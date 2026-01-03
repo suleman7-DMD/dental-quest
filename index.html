@@ -3084,11 +3084,13 @@
                 // Load calendar events
                 if (data.calendarEvents) {
                     calendarEvents = data.calendarEvents;
-                    // Remove past events
+                    // Remove past events using local timezone
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     calendarEvents = calendarEvents.filter(event => {
-                        const eventDate = new Date(event.dateStr);
+                        const [year, month, day] = event.dateStr.split('-').map(Number);
+                        const eventDate = new Date(year, month - 1, day);
+                        eventDate.setHours(0, 0, 0, 0);
                         return eventDate >= today;
                     });
                 }
@@ -3308,11 +3310,13 @@
                     // Restore calendar events (if available - backward compatible)
                     if (checkpoint.calendarEvents) {
                         calendarEvents = checkpoint.calendarEvents;
-                        // Remove past events
+                        // Remove past events using local timezone
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         calendarEvents = calendarEvents.filter(event => {
-                            const eventDate = new Date(event.dateStr);
+                            const [year, month, day] = event.dateStr.split('-').map(Number);
+                            const eventDate = new Date(year, month - 1, day);
+                            eventDate.setHours(0, 0, 0, 0);
                             return eventDate >= today;
                         });
                     } else {
@@ -5111,7 +5115,11 @@
             today.setHours(0, 0, 0, 0);
             
             const html = sortedEvents.map(event => {
-                const eventDate = new Date(event.dateStr);
+                // Parse date in local timezone to avoid off-by-one errors
+                const [year, month, day] = event.dateStr.split('-').map(Number);
+                const eventDate = new Date(year, month - 1, day);
+                eventDate.setHours(0, 0, 0, 0);
+                
                 const diffTime = eventDate - today;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 
@@ -5202,7 +5210,11 @@
                 return;
             }
             
-            const eventDate = new Date(date);
+            // Parse date in local timezone to avoid off-by-one errors
+            const [year, month, day] = date.split('-').map(Number);
+            const eventDate = new Date(year, month - 1, day);
+            eventDate.setHours(0, 0, 0, 0);
+            
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
