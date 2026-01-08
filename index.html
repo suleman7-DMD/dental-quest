@@ -1549,6 +1549,231 @@
             max-height: 85vh;
         }
 
+        /* Daily Planner Styles */
+        .planner-modal {
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .planner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .planner-date {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .planner-goal {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .planner-goal-label {
+            font-size: 0.85em;
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .planner-goal-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+        }
+
+        .planner-times {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .planner-time-box {
+            flex: 1;
+            min-width: 140px;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .planner-time-box.sleep {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        }
+
+        .planner-time-label {
+            font-size: 0.8em;
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .planner-time-input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .planner-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .planner-block {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            transition: all 0.2s ease;
+        }
+
+        .planner-block:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .planner-block.completed {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+        }
+
+        .planner-block.current {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+            animation: pulse-current 2s infinite;
+        }
+
+        @keyframes pulse-current {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1); }
+        }
+
+        .planner-block-time {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            min-width: 160px;
+        }
+
+        .planner-block-time input {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .planner-block-task {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .planner-block-task:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .planner-block-check {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .planner-block-delete {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .planner-block-delete:hover {
+            color: #ef4444;
+        }
+
+        .planner-add-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .planner-add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .planner-progress {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+        }
+
+        .planner-progress-bar {
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .planner-progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .planner-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .planner-reset-info {
+            text-align: center;
+            font-size: 0.8em;
+            color: #9ca3af;
+            margin-top: 15px;
+        }
+
         .notebook-tabs {
             display: flex;
             gap: 5px;
@@ -1962,6 +2187,7 @@
                 <button class="data-btn import-btn" onclick="document.getElementById('checkpointFile').click()" title="Restore your data from a checkpoint file">📂 Restore Checkpoint</button>
                 <button class="data-btn clear-btn" onclick="clearAllData()" title="Delete all data and start fresh">🗑️ Clear All Data</button>
                 <button class="data-btn" onclick="openNotebook()" title="Open your personal notebook">📓 Notebook</button>
+                <button class="data-btn" onclick="openDailyPlanner()" title="Plan your day hour by hour" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%); font-weight: 600;">📋 Daily Planner</button>
                 <button class="data-btn" onclick="openCalendar()" title="Master Calendar & Countdowns" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); font-weight: 600;">📅 Calendar</button>
                 <button class="data-btn" onclick="openFinancials()" title="Financial Command Center" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); font-weight: 600;">💰 Financials</button>
                 <a href="stimulant-elimination-calculator.html" class="data-btn" title="Sleep Prediction Calculator" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); font-weight: 600; text-decoration: none;">💊 Sleep Tracker</a>
@@ -2487,6 +2713,57 @@
                         <div class="notebook-actions">
                             <button class="new-page-btn" onclick="createNewPage()">+ New Page</button>
                             <button class="modal-btn primary" onclick="closeNotebook()">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Planner Modal -->
+                <div class="modal-overlay" id="dailyPlannerModal" onclick="closeDailyPlanner()">
+                    <div class="modal-content planner-modal" onclick="event.stopPropagation()">
+                        <div class="planner-header">
+                            <h3>📋 Daily Planner</h3>
+                            <div class="planner-date" id="plannerDate">Today</div>
+                        </div>
+
+                        <div class="planner-goal">
+                            <div class="planner-goal-label">🎯 Today's Main Goal</div>
+                            <input type="text" class="planner-goal-input" id="plannerGoal" placeholder="What's the ONE thing you must accomplish today?" oninput="saveDailyPlanner()">
+                        </div>
+
+                        <div class="planner-times">
+                            <div class="planner-time-box">
+                                <div class="planner-time-label">⏰ Current Time</div>
+                                <div id="plannerCurrentTime" style="font-size: 1.3em; font-weight: 700; color: #1e40af;">--:--</div>
+                            </div>
+                            <div class="planner-time-box sleep">
+                                <div class="planner-time-label">🌙 Target Bedtime</div>
+                                <input type="time" class="planner-time-input" id="plannerBedtime" value="23:00" oninput="saveDailyPlanner()">
+                            </div>
+                        </div>
+
+                        <div class="planner-blocks" id="plannerBlocks">
+                            <!-- Time blocks will be inserted here -->
+                        </div>
+
+                        <button class="planner-add-btn" onclick="addPlannerBlock()">+ Add Time Block</button>
+
+                        <div class="planner-progress">
+                            <div class="planner-progress-text">
+                                <span>Progress</span>
+                                <span id="plannerProgressPercent">0%</span>
+                            </div>
+                            <div class="planner-progress-bar">
+                                <div class="planner-progress-fill" id="plannerProgressFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="planner-reset-info">
+                            ⏰ Planner auto-resets daily at 5:00 AM
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                            <button class="modal-btn" onclick="clearDailyPlanner()" style="background: #ef4444;">Clear All</button>
+                            <button class="modal-btn primary" onclick="closeDailyPlanner()">Close</button>
                         </div>
                     </div>
                 </div>
@@ -3120,7 +3397,8 @@
                 notebook,
                 financials,
                 pillAssignments,
-                calendarEvents
+                calendarEvents,
+                dailyPlanner
             };
             
             // Always save to localStorage as backup
@@ -3613,9 +3891,19 @@
                             console.log('✅ Loaded', calendarEvents.length, 'calendar events from Firebase');
                         }
                         
+                        // Load daily planner from Firebase
+                        if (data.dailyPlanner) {
+                            dailyPlanner = data.dailyPlanner;
+                            checkPlannerReset();
+                            console.log('✅ Loaded daily planner from Firebase');
+                        }
+                        
                         updateStats();
                         renderTasks();
                         updateMedicationDisplay();
+                        
+                        // Setup real-time sync for daily planner
+                        setupPlannerRealtimeSync();
                         
                         showToast('Data loaded from cloud ☁️', '✅');
                     } else {
@@ -5375,6 +5663,305 @@
                 renderMasterCalendar();
                 closeAddCountdown();
                 showToast('Countdown deleted', '🗑️');
+            }
+        }
+
+        // ============================================
+        // DAILY PLANNER
+        // ============================================
+        
+        let dailyPlanner = {
+            date: null,
+            goal: '',
+            bedtime: '23:00',
+            blocks: [],
+            lastReset: null
+        };
+
+        function getTodayDateString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function checkPlannerReset() {
+            const now = new Date();
+            const hours = now.getHours();
+            const todayStr = getTodayDateString();
+            
+            // Reset at 5 AM
+            if (dailyPlanner.date !== todayStr && hours >= 5) {
+                // New day after 5 AM - reset
+                dailyPlanner = {
+                    date: todayStr,
+                    goal: '',
+                    bedtime: '23:00',
+                    blocks: [],
+                    lastReset: now.toISOString()
+                };
+                saveDailyPlanner();
+                return true;
+            }
+            
+            // If it's before 5 AM and the date is yesterday, don't reset yet
+            if (hours < 5 && dailyPlanner.date) {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                if (dailyPlanner.date === yesterdayStr) {
+                    // Still working on yesterday's plan
+                    return false;
+                }
+            }
+            
+            // If no date set, initialize to today
+            if (!dailyPlanner.date) {
+                dailyPlanner.date = todayStr;
+                saveDailyPlanner();
+            }
+            
+            return false;
+        }
+
+        function loadDailyPlanner() {
+            if (firebaseInitialized && database && currentUser) {
+                database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').once('value').then(snapshot => {
+                    const data = snapshot.val();
+                    if (data) {
+                        dailyPlanner = { ...dailyPlanner, ...data };
+                    }
+                    checkPlannerReset();
+                    renderPlannerBlocks();
+                });
+            } else {
+                const saved = localStorage.getItem('dailyPlanner');
+                if (saved) {
+                    dailyPlanner = JSON.parse(saved);
+                }
+                checkPlannerReset();
+            }
+        }
+
+        function saveDailyPlanner() {
+            // Update goal and bedtime from inputs if modal is open
+            const goalInput = document.getElementById('plannerGoal');
+            const bedtimeInput = document.getElementById('plannerBedtime');
+            if (goalInput) dailyPlanner.goal = goalInput.value;
+            if (bedtimeInput) dailyPlanner.bedtime = bedtimeInput.value;
+            
+            localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
+            
+            // Save to main Firebase data (under user's path)
+            if (firebaseInitialized && database && currentUser) {
+                database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').set(dailyPlanner)
+                    .then(() => console.log('Daily planner saved to Firebase'))
+                    .catch(err => console.error('Firebase save error:', err));
+            }
+        }
+
+        function openDailyPlanner() {
+            checkPlannerReset();
+            
+            // Update date display
+            const now = new Date();
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('plannerDate').textContent = now.toLocaleDateString('en-US', options);
+            
+            // Load values
+            document.getElementById('plannerGoal').value = dailyPlanner.goal || '';
+            document.getElementById('plannerBedtime').value = dailyPlanner.bedtime || '23:00';
+            
+            renderPlannerBlocks();
+            updatePlannerProgress();
+            startPlannerClock();
+            
+            document.getElementById('dailyPlannerModal').classList.add('show');
+        }
+
+        function closeDailyPlanner() {
+            saveDailyPlanner();
+            document.getElementById('dailyPlannerModal').classList.remove('show');
+        }
+
+        let plannerClockInterval = null;
+        function startPlannerClock() {
+            if (plannerClockInterval) clearInterval(plannerClockInterval);
+            
+            function updateClock() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                const el = document.getElementById('plannerCurrentTime');
+                if (el) el.textContent = timeStr;
+                
+                // Also highlight current time block
+                highlightCurrentBlock();
+            }
+            
+            updateClock();
+            plannerClockInterval = setInterval(updateClock, 30000); // Update every 30 seconds
+        }
+
+        function highlightCurrentBlock() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            document.querySelectorAll('.planner-block').forEach((block, index) => {
+                block.classList.remove('current');
+                
+                const plannerBlock = dailyPlanner.blocks[index];
+                if (plannerBlock && plannerBlock.startTime && plannerBlock.endTime) {
+                    const startParts = plannerBlock.startTime.split(':').map(Number);
+                    const endParts = plannerBlock.endTime.split(':').map(Number);
+                    const startMinutes = startParts[0] * 60 + startParts[1];
+                    const endMinutes = endParts[0] * 60 + endParts[1];
+                    
+                    if (currentMinutes >= startMinutes && currentMinutes < endMinutes && !plannerBlock.completed) {
+                        block.classList.add('current');
+                    }
+                }
+            });
+        }
+
+        function renderPlannerBlocks() {
+            const container = document.getElementById('plannerBlocks');
+            if (!container) return;
+            
+            if (dailyPlanner.blocks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #9ca3af;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">📝</div>
+                        <div>No time blocks yet. Click "Add Time Block" to start planning!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = dailyPlanner.blocks.map((block, index) => `
+                <div class="planner-block ${block.completed ? 'completed' : ''}" data-index="${index}">
+                    <input type="checkbox" class="planner-block-check" 
+                           ${block.completed ? 'checked' : ''} 
+                           onchange="togglePlannerBlock(${index})">
+                    <div class="planner-block-time">
+                        <input type="time" value="${block.startTime || ''}" 
+                               onchange="updatePlannerBlock(${index}, 'startTime', this.value)"
+                               placeholder="Start">
+                        <span>→</span>
+                        <input type="time" value="${block.endTime || ''}" 
+                               onchange="updatePlannerBlock(${index}, 'endTime', this.value)"
+                               placeholder="End">
+                    </div>
+                    <input type="text" class="planner-block-task" 
+                           value="${block.task || ''}" 
+                           placeholder="What will you do?"
+                           oninput="updatePlannerBlock(${index}, 'task', this.value)"
+                           style="${block.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">
+                    <button class="planner-block-delete" onclick="deletePlannerBlock(${index})">×</button>
+                </div>
+            `).join('');
+            
+            highlightCurrentBlock();
+            updatePlannerProgress();
+        }
+
+        function addPlannerBlock() {
+            // Default to current time rounded to nearest 15 min
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+            now.setMinutes(minutes);
+            const startTime = now.toTimeString().slice(0, 5);
+            
+            now.setHours(now.getHours() + 1);
+            const endTime = now.toTimeString().slice(0, 5);
+            
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: startTime,
+                endTime: endTime,
+                task: '',
+                completed: false
+            });
+            
+            saveDailyPlanner();
+            renderPlannerBlocks();
+            
+            // Focus the new task input
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('.planner-block-task');
+                if (inputs.length > 0) {
+                    inputs[inputs.length - 1].focus();
+                }
+            }, 100);
+        }
+
+        function updatePlannerBlock(index, field, value) {
+            if (dailyPlanner.blocks[index]) {
+                dailyPlanner.blocks[index][field] = value;
+                
+                // Update goal from input
+                dailyPlanner.goal = document.getElementById('plannerGoal').value;
+                dailyPlanner.bedtime = document.getElementById('plannerBedtime').value;
+                
+                saveDailyPlanner();
+            }
+        }
+
+        function togglePlannerBlock(index) {
+            if (dailyPlanner.blocks[index]) {
+                dailyPlanner.blocks[index].completed = !dailyPlanner.blocks[index].completed;
+                saveDailyPlanner();
+                renderPlannerBlocks();
+                
+                // Show celebration if all blocks completed
+                const allCompleted = dailyPlanner.blocks.length > 0 && 
+                                     dailyPlanner.blocks.every(b => b.completed);
+                if (allCompleted) {
+                    showToast('🎉 All tasks completed! Amazing work!', '🏆');
+                }
+            }
+        }
+
+        function deletePlannerBlock(index) {
+            dailyPlanner.blocks.splice(index, 1);
+            saveDailyPlanner();
+            renderPlannerBlocks();
+        }
+
+        function updatePlannerProgress() {
+            const total = dailyPlanner.blocks.length;
+            const completed = dailyPlanner.blocks.filter(b => b.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            const percentEl = document.getElementById('plannerProgressPercent');
+            const fillEl = document.getElementById('plannerProgressFill');
+            
+            if (percentEl) percentEl.textContent = `${percent}% (${completed}/${total})`;
+            if (fillEl) fillEl.style.width = `${percent}%`;
+        }
+
+        function clearDailyPlanner() {
+            if (confirm('Clear all time blocks for today? This cannot be undone.')) {
+                dailyPlanner.blocks = [];
+                dailyPlanner.goal = '';
+                document.getElementById('plannerGoal').value = '';
+                saveDailyPlanner();
+                renderPlannerBlocks();
+                showToast('Daily planner cleared', '🗑️');
+            }
+        }
+
+        // Listen for real-time updates from other devices
+        function setupPlannerRealtimeSync() {
+            if (firebaseInitialized && database && currentUser) {
+                database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').on('value', snapshot => {
+                    const data = snapshot.val();
+                    if (data && data.date === dailyPlanner.date) {
+                        // Only update if it's the same day's data
+                        const modal = document.getElementById('dailyPlannerModal');
+                        if (modal && !modal.classList.contains('show')) {
+                            // Only auto-update if modal is closed
+                            dailyPlanner = { ...dailyPlanner, ...data };
+                            localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
+                        }
+                    }
+                });
             }
         }
 
