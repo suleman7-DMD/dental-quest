@@ -1044,7 +1044,7 @@
                     <div class="input-row">
                         <div class="input-group" style="flex: 1;">
                             <label>What time did you wake up?</label>
-                            <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime();">
+                            <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime(); saveState()">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label style="display: flex; align-items: center;">
@@ -1070,7 +1070,7 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate()">
+                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate(); saveState()">
                         </div>
                     </div>
                     <div id="sleepDebtDisplay" style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9em;">
@@ -1233,11 +1233,11 @@
                         <div class="input-row">
                             <div class="input-group" id="vitaminCTimeGroup" style="display: none;">
                                 <label>Vitamin C taken at:</label>
-                                <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate()">
+                                <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState()">
                             </div>
                             <div class="input-group" id="saunaTimeGroup" style="display: none;">
                                 <label>Sauna session at:</label>
-                                <input type="time" id="saunaTime" value="18:00" onchange="recalculate()">
+                                <input type="time" id="saunaTime" value="18:00" onchange="recalculate(); saveState()">
                             </div>
                         </div>
                     </div>
@@ -1270,7 +1270,7 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()">
+                            <input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate(); saveState()">
                             <span class="setting-hint">Default: 11 hrs. Range: 9-14</span>
                         </div>
                         <div class="setting-item">
@@ -1299,12 +1299,12 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()">
+                            <input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate(); saveState()">
                             <span class="setting-hint">Lower = more sensitive. Default: 14mg</span>
                         </div>
                         <div class="setting-item">
                             <label>Caffeine Half-Life (hours)</label>
-                            <input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()">
+                            <input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate(); saveState()">
                             <span class="setting-hint">Default: 5 hrs. Smokers: ~3 hrs</span>
                         </div>
                         <div class="setting-item">
@@ -1327,12 +1327,12 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()">
+                            <input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate(); saveState()">
                             <span class="setting-hint">Default: 25mg. Lower = more sensitive</span>
                         </div>
                         <div class="setting-item">
                             <label>Your Weight (lbs)</label>
-                            <input type="number" id="weight" value="190" min="100" max="350" step="5" onchange="recalculate()">
+                            <input type="number" id="weight" value="190" min="100" max="350" step="5" onchange="recalculate(); saveState()">
                             <span class="setting-hint">Used for peak concentration estimate</span>
                         </div>
                     </div>
@@ -2123,12 +2123,14 @@
             state.medications.push(entry);
             renderMedEntries();
             recalculate();
+            saveState();
         }
 
         function removeMedEntry(id) {
             state.medications = state.medications.filter(m => m.id !== id);
             renderMedEntries();
             recalculate();
+            saveState();
         }
 
         function updateMedEntry(id, field, value) {
@@ -2142,6 +2144,7 @@
                 // CRITICAL: Must re-render to update stacking warning with new values
                 renderMedEntries();
                 recalculate();
+                saveState();
             }
         }
 
@@ -2236,12 +2239,14 @@
             state.caffeine.push({ id: Date.now(), amount, name, time });
             renderCaffeineEntries();
             recalculate();
+            saveState();
         }
 
         function removeCaffeine(id) {
             state.caffeine = state.caffeine.filter(c => c.id !== id);
             renderCaffeineEntries();
             recalculate();
+            saveState();
         }
 
         function renderCaffeineEntries() {
@@ -2275,6 +2280,7 @@
             // Show/hide time inputs
             updateModifierTimeInputs();
             recalculate();
+            saveState();
         }
 
         function updateModifierTimeInputs() {
@@ -2520,8 +2526,9 @@
             // Draw graph
             drawGraph();
             
-            // Save state
-            saveState();
+            // NOTE: Do NOT call saveState() here!
+            // recalculate() is called every second for live UI updates.
+            // saveState() should only be called when user makes actual changes.
         }
 
         function updateStatusItem(indicatorId, isOk, current, threshold) {
@@ -3710,6 +3717,8 @@
         let firebaseInitialized = false;
         let database = null;
         let firebaseSyncEnabled = false;
+        let currentUser = null;
+        let userPath = null;
         
         function updateSyncStatus(status, text) {
             const iconEl = document.getElementById('syncIcon');
@@ -3722,15 +3731,17 @@
                     textEl.style.color = '#10b981';
                 } else if (status === 'syncing') {
                     iconEl.textContent = '🔄';
+                    iconEl.style.color = '#f59e0b';
                     textEl.textContent = text || 'Syncing...';
                     textEl.style.color = '#f59e0b';
                 } else if (status === 'offline') {
                     iconEl.textContent = '📴';
                     iconEl.style.color = '#ef4444';
-                    textEl.textContent = text || 'Offline (local only)';
+                    textEl.textContent = text || 'Offline';
                     textEl.style.color = '#ef4444';
                 } else {
                     iconEl.textContent = '☁️';
+                    iconEl.style.color = '#8b949e';
                     textEl.textContent = text || 'Connecting...';
                     textEl.style.color = '#8b949e';
                 }
@@ -3739,86 +3750,161 @@
         
         function initFirebase() {
             try {
+                // Initialize Firebase app if not already done
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                firebaseSyncEnabled = true;
-                console.log('Firebase initialized for Stimulant Calculator');
+                console.log('✅ Firebase app initialized');
                 
-                updateSyncStatus('syncing', 'Syncing...');
+                // Check for saved PIN (same as Dental Quest uses)
+                const savedPin = localStorage.getItem('dentalQuestPin');
                 
-                // Load from Firebase
-                loadFromFirebase();
+                if (savedPin) {
+                    setupUserAuth(savedPin);
+                } else {
+                    // No PIN - prompt user
+                    console.log('No PIN found, prompting...');
+                    setTimeout(() => promptForPin(), 500);
+                }
             } catch (error) {
-                console.error('Firebase init error:', error);
+                console.error('❌ Firebase init error:', error);
                 firebaseSyncEnabled = false;
-                updateSyncStatus('offline', 'Offline mode');
+                updateSyncStatus('offline', 'Init failed');
             }
         }
         
+        function setupUserAuth(pin) {
+            // Use the same user ID format as Dental Quest
+            const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
+            currentUser = { uid: hashedPin };
+            userPath = 'users/' + hashedPin + '/stimulantCalculator';
+            firebaseSyncEnabled = true;
+            
+            console.log('✅ User authenticated, path:', userPath);
+            updateSyncStatus('syncing', 'Syncing...');
+            
+            // Load from Firebase
+            loadFromFirebase();
+        }
+        
+        function promptForPin() {
+            // Check if we're already showing prompt
+            if (document.getElementById('pinPromptOverlay')) return;
+            
+            // Create a nicer prompt overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'pinPromptOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            overlay.innerHTML = `
+                <div style="background: #1e293b; padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: white;">
+                    <h3 style="margin-bottom: 15px;">🔐 Enter Your PIN</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
+                    <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3b82f6; background: #0f172a; color: white; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #475569; color: white; cursor: pointer;">Skip (Local Only)</button>
+                        <button onclick="submitPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">Connect</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Focus the input
+            setTimeout(() => {
+                const input = document.getElementById('pinInput');
+                if (input) {
+                    input.focus();
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') submitPin();
+                    });
+                }
+            }, 100);
+        }
+        
+        function submitPin() {
+            const input = document.getElementById('pinInput');
+            const pin = input ? input.value.trim() : '';
+            
+            if (pin) {
+                localStorage.setItem('dentalQuestPin', pin);
+                setupUserAuth(pin);
+                showToast('✅ Connected with PIN!');
+            } else {
+                showToast('Please enter a PIN');
+                return;
+            }
+            
+            // Remove overlay
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
+        }
+        
+        function skipPin() {
+            firebaseSyncEnabled = false;
+            updateSyncStatus('offline', 'Local only');
+            showToast('Using offline mode');
+            
+            // Remove overlay
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
+        }
+        
         function saveToFirebase() {
-            if (!firebaseSyncEnabled || !database) return;
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                console.log('Firebase save skipped - not connected');
+                return;
+            }
             
-            // Set flag to ignore our own update in real-time listener
-            ignoringOwnUpdate = true;
             const saveTime = new Date().toISOString();
-            lastSaveTimestamp = saveTime;
+            lastKnownTimestamp = saveTime; // Track our own save to ignore in real-time listener
             
-            // Use update with promise for reliable saving
-            database.ref('stimulantCalculator').set({
+            // Save to Firebase
+            database.ref(userPath).set({
                 state: state,
                 lastUpdated: saveTime
             })
             .then(() => {
+                console.log('✅ Saved to Firebase at', saveTime);
                 updateSyncStatus('connected', 'Saved ✓');
-                console.log('Saved to Firebase at', saveTime);
             })
             .catch(error => {
-                console.error('Firebase save error:', error);
-                updateSyncStatus('offline', 'Save failed');
-                ignoringOwnUpdate = false;
+                console.error('❌ Firebase save error:', error);
+                // Don't show error status, data is still saved locally
             });
         }
         
         function loadFromFirebase() {
-            if (!firebaseSyncEnabled || !database) {
-                updateSyncStatus('offline', 'Offline mode');
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                updateSyncStatus('offline', 'Not connected');
                 return;
             }
             
-            database.ref('stimulantCalculator').once('value')
+            console.log('Loading from Firebase path:', userPath);
+            
+            database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
+                    console.log('Firebase data received:', data ? 'yes' : 'no data yet');
+                    
                     if (data && data.state) {
                         const firebaseState = data.state;
                         
                         // Smart merge - keep local data if Firebase data is empty/missing
-                        // For arrays, use Firebase data if it exists and has items, otherwise keep local
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            // Arrays: use Firebase if it has data, otherwise keep local
                             medications: (firebaseState.medications && firebaseState.medications.length > 0) ? firebaseState.medications : state.medications,
                             caffeine: (firebaseState.caffeine && firebaseState.caffeine.length > 0) ? firebaseState.caffeine : state.caffeine,
                             history: (firebaseState.history && firebaseState.history.length > 0) ? firebaseState.history : state.history,
-                            // Objects: deep merge
-                            modifiers: { 
-                                ...state.modifiers, 
-                                ...(firebaseState.modifiers || {})
-                            },
-                            settings: { 
-                                ...state.settings, 
-                                ...(firebaseState.settings || {}) 
-                            },
-                            sleepHistory: { 
-                                ...state.sleepHistory, 
-                                ...(firebaseState.sleepHistory || {}) 
-                            }
+                            modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                            settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
                         };
                         
-                        // Also save merged state to localStorage as backup
+                        // Save merged state to localStorage
                         localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                         
                         // Re-render everything
@@ -3838,77 +3924,87 @@
                         
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
-                        console.log('Loaded from Firebase:', data.lastUpdated);
+                        console.log('✅ Loaded from Firebase:', data.lastUpdated);
                     } else {
                         // No Firebase data yet - save current local state to Firebase
+                        console.log('No existing data, pushing local state to Firebase');
                         updateSyncStatus('connected', 'Connected');
-                        saveToFirebase(); // Push local data to cloud for first sync
+                        saveToFirebase();
                     }
                     
                     // Set up real-time listener for changes from other devices
                     setupRealtimeSync();
                 })
                 .catch(error => {
-                    console.error('Firebase load error:', error);
-                    updateSyncStatus('offline', 'Sync failed');
+                    console.error('❌ Firebase load error:', error);
+                    // Still show as connected if we have a valid path, just couldn't load
+                    updateSyncStatus('connected', 'Local + Cloud');
+                    // Try to save anyway
+                    saveToFirebase();
                 });
         }
         
         // Real-time sync - listen for changes from other devices
         let realtimeSyncEnabled = false;
-        let lastSaveTimestamp = null;
-        let ignoringOwnUpdate = false;
+        let lastKnownTimestamp = null;
         
         function setupRealtimeSync() {
-            if (realtimeSyncEnabled || !database) return;
+            if (realtimeSyncEnabled || !database || !userPath) return;
             realtimeSyncEnabled = true;
             
-            database.ref('stimulantCalculator').on('value', snapshot => {
-                // Ignore our own updates
-                if (ignoringOwnUpdate) {
-                    ignoringOwnUpdate = false;
+            console.log('Setting up real-time sync on:', userPath);
+            
+            let isFirstLoad = true;
+            
+            database.ref(userPath).on('value', snapshot => {
+                // Skip the first callback (it's the initial load we already handled)
+                if (isFirstLoad) {
+                    isFirstLoad = false;
+                    const data = snapshot.val();
+                    if (data && data.lastUpdated) {
+                        lastKnownTimestamp = data.lastUpdated;
+                    }
                     return;
                 }
                 
                 const data = snapshot.val();
                 if (data && data.state && data.lastUpdated) {
-                    // Check if this update is from another device (compare timestamps)
-                    const localLastSave = localStorage.getItem('stimCalcLastSave');
-                    
-                    // Only process if Firebase data is newer than our last save
-                    // AND it's been at least 2 seconds since we saved (debounce)
-                    const timeSinceOurSave = localLastSave ? (new Date().getTime() - new Date(localLastSave).getTime()) : Infinity;
-                    
-                    if (data.lastUpdated !== lastSaveTimestamp && timeSinceOurSave > 2000) {
-                        console.log('Received update from another device:', data.lastUpdated);
-                        lastSaveTimestamp = data.lastUpdated;
-                        
-                        // Merge in the new data
-                        const firebaseState = data.state;
-                        state = {
-                            wakeTime: firebaseState.wakeTime || state.wakeTime,
-                            hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            medications: firebaseState.medications || state.medications,
-                            caffeine: firebaseState.caffeine || state.caffeine,
-                            history: firebaseState.history || state.history,
-                            modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
-                            settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
-                        };
-                        
-                        // Update localStorage
-                        localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
-                        
-                        // Re-render
-                        document.getElementById('wakeTime').value = state.wakeTime;
-                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-                        renderMedEntries();
-                        renderCaffeineEntries();
-                        renderSleepCalendar();
-                        recalculate();
-                        
-                        updateSyncStatus('connected', '🔄 Updated');
+                    // Only process if this is a NEW update (different timestamp)
+                    if (data.lastUpdated === lastKnownTimestamp) {
+                        console.log('Skipping own update');
+                        return;
                     }
+                    
+                    lastKnownTimestamp = data.lastUpdated;
+                    console.log('📥 Received real-time update from another device');
+                    
+                    // Merge in the new data
+                    const firebaseState = data.state;
+                    state = {
+                        wakeTime: firebaseState.wakeTime || state.wakeTime,
+                        hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                        medications: firebaseState.medications || state.medications,
+                        caffeine: firebaseState.caffeine || state.caffeine,
+                        history: firebaseState.history || state.history,
+                        modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
+                    };
+                    
+                    // Update localStorage
+                    localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                    
+                    // Re-render
+                    document.getElementById('wakeTime').value = state.wakeTime;
+                    document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                    renderMedEntries();
+                    renderCaffeineEntries();
+                    renderSleepCalendar();
+                    renderHistory();
+                    recalculate();
+                    
+                    updateSyncStatus('connected', '🔄 Updated');
+                    showToast('📥 Synced from another device');
                 }
             });
         }
@@ -3917,15 +4013,39 @@
         // STORAGE (Local + Firebase)
         // ============================================
         
+        // Debounce timer for Firebase saves
+        let firebaseSaveTimeout = null;
+        let lastLocalSave = 0;
+        
         function saveState() {
-            // Track when we last saved (for real-time sync comparison)
-            const saveTime = new Date().toISOString();
-            localStorage.setItem('stimCalcLastSave', saveTime);
+            // Always save to localStorage immediately (but not too often)
+            const now = Date.now();
+            if (now - lastLocalSave > 500) { // Max twice per second for localStorage
+                localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                lastLocalSave = now;
+            }
             
-            // Always save to localStorage
+            // Debounce Firebase saves - wait 2 seconds of inactivity before saving
+            if (firebaseSaveTimeout) {
+                clearTimeout(firebaseSaveTimeout);
+            }
+            
+            firebaseSaveTimeout = setTimeout(() => {
+                saveToFirebase();
+            }, 2000); // Wait 2 seconds before saving to Firebase
+        }
+        
+        // Force immediate save (for important actions like Save & Log)
+        function saveStateImmediate() {
             localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
             
-            // Also save to Firebase if connected
+            // Clear any pending debounced save
+            if (firebaseSaveTimeout) {
+                clearTimeout(firebaseSaveTimeout);
+                firebaseSaveTimeout = null;
+            }
+            
+            // Save to Firebase immediately
             saveToFirebase();
         }
 
