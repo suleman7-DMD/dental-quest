@@ -3710,6 +3710,7 @@
         let firebaseInitialized = false;
         let database = null;
         let firebaseSyncEnabled = false;
+        let currentUser = null;
         
         function updateSyncStatus(status, text) {
             const iconEl = document.getElementById('syncIcon');
@@ -3744,13 +3745,28 @@
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                firebaseSyncEnabled = true;
                 console.log('Firebase initialized for Stimulant Calculator');
                 
-                updateSyncStatus('syncing', 'Syncing...');
-                
-                // Load from Firebase
-                loadFromFirebase();
+                // Check for saved PIN (same as Dental Quest uses)
+                const savedPin = localStorage.getItem('dentalQuestPin');
+                if (savedPin) {
+                    // Use the same user ID format as Dental Quest
+                    const hashedPin = 'user_' + btoa(savedPin).replace(/[^a-zA-Z0-9]/g, '');
+                    currentUser = { uid: hashedPin };
+                    firebaseSyncEnabled = true;
+                    
+                    updateSyncStatus('syncing', 'Syncing...');
+                    console.log('Using PIN auth, user ID:', hashedPin);
+                    
+                    // Load from Firebase
+                    loadFromFirebase();
+                } else {
+                    // No PIN saved - prompt user or use local only
+                    console.log('No PIN found - checking if Dental Quest has one...');
+                    
+                    // Try to prompt for PIN
+                    promptForPin();
+                }
             } catch (error) {
                 console.error('Firebase init error:', error);
                 firebaseSyncEnabled = false;
@@ -3758,16 +3774,37 @@
             }
         }
         
+        function promptForPin() {
+            const pin = prompt('Enter your Dental Quest PIN to sync across devices:\n(Same PIN you use in the main app)\n\nLeave blank for offline-only mode.');
+            
+            if (pin && pin.trim()) {
+                localStorage.setItem('dentalQuestPin', pin.trim());
+                const hashedPin = 'user_' + btoa(pin.trim()).replace(/[^a-zA-Z0-9]/g, '');
+                currentUser = { uid: hashedPin };
+                firebaseSyncEnabled = true;
+                
+                updateSyncStatus('syncing', 'Syncing...');
+                loadFromFirebase();
+                showToast('Connected with PIN!');
+            } else {
+                firebaseSyncEnabled = false;
+                updateSyncStatus('offline', 'Local only');
+                showToast('Using offline mode');
+            }
+        }
+        
         function saveToFirebase() {
-            if (!firebaseSyncEnabled || !database) return;
+            if (!firebaseSyncEnabled || !database || !currentUser) return;
             
             // Set flag to ignore our own update in real-time listener
             ignoringOwnUpdate = true;
             const saveTime = new Date().toISOString();
             lastSaveTimestamp = saveTime;
             
-            // Use update with promise for reliable saving
-            database.ref('stimulantCalculator').set({
+            // Save under user's path (same structure as Dental Quest)
+            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
+            
+            database.ref(userPath).set({
                 state: state,
                 lastUpdated: saveTime
             })
@@ -3783,12 +3820,14 @@
         }
         
         function loadFromFirebase() {
-            if (!firebaseSyncEnabled || !database) {
+            if (!firebaseSyncEnabled || !database || !currentUser) {
                 updateSyncStatus('offline', 'Offline mode');
                 return;
             }
             
-            database.ref('stimulantCalculator').once('value')
+            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
+            
+            database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
                     if (data && data.state) {
@@ -3860,10 +3899,12 @@
         let ignoringOwnUpdate = false;
         
         function setupRealtimeSync() {
-            if (realtimeSyncEnabled || !database) return;
+            if (realtimeSyncEnabled || !database || !currentUser) return;
             realtimeSyncEnabled = true;
             
-            database.ref('stimulantCalculator').on('value', snapshot => {
+            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
+            
+            database.ref(userPath).on('value', snapshot => {
                 // Ignore our own updates
                 if (ignoringOwnUpdate) {
                     ignoringOwnUpdate = false;
