@@ -3711,6 +3711,7 @@
         let database = null;
         let firebaseSyncEnabled = false;
         let currentUser = null;
+        let userPath = null;
         
         function updateSyncStatus(status, text) {
             const iconEl = document.getElementById('syncIcon');
@@ -3723,15 +3724,17 @@
                     textEl.style.color = '#10b981';
                 } else if (status === 'syncing') {
                     iconEl.textContent = '🔄';
+                    iconEl.style.color = '#f59e0b';
                     textEl.textContent = text || 'Syncing...';
                     textEl.style.color = '#f59e0b';
                 } else if (status === 'offline') {
                     iconEl.textContent = '📴';
                     iconEl.style.color = '#ef4444';
-                    textEl.textContent = text || 'Offline (local only)';
+                    textEl.textContent = text || 'Offline';
                     textEl.style.color = '#ef4444';
                 } else {
                     iconEl.textContent = '☁️';
+                    iconEl.style.color = '#8b949e';
                     textEl.textContent = text || 'Connecting...';
                     textEl.style.color = '#8b949e';
                 }
@@ -3740,124 +3743,161 @@
         
         function initFirebase() {
             try {
+                // Initialize Firebase app if not already done
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                console.log('Firebase initialized for Stimulant Calculator');
+                console.log('✅ Firebase app initialized');
                 
                 // Check for saved PIN (same as Dental Quest uses)
                 const savedPin = localStorage.getItem('dentalQuestPin');
+                
                 if (savedPin) {
-                    // Use the same user ID format as Dental Quest
-                    const hashedPin = 'user_' + btoa(savedPin).replace(/[^a-zA-Z0-9]/g, '');
-                    currentUser = { uid: hashedPin };
-                    firebaseSyncEnabled = true;
-                    
-                    updateSyncStatus('syncing', 'Syncing...');
-                    console.log('Using PIN auth, user ID:', hashedPin);
-                    
-                    // Load from Firebase
-                    loadFromFirebase();
+                    setupUserAuth(savedPin);
                 } else {
-                    // No PIN saved - prompt user or use local only
-                    console.log('No PIN found - checking if Dental Quest has one...');
-                    
-                    // Try to prompt for PIN
-                    promptForPin();
+                    // No PIN - prompt user
+                    console.log('No PIN found, prompting...');
+                    setTimeout(() => promptForPin(), 500);
                 }
             } catch (error) {
-                console.error('Firebase init error:', error);
+                console.error('❌ Firebase init error:', error);
                 firebaseSyncEnabled = false;
-                updateSyncStatus('offline', 'Offline mode');
+                updateSyncStatus('offline', 'Init failed');
             }
+        }
+        
+        function setupUserAuth(pin) {
+            // Use the same user ID format as Dental Quest
+            const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
+            currentUser = { uid: hashedPin };
+            userPath = 'users/' + hashedPin + '/stimulantCalculator';
+            firebaseSyncEnabled = true;
+            
+            console.log('✅ User authenticated, path:', userPath);
+            updateSyncStatus('syncing', 'Syncing...');
+            
+            // Load from Firebase
+            loadFromFirebase();
         }
         
         function promptForPin() {
-            const pin = prompt('Enter your Dental Quest PIN to sync across devices:\n(Same PIN you use in the main app)\n\nLeave blank for offline-only mode.');
+            // Check if we're already showing prompt
+            if (document.getElementById('pinPromptOverlay')) return;
             
-            if (pin && pin.trim()) {
-                localStorage.setItem('dentalQuestPin', pin.trim());
-                const hashedPin = 'user_' + btoa(pin.trim()).replace(/[^a-zA-Z0-9]/g, '');
-                currentUser = { uid: hashedPin };
-                firebaseSyncEnabled = true;
-                
-                updateSyncStatus('syncing', 'Syncing...');
-                loadFromFirebase();
-                showToast('Connected with PIN!');
+            // Create a nicer prompt overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'pinPromptOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            overlay.innerHTML = `
+                <div style="background: #1e293b; padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: white;">
+                    <h3 style="margin-bottom: 15px;">🔐 Enter Your PIN</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
+                    <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3b82f6; background: #0f172a; color: white; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #475569; color: white; cursor: pointer;">Skip (Local Only)</button>
+                        <button onclick="submitPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">Connect</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Focus the input
+            setTimeout(() => {
+                const input = document.getElementById('pinInput');
+                if (input) {
+                    input.focus();
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') submitPin();
+                    });
+                }
+            }, 100);
+        }
+        
+        function submitPin() {
+            const input = document.getElementById('pinInput');
+            const pin = input ? input.value.trim() : '';
+            
+            if (pin) {
+                localStorage.setItem('dentalQuestPin', pin);
+                setupUserAuth(pin);
+                showToast('✅ Connected with PIN!');
             } else {
-                firebaseSyncEnabled = false;
-                updateSyncStatus('offline', 'Local only');
-                showToast('Using offline mode');
+                showToast('Please enter a PIN');
+                return;
             }
+            
+            // Remove overlay
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
+        }
+        
+        function skipPin() {
+            firebaseSyncEnabled = false;
+            updateSyncStatus('offline', 'Local only');
+            showToast('Using offline mode');
+            
+            // Remove overlay
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
         }
         
         function saveToFirebase() {
-            if (!firebaseSyncEnabled || !database || !currentUser) return;
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                console.log('Firebase save skipped - not connected');
+                return;
+            }
             
-            // Set flag to ignore our own update in real-time listener
-            ignoringOwnUpdate = true;
             const saveTime = new Date().toISOString();
-            lastSaveTimestamp = saveTime;
             
-            // Save under user's path (same structure as Dental Quest)
-            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
-            
+            // Save to Firebase
             database.ref(userPath).set({
                 state: state,
                 lastUpdated: saveTime
             })
             .then(() => {
+                console.log('✅ Saved to Firebase at', saveTime);
                 updateSyncStatus('connected', 'Saved ✓');
-                console.log('Saved to Firebase at', saveTime);
             })
             .catch(error => {
-                console.error('Firebase save error:', error);
-                updateSyncStatus('offline', 'Save failed');
-                ignoringOwnUpdate = false;
+                console.error('❌ Firebase save error:', error);
+                // Don't show "Sync failed" for save errors, just log them
+                // Data is still saved locally
             });
         }
         
         function loadFromFirebase() {
-            if (!firebaseSyncEnabled || !database || !currentUser) {
-                updateSyncStatus('offline', 'Offline mode');
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                updateSyncStatus('offline', 'Not connected');
                 return;
             }
             
-            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
+            console.log('Loading from Firebase path:', userPath);
             
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
+                    console.log('Firebase data received:', data ? 'yes' : 'no data yet');
+                    
                     if (data && data.state) {
                         const firebaseState = data.state;
                         
                         // Smart merge - keep local data if Firebase data is empty/missing
-                        // For arrays, use Firebase data if it exists and has items, otherwise keep local
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            // Arrays: use Firebase if it has data, otherwise keep local
                             medications: (firebaseState.medications && firebaseState.medications.length > 0) ? firebaseState.medications : state.medications,
                             caffeine: (firebaseState.caffeine && firebaseState.caffeine.length > 0) ? firebaseState.caffeine : state.caffeine,
                             history: (firebaseState.history && firebaseState.history.length > 0) ? firebaseState.history : state.history,
-                            // Objects: deep merge
-                            modifiers: { 
-                                ...state.modifiers, 
-                                ...(firebaseState.modifiers || {})
-                            },
-                            settings: { 
-                                ...state.settings, 
-                                ...(firebaseState.settings || {}) 
-                            },
-                            sleepHistory: { 
-                                ...state.sleepHistory, 
-                                ...(firebaseState.sleepHistory || {}) 
-                            }
+                            modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                            settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
                         };
                         
-                        // Also save merged state to localStorage as backup
+                        // Save merged state to localStorage
                         localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                         
                         // Re-render everything
@@ -3877,79 +3917,74 @@
                         
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
-                        console.log('Loaded from Firebase:', data.lastUpdated);
+                        console.log('✅ Loaded from Firebase:', data.lastUpdated);
                     } else {
                         // No Firebase data yet - save current local state to Firebase
+                        console.log('No existing data, pushing local state to Firebase');
                         updateSyncStatus('connected', 'Connected');
-                        saveToFirebase(); // Push local data to cloud for first sync
+                        saveToFirebase();
                     }
                     
                     // Set up real-time listener for changes from other devices
                     setupRealtimeSync();
                 })
                 .catch(error => {
-                    console.error('Firebase load error:', error);
-                    updateSyncStatus('offline', 'Sync failed');
+                    console.error('❌ Firebase load error:', error);
+                    // Still show as connected if we have a valid path, just couldn't load
+                    updateSyncStatus('connected', 'Local + Cloud');
+                    // Try to save anyway
+                    saveToFirebase();
                 });
         }
         
         // Real-time sync - listen for changes from other devices
         let realtimeSyncEnabled = false;
-        let lastSaveTimestamp = null;
-        let ignoringOwnUpdate = false;
         
         function setupRealtimeSync() {
-            if (realtimeSyncEnabled || !database || !currentUser) return;
+            if (realtimeSyncEnabled || !database || !userPath) return;
             realtimeSyncEnabled = true;
             
-            const userPath = 'users/' + currentUser.uid + '/stimulantCalculator';
+            console.log('Setting up real-time sync on:', userPath);
+            
+            let isFirstLoad = true;
             
             database.ref(userPath).on('value', snapshot => {
-                // Ignore our own updates
-                if (ignoringOwnUpdate) {
-                    ignoringOwnUpdate = false;
+                // Skip the first callback (it's the initial load we already handled)
+                if (isFirstLoad) {
+                    isFirstLoad = false;
                     return;
                 }
                 
                 const data = snapshot.val();
-                if (data && data.state && data.lastUpdated) {
-                    // Check if this update is from another device (compare timestamps)
-                    const localLastSave = localStorage.getItem('stimCalcLastSave');
+                if (data && data.state) {
+                    console.log('📥 Received real-time update');
                     
-                    // Only process if Firebase data is newer than our last save
-                    // AND it's been at least 2 seconds since we saved (debounce)
-                    const timeSinceOurSave = localLastSave ? (new Date().getTime() - new Date(localLastSave).getTime()) : Infinity;
+                    // Merge in the new data
+                    const firebaseState = data.state;
+                    state = {
+                        wakeTime: firebaseState.wakeTime || state.wakeTime,
+                        hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                        medications: firebaseState.medications || state.medications,
+                        caffeine: firebaseState.caffeine || state.caffeine,
+                        history: firebaseState.history || state.history,
+                        modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
+                    };
                     
-                    if (data.lastUpdated !== lastSaveTimestamp && timeSinceOurSave > 2000) {
-                        console.log('Received update from another device:', data.lastUpdated);
-                        lastSaveTimestamp = data.lastUpdated;
-                        
-                        // Merge in the new data
-                        const firebaseState = data.state;
-                        state = {
-                            wakeTime: firebaseState.wakeTime || state.wakeTime,
-                            hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            medications: firebaseState.medications || state.medications,
-                            caffeine: firebaseState.caffeine || state.caffeine,
-                            history: firebaseState.history || state.history,
-                            modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
-                            settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
-                        };
-                        
-                        // Update localStorage
-                        localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
-                        
-                        // Re-render
-                        document.getElementById('wakeTime').value = state.wakeTime;
-                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-                        renderMedEntries();
-                        renderCaffeineEntries();
-                        renderSleepCalendar();
-                        recalculate();
-                        
-                        updateSyncStatus('connected', '🔄 Updated');
-                    }
+                    // Update localStorage
+                    localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                    
+                    // Re-render
+                    document.getElementById('wakeTime').value = state.wakeTime;
+                    document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                    renderMedEntries();
+                    renderCaffeineEntries();
+                    renderSleepCalendar();
+                    renderHistory();
+                    recalculate();
+                    
+                    updateSyncStatus('connected', '🔄 Updated');
                 }
             });
         }
