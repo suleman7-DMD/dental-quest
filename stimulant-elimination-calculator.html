@@ -2402,26 +2402,63 @@
             document.getElementById('sleepGateTime').textContent = 
                 `${minutesToTime(sleepGate.start > 24*60 ? sleepGate.start - 24*60 : sleepGate.start)} - ${minutesToTime(sleepGate.end > 24*60 ? sleepGate.end - 24*60 : sleepGate.end)}`;
             
-            // Update Circadian Status
+            // Update Circadian Status - now reflects ACTUAL circadian health from 7-day data
+            const circadianAnalysis = analyzeCircadianPhase();
             const inForbiddenZone = isInForbiddenZone(now);
             const inSleepGate = isInSleepGate(now);
             const circadianStatusEl = document.getElementById('circadianStatus');
             const circadianIndicatorEl = document.getElementById('circadianIndicator');
             const circadianItem = document.getElementById('circadianStatusItem');
             
-            if (inForbiddenZone) {
+            // First priority: Check for severe sleep debt from 7-day history
+            const avgSleep = circadianAnalysis.avgSleep;
+            const dataPoints = circadianAnalysis.dataPoints;
+            
+            if (dataPoints >= 2 && avgSleep < 4.5) {
+                // CRITICAL: Severe sleep deprivation
+                circadianStatusEl.textContent = 'CRITICAL DEBT';
+                circadianIndicatorEl.textContent = '🚨';
+                circadianItem.className = 'status-item blocking';
+                circadianItem.style.borderLeftColor = '#ef4444';
+            } else if (dataPoints >= 2 && avgSleep < 6) {
+                // WARNING: Accumulating debt
+                circadianStatusEl.textContent = 'Sleep Debt';
+                circadianIndicatorEl.textContent = '⚠️';
+                circadianItem.className = 'status-item blocking';
+                circadianItem.style.borderLeftColor = '#f59e0b';
+            } else if (circadianAnalysis.phase === 'danger-delayed' || circadianAnalysis.phase === 'delayed') {
+                // Delayed phase
+                circadianStatusEl.textContent = circadianAnalysis.label;
+                circadianIndicatorEl.textContent = circadianAnalysis.icon;
+                circadianItem.className = 'status-item blocking';
+                circadianItem.style.borderLeftColor = circadianAnalysis.color;
+            } else if (circadianAnalysis.stdDev > 120 && dataPoints >= 2) {
+                // High variability
+                circadianStatusEl.textContent = 'Irregular';
+                circadianIndicatorEl.textContent = '🔀';
+                circadianItem.className = 'status-item blocking';
+                circadianItem.style.borderLeftColor = '#f59e0b';
+            } else if (inForbiddenZone) {
                 circadianStatusEl.textContent = 'Forbidden Zone';
                 circadianIndicatorEl.textContent = '⚠️';
                 circadianItem.className = 'status-item blocking';
+                circadianItem.style.borderLeftColor = '#ef4444';
             } else if (inSleepGate) {
                 circadianStatusEl.textContent = 'Sleep Gate Open';
                 circadianIndicatorEl.textContent = '🌙';
                 circadianItem.className = 'status-item ok';
                 circadianItem.style.borderLeftColor = '#10b981';
-            } else {
-                circadianStatusEl.textContent = 'Normal';
+            } else if (circadianAnalysis.phase === 'normal' && avgSleep >= 6.5) {
+                circadianStatusEl.textContent = 'Healthy';
                 circadianIndicatorEl.textContent = '✓';
                 circadianItem.className = 'status-item ok';
+                circadianItem.style.borderLeftColor = '#10b981';
+            } else {
+                // Default - not enough data or borderline
+                circadianStatusEl.textContent = circadianAnalysis.label || 'Monitoring';
+                circadianIndicatorEl.textContent = circadianAnalysis.icon || '📊';
+                circadianItem.className = 'status-item ok';
+                circadianItem.style.borderLeftColor = circadianAnalysis.color || '#8b949e';
             }
             
             // Calculate current loads
@@ -3401,6 +3438,9 @@
         function renderHistory() {
             const container = document.getElementById('historyList');
             
+            // Clean up corrupted history entries (from the old bug)
+            cleanupHistory();
+            
             if (state.history.length === 0) {
                 container.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
                 return;
@@ -3408,17 +3448,30 @@
             
             container.innerHTML = state.history.slice(0, 10).map(entry => {
                 const date = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                const totalDose = entry.medications.reduce((sum, m) => sum + m.dose, 0);
-                const totalCaff = entry.caffeine.reduce((sum, c) => sum + c.amount, 0);
+                const totalDose = entry.medications ? entry.medications.reduce((sum, m) => sum + m.dose, 0) : 0;
+                const totalCaff = entry.caffeine ? entry.caffeine.reduce((sum, c) => sum + c.amount, 0) : 0;
                 
                 let accuracyText = 'Awaiting feedback';
                 let accuracyClass = '';
                 
-                if (entry.actualSleep !== null) {
+                // Handle actualSleep - check for valid number
+                if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
                     const diff = Math.abs(entry.actualSleep - entry.predictedSleep);
                     const diffMins = Math.round(diff);
                     accuracyText = diffMins <= 30 ? '✓ Accurate' : `${diffMins} min off`;
                     accuracyClass = diffMins <= 30 ? 'style="color: #10b981;"' : diffMins <= 60 ? 'style="color: #f59e0b;"' : 'style="color: #ef4444;"';
+                }
+                
+                // Format predicted sleep time safely
+                let predictedStr = '--:--';
+                if (entry.predictedSleep !== null && entry.predictedSleep !== undefined && !isNaN(entry.predictedSleep)) {
+                    predictedStr = minutesToTime(entry.predictedSleep > 24*60 ? entry.predictedSleep - 24*60 : entry.predictedSleep);
+                }
+                
+                // Format actual sleep time safely
+                let actualStr = accuracyText;
+                if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
+                    actualStr = 'Actual: ' + minutesToTime(entry.actualSleep);
                 }
                 
                 return `
@@ -3428,12 +3481,47 @@
                             <div class="history-details">${totalDose}mg Adderall, ${totalCaff}mg Caffeine</div>
                         </div>
                         <div class="history-accuracy">
-                            <div class="history-predicted">Predicted: ${minutesToTime(entry.predictedSleep > 24*60 ? entry.predictedSleep - 24*60 : entry.predictedSleep)}</div>
-                            <div class="history-actual" ${accuracyClass}>${entry.actualSleep !== null ? 'Actual: ' + minutesToTime(entry.actualSleep) : accuracyText}</div>
+                            <div class="history-predicted">Predicted: ${predictedStr}</div>
+                            <div class="history-actual" ${accuracyClass}>${actualStr}</div>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Clean up corrupted history entries
+        function cleanupHistory() {
+            if (!state.history || state.history.length === 0) return;
+            
+            // Group entries by date and keep only one per day (the most recent one with valid data)
+            const byDate = {};
+            state.history.forEach(entry => {
+                const date = entry.date;
+                if (!byDate[date]) {
+                    byDate[date] = entry;
+                } else {
+                    // Keep the one with more data or higher ID (more recent)
+                    const existing = byDate[date];
+                    const existingHasMeds = existing.medications && existing.medications.length > 0;
+                    const newHasMeds = entry.medications && entry.medications.length > 0;
+                    
+                    if (newHasMeds && !existingHasMeds) {
+                        byDate[date] = entry;
+                    } else if (entry.id > existing.id) {
+                        byDate[date] = entry;
+                    }
+                }
+            });
+            
+            // Rebuild history from deduplicated entries, sorted by date descending
+            const cleaned = Object.values(byDate).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Only save if we actually cleaned something
+            if (cleaned.length < state.history.length) {
+                console.log(`Cleaned history: ${state.history.length} → ${cleaned.length} entries`);
+                state.history = cleaned;
+                saveState();
+            }
         }
 
         // ============================================
