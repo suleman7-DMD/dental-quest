@@ -711,6 +711,7 @@
                 padding: 3px;
                 font-size: 0.75em;
                 min-height: 50px;
+                position: relative;
             }
             
             .calendar-day-num {
@@ -744,22 +745,29 @@
             
             /* Master calendar mobile fixes */
             #masterCalendarGrid {
-                font-size: 0.75em;
-                padding: 10px !important;
+                font-size: 0.65em;
+                padding: 6px !important;
             }
             
             #masterCalendarGrid > div {
-                gap: 4px !important;
+                gap: 2px !important;
             }
             
-            #masterCalendarGrid .calendar-day {
-                min-height: 80px !important;
-                padding: 6px !important;
-                font-size: 0.7em !important;
+            #masterCalendarGrid > div > div {
+                height: 100px !important;
+                max-height: 100px !important;
+                padding: 4px !important;
+                font-size: 1em !important;
             }
             
             #countdownsList {
-                font-size: 0.85em;
+                font-size: 0.8em;
+                padding: 10px;
+            }
+            
+            #countdownsList > div {
+                padding: 12px !important;
+                margin-bottom: 10px !important;
             }
             
             .modal-content {
@@ -5064,57 +5072,59 @@
                 }
                 
                 html += `
-                    <div style="background: ${dayBg}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 10px; min-height: 120px; cursor: pointer; transition: all 0.2s;"
+                    <div style="background: ${dayBg}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 8px; height: 120px; max-height: 120px; overflow: hidden; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;"
                          onmouseover="this.style.background='rgba(59, 130, 246, 0.15)'" 
                          onmouseout="this.style.background='${dayBg}'">
                         
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div style="font-size: 1.3em; font-weight: 700; color: ${isToday ? '#58a6ff' : '#e6edf3'};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px; flex-shrink: 0;">
+                            <div style="font-size: 1.1em; font-weight: 700; color: ${isToday ? '#58a6ff' : '#e6edf3'};">
                                 ${day}
                             </div>
                             ${(needs30mg || needs20mg) ? `
                                 <div style="display: flex; gap: 3px;">
-                                    ${needs30mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has30mgPill ? '#10b981' : '#dc2626'};"></div>` : ''}
-                                    ${needs20mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has20mgPill ? '#10b981' : '#dc2626'};"></div>` : ''}
+                                    ${needs30mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has30mgPill ? '#10b981' : '#dc2626'}; flex-shrink: 0;"></div>` : ''}
+                                    ${needs20mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has20mgPill ? '#10b981' : '#dc2626'}; flex-shrink: 0;"></div>` : ''}
                                 </div>
                             ` : ''}
                         </div>
                         
-                        ${is30mgRefill || is20mgRefill ? `
-                            <div style="margin-bottom: 6px;">
-                                ${is30mgRefill ? `
-                                    <div style="background: rgba(16, 185, 129, 0.2); padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; font-size: 0.75em; color: #10b981; font-weight: 600;">
-                                        🎉 30mg XR Refill
-                                    </div>
-                                    <div style="font-size: 0.7em; color: #8b949e; margin-left: 4px; margin-bottom: 4px;">
-                                        ${getMedStatus('30mg')}
-                                    </div>
-                                ` : ''}
-                                ${is20mgRefill ? `
-                                    <div style="background: rgba(16, 185, 129, 0.2); padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; font-size: 0.75em; color: #10b981; font-weight: 600;">
-                                        🎉 20mg XR Refill
-                                    </div>
-                                    <div style="font-size: 0.7em; color: #8b949e; margin-left: 4px; margin-bottom: 4px;">
-                                        ${getMedStatus('20mg')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        ` : ''}
-                        
-                        ${dayEvents.length > 0 ? `
-                            <div style="margin-top: 6px;">
-                                ${dayEvents.slice(0, 2).map(event => `
-                                    <div style="background: rgba(59, 130, 246, 0.2); padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; font-size: 0.8em; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
-                                        ${categoryIcons[event.category]} ${event.description}
-                                    </div>
-                                `).join('')}
-                                ${dayEvents.length > 2 ? `
-                                    <div style="font-size: 0.75em; color: #8b949e; margin-top: 4px;">
-                                        +${dayEvents.length - 2} more
-                                    </div>
-                                ` : ''}
-                            </div>
-                        ` : ''}
+                        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 2px;">
+                            ${is30mgRefill || is20mgRefill ? `
+                                <div style="flex-shrink: 0;">
+                                    ${is30mgRefill ? `
+                                        <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            🎉 30mg Refill
+                                        </div>
+                                        <div style="font-size: 0.6em; color: #8b949e; margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${getMedStatus('30mg')}
+                                        </div>
+                                    ` : ''}
+                                    ${is20mgRefill ? `
+                                        <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            🎉 20mg Refill
+                                        </div>
+                                        <div style="font-size: 0.6em; color: #8b949e; margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${getMedStatus('20mg')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${dayEvents.length > 0 ? `
+                                <div style="flex: 1; overflow: hidden;">
+                                    ${dayEvents.slice(0, 2).map(event => `
+                                        <div style="background: rgba(59, 130, 246, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
+                                            ${categoryIcons[event.category]} ${event.description}
+                                        </div>
+                                    `).join('')}
+                                    ${dayEvents.length > 2 ? `
+                                        <div style="font-size: 0.6em; color: #8b949e; margin-top: 2px;">
+                                            +${dayEvents.length - 2} more
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }
@@ -5871,7 +5881,7 @@
                         <div style="position: relative;">
                             <div class="calendar-day-num">${day.dayNum}</div>
                             <button onclick="event.stopPropagation(); openNoteModal('${day.dateStr}', '${day.date.toDateString()}')" 
-                                    style="position: absolute; top: -5px; right: -5px; background: #3b82f6; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7em; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+                                    style="position: absolute; bottom: 2px; right: 2px; background: rgba(59, 130, 246, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.75em; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;"
                                     title="Add/edit note">+</button>
                         </div>
                         <div class="calendar-day-icon">${icon}</div>
