@@ -1673,15 +1673,16 @@
             display: flex;
             gap: 5px;
             align-items: center;
-            min-width: 160px;
+            min-width: 220px;
+            flex-shrink: 0;
         }
 
         .planner-block-time input {
-            width: 70px;
-            padding: 6px;
+            width: 100px;
+            padding: 6px 8px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             text-align: center;
         }
 
@@ -1691,6 +1692,7 @@
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 0.95em;
+            min-width: 120px;
         }
 
         .planner-block-task:focus {
@@ -1735,6 +1737,53 @@
         .planner-add-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Planner Stats */
+        .planner-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 12px;
+        }
+
+        .planner-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 10px 5px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .planner-stat-icon {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .planner-stat-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .planner-stat-label {
+            font-size: 0.7em;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 500px) {
+            .planner-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .planner-progress {
@@ -2745,11 +2794,20 @@
                             <!-- Time blocks will be inserted here -->
                         </div>
 
-                        <button class="planner-add-btn" onclick="addPlannerBlock()">+ Add Time Block</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                            <button class="planner-add-btn" onclick="addPlannerBlock()" style="flex: 1; min-width: 150px;">+ Add Time Block</button>
+                            <button class="planner-add-btn" onclick="addQuickBreak()" style="flex: 0; min-width: auto; padding: 12px 16px; background: linear-gradient(135deg, #f59e0b, #d97706);">☕ +15min Break</button>
+                            <button class="planner-add-btn" onclick="addQuickPomodoro()" style="flex: 0; min-width: auto; padding: 12px 16px; background: linear-gradient(135deg, #ef4444, #dc2626);">🍅 +25min Focus</button>
+                        </div>
+
+                        <!-- Day at a Glance Stats -->
+                        <div class="planner-stats" id="plannerStatsContainer">
+                            <!-- Stats will be inserted here -->
+                        </div>
 
                         <div class="planner-progress">
                             <div class="planner-progress-text">
-                                <span>Progress</span>
+                                <span>Tasks Progress</span>
                                 <span id="plannerProgressPercent">0%</span>
                             </div>
                             <div class="planner-progress-bar">
@@ -2758,7 +2816,7 @@
                         </div>
 
                         <div class="planner-reset-info">
-                            ⏰ Planner auto-resets daily at 5:00 AM
+                            ⏰ Planner auto-resets daily at 5:00 AM • Tasks auto-sort by time
                         </div>
 
                         <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -5791,12 +5849,13 @@
                 const el = document.getElementById('plannerCurrentTime');
                 if (el) el.textContent = timeStr;
                 
-                // Also highlight current time block
+                // Also highlight current time block and update stats (for bedtime countdown)
                 highlightCurrentBlock();
+                updatePlannerStats();
             }
             
             updateClock();
-            plannerClockInterval = setInterval(updateClock, 30000); // Update every 30 seconds
+            plannerClockInterval = setInterval(updateClock, 60000); // Update every minute
         }
 
         function highlightCurrentBlock() {
@@ -5820,9 +5879,66 @@
             });
         }
 
+        function sortPlannerBlocks() {
+            // Sort blocks by start time
+            dailyPlanner.blocks.sort((a, b) => {
+                if (!a.startTime) return 1;
+                if (!b.startTime) return -1;
+                return a.startTime.localeCompare(b.startTime);
+            });
+        }
+
+        function calculatePlannerStats() {
+            let totalMinutes = 0;
+            let completedMinutes = 0;
+            let breakMinutes = 0;
+            
+            dailyPlanner.blocks.forEach(block => {
+                if (block.startTime && block.endTime) {
+                    const start = block.startTime.split(':').map(Number);
+                    const end = block.endTime.split(':').map(Number);
+                    const startMins = start[0] * 60 + start[1];
+                    const endMins = end[0] * 60 + end[1];
+                    const duration = endMins - startMins;
+                    
+                    if (duration > 0) {
+                        // Check if it's a break (task contains "break" or "lunch" or "rest")
+                        const isBreak = block.task && /break|lunch|rest|relax|eat/i.test(block.task);
+                        
+                        if (isBreak) {
+                            breakMinutes += duration;
+                        } else {
+                            totalMinutes += duration;
+                            if (block.completed) {
+                                completedMinutes += duration;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            return {
+                totalWork: totalMinutes,
+                completedWork: completedMinutes,
+                breakTime: breakMinutes,
+                remainingWork: totalMinutes - completedMinutes
+            };
+        }
+
+        function formatMinutesToHours(mins) {
+            const hours = Math.floor(mins / 60);
+            const minutes = mins % 60;
+            if (hours === 0) return `${minutes}m`;
+            if (minutes === 0) return `${hours}h`;
+            return `${hours}h ${minutes}m`;
+        }
+
         function renderPlannerBlocks() {
             const container = document.getElementById('plannerBlocks');
             if (!container) return;
+            
+            // Sort blocks by time before rendering
+            sortPlannerBlocks();
             
             if (dailyPlanner.blocks.length === 0) {
                 container.innerHTML = `
@@ -5831,10 +5947,23 @@
                         <div>No time blocks yet. Click "Add Time Block" to start planning!</div>
                     </div>
                 `;
+                updatePlannerStats();
                 return;
             }
             
-            container.innerHTML = dailyPlanner.blocks.map((block, index) => `
+            container.innerHTML = dailyPlanner.blocks.map((block, index) => {
+                // Calculate duration for display
+                let durationBadge = '';
+                if (block.startTime && block.endTime) {
+                    const start = block.startTime.split(':').map(Number);
+                    const end = block.endTime.split(':').map(Number);
+                    const duration = (end[0] * 60 + end[1]) - (start[0] * 60 + start[1]);
+                    if (duration > 0) {
+                        durationBadge = `<span style="font-size: 0.7em; background: ${block.completed ? '#10b981' : '#6366f1'}; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">${formatMinutesToHours(duration)}</span>`;
+                    }
+                }
+                
+                return `
                 <div class="planner-block ${block.completed ? 'completed' : ''}" data-index="${index}">
                     <input type="checkbox" class="planner-block-check" 
                            ${block.completed ? 'checked' : ''} 
@@ -5847,6 +5976,7 @@
                         <input type="time" value="${block.endTime || ''}" 
                                onchange="updatePlannerBlock(${index}, 'endTime', this.value)"
                                placeholder="End">
+                        ${durationBadge}
                     </div>
                     <input type="text" class="planner-block-task" 
                            value="${block.task || ''}" 
@@ -5855,10 +5985,11 @@
                            style="${block.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">
                     <button class="planner-block-delete" onclick="deletePlannerBlock(${index})">×</button>
                 </div>
-            `).join('');
+            `}).join('');
             
             highlightCurrentBlock();
             updatePlannerProgress();
+            updatePlannerStats();
         }
 
         function addPlannerBlock() {
@@ -5882,13 +6013,61 @@
             saveDailyPlanner();
             renderPlannerBlocks();
             
-            // Focus the new task input
+            // Focus the new task input (find the one that was just added based on time)
             setTimeout(() => {
                 const inputs = document.querySelectorAll('.planner-block-task');
-                if (inputs.length > 0) {
+                // Find the input for the block we just added
+                const newBlockIndex = dailyPlanner.blocks.findIndex(b => b.id === dailyPlanner.blocks[dailyPlanner.blocks.length - 1]?.id);
+                if (inputs[newBlockIndex]) {
+                    inputs[newBlockIndex].focus();
+                } else if (inputs.length > 0) {
                     inputs[inputs.length - 1].focus();
                 }
             }, 100);
+        }
+
+        function addQuickBreak() {
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
+            now.setMinutes(minutes);
+            const startTime = now.toTimeString().slice(0, 5);
+            
+            now.setMinutes(now.getMinutes() + 15);
+            const endTime = now.toTimeString().slice(0, 5);
+            
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: startTime,
+                endTime: endTime,
+                task: '☕ Break',
+                completed: false
+            });
+            
+            saveDailyPlanner();
+            renderPlannerBlocks();
+            showToast('15min break added!', '☕');
+        }
+
+        function addQuickPomodoro() {
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
+            now.setMinutes(minutes);
+            const startTime = now.toTimeString().slice(0, 5);
+            
+            now.setMinutes(now.getMinutes() + 25);
+            const endTime = now.toTimeString().slice(0, 5);
+            
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: startTime,
+                endTime: endTime,
+                task: '🍅 Focus session',
+                completed: false
+            });
+            
+            saveDailyPlanner();
+            renderPlannerBlocks();
+            showToast('25min focus block added!', '🍅');
         }
 
         function updatePlannerBlock(index, field, value) {
@@ -5900,6 +6079,13 @@
                 dailyPlanner.bedtime = document.getElementById('plannerBedtime').value;
                 
                 saveDailyPlanner();
+                
+                // Re-sort and re-render if time changed
+                if (field === 'startTime' || field === 'endTime') {
+                    renderPlannerBlocks();
+                } else {
+                    updatePlannerStats();
+                }
             }
         }
 
@@ -5934,6 +6120,62 @@
             
             if (percentEl) percentEl.textContent = `${percent}% (${completed}/${total})`;
             if (fillEl) fillEl.style.width = `${percent}%`;
+        }
+
+        function updatePlannerStats() {
+            const statsEl = document.getElementById('plannerStatsContainer');
+            if (!statsEl) return;
+            
+            const stats = calculatePlannerStats();
+            
+            // Calculate time until bedtime
+            let bedtimeCountdown = '';
+            let bedtimeClass = '';
+            if (dailyPlanner.bedtime) {
+                const now = new Date();
+                const [bedH, bedM] = dailyPlanner.bedtime.split(':').map(Number);
+                const bedTime = new Date();
+                bedTime.setHours(bedH, bedM, 0);
+                const diff = bedTime - now;
+                if (diff > 0) {
+                    const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+                    const minsLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    bedtimeCountdown = `${hoursLeft}h ${minsLeft}m`;
+                    bedtimeClass = hoursLeft < 2 ? 'color: #ef4444;' : hoursLeft < 4 ? 'color: #f59e0b;' : 'color: #10b981;';
+                } else {
+                    bedtimeCountdown = 'Past!';
+                    bedtimeClass = 'color: #ef4444;';
+                }
+            }
+            
+            statsEl.innerHTML = `
+                <div class="planner-stat">
+                    <span class="planner-stat-icon">⏱️</span>
+                    <span class="planner-stat-value">${formatMinutesToHours(stats.totalWork)}</span>
+                    <span class="planner-stat-label">Work Planned</span>
+                </div>
+                <div class="planner-stat" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                    <span class="planner-stat-icon">✅</span>
+                    <span class="planner-stat-value" style="color: #065f46;">${formatMinutesToHours(stats.completedWork)}</span>
+                    <span class="planner-stat-label">Done</span>
+                </div>
+                <div class="planner-stat">
+                    <span class="planner-stat-icon">🎯</span>
+                    <span class="planner-stat-value">${formatMinutesToHours(stats.remainingWork)}</span>
+                    <span class="planner-stat-label">Remaining</span>
+                </div>
+                <div class="planner-stat">
+                    <span class="planner-stat-icon">☕</span>
+                    <span class="planner-stat-value">${formatMinutesToHours(stats.breakTime)}</span>
+                    <span class="planner-stat-label">Breaks</span>
+                </div>
+                ${bedtimeCountdown ? `
+                <div class="planner-stat" style="grid-column: span 4; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); flex-direction: row; gap: 10px; justify-content: center;">
+                    <span class="planner-stat-icon" style="margin: 0;">🌙</span>
+                    <span style="font-weight: 600; ${bedtimeClass}">${bedtimeCountdown} until bedtime</span>
+                </div>
+                ` : ''}
+            `;
         }
 
         function clearDailyPlanner() {
