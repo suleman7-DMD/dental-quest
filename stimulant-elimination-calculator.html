@@ -3761,16 +3761,25 @@
         function saveToFirebase() {
             if (!firebaseSyncEnabled || !database) return;
             
-            try {
-                database.ref('stimulantCalculator').set({
-                    state: state,
-                    lastUpdated: new Date().toISOString()
-                });
+            // Set flag to ignore our own update in real-time listener
+            ignoringOwnUpdate = true;
+            const saveTime = new Date().toISOString();
+            lastSaveTimestamp = saveTime;
+            
+            // Use update with promise for reliable saving
+            database.ref('stimulantCalculator').set({
+                state: state,
+                lastUpdated: saveTime
+            })
+            .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
-            } catch (error) {
+                console.log('Saved to Firebase at', saveTime);
+            })
+            .catch(error => {
                 console.error('Firebase save error:', error);
                 updateSyncStatus('offline', 'Save failed');
-            }
+                ignoringOwnUpdate = false;
+            });
         }
         
         function loadFromFirebase() {
@@ -3783,16 +3792,33 @@
                 .then(snapshot => {
                     const data = snapshot.val();
                     if (data && data.state) {
-                        // Merge Firebase data with current state
+                        const firebaseState = data.state;
+                        
+                        // Smart merge - keep local data if Firebase data is empty/missing
+                        // For arrays, use Firebase data if it exists and has items, otherwise keep local
                         state = {
-                            ...state,
-                            ...data.state,
-                            modifiers: { ...state.modifiers, ...(data.state.modifiers || {}) },
-                            settings: { ...state.settings, ...(data.state.settings || {}) },
-                            sleepHistory: { ...state.sleepHistory, ...(data.state.sleepHistory || {}) }
+                            wakeTime: firebaseState.wakeTime || state.wakeTime,
+                            hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                            // Arrays: use Firebase if it has data, otherwise keep local
+                            medications: (firebaseState.medications && firebaseState.medications.length > 0) ? firebaseState.medications : state.medications,
+                            caffeine: (firebaseState.caffeine && firebaseState.caffeine.length > 0) ? firebaseState.caffeine : state.caffeine,
+                            history: (firebaseState.history && firebaseState.history.length > 0) ? firebaseState.history : state.history,
+                            // Objects: deep merge
+                            modifiers: { 
+                                ...state.modifiers, 
+                                ...(firebaseState.modifiers || {})
+                            },
+                            settings: { 
+                                ...state.settings, 
+                                ...(firebaseState.settings || {}) 
+                            },
+                            sleepHistory: { 
+                                ...state.sleepHistory, 
+                                ...(firebaseState.sleepHistory || {}) 
+                            }
                         };
                         
-                        // Also save to localStorage as backup
+                        // Also save merged state to localStorage as backup
                         localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                         
                         // Re-render everything
@@ -3814,8 +3840,13 @@
                         showToast('☁️ Synced from cloud');
                         console.log('Loaded from Firebase:', data.lastUpdated);
                     } else {
+                        // No Firebase data yet - save current local state to Firebase
                         updateSyncStatus('connected', 'Connected');
+                        saveToFirebase(); // Push local data to cloud for first sync
                     }
+                    
+                    // Set up real-time listener for changes from other devices
+                    setupRealtimeSync();
                 })
                 .catch(error => {
                     console.error('Firebase load error:', error);
@@ -3823,11 +3854,74 @@
                 });
         }
         
+        // Real-time sync - listen for changes from other devices
+        let realtimeSyncEnabled = false;
+        let lastSaveTimestamp = null;
+        let ignoringOwnUpdate = false;
+        
+        function setupRealtimeSync() {
+            if (realtimeSyncEnabled || !database) return;
+            realtimeSyncEnabled = true;
+            
+            database.ref('stimulantCalculator').on('value', snapshot => {
+                // Ignore our own updates
+                if (ignoringOwnUpdate) {
+                    ignoringOwnUpdate = false;
+                    return;
+                }
+                
+                const data = snapshot.val();
+                if (data && data.state && data.lastUpdated) {
+                    // Check if this update is from another device (compare timestamps)
+                    const localLastSave = localStorage.getItem('stimCalcLastSave');
+                    
+                    // Only process if Firebase data is newer than our last save
+                    // AND it's been at least 2 seconds since we saved (debounce)
+                    const timeSinceOurSave = localLastSave ? (new Date().getTime() - new Date(localLastSave).getTime()) : Infinity;
+                    
+                    if (data.lastUpdated !== lastSaveTimestamp && timeSinceOurSave > 2000) {
+                        console.log('Received update from another device:', data.lastUpdated);
+                        lastSaveTimestamp = data.lastUpdated;
+                        
+                        // Merge in the new data
+                        const firebaseState = data.state;
+                        state = {
+                            wakeTime: firebaseState.wakeTime || state.wakeTime,
+                            hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                            medications: firebaseState.medications || state.medications,
+                            caffeine: firebaseState.caffeine || state.caffeine,
+                            history: firebaseState.history || state.history,
+                            modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                            settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
+                        };
+                        
+                        // Update localStorage
+                        localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                        
+                        // Re-render
+                        document.getElementById('wakeTime').value = state.wakeTime;
+                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                        renderMedEntries();
+                        renderCaffeineEntries();
+                        renderSleepCalendar();
+                        recalculate();
+                        
+                        updateSyncStatus('connected', '🔄 Updated');
+                    }
+                }
+            });
+        }
+        
         // ============================================
         // STORAGE (Local + Firebase)
         // ============================================
         
         function saveState() {
+            // Track when we last saved (for real-time sync comparison)
+            const saveTime = new Date().toISOString();
+            localStorage.setItem('stimCalcLastSave', saveTime);
+            
             // Always save to localStorage
             localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
             
