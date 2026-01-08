@@ -422,6 +422,72 @@
             width: 100px;
         }
 
+        /* Workout Planner */
+        #workoutPlannerCard {
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        #workoutPlannerCard .section-title {
+            color: #10b981;
+        }
+
+        .workout-zone-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: white;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+            z-index: 10;
+        }
+
+        .workout-zone-label {
+            position: absolute;
+            top: -20px;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .workout-result-optimal {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+        }
+
+        .workout-result-caution {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+        }
+
+        .workout-result-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+        }
+
+        .workout-impact-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .workout-impact-item:last-child {
+            border-bottom: none;
+        }
+
+        .workout-impact-positive {
+            color: #10b981;
+        }
+
+        .workout-impact-negative {
+            color: #ef4444;
+        }
+
+        .workout-impact-neutral {
+            color: #8b949e;
+        }
+
         /* Graph */
         .graph-container {
             position: relative;
@@ -1036,7 +1102,28 @@
         <div class="main-grid">
             <!-- Left Column: Inputs -->
             <div class="card">
-                <h2><span class="icon">⚙️</span> Today's Inputs</h2>
+                <h2 style="display: flex; align-items: center; gap: 8px;">
+                    <span class="icon">⚙️</span> Today's Inputs
+                    <span class="help-icon" style="font-size: 0.5em;">?
+                        <div class="tooltip-content" style="width: 380px;">
+                            <div class="tooltip-title">🚦 THE "IDIOT LIGHTS" (Color Meanings)</div>
+                            <div class="tooltip-section">
+                                <div class="tooltip-text" style="line-height: 1.8;">
+                                    <strong style="color: #10b981;">🟢 GREEN = "GO"</strong><br>
+                                    You are on track. Sleep will be restorative. You can lift weights, relax, whatever.<br><br>
+                                    <strong style="color: #f59e0b;">🟡 YELLOW = "CAUTION"</strong><br>
+                                    You will sleep, but it might be groggy. Drink water, maybe skip the gym if tired.<br><br>
+                                    <strong style="color: #ef4444;">🔴 RED = "STOP"</strong><br>
+                                    You are about to ruin tomorrow.<br>
+                                    <strong>Emergency Protocol:</strong><br>
+                                    1. Check "Vitamin C Flush" box<br>
+                                    2. Check "Sauna" box<br>
+                                    3. Actually DO those things
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                </h2>
 
                 <!-- Wake Time & Sleep Debt -->
                 <div class="input-section">
@@ -1131,7 +1218,32 @@
 
                 <!-- Caffeine -->
                 <div class="input-section">
-                    <h3>Caffeine Intake</h3>
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        Caffeine Intake
+                        <span class="help-icon" style="font-size: 0.7em;">?
+                            <div class="tooltip-content" style="width: 400px;">
+                                <div class="tooltip-title">☕ THE PARKING LOT ANALOGY</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">Your Brain is a Parking Lot</div>
+                                    <div class="tooltip-text">
+                                        <strong>Cars = Adenosine (Sleep Pressure).</strong> Every hour awake, more cars arrive.<br>
+                                        <strong>Full Lot = Sleep.</strong> When the lot is full, you feel irresistible tiredness.
+                                    </div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">What Caffeine Does</div>
+                                    <div class="tooltip-text">Caffeine is NOT energy. Caffeine is a <strong>Traffic Cone</strong>. It blocks parking spots. Cars (sleep pressure) still arrive, but they can't park – they just circle around, building up.</div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Crash</div>
+                                    <div class="tooltip-text">When caffeine wears off (5-8 hrs), the cones vanish. <strong>ALL the waiting cars park at once.</strong> This is why you crash – 8 hours of delayed sleep pressure hits instantly.</div>
+                                </div>
+                                <div class="tooltip-highlight tooltip-danger">
+                                    <strong>The Noon Wall:</strong> Never add caffeine after 12 PM. A 1 PM coffee = an 11 PM problem.
+                                </div>
+                            </div>
+                        </span>
+                    </h3>
                     <div class="caffeine-presets">
                         <button class="caffeine-preset" onclick="addCaffeine(100, 'Coffee')">☕ Coffee (100mg)</button>
                         <button class="caffeine-preset" onclick="addCaffeine(63, 'Espresso')">🔥 Espresso (63mg)</button>
@@ -1243,6 +1355,208 @@
                     </div>
                 </div>
 
+                <!-- Workout Planner -->
+                <div class="card" id="workoutPlannerCard">
+                    <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                        🏋️ Workout Planner
+                        <span class="help-icon" style="font-size: 0.6em;">?
+                            <div class="tooltip-content" style="width: 380px;">
+                                <div class="tooltip-title">🏋️ THE WORKOUT OPTIMIZER</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">Why This Matters</div>
+                                    <div class="tooltip-text">Exercise produces <strong>two competing chemicals</strong>: Adenosine (makes you sleepy) and Cortisol (keeps you awake). The goal is to <strong>maximize adenosine, minimize cortisol</strong>.</div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Golden Rule</div>
+                                    <div class="tooltip-text">Workout during your <strong>Golden Zone</strong> (green bar) and your body will help you sleep. Workout during the <strong>Forbidden Zone</strong> (red bar) and you'll stack cortisol on cortisol = wired until 2 AM.</div>
+                                </div>
+                                <div class="tooltip-highlight tooltip-success">
+                                    <strong>Autopilot:</strong> Green = Go. Yellow = Caution. Red = Walk/Yoga only.
+                                </div>
+                            </div>
+                        </span>
+                    </h2>
+                    <p style="color: #8b949e; font-size: 0.85em; margin-bottom: 15px;">Plan your workout to maximize sleep pressure without triggering hyperarousal.</p>
+                    
+                    <!-- Workout Timeline Visualization -->
+                    <div id="workoutTimeline" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                        <div style="font-size: 0.8em; color: #8b949e; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            TODAY'S EXERCISE WINDOWS
+                            <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px;">?
+                                <div class="tooltip-content" style="width: 350px;">
+                                    <div class="tooltip-title">📊 THE TIMELINE</div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-text" style="line-height: 1.6;">
+                                            <strong style="color: #10b981;">🟢 GREEN (Golden Zone)</strong><br>
+                                            Wake+3h to Wake+11h. Core temp naturally rising, cortisol manageable. <strong>Best time for any workout.</strong><br><br>
+                                            <strong style="color: #f59e0b;">🟡 YELLOW (Caution)</strong><br>
+                                            Wake+11h to Wake+13h. Getting late. Heavy lifting OK, skip HIIT.<br><br>
+                                            <strong style="color: #ef4444;">🔴 RED (Forbidden Zone)</strong><br>
+                                            Wake+13h to Wake+15h. Your "Second Wind" period. Exercise cortisol + natural cortisol = hyperarousal. <strong>Only walking/yoga safe here.</strong><br><br>
+                                            <strong style="color: #6b7280;">⬛ GRAY (Too Late)</strong><br>
+                                            Core temp won't drop in time for sleep.
+                                        </div>
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
+                        <div id="workoutTimelineBar" style="position: relative; height: 40px; background: linear-gradient(90deg, #10b981 0%, #10b981 45%, #f59e0b 45%, #f59e0b 60%, #ef4444 60%, #ef4444 75%, #6b7280 75%); border-radius: 8px; overflow: hidden;">
+                            <!-- Current time marker will be added by JS -->
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75em; color: #8b949e;">
+                            <span id="workoutWindowStart">Wake</span>
+                            <span style="color: #10b981;">Golden Zone</span>
+                            <span style="color: #f59e0b;">Caution</span>
+                            <span style="color: #ef4444;">Forbidden</span>
+                            <span id="workoutWindowEnd">Sleep</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Workout Inputs -->
+                    <div class="input-row" style="margin-bottom: 15px;">
+                        <div class="input-group">
+                            <label>Planned Time</label>
+                            <input type="time" id="workoutTime" onchange="updateWorkoutPlan()">
+                        </div>
+                        <div class="input-group">
+                            <label>Duration (min)</label>
+                            <select id="workoutDuration" onchange="updateWorkoutPlan()">
+                                <option value="20">20 min</option>
+                                <option value="30">30 min</option>
+                                <option value="45" selected>45 min</option>
+                                <option value="60">60 min</option>
+                                <option value="90">90 min</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-row" style="margin-bottom: 15px;">
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 6px;">
+                                Type
+                                <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px;">?
+                                    <div class="tooltip-content" style="width: 340px;">
+                                        <div class="tooltip-title">🏋️ EXERCISE TYPES EXPLAINED</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-text" style="line-height: 1.7;">
+                                                <strong style="color: #10b981;">🏋️ Heavy Lifting</strong><br>
+                                                Best choice. Burns massive ATP → floods brain with Adenosine (sleep fuel). <strong>-15 min to sleep time.</strong><br><br>
+                                                <strong style="color: #10b981;">🏃 Zone 2 Cardio</strong><br>
+                                                Jogging, steady cycling. Also builds Adenosine. <strong>-15 min to sleep time.</strong><br><br>
+                                                <strong style="color: #ef4444;">⚡ HIIT / CrossFit</strong><br>
+                                                DANGER. Spikes Cortisol (stress hormone). <strong>No sleep benefit.</strong> Can add +90 min if done late.<br><br>
+                                                <strong style="color: #3b82f6;">🚶 Walk / Yoga</strong><br>
+                                                Safe anytime, even in Forbidden Zone. <strong>-5 min to sleep time.</strong> No temperature penalty.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <select id="workoutType" onchange="updateWorkoutPlan()">
+                                <option value="lifting">🏋️ Heavy Lifting</option>
+                                <option value="zone2">🏃 Zone 2 Cardio</option>
+                                <option value="hiit">⚡ HIIT / CrossFit</option>
+                                <option value="walk">🚶 Walk / Yoga</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 6px;">
+                                Intensity
+                                <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px;">?
+                                    <div class="tooltip-content" style="width: 300px;">
+                                        <div class="tooltip-title">💪 INTENSITY & CORTISOL</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-text">
+                                                Higher intensity = more Cortisol (awake fuel).<br><br>
+                                                <strong>Redline (HR > 160):</strong> Triggers "fight or flight" response. Avoid if sleep-deprived or in Forbidden Zone.<br><br>
+                                                <strong>Medium:</strong> Standard training. Balanced cortisol/adenosine.<br><br>
+                                                <strong>Low:</strong> Recovery pace. Minimal cortisol impact.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <select id="workoutIntensity" onchange="updateWorkoutPlan()">
+                                <option value="low">Low (Recovery)</option>
+                                <option value="medium" selected>Medium (Standard)</option>
+                                <option value="redline">Redline (Max Effort)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                            <input type="checkbox" id="workoutFasted" onchange="updateWorkoutPlan()" style="width: 18px; height: 18px;">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                🍽️ Fasted (haven't eaten in 4+ hours)
+                                <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px;" onclick="event.stopPropagation();">?
+                                    <div class="tooltip-content" style="width: 320px;">
+                                        <div class="tooltip-title">🍽️ THE GLYCOGEN PANIC</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Problem</div>
+                                            <div class="tooltip-text">Lifting with empty glycogen stores forces your liver to create glucose from scratch (gluconeogenesis). This process <strong>requires Cortisol</strong>.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Result</div>
+                                            <div class="tooltip-text">Working out fasted spikes stress hormones → "tired but wired" crash → <strong>+45 min to sleep time.</strong></div>
+                                        </div>
+                                        <div class="tooltip-highlight tooltip-danger">
+                                            <strong>Fix:</strong> Eat rapid carbs (fruit, oatmeal, toast) 30 min before lifting to neutralize this risk.
+                                        </div>
+                                    </div>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <!-- Workout Impact Result -->
+                    <div id="workoutResult" style="padding: 15px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981;">
+                        <div id="workoutResultHeader" style="font-weight: 700; font-size: 1.1em; margin-bottom: 8px; color: #10b981;">
+                            ✅ GOLDEN SLOT
+                        </div>
+                        <div id="workoutResultText" style="color: #c9d1d9; line-height: 1.5;">
+                            Set your planned workout time to see the impact on your sleep.
+                        </div>
+                        <div id="workoutResultDetails" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; color: #8b949e;">
+                            <!-- Details will be filled by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cold Shower Override (shown when needed) -->
+                    <div id="coldShowerOption" style="display: none; margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="coldShowerToggle" onchange="updateWorkoutPlan()" style="width: 18px; height: 18px;">
+                            <div style="display: flex; align-items: flex-start; gap: 6px; flex: 1;">
+                                <div>
+                                    <div style="font-weight: 600; color: #60a5fa;">❄️ Cold Shower After Workout?</div>
+                                    <div style="font-size: 0.85em; color: #8b949e;">Cuts cooldown time from 4h → 2h by rapidly dumping core heat</div>
+                                </div>
+                                <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px; flex-shrink: 0;" onclick="event.stopPropagation();">?
+                                    <div class="tooltip-content" style="width: 300px;">
+                                        <div class="tooltip-title">❄️ THERMAL OVERRIDE</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Science</div>
+                                            <div class="tooltip-text">Sleep requires your core body temp to drop ~2°F. Exercise raises it. Normally takes <strong>4 hours</strong> to cool down.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">Cold Water Magic</div>
+                                            <div class="tooltip-text">Cold immersion rapidly dumps heat via conduction, bypassing slow metabolic cooling. Cuts the window to <strong>2 hours</strong>.</div>
+                                        </div>
+                                        <div class="tooltip-highlight tooltip-success">
+                                            <strong>Trade-off:</strong> Suffer 3-5 min of cold to "buy back" 2 hours of sleep time.
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Apply Workout Button -->
+                    <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="margin-top: 15px; width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 10px; color: white; font-weight: 600; font-size: 1em; cursor: pointer; display: none;">
+                        ✓ Apply This Workout to Calculation
+                    </button>
+                </div>
+
                 <!-- Settings -->
                 <div class="settings-toggle" onclick="toggleSettings()">
                     <span>⚙️ Personal Calibration Settings</span>
@@ -1349,7 +1663,25 @@
                 <!-- Countdown Display -->
                 <div class="card">
                     <div class="countdown-display">
-                        <div class="countdown-label">Projected Sleep Window</div>
+                        <div class="countdown-label" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            Projected Sleep Window
+                            <span class="help-icon" style="font-size: 0.7em;">?
+                                <div class="tooltip-content" style="width: 380px;">
+                                    <div class="tooltip-title">🎯 YOUR DAILY WORKFLOW</div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-label">Step 1: Morning Setup (When you wake)</div>
+                                        <div class="tooltip-text">Enter Wake Time and Sleep Hours. Look at this display.<br>• If it says <strong>10 PM</strong>: Great. Take your normal meds.<br>• If it says <strong>2 AM</strong>: Stop! Lower your dose until this shows your target time.</div>
+                                    </div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-label">Step 2: Lunchtime Check (Before boosting)</div>
+                                        <div class="tooltip-text">Before adding coffee or a booster dose, check this display.<br>• If it turns <strong style="color: #ef4444;">RED</strong>: Do NOT take it. It's a trap.<br>• If it stays <strong style="color: #10b981;">GREEN</strong>: You're clear.</div>
+                                    </div>
+                                    <div class="tooltip-highlight">
+                                        <strong>The Big Number:</strong> This is when your body will be chemically ABLE to sleep. Plan backwards from your wake time.
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
                         <div class="countdown-time green time-display" id="sleepTime">10:30 PM</div>
                         <div class="countdown-remaining">
                             <span id="timeRemaining">6h 23m</span> until sleep available
@@ -1453,7 +1785,20 @@
 
                     <!-- Blocking Factors -->
                     <div class="blocking-factors" id="blockingFactors" style="display: none;">
-                        <h4>⏳ Blocking Factors</h4>
+                        <h4 style="display: flex; align-items: center; gap: 8px;">
+                            ⏳ Blocking Factors
+                            <span class="help-icon" style="font-size: 0.7em; width: 14px; height: 14px;">?
+                                <div class="tooltip-content" style="width: 300px;">
+                                    <div class="tooltip-title">⏳ WHAT'S BLOCKING SLEEP?</div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-text">These are the specific drugs/factors still above your sleep threshold. You can't sleep until ALL blocking factors clear.</div>
+                                    </div>
+                                    <div class="tooltip-highlight">
+                                        <strong>Tip:</strong> The time shown is when that specific blocker clears. Your sleep time = the LATEST one.
+                                    </div>
+                                </div>
+                            </span>
+                        </h4>
                         <div id="blockingList">
                             <!-- Will be populated dynamically -->
                         </div>
@@ -1461,7 +1806,28 @@
 
                     <!-- Expected Feelings Timeline -->
                     <div id="feelingsTimeline" style="margin-top: 15px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-                        <div style="font-size: 0.9em; font-weight: 600; color: #58a6ff; margin-bottom: 12px;">💡 WHAT YOU'LL FEEL TONIGHT</div>
+                        <div style="font-size: 0.9em; font-weight: 600; color: #58a6ff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            💡 WHAT YOU'LL FEEL TONIGHT
+                            <span class="help-icon" style="font-size: 0.8em; width: 14px; height: 14px;">?
+                                <div class="tooltip-content" style="width: 350px;">
+                                    <div class="tooltip-title">💡 BODY PREDICTIONS</div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-text">This timeline predicts the subjective feelings you'll experience based on drug levels + circadian rhythm.</div>
+                                    </div>
+                                    <div class="tooltip-section">
+                                        <div class="tooltip-label">Key Events:</div>
+                                        <div class="tooltip-text">
+                                            <strong>Second Wind:</strong> The "Forbidden Zone" - you'll feel alert even if tired.<br><br>
+                                            <strong>Sleep Gate:</strong> Melatonin rising - body ready for sleep.<br><br>
+                                            <strong>Crash:</strong> Drug dropping fast - fatigue hits suddenly.
+                                        </div>
+                                    </div>
+                                    <div class="tooltip-highlight tooltip-danger">
+                                        <strong>If you feel tired at 2 PM:</strong> That's FAKE tired (circadian dip). Don't drink coffee - it's a trap!
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
                         <div id="feelingsList" style="display: flex; flex-direction: column; gap: 8px;">
                             <!-- Will be populated dynamically -->
                         </div>
@@ -1498,7 +1864,33 @@
                     <div style="font-size: 0.8em; color: #6e7681; text-align: center;">Click a scenario to simulate • Predictions update in real-time</div>
                 </div>
                 <div class="card" style="margin-top: 20px;">
-                    <h2><span class="icon">📈</span> Drug Concentration Over Time</h2>
+                    <h2 style="display: flex; align-items: center; gap: 8px;">
+                        <span class="icon">📈</span> Drug Concentration Over Time
+                        <span class="help-icon" style="font-size: 0.5em;">?
+                            <div class="tooltip-content" style="width: 400px;">
+                                <div class="tooltip-title">📈 THE ONE RULE (How to Read This)</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">Forget the curves. Just look at the lines:</div>
+                                    <div class="tooltip-text" style="line-height: 1.7;">
+                                        <strong style="color: #8b5cf6;">🟣 Purple Line</strong> = Your Meds (Amphetamine)<br>
+                                        <strong style="color: #f59e0b;">🟡 Yellow Line</strong> = Caffeine<br>
+                                        <strong style="color: #ef4444;">🔴 Red Dotted Line</strong> = Sleep Threshold<br>
+                                        <strong style="color: #10b981;">🟢 Green Box</strong> = Your Ideal Sleep Window
+                                    </div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Only Question:</div>
+                                    <div class="tooltip-text">Does the drug line cross <strong>UNDER</strong> the red line <strong>inside</strong> the green box?</div>
+                                </div>
+                                <div class="tooltip-highlight tooltip-success">
+                                    <strong>YES?</strong> → You are safe. Do nothing.
+                                </div>
+                                <div class="tooltip-highlight tooltip-danger">
+                                    <strong>NO?</strong> → Danger. Add Modifiers (Vitamin C, Sauna) until it fits.
+                                </div>
+                            </div>
+                        </span>
+                    </h2>
                     <div class="graph-container" id="graphContainer">
                         <canvas id="graphCanvas" class="graph-canvas"></canvas>
                         <div id="graphTooltip" class="graph-tooltip" style="display: none;"></div>
@@ -2294,6 +2686,385 @@
             vitCGroup.style.display = showVitC ? 'flex' : 'none';
             saunaGroup.style.display = showSauna ? 'flex' : 'none';
             container.style.display = (showVitC || showSauna) ? 'block' : 'none';
+        }
+
+        // ============================================
+        // WORKOUT PLANNER
+        // ============================================
+        
+        // Workout state
+        let workoutPlan = {
+            active: false,
+            time: null,
+            duration: 45,
+            type: 'lifting',
+            intensity: 'medium',
+            fasted: false,
+            coldShower: false,
+            applied: false
+        };
+        
+        function initWorkoutPlanner() {
+            // Set default workout time to current time rounded to nearest 15 min
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+            now.setMinutes(minutes);
+            const defaultTime = now.toTimeString().slice(0, 5);
+            
+            const timeInput = document.getElementById('workoutTime');
+            if (timeInput && !timeInput.value) {
+                timeInput.value = defaultTime;
+            }
+            
+            updateWorkoutTimeline();
+            updateWorkoutPlan();
+        }
+        
+        function updateWorkoutTimeline() {
+            const wakeMinutes = timeToMinutes(state.wakeTime);
+            const forbiddenStart = wakeMinutes + (13 * 60); // Wake + 13 hours
+            const sleepGateStart = wakeMinutes + (15 * 60); // Wake + 15 hours
+            const goldenEnd = wakeMinutes + (11 * 60); // Wake + 11 hours (end of golden zone)
+            
+            // Calculate predicted sleep for the timeline end
+            const { sleepTime } = calculateSleepTime();
+            
+            // Update labels
+            document.getElementById('workoutWindowStart').textContent = formatTime12(state.wakeTime);
+            document.getElementById('workoutWindowEnd').textContent = minutesToTime(sleepTime > 24*60 ? sleepTime - 24*60 : sleepTime);
+            
+            // Update timeline bar gradient based on actual wake time
+            // Green: wake to golden end, Yellow: golden end to forbidden, Red: forbidden zone, Gray: after
+            const totalWindow = sleepTime - wakeMinutes;
+            const goldenPercent = Math.min(100, Math.max(0, ((goldenEnd - wakeMinutes) / totalWindow) * 100));
+            const forbiddenPercent = Math.min(100, Math.max(0, ((forbiddenStart - wakeMinutes) / totalWindow) * 100));
+            const sleepGatePercent = Math.min(100, Math.max(0, ((sleepGateStart - wakeMinutes) / totalWindow) * 100));
+            
+            const timelineBar = document.getElementById('workoutTimelineBar');
+            timelineBar.style.background = `linear-gradient(90deg, 
+                #10b981 0%, #10b981 ${goldenPercent}%, 
+                #f59e0b ${goldenPercent}%, #f59e0b ${forbiddenPercent}%, 
+                #ef4444 ${forbiddenPercent}%, #ef4444 ${sleepGatePercent}%, 
+                #6b7280 ${sleepGatePercent}%)`;
+            
+            // Add current time marker
+            const now = getCurrentMinutes();
+            if (now >= wakeMinutes && now <= sleepTime) {
+                const nowPercent = ((now - wakeMinutes) / totalWindow) * 100;
+                timelineBar.innerHTML = `<div class="workout-zone-marker" style="left: ${nowPercent}%;"><div class="workout-zone-label">Now</div></div>`;
+            }
+        }
+        
+        function calculateWorkoutImpact() {
+            const workoutTimeEl = document.getElementById('workoutTime');
+            if (!workoutTimeEl || !workoutTimeEl.value) return null;
+            
+            const workoutStart = timeToMinutes(workoutTimeEl.value);
+            const duration = parseInt(document.getElementById('workoutDuration').value) || 45;
+            const type = document.getElementById('workoutType').value;
+            const intensity = document.getElementById('workoutIntensity').value;
+            const isFasted = document.getElementById('workoutFasted').checked;
+            const coldShower = document.getElementById('coldShowerToggle').checked;
+            
+            const wakeMinutes = timeToMinutes(state.wakeTime);
+            const workoutEnd = workoutStart + duration;
+            
+            // Define zones
+            const goldenStart = wakeMinutes + (3 * 60);  // Wake + 3 hours
+            const goldenEnd = wakeMinutes + (11 * 60);   // Wake + 11 hours
+            const forbiddenStart = wakeMinutes + (13 * 60); // Wake + 13 hours
+            const forbiddenEnd = wakeMinutes + (15 * 60);   // Wake + 15 hours
+            
+            // Get base drug clear time (without workout effects)
+            const { sleepTime: baseSleepTime } = calculateSleepTime();
+            
+            // Check for hyperarousal state (acute sleep deprivation)
+            const isHyperaroused = state.hoursSleptLastNight < 4;
+            
+            // Initialize impact values
+            let adenosineBonus = 0;
+            let cortisolDelay = 0;
+            let thermalDelay = 0;
+            let warnings = [];
+            let status = 'optimal'; // optimal, caution, danger
+            
+            // RULE 1: Adenosine Bonus (flat -15 min for lifting/zone2, -5 for walk)
+            if (duration >= 20) {
+                if (type === 'lifting' || type === 'zone2') {
+                    adenosineBonus = 15;
+                } else if (type === 'walk') {
+                    adenosineBonus = 5;
+                }
+                // HIIT gets no adenosine bonus - cortisol cancels it out
+            }
+            
+            // RULE 2: Fasted Penalty
+            if (isFasted && intensity !== 'low' && type !== 'walk') {
+                cortisolDelay += 45;
+                warnings.push({
+                    type: 'danger',
+                    icon: '🍽️',
+                    title: 'GLYCOGEN PANIC',
+                    text: 'Lifting fasted will spike cortisol. Eat rapid carbs (fruit/oatmeal) NOW to neutralize this risk.'
+                });
+                status = 'caution';
+            }
+            
+            // RULE 3: HIIT in bad conditions
+            const isLateDay = workoutStart >= forbiddenStart || isHyperaroused;
+            if (type === 'hiit') {
+                if (isLateDay) {
+                    cortisolDelay += 90;
+                    warnings.push({
+                        type: 'danger',
+                        icon: '⚡',
+                        title: 'ADRENALINE TRAP',
+                        text: 'High intensity now will stack with your "Second Wind" or Sleep Debt. You will be wired until very late. Switch to heavy lifting or walking.'
+                    });
+                    status = 'danger';
+                } else if (workoutStart >= goldenEnd) {
+                    cortisolDelay += 45;
+                    warnings.push({
+                        type: 'warning',
+                        icon: '⚠️',
+                        title: 'Late HIIT Risk',
+                        text: 'HIIT after your Golden Window raises evening cortisol. Consider Zone 2 or lifting instead.'
+                    });
+                    status = 'caution';
+                }
+            }
+            
+            // RULE 4: Thermal cooldown (4 hours, or 2 with cold shower)
+            let cooldownHours = 4;
+            if (coldShower) cooldownHours = 2;
+            if (type === 'walk') cooldownHours = 0; // Walk/yoga doesn't raise core temp significantly
+            
+            const cooldownComplete = workoutEnd + (cooldownHours * 60);
+            
+            // RULE 5: Check zone timing
+            if (workoutStart >= forbiddenStart && workoutStart < forbiddenEnd && type !== 'walk') {
+                warnings.push({
+                    type: 'danger',
+                    icon: '🚫',
+                    title: 'FORBIDDEN ZONE WORKOUT',
+                    text: 'Exercising during your Forbidden Zone will stack exercise cortisol with your natural "Second Wind". Only walking/yoga is safe here.'
+                });
+                status = 'danger';
+            } else if (workoutStart >= goldenEnd && workoutStart < forbiddenStart) {
+                if (type !== 'walk' && status !== 'danger') {
+                    status = 'caution';
+                }
+            } else if (workoutStart >= goldenStart && workoutStart <= goldenEnd) {
+                if (status !== 'danger' && status !== 'caution') {
+                    status = 'optimal';
+                }
+            }
+            
+            // Calculate final sleep time
+            let predictedSleep = baseSleepTime - adenosineBonus + cortisolDelay;
+            
+            // Thermal hard stop - can't sleep until cooled down
+            let thermalBlocked = false;
+            if (cooldownComplete > predictedSleep) {
+                thermalDelay = cooldownComplete - predictedSleep;
+                predictedSleep = cooldownComplete;
+                thermalBlocked = true;
+                
+                if (thermalDelay > 30 && !coldShower && type !== 'walk') {
+                    warnings.push({
+                        type: 'warning',
+                        icon: '🌡️',
+                        title: 'THERMAL BLOCK',
+                        text: `Drugs will clear, but your core temp won't drop until ${minutesToTime(cooldownComplete > 24*60 ? cooldownComplete - 24*60 : cooldownComplete)}. Consider a cold shower to cut cooldown time.`
+                    });
+                }
+            }
+            
+            // Special case: Walk/yoga is always OK
+            if (type === 'walk') {
+                status = warnings.length > 0 ? 'caution' : 'optimal';
+                if (workoutStart >= forbiddenStart) {
+                    warnings = [{
+                        type: 'success',
+                        icon: '✅',
+                        title: 'SAFE ACTIVITY',
+                        text: 'Walking and yoga are the only "green light" activities during the Forbidden Zone or late evening. Good choice!'
+                    }];
+                    status = 'optimal';
+                }
+            }
+            
+            // Build recommendation text
+            let recommendation = '';
+            if (status === 'optimal') {
+                if (workoutStart >= goldenStart && workoutStart <= goldenEnd) {
+                    recommendation = `Perfect timing! This ${type === 'lifting' ? 'lifting session' : type === 'zone2' ? 'cardio session' : type === 'walk' ? 'activity' : 'workout'} will maximize sleep pressure without spiking evening cortisol.`;
+                } else {
+                    recommendation = 'This workout should have minimal negative impact on your sleep.';
+                }
+            } else if (status === 'caution') {
+                recommendation = 'This workout may delay sleep. Review the warnings and consider adjustments.';
+            } else {
+                recommendation = 'This workout will significantly harm your sleep. Strongly consider rescheduling or changing type.';
+            }
+            
+            return {
+                status,
+                workoutStart,
+                workoutEnd,
+                cooldownComplete,
+                baseSleepTime,
+                predictedSleep,
+                adenosineBonus,
+                cortisolDelay,
+                thermalDelay,
+                thermalBlocked,
+                warnings,
+                recommendation,
+                showColdShowerOption: thermalBlocked && !coldShower && type !== 'walk'
+            };
+        }
+        
+        function updateWorkoutPlan() {
+            const impact = calculateWorkoutImpact();
+            if (!impact) return;
+            
+            const resultDiv = document.getElementById('workoutResult');
+            const headerDiv = document.getElementById('workoutResultHeader');
+            const textDiv = document.getElementById('workoutResultText');
+            const detailsDiv = document.getElementById('workoutResultDetails');
+            const coldShowerDiv = document.getElementById('coldShowerOption');
+            const applyBtn = document.getElementById('applyWorkoutBtn');
+            
+            // Update styling based on status
+            resultDiv.className = `workout-result-${impact.status}`;
+            resultDiv.style.borderLeftColor = impact.status === 'optimal' ? '#10b981' : impact.status === 'caution' ? '#f59e0b' : '#ef4444';
+            resultDiv.style.background = impact.status === 'optimal' ? 'rgba(16, 185, 129, 0.1)' : impact.status === 'caution' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            
+            // Update header
+            const statusIcons = { optimal: '✅ GOLDEN SLOT', caution: '⚠️ PROCEED WITH CAUTION', danger: '🚫 NOT RECOMMENDED' };
+            const statusColors = { optimal: '#10b981', caution: '#f59e0b', danger: '#ef4444' };
+            headerDiv.textContent = statusIcons[impact.status];
+            headerDiv.style.color = statusColors[impact.status];
+            
+            // Build text content
+            let textContent = `<div style="margin-bottom: 10px;">${impact.recommendation}</div>`;
+            
+            // Add warnings
+            if (impact.warnings.length > 0) {
+                impact.warnings.forEach(w => {
+                    const wColor = w.type === 'danger' ? '#ef4444' : w.type === 'warning' ? '#f59e0b' : '#10b981';
+                    textContent += `
+                        <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 3px solid ${wColor};">
+                            <div style="font-weight: 600; color: ${wColor};">${w.icon} ${w.title}</div>
+                            <div style="font-size: 0.9em; margin-top: 4px;">${w.text}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            textDiv.innerHTML = textContent;
+            
+            // Build details
+            const sleepTimeFormatted = minutesToTime(impact.predictedSleep > 24*60 ? impact.predictedSleep - 24*60 : impact.predictedSleep);
+            const baseSleepFormatted = minutesToTime(impact.baseSleepTime > 24*60 ? impact.baseSleepTime - 24*60 : impact.baseSleepTime);
+            
+            let detailsContent = `
+                <div class="workout-impact-item">
+                    <span>Base Sleep Time (drugs only)</span>
+                    <span>${baseSleepFormatted}</span>
+                </div>
+            `;
+            
+            if (impact.adenosineBonus > 0) {
+                detailsContent += `
+                    <div class="workout-impact-item">
+                        <span>Adenosine Bonus</span>
+                        <span class="workout-impact-positive">-${impact.adenosineBonus} min</span>
+                    </div>
+                `;
+            }
+            
+            if (impact.cortisolDelay > 0) {
+                detailsContent += `
+                    <div class="workout-impact-item">
+                        <span>Cortisol Delay</span>
+                        <span class="workout-impact-negative">+${impact.cortisolDelay} min</span>
+                    </div>
+                `;
+            }
+            
+            if (impact.thermalDelay > 0) {
+                detailsContent += `
+                    <div class="workout-impact-item">
+                        <span>Thermal Cooldown Block</span>
+                        <span class="workout-impact-negative">+${Math.round(impact.thermalDelay)} min</span>
+                    </div>
+                `;
+            }
+            
+            detailsContent += `
+                <div class="workout-impact-item" style="font-weight: 600; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <span>Predicted Sleep After Workout</span>
+                    <span style="color: ${statusColors[impact.status]};">${sleepTimeFormatted}</span>
+                </div>
+            `;
+            
+            detailsDiv.innerHTML = detailsContent;
+            
+            // Show/hide cold shower option
+            coldShowerDiv.style.display = impact.showColdShowerOption ? 'block' : 'none';
+            
+            // Show apply button
+            applyBtn.style.display = 'block';
+            
+            // Update timeline
+            updateWorkoutTimeline();
+        }
+        
+        function toggleFastedState() {
+            // Just trigger update - checkbox handles its own state
+        }
+        
+        function applyWorkoutPlan() {
+            const impact = calculateWorkoutImpact();
+            if (!impact) return;
+            
+            const type = document.getElementById('workoutType').value;
+            
+            // Auto-set the appropriate modifier
+            if (type === 'lifting' || type === 'zone2') {
+                // Enable heavy lifting modifier
+                const liftingEl = document.querySelector('[data-modifier="heavyLifting"]');
+                if (liftingEl && !state.modifiers.heavyLifting.active) {
+                    state.modifiers.heavyLifting.active = true;
+                    liftingEl.classList.add('active');
+                }
+            }
+            
+            // Store workout plan in state for reference
+            workoutPlan = {
+                active: true,
+                time: document.getElementById('workoutTime').value,
+                duration: parseInt(document.getElementById('workoutDuration').value),
+                type: type,
+                intensity: document.getElementById('workoutIntensity').value,
+                fasted: document.getElementById('workoutFasted').checked,
+                coldShower: document.getElementById('coldShowerToggle').checked,
+                applied: true,
+                impact: impact
+            };
+            
+            // Save and recalculate
+            saveState();
+            recalculate();
+            
+            showToast('Workout plan applied! Sleep prediction updated.', '🏋️');
+            
+            // Update button to show it's applied
+            const btn = document.getElementById('applyWorkoutBtn');
+            btn.textContent = '✓ Workout Applied';
+            btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
         }
 
         function toggleSettings() {
@@ -4242,6 +5013,9 @@
                 }
             });
             updateModifierTimeInputs();
+            
+            // Initialize workout planner
+            initWorkoutPlanner();
             
             // Initial calculation
             recalculate();
