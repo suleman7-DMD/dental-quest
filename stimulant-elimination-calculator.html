@@ -1,0 +1,3968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stimulant Elimination Calculator</title>
+    
+    <!-- Firebase SDK - Same as Dental Quest App -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #e6edf3;
+        }
+
+        /* Scale everything down 15% for less scrolling */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            transform: scale(0.85);
+            transform-origin: top center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #8b949e;
+            font-size: 1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #58a6ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            font-size: 1.3em;
+        }
+
+        /* Countdown Display */
+        .countdown-display {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .countdown-label {
+            font-size: 0.9em;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .countdown-time {
+            font-size: 4em;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px currentColor;
+        }
+
+        .countdown-time.green { color: #10b981; }
+        .countdown-time.yellow { color: #f59e0b; }
+        .countdown-time.red { color: #ef4444; }
+
+        .countdown-remaining {
+            font-size: 1.3em;
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+
+        .sleep-quality {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .sleep-quality.green {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .sleep-quality.yellow {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .sleep-quality.red {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Current Status */
+        .status-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border-left: 4px solid #30363d;
+        }
+
+        .status-item.ok { border-left-color: #10b981; }
+        .status-item.blocking { border-left-color: #ef4444; }
+
+        .status-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+        }
+
+        .status-value {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-indicator {
+            font-size: 1.2em;
+        }
+
+        /* Input Sections */
+        .input-section {
+            margin-bottom: 24px;
+        }
+
+        .input-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-section h3 {
+            font-size: 0.9em;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        input[type="time"],
+        input[type="number"],
+        select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #e6edf3;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        input[type="time"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        /* Medication Entry */
+        .med-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .med-entry select {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .med-entry input[type="time"] {
+            width: 130px;
+        }
+
+        .med-entry .remove-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            color: #ef4444;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .med-entry .remove-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(88, 166, 255, 0.15);
+            border: 1px dashed rgba(88, 166, 255, 0.4);
+            border-radius: 10px;
+            color: #58a6ff;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: rgba(88, 166, 255, 0.25);
+            border-style: solid;
+        }
+
+        /* Caffeine Quick Buttons */
+        .caffeine-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .caffeine-preset {
+            padding: 8px 14px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 20px;
+            color: #f59e0b;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .caffeine-preset:hover {
+            background: rgba(245, 158, 11, 0.3);
+        }
+
+        .caffeine-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .caffeine-entry .caffeine-info {
+            flex: 1;
+        }
+
+        .caffeine-entry .caffeine-time {
+            color: #8b949e;
+        }
+
+        /* Modifiers */
+        .modifier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .modifier-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .modifier-item:hover {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .modifier-item.active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .modifier-item.negative.active {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .modifier-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #30363d;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .modifier-item.active .modifier-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .modifier-item.negative.active .modifier-checkbox {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .modifier-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 0.8em;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .modifier-item.active .modifier-checkbox::after {
+            opacity: 1;
+        }
+
+        .modifier-text {
+            flex: 1;
+        }
+
+        .modifier-text .name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .modifier-text .effect {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .modifier-time {
+            width: 100px;
+        }
+
+        /* Graph */
+        .graph-container {
+            position: relative;
+            height: 250px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .graph-legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.amphetamine { background: #3b82f6; }
+        .legend-dot.caffeine { background: #f59e0b; }
+        .legend-dot.threshold { background: #ef4444; }
+
+        .graph-tooltip {
+            position: absolute;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            min-width: 150px;
+        }
+
+        .graph-tooltip .tooltip-time {
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+
+        .graph-tooltip .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .graph-tooltip .tooltip-label {
+            color: #8b949e;
+        }
+
+        .graph-tooltip .tooltip-value {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .graph-tooltip .tooltip-value.amp { color: #3b82f6; }
+        .graph-tooltip .tooltip-value.caff { color: #f59e0b; }
+
+        /* Recommendations */
+        .recommendations {
+            margin-top: 20px;
+        }
+
+        .recommendation {
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid #58a6ff;
+        }
+
+        .recommendation.warning {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .recommendation.danger {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .recommendation.success {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-text {
+            font-size: 0.9em;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+
+        /* Settings Panel */
+        .settings-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .settings-toggle:hover {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .settings-content {
+            display: none;
+            padding: 20px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .settings-content.show {
+            display: block;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-item label {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        .setting-item input {
+            padding: 10px 14px;
+        }
+
+        .setting-hint {
+            font-size: 0.75em;
+            color: #6e7681;
+        }
+
+        /* History */
+        .history-entry {
+            padding: 14px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date {
+            font-weight: 500;
+        }
+
+        .history-details {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        .history-accuracy {
+            text-align: right;
+        }
+
+        .history-predicted {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        .history-actual {
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e6edf3;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #21262d;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border: 1px solid #30363d;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        /* Blocking Factors */
+        .blocking-factors {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .blocking-factors h4 {
+            color: #ef4444;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .blocking-factor {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9em;
+        }
+
+        .blocking-factor:last-child {
+            border-bottom: none;
+        }
+
+        .blocking-factor .clears-at {
+            color: #f59e0b;
+            font-weight: 500;
+        }
+
+        /* Feedback Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #161b22;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid #30363d;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #58a6ff;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Time Display Helper */
+        .time-display {
+            font-variant-numeric: tabular-nums;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .countdown-time {
+                font-size: 3em;
+            }
+            
+            .med-entry {
+                flex-wrap: wrap;
+            }
+            
+            .med-entry select,
+            .med-entry input[type="time"] {
+                width: 100%;
+            }
+            
+            .caffeine-presets {
+                justify-content: center;
+            }
+            
+            .modifier-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================
+           EDUCATIONAL TOOLTIP SYSTEM
+           ============================================ */
+        
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 6px;
+            position: relative;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .help-icon:hover {
+            background: #58a6ff;
+            color: #0d1117;
+            border-color: #58a6ff;
+            transform: scale(1.1);
+        }
+
+        .help-icon .tooltip-content {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 380px;
+            padding: 16px;
+            background: linear-gradient(135deg, #1a1f35 0%, #0d1117 100%);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            color: #c9d1d9;
+            font-size: 12px;
+            line-height: 1.6;
+            font-weight: normal;
+            text-align: left;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(88, 166, 255, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .help-icon .tooltip-content::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: #30363d transparent transparent transparent;
+        }
+
+        .help-icon:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            bottom: calc(100% + 8px);
+        }
+
+        .tooltip-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #58a6ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tooltip-section {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .tooltip-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .tooltip-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #f59e0b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-text {
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .tooltip-text strong {
+            color: #e6edf3;
+        }
+
+        .tooltip-highlight {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 3px solid #f59e0b;
+            padding: 8px 10px;
+            margin-top: 8px;
+            border-radius: 0 6px 6px 0;
+            font-size: 11px;
+        }
+
+        .tooltip-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-left-color: #ef4444;
+        }
+
+        .tooltip-success {
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: #10b981;
+        }
+
+        /* Dose comparison mini-chart */
+        .dose-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .dose-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .dose-bar-label {
+            width: 50px;
+            color: #8b949e;
+        }
+
+        .dose-bar-fill {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+
+        .dose-bar-time {
+            color: #e6edf3;
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        /* Stacking warning badge */
+        .stacking-warning {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Mobile tooltip adjustments */
+        @media (max-width: 500px) {
+            .help-icon .tooltip-content {
+                max-width: 300px;
+                left: auto;
+                right: -10px;
+                transform: none;
+            }
+            
+            .help-icon .tooltip-content::before {
+                left: auto;
+                right: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">Saved</span>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-content">
+            <h3>🌙 How did you sleep?</h3>
+            <p style="color: #8b949e; margin-bottom: 20px;">Yesterday's prediction was <strong id="feedbackPredicted">10:30 PM</strong>. When did you actually fall asleep?</p>
+            <div class="input-group">
+                <label>Actual sleep time:</label>
+                <input type="time" id="actualSleepTime" style="width: 100%;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()">Skip</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <a href="index.html" style="color: #58a6ff; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
+                    ← Back to Quest
+                </a>
+                <div id="syncStatus" style="font-size: 0.8em; color: #8b949e; display: flex; align-items: center; gap: 6px;">
+                    <span id="syncIcon">☁️</span>
+                    <span id="syncText">Connecting...</span>
+                </div>
+            </div>
+            <h1>💊 Stimulant Elimination Calculator</h1>
+            <p>Pharmacokinetic sleep prediction based on your personal physiology</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column: Inputs -->
+            <div class="card">
+                <h2><span class="icon">⚙️</span> Today's Inputs</h2>
+
+                <!-- Wake Time & Sleep Debt -->
+                <div class="input-section">
+                    <h3>Wake Time & Sleep History</h3>
+                    <div class="input-row">
+                        <div class="input-group" style="flex: 1;">
+                            <label>What time did you wake up?</label>
+                            <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime();">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label style="display: flex; align-items: center;">
+                                Hours slept last night
+                                <span class="help-icon">?
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">⚠️ THE HYPERAROUSAL TRAP</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Myth</div>
+                                            <div class="tooltip-text">"Less sleep = more tired = easier to fall asleep." <strong>This is FALSE for acute deprivation.</strong></div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Mechanism</div>
+                                            <div class="tooltip-text">When you sleep <strong>&lt;4 hours</strong>, your brain enters <strong>"Survival Mode."</strong> The HPA Axis floods your system with Cortisol and Adrenaline to keep you functioning.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Consequence</div>
+                                            <div class="tooltip-text">You enter <strong>"Hyperarousal"</strong> – physically exhausted (high Adenosine) but chemically wired (high Adrenaline). This overrides your sleep drive.</div>
+                                        </div>
+                                        <div class="tooltip-highlight tooltip-danger">
+                                            <strong>If &lt;4 hrs:</strong> Don't rely on "being tired." You must aggressively lower cortisol (hot shower, meditation, NO screens after 8 PM).
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate()">
+                        </div>
+                    </div>
+                    <div id="sleepDebtDisplay" style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9em;">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Medication -->
+                <div class="input-section">
+                    <h3 style="display: flex; align-items: center;">
+                        Medication Doses
+                        <span class="help-icon">?
+                            <div class="tooltip-content">
+                                <div class="tooltip-title">💊 THE "LONG TAIL" OF ELIMINATION</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Myth</div>
+                                    <div class="tooltip-text">"70mg is just 20mg more than 50mg." <strong>This is dangerously wrong.</strong></div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Math</div>
+                                    <div class="tooltip-text">Elimination follows <strong>First-Order Kinetics</strong> – you lose a fixed <em>percentage</em> per hour, not a fixed amount. A higher peak means the "mountain" takes much longer to erode.</div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Real Cost</div>
+                                    <div class="tooltip-text">Taking <strong>70mg vs 50mg</strong> adds approximately <strong>2.5-3 hours</strong> to your clearance time. You're not buying "more focus" – you're buying insomnia.</div>
+                                </div>
+                                <div class="dose-comparison">
+                                    <div class="dose-bar">
+                                        <span class="dose-bar-label">30mg</span>
+                                        <div class="dose-bar-fill" style="width: 80px;"></div>
+                                        <span class="dose-bar-time">~14 hrs</span>
+                                    </div>
+                                    <div class="dose-bar">
+                                        <span class="dose-bar-label">50mg</span>
+                                        <div class="dose-bar-fill" style="width: 120px;"></div>
+                                        <span class="dose-bar-time">~16 hrs</span>
+                                    </div>
+                                    <div class="dose-bar">
+                                        <span class="dose-bar-label">70mg</span>
+                                        <div class="dose-bar-fill" style="width: 170px;"></div>
+                                        <span class="dose-bar-time">~19 hrs</span>
+                                    </div>
+                                </div>
+                                <div class="tooltip-highlight tooltip-danger">
+                                    <strong>Rule:</strong> Stick to the lowest effective dose. Every extra 20mg costs you 2+ hours of sleep.
+                                </div>
+                            </div>
+                        </span>
+                    </h3>
+                    <div id="medEntries">
+                        <!-- Entries will be added here -->
+                    </div>
+                    <button class="add-btn" onclick="addMedEntry()">+ Add Medication Dose</button>
+                    <div id="stackingWarning" style="display: none; margin-top: 10px; padding: 12px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; font-size: 0.85em;">
+                        <!-- Dynamic stacking warning will appear here -->
+                    </div>
+                </div>
+
+                <!-- Caffeine -->
+                <div class="input-section">
+                    <h3>Caffeine Intake</h3>
+                    <div class="caffeine-presets">
+                        <button class="caffeine-preset" onclick="addCaffeine(100, 'Coffee')">☕ Coffee (100mg)</button>
+                        <button class="caffeine-preset" onclick="addCaffeine(63, 'Espresso')">🔥 Espresso (63mg)</button>
+                        <button class="caffeine-preset" onclick="addCaffeine(160, 'Energy Drink')">⚡ Energy (160mg)</button>
+                        <button class="caffeine-preset" onclick="addCaffeine(50, 'Tea')">🍵 Tea (50mg)</button>
+                    </div>
+                    <div id="caffeineEntries">
+                        <!-- Entries will be added here -->
+                    </div>
+                </div>
+
+                <!-- Modifiers -->
+                <div class="input-section">
+                    <h3>Modifiers</h3>
+                    <div class="modifier-grid">
+                        <div class="modifier-item" onclick="toggleModifier(this, 'vitaminC')" data-modifier="vitaminC">
+                            <div class="modifier-checkbox"></div>
+                            <div class="modifier-text">
+                                <div class="name" style="display: flex; align-items: center;">
+                                    🍊 Vitamin C Flush
+                                    <span class="help-icon" onclick="event.stopPropagation();">?
+                                        <div class="tooltip-content">
+                                            <div class="tooltip-title">🧪 THE pH MECHANISM</div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Science</div>
+                                                <div class="tooltip-text">Amphetamines are <strong>"Weak Bases."</strong> Your kidneys normally reabsorb them back into the blood if your urine is alkaline (basic pH).</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Hack</div>
+                                                <div class="tooltip-text">Taking <strong>1000mg of Vitamin C</strong> (Ascorbic Acid) acidifies your urine. In an acidic environment, the amphetamine molecule becomes <strong>ionized</strong> and cannot be reabsorbed.</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Result</div>
+                                                <div class="tooltip-text">Your kidneys flush the drug <strong>~30% faster</strong>. This is the only way to chemically "shorten" the duration of the drug.</div>
+                                            </div>
+                                            <div class="tooltip-highlight tooltip-success">
+                                                <strong>Timing:</strong> Take at 5-6 PM for maximum effect on evening clearance.
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="effect">1000mg - Reduces half-life 30%</div>
+                            </div>
+                        </div>
+                        <div class="modifier-item" onclick="toggleModifier(this, 'heavyLift')" data-modifier="heavyLift">
+                            <div class="modifier-checkbox"></div>
+                            <div class="modifier-text">
+                                <div class="name" style="display: flex; align-items: center;">
+                                    🏋️ Heavy Lifting
+                                    <span class="help-icon" onclick="event.stopPropagation();">?
+                                        <div class="tooltip-content">
+                                            <div class="tooltip-title">📉 THE ADENOSINE PUMP</div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Chemistry</div>
+                                                <div class="tooltip-text">Sleep pressure is driven by <strong>Adenosine</strong> – the byproduct of burning ATP (cellular energy). The more ATP you burn, the more Adenosine accumulates.</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Logic</div>
+                                                <div class="tooltip-text">Heavy compound lifting (squats, deadlifts) burns <strong>massive amounts of ATP</strong>. This rapidly floods the brain with Adenosine – the only natural force strong enough to <strong>"mute"</strong> the stimulant signal.</div>
+                                            </div>
+                                            <div class="tooltip-highlight">
+                                                <strong>Key Difference:</strong> Cardio raises cortisol (bad for sleep). Heavy lifting raises Adenosine (good for sleep).
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="effect">-15 min (adenosine boost)</div>
+                            </div>
+                        </div>
+                        <div class="modifier-item" onclick="toggleModifier(this, 'sauna')" data-modifier="sauna">
+                            <div class="modifier-checkbox"></div>
+                            <div class="modifier-text">
+                                <div class="name" style="display: flex; align-items: center;">
+                                    🧖 Sauna (15+ min)
+                                    <span class="help-icon" onclick="event.stopPropagation();">?
+                                        <div class="tooltip-content">
+                                            <div class="tooltip-title">🔥 PARASYMPATHETIC REBOUND</div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Mechanism</div>
+                                                <div class="tooltip-text">Heat stress triggers a <strong>massive sympathetic response</strong> (heart rate up, vasodilation). When you exit and cool down, the pendulum swings hard into <strong>parasympathetic mode</strong> (rest & digest).</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Benefit</div>
+                                                <div class="tooltip-text">This "rebound effect" mimics exhaustion signals and effectively <strong>raises your sleep threshold</strong> – allowing you to fall asleep with slightly more drug in your system.</div>
+                                            </div>
+                                            <div class="tooltip-highlight tooltip-success">
+                                                <strong>Best Timing:</strong> Evening session (after 5 PM) for maximum sleep benefit. The cool-down phase primes your body for sleep.
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="effect">-30 min (parasympathetic activation)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modifier Times (shown when relevant) -->
+                    <div id="modifierTimes" style="margin-top: 15px; display: none;">
+                        <div class="input-row">
+                            <div class="input-group" id="vitaminCTimeGroup" style="display: none;">
+                                <label>Vitamin C taken at:</label>
+                                <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate()">
+                            </div>
+                            <div class="input-group" id="saunaTimeGroup" style="display: none;">
+                                <label>Sauna session at:</label>
+                                <input type="time" id="saunaTime" value="18:00" onchange="recalculate()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="settings-toggle" onclick="toggleSettings()">
+                    <span>⚙️ Personal Calibration Settings</span>
+                    <span id="settingsArrow">▼</span>
+                </div>
+                <div class="settings-content" id="settingsContent">
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                Amphetamine Half-Life (hours)
+                                <span class="help-icon" style="width: 16px; height: 16px; font-size: 10px;">?
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">⏱️ YOUR METABOLISM SPEED</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">What It Means</div>
+                                            <div class="tooltip-text">Half-life = time for your body to eliminate <strong>50%</strong> of the drug. Default is 11 hours (clinical average).</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">Key Insight</div>
+                                            <div class="tooltip-text">Unlike tolerance, <strong>half-life doesn't change much</strong> with chronic use. Your liver doesn't get faster at metabolizing amphetamines over time.</div>
+                                        </div>
+                                        <div class="tooltip-highlight">
+                                            <strong>Adjust if:</strong> Active/athletic = try 10 hrs. Sedentary = try 11-12 hrs.
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()">
+                            <span class="setting-hint">Default: 11 hrs. Range: 9-14</span>
+                        </div>
+                        <div class="setting-item">
+                            <label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                Sleep Threshold (mg)
+                                <span class="help-icon" style="width: 16px; height: 16px; font-size: 10px;">?
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">🧠 RECEPTOR DOWNREGULATION</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">Why You Can Sleep On Meds</div>
+                                            <div class="tooltip-text">After years of use, your post-synaptic <strong>Dopamine D2 receptors</strong> become less sensitive (downregulation). Your brain has adapted.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Result</div>
+                                            <div class="tooltip-text">Drug levels don't need to hit zero – they just need to drop below your <strong>personal "noise floor."</strong> A new user might need &lt;8mg. A veteran (13+ years) might sleep fine at 18-20mg.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">Calibration</div>
+                                            <div class="tooltip-text">If predictions are <strong>too late</strong> → raise threshold. If you can't sleep when app says you should → lower threshold.</div>
+                                        </div>
+                                        <div class="tooltip-highlight">
+                                            <strong>Veterans (5+ years):</strong> Try 16-20mg<br>
+                                            <strong>Moderate use (1-5 years):</strong> Try 12-16mg<br>
+                                            <strong>New users (&lt;1 year):</strong> Try 8-12mg
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()">
+                            <span class="setting-hint">Lower = more sensitive. Default: 14mg</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Caffeine Half-Life (hours)</label>
+                            <input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()">
+                            <span class="setting-hint">Default: 5 hrs. Smokers: ~3 hrs</span>
+                        </div>
+                        <div class="setting-item">
+                            <label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                Caffeine Threshold (mg)
+                                <span class="help-icon" style="width: 16px; height: 16px; font-size: 10px;">?
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">☕ THE BOOLEAN BLOCKER</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Mechanism</div>
+                                            <div class="tooltip-text">Caffeine doesn't just "add" to stimulation – it acts as a <strong>Boolean gate</strong>. Above threshold = sleep blocked. Period.</div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-label">The Math</div>
+                                            <div class="tooltip-text">100mg coffee at 2 PM → 50mg at 7 PM → <strong>25mg at midnight</strong>. That "afternoon coffee" is still blocking your adenosine receptors 10 hours later.</div>
+                                        </div>
+                                        <div class="tooltip-highlight tooltip-danger">
+                                            <strong>Rule:</strong> No caffeine after noon. Each cup adds ~3 hours to your sleep window.
+                                        </div>
+                                    </div>
+                                </span>
+                            </label>
+                            <input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()">
+                            <span class="setting-hint">Default: 25mg. Lower = more sensitive</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Your Weight (lbs)</label>
+                            <input type="number" id="weight" value="190" min="100" max="350" step="5" onchange="recalculate()">
+                            <span class="setting-hint">Used for peak concentration estimate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="btn btn-secondary" onclick="clearToday()">🗑️ Clear Today</button>
+                    <button class="btn btn-primary" onclick="saveDay()">💾 Save & Log</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div>
+                <!-- Countdown Display -->
+                <div class="card">
+                    <div class="countdown-display">
+                        <div class="countdown-label">Projected Sleep Window</div>
+                        <div class="countdown-time green time-display" id="sleepTime">10:30 PM</div>
+                        <div class="countdown-remaining">
+                            <span id="timeRemaining">6h 23m</span> until sleep available
+                        </div>
+                        <div class="sleep-quality green" id="sleepQuality">
+                            ✓ 8.2 hours of sleep possible
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div class="status-grid" id="statusGrid">
+                        <div class="status-item ok">
+                            <div class="status-label">
+                                <span>💊 Amphetamine Load</span>
+                            </div>
+                            <div>
+                                <span class="status-value" id="currentAmpLoad">0.0 mg</span>
+                                <span class="status-indicator" id="ampStatus">✓</span>
+                            </div>
+                        </div>
+                        <div class="status-item ok">
+                            <div class="status-label">
+                                <span>☕ Caffeine Load</span>
+                            </div>
+                            <div>
+                                <span class="status-value" id="currentCaffLoad">0.0 mg</span>
+                                <span class="status-indicator" id="caffStatus">✓</span>
+                            </div>
+                        </div>
+                        <div class="status-item ok" id="circadianStatusItem">
+                            <div class="status-label">
+                                <span>🌙 Circadian Phase</span>
+                            </div>
+                            <div>
+                                <span class="status-value" id="circadianStatus">Normal</span>
+                                <span class="status-indicator" id="circadianIndicator">✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Circadian Timeline -->
+                    <div id="circadianTimeline" style="margin-top: 15px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                        <div style="font-size: 0.85em; color: #8b949e; margin-bottom: 10px;">CIRCADIAN RHYTHM (Based on <span id="wakeTimeDisplay">6:45 AM</span> wake)</div>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 140px; padding: 10px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; border-left: 3px solid #ef4444; position: relative;">
+                                <div style="font-size: 0.75em; color: #ef4444; margin-bottom: 4px; display: flex; align-items: center;">
+                                    ⚠️ FORBIDDEN ZONE
+                                    <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px; margin-left: 4px;">?
+                                        <div class="tooltip-content" style="width: 320px;">
+                                            <div class="tooltip-title">🚫 THE "WAKE MAINTENANCE ZONE"</div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Phenomenon</div>
+                                                <div class="tooltip-text">Ever felt tired at 8 PM, then <strong>wide awake</strong> at 10 PM? That's the Forbidden Zone – your body's "Second Wind."</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Mechanism</div>
+                                                <div class="tooltip-text">About 2-3 hours before your ideal bedtime, your <strong>Circadian Clock</strong> releases a massive "Wake Up" signal. Evolutionarily, this ensured you stayed alert to find a safe sleeping spot before dark.</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Risk</div>
+                                                <div class="tooltip-text">If your drugs clear during this window, you'll feel a crash... then get a <strong>second wind</strong>. You'll be physically unable to sleep for another <strong>90-120 minutes</strong> until this biological wave passes.</div>
+                                            </div>
+                                            <div class="tooltip-highlight tooltip-danger">
+                                                <strong>Strategy:</strong> If you miss your Sleep Gate and hit this zone, don't fight it. Relax, avoid screens, and wait for the wave to pass.
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div style="font-weight: 600;" id="forbiddenZoneTime">7:45 PM - 9:45 PM</div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Second wind period</div>
+                            </div>
+                            <div style="flex: 1; min-width: 140px; padding: 10px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; border-left: 3px solid #10b981; position: relative;">
+                                <div style="font-size: 0.75em; color: #10b981; margin-bottom: 4px; display: flex; align-items: center;">
+                                    ✨ SLEEP GATE
+                                    <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px; margin-left: 4px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: rgba(16, 185, 129, 0.4);">?
+                                        <div class="tooltip-content" style="width: 320px;">
+                                            <div class="tooltip-title" style="color: #10b981;">✨ YOUR BIOLOGICAL BEDTIME</div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Science</div>
+                                                <div class="tooltip-text">This is when your <strong>Pineal Gland</strong> wants to release melatonin. It occurs ~15-17 hours after your wake time, when body temperature drops and sleep pressure peaks.</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Goal</div>
+                                                <div class="tooltip-text">You want your <strong>drug levels to cross below threshold</strong> while this gate is open. This is the visual definition of a <strong>"Perfect Day"</strong> on the graph.</div>
+                                            </div>
+                                            <div class="tooltip-section">
+                                                <div class="tooltip-label">The Mismatch Problem</div>
+                                                <div class="tooltip-text">If your drugs are still high when this gate opens, you'll <strong>"miss the bus."</strong> The gate closes, and you enter the Forbidden Zone – forcing you to stay awake until drugs fully clear.</div>
+                                            </div>
+                                            <div class="tooltip-highlight tooltip-success">
+                                                <strong>Target:</strong> Plan your dose timing so the blue line crosses under the red threshold line inside this green window.
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div style="font-weight: 600;" id="sleepGateTime">9:45 PM - 11:45 PM</div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Optimal sleep window</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blocking Factors -->
+                    <div class="blocking-factors" id="blockingFactors" style="display: none;">
+                        <h4>⏳ Blocking Factors</h4>
+                        <div id="blockingList">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Expected Feelings Timeline -->
+                    <div id="feelingsTimeline" style="margin-top: 15px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                        <div style="font-size: 0.9em; font-weight: 600; color: #58a6ff; margin-bottom: 12px;">💡 WHAT YOU'LL FEEL TONIGHT</div>
+                        <div id="feelingsList" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What-If Scenarios -->
+                <div class="card" style="margin-top: 20px;">
+                    <h2><span class="icon">🔮</span> What-If Scenarios</h2>
+                    <div id="scenarioResults" style="margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div class="scenario-card" id="scenarioAddCoffee" style="padding: 14px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer;" onclick="simulateScenario('coffee')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #f59e0b; margin-bottom: 6px;">☕ Add Coffee Now?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioCoffeeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioCoffeeDelta">--</span></div>
+                            </div>
+                            <div class="scenario-card" id="scenarioAddEspresso" style="padding: 14px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer;" onclick="simulateScenario('espresso')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #ef4444; margin-bottom: 6px;">🔥 Double Espresso?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioEspressoSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioEspressoDelta">--</span></div>
+                            </div>
+                            <div class="scenario-card" id="scenarioVitC" style="padding: 14px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" onclick="simulateScenario('vitc')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #10b981; margin-bottom: 6px;">🍊 Take Vitamin C?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioVitCSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioVitCDelta">--</span></div>
+                            </div>
+                            <div class="scenario-card" id="scenarioSauna" style="padding: 14px; background: rgba(168, 85, 247, 0.1); border-radius: 10px; border: 1px solid rgba(168, 85, 247, 0.3); cursor: pointer;" onclick="simulateScenario('sauna')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #a855f7; margin-bottom: 6px;">🧖 Sauna Session?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioSaunaSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioSaunaDelta">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8em; color: #6e7681; text-align: center;">Click a scenario to simulate • Predictions update in real-time</div>
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h2><span class="icon">📈</span> Drug Concentration Over Time</h2>
+                    <div class="graph-container" id="graphContainer">
+                        <canvas id="graphCanvas" class="graph-canvas"></canvas>
+                        <div id="graphTooltip" class="graph-tooltip" style="display: none;"></div>
+                    </div>
+                    <div class="graph-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot amphetamine"></div>
+                            <span>Amphetamine</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot caffeine"></div>
+                            <span>Caffeine</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot threshold"></div>
+                            <span>Sleep Threshold</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card" style="margin-top: 20px;">
+                    <h2><span class="icon">💡</span> Recommendations</h2>
+                    <div class="recommendations" id="recommendations">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7-Day Sleep History Calendar -->
+        <div class="card" style="margin-top: 20px;">
+            <h2><span class="icon">📅</span> 7-Day Sleep Pattern & Circadian Phase</h2>
+            <p style="color: #8b949e; font-size: 0.85em; margin-bottom: 15px;">Click any day to log hours slept when waking up that day + your wake time. This detects your circadian phase.</p>
+            
+            <!-- Circadian Phase Display -->
+            <div id="circadianPhaseDisplay" style="margin-bottom: 20px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                <!-- Will be populated dynamically -->
+            </div>
+            
+            <div id="sleepCalendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                <!-- Will be populated dynamically -->
+            </div>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; font-size: 0.8em; color: #8b949e; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
+                    <span>> 6.5 hrs (Restored)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 3px;"></div>
+                    <span>4.5-6.5 hrs (Functional)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 3px;"></div>
+                    <span>< 4.5 hrs (DANGER)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sleep Edit Modal -->
+        <div class="modal-overlay" id="sleepEditModal">
+            <div class="modal-content" style="max-width: 350px;">
+                <h3 id="sleepEditTitle">📅 Edit Sleep Data</h3>
+                <p style="color: #8b949e; margin-bottom: 15px; font-size: 0.9em;">Enter the sleep you got <strong>before waking up</strong> on this day.</p>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Hours Slept</label>
+                    <input type="number" id="sleepEditHours" value="7" min="0" max="14" step="0.5" style="width: 100%;">
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Wake Time (when you woke up this day)</label>
+                    <input type="time" id="sleepEditWakeTime" value="07:00" style="width: 100%;">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeSleepEditModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSleepEdit()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="card" style="margin-top: 20px;">
+            <h2><span class="icon">📊</span> History & Calibration</h2>
+            <div id="historyList">
+                <p style="color: #8b949e; text-align: center; padding: 20px;">No history yet. Save today's data to start tracking accuracy.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let state = {
+            wakeTime: '06:45',
+            hoursSleptLastNight: 8,
+            medications: [],
+            caffeine: [],
+            modifiers: {
+                vitaminC: { active: false, time: '17:00' },
+                heavyLift: { active: false },
+                sauna: { active: false, time: '18:00' }
+            },
+            settings: {
+                ampHalfLife: 11,
+                sleepThreshold: 14,
+                caffHalfLife: 5,
+                caffThreshold: 25,
+                weight: 190
+            },
+            history: [],
+            // Enhanced sleep history: stores hours slept AND wake time for each day
+            // { 'YYYY-MM-DD': { hoursSlept: number, wakeTime: 'HH:MM' } }
+            sleepHistory: {}
+        };
+
+        // ============================================
+        // CIRCADIAN PHASE DETECTION
+        // ============================================
+        
+        function analyzeCircadianPhase() {
+            // Collect wake times from last 7 days
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const wakeTimes = [];
+            
+            // ALWAYS include today first with current inputs
+            wakeTimes.push({
+                date: todayStr,
+                wakeMinutes: timeToMinutes(state.wakeTime),
+                hoursSlept: state.hoursSleptLastNight
+            });
+            
+            // Then check history for past 6 days (not including today since we added it above)
+            for (let i = 1; i <= 6; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const entry = state.sleepHistory[dateStr];
+                if (entry) {
+                    // Handle both old format (just number) and new format (object)
+                    if (typeof entry === 'object' && entry.wakeTime) {
+                        wakeTimes.push({
+                            date: dateStr,
+                            wakeMinutes: timeToMinutes(entry.wakeTime),
+                            hoursSlept: entry.hoursSlept || 0
+                        });
+                    } else if (typeof entry === 'number') {
+                        // Old format - only has hours, no wake time
+                        // Skip for phase calculation but could use for sleep avg
+                        wakeTimes.push({
+                            date: dateStr,
+                            wakeMinutes: null, // Unknown
+                            hoursSlept: entry
+                        });
+                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
+                        // New format but no wake time yet
+                        wakeTimes.push({
+                            date: dateStr,
+                            wakeMinutes: null,
+                            hoursSlept: entry.hoursSlept
+                        });
+                    }
+                }
+            }
+            
+            // Filter to only entries with wake times for phase calculation
+            const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null);
+            
+            // Calculate average sleep from ALL entries (even without wake time)
+            const allSleepData = wakeTimes.filter(w => w.hoursSlept > 0);
+            const avgSleep = allSleepData.length > 0 
+                ? allSleepData.reduce((sum, w) => sum + w.hoursSlept, 0) / allSleepData.length 
+                : state.hoursSleptLastNight;
+            
+            if (wakeTimesWithData.length < 1) {
+                return {
+                    phase: 'unknown',
+                    label: 'Insufficient Data',
+                    color: '#8b949e',
+                    icon: '❓',
+                    avgWakeTime: timeToMinutes(state.wakeTime),
+                    avgSleep: avgSleep,
+                    consistency: 0,
+                    stdDev: 0,
+                    dataPoints: allSleepData.length,
+                    recommendation: 'Log wake times in the calendar to detect your circadian phase. Click any day to add data.'
+                };
+            }
+            
+            // Calculate average wake time from entries that have it
+            const avgWakeMinutes = wakeTimesWithData.reduce((sum, w) => sum + w.wakeMinutes, 0) / wakeTimesWithData.length;
+            
+            // Calculate consistency (standard deviation of wake times)
+            let stdDev = 0;
+            if (wakeTimesWithData.length >= 2) {
+                const variance = wakeTimesWithData.reduce((sum, w) => {
+                    const diff = w.wakeMinutes - avgWakeMinutes;
+                    return sum + (diff * diff);
+                }, 0) / wakeTimesWithData.length;
+                stdDev = Math.sqrt(variance);
+            }
+            
+            // Detect phase based on average wake time
+            let phase, label, color, icon, recommendation;
+            
+            // Normal: wake 5am-8am (300-480 minutes)
+            // Early Bird: wake before 5am (<300 minutes)
+            // Night Owl: wake after 10am (>600 minutes)
+            // Extreme Night Owl: wake after noon (>720 minutes) - DANGER
+            
+            if (avgWakeMinutes >= 300 && avgWakeMinutes <= 480) {
+                phase = 'normal';
+                label = 'Normal Phase';
+                color = '#10b981';
+                icon = '✅';
+                recommendation = 'Your circadian rhythm is well-aligned. Maintain consistent wake times to preserve this.';
+            } else if (avgWakeMinutes < 300) {
+                // Early bird (before 5am)
+                if (avgWakeMinutes < 180) {
+                    // Extreme early (before 3am)
+                    phase = 'extreme-early';
+                    label = 'Extreme Early Bird';
+                    color = '#f59e0b';
+                    icon = '🌅';
+                    recommendation = 'Waking before 3am consistently may indicate Advanced Sleep Phase Disorder. Consider light therapy in evening and avoiding morning light to shift later.';
+                } else {
+                    phase = 'early';
+                    label = 'Early Bird';
+                    color = '#06b6d4';
+                    icon = '🐦';
+                    recommendation = 'Early wake pattern. This is generally healthy if intentional. Ensure you\'re getting enough total sleep hours.';
+                }
+            } else if (avgWakeMinutes > 720) {
+                // Extreme night owl (after noon) - DANGER ZONE
+                phase = 'danger-delayed';
+                label = 'SEVERELY DELAYED';
+                color = '#ef4444';
+                icon = '🚨';
+                recommendation = 'DANGER: Waking after noon indicates severely delayed circadian phase. This pattern correlates with depression, metabolic dysfunction, and cognitive impairment. You need aggressive light therapy (10,000 lux) immediately upon waking and strict light avoidance after 8pm.';
+            } else if (avgWakeMinutes > 600) {
+                // Night owl (after 10am)
+                phase = 'delayed';
+                label = 'Delayed Phase';
+                color = '#f59e0b';
+                icon = '🦉';
+                recommendation = 'Your circadian rhythm is delayed. To shift earlier: get bright light immediately upon waking, avoid screens after 8pm, and gradually wake 15-30 min earlier every few days.';
+            } else {
+                // Slightly late (8am-10am)
+                phase = 'slightly-late';
+                label = 'Slightly Late';
+                color = '#eab308';
+                icon = '⏰';
+                recommendation = 'Wake time is slightly later than ideal. Consider morning light exposure to anchor your rhythm earlier.';
+            }
+            
+            // Check consistency (only if we have multiple wake times)
+            let consistencyWarning = '';
+            if (wakeTimesWithData.length >= 3 && stdDev > 120) {
+                // More than 2 hour variation
+                consistencyWarning = '\n\n⚠️ HIGH VARIABILITY: Your wake times vary by over 2 hours. Inconsistent sleep schedules cause "social jet lag" which impairs cognitive function and metabolism.';
+            } else if (wakeTimesWithData.length >= 3 && stdDev > 60) {
+                consistencyWarning = '\n\n⚠️ MODERATE VARIABILITY: Try to keep wake times within 1 hour of each other, even on weekends.';
+            }
+            
+            // Check sleep debt accumulation (use allSleepData which includes entries without wake times)
+            let debtWarning = '';
+            if (allSleepData.length >= 3) {
+                const recentDays = allSleepData.slice(0, 3);
+                const recentAvgSleep = recentDays.reduce((sum, w) => sum + w.hoursSlept, 0) / recentDays.length;
+                if (recentAvgSleep < 5) {
+                    debtWarning = '\n\n🚨 CRITICAL SLEEP DEBT: Averaging less than 5 hours over recent days. Hyperarousal risk is extremely high.';
+                } else if (recentAvgSleep < 6.5) {
+                    debtWarning = '\n\n⚠️ ACCUMULATING DEBT: Averaging less than 6.5 hours. This compounds cognitive impairment.';
+                }
+            }
+            
+            return {
+                phase,
+                label,
+                color,
+                icon,
+                avgWakeTime: avgWakeMinutes,
+                avgSleep,
+                consistency: wakeTimesWithData.length >= 2 ? Math.max(0, 100 - (stdDev / 2)) : 0,
+                stdDev,
+                recommendation: recommendation + consistencyWarning + debtWarning,
+                dataPoints: allSleepData.length
+            };
+        }
+
+        // ============================================
+        // PHARMACOKINETIC CALCULATIONS
+        // ============================================
+        
+        function timeToMinutes(timeStr) {
+            const [hours, mins] = timeStr.split(':').map(Number);
+            return hours * 60 + mins;
+        }
+
+        function minutesToTime(mins) {
+            const hours = Math.floor(mins / 60) % 24;
+            const minutes = Math.floor(mins % 60);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+
+        function minutesToTimeValue(mins) {
+            const hours = Math.floor(mins / 60) % 24;
+            const minutes = Math.floor(mins % 60);
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // ============================================
+        // PROCESS S: Sleep Debt / Adenosine Pressure
+        // ============================================
+        
+        // Global hyperarousal flag
+        let hyperarousalMode = false;
+        
+        function calculateSleepDebtBonus() {
+            // For every hour under 8, add 1.5mg to threshold
+            const hoursSlept = state.hoursSleptLastNight;
+            const deficit = Math.max(0, 8 - hoursSlept);
+            
+            // CRITICAL: Hyperarousal detection
+            // Acute deprivation (<4 hrs) triggers cortisol/adrenaline response
+            // This makes sleep HARDER, not easier - the adenosine is counteracted
+            if (hoursSlept < 4) {
+                hyperarousalMode = true;
+                // Return ZERO bonus - the adrenaline negates the sleep pressure
+                // The user will feel exhausted but wired
+                return 0;
+            }
+            
+            hyperarousalMode = false;
+            return deficit * 1.5;
+        }
+
+        function getEffectiveThreshold() {
+            const baseThreshold = state.settings.sleepThreshold;
+            const sleepDebtBonus = calculateSleepDebtBonus();
+            return baseThreshold + sleepDebtBonus;
+        }
+        
+        function isHyperarousalMode() {
+            return hyperarousalMode;
+        }
+
+        // ============================================
+        // PROCESS C: Circadian Rhythm
+        // ============================================
+        
+        function getForbiddenZone() {
+            // Forbidden Zone: 13-15 hours after wake time
+            const wakeMinutes = timeToMinutes(state.wakeTime);
+            const start = wakeMinutes + (13 * 60); // 13 hours after wake
+            const end = wakeMinutes + (15 * 60);   // 15 hours after wake
+            return { start, end };
+        }
+
+        function getSleepGate() {
+            // Sleep Gate: 15-17 hours after wake time (optimal window)
+            const wakeMinutes = timeToMinutes(state.wakeTime);
+            const start = wakeMinutes + (15 * 60); // 15 hours after wake
+            const end = wakeMinutes + (17 * 60);   // 17 hours after wake
+            return { start, end };
+        }
+
+        function isInForbiddenZone(timeMinutes) {
+            const { start, end } = getForbiddenZone();
+            // Handle day rollover
+            let checkTime = timeMinutes;
+            if (checkTime < timeToMinutes(state.wakeTime)) {
+                checkTime += 24 * 60; // Next day
+            }
+            return checkTime >= start && checkTime < end;
+        }
+
+        function isInSleepGate(timeMinutes) {
+            const { start, end } = getSleepGate();
+            let checkTime = timeMinutes;
+            if (checkTime < timeToMinutes(state.wakeTime)) {
+                checkTime += 24 * 60;
+            }
+            return checkTime >= start && checkTime <= end;
+        }
+
+        function getForbiddenZoneEnd() {
+            const { end } = getForbiddenZone();
+            return end > 24 * 60 ? end - 24 * 60 : end;
+        }
+
+        // Calculate amphetamine load at a given time (in minutes from midnight)
+        function calculateAmpLoad(atMinutes) {
+            let totalLoad = 0;
+            const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
+            const vitCTime = state.modifiers.vitaminC.active ? timeToMinutes(state.modifiers.vitaminC.time) : Infinity;
+            const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
+
+            state.medications.forEach(med => {
+                const doseTime = timeToMinutes(med.time);
+                const totalDose = med.dose;
+                
+                // XR splits into two releases
+                const immediateRelease = totalDose * 0.5;
+                const delayedRelease = totalDose * 0.5;
+                const delayedTime = doseTime + 240; // T+4 hours
+                
+                // Calculate immediate release component
+                if (atMinutes >= doseTime) {
+                    const elapsed = atMinutes - doseTime;
+                    let effectiveHalfLife = baseHalfLife;
+                    
+                    // If Vitamin C was taken, use reduced half-life for time after it
+                    if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                        const beforeVitC = Math.max(0, vitCTime - doseTime);
+                        const afterVitC = atMinutes - Math.max(doseTime, vitCTime);
+                        
+                        // Decay before Vitamin C
+                        let remaining = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
+                        // Then faster decay after
+                        remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
+                        totalLoad += remaining;
+                    } else {
+                        totalLoad += immediateRelease * Math.pow(0.5, elapsed / baseHalfLife);
+                    }
+                }
+                
+                // Calculate delayed release component
+                if (atMinutes >= delayedTime) {
+                    const elapsed = atMinutes - delayedTime;
+                    let effectiveHalfLife = baseHalfLife;
+                    
+                    if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                        const beforeVitC = Math.max(0, vitCTime - delayedTime);
+                        const afterVitC = atMinutes - Math.max(delayedTime, vitCTime);
+                        
+                        let remaining = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
+                        remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
+                        totalLoad += remaining;
+                    } else {
+                        totalLoad += delayedRelease * Math.pow(0.5, elapsed / baseHalfLife);
+                    }
+                }
+            });
+            
+            return totalLoad;
+        }
+
+        // Calculate caffeine load at a given time
+        function calculateCaffLoad(atMinutes) {
+            let totalLoad = 0;
+            const halfLife = state.settings.caffHalfLife * 60;
+
+            state.caffeine.forEach(caff => {
+                const doseTime = timeToMinutes(caff.time);
+                if (atMinutes >= doseTime) {
+                    const elapsed = atMinutes - doseTime;
+                    totalLoad += caff.amount * Math.pow(0.5, elapsed / halfLife);
+                }
+            });
+
+            return totalLoad;
+        }
+
+        // Find when amphetamine clears threshold
+        function findAmpClearTime() {
+            const threshold = getEffectiveThreshold(); // Use effective threshold with sleep debt
+            
+            if (state.medications.length === 0) return null;
+            
+            // Binary search from now to 36 hours later
+            const now = getCurrentMinutes();
+            let low = now;
+            let high = now + 36 * 60; // 36 hours max search
+            
+            // First check if already below threshold
+            if (calculateAmpLoad(now) < threshold) {
+                return now;
+            }
+            
+            while (high - low > 1) {
+                const mid = Math.floor((low + high) / 2);
+                if (calculateAmpLoad(mid) > threshold) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            
+            return high;
+        }
+
+        // Find when caffeine clears threshold
+        function findCaffClearTime() {
+            const threshold = state.settings.caffThreshold;
+            
+            if (state.caffeine.length === 0) return null;
+            
+            const now = getCurrentMinutes();
+            let low = now;
+            let high = now + 24 * 60;
+            
+            if (calculateCaffLoad(now) < threshold) {
+                return now;
+            }
+            
+            while (high - low > 1) {
+                const mid = Math.floor((low + high) / 2);
+                if (calculateCaffLoad(mid) > threshold) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            
+            return high;
+        }
+
+        // Get cortisol clear time (no longer used - HIIT removed)
+        function getCortisolClearTime() {
+            return null;
+        }
+
+        // Calculate projected sleep time
+        function calculateSleepTime() {
+            const ampClear = findAmpClearTime();
+            const caffClear = findCaffClearTime();
+            
+            let sleepTime = getCurrentMinutes();
+            let blockingFactors = [];
+            
+            if (ampClear !== null && ampClear > sleepTime) {
+                sleepTime = ampClear;
+                blockingFactors.push({
+                    name: 'Amphetamine',
+                    clearsAt: ampClear,
+                    type: 'drug'
+                });
+            }
+            
+            if (caffClear !== null && caffClear > sleepTime) {
+                sleepTime = caffClear;
+                blockingFactors.push({
+                    name: 'Caffeine',
+                    clearsAt: caffClear,
+                    type: 'drug'
+                });
+            }
+            
+            // PROCESS C: Forbidden Zone is a HARD BLOCKER
+            // If sleep time falls within forbidden zone, push to after it ends
+            const forbiddenZone = getForbiddenZone();
+            let sleepTimeNormalized = sleepTime;
+            if (sleepTime < timeToMinutes(state.wakeTime)) {
+                sleepTimeNormalized = sleepTime + 24 * 60;
+            }
+            
+            if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
+                // Sleep time is in forbidden zone - push to end of zone
+                const forbiddenEnd = forbiddenZone.end;
+                blockingFactors.push({
+                    name: 'Forbidden Zone (Circadian)',
+                    clearsAt: forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd,
+                    type: 'circadian',
+                    note: 'Second wind period - your body resists sleep'
+                });
+                sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
+            }
+            
+            // Apply positive modifiers with timing consideration
+            if (state.modifiers.heavyLift.active) {
+                // Heavy lifting increases adenosine (good for sleep)
+                // Apply -15 min bonus
+                sleepTime -= 15;
+            }
+            
+            if (state.modifiers.sauna.active) {
+                // Sauna triggers parasympathetic response
+                // Only apply full bonus if taken in evening (after 5pm)
+                const saunaTime = timeToMinutes(state.modifiers.sauna.time);
+                const fivePM = 17 * 60;
+                
+                if (saunaTime >= fivePM) {
+                    // Evening sauna - full parasympathetic benefit
+                    sleepTime -= 30;
+                } else {
+                    // Earlier sauna - reduced benefit (body has time to re-arouse)
+                    sleepTime -= 15;
+                }
+            }
+            
+            // Sort blocking factors by clear time
+            blockingFactors.sort((a, b) => {
+                let aTime = a.clearsAt;
+                let bTime = b.clearsAt;
+                // Normalize for comparison
+                if (aTime < 6 * 60) aTime += 24 * 60;
+                if (bTime < 6 * 60) bTime += 24 * 60;
+                return bTime - aTime;
+            });
+            
+            return { sleepTime, blockingFactors };
+        }
+
+        function getCurrentMinutes() {
+            const now = new Date();
+            return now.getHours() * 60 + now.getMinutes();
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        
+        function addMedEntry(dose = 50, time = null) {
+            const now = new Date();
+            const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            const entry = { id: Date.now(), dose, time: defaultTime };
+            state.medications.push(entry);
+            renderMedEntries();
+            recalculate();
+        }
+
+        function removeMedEntry(id) {
+            state.medications = state.medications.filter(m => m.id !== id);
+            renderMedEntries();
+            recalculate();
+        }
+
+        function updateMedEntry(id, field, value) {
+            const med = state.medications.find(m => m.id === id);
+            if (med) {
+                if (field === 'dose') {
+                    med.dose = parseInt(value);
+                } else if (field === 'time') {
+                    med.time = value;
+                }
+                // CRITICAL: Must re-render to update stacking warning with new values
+                renderMedEntries();
+                recalculate();
+            }
+        }
+
+        function renderMedEntries() {
+            const container = document.getElementById('medEntries');
+            container.innerHTML = state.medications.map((med, index) => `
+                <div class="med-entry">
+                    <select onchange="updateMedEntry(${med.id}, 'dose', this.value)">
+                        <option value="20" ${med.dose === 20 ? 'selected' : ''}>20mg XR</option>
+                        <option value="30" ${med.dose === 30 ? 'selected' : ''}>30mg XR</option>
+                        <option value="40" ${med.dose === 40 ? 'selected' : ''}>40mg XR (20+20)</option>
+                        <option value="50" ${med.dose === 50 ? 'selected' : ''}>50mg XR (30+20)</option>
+                        <option value="60" ${med.dose === 60 ? 'selected' : ''}>60mg XR (30+30)</option>
+                        <option value="70" ${med.dose === 70 ? 'selected' : ''}>70mg XR (30+20+20)</option>
+                    </select>
+                    <input type="time" value="${med.time}" onchange="updateMedEntry(${med.id}, 'time', this.value)">
+                    ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
+                    <button class="remove-btn" onclick="removeMedEntry(${med.id})">×</button>
+                </div>
+            `).join('');
+            
+            // Update stacking warning panel
+            updateStackingWarning();
+        }
+        
+        function updateStackingWarning() {
+            const warningEl = document.getElementById('stackingWarning');
+            if (!warningEl) return;
+            
+            const totalDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
+            const numDoses = state.medications.length;
+            const sleepDebt = Math.max(0, 8 - state.hoursSleptLastNight);
+            
+            if (numDoses > 1) {
+                let riskLevel = 'moderate';
+                let riskColor = '#f59e0b';
+                
+                // High risk if: stacking + no sleep debt (fighting drug "naked")
+                if (sleepDebt < 2 && totalDose >= 60) {
+                    riskLevel = 'high';
+                    riskColor = '#ef4444';
+                }
+                
+                warningEl.style.display = 'block';
+                warningEl.style.borderColor = `rgba(${riskLevel === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.4)`;
+                warningEl.style.background = `rgba(${riskLevel === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.15)`;
+                
+                warningEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: ${riskColor};">
+                            ⚠️ DOSE STACKING DETECTED
+                        </div>
+                        <div style="font-size: 0.9em; color: ${riskColor};">
+                            Total: ${totalDose}mg
+                        </div>
+                    </div>
+                    <div style="color: #c9d1d9; line-height: 1.5;">
+                        <strong>The Math:</strong> Adding a second dose doesn't just raise the peak – it <em>widens the base</em> of the elimination curve. 
+                        That ${state.medications[1]?.dose || 20}mg "booster" often adds <strong>4-6+ hours</strong> of wakefulness, not just more focus.
+                    </div>
+                    ${sleepDebt < 2 ? `
+                        <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; color: #fca5a5;">
+                            <strong>🚨 HIGH RISK:</strong> You're well-rested (${sleepDebt.toFixed(1)}hr debt). Your brain has NO adenosine pressure to fight this extra drug. You're fighting it "naked."
+                        </div>
+                    ` : ''}
+                    <div style="margin-top: 10px; font-size: 0.85em; color: #8b949e;">
+                        <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
+                    </div>
+                `;
+            } else if (totalDose >= 60) {
+                // Single high dose warning
+                warningEl.style.display = 'block';
+                warningEl.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                warningEl.style.background = 'rgba(245, 158, 11, 0.1)';
+                
+                warningEl.innerHTML = `
+                    <div style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
+                        💊 High Dose Warning: ${totalDose}mg
+                    </div>
+                    <div style="color: #8b949e; font-size: 0.9em;">
+                        Doses above 50mg extend clearance time disproportionately. Consider if you really need this much today.
+                    </div>
+                `;
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        function addCaffeine(amount, name) {
+            const now = new Date();
+            const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            state.caffeine.push({ id: Date.now(), amount, name, time });
+            renderCaffeineEntries();
+            recalculate();
+        }
+
+        function removeCaffeine(id) {
+            state.caffeine = state.caffeine.filter(c => c.id !== id);
+            renderCaffeineEntries();
+            recalculate();
+        }
+
+        function renderCaffeineEntries() {
+            const container = document.getElementById('caffeineEntries');
+            container.innerHTML = state.caffeine.map(caff => `
+                <div class="caffeine-entry">
+                    <span class="caffeine-info">${caff.name} (${caff.amount}mg)</span>
+                    <span class="caffeine-time">${formatTime12(caff.time)}</span>
+                    <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine(${caff.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function formatTime12(time24) {
+            const [hours, mins] = time24.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+            return `${hours12}:${mins.toString().padStart(2, '0')} ${period}`;
+        }
+
+        function toggleModifier(element, modifierName) {
+            const modifier = state.modifiers[modifierName];
+            modifier.active = !modifier.active;
+            
+            if (modifier.active) {
+                element.classList.add('active');
+            } else {
+                element.classList.remove('active');
+            }
+            
+            // Show/hide time inputs
+            updateModifierTimeInputs();
+            recalculate();
+        }
+
+        function updateModifierTimeInputs() {
+            const container = document.getElementById('modifierTimes');
+            const vitCGroup = document.getElementById('vitaminCTimeGroup');
+            const saunaGroup = document.getElementById('saunaTimeGroup');
+            
+            const showVitC = state.modifiers.vitaminC.active;
+            const showSauna = state.modifiers.sauna.active;
+            
+            vitCGroup.style.display = showVitC ? 'flex' : 'none';
+            saunaGroup.style.display = showSauna ? 'flex' : 'none';
+            container.style.display = (showVitC || showSauna) ? 'block' : 'none';
+        }
+
+        function toggleSettings() {
+            const content = document.getElementById('settingsContent');
+            const arrow = document.getElementById('settingsArrow');
+            content.classList.toggle('show');
+            arrow.textContent = content.classList.contains('show') ? '▲' : '▼';
+        }
+
+        // ============================================
+        // MAIN RECALCULATION
+        // ============================================
+        
+        function recalculate() {
+            // Update state from inputs
+            state.wakeTime = document.getElementById('wakeTime').value;
+            const newHoursSlept = parseFloat(document.getElementById('hoursSlept').value) || 8;
+            
+            // Check if hours slept changed - update calendar and stacking warning
+            if (newHoursSlept !== state.hoursSleptLastNight) {
+                state.hoursSleptLastNight = newHoursSlept;
+                updateTodaySleepHistory();
+                updateStackingWarning(); // Re-evaluate risk based on new sleep debt
+            } else {
+                state.hoursSleptLastNight = newHoursSlept;
+            }
+            
+            state.settings.ampHalfLife = parseFloat(document.getElementById('ampHalfLife').value);
+            state.settings.sleepThreshold = parseFloat(document.getElementById('sleepThreshold').value);
+            state.settings.caffHalfLife = parseFloat(document.getElementById('caffHalfLife').value);
+            state.settings.caffThreshold = parseFloat(document.getElementById('caffThreshold').value);
+            state.settings.weight = parseFloat(document.getElementById('weight').value);
+            
+            if (state.modifiers.vitaminC.active) {
+                state.modifiers.vitaminC.time = document.getElementById('vitaminCTime').value;
+            }
+            if (state.modifiers.sauna.active) {
+                state.modifiers.sauna.time = document.getElementById('saunaTime').value;
+            }
+
+            const now = getCurrentMinutes();
+            
+            // Update Sleep Debt Display
+            const sleepDebtBonus = calculateSleepDebtBonus();
+            const effectiveThreshold = getEffectiveThreshold();
+            const sleepDebtDisplay = document.getElementById('sleepDebtDisplay');
+            
+            // CRITICAL: Check for Hyperarousal Mode (acute deprivation < 4 hrs)
+            if (isHyperarousalMode()) {
+                sleepDebtDisplay.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #ef4444; font-weight: 700;">🚨 ACUTE DEPRIVATION DETECTED</span>
+                        <span style="color: #ef4444; font-weight: 600;">HIGH ADRENALINE RISK</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #fca5a5; margin-top: 8px; line-height: 1.5;">
+                        <strong>WARNING:</strong> You slept less than 4 hours. Your body is in survival mode.
+                        <br><br>
+                        <strong>The Paradox:</strong> Sleep pressure is high, but your HPA axis is flooding your system with cortisol and adrenaline. You will feel "tired but wired."
+                        <br><br>
+                        <strong>Action Required:</strong>
+                        <br>• Avoid ALL screens after 8 PM (blue light extends wakefulness 90-120 min)
+                        <br>• No caffeine after noon
+                        <br>• Hot shower or sauna to trigger parasympathetic response
+                        <br>• The sleep debt bonus is NEGATED - you need drugs to clear fully
+                    </div>
+                    <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; font-size: 0.85em;">
+                        Threshold: ${effectiveThreshold.toFixed(1)}mg (no bonus applied - adrenaline counteracts adenosine)
+                    </div>
+                `;
+                sleepDebtDisplay.style.borderLeft = '4px solid #ef4444';
+                sleepDebtDisplay.style.background = 'rgba(239, 68, 68, 0.1)';
+            } else if (sleepDebtBonus > 0) {
+                sleepDebtDisplay.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #f59e0b;">😴 Sleep Debt Detected</span>
+                        <span style="color: #f59e0b; font-weight: 600;">+${sleepDebtBonus.toFixed(1)}mg to threshold</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 6px;">
+                        Base threshold: ${state.settings.sleepThreshold}mg → Effective: <strong style="color: #10b981;">${effectiveThreshold.toFixed(1)}mg</strong>
+                        <br>Your exhaustion will help you fall asleep with more drug in your system.
+                    </div>
+                `;
+                sleepDebtDisplay.style.borderLeft = '3px solid #f59e0b';
+                sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
+            } else {
+                sleepDebtDisplay.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #10b981;">✓ Well Rested</span>
+                        <span style="color: #8b949e;">Threshold: ${effectiveThreshold.toFixed(1)}mg</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 6px;">
+                        No sleep debt modifier applied.
+                    </div>
+                `;
+                sleepDebtDisplay.style.borderLeft = '3px solid #10b981';
+                sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
+            }
+            
+            // Update Circadian Timeline Display
+            const forbiddenZone = getForbiddenZone();
+            const sleepGate = getSleepGate();
+            
+            document.getElementById('wakeTimeDisplay').textContent = formatTime12(state.wakeTime);
+            document.getElementById('forbiddenZoneTime').textContent = 
+                `${minutesToTime(forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start)} - ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}`;
+            document.getElementById('sleepGateTime').textContent = 
+                `${minutesToTime(sleepGate.start > 24*60 ? sleepGate.start - 24*60 : sleepGate.start)} - ${minutesToTime(sleepGate.end > 24*60 ? sleepGate.end - 24*60 : sleepGate.end)}`;
+            
+            // Update Circadian Status
+            const inForbiddenZone = isInForbiddenZone(now);
+            const inSleepGate = isInSleepGate(now);
+            const circadianStatusEl = document.getElementById('circadianStatus');
+            const circadianIndicatorEl = document.getElementById('circadianIndicator');
+            const circadianItem = document.getElementById('circadianStatusItem');
+            
+            if (inForbiddenZone) {
+                circadianStatusEl.textContent = 'Forbidden Zone';
+                circadianIndicatorEl.textContent = '⚠️';
+                circadianItem.className = 'status-item blocking';
+            } else if (inSleepGate) {
+                circadianStatusEl.textContent = 'Sleep Gate Open';
+                circadianIndicatorEl.textContent = '🌙';
+                circadianItem.className = 'status-item ok';
+                circadianItem.style.borderLeftColor = '#10b981';
+            } else {
+                circadianStatusEl.textContent = 'Normal';
+                circadianIndicatorEl.textContent = '✓';
+                circadianItem.className = 'status-item ok';
+            }
+            
+            // Calculate current loads
+            const currentAmpLoad = calculateAmpLoad(now);
+            const currentCaffLoad = calculateCaffLoad(now);
+            
+            // Update current status display
+            const caffThreshold = state.settings.caffThreshold;
+            
+            document.getElementById('currentAmpLoad').textContent = currentAmpLoad.toFixed(1) + ' mg';
+            document.getElementById('currentCaffLoad').textContent = currentCaffLoad.toFixed(1) + ' mg';
+            
+            const ampOk = currentAmpLoad < effectiveThreshold;
+            const caffOk = currentCaffLoad < caffThreshold;
+            
+            // Update status indicators
+            updateStatusItem('ampStatus', ampOk, currentAmpLoad, effectiveThreshold);
+            updateStatusItem('caffStatus', caffOk, currentCaffLoad, caffThreshold);
+            
+            // Calculate sleep time
+            const { sleepTime, blockingFactors } = calculateSleepTime();
+            
+            // Update main countdown display
+            const sleepTimeDisplay = document.getElementById('sleepTime');
+            const timeRemainingEl = document.getElementById('timeRemaining');
+            const sleepQualityEl = document.getElementById('sleepQuality');
+            
+            // Handle case where sleep time might be next day
+            let displaySleepTime = sleepTime;
+            if (sleepTime > 24 * 60) {
+                displaySleepTime = sleepTime - 24 * 60;
+            }
+            
+            sleepTimeDisplay.textContent = minutesToTime(displaySleepTime);
+            
+            // Calculate time remaining
+            let remaining = sleepTime - now;
+            if (remaining < 0) remaining += 24 * 60; // Handle day rollover
+            const remainingHours = Math.floor(remaining / 60);
+            const remainingMins = Math.floor(remaining % 60);
+            timeRemainingEl.textContent = `${remainingHours}h ${remainingMins}m`;
+            
+            // Calculate sleep hours available
+            const wakeMinutes = timeToMinutes(state.wakeTime);
+            let nextWake = wakeMinutes;
+            if (sleepTime > wakeMinutes || sleepTime < 6 * 60) {
+                nextWake = wakeMinutes + 24 * 60; // Next day
+            }
+            
+            let effectiveSleepTime = sleepTime;
+            if (sleepTime < 6 * 60) {
+                effectiveSleepTime = sleepTime + 24 * 60;
+            }
+            
+            const sleepHours = Math.max(0, (nextWake - effectiveSleepTime) / 60);
+            
+            // Color coding - updated terminology per expert recommendation
+            let colorClass, qualityText;
+            if (sleepHours >= 8) {
+                colorClass = 'green';
+                qualityText = `✓ Projected Sleep Duration: ${sleepHours.toFixed(1)} hours`;
+            } else if (sleepHours >= 6) {
+                colorClass = 'yellow';
+                qualityText = `⚠️ Projected Duration: ${sleepHours.toFixed(1)} hours - suboptimal but functional`;
+            } else if (sleepHours > 0) {
+                colorClass = 'red';
+                qualityText = `🚨 Projected Duration: ${sleepHours.toFixed(1)} hours - muscle catabolism risk`;
+            } else {
+                colorClass = 'red';
+                qualityText = `🚨 SLEEP IMPOSSIBLE TONIGHT - drugs won't clear before wake time`;
+            }
+            
+            sleepTimeDisplay.className = `countdown-time ${colorClass} time-display`;
+            sleepQualityEl.className = `sleep-quality ${colorClass}`;
+            sleepQualityEl.textContent = qualityText;
+            
+            // Update blocking factors
+            const blockingContainer = document.getElementById('blockingFactors');
+            const blockingList = document.getElementById('blockingList');
+            
+            if (blockingFactors.length > 0 && !(ampOk && caffOk && !inForbiddenZone)) {
+                blockingContainer.style.display = 'block';
+                blockingList.innerHTML = blockingFactors.map(f => `
+                    <div class="blocking-factor">
+                        <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #8b949e;">(${f.note})</span>` : ''}</span>
+                        <span class="clears-at">Clears at ${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                    </div>
+                `).join('');
+            } else {
+                blockingContainer.style.display = 'none';
+            }
+            
+            // Update recommendations
+            updateRecommendations(sleepTime, sleepHours, blockingFactors);
+            
+            // Update feelings timeline
+            updateFeelingsTimeline();
+            
+            // Update what-if scenarios
+            updateScenarios();
+            
+            // Draw graph
+            drawGraph();
+            
+            // Save state
+            saveState();
+        }
+
+        function updateStatusItem(indicatorId, isOk, current, threshold) {
+            const indicator = document.getElementById(indicatorId);
+            const statusItem = indicator.closest('.status-item');
+            
+            indicator.textContent = isOk ? '✓' : '⏳';
+            statusItem.className = `status-item ${isOk ? 'ok' : 'blocking'}`;
+        }
+
+        // ============================================
+        // RECOMMENDATIONS ENGINE
+        // ============================================
+        
+        function updateRecommendations(sleepTime, sleepHours, blockingFactors) {
+            const container = document.getElementById('recommendations');
+            const recommendations = [];
+            const now = getCurrentMinutes();
+            const noon = 12 * 60;
+            const sevenPM = 19 * 60;
+            const eightPM = 20 * 60;
+            const forbiddenZone = getForbiddenZone();
+            const sleepGate = getSleepGate();
+            const effectiveThreshold = getEffectiveThreshold();
+            const sleepDebtBonus = calculateSleepDebtBonus();
+            
+            // CRITICAL: Hyperarousal warning (highest priority)
+            if (isHyperarousalMode()) {
+                recommendations.push({
+                    type: 'danger',
+                    icon: '🚨',
+                    title: 'HYPERAROUSAL MODE ACTIVE',
+                    text: `You slept < 4 hours. Your HPA axis is flooding your system with cortisol and adrenaline. The normal "sleep debt helps you sleep" rule is REVERSED. You will feel exhausted but unable to sleep. Aggressive intervention required: NO screens after ${minutesToTime(eightPM)}, hot shower, meditation, and avoid ALL caffeine.`
+                });
+            }
+            
+            // Check if predicted sleep is in forbidden zone
+            const forbiddenZoneBlocking = blockingFactors.find(f => f.type === 'circadian');
+            if (forbiddenZoneBlocking) {
+                const drugClearTime = blockingFactors.find(f => f.type === 'drug')?.clearsAt;
+                if (drugClearTime) {
+                    recommendations.push({
+                        type: 'warning',
+                        icon: '🌙',
+                        title: 'Forbidden Zone Impact',
+                        text: `Your drugs clear at ${minutesToTime(drugClearTime > 24*60 ? drugClearTime - 24*60 : drugClearTime)}, but this falls in your "Forbidden Zone" (${minutesToTime(forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start)} - ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}). You may feel a crash then get a "second wind." True sleep onset pushed to ${minutesToTime(sleepTime > 24*60 ? sleepTime - 24*60 : sleepTime)}.`
+                    });
+                }
+            }
+            
+            // Sleep debt notification (only show if NOT in hyperarousal mode)
+            if (!isHyperarousalMode() && sleepDebtBonus >= 4.5) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '😴',
+                    title: 'Significant Sleep Debt',
+                    text: `You're running on ${state.hoursSleptLastNight} hours of sleep. Your effective threshold is now ${effectiveThreshold.toFixed(1)}mg (up from ${state.settings.sleepThreshold}mg). While this means you'll crash earlier, chronic sleep debt has serious health consequences.`
+                });
+            } else if (!isHyperarousalMode() && sleepDebtBonus > 0) {
+                recommendations.push({
+                    type: 'info',
+                    icon: '💤',
+                    title: 'Sleep Debt Detected',
+                    text: `Running a ${(8 - state.hoursSleptLastNight).toFixed(1)} hour deficit. Your threshold is elevated to ${effectiveThreshold.toFixed(1)}mg, which will help you fall asleep earlier despite the stimulants.`
+                });
+            }
+            
+            // Sleep gate notification
+            const sleepTimeNormalized = sleepTime < timeToMinutes(state.wakeTime) ? sleepTime + 24 * 60 : sleepTime;
+            if (sleepTimeNormalized >= sleepGate.start && sleepTimeNormalized <= sleepGate.end) {
+                recommendations.push({
+                    type: 'success',
+                    icon: '✨',
+                    title: 'Sleep Gate Alignment',
+                    text: `Your projected sleep time falls within your optimal "Sleep Gate" window (${minutesToTime(sleepGate.start > 24*60 ? sleepGate.start - 24*60 : sleepGate.start)} - ${minutesToTime(sleepGate.end > 24*60 ? sleepGate.end - 24*60 : sleepGate.end)}). This is when your body naturally wants to sleep.`
+                });
+            }
+            
+            // Caffeine cutoff warning
+            if (now < noon && state.caffeine.length === 0) {
+                const timeUntilCutoff = noon - now;
+                const hours = Math.floor(timeUntilCutoff / 60);
+                const mins = timeUntilCutoff % 60;
+                recommendations.push({
+                    type: 'info',
+                    icon: '☕',
+                    title: 'Caffeine Window Open',
+                    text: `You have ${hours}h ${mins}m until noon caffeine cutoff. Each coffee after 12pm adds ~3 hours to your sleep window.`
+                });
+            }
+            
+            // If sleep is late, suggest interventions
+            if (sleepHours < 7 && !state.modifiers.vitaminC.active) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '🍊',
+                    title: 'Consider Vitamin C Flush',
+                    text: `Taking 1000mg Vitamin C at 5-6pm could reduce your half-life by 30%, potentially moving sleep ~45-60 min earlier.`
+                });
+            }
+            
+            if (sleepHours < 7 && !state.modifiers.sauna.active) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '🧖',
+                    title: 'Sauna Could Help',
+                    text: '15+ minutes in the sauna triggers parasympathetic rebound, potentially allowing sleep 30 min earlier.'
+                });
+            }
+            
+            // Good sleep projection
+            if (sleepHours >= 8 && !forbiddenZoneBlocking) {
+                recommendations.push({
+                    type: 'success',
+                    icon: '✨',
+                    title: 'On Track for Quality Sleep',
+                    text: `Current trajectory gives you ${sleepHours.toFixed(1)} hours. Cortisol will be low, muscle will be spared.`
+                });
+            }
+            
+            // Critical warning
+            if (sleepHours < 6) {
+                recommendations.push({
+                    type: 'danger',
+                    icon: '🚨',
+                    title: 'Critical Sleep Deficit',
+                    text: `Only ${sleepHours.toFixed(1)} hours possible. This triggers elevated cortisol, insulin resistance, and muscle catabolism. Tomorrow will be compromised.`
+                });
+            }
+            
+            // CHRONIC DEBT & CIRCADIAN PHASE ANALYSIS
+            const circadianAnalysis = analyzeCircadianPhase();
+            
+            // Add circadian phase warning if problematic
+            if (circadianAnalysis.phase === 'danger-delayed' || circadianAnalysis.phase === 'delayed') {
+                recommendations.push({
+                    type: 'danger',
+                    icon: circadianAnalysis.icon,
+                    title: `Circadian Phase: ${circadianAnalysis.label}`,
+                    text: circadianAnalysis.recommendation.split('\n\n')[0] // Just the main recommendation
+                });
+            } else if (circadianAnalysis.phase === 'extreme-early' || circadianAnalysis.phase === 'slightly-late') {
+                recommendations.push({
+                    type: 'warning',
+                    icon: circadianAnalysis.icon,
+                    title: `Circadian Phase: ${circadianAnalysis.label}`,
+                    text: circadianAnalysis.recommendation.split('\n\n')[0]
+                });
+            }
+            
+            // Add chronic debt warning if averaging low sleep
+            if (circadianAnalysis.avgSleep && circadianAnalysis.avgSleep < 5 && circadianAnalysis.dataPoints >= 3) {
+                recommendations.push({
+                    type: 'danger',
+                    icon: '📉',
+                    title: 'Chronic Sleep Debt Detected',
+                    text: `You're averaging only ${circadianAnalysis.avgSleep.toFixed(1)} hours over the past ${circadianAnalysis.dataPoints} days. This compounds cognitive impairment and raises baseline cortisol. Your body is running on adrenaline.`
+                });
+            } else if (circadianAnalysis.avgSleep && circadianAnalysis.avgSleep < 6.5 && circadianAnalysis.dataPoints >= 3) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '📊',
+                    title: 'Accumulating Sleep Debt',
+                    text: `Averaging ${circadianAnalysis.avgSleep.toFixed(1)} hours over ${circadianAnalysis.dataPoints} days. The deficit compounds – you need a recovery night (9+ hours) to clear this debt.`
+                });
+            }
+            
+            // Consistency warning
+            if (circadianAnalysis.stdDev && circadianAnalysis.stdDev > 120 && circadianAnalysis.dataPoints >= 3) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '🔀',
+                    title: 'Inconsistent Sleep Schedule',
+                    text: `Your wake times vary by over 2 hours. This "social jet lag" disrupts circadian rhythms as much as actual travel. Try to keep wake times within 1 hour, even on weekends.`
+                });
+            }
+            
+            // No meds logged
+            if (state.medications.length === 0) {
+                recommendations.push({
+                    type: 'info',
+                    icon: '💊',
+                    title: 'No Medications Logged',
+                    text: 'Add your medication doses to see projected sleep time.'
+                });
+            }
+            
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation ${rec.type}">
+                    <div class="recommendation-title">${rec.icon} ${rec.title}</div>
+                    <div class="recommendation-text">${rec.text}</div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // EXPECTED FEELINGS TIMELINE
+        // ============================================
+        
+        function updateFeelingsTimeline() {
+            const container = document.getElementById('feelingsList');
+            const feelings = [];
+            const now = getCurrentMinutes();
+            const { sleepTime, blockingFactors } = calculateSleepTime();
+            const forbiddenZone = getForbiddenZone();
+            const sleepGate = getSleepGate();
+            
+            // Find when drugs crash (largest drop point)
+            const ampClear = findAmpClearTime();
+            const caffClear = findCaffClearTime();
+            const effectiveThreshold = getEffectiveThreshold();
+            
+            // Get total dose for context
+            const totalAmpDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
+            
+            if (totalAmpDose === 0) {
+                container.innerHTML = '<div style="color: #8b949e; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
+                return;
+            }
+            
+            // Find peak time (about 2-4 hours after last dose for XR)
+            if (state.medications.length > 0) {
+                const lastDoseTime = Math.max(...state.medications.map(m => timeToMinutes(m.time)));
+                const peakTime = lastDoseTime + 180; // ~3 hours after dose
+                
+                if (peakTime > now && peakTime < sleepTime) {
+                    feelings.push({
+                        time: peakTime,
+                        emoji: '⚡',
+                        label: 'Peak Focus',
+                        detail: 'Maximum drug effect - best for demanding tasks',
+                        color: '#3b82f6'
+                    });
+                }
+                
+                // Second wave for XR (T+4 from dose)
+                const secondWaveTime = lastDoseTime + 240;
+                if (secondWaveTime > now && secondWaveTime < sleepTime && secondWaveTime !== peakTime) {
+                    feelings.push({
+                        time: secondWaveTime,
+                        emoji: '🔄',
+                        label: 'Second Release',
+                        detail: 'XR second layer kicks in',
+                        color: '#8b5cf6'
+                    });
+                }
+            }
+            
+            // Crash point (when amp drops below threshold rapidly)
+            if (ampClear && ampClear > now) {
+                const crashTime = ampClear - 30; // Crash starts ~30 min before full clear
+                if (crashTime > now) {
+                    feelings.push({
+                        time: crashTime,
+                        emoji: '📉',
+                        label: 'Crash Begins',
+                        detail: 'Amphetamine dropping fast - fatigue onset',
+                        color: '#f59e0b'
+                    });
+                }
+            }
+            
+            // Forbidden Zone feelings
+            const fzStart = forbiddenZone.start > 24 * 60 ? forbiddenZone.start - 24 * 60 : forbiddenZone.start;
+            const fzEnd = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
+            
+            if (fzStart > now) {
+                feelings.push({
+                    time: fzStart,
+                    emoji: '⚠️',
+                    label: 'Second Wind',
+                    detail: 'Circadian alerting signal - will feel awake despite exhaustion',
+                    color: '#ef4444'
+                });
+            }
+            
+            // Sleep Gate opening
+            const sgStart = sleepGate.start > 24 * 60 ? sleepGate.start - 24 * 60 : sleepGate.start;
+            if (sgStart > now) {
+                feelings.push({
+                    time: sgStart,
+                    emoji: '🌙',
+                    label: 'Sleep Gate Opens',
+                    detail: 'Melatonin rising - body ready for sleep',
+                    color: '#10b981'
+                });
+            }
+            
+            // Final sleep
+            if (sleepTime > now) {
+                let sleepTimeDisplay = sleepTime;
+                if (sleepTime > 24 * 60) sleepTimeDisplay = sleepTime - 24 * 60;
+                
+                feelings.push({
+                    time: sleepTimeDisplay,
+                    emoji: '😴',
+                    label: 'Sleep Onset',
+                    detail: 'Projected time you\'ll fall asleep',
+                    color: '#06b6d4'
+                });
+            }
+            
+            // Sort by time
+            feelings.sort((a, b) => {
+                let aTime = a.time;
+                let bTime = b.time;
+                // Normalize times past midnight
+                if (aTime < 6 * 60) aTime += 24 * 60;
+                if (bTime < 6 * 60) bTime += 24 * 60;
+                return aTime - bTime;
+            });
+            
+            // Render
+            if (feelings.length === 0) {
+                container.innerHTML = '<div style="color: #8b949e; font-style: italic; padding: 8px;">All events have passed or no data available.</div>';
+                return;
+            }
+            
+            container.innerHTML = feelings.map(f => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; border-left: 3px solid ${f.color};">
+                    <div style="font-size: 1.4em;">${f.emoji}</div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; color: ${f.color};">${f.label}</span>
+                            <span style="font-size: 0.9em; color: #e6edf3; font-variant-numeric: tabular-nums;">${minutesToTime(f.time)}</span>
+                        </div>
+                        <div style="font-size: 0.8em; color: #8b949e; margin-top: 2px;">${f.detail}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // WHAT-IF SCENARIOS
+        // ============================================
+        
+        function updateScenarios() {
+            const now = getCurrentMinutes();
+            const { sleepTime: baseSleepTime } = calculateSleepTime();
+            
+            // Scenario 1: Add coffee now
+            const coffeeSleep = simulateCaffeineAddition(100);
+            updateScenarioDisplay('Coffee', coffeeSleep, baseSleepTime);
+            
+            // Scenario 2: Add double espresso
+            const espressoSleep = simulateCaffeineAddition(126);
+            updateScenarioDisplay('Espresso', espressoSleep, baseSleepTime);
+            
+            // Scenario 3: Take Vitamin C now (if not already active)
+            const vitcSleep = simulateVitaminC();
+            updateScenarioDisplay('VitC', vitcSleep, baseSleepTime);
+            
+            // Scenario 4: Sauna session (if not already active)
+            const saunaSleep = simulateSauna();
+            updateScenarioDisplay('Sauna', saunaSleep, baseSleepTime);
+        }
+        
+        function simulateCaffeineAddition(amount) {
+            // Temporarily add caffeine and calculate
+            const now = getCurrentMinutes();
+            const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
+            
+            const tempCaff = { id: 999999, amount, name: 'Simulated', time: nowTime };
+            state.caffeine.push(tempCaff);
+            
+            const { sleepTime } = calculateSleepTime();
+            
+            // Remove temp caffeine
+            state.caffeine = state.caffeine.filter(c => c.id !== 999999);
+            
+            return sleepTime;
+        }
+        
+        function simulateVitaminC() {
+            if (state.modifiers.vitaminC.active) {
+                // Already active - show current sleep time
+                return calculateSleepTime().sleepTime;
+            }
+            
+            const now = getCurrentMinutes();
+            const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
+            
+            // Temporarily activate vitamin C
+            const wasActive = state.modifiers.vitaminC.active;
+            const oldTime = state.modifiers.vitaminC.time;
+            
+            state.modifiers.vitaminC.active = true;
+            state.modifiers.vitaminC.time = nowTime;
+            
+            const { sleepTime } = calculateSleepTime();
+            
+            // Restore
+            state.modifiers.vitaminC.active = wasActive;
+            state.modifiers.vitaminC.time = oldTime;
+            
+            return sleepTime;
+        }
+        
+        function simulateSauna() {
+            if (state.modifiers.sauna.active) {
+                return calculateSleepTime().sleepTime;
+            }
+            
+            // Temporarily activate sauna
+            const wasActive = state.modifiers.sauna.active;
+            
+            state.modifiers.sauna.active = true;
+            
+            const { sleepTime } = calculateSleepTime();
+            
+            // Restore
+            state.modifiers.sauna.active = wasActive;
+            
+            return sleepTime;
+        }
+        
+        function updateScenarioDisplay(scenario, newSleepTime, baseSleepTime) {
+            const sleepEl = document.getElementById(`scenario${scenario}Sleep`);
+            const deltaEl = document.getElementById(`scenario${scenario}Delta`);
+            
+            if (!sleepEl || !deltaEl) return;
+            
+            let displaySleep = newSleepTime;
+            if (displaySleep > 24 * 60) displaySleep -= 24 * 60;
+            
+            sleepEl.textContent = minutesToTime(displaySleep);
+            
+            // Calculate delta
+            let delta = newSleepTime - baseSleepTime;
+            
+            // Handle edge cases for delta display
+            if (Math.abs(delta) > 12 * 60) {
+                // Probably crossed midnight - adjust
+                delta = delta > 0 ? delta - 24 * 60 : delta + 24 * 60;
+            }
+            
+            const deltaHours = Math.floor(Math.abs(delta) / 60);
+            const deltaMins = Math.abs(delta) % 60;
+            const sign = delta > 0 ? '+' : delta < 0 ? '-' : '';
+            
+            if (delta === 0) {
+                deltaEl.textContent = 'No change';
+                deltaEl.style.color = '#8b949e';
+            } else {
+                let deltaStr = '';
+                if (deltaHours > 0) deltaStr += `${deltaHours}h `;
+                deltaStr += `${deltaMins}m`;
+                
+                deltaEl.textContent = sign + deltaStr;
+                deltaEl.style.color = delta > 0 ? '#ef4444' : '#10b981';
+            }
+        }
+        
+        function simulateScenario(type) {
+            const now = getCurrentMinutes();
+            const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
+            
+            switch(type) {
+                case 'coffee':
+                    addCaffeine(100, 'Coffee');
+                    showToast('☕ Coffee added!');
+                    break;
+                case 'espresso':
+                    addCaffeine(126, 'Double Espresso');
+                    showToast('🔥 Double espresso added!');
+                    break;
+                case 'vitc':
+                    if (!state.modifiers.vitaminC.active) {
+                        state.modifiers.vitaminC.active = true;
+                        state.modifiers.vitaminC.time = nowTime;
+                        document.querySelector('[data-modifier="vitaminC"]').classList.add('active');
+                        document.getElementById('vitaminCTime').value = nowTime;
+                        updateModifierTimeInputs();
+                        showToast('🍊 Vitamin C activated!');
+                    } else {
+                        showToast('Vitamin C already active');
+                    }
+                    break;
+                case 'sauna':
+                    if (!state.modifiers.sauna.active) {
+                        state.modifiers.sauna.active = true;
+                        state.modifiers.sauna.time = nowTime;
+                        document.querySelector('[data-modifier="sauna"]').classList.add('active');
+                        document.getElementById('saunaTime').value = nowTime;
+                        updateModifierTimeInputs();
+                        showToast('🧖 Sauna session added!');
+                    } else {
+                        showToast('Sauna already active');
+                    }
+                    break;
+            }
+            recalculate();
+        }
+
+        // ============================================
+        // GRAPH DRAWING
+        // ============================================
+        
+        function drawGraph() {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 40;
+            canvas.height = rect.height - 40;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = { left: 50, right: 20, top: 20, bottom: 30 };
+            const graphWidth = width - padding.left - padding.right;
+            const graphHeight = height - padding.top - padding.bottom;
+            
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+            
+            // Time range: 6am to 3am next day (21 hours)
+            const startTime = 6 * 60; // 6am
+            const endTime = 27 * 60; // 3am next day
+            const timeRange = endTime - startTime;
+            
+            // Find max values for scaling
+            const effectiveThreshold = getEffectiveThreshold();
+            let maxAmp = effectiveThreshold * 2;
+            let maxCaff = state.settings.caffThreshold * 2;
+            
+            for (let t = startTime; t <= endTime; t += 15) {
+                maxAmp = Math.max(maxAmp, calculateAmpLoad(t));
+                maxCaff = Math.max(maxCaff, calculateCaffLoad(t));
+            }
+            
+            const maxY = Math.max(maxAmp, maxCaff, 50);
+            
+            // Draw Forbidden Zone band (red, semi-transparent)
+            const forbiddenZone = getForbiddenZone();
+            let fzStart = forbiddenZone.start;
+            let fzEnd = forbiddenZone.end;
+            if (fzStart > 24 * 60) fzStart -= 24 * 60;
+            if (fzEnd > 24 * 60) fzEnd -= 24 * 60;
+            
+            // Adjust for graph coordinates
+            if (fzStart >= startTime && fzStart <= endTime) {
+                const fzStartX = padding.left + ((fzStart - startTime) / timeRange) * graphWidth;
+                const fzEndX = padding.left + ((Math.min(fzEnd, endTime) - startTime) / timeRange) * graphWidth;
+                
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+                ctx.fillRect(fzStartX, padding.top, fzEndX - fzStartX, graphHeight);
+                
+                // Label
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
+                ctx.fillText('ZONE', (fzStartX + fzEndX) / 2, padding.top + 22);
+            }
+            
+            // Draw Sleep Gate band (green, semi-transparent)
+            const sleepGate = getSleepGate();
+            let sgStart = sleepGate.start;
+            let sgEnd = sleepGate.end;
+            if (sgStart > 24 * 60) sgStart -= 24 * 60;
+            if (sgEnd > 24 * 60) sgEnd -= 24 * 60;
+            
+            if (sgStart >= startTime && sgStart <= endTime) {
+                const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
+                const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
+                
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+                ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
+                
+                // Label
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
+                ctx.fillText('GATE', (sgStartX + sgEndX) / 2, padding.top + 22);
+            }
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (graphHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+                
+                // Y-axis labels
+                const value = Math.round(maxY * (1 - i / 5));
+                ctx.fillStyle = '#8b949e';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(value + 'mg', padding.left - 8, y + 4);
+            }
+            
+            // Vertical grid lines and time labels
+            const timeLabels = ['6am', '9am', '12pm', '3pm', '6pm', '9pm', '12am', '3am'];
+            const timePoints = [6, 9, 12, 15, 18, 21, 24, 27];
+            
+            timePoints.forEach((hour, i) => {
+                const x = padding.left + ((hour * 60 - startTime) / timeRange) * graphWidth;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.moveTo(x, padding.top);
+                ctx.lineTo(x, height - padding.bottom);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#8b949e';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(timeLabels[i], x, height - 8);
+            });
+            
+            // Draw threshold line (using effective threshold)
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            const thresholdY = padding.top + graphHeight * (1 - effectiveThreshold / maxY);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, thresholdY);
+            ctx.lineTo(width - padding.right, thresholdY);
+            ctx.stroke();
+            
+            // Label threshold
+            ctx.fillStyle = '#ef4444';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${effectiveThreshold.toFixed(0)}mg threshold`, padding.left + 5, thresholdY - 5);
+            
+            ctx.setLineDash([]);
+            
+            // Draw "Stimulant Blockade" shading (area between amp curve and threshold)
+            // This visually shows when drugs are blocking sleep
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(padding.left, thresholdY);
+            
+            for (let t = startTime; t <= endTime; t += 5) {
+                const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                const load = calculateAmpLoad(t);
+                const y = padding.top + graphHeight * (1 - load / maxY);
+                
+                // Only shade if above threshold
+                if (load > effectiveThreshold) {
+                    ctx.lineTo(x, y);
+                } else {
+                    ctx.lineTo(x, thresholdY);
+                }
+            }
+            
+            // Close the path back along the threshold line
+            ctx.lineTo(width - padding.right, thresholdY);
+            ctx.lineTo(padding.left, thresholdY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Add "Stimulant Blockade" label in the shaded area
+            const peakTime = state.medications.length > 0 ? 
+                Math.min(...state.medications.map(m => timeToMinutes(m.time))) + 180 : // ~3 hrs after first dose
+                startTime + 360;
+            
+            if (peakTime >= startTime && peakTime <= endTime) {
+                const peakLoad = calculateAmpLoad(peakTime);
+                if (peakLoad > effectiveThreshold) {
+                    const labelX = padding.left + ((peakTime - startTime) / timeRange) * graphWidth;
+                    const labelY = padding.top + graphHeight * (1 - (effectiveThreshold + (peakLoad - effectiveThreshold) / 2) / maxY);
+                    
+                    ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+                    ctx.font = 'bold 9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('STIMULANT', labelX, labelY - 5);
+                    ctx.fillText('BLOCKADE', labelX, labelY + 5);
+                }
+            }
+            
+            // Draw amphetamine curve
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            let firstPoint = true;
+            
+            for (let t = startTime; t <= endTime; t += 5) {
+                const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                const load = calculateAmpLoad(t);
+                const y = padding.top + graphHeight * (1 - load / maxY);
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw caffeine curve
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            firstPoint = true;
+            
+            for (let t = startTime; t <= endTime; t += 5) {
+                const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                const load = calculateCaffLoad(t);
+                const y = padding.top + graphHeight * (1 - load / maxY);
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw "now" line
+            const now = getCurrentMinutes();
+            if (now >= startTime && now <= endTime) {
+                const nowX = padding.left + ((now - startTime) / timeRange) * graphWidth;
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(nowX, padding.top);
+                ctx.lineTo(nowX, height - padding.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('NOW', nowX, padding.top - 5);
+            }
+        }
+
+        // ============================================
+        // GRAPH TOOLTIP
+        // ============================================
+        
+        function setupGraphTooltip() {
+            const canvas = document.getElementById('graphCanvas');
+            const tooltip = document.getElementById('graphTooltip');
+            const container = document.getElementById('graphContainer');
+            
+            if (!canvas || !tooltip || !container) return;
+            
+            canvas.addEventListener('mousemove', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Graph dimensions (must match drawGraph)
+                const padding = { left: 50, right: 20, top: 20, bottom: 30 };
+                const graphWidth = canvas.width - padding.left - padding.right;
+                const graphHeight = canvas.height - padding.top - padding.bottom;
+                
+                // Check if within graph area
+                if (x < padding.left || x > canvas.width - padding.right || 
+                    y < padding.top || y > canvas.height - padding.bottom) {
+                    tooltip.style.display = 'none';
+                    return;
+                }
+                
+                // Time range (must match drawGraph)
+                const startTime = 6 * 60; // 6am
+                const endTime = 27 * 60; // 3am next day
+                const timeRange = endTime - startTime;
+                
+                // Calculate time at mouse position
+                const timeAtMouse = startTime + ((x - padding.left) / graphWidth) * timeRange;
+                
+                // Calculate drug loads at this time
+                const ampLoad = calculateAmpLoad(timeAtMouse);
+                const caffLoad = calculateCaffLoad(timeAtMouse);
+                const effectiveThreshold = getEffectiveThreshold();
+                
+                // Format time
+                let displayTime = timeAtMouse;
+                if (displayTime >= 24 * 60) displayTime -= 24 * 60;
+                const timeStr = minutesToTime(displayTime);
+                
+                // Check zones
+                const inForbidden = isInForbiddenZone(timeAtMouse);
+                const inSleepGate = isInSleepGate(timeAtMouse);
+                
+                let zoneText = '';
+                if (inForbidden) {
+                    zoneText = '<div style="color: #ef4444; font-size: 0.85em; margin-top: 6px;">⚠️ Forbidden Zone</div>';
+                } else if (inSleepGate) {
+                    zoneText = '<div style="color: #10b981; font-size: 0.85em; margin-top: 6px;">✨ Sleep Gate</div>';
+                }
+                
+                // Status indicators
+                const ampStatus = ampLoad < effectiveThreshold ? '✓' : '⏳';
+                const caffStatus = caffLoad < state.settings.caffThreshold ? '✓' : '⏳';
+                
+                tooltip.innerHTML = `
+                    <div class="tooltip-time">${timeStr}</div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">💊 Amphetamine:</span>
+                        <span class="tooltip-value amp">${ampLoad.toFixed(1)}mg ${ampStatus}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">☕ Caffeine:</span>
+                        <span class="tooltip-value caff">${caffLoad.toFixed(1)}mg ${caffStatus}</span>
+                    </div>
+                    <div class="tooltip-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <span class="tooltip-label">Threshold:</span>
+                        <span class="tooltip-value" style="color: #ef4444;">${effectiveThreshold.toFixed(1)}mg</span>
+                    </div>
+                    ${zoneText}
+                `;
+                
+                // Position tooltip
+                const containerRect = container.getBoundingClientRect();
+                let tooltipX = e.clientX - containerRect.left + 15;
+                let tooltipY = e.clientY - containerRect.top - 10;
+                
+                // Keep tooltip within container
+                const tooltipWidth = 170;
+                const tooltipHeight = 120;
+                
+                if (tooltipX + tooltipWidth > containerRect.width - 20) {
+                    tooltipX = e.clientX - containerRect.left - tooltipWidth - 15;
+                }
+                if (tooltipY + tooltipHeight > containerRect.height - 20) {
+                    tooltipY = containerRect.height - tooltipHeight - 20;
+                }
+                if (tooltipY < 10) tooltipY = 10;
+                
+                tooltip.style.left = tooltipX + 'px';
+                tooltip.style.top = tooltipY + 'px';
+                tooltip.style.display = 'block';
+            });
+            
+            canvas.addEventListener('mouseleave', function() {
+                tooltip.style.display = 'none';
+            });
+        }
+
+        // ============================================
+        // HISTORY & FEEDBACK
+        // ============================================
+        
+        function saveDay() {
+            const { sleepTime } = calculateSleepTime();
+            
+            const entry = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                medications: [...state.medications],
+                caffeine: [...state.caffeine],
+                modifiers: JSON.parse(JSON.stringify(state.modifiers)),
+                predictedSleep: sleepTime,
+                actualSleep: null
+            };
+            
+            state.history.unshift(entry);
+            if (state.history.length > 30) state.history.pop(); // Keep last 30 days
+            
+            saveState();
+            renderHistory();
+            showToast('Day saved! Log actual sleep time tomorrow.');
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            
+            if (state.history.length === 0) {
+                container.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
+                return;
+            }
+            
+            container.innerHTML = state.history.slice(0, 10).map(entry => {
+                const date = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const totalDose = entry.medications.reduce((sum, m) => sum + m.dose, 0);
+                const totalCaff = entry.caffeine.reduce((sum, c) => sum + c.amount, 0);
+                
+                let accuracyText = 'Awaiting feedback';
+                let accuracyClass = '';
+                
+                if (entry.actualSleep !== null) {
+                    const diff = Math.abs(entry.actualSleep - entry.predictedSleep);
+                    const diffMins = Math.round(diff);
+                    accuracyText = diffMins <= 30 ? '✓ Accurate' : `${diffMins} min off`;
+                    accuracyClass = diffMins <= 30 ? 'style="color: #10b981;"' : diffMins <= 60 ? 'style="color: #f59e0b;"' : 'style="color: #ef4444;"';
+                }
+                
+                return `
+                    <div class="history-entry">
+                        <div>
+                            <div class="history-date">${date}</div>
+                            <div class="history-details">${totalDose}mg Adderall, ${totalCaff}mg Caffeine</div>
+                        </div>
+                        <div class="history-accuracy">
+                            <div class="history-predicted">Predicted: ${minutesToTime(entry.predictedSleep > 24*60 ? entry.predictedSleep - 24*60 : entry.predictedSleep)}</div>
+                            <div class="history-actual" ${accuracyClass}>${entry.actualSleep !== null ? 'Actual: ' + minutesToTime(entry.actualSleep) : accuracyText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // 7-DAY SLEEP HISTORY CALENDAR
+        // ============================================
+        
+        function renderSleepCalendar() {
+            const container = document.getElementById('sleepCalendar');
+            if (!container) return;
+            
+            const today = new Date();
+            const days = [];
+            
+            // Generate last 7 days
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayNum = date.getDate();
+                const isToday = i === 0;
+                
+                days.push({ dateStr, dayName, dayNum, isToday });
+            }
+            
+            container.innerHTML = days.map(day => {
+                const entry = state.sleepHistory[day.dateStr];
+                // Handle both old format (just number) and new format (object)
+                const hoursSlept = entry ? (typeof entry === 'object' ? entry.hoursSlept : entry) : undefined;
+                const wakeTime = entry && typeof entry === 'object' ? entry.wakeTime : undefined;
+                const hasData = hoursSlept !== undefined;
+                
+                let bgColor, borderColor, textColor, statusText, wakeTimeDisplay;
+                
+                if (!hasData) {
+                    bgColor = 'rgba(0,0,0,0.2)';
+                    borderColor = 'rgba(255,255,255,0.1)';
+                    textColor = '#6e7681';
+                    statusText = '—';
+                    wakeTimeDisplay = '';
+                } else if (hoursSlept > 6.5) {
+                    bgColor = 'rgba(16, 185, 129, 0.2)';
+                    borderColor = '#10b981';
+                    textColor = '#10b981';
+                    statusText = `${hoursSlept.toFixed(1)}h`;
+                    wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
+                } else if (hoursSlept >= 4.5) {
+                    bgColor = 'rgba(245, 158, 11, 0.2)';
+                    borderColor = '#f59e0b';
+                    textColor = '#f59e0b';
+                    statusText = `${hoursSlept.toFixed(1)}h`;
+                    wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
+                } else {
+                    bgColor = 'rgba(239, 68, 68, 0.2)';
+                    borderColor = '#ef4444';
+                    textColor = '#ef4444';
+                    statusText = `${hoursSlept.toFixed(1)}h ⚠️`;
+                    wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
+                }
+                
+                return `
+                    <div onclick="openSleepEditModal('${day.dateStr}')" style="
+                        background: ${bgColor};
+                        border: 2px solid ${borderColor};
+                        border-radius: 8px;
+                        padding: 10px 6px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                        ${day.isToday ? 'box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);' : ''}
+                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="font-size: 0.75em; color: #8b949e; margin-bottom: 4px;">${day.dayName}</div>
+                        <div style="font-size: 1.1em; font-weight: 600; color: #e6edf3; margin-bottom: 2px;">${day.dayNum}</div>
+                        <div style="font-size: 0.85em; font-weight: 600; color: ${textColor};">${statusText}</div>
+                        ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #8b949e; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
+                        ${day.isToday ? '<div style="font-size: 0.65em; color: #58a6ff; margin-top: 2px;">TODAY</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            // Update circadian phase display
+            renderCircadianPhase();
+        }
+        
+        function renderCircadianPhase() {
+            const container = document.getElementById('circadianPhaseDisplay');
+            if (!container) return;
+            
+            const analysis = analyzeCircadianPhase();
+            
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 1.8em;">${analysis.icon}</span>
+                            <div>
+                                <div style="font-size: 0.75em; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
+                                <div style="font-size: 1.2em; font-weight: 700; color: ${analysis.color};">${analysis.label}</div>
+                            </div>
+                        </div>
+                        ${analysis.avgWakeTime ? `
+                            <div style="display: flex; gap: 20px; font-size: 0.85em; color: #8b949e;">
+                                <div>
+                                    <span style="color: #e6edf3; font-weight: 600;">${minutesToTime(analysis.avgWakeTime)}</span> avg wake
+                                </div>
+                                ${analysis.avgSleep ? `
+                                    <div>
+                                        <span style="color: #e6edf3; font-weight: 600;">${analysis.avgSleep.toFixed(1)}h</span> avg sleep
+                                    </div>
+                                ` : ''}
+                                ${analysis.dataPoints ? `
+                                    <div>
+                                        <span style="color: #e6edf3; font-weight: 600;">${analysis.dataPoints}</span> days logged
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${analysis.consistency !== undefined && analysis.dataPoints >= 3 ? `
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.75em; color: #8b949e;">Consistency</div>
+                            <div style="font-size: 1.4em; font-weight: 700; color: ${analysis.consistency > 70 ? '#10b981' : analysis.consistency > 40 ? '#f59e0b' : '#ef4444'};">${Math.round(analysis.consistency)}%</div>
+                            ${analysis.stdDev ? `<div style="font-size: 0.7em; color: #6e7681;">±${Math.round(analysis.stdDev)}min variation</div>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+                <div style="margin-top: 12px; padding: 12px; background: rgba(${analysis.color === '#ef4444' ? '239, 68, 68' : analysis.color === '#f59e0b' ? '245, 158, 11' : analysis.color === '#10b981' ? '16, 185, 129' : '88, 166, 255'}, 0.1); border-radius: 8px; border-left: 3px solid ${analysis.color};">
+                    <div style="font-size: 0.85em; color: #c9d1d9; line-height: 1.5; white-space: pre-wrap;">${analysis.recommendation}</div>
+                </div>
+            `;
+        }
+        
+        // Global variable to track which date we're editing
+        let currentEditingDate = null;
+        
+        function openSleepEditModal(dateStr) {
+            currentEditingDate = dateStr;
+            
+            const entry = state.sleepHistory[dateStr];
+            const hoursSlept = entry ? (typeof entry === 'object' ? entry.hoursSlept : entry) : 7;
+            const wakeTime = entry && typeof entry === 'object' ? entry.wakeTime : '07:00';
+            
+            // Format date for display
+            const date = new Date(dateStr + 'T12:00:00'); // Add time to avoid timezone issues
+            const displayDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            
+            document.getElementById('sleepEditTitle').textContent = `📅 ${displayDate}`;
+            document.getElementById('sleepEditHours').value = hoursSlept;
+            document.getElementById('sleepEditWakeTime').value = wakeTime;
+            document.getElementById('sleepEditModal').classList.add('show');
+        }
+        
+        function closeSleepEditModal() {
+            document.getElementById('sleepEditModal').classList.remove('show');
+            currentEditingDate = null;
+        }
+        
+        function saveSleepEdit() {
+            if (!currentEditingDate) return;
+            
+            const hours = parseFloat(document.getElementById('sleepEditHours').value);
+            const wakeTime = document.getElementById('sleepEditWakeTime').value;
+            
+            if (isNaN(hours) || hours < 0 || hours > 14) {
+                showToast('Invalid hours. Enter 0-14.');
+                return;
+            }
+            
+            // Save as object with both values
+            state.sleepHistory[currentEditingDate] = {
+                hoursSlept: hours,
+                wakeTime: wakeTime
+            };
+            
+            saveState();
+            
+            // If editing today, also update the main inputs
+            const today = new Date().toISOString().split('T')[0];
+            if (currentEditingDate === today) {
+                state.hoursSleptLastNight = hours;
+                state.wakeTime = wakeTime;
+                document.getElementById('hoursSlept').value = hours;
+                document.getElementById('wakeTime').value = wakeTime;
+                recalculate();
+            }
+            
+            renderSleepCalendar();
+            closeSleepEditModal();
+            showToast(`Saved: ${hours}h sleep, wake ${formatTime12(wakeTime)}`);
+        }
+        
+        // Auto-update today's sleep in the calendar when main input changes
+        function updateTodaySleepHistory() {
+            const today = new Date().toISOString().split('T')[0];
+            const existing = state.sleepHistory[today];
+            
+            // Preserve wake time if it exists, update hours
+            state.sleepHistory[today] = {
+                hoursSlept: state.hoursSleptLastNight,
+                wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime
+            };
+            
+            renderSleepCalendar();
+        }
+        
+        // Also update when wake time changes
+        function updateTodayWakeTime() {
+            const today = new Date().toISOString().split('T')[0];
+            const existing = state.sleepHistory[today];
+            
+            state.sleepHistory[today] = {
+                hoursSlept: existing && typeof existing === 'object' ? existing.hoursSlept : state.hoursSleptLastNight,
+                wakeTime: state.wakeTime
+            };
+            
+            renderSleepCalendar();
+        }
+
+        function showFeedbackModal() {
+            // Check if there's a recent entry without feedback
+            const recent = state.history.find(h => h.actualSleep === null);
+            if (recent) {
+                document.getElementById('feedbackPredicted').textContent = minutesToTime(recent.predictedSleep > 24*60 ? recent.predictedSleep - 24*60 : recent.predictedSleep);
+                document.getElementById('feedbackModal').classList.add('show');
+            }
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('show');
+        }
+
+        function submitFeedback() {
+            const actualTime = document.getElementById('actualSleepTime').value;
+            if (!actualTime) {
+                showToast('Please enter your actual sleep time');
+                return;
+            }
+            
+            const recent = state.history.find(h => h.actualSleep === null);
+            if (recent) {
+                recent.actualSleep = timeToMinutes(actualTime);
+                saveState();
+                renderHistory();
+                closeFeedbackModal();
+                showToast('Feedback recorded! This helps calibrate your settings.');
+                
+                // Suggest calibration if consistently off
+                suggestCalibration();
+            }
+        }
+
+        function suggestCalibration() {
+            const withFeedback = state.history.filter(h => h.actualSleep !== null).slice(0, 5);
+            if (withFeedback.length < 3) return;
+            
+            const avgDiff = withFeedback.reduce((sum, h) => sum + (h.actualSleep - h.predictedSleep), 0) / withFeedback.length;
+            
+            if (avgDiff > 30) {
+                // Consistently sleeping later than predicted - lower threshold
+                showToast('Tip: You seem more sensitive. Try lowering your Sleep Threshold in settings.');
+            } else if (avgDiff < -30) {
+                // Sleeping earlier - raise threshold
+                showToast('Tip: You might be less sensitive. Try raising your Sleep Threshold in settings.');
+            }
+        }
+
+        // ============================================
+        // FIREBASE CONFIGURATION (Same as Dental Quest)
+        // ============================================
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCq0zU4Gm2kXKHDaCHzRD70p1B2NRXxKJc",
+            authDomain: "dental-student-quest.firebaseapp.com",
+            databaseURL: "https://dental-student-quest-default-rtdb.firebaseio.com",
+            projectId: "dental-student-quest",
+            storageBucket: "dental-student-quest.firebasestorage.app",
+            messagingSenderId: "894381493570",
+            appId: "1:894381493570:web:857d7d8fe247ef985e4cdb"
+        };
+        
+        let firebaseInitialized = false;
+        let database = null;
+        let firebaseSyncEnabled = false;
+        
+        function updateSyncStatus(status, text) {
+            const iconEl = document.getElementById('syncIcon');
+            const textEl = document.getElementById('syncText');
+            if (iconEl && textEl) {
+                if (status === 'connected') {
+                    iconEl.textContent = '☁️';
+                    iconEl.style.color = '#10b981';
+                    textEl.textContent = text || 'Synced';
+                    textEl.style.color = '#10b981';
+                } else if (status === 'syncing') {
+                    iconEl.textContent = '🔄';
+                    textEl.textContent = text || 'Syncing...';
+                    textEl.style.color = '#f59e0b';
+                } else if (status === 'offline') {
+                    iconEl.textContent = '📴';
+                    iconEl.style.color = '#ef4444';
+                    textEl.textContent = text || 'Offline (local only)';
+                    textEl.style.color = '#ef4444';
+                } else {
+                    iconEl.textContent = '☁️';
+                    textEl.textContent = text || 'Connecting...';
+                    textEl.style.color = '#8b949e';
+                }
+            }
+        }
+        
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                firebaseInitialized = true;
+                firebaseSyncEnabled = true;
+                console.log('Firebase initialized for Stimulant Calculator');
+                
+                updateSyncStatus('syncing', 'Syncing...');
+                
+                // Load from Firebase
+                loadFromFirebase();
+            } catch (error) {
+                console.error('Firebase init error:', error);
+                firebaseSyncEnabled = false;
+                updateSyncStatus('offline', 'Offline mode');
+            }
+        }
+        
+        function saveToFirebase() {
+            if (!firebaseSyncEnabled || !database) return;
+            
+            try {
+                database.ref('stimulantCalculator').set({
+                    state: state,
+                    lastUpdated: new Date().toISOString()
+                });
+                updateSyncStatus('connected', 'Saved ✓');
+            } catch (error) {
+                console.error('Firebase save error:', error);
+                updateSyncStatus('offline', 'Save failed');
+            }
+        }
+        
+        function loadFromFirebase() {
+            if (!firebaseSyncEnabled || !database) {
+                updateSyncStatus('offline', 'Offline mode');
+                return;
+            }
+            
+            database.ref('stimulantCalculator').once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (data && data.state) {
+                        // Merge Firebase data with current state
+                        state = {
+                            ...state,
+                            ...data.state,
+                            modifiers: { ...state.modifiers, ...(data.state.modifiers || {}) },
+                            settings: { ...state.settings, ...(data.state.settings || {}) },
+                            sleepHistory: { ...state.sleepHistory, ...(data.state.sleepHistory || {}) }
+                        };
+                        
+                        // Also save to localStorage as backup
+                        localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                        
+                        // Re-render everything
+                        document.getElementById('wakeTime').value = state.wakeTime;
+                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                        document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
+                        document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
+                        document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
+                        document.getElementById('caffThreshold').value = state.settings.caffThreshold;
+                        document.getElementById('weight').value = state.settings.weight;
+                        
+                        renderMedEntries();
+                        renderCaffeineEntries();
+                        renderSleepCalendar();
+                        renderHistory();
+                        recalculate();
+                        
+                        updateSyncStatus('connected', 'Synced ✓');
+                        showToast('☁️ Synced from cloud');
+                        console.log('Loaded from Firebase:', data.lastUpdated);
+                    } else {
+                        updateSyncStatus('connected', 'Connected');
+                    }
+                })
+                .catch(error => {
+                    console.error('Firebase load error:', error);
+                    updateSyncStatus('offline', 'Sync failed');
+                });
+        }
+        
+        // ============================================
+        // STORAGE (Local + Firebase)
+        // ============================================
+        
+        function saveState() {
+            // Always save to localStorage
+            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+            
+            // Also save to Firebase if connected
+            saveToFirebase();
+        }
+
+        function loadState() {
+            // First load from localStorage (immediate)
+            const saved = localStorage.getItem('stimulantCalculatorState');
+            if (saved) {
+                const loaded = JSON.parse(saved);
+                
+                // Merge with defaults to handle new fields
+                state = {
+                    ...state,
+                    ...loaded,
+                    modifiers: { ...state.modifiers, ...loaded.modifiers },
+                    settings: { ...state.settings, ...loaded.settings },
+                    sleepHistory: { ...state.sleepHistory, ...loaded.sleepHistory }
+                };
+                
+                // Clear today's entries (fresh start each day)
+                const today = new Date().toISOString().split('T')[0];
+                const lastDate = state.history[0]?.date;
+                
+                if (lastDate !== today) {
+                    // New day - clear entries but keep settings and history
+                    state.medications = [];
+                    state.caffeine = [];
+                    Object.keys(state.modifiers).forEach(k => {
+                        state.modifiers[k].active = false;
+                    });
+                }
+                
+                // Clean up old sleep history entries (keep only last 14 days)
+                const twoWeeksAgo = new Date();
+                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+                const cutoffDate = twoWeeksAgo.toISOString().split('T')[0];
+                
+                Object.keys(state.sleepHistory).forEach(dateStr => {
+                    if (dateStr < cutoffDate) {
+                        delete state.sleepHistory[dateStr];
+                    }
+                });
+            }
+            
+            // Firebase will load async and override if newer
+        }
+
+        function clearToday() {
+            if (confirm('Clear all of today\'s entries?')) {
+                state.medications = [];
+                state.caffeine = [];
+                Object.keys(state.modifiers).forEach(k => {
+                    state.modifiers[k].active = false;
+                });
+                
+                renderMedEntries();
+                renderCaffeineEntries();
+                document.querySelectorAll('.modifier-item').forEach(el => el.classList.remove('active'));
+                updateModifierTimeInputs();
+                recalculate();
+                showToast('Today cleared');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        function init() {
+            loadState();
+            
+            // Initialize Firebase for cloud sync
+            initFirebase();
+            
+            // Set input values from state
+            document.getElementById('wakeTime').value = state.wakeTime;
+            document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+            document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
+            document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
+            document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
+            document.getElementById('caffThreshold').value = state.settings.caffThreshold;
+            document.getElementById('weight').value = state.settings.weight;
+            document.getElementById('vitaminCTime').value = state.modifiers.vitaminC.time;
+            document.getElementById('saunaTime').value = state.modifiers.sauna.time;
+            
+            // Render existing entries
+            renderMedEntries();
+            renderCaffeineEntries();
+            renderHistory();
+            renderSleepCalendar();
+            
+            // Initialize today's sleep in calendar
+            updateTodaySleepHistory();
+            
+            // Restore modifier states
+            Object.keys(state.modifiers).forEach(key => {
+                if (state.modifiers[key].active) {
+                    const el = document.querySelector(`[data-modifier="${key}"]`);
+                    if (el) el.classList.add('active');
+                }
+            });
+            updateModifierTimeInputs();
+            
+            // Initial calculation
+            recalculate();
+            
+            // Setup graph tooltip
+            setupGraphTooltip();
+            
+            // Check for pending feedback
+            setTimeout(() => {
+                const recent = state.history.find(h => h.actualSleep === null);
+                if (recent && recent.date !== new Date().toISOString().split('T')[0]) {
+                    showFeedbackModal();
+                }
+            }, 2000);
+            
+            // Update every second for live countdown
+            setInterval(recalculate, 1000);
+            
+            // Redraw graph on resize
+            window.addEventListener('resize', drawGraph);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
