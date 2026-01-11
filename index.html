@@ -3137,6 +3137,7 @@
             focusTimerInterval: null,
             lastPlanningDate: null
         };
+        let lastCriticalEODReset = null; // Synced across devices to prevent duplicate resets
         let editingTaskId = null;
         let editingTaskSize = 'medium';
         let editingTaskLeverage = false;
@@ -3713,6 +3714,11 @@
                     };
                 }
                 
+                // Load last critical EOD reset date
+                if (data.lastCriticalEODReset) {
+                    lastCriticalEODReset = data.lastCriticalEODReset;
+                }
+                
                 updateStats();
                 renderTasks();
                 updateMedicationDisplay();
@@ -3744,6 +3750,7 @@
                 calendarEvents,
                 dailyPlanner,
                 focusModeData,
+                lastCriticalEODReset, // Sync reset date across devices
                 lastSaved: Date.now() // Timestamp for sync tracking
             };
             
@@ -4285,6 +4292,14 @@
                                 lastPlanningDate: data.focusModeData.lastPlanningDate || null
                             };
                             console.log('✅ Loaded Focus Mode data from Firebase');
+                        }
+                        
+                        // Load last reset date from Firebase (prevents duplicate resets across devices)
+                        if (data.lastCriticalEODReset) {
+                            lastCriticalEODReset = data.lastCriticalEODReset;
+                            // Also sync to localStorage for consistency
+                            localStorage.setItem('lastCriticalEODReset', lastCriticalEODReset);
+                            console.log('✅ Loaded lastCriticalEODReset from Firebase:', lastCriticalEODReset);
                         }
                         
                         // Check for daily reset of Critical/EOD flags
@@ -6157,11 +6172,15 @@
             const hours = now.getHours();
             const todayStr = getTodayDateString();
             
-            // Get last reset date from localStorage
-            const lastCriticalReset = localStorage.getItem('lastCriticalEODReset');
+            // Check BOTH the global variable (synced from Firebase) AND localStorage
+            // This prevents duplicate resets when opening on a new device
+            const localStorageReset = localStorage.getItem('lastCriticalEODReset');
+            const effectiveLastReset = lastCriticalEODReset || localStorageReset;
+            
+            console.log('🔍 Checking EOD reset - today:', todayStr, 'lastReset:', effectiveLastReset);
             
             // Reset at 5 AM if it's a new day
-            if (lastCriticalReset !== todayStr && hours >= 5) {
+            if (effectiveLastReset !== todayStr && hours >= 5) {
                 console.log('🔄 Resetting Critical/EOD flags for new day...');
                 
                 let resetCount = 0;
@@ -6181,6 +6200,8 @@
                     focusModeData.focusTimerSeconds = 0;
                 }
                 
+                // Update BOTH the global variable AND localStorage
+                lastCriticalEODReset = todayStr;
                 localStorage.setItem('lastCriticalEODReset', todayStr);
                 
                 if (resetCount > 0) {
@@ -6189,6 +6210,8 @@
                 }
                 
                 return true;
+            } else {
+                console.log('✅ No EOD reset needed - already done for today');
             }
             
             return false;
@@ -6757,6 +6780,12 @@
                 }
                 if (data.financials) {
                     financials = { ...financials, ...data.financials };
+                }
+                
+                // Sync lastCriticalEODReset to prevent duplicate resets
+                if (data.lastCriticalEODReset) {
+                    lastCriticalEODReset = data.lastCriticalEODReset;
+                    localStorage.setItem('lastCriticalEODReset', lastCriticalEODReset);
                 }
                 
                 // Save to localStorage
