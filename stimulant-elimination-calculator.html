@@ -128,12 +128,13 @@
             border-radius: 12px;
             padding: 10px;
             margin-bottom: 15px;
-            height: 200px;
+            height: 220px;
+            min-height: 180px;
+            position: relative;
         }
         
         .focus-graph-container canvas {
-            width: 100% !important;
-            height: 100% !important;
+            display: block;
         }
         
         .focus-card {
@@ -6786,20 +6787,28 @@
             }
         }
         
-        // Coffee functions
+        // Coffee functions - FIXED to prevent duplicates
         function focusUpdateCoffee(cup) {
-            const time = document.getElementById(`focusCoffee${cup}Time`).value;
+            const timeEl = document.getElementById(`focusCoffee${cup}Time`);
+            const time = timeEl ? timeEl.value : null;
             if (!time) return;
             
-            // Find or create coffee entry
-            const existingIndex = state.caffeine.findIndex(c => c.name === `Cup ${cup}`);
+            // Clear any entries that might conflict - look for existing entries with similar times
+            // or named "Cup 1"/"Cup 2" or matching Coffee entries
+            const targetName = `Cup ${cup}`;
+            
+            // First, try to find an existing Focus Mode entry
+            let existingIndex = state.caffeine.findIndex(c => c.name === targetName);
+            
             if (existingIndex >= 0) {
+                // Update existing Focus Mode entry
                 state.caffeine[existingIndex].time = time;
             } else {
+                // Create new entry
                 state.caffeine.push({
                     id: Date.now() + cup,
                     amount: 95, // Standard cup
-                    name: `Cup ${cup}`,
+                    name: targetName,
                     time: time
                 });
             }
@@ -6810,23 +6819,45 @@
             renderFocusMode();
         }
         
+        function focusClearAllCaffeine() {
+            if (confirm('Clear all caffeine entries?')) {
+                state.caffeine = [];
+                document.getElementById('focusCoffee1Time').value = '';
+                document.getElementById('focusCoffee2Time').value = '';
+                renderCaffeineEntries();
+                saveState();
+                recalculate();
+                renderFocusMode();
+                showToast('All caffeine cleared', '☕');
+            }
+        }
+        
         function updateFocusCoffeeStatus() {
             const statusEl = document.getElementById('focusCoffeeStatus');
             const coffee1 = document.getElementById('focusCoffee1Time');
             const coffee2 = document.getElementById('focusCoffee2Time');
             
-            // Sync from state
-            const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
-            const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
+            if (!statusEl) return;
             
-            if (cup1 && coffee1) coffee1.value = cup1.time;
-            if (cup2 && coffee2) coffee2.value = cup2.time;
-            
+            // Show total from ALL sources (Focus Mode + Full View)
             if (state.caffeine.length === 0) {
-                statusEl.textContent = 'No coffee logged yet';
+                statusEl.innerHTML = 'No coffee logged yet';
+                if (coffee1) coffee1.value = '';
+                if (coffee2) coffee2.value = '';
             } else {
-                const total = state.caffeine.reduce((sum, c) => sum + c.amount, 0);
-                statusEl.textContent = `${state.caffeine.length} cup(s) • ${total}mg caffeine total`;
+                const total = state.caffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
+                
+                // Sync Focus Mode inputs from state
+                const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
+                const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
+                
+                if (cup1 && coffee1) coffee1.value = cup1.time;
+                if (cup2 && coffee2) coffee2.value = cup2.time;
+                
+                // Show entry count with clear button hint
+                const entryText = state.caffeine.length === 1 ? 'entry' : 'entries';
+                statusEl.innerHTML = `<span>${state.caffeine.length} ${entryText} • ${total}mg total</span>
+                    <button onclick="focusClearAllCaffeine()" style="margin-left: 10px; padding: 4px 10px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 0.8em; cursor: pointer;">Clear All</button>`;
             }
         }
         
@@ -6965,7 +6996,7 @@
             }
         }
         
-        // Focus Mode Graph (simplified)
+        // Focus Mode Graph (simplified) - MOBILE FIXED
         function drawFocusGraph() {
             const canvas = document.getElementById('focusGraphCanvas');
             if (!canvas) return;
@@ -6973,57 +7004,118 @@
             const ctx = canvas.getContext('2d');
             const container = canvas.parentElement;
             
-            canvas.width = container.clientWidth - 20;
-            canvas.height = container.clientHeight - 20;
+            // Get device pixel ratio for sharp rendering on mobile
+            const dpr = window.devicePixelRatio || 1;
+            const rect = container.getBoundingClientRect();
             
-            const width = canvas.width;
-            const height = canvas.height;
-            const padding = { left: 35, right: 15, top: 15, bottom: 25 };
+            // Set actual canvas size accounting for padding
+            const canvasWidth = rect.width - 20;
+            const canvasHeight = rect.height - 20;
+            
+            // Set display size
+            canvas.style.width = canvasWidth + 'px';
+            canvas.style.height = canvasHeight + 'px';
+            
+            // Set actual size in memory (scaled for retina)
+            canvas.width = canvasWidth * dpr;
+            canvas.height = canvasHeight * dpr;
+            
+            // Scale context to match
+            ctx.scale(dpr, dpr);
+            
+            const width = canvasWidth;
+            const height = canvasHeight;
+            const padding = { left: 40, right: 15, top: 15, bottom: 30 };
             const graphWidth = width - padding.left - padding.right;
             const graphHeight = height - padding.top - padding.bottom;
             
+            // Clear canvas
             ctx.clearRect(0, 0, width, height);
             
-            // Time range: 6am to 3am
+            // Background
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Time range: 6am to 3am next day
             const startTime = 6 * 60;
             const endTime = 27 * 60;
             const timeRange = endTime - startTime;
             
-            // Find max
+            // Find max Y value for scaling
             const effectiveThreshold = getEffectiveThreshold();
-            let maxY = effectiveThreshold * 2;
+            let maxY = Math.max(effectiveThreshold * 3, 50); // Minimum 50mg scale
             for (let t = startTime; t <= endTime; t += 30) {
-                maxY = Math.max(maxY, calculateAmpLoad(t));
+                maxY = Math.max(maxY, calculateAmpLoad(t), calculateCaffLoad(t));
             }
             
-            // Draw Sleep Gate
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (i / 4) * graphHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+            }
+            
+            // Draw Sleep Gate zone
             const sleepGate = getSleepGate();
             let sgStart = sleepGate.start;
-            if (sgStart > 24 * 60) sgStart -= 24 * 60;
             let sgEnd = sleepGate.end;
+            
+            // Normalize to graph time range
+            if (sgStart > 24 * 60) sgStart -= 24 * 60;
             if (sgEnd > 24 * 60) sgEnd -= 24 * 60;
             
-            if (sgStart >= startTime) {
-                const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
-                const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
-                ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
-                ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
+            // Handle sleep gate that might be past midnight
+            if (sgStart >= startTime || sgStart < 6 * 60) {
+                let drawStart = sgStart;
+                let drawEnd = sgEnd;
+                if (sgStart < 6 * 60) drawStart += 24 * 60; // Next day
+                if (sgEnd < 6 * 60) drawEnd += 24 * 60;
+                
+                const sgStartX = padding.left + ((drawStart - startTime) / timeRange) * graphWidth;
+                const sgEndX = padding.left + ((Math.min(drawEnd, endTime) - startTime) / timeRange) * graphWidth;
+                
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.fillRect(sgStartX, padding.top, Math.max(0, sgEndX - sgStartX), graphHeight);
             }
             
             // Draw threshold line
             const thresholdY = padding.top + (1 - effectiveThreshold / maxY) * graphHeight;
             ctx.setLineDash([5, 5]);
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(padding.left, thresholdY);
             ctx.lineTo(width - padding.right, thresholdY);
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Draw amphetamine curve
+            // Draw caffeine curve (yellow) - draw first so amphetamine is on top
+            if (state.caffeine.length > 0) {
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                let first = true;
+                for (let t = startTime; t <= endTime; t += 10) {
+                    const load = calculateCaffLoad(t);
+                    const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                    const y = padding.top + (1 - load / maxY) * graphHeight;
+                    if (first) {
+                        ctx.moveTo(x, y);
+                        first = false;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Draw amphetamine curve (purple)
             ctx.strokeStyle = '#8b5cf6';
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = 3;
             ctx.beginPath();
             let first = true;
             for (let t = startTime; t <= endTime; t += 10) {
@@ -7039,56 +7131,55 @@
             }
             ctx.stroke();
             
-            // Draw caffeine curve
-            if (state.caffeine.length > 0) {
-                ctx.strokeStyle = '#f59e0b';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                first = true;
-                for (let t = startTime; t <= endTime; t += 10) {
-                    const load = calculateCaffLoad(t);
-                    const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
-                    const y = padding.top + (1 - load / maxY) * graphHeight;
-                    if (first) {
-                        ctx.moveTo(x, y);
-                        first = false;
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-                ctx.stroke();
-            }
-            
-            // Time labels
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '10px sans-serif';
-            ctx.textAlign = 'center';
-            const labels = [
-                { time: 6, label: '6a' },
-                { time: 12, label: '12p' },
-                { time: 18, label: '6p' },
-                { time: 24, label: '12a' }
-            ];
-            labels.forEach(l => {
-                const x = padding.left + ((l.time * 60 - startTime) / timeRange) * graphWidth;
-                ctx.fillText(l.label, x, height - 5);
-            });
-            
             // Current time marker
             const now = getCurrentMinutes();
-            if (now >= startTime || now < 6 * 60) {
-                let displayNow = now;
-                if (now < 6 * 60) displayNow += 24 * 60;
+            let displayNow = now;
+            if (now < 6 * 60) displayNow += 24 * 60;
+            
+            if (displayNow >= startTime && displayNow <= endTime) {
                 const nowX = padding.left + ((displayNow - startTime) / timeRange) * graphWidth;
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
                 ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
+                ctx.setLineDash([4, 4]);
                 ctx.beginPath();
                 ctx.moveTo(nowX, padding.top);
                 ctx.lineTo(nowX, height - padding.bottom);
                 ctx.stroke();
                 ctx.setLineDash([]);
+                
+                // "Now" label
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Now', nowX, padding.top - 3);
             }
+            
+            // Time labels
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            
+            const timeLabels = [
+                { time: 6 * 60, label: '6a' },
+                { time: 12 * 60, label: '12p' },
+                { time: 18 * 60, label: '6p' },
+                { time: 24 * 60, label: '12a' }
+            ];
+            
+            timeLabels.forEach(tl => {
+                const x = padding.left + ((tl.time - startTime) / timeRange) * graphWidth;
+                ctx.fillText(tl.label, x, height - 8);
+            });
+            
+            // Y-axis label
+            ctx.save();
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.translate(12, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('mg', 0, 0);
+            ctx.restore();
         }
         
         // Initialize focus mode on load
