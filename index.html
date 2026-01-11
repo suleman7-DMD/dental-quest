@@ -4242,7 +4242,13 @@
                         
                         // Load daily planner from Firebase
                         if (data.dailyPlanner) {
-                            dailyPlanner = data.dailyPlanner;
+                            dailyPlanner = {
+                                date: data.dailyPlanner.date || null,
+                                goal: data.dailyPlanner.goal || '',
+                                bedtime: data.dailyPlanner.bedtime || '23:00',
+                                blocks: data.dailyPlanner.blocks || [],
+                                lastReset: data.dailyPlanner.lastReset || null
+                            };
                             checkPlannerReset();
                             console.log('✅ Loaded daily planner from Firebase');
                         }
@@ -6163,7 +6169,13 @@
                 database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').once('value').then(snapshot => {
                     const data = snapshot.val();
                     if (data) {
-                        dailyPlanner = { ...dailyPlanner, ...data };
+                        dailyPlanner = {
+                            date: data.date || dailyPlanner.date,
+                            goal: data.goal || '',
+                            bedtime: data.bedtime || '23:00',
+                            blocks: data.blocks || [],
+                            lastReset: data.lastReset || null
+                        };
                     }
                     checkPlannerReset();
                     renderPlannerBlocks();
@@ -6171,7 +6183,14 @@
             } else {
                 const saved = localStorage.getItem('dailyPlanner');
                 if (saved) {
-                    dailyPlanner = JSON.parse(saved);
+                    const data = JSON.parse(saved);
+                    dailyPlanner = {
+                        date: data.date || null,
+                        goal: data.goal || '',
+                        bedtime: data.bedtime || '23:00',
+                        blocks: data.blocks || [],
+                        lastReset: data.lastReset || null
+                    };
                 }
                 checkPlannerReset();
             }
@@ -6202,6 +6221,19 @@
             }
             
             try {
+                // Ensure dailyPlanner is properly initialized
+                if (!dailyPlanner) {
+                    dailyPlanner = {
+                        date: getTodayDateString(),
+                        goal: '',
+                        bedtime: '23:00',
+                        blocks: []
+                    };
+                }
+                if (!dailyPlanner.blocks) {
+                    dailyPlanner.blocks = [];
+                }
+                
                 checkPlannerReset();
                 
                 // Update date display
@@ -6273,6 +6305,11 @@
         }
 
         function sortPlannerBlocks() {
+            // Ensure blocks array exists
+            if (!dailyPlanner.blocks) {
+                dailyPlanner.blocks = [];
+                return;
+            }
             // Sort blocks by start time
             dailyPlanner.blocks.sort((a, b) => {
                 if (!a.startTime) return 1;
@@ -6285,6 +6322,11 @@
             let totalMinutes = 0;
             let completedMinutes = 0;
             let breakMinutes = 0;
+            
+            // Ensure blocks array exists
+            if (!dailyPlanner.blocks) {
+                dailyPlanner.blocks = [];
+            }
             
             dailyPlanner.blocks.forEach(block => {
                 if (block.startTime && block.endTime) {
@@ -6329,6 +6371,11 @@
         function renderPlannerBlocks() {
             const container = document.getElementById('plannerBlocks');
             if (!container) return;
+            
+            // Ensure blocks array exists
+            if (!dailyPlanner.blocks) {
+                dailyPlanner.blocks = [];
+            }
             
             // Sort blocks by time before rendering
             sortPlannerBlocks();
@@ -6504,6 +6551,11 @@
         }
 
         function updatePlannerProgress() {
+            // Ensure blocks array exists
+            if (!dailyPlanner.blocks) {
+                dailyPlanner.blocks = [];
+            }
+            
             const total = dailyPlanner.blocks.length;
             const completed = dailyPlanner.blocks.filter(b => b.completed).length;
             const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -6592,7 +6644,13 @@
                         const modal = document.getElementById('dailyPlannerModal');
                         if (modal && !modal.classList.contains('show')) {
                             // Only auto-update if modal is closed
-                            dailyPlanner = { ...dailyPlanner, ...data };
+                            dailyPlanner = {
+                                date: data.date || dailyPlanner.date,
+                                goal: data.goal || '',
+                                bedtime: data.bedtime || '23:00',
+                                blocks: data.blocks || [],
+                                lastReset: data.lastReset || null
+                            };
                             localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
                         }
                     }
@@ -6608,6 +6666,14 @@
             }
             
             try {
+                // Ensure notebook is properly initialized
+                if (!notebook) {
+                    notebook = { pages: [], currentPageId: null };
+                }
+                if (!notebook.pages) {
+                    notebook.pages = [];
+                }
+                
                 // Initialize with first page if none exist
                 if (notebook.pages.length === 0) {
                     createNewPage();
