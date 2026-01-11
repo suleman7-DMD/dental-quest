@@ -3716,6 +3716,9 @@
                 renderTasks();
                 updateMedicationDisplay();
             }
+            // Check for daily reset of Critical/EOD flags
+            checkCriticalEODReset();
+            
             // Always init focus mode
             initFocusMode();
         }
@@ -4513,7 +4516,11 @@
         
         function openFinancials() {
             const modal = document.getElementById('financialModal');
-            modal.style.display = 'flex';
+            if (!modal) {
+                console.error('Financial modal not found!');
+                return;
+            }
+            modal.classList.add('show');
             
             try {
                 renderFinancialCockpit();
@@ -4522,22 +4529,24 @@
                 console.error('Error rendering financial cockpit:', error);
                 // Show error message in dashboard
                 const dashboard = document.getElementById('financialDashboard');
-                dashboard.innerHTML = `
-                    <div style="padding: 40px; text-align: center; color: #f87171;">
-                        <h2>⚠️ Error Loading Financial Dashboard</h2>
-                        <p style="margin: 20px 0; color: #8b949e;">${error.message}</p>
-                        <p style="color: #8b949e;">Check the console for details.</p>
-                        <button onclick="closeFinancials()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
-                            Close
-                        </button>
-                    </div>
-                `;
+                if (dashboard) {
+                    dashboard.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: #f87171;">
+                            <h2>⚠️ Error Loading Financial Dashboard</h2>
+                            <p style="margin: 20px 0; color: #8b949e;">${error.message}</p>
+                            <p style="color: #8b949e;">Check the console for details.</p>
+                            <button onclick="closeFinancials()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                                Close
+                            </button>
+                        </div>
+                    `;
+                }
             }
         }
 
         function closeFinancials() {
             const modal = document.getElementById('financialModal');
-            modal.style.display = 'none';
+            if (modal) modal.classList.remove('show');
         }
 
         // Calculate real-time financial status
@@ -5595,12 +5604,22 @@
         let editingCountdownId = null;
         
         function openCalendar() {
-            document.getElementById('calendarModal').classList.add('show');
-            renderMasterCalendar();
+            const modal = document.getElementById('calendarModal');
+            if (!modal) {
+                console.error('Calendar modal not found!');
+                return;
+            }
+            modal.classList.add('show');
+            try {
+                renderMasterCalendar();
+            } catch (error) {
+                console.error('Error rendering calendar:', error);
+            }
         }
         
         function closeCalendar() {
-            document.getElementById('calendarModal').classList.remove('show');
+            const modal = document.getElementById('calendarModal');
+            if (modal) modal.classList.remove('show');
         }
         
         function changeMonth(direction) {
@@ -6070,6 +6089,50 @@
             
             return false;
         }
+        
+        // CRITICAL/EOD AUTO-RESET AT 5 AM
+        // This clears all doToday and mustComplete flags daily
+        function checkCriticalEODReset() {
+            const now = new Date();
+            const hours = now.getHours();
+            const todayStr = getTodayDateString();
+            
+            // Get last reset date from localStorage
+            const lastCriticalReset = localStorage.getItem('lastCriticalEODReset');
+            
+            // Reset at 5 AM if it's a new day
+            if (lastCriticalReset !== todayStr && hours >= 5) {
+                console.log('🔄 Resetting Critical/EOD flags for new day...');
+                
+                let resetCount = 0;
+                (tasks || []).forEach(task => {
+                    if (task.doToday || task.mustComplete) {
+                        task.doToday = false;
+                        task.mustComplete = false;
+                        resetCount++;
+                    }
+                });
+                
+                // Also clear Focus Mode today's tasks
+                if (focusModeData) {
+                    focusModeData.oneThingId = null;
+                    focusModeData.microSteps = [];
+                    focusModeData.todaysTasks = { big: [], medium: [], small: [] };
+                    focusModeData.focusTimerSeconds = 0;
+                }
+                
+                localStorage.setItem('lastCriticalEODReset', todayStr);
+                
+                if (resetCount > 0) {
+                    saveData();
+                    console.log(`✅ Reset ${resetCount} tasks' Critical/EOD flags`);
+                }
+                
+                return true;
+            }
+            
+            return false;
+        }
 
         function loadDailyPlanner() {
             if (firebaseInitialized && database && currentUser) {
@@ -6108,27 +6171,36 @@
         }
 
         function openDailyPlanner() {
-            checkPlannerReset();
-            
-            // Update date display
-            const now = new Date();
-            const options = { weekday: 'long', month: 'long', day: 'numeric' };
-            document.getElementById('plannerDate').textContent = now.toLocaleDateString('en-US', options);
-            
-            // Load values
-            document.getElementById('plannerGoal').value = dailyPlanner.goal || '';
-            document.getElementById('plannerBedtime').value = dailyPlanner.bedtime || '23:00';
-            
-            renderPlannerBlocks();
-            updatePlannerProgress();
-            startPlannerClock();
-            
-            document.getElementById('dailyPlannerModal').classList.add('show');
+            try {
+                checkPlannerReset();
+                
+                // Update date display
+                const now = new Date();
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                const plannerDateEl = document.getElementById('plannerDate');
+                if (plannerDateEl) plannerDateEl.textContent = now.toLocaleDateString('en-US', options);
+                
+                // Load values
+                const goalEl = document.getElementById('plannerGoal');
+                const bedtimeEl = document.getElementById('plannerBedtime');
+                if (goalEl) goalEl.value = dailyPlanner.goal || '';
+                if (bedtimeEl) bedtimeEl.value = dailyPlanner.bedtime || '23:00';
+                
+                renderPlannerBlocks();
+                updatePlannerProgress();
+                startPlannerClock();
+                
+                const modal = document.getElementById('dailyPlannerModal');
+                if (modal) modal.classList.add('show');
+            } catch (error) {
+                console.error('Error opening daily planner:', error);
+            }
         }
 
         function closeDailyPlanner() {
             saveDailyPlanner();
-            document.getElementById('dailyPlannerModal').classList.remove('show');
+            const modal = document.getElementById('dailyPlannerModal');
+            if (modal) modal.classList.remove('show');
         }
 
         let plannerClockInterval = null;
@@ -7267,6 +7339,7 @@
                                 ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
                             </button>
                         ` : ''}
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="addTaskToFocusMode(${task.id})" style="background: #667eea;" title="Add to Focus Mode">🎯</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal(${task.id})" style="background: #6366f1;">✏️</button>` : ''}
                         <button class="task-delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
@@ -8298,6 +8371,53 @@
             showToast('Removed from today\'s tasks', '👋');
         }
         
+        function addTaskToFocusMode(taskId) {
+            const task = (tasks || []).find(t => t.id === taskId);
+            if (!task) return;
+            
+            // Determine size
+            const size = task.size || 'medium';
+            
+            // Initialize todaysTasks if needed
+            if (!focusModeData.todaysTasks) {
+                focusModeData.todaysTasks = { big: [], medium: [], small: [] };
+            }
+            if (!focusModeData.todaysTasks[size]) {
+                focusModeData.todaysTasks[size] = [];
+            }
+            
+            // Check if already added
+            if (focusModeData.todaysTasks[size].includes(taskId)) {
+                showToast('Task already in Focus Mode!', '⚠️');
+                return;
+            }
+            
+            // Check size limits (1-3-5 rule)
+            const limits = { big: 1, medium: 3, small: 5 };
+            const currentCount = focusModeData.todaysTasks[size].length;
+            
+            // For big tasks, check if ONE thing is set
+            if (size === 'big' && focusModeData.oneThingId) {
+                showToast('You already have your ONE thing set!', '⚠️');
+                return;
+            }
+            
+            if (currentCount >= limits[size]) {
+                showToast(`Max ${limits[size]} ${size} tasks per day!`, '⚠️');
+                return;
+            }
+            
+            // Add to focus mode
+            focusModeData.todaysTasks[size].push(taskId);
+            
+            saveData();
+            renderTasks();
+            if (currentView === 'focus') renderFocusMode();
+            
+            const sizeEmoji = size === 'big' ? '🔴' : size === 'small' ? '🟢' : '🟡';
+            showToast(`Added ${sizeEmoji} ${size} task to Focus Mode!`, '🎯');
+        }
+        
         function clearOneThing() {
             // Clear the ONE thing without completing it
             focusModeData.oneThingId = null;
@@ -8434,7 +8554,20 @@
         }
         
         function initFocusMode() {
-            if (currentView === 'focus') renderFocusMode();
+            // Make sure Focus Mode container is visible if currentView is 'focus'
+            const focusContainer = document.getElementById('focusModeContainer');
+            const fullContainer = document.getElementById('fullViewContainer');
+            
+            if (currentView === 'focus') {
+                if (focusContainer) focusContainer.style.display = 'block';
+                if (fullContainer) fullContainer.style.display = 'none';
+                renderFocusMode();
+            } else {
+                if (focusContainer) focusContainer.style.display = 'none';
+                if (fullContainer) fullContainer.style.display = 'block';
+            }
+            
+            console.log('✅ Focus Mode initialized, currentView:', currentView);
         }
 
         // Reset daily stats at midnight
