@@ -2462,8 +2462,8 @@
         <div class="main-content">
             <div class="tasks-section">
                 <div class="category-tabs">
-                    <button class="category-tab dotoday active" data-category="dotoday">🔴 Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
-                    <button class="category-tab mustcomplete" data-category="mustcomplete" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 MUST Complete by EOD <span class="task-count" id="count-mustcomplete">(0)</span></button>
+                    <button class="category-tab dotoday active" data-category="dotoday">🔥 Critical <span class="task-count" id="count-dotoday">(0)</span></button>
+                    <button class="category-tab mustcomplete" data-category="mustcomplete" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 EOD Deadline <span class="task-count" id="count-mustcomplete">(0)</span></button>
                     <button class="category-tab financial" data-category="financial">💰 Financial <span class="task-count" id="count-financial">(0)</span></button>
                     <button class="category-tab clinic" data-category="clinic">🦷 Clinic Requirements <span class="task-count" id="count-clinic">(0)</span></button>
                     <button class="category-tab health" data-category="health">❤️ Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
@@ -2735,7 +2735,7 @@
                                     <li>Use Pomodoro timer for focus sessions</li>
                                 </ul>
                                 <div class="help-tip">
-                                    <strong>🔴 Do Today Feature:</strong> Mark critical tasks with "Do Today" button. They'll appear in both their original category AND the "Critical Must Do Today" category. When completed, they disappear from "Do Today" but stay in original category. XP only counted once!
+                                    <strong>🔥 Critical & 🚨 EOD:</strong> Critical = important tasks for soon. EOD = hard deadline TODAY. Tasks show in both home category AND Critical/EOD views. XP counted once!
                                 </div>
                             </div>
 
@@ -3141,6 +3141,15 @@
         let editingTaskLeverage = false;
         let planningMode = 'onething';
         let selectedPlanningTaskId = null;
+        
+        // Modal debouncing to prevent glitchy rapid clicks
+        let modalDebounce = {};
+        function debounceModal(name, fn) {
+            if (modalDebounce[name]) return;
+            modalDebounce[name] = true;
+            fn();
+            setTimeout(() => { modalDebounce[name] = false; }, 150);
+        }
         
         let stats = {
             totalXPGained: 0,
@@ -7175,9 +7184,9 @@
             if (filteredTasks.length === 0) {
                 let emptyMessage = 'No tasks yet. Add one above to get started!';
                 if (currentCategory === 'dotoday') {
-                    emptyMessage = 'No critical tasks for today. Mark tasks with "🔴 Do Today" to see them here!';
+                    emptyMessage = 'No critical tasks flagged. Use 🔥 Critical on important tasks!';
                 } else if (currentCategory === 'mustcomplete') {
-                    emptyMessage = 'No urgent EOD tasks. Mark tasks with "🚨 Must Complete" for absolute deadlines!';
+                    emptyMessage = 'No EOD deadlines. Use 🚨 EOD for tasks that MUST be done today!';
                 }
                     
                 taskList.innerHTML = `
@@ -7235,10 +7244,10 @@
                         <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
                         <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
                         ${task.mustComplete ? '<span class="today-badge" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 EOD</span>' : ''}
-                        ${task.doToday && !isDoTodayView && !task.mustComplete ? '<span class="today-badge">🔴 TODAY</span>' : ''}
+                        ${task.doToday && !isDoTodayView && !task.mustComplete ? '<span class="today-badge">🔥 CRITICAL</span>' : ''}
                         ${!task.completed && !isDoTodayView && !isMustCompleteView ? `
                             <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday(${task.id})" style="margin-right: 5px;">
-                                ${task.doToday ? '✓ Today' : '🔴 Today'}
+                                ${task.doToday ? '✓ Critical' : '🔥 Critical'}
                             </button>
                             <button class="do-today-btn ${task.mustComplete ? 'active' : ''}" onclick="toggleMustComplete(${task.id})" style="background: ${task.mustComplete ? '#7f1d1d' : 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)'};">
                                 ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
@@ -7249,6 +7258,7 @@
                                 ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
                             </button>
                         ` : ''}
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="addToFocusMode(${task.id})" style="background: #8b5cf6;" title="Add to Focus Mode">🎯</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal(${task.id})" style="background: #6366f1;">✏️</button>` : ''}
                         <button class="task-delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
@@ -7423,8 +7433,8 @@
             updateStats();
             saveData();
             
-            const message = task.doToday ? 'Marked as critical for today!' : 'Removed from today\'s list';
-            showToast(message, task.doToday ? '🔴' : 'ℹ️');
+            const message = task.doToday ? '🔥 Marked as Critical!' : 'Removed from Critical list';
+            showToast(message, task.doToday ? '🔥' : 'ℹ️');
         }
 
         // Delete task
@@ -8268,6 +8278,41 @@
                     </div>
                 `;
             }).join('');
+        }
+        
+        function addToFocusMode(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            const size = task.size || 'medium';
+            
+            const allFocusIds = [
+                focusModeData.oneThingId,
+                ...(focusModeData.todaysTasks.big || []),
+                ...(focusModeData.todaysTasks.medium || []),
+                ...(focusModeData.todaysTasks.small || [])
+            ].filter(Boolean);
+            
+            if (allFocusIds.includes(taskId)) {
+                showToast('Already in Focus Mode!', '✅');
+                return;
+            }
+            
+            if (!focusModeData.todaysTasks[size]) {
+                focusModeData.todaysTasks[size] = [];
+            }
+            focusModeData.todaysTasks[size].push(taskId);
+            
+            if (!task.doToday) {
+                task.doToday = true;
+            }
+            
+            renderFocusMode();
+            renderTasks();
+            saveData();
+            
+            const sizeEmoji = size === 'big' ? '🔴' : size === 'small' ? '🟢' : '🟡';
+            showToast(sizeEmoji + ' Added to Focus Mode!', '🎯');
         }
         
         function removeFromToday(taskId, size) {
