@@ -419,6 +419,50 @@
         .task-item.future { border-left-color: #4facfe; }
         .task-item.life { border-left-color: #f093fb; }
         .task-item.dotoday { border-left-color: #ff416c; }
+        .task-item.mustcomplete { border-left-color: #7f1d1d; background: rgba(127, 29, 29, 0.1); }
+
+        .category-tab.mustcomplete {
+            background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+            color: white;
+            animation: urgentPulse 1.5s infinite;
+        }
+        
+        @keyframes urgentPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+        }
+
+        /* Drag and Drop Styles */
+        .task-item {
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+        
+        .task-item:active {
+            cursor: grabbing;
+        }
+        
+        .task-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .task-item.drag-over {
+            border-top: 3px solid #667eea;
+            margin-top: -3px;
+        }
+        
+        .task-item .drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            padding: 0 8px;
+            font-size: 1.2em;
+        }
+        
+        .task-item .drag-handle:hover {
+            color: #667eea;
+        }
 
         .today-badge {
             background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
@@ -2243,6 +2287,10 @@
                 <button class="data-btn" onclick="showHelp()" title="Quick reference guide">❓ Help</button>
                 <input type="file" id="checkpointFile" accept=".dent,.json" style="display: none;" onchange="restoreCheckpoint(event)">
             </div>
+            <div class="view-toggle-container" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">🎯 Focus Mode</button>
+                <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 1em; cursor: pointer;">📋 Full Task View</button>
+            </div>
         </div>
 
         <div class="stats-container">
@@ -2293,13 +2341,132 @@
             </div>
         </div>
 
+        <!-- ==================== FOCUS MODE CONTAINER ==================== -->
+        <div id="focusModeContainer">
+            <div class="focus-mode-wrapper" style="max-width: 900px; margin: 0 auto;">
+                <div class="focus-greeting" id="focusGreeting" style="text-align: center; color: white; margin-bottom: 25px; font-size: 1.3em; opacity: 0.95;">
+                    ☀️ Good morning, Sully
+                </div>
+
+                <!-- The One Thing Card -->
+                <div class="one-thing-card" id="oneThingCard" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 30px; margin-bottom: 25px; border: 2px solid #667eea; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);">
+                    <div id="oneThingContent">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Task Budget Card -->
+                <div class="task-budget-card" style="background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="font-size: 1.2em; font-weight: 700; color: #333;">📋 TODAY'S TASK BUDGET</div>
+                        <div style="background: #f3f4f6; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; color: #6b7280; font-weight: 600;">1-3-5 Rule</div>
+                    </div>
+                    
+                    <div id="taskBudgetBars" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #dc2626;">🔴 BIG</div>
+                            <div id="budgetBarBig" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
+                            <div id="budgetCountBig" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/1</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #f59e0b;">🟡 MEDIUM</div>
+                            <div id="budgetBarMedium" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
+                            <div id="budgetCountMedium" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/3</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #10b981;">🟢 SMALL</div>
+                            <div id="budgetBarSmall" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
+                            <div id="budgetCountSmall" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/5</div>
+                        </div>
+                        <!-- Time Estimate -->
+                        <div style="margin-top: 10px; padding-top: 12px; border-top: 2px dashed #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 0.9em; color: #6b7280;">
+                                ⏱️ <strong>Estimated time:</strong> <span id="totalTimeEstimate" style="color: #667eea; font-weight: 700;">0 min</span>
+                            </div>
+                            <div id="timeContext" style="font-size: 0.8em; color: #9ca3af;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Add Task -->
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f0fdf4; border: 2px dashed #86efac; border-radius: 12px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <input type="text" id="focusQuickAdd" placeholder="Quick add a task..." 
+                                   onkeypress="if(event.key==='Enter')quickAddFromFocus()"
+                                   style="flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95em;">
+                            <select id="focusQuickAddSize" style="padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9em; background: white;">
+                                <option value="small">🟢 Small (~5 min)</option>
+                                <option value="medium" selected>🟡 Medium (~25 min)</option>
+                                <option value="big">🔴 Big (~60 min)</option>
+                            </select>
+                            <select id="focusQuickAddCategory" style="padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9em; background: white;">
+                                <option value="health">❤️ Health</option>
+                                <option value="school">📋 School</option>
+                                <option value="academic">📚 Academic</option>
+                                <option value="clinic">🦷 Clinic</option>
+                                <option value="financial">💰 Financial</option>
+                                <option value="future">🚀 Future</option>
+                                <option value="life">🏡 Life</option>
+                            </select>
+                            <button onclick="quickAddFromFocus()" style="padding: 10px 18px; border: none; border-radius: 8px; background: #10b981; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Medium Tasks -->
+                    <div id="mediumTasksSection" style="margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;">
+                            <span style="font-weight: 700; font-size: 0.95em; color: #f59e0b;">🟡 MEDIUM TASKS</span>
+                            <span style="font-size: 0.8em; color: #9ca3af; margin-left: auto;">Do after The One Thing</span>
+                        </div>
+                        <div id="mediumTasksList"></div>
+                    </div>
+
+                    <!-- Small Tasks -->
+                    <div id="smallTasksSection">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;">
+                            <span style="font-weight: 700; font-size: 0.95em; color: #10b981;">🟢 SMALL TASKS</span>
+                            <span style="font-size: 0.8em; color: #9ca3af; margin-left: auto;">Quick wins - build momentum</span>
+                        </div>
+                        <div id="smallTasksList"></div>
+                    </div>
+                </div>
+
+                <!-- Momentum Starter -->
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: #92400e; font-weight: 700;">
+                        ⚡ MOMENTUM STARTER
+                    </div>
+                    <div style="color: #78350f; font-size: 0.9em; margin-bottom: 15px;">
+                        Feeling stuck? Start with a tiny win to build activation energy:
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="doRandomSmallTask()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">🎲 Random 2-min Task</button>
+                        <button onclick="start5MinSprint()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">⏱️ 5-min Sprint</button>
+                        <button onclick="switchToFullView()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">📋 Manage Tasks</button>
+                    </div>
+                </div>
+
+                <!-- Backlog Summary -->
+                <div style="background: #f1f5f9; border-radius: 16px; padding: 20px; text-align: center;">
+                    <div style="font-size: 1.1em; color: #64748b; margin-bottom: 15px;">
+                        📦 <strong id="backlogCount">0</strong> more tasks across <strong id="backlogCategories">0</strong> categories
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button onclick="switchToFullView()" style="padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; background: #667eea; color: white;">View Full Task List</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FULL VIEW CONTAINER (original view) ==================== -->
+        <div id="fullViewContainer" style="display: none;">
         <div class="main-content">
             <div class="tasks-section">
                 <div class="category-tabs">
-                    <button class="category-tab dotoday" data-category="dotoday">🔴 Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
+                    <button class="category-tab dotoday active" data-category="dotoday">🔴 Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
+                    <button class="category-tab mustcomplete" data-category="mustcomplete" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 MUST Complete by EOD <span class="task-count" id="count-mustcomplete">(0)</span></button>
                     <button class="category-tab financial" data-category="financial">💰 Financial <span class="task-count" id="count-financial">(0)</span></button>
                     <button class="category-tab clinic" data-category="clinic">🦷 Clinic Requirements <span class="task-count" id="count-clinic">(0)</span></button>
-                    <button class="category-tab health active" data-category="health">❤️ Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
+                    <button class="category-tab health" data-category="health">❤️ Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
                     <button class="category-tab school" data-category="school">📋 School Maintenance <span class="task-count" id="count-school">(0)</span></button>
                     <button class="category-tab academic" data-category="academic">📚 Academic & Didactic <span class="task-count" id="count-academic">(0)</span></button>
                     <button class="category-tab future" data-category="future">🚀 Future Job & Life <span class="task-count" id="count-future">(0)</span></button>
@@ -2844,6 +3011,78 @@
             </div>
         </div>
     </div>
+    </div> <!-- Close fullViewContainer -->
+
+    <!-- Planning Modal for Focus Mode -->
+    <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20000; padding: 20px;">
+        <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; color: #e6edf3;">
+            <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
+                <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">🎯 Select Your ONE THING for Today</div>
+                <button onclick="closePlanningModal()" style="background: none; border: none; color: #8b949e; font-size: 1.5em; cursor: pointer;">✕</button>
+            </div>
+            <div id="planningModalBody" style="padding: 25px 30px;">
+                <!-- Will be populated by JS -->
+            </div>
+            <div style="padding: 20px 30px; border-top: 1px solid #30363d; display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="closePlanningModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: #30363d; color: #c9d1d9;">Cancel</button>
+                <button onclick="confirmPlanningSelection()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">Confirm Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Edit Modal for Focus Mode -->
+    <div id="taskEditModal" onclick="closeTaskEditModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20000; padding: 20px;">
+        <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 500px; width: 100%; color: #e6edf3;">
+            <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">✏️ Edit Task</div>
+                <button onclick="closeTaskEditModal()" style="background: none; border: none; color: #8b949e; font-size: 1.5em; cursor: pointer;">✕</button>
+            </div>
+            <div style="padding: 25px 30px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #8b949e; margin-bottom: 8px; font-weight: 600;">Task</label>
+                    <input type="text" id="editTaskText" style="width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; color: #e6edf3; font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #8b949e; margin-bottom: 8px; font-weight: 600;">Size (How long will this take?)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="size-option" data-size="big" onclick="selectTaskSize('big')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;">🔴</div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Big</div>
+                            <div style="font-size: 0.75em; color: #8b949e;">1+ hour</div>
+                        </div>
+                        <div class="size-option selected" data-size="medium" onclick="selectTaskSize('medium')" style="flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 10px; text-align: center; cursor: pointer; background: rgba(102, 126, 234, 0.2);">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;">🟡</div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Medium</div>
+                            <div style="font-size: 0.75em; color: #8b949e;">15-45 min</div>
+                        </div>
+                        <div class="size-option" data-size="small" onclick="selectTaskSize('small')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;">🟢</div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Small</div>
+                            <div style="font-size: 0.75em; color: #8b949e;">2-15 min</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #8b949e; margin-bottom: 8px; font-weight: 600;">High Leverage (80/20)?</label>
+                    <div id="leverageToggle" onclick="toggleLeverage()" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #21262d; border-radius: 10px; cursor: pointer;">
+                        <div id="leverageSwitch" style="width: 44px; height: 24px; background: #30363d; border-radius: 12px; position: relative; transition: all 0.2s ease;">
+                            <div style="position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s ease;"></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #e6edf3; margin-bottom: 2px;">📊 High Leverage Task</div>
+                            <div style="font-size: 0.85em; color: #8b949e;">20% effort → 80% impact on your goals</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 20px 30px; border-top: 1px solid #30363d; display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="closeTaskEditModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: #30363d; color: #c9d1d9;">Cancel</button>
+                <button onclick="saveTaskEdit()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">Save Changes</button>
+            </div>
+        </div>
+    </div>
 
     <div class="achievement-popup" id="achievementPopup">
         <h2>Level Up!</h2>
@@ -2885,6 +3124,23 @@
         let workMinutes = 25;
         let breakMinutes = 5;
         let currentTask = null;
+        
+        // Focus Mode variables
+        let currentView = 'focus'; // 'focus' or 'full'
+        let focusModeData = {
+            oneThingId: null,
+            microSteps: [],
+            todaysTasks: { big: [], medium: [], small: [] },
+            focusTimerSeconds: 0,
+            focusTimerRunning: false,
+            focusTimerInterval: null,
+            lastPlanningDate: null
+        };
+        let editingTaskId = null;
+        let editingTaskSize = 'medium';
+        let editingTaskLeverage = false;
+        let planningMode = 'onething';
+        let selectedPlanningTaskId = null;
         
         let stats = {
             totalXPGained: 0,
@@ -3439,10 +3695,27 @@
                     });
                 }
                 
+                // Load Focus Mode data
+                if (data.focusModeData) {
+                    focusModeData = {
+                        ...focusModeData,
+                        oneThingId: data.focusModeData.oneThingId || null,
+                        microSteps: data.focusModeData.microSteps || [],
+                        todaysTasks: {
+                            big: data.focusModeData.todaysTasks?.big || [],
+                            medium: data.focusModeData.todaysTasks?.medium || [],
+                            small: data.focusModeData.todaysTasks?.small || []
+                        },
+                        lastPlanningDate: data.focusModeData.lastPlanningDate || null
+                    };
+                }
+                
                 updateStats();
                 renderTasks();
                 updateMedicationDisplay();
             }
+            // Always init focus mode
+            initFocusMode();
         }
 
         // Save data to Firebase (or localStorage as fallback)
@@ -3456,7 +3729,8 @@
                 financials,
                 pillAssignments,
                 calendarEvents,
-                dailyPlanner
+                dailyPlanner,
+                focusModeData
             };
             
             // Always save to localStorage as backup
@@ -6784,19 +7058,38 @@
             const input = document.getElementById('taskInput');
             const text = input.value.trim();
             if (!text) return;
+            
+            // If adding from dotoday or mustcomplete view, default to health category
+            let taskCategory = currentCategory;
+            let markDoToday = false;
+            let markMustComplete = false;
+            
+            if (currentCategory === 'dotoday') {
+                taskCategory = 'health'; // Default category
+                markDoToday = true;
+            } else if (currentCategory === 'mustcomplete') {
+                taskCategory = 'health'; // Default category
+                markDoToday = true;
+                markMustComplete = true;
+            }
 
             const task = {
                 id: Date.now(),
                 text: text,
-                category: currentCategory,
+                category: taskCategory,
                 completed: false,
-                doToday: false,
-                createdAt: new Date().toISOString()
+                doToday: markDoToday,
+                mustComplete: markMustComplete,
+                createdAt: new Date().toISOString(),
+                size: 'medium',
+                highLeverage: false,
+                sortOrder: tasks.length
             };
 
             tasks.push(task);
             input.value = '';
             renderTasks();
+            if (currentView === 'focus') renderFocusMode();
             saveData();
         }
 
@@ -6844,10 +7137,16 @@
             if (currentCategory === 'dotoday') {
                 // Show all tasks marked as "Do Today" across all categories
                 filteredTasks = tasks.filter(t => t.doToday && !t.completed);
+            } else if (currentCategory === 'mustcomplete') {
+                // Show tasks marked as must complete by EOD
+                filteredTasks = tasks.filter(t => t.mustComplete && !t.completed);
             } else {
                 // Show only incomplete tasks for the current category
                 filteredTasks = tasks.filter(t => t.category === currentCategory && !t.completed);
             }
+            
+            // Sort by sortOrder if exists
+            filteredTasks.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
             // Update task counts for all categories
             const categories = ['financial', 'clinic', 'health', 'school', 'academic', 'future', 'life'];
@@ -6865,11 +7164,21 @@
             if (doTodayCountElement) {
                 doTodayCountElement.textContent = `(${doTodayCount})`;
             }
+            
+            // Update "Must Complete" count
+            const mustCompleteCount = tasks.filter(t => t.mustComplete && !t.completed).length;
+            const mustCompleteCountElement = document.getElementById('count-mustcomplete');
+            if (mustCompleteCountElement) {
+                mustCompleteCountElement.textContent = `(${mustCompleteCount})`;
+            }
 
             if (filteredTasks.length === 0) {
-                const emptyMessage = currentCategory === 'dotoday' 
-                    ? 'No critical tasks for today. Mark tasks with "🔴 Do Today" to see them here!'
-                    : 'No tasks yet. Add one above to get started!';
+                let emptyMessage = 'No tasks yet. Add one above to get started!';
+                if (currentCategory === 'dotoday') {
+                    emptyMessage = 'No critical tasks for today. Mark tasks with "🔴 Do Today" to see them here!';
+                } else if (currentCategory === 'mustcomplete') {
+                    emptyMessage = 'No urgent EOD tasks. Mark tasks with "🚨 Must Complete" for absolute deadlines!';
+                }
                     
                 taskList.innerHTML = `
                     <div class="empty-state">
@@ -6882,8 +7191,9 @@
                 return;
             }
 
-            taskList.innerHTML = filteredTasks.map(task => {
+            taskList.innerHTML = filteredTasks.map((task, index) => {
                 const isDoTodayView = currentCategory === 'dotoday';
+                const isMustCompleteView = currentCategory === 'mustcomplete';
                 const categoryIcons = {
                     financial: '💰',
                     clinic: '🦷',
@@ -6903,25 +7213,147 @@
                     life: 'Life'
                 };
                 
+                const sizeIcon = task.size === 'big' ? '🔴' : task.size === 'small' ? '🟢' : '🟡';
+                const leverageIcon = task.highLeverage ? '📊' : '';
+                
                 return `
-                    <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}">
+                    <div class="task-item ${isMustCompleteView ? 'mustcomplete' : isDoTodayView ? 'dotoday' : task.category}" 
+                         draggable="true" 
+                         data-task-id="${task.id}"
+                         data-index="${index}"
+                         ondragstart="handleDragStart(event, ${task.id})"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event, ${task.id})"
+                         ondragend="handleDragEnd(event)">
+                        <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
                         <input type="checkbox" 
                                class="task-checkbox" 
                                ${task.completed ? 'checked' : ''} 
                                onchange="toggleTask(${task.id})">
-                        ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
+                        ${(isDoTodayView || isMustCompleteView) ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
+                        <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
                         <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
-                        ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
-                        ${!task.completed && !isDoTodayView ? `
-                            <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday(${task.id})">
-                                ${task.doToday ? '✓ Marked' : '🔴 Do Today'}
+                        ${task.mustComplete ? '<span class="today-badge" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 EOD</span>' : ''}
+                        ${task.doToday && !isDoTodayView && !task.mustComplete ? '<span class="today-badge">🔴 TODAY</span>' : ''}
+                        ${!task.completed && !isDoTodayView && !isMustCompleteView ? `
+                            <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday(${task.id})" style="margin-right: 5px;">
+                                ${task.doToday ? '✓ Today' : '🔴 Today'}
+                            </button>
+                            <button class="do-today-btn ${task.mustComplete ? 'active' : ''}" onclick="toggleMustComplete(${task.id})" style="background: ${task.mustComplete ? '#7f1d1d' : 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)'};">
+                                ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
                             </button>
                         ` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️ Start</button>` : ''}
+                        ${(isDoTodayView || isMustCompleteView) && !task.completed ? `
+                            <button class="do-today-btn" onclick="toggleMustComplete(${task.id})" style="background: ${task.mustComplete ? '#7f1d1d' : 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)'}; margin-right: 5px;">
+                                ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
+                            </button>
+                        ` : ''}
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️</button>` : ''}
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal(${task.id})" style="background: #6366f1;">✏️</button>` : ''}
                         <button class="task-delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Drag and Drop Functions
+        let draggedTaskId = null;
+        
+        function handleDragStart(event, taskId) {
+            draggedTaskId = taskId;
+            event.target.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            const taskItem = event.target.closest('.task-item');
+            if (taskItem && !taskItem.classList.contains('dragging')) {
+                taskItem.classList.add('drag-over');
+            }
+        }
+        
+        function handleDragLeave(event) {
+            const taskItem = event.target.closest('.task-item');
+            if (taskItem) {
+                taskItem.classList.remove('drag-over');
+            }
+        }
+        
+        function handleDrop(event, targetTaskId) {
+            event.preventDefault();
+            const taskItem = event.target.closest('.task-item');
+            if (taskItem) {
+                taskItem.classList.remove('drag-over');
+            }
+            
+            if (draggedTaskId === targetTaskId) return;
+            
+            // Find indices
+            const draggedTask = tasks.find(t => t.id === draggedTaskId);
+            const targetTask = tasks.find(t => t.id === targetTaskId);
+            
+            if (!draggedTask || !targetTask) return;
+            
+            // Get filtered tasks for current view to determine visual order
+            let filteredTasks;
+            if (currentCategory === 'dotoday') {
+                filteredTasks = tasks.filter(t => t.doToday && !t.completed);
+            } else if (currentCategory === 'mustcomplete') {
+                filteredTasks = tasks.filter(t => t.mustComplete && !t.completed);
+            } else {
+                filteredTasks = tasks.filter(t => t.category === currentCategory && !t.completed);
+            }
+            
+            // Update sortOrder for all filtered tasks
+            const draggedIndex = filteredTasks.findIndex(t => t.id === draggedTaskId);
+            const targetIndex = filteredTasks.findIndex(t => t.id === targetTaskId);
+            
+            // Reorder
+            filteredTasks.splice(draggedIndex, 1);
+            filteredTasks.splice(targetIndex, 0, draggedTask);
+            
+            // Update sortOrder based on new positions
+            filteredTasks.forEach((task, index) => {
+                task.sortOrder = index;
+            });
+            
+            renderTasks();
+            saveData();
+            showToast('Tasks reordered!', '↕️');
+        }
+        
+        function handleDragEnd(event) {
+            event.target.classList.remove('dragging');
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedTaskId = null;
+        }
+        
+        // Toggle Must Complete
+        function toggleMustComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            
+            task.mustComplete = !task.mustComplete;
+            
+            // If marking as must complete, also mark as do today
+            if (task.mustComplete && !task.doToday) {
+                task.doToday = true;
+            }
+            
+            renderTasks();
+            if (currentView === 'focus') renderFocusMode();
+            saveData();
+            
+            if (task.mustComplete) {
+                showToast('🚨 Marked as MUST complete by EOD!', '⚠️');
+            } else {
+                showToast('Removed EOD deadline', '👍');
+            }
         }
 
         // Toggle task completion
@@ -7348,6 +7780,643 @@
             
             // Update current category XP display
             updateCategoryXPDisplay();
+        }
+
+        // ============================================
+        // FOCUS MODE FUNCTIONS
+        // ============================================
+        
+        function switchToFocusMode() {
+            currentView = 'focus';
+            document.getElementById('focusModeContainer').style.display = 'block';
+            document.getElementById('fullViewContainer').style.display = 'none';
+            document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.95)';
+            document.getElementById('focusModeBtn').style.color = '#667eea';
+            document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.1)';
+            document.getElementById('fullViewBtn').style.color = 'white';
+            renderFocusMode();
+        }
+        
+        function switchToFullView() {
+            currentView = 'full';
+            document.getElementById('focusModeContainer').style.display = 'none';
+            document.getElementById('fullViewContainer').style.display = 'block';
+            document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.1)';
+            document.getElementById('focusModeBtn').style.color = 'white';
+            document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.95)';
+            document.getElementById('fullViewBtn').style.color = '#667eea';
+        }
+        
+        function renderFocusMode() {
+            updateFocusGreeting();
+            renderOneThingCard();
+            renderTaskBudget();
+            renderTodaysTasks();
+            updateBacklogCount();
+        }
+        
+        function updateFocusGreeting() {
+            const hour = new Date().getHours();
+            let greeting = '☀️ Good morning';
+            if (hour >= 12 && hour < 17) greeting = '🌤️ Good afternoon';
+            if (hour >= 17 && hour < 21) greeting = '🌆 Good evening';
+            if (hour >= 21 || hour < 5) greeting = '🌙 Good night';
+            
+            const el = document.getElementById('focusGreeting');
+            if (el) el.textContent = `${greeting}, Sully`;
+        }
+        
+        function renderOneThingCard() {
+            const container = document.getElementById('oneThingContent');
+            if (!container) return;
+            
+            const oneThingTask = focusModeData.oneThingId ? 
+                (tasks || []).find(t => t.id === focusModeData.oneThingId && !t.completed) : null;
+            
+            if (!oneThingTask) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 4em; margin-bottom: 15px;">🎯</div>
+                        <div style="color: #8b949e; font-size: 1.1em; margin-bottom: 20px;">
+                            What's the ONE thing that would make today a success?
+                        </div>
+                        <button onclick="openOneThingPicker()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; padding: 14px 28px; color: white; font-weight: 700; font-size: 1.1em; cursor: pointer;">
+                            Choose Your ONE Thing
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const catInfo = getCategoryInfo(oneThingTask.category);
+            const sizeIcon = oneThingTask.size === 'big' ? '🔴' : oneThingTask.size === 'small' ? '🟢' : '🟡';
+            
+            container.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 2em;">🔥</div>
+                    <div style="color: #fbbf24; font-size: 1.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">THE ONE THING</div>
+                    ${oneThingTask.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">📊 HIGH LEVERAGE</div>' : ''}
+                    <div style="margin-left: auto; display: flex; gap: 8px;">
+                        <button onclick="openOneThingPicker()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Change to different task">🔄 Change</button>
+                        <button onclick="clearOneThing()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Clear and pick later">✕</button>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="color: #e6edf3; font-size: 1.3em; font-weight: 600; margin-bottom: 8px;">${escapeHtml(oneThingTask.text)}</div>
+                    <div style="display: flex; gap: 15px; font-size: 0.85em; color: #8b949e;">
+                        <span style="padding: 2px 8px; border-radius: 6px; background: ${catInfo.color}20; color: ${catInfo.color};">${catInfo.emoji} ${catInfo.name}</span>
+                        <span>${sizeIcon} ${oneThingTask.size || 'Medium'}</span>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px;">
+                    <div style="color: #8b949e; font-size: 0.9em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        🧩 Break it down (micro-steps):
+                    </div>
+                    <div id="microStepsList">${renderMicroSteps()}</div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="newMicroStep" placeholder="Add a tiny next step..." 
+                               onkeypress="if(event.key==='Enter')addMicroStep()"
+                               style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #e6edf3; font-size: 0.95em;">
+                        <button onclick="addMicroStep()" style="background: #667eea; border: none; border-radius: 8px; padding: 10px 16px; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; flex-wrap: wrap;">
+                    <div id="focusTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: #e6edf3;">
+                        ${formatFocusTimer(focusModeData.focusTimerSeconds)}
+                    </div>
+                    <button id="focusTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        ${focusModeData.focusTimerRunning ? '⏸ Pause' : '▶ Start Focus'}
+                    </button>
+                    <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        ✓ Complete
+                    </button>
+                </div>
+            `;
+        }
+        
+        function renderMicroSteps() {
+            if (!focusModeData.microSteps || focusModeData.microSteps.length === 0) {
+                return '<div style="color: #6b7280; font-size: 0.9em; padding: 10px;">No micro-steps yet. Break your task into tiny pieces!</div>';
+            }
+            
+            return focusModeData.microSteps.map((step, index) => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; ${step.completed ? 'opacity: 0.6;' : ''}">
+                    <div onclick="toggleMicroStep(${index})" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? '#10b981' : '#667eea'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? '#10b981' : 'transparent'}; color: white; flex-shrink: 0;">
+                        ${step.completed ? '✓' : ''}
+                    </div>
+                    <div style="flex: 1; color: #c9d1d9; ${step.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">${escapeHtml(step.text)}</div>
+                    <button onclick="removeMicroStep(${index})" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 5px;">✕</button>
+                </div>
+            `).join('');
+        }
+        
+        function addMicroStep() {
+            const input = document.getElementById('newMicroStep');
+            if (!input || !input.value.trim()) return;
+            
+            focusModeData.microSteps.push({ id: Date.now(), text: input.value.trim(), completed: false });
+            input.value = '';
+            renderOneThingCard();
+            saveData();
+        }
+        
+        function toggleMicroStep(index) {
+            if (focusModeData.microSteps[index]) {
+                focusModeData.microSteps[index].completed = !focusModeData.microSteps[index].completed;
+                renderOneThingCard();
+                saveData();
+            }
+        }
+        
+        function removeMicroStep(index) {
+            focusModeData.microSteps.splice(index, 1);
+            renderOneThingCard();
+            saveData();
+        }
+        
+        function formatFocusTimer(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function toggleFocusTimer() {
+            if (focusModeData.focusTimerRunning) {
+                clearInterval(focusModeData.focusTimerInterval);
+                focusModeData.focusTimerRunning = false;
+            } else {
+                focusModeData.focusTimerRunning = true;
+                focusModeData.focusTimerInterval = setInterval(() => {
+                    focusModeData.focusTimerSeconds++;
+                    const display = document.getElementById('focusTimerDisplay');
+                    if (display) display.textContent = formatFocusTimer(focusModeData.focusTimerSeconds);
+                }, 1000);
+            }
+            const btn = document.getElementById('focusTimerBtn');
+            if (btn) btn.textContent = focusModeData.focusTimerRunning ? '⏸ Pause' : '▶ Start Focus Session';
+        }
+        
+        function completeOneThing() {
+            if (!focusModeData.oneThingId) return;
+            const task = (tasks || []).find(t => t.id === focusModeData.oneThingId);
+            if (task) {
+                toggleTask(task.id);
+                focusModeData.oneThingId = null;
+                focusModeData.microSteps = [];
+                focusModeData.focusTimerSeconds = 0;
+                if (focusModeData.focusTimerRunning) {
+                    clearInterval(focusModeData.focusTimerInterval);
+                    focusModeData.focusTimerRunning = false;
+                }
+                renderFocusMode();
+                saveData();
+                showToast('🎉 ONE THING completed! Great work!', '🏆');
+            }
+        }
+        
+        function openOneThingPicker() {
+            planningMode = 'onething';
+            selectedPlanningTaskId = null;
+            const modal = document.getElementById('planningModal');
+            const title = document.getElementById('planningModalTitle');
+            const body = document.getElementById('planningModalBody');
+            
+            if (title) title.textContent = '🎯 Select Your ONE THING for Today';
+            
+            const incompleteTasks = (tasks || []).filter(t => !t.completed);
+            const sortedTasks = incompleteTasks.sort((a, b) => {
+                if (a.highLeverage && !b.highLeverage) return -1;
+                if (!a.highLeverage && b.highLeverage) return 1;
+                const sizeOrder = { big: 0, medium: 1, small: 2 };
+                return (sizeOrder[a.size] || 1) - (sizeOrder[b.size] || 1);
+            });
+            
+            if (body) {
+                body.innerHTML = `
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: #c9d1d9;">
+                            Choose the task that would make today a success if completed:
+                        </div>
+                        ${sortedTasks.length === 0 ? 
+                            '<div style="color: #8b949e; padding: 20px; text-align: center;">No tasks yet. Add some in Full View first!</div>' :
+                            sortedTasks.map(task => renderPlanningTaskOption(task)).join('')
+                        }
+                    </div>
+                `;
+            }
+            if (modal) modal.style.display = 'flex';
+        }
+        
+        function openAddTasksModal(size) {
+            planningMode = size;
+            selectedPlanningTaskId = null;
+            const modal = document.getElementById('planningModal');
+            const title = document.getElementById('planningModalTitle');
+            const body = document.getElementById('planningModalBody');
+            
+            const sizeLabels = { big: '🔴 Big Tasks', medium: '🟡 Medium Tasks', small: '🟢 Small Tasks' };
+            if (title) title.textContent = `Add ${sizeLabels[size]} to Today`;
+            
+            const sizeTasks = (tasks || []).filter(t => 
+                !t.completed && 
+                (t.size === size || (!t.size && size === 'medium')) &&
+                !(focusModeData.todaysTasks[size] || []).includes(t.id)
+            );
+            
+            if (body) {
+                body.innerHTML = `
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: #c9d1d9;">
+                            Select tasks to add to today's ${size} tasks:
+                        </div>
+                        ${sizeTasks.length === 0 ? 
+                            `<div style="color: #8b949e; padding: 20px; text-align: center;">No ${size} tasks available.</div>` :
+                            sizeTasks.map(task => renderPlanningTaskOption(task)).join('')
+                        }
+                    </div>
+                `;
+            }
+            if (modal) modal.style.display = 'flex';
+        }
+        
+        function renderPlanningTaskOption(task) {
+            const catInfo = getCategoryInfo(task.category);
+            const sizeLabel = task.size === 'big' ? '🔴 Big' : task.size === 'small' ? '🟢 Small' : '🟡 Medium';
+            const isSelected = selectedPlanningTaskId === task.id;
+            
+            return `
+                <div onclick="selectPlanningTask(${task.id}, this)" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: ${isSelected ? 'rgba(102, 126, 234, 0.15)' : '#21262d'}; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid ${isSelected ? '#667eea' : 'transparent'};">
+                    <div style="width: 20px; height: 20px; border: 2px solid ${isSelected ? '#667eea' : '#6e7681'}; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ${isSelected ? '#667eea' : 'transparent'};">
+                        ${isSelected ? '<div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>' : ''}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="color: #e6edf3; font-weight: 500; margin-bottom: 4px;">${escapeHtml(task.text)}</div>
+                        <div style="font-size: 0.85em; color: #8b949e; display: flex; gap: 12px;">
+                            <span>${catInfo.emoji} ${catInfo.name}</span>
+                            <span>${sizeLabel}</span>
+                            ${task.highLeverage ? '<span style="color: #fbbf24;">📊 High Leverage</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function selectPlanningTask(taskId, element) {
+            selectedPlanningTaskId = taskId;
+            document.querySelectorAll('#planningModalBody > div > div[onclick]').forEach(opt => {
+                opt.style.background = '#21262d';
+                opt.style.borderColor = 'transparent';
+                opt.querySelector('div > div:first-child').style.borderColor = '#6e7681';
+                opt.querySelector('div > div:first-child').style.background = 'transparent';
+                opt.querySelector('div > div:first-child').innerHTML = '';
+            });
+            if (element) {
+                element.style.background = 'rgba(102, 126, 234, 0.15)';
+                element.style.borderColor = '#667eea';
+                element.querySelector('div:first-child').style.borderColor = '#667eea';
+                element.querySelector('div:first-child').style.background = '#667eea';
+                element.querySelector('div:first-child').innerHTML = '<div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>';
+            }
+        }
+        
+        function confirmPlanningSelection() {
+            if (!selectedPlanningTaskId) { showToast('Please select a task first', '⚠️'); return; }
+            
+            const task = (tasks || []).find(t => t.id === selectedPlanningTaskId);
+            
+            if (planningMode === 'onething') {
+                focusModeData.oneThingId = selectedPlanningTaskId;
+                focusModeData.microSteps = [];
+                focusModeData.focusTimerSeconds = 0;
+                if (task && !task.doToday) task.doToday = true;
+                // DON'T add to todaysTasks - ONE Thing is tracked separately
+                showToast('✅ ONE THING set! Let\'s crush it!', '🎯');
+            } else {
+                const size = planningMode;
+                // Don't add if it's already the ONE thing
+                if (selectedPlanningTaskId !== focusModeData.oneThingId) {
+                    if (!(focusModeData.todaysTasks[size] || []).includes(selectedPlanningTaskId)) {
+                        focusModeData.todaysTasks[size].push(selectedPlanningTaskId);
+                    }
+                }
+                showToast(`✅ Added to ${size} tasks!`, '📋');
+            }
+            
+            closePlanningModal();
+            renderFocusMode();
+            saveData();
+        }
+        
+        function closePlanningModal() {
+            const modal = document.getElementById('planningModal');
+            if (modal) modal.style.display = 'none';
+            selectedPlanningTaskId = null;
+        }
+        
+        function renderTaskBudget() {
+            if (!focusModeData || !focusModeData.todaysTasks) return;
+            
+            // Filter out ONE thing from size lists to avoid double counting
+            const oneThingId = focusModeData.oneThingId;
+            const counts = {
+                big: (focusModeData.todaysTasks.big || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length,
+                medium: (focusModeData.todaysTasks.medium || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length,
+                small: (focusModeData.todaysTasks.small || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length
+            };
+            
+            // ONE thing always counts as the BIG task (slot 1)
+            if (oneThingId) {
+                const oneThingTask = (tasks || []).find(t => t.id === oneThingId);
+                if (oneThingTask && !oneThingTask.completed) {
+                    counts.big = 1; // ONE thing fills the big slot
+                }
+            }
+            
+            renderBudgetBar('budgetBarBig', counts.big, 1, '#dc2626');
+            renderBudgetBar('budgetBarMedium', counts.medium, 3, '#f59e0b');
+            renderBudgetBar('budgetBarSmall', counts.small, 5, '#10b981');
+            
+            const bigEl = document.getElementById('budgetCountBig');
+            const medEl = document.getElementById('budgetCountMedium');
+            const smallEl = document.getElementById('budgetCountSmall');
+            if (bigEl) bigEl.textContent = `${Math.min(counts.big, 1)}/1`;
+            if (medEl) medEl.textContent = `${Math.min(counts.medium, 3)}/3`;
+            if (smallEl) smallEl.textContent = `${Math.min(counts.small, 5)}/5`;
+            
+            // Update time estimate
+            updateTimeEstimate(counts);
+        }
+        
+        function updateTimeEstimate(counts) {
+            // Time estimates: Big = 60 min, Medium = 25 min, Small = 5 min
+            const totalMinutes = (counts.big * 60) + (counts.medium * 25) + (counts.small * 5);
+            const timeEl = document.getElementById('totalTimeEstimate');
+            const contextEl = document.getElementById('timeContext');
+            
+            if (timeEl) {
+                if (totalMinutes === 0) {
+                    timeEl.textContent = '0 min';
+                } else if (totalMinutes < 60) {
+                    timeEl.textContent = `${totalMinutes} min`;
+                } else {
+                    const hours = Math.floor(totalMinutes / 60);
+                    const mins = totalMinutes % 60;
+                    timeEl.textContent = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                }
+            }
+            
+            if (contextEl) {
+                if (totalMinutes === 0) {
+                    contextEl.textContent = 'Add tasks to plan your day';
+                } else if (totalMinutes <= 120) {
+                    contextEl.textContent = '✨ Light day - room for deep work';
+                } else if (totalMinutes <= 240) {
+                    contextEl.textContent = '👍 Balanced workload';
+                } else if (totalMinutes <= 360) {
+                    contextEl.textContent = '⚡ Full day ahead';
+                } else {
+                    contextEl.textContent = '⚠️ Heavy - consider trimming';
+                }
+            }
+        }
+        
+        function quickAddFromFocus() {
+            const input = document.getElementById('focusQuickAdd');
+            const sizeSelect = document.getElementById('focusQuickAddSize');
+            const categorySelect = document.getElementById('focusQuickAddCategory');
+            
+            if (!input || !input.value.trim()) {
+                showToast('Please enter a task', '⚠️');
+                return;
+            }
+            
+            const task = {
+                id: Date.now(),
+                text: input.value.trim(),
+                category: categorySelect.value,
+                completed: false,
+                doToday: true, // Auto-mark as do today
+                createdAt: new Date().toISOString(),
+                size: sizeSelect.value,
+                highLeverage: false
+            };
+            
+            tasks.push(task);
+            
+            // Add to today's focus tasks
+            if (!focusModeData.todaysTasks[task.size].includes(task.id)) {
+                focusModeData.todaysTasks[task.size].push(task.id);
+            }
+            
+            input.value = '';
+            renderFocusMode();
+            saveData();
+            showToast(`Added to ${task.size} tasks!`, '✅');
+        }
+        
+        function renderBudgetBar(containerId, filled, total, color) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let html = '';
+            for (let i = 0; i < total; i++) {
+                const isFilled = i < filled;
+                html += `<div style="flex: 1; height: 100%; background: ${isFilled ? color : '#d1d5db'}; border-radius: 8px;"></div>`;
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderTodaysTasks() {
+            renderTaskSizeSection('medium', 'mediumTasksList');
+            renderTaskSizeSection('small', 'smallTasksList');
+        }
+        
+        function renderTaskSizeSection(size, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            // Filter out the ONE thing from medium/small lists to avoid duplication
+            const taskIds = (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) || [];
+            const filteredIds = taskIds.filter(id => id !== focusModeData.oneThingId);
+            const todaysTasks = filteredIds.map(id => (tasks || []).find(t => t.id === id)).filter(t => t && !t.completed);
+            
+            if (todaysTasks.length === 0) {
+                container.innerHTML = `
+                    <div style="color: #9ca3af; font-size: 0.9em; padding: 15px; text-align: center; background: #f9fafb; border-radius: 8px;">
+                        No ${size} tasks for today. 
+                        <button onclick="openAddTasksModal('${size}')" style="background: none; border: none; color: #667eea; cursor: pointer; text-decoration: underline;">Add some →</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = todaysTasks.map(task => {
+                const borderColor = size === 'small' ? '#10b981' : '#f59e0b';
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
+                        <div onclick="toggleFocusTask(${task.id})" style="width: 24px; height: 24px; border: 2px solid #10b981; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
+                            <span style="color: #10b981; font-size: 14px;">✓</span>
+                        </div>
+                        <div style="flex: 1; color: #374151; font-size: 0.95em;">${escapeHtml(task.text)}</div>
+                        ${task.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">📊</div>' : ''}
+                        <div style="color: #9ca3af; font-size: 0.85em; white-space: nowrap;">${size === 'small' ? '~5 min' : '~20 min'}</div>
+                        <button onclick="removeFromToday(${task.id}, '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function removeFromToday(taskId, size) {
+            // Remove task from today's list (doesn't delete the task, just removes from focus)
+            if (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) {
+                focusModeData.todaysTasks[size] = focusModeData.todaysTasks[size].filter(id => id !== taskId);
+            }
+            renderFocusMode();
+            saveData();
+            showToast('Removed from today\'s tasks', '👋');
+        }
+        
+        function clearOneThing() {
+            // Clear the ONE thing without completing it
+            focusModeData.oneThingId = null;
+            focusModeData.microSteps = [];
+            focusModeData.focusTimerSeconds = 0;
+            if (focusModeData.focusTimerRunning) {
+                clearInterval(focusModeData.focusTimerInterval);
+                focusModeData.focusTimerRunning = false;
+            }
+            renderFocusMode();
+            saveData();
+            showToast('ONE Thing cleared - pick a new one!', '🔄');
+        }
+        
+        function toggleFocusTask(taskId) {
+            toggleTask(taskId);
+            renderFocusMode();
+        }
+        
+        function updateBacklogCount() {
+            if (!focusModeData || !focusModeData.todaysTasks) return;
+            
+            const todaysTaskIds = [
+                focusModeData.oneThingId,
+                ...(focusModeData.todaysTasks.big || []),
+                ...(focusModeData.todaysTasks.medium || []),
+                ...(focusModeData.todaysTasks.small || [])
+            ].filter(Boolean);
+            
+            const backlogTasks = (tasks || []).filter(t => !t.completed && !todaysTaskIds.includes(t.id));
+            const categories = new Set(backlogTasks.map(t => t.category));
+            
+            const countEl = document.getElementById('backlogCount');
+            const catEl = document.getElementById('backlogCategories');
+            if (countEl) countEl.textContent = backlogTasks.length;
+            if (catEl) catEl.textContent = categories.size;
+        }
+        
+        function getCategoryInfo(category) {
+            const cats = {
+                financial: { name: 'Financial', emoji: '💰', color: '#22c55e' },
+                clinic: { name: 'Clinic', emoji: '🦷', color: '#ef4444' },
+                health: { name: 'Health', emoji: '❤️', color: '#ec4899' },
+                school: { name: 'School', emoji: '📋', color: '#6b7280' },
+                academic: { name: 'Academic', emoji: '📚', color: '#f59e0b' },
+                future: { name: 'Future', emoji: '🚀', color: '#3b82f6' },
+                life: { name: 'Life', emoji: '🏡', color: '#8b5cf6' }
+            };
+            return cats[category] || { name: 'Task', emoji: '📌', color: '#6b7280' };
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+        
+        function doRandomSmallTask() {
+            const smallTasks = (tasks || []).filter(t => !t.completed && (t.size === 'small' || (!t.size && t.text && t.text.length < 50)));
+            if (smallTasks.length === 0) { showToast('No small tasks found!', '⚠️'); return; }
+            const randomTask = smallTasks[Math.floor(Math.random() * smallTasks.length)];
+            showToast(`🎲 Try: "${randomTask.text.substring(0, 40)}..."`, '⚡');
+            if (!(focusModeData.todaysTasks.small || []).includes(randomTask.id)) {
+                focusModeData.todaysTasks.small.push(randomTask.id);
+                renderFocusMode();
+                saveData();
+            }
+        }
+        
+        function start5MinSprint() {
+            showToast('⏱️ 5-minute sprint! GO GO GO!', '🏃');
+        }
+        
+        // Task Edit Modal
+        function openTaskEditModal(taskId) {
+            editingTaskId = taskId;
+            const task = (tasks || []).find(t => t.id === taskId);
+            if (!task) return;
+            
+            editingTaskSize = task.size || 'medium';
+            editingTaskLeverage = task.highLeverage || false;
+            
+            document.getElementById('editTaskText').value = task.text;
+            updateSizeSelection();
+            updateLeverageToggle();
+            document.getElementById('taskEditModal').style.display = 'flex';
+        }
+        
+        function closeTaskEditModal() {
+            document.getElementById('taskEditModal').style.display = 'none';
+            editingTaskId = null;
+        }
+        
+        function selectTaskSize(size) {
+            editingTaskSize = size;
+            updateSizeSelection();
+        }
+        
+        function updateSizeSelection() {
+            document.querySelectorAll('.size-option').forEach(opt => {
+                const isSelected = opt.dataset.size === editingTaskSize;
+                opt.style.borderColor = isSelected ? '#667eea' : '#30363d';
+                opt.style.background = isSelected ? 'rgba(102, 126, 234, 0.2)' : '#21262d';
+            });
+        }
+        
+        function toggleLeverage() {
+            editingTaskLeverage = !editingTaskLeverage;
+            updateLeverageToggle();
+        }
+        
+        function updateLeverageToggle() {
+            const toggle = document.getElementById('leverageSwitch');
+            if (toggle) {
+                toggle.style.background = editingTaskLeverage ? '#fbbf24' : '#30363d';
+                toggle.querySelector('div').style.left = editingTaskLeverage ? '23px' : '3px';
+            }
+        }
+        
+        function saveTaskEdit() {
+            if (!editingTaskId) return;
+            const task = (tasks || []).find(t => t.id === editingTaskId);
+            if (!task) return;
+            
+            task.text = document.getElementById('editTaskText').value.trim();
+            task.size = editingTaskSize;
+            task.highLeverage = editingTaskLeverage;
+            
+            closeTaskEditModal();
+            renderTasks();
+            if (currentView === 'focus') renderFocusMode();
+            saveData();
+            showToast('Task updated!', '✅');
+        }
+        
+        function initFocusMode() {
+            if (currentView === 'focus') renderFocusMode();
         }
 
         // Reset daily stats at midnight
