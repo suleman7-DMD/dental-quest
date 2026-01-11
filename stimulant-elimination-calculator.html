@@ -32,6 +32,390 @@
             transform: scale(0.85);
             transform-origin: top center;
         }
+        
+        /* ============================================ */
+        /* FOCUS MODE STYLES - MOBILE FIRST */
+        /* ============================================ */
+        
+        .focus-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 10px;
+            transform: none;
+        }
+        
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 4px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: #8b949e;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .view-toggle button.active {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+        }
+        
+        .focus-hero {
+            text-align: center;
+            padding: 20px 15px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(16, 185, 129, 0.2));
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        .focus-hero-label {
+            font-size: 0.85em;
+            color: #8b949e;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .focus-hero-time {
+            font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        
+        .focus-hero-countdown {
+            font-size: 1.1em;
+            color: #e6edf3;
+            margin-top: 8px;
+        }
+        
+        .focus-hero-bar {
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+        
+        .focus-hero-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #00d9ff);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .focus-graph-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+            height: 200px;
+        }
+        
+        .focus-graph-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .focus-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .focus-card-title {
+            font-size: 0.85em;
+            color: #8b949e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .focus-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .focus-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .focus-input-group label {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+        
+        .focus-input-group input,
+        .focus-input-group select {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            color: #e6edf3;
+            font-size: 1em;
+            -webkit-appearance: none;
+        }
+        
+        .focus-input-group input:focus,
+        .focus-input-group select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+        
+        .focus-quick-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .focus-quick-btn.primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .focus-quick-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e6edf3;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .focus-quick-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .focus-quick-btn.active {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            border: none;
+        }
+        
+        .focus-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .focus-status-pill.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .focus-status-pill.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .focus-status-pill.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .focus-sleep-history {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .focus-sleep-day {
+            min-width: 70px;
+            padding: 10px 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .focus-sleep-day.active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.2);
+        }
+        
+        .focus-sleep-day-label {
+            font-size: 0.7em;
+            color: #8b949e;
+            margin-bottom: 4px;
+        }
+        
+        .focus-sleep-day-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #e6edf3;
+        }
+        
+        .focus-meds-confirmed {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+        }
+        
+        .focus-workout-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .focus-workout-type {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+        
+        .focus-workout-type.active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .focus-nicotine-btns {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .focus-nicotine-btns button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #focusLogVape {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+        
+        #focusLogVape.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        #focusLogZyn {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+        
+        #focusLogZyn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .focus-nic-status {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .focus-nic-status.show {
+            display: block;
+        }
+        
+        .focus-full-view-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #8b949e;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        
+        .focus-full-view-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: #e6edf3;
+        }
+        
+        /* Hide full view when in focus mode */
+        body.focus-mode .container {
+            display: none;
+        }
+        
+        body.focus-mode .focus-container {
+            display: block;
+        }
+        
+        body:not(.focus-mode) .focus-container {
+            display: none;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 500px) {
+            .focus-container {
+                padding: 8px;
+            }
+            
+            .focus-hero-time {
+                font-size: 2.5em;
+            }
+            
+            .focus-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .focus-sleep-day {
+                min-width: 60px;
+            }
+        }
 
         .header {
             text-align: center;
@@ -1085,6 +1469,222 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- FOCUS MODE - MOBILE FIRST INTERFACE -->
+    <!-- ============================================ -->
+    <div class="focus-container">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="active" onclick="setViewMode('focus')">🎯 Focus</button>
+            <button onclick="setViewMode('full')">📊 Full View</button>
+        </div>
+        
+        <!-- Hero: Sleep Window -->
+        <div class="focus-hero">
+            <div class="focus-hero-label">Projected Sleep Window</div>
+            <div class="focus-hero-time" id="focusSleepTime">--:-- PM</div>
+            <div class="focus-hero-countdown" id="focusCountdown">-- remaining</div>
+            <div class="focus-hero-bar">
+                <div class="focus-hero-bar-fill" id="focusProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Graph -->
+        <div class="focus-graph-container">
+            <canvas id="focusGraphCanvas"></canvas>
+        </div>
+        
+        <!-- Sleep Entry -->
+        <div class="focus-card">
+            <div class="focus-card-title">😴 Sleep</div>
+            <div class="focus-row">
+                <div class="focus-input-group">
+                    <label>Last night</label>
+                    <input type="number" id="focusHoursSlept" min="0" max="14" step="0.5" value="8" 
+                           onchange="focusUpdateSleep()" style="font-size: 1.2em; text-align: center;">
+                </div>
+                <div class="focus-input-group">
+                    <label>Wake time</label>
+                    <input type="time" id="focusWakeTime" value="06:45" onchange="focusUpdateWake()">
+                </div>
+            </div>
+            <!-- Recent nights quick edit -->
+            <div style="margin-top: 12px;">
+                <label style="font-size: 0.8em; color: #8b949e; display: block; margin-bottom: 6px;">Recent nights (tap to edit)</label>
+                <div class="focus-sleep-history" id="focusSleepHistory"></div>
+            </div>
+        </div>
+        
+        <!-- Medication Entry -->
+        <div class="focus-card">
+            <div class="focus-card-title">💊 Medication</div>
+            <div id="focusMedsNotConfirmed">
+                <div style="margin-bottom: 12px; color: #8b949e; font-size: 0.9em;">
+                    Standard dose: <strong style="color: #e6edf3;">30mg + 20mg XR</strong>
+                </div>
+                <div class="focus-row" style="margin-bottom: 12px;">
+                    <div class="focus-input-group">
+                        <label>Time taken</label>
+                        <input type="time" id="focusMedTime" value="07:00">
+                    </div>
+                    <div class="focus-input-group">
+                        <label>&nbsp;</label>
+                        <button class="focus-quick-btn primary" onclick="focusConfirmMeds()" style="height: 48px;">
+                            ✓ Confirm
+                        </button>
+                    </div>
+                </div>
+                <button class="focus-quick-btn secondary" onclick="focusShowCustomDose()" style="width: 100%; font-size: 0.85em;">
+                    Different dose today? →
+                </button>
+            </div>
+            <div id="focusMedsConfirmed" style="display: none;">
+                <div class="focus-meds-confirmed">
+                    <div>
+                        <div style="font-weight: 600; color: #10b981;">✓ Meds Logged</div>
+                        <div style="font-size: 0.9em; color: #8b949e;" id="focusMedsSummary">50mg XR at 7:00 AM</div>
+                    </div>
+                    <button class="focus-quick-btn secondary" onclick="focusEditMeds()" style="padding: 8px 12px; font-size: 0.85em;">Edit</button>
+                </div>
+            </div>
+            <!-- Custom dose panel (hidden by default) -->
+            <div id="focusCustomDose" style="display: none; margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                <div class="focus-input-group" style="margin-bottom: 10px;">
+                    <label>Select preset or enter custom</label>
+                    <select id="focusDoseSelect" style="font-size: 1em;" onchange="focusDoseSelectChange()">
+                        <option value="10">10mg XR</option>
+                        <option value="15">15mg XR</option>
+                        <option value="20">20mg XR</option>
+                        <option value="25">25mg XR</option>
+                        <option value="30">30mg XR</option>
+                        <option value="35">35mg XR</option>
+                        <option value="40">40mg XR</option>
+                        <option value="45">45mg XR</option>
+                        <option value="50" selected>50mg XR (30+20)</option>
+                        <option value="55">55mg XR</option>
+                        <option value="60">60mg XR (30+30)</option>
+                        <option value="65">65mg XR</option>
+                        <option value="70">70mg XR (30+20+20)</option>
+                        <option value="custom">Custom amount...</option>
+                    </select>
+                </div>
+                <div id="focusCustomDoseInput" style="display: none; margin-bottom: 10px;">
+                    <div class="focus-input-group">
+                        <label>Enter exact dose (mg)</label>
+                        <input type="number" id="focusCustomDoseValue" min="5" max="100" step="5" value="50" style="font-size: 1.1em; text-align: center;">
+                    </div>
+                </div>
+                <div class="focus-row">
+                    <button class="focus-quick-btn secondary" onclick="focusHideCustomDose()">Cancel</button>
+                    <button class="focus-quick-btn primary" onclick="focusConfirmCustomDose()">Confirm</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coffee Entry -->
+        <div class="focus-card">
+            <div class="focus-card-title">☕ Coffee</div>
+            <div class="focus-row" style="margin-bottom: 10px;">
+                <div class="focus-input-group">
+                    <label>1st cup</label>
+                    <input type="time" id="focusCoffee1Time" onchange="focusUpdateCoffee(1)">
+                </div>
+                <div class="focus-input-group">
+                    <label>2nd cup</label>
+                    <input type="time" id="focusCoffee2Time" onchange="focusUpdateCoffee(2)">
+                </div>
+            </div>
+            <div id="focusCoffeeStatus" style="font-size: 0.85em; color: #8b949e;"></div>
+        </div>
+        
+        <!-- Workout Entry -->
+        <div class="focus-card">
+            <div class="focus-card-title">🏋️ Workout + Sauna</div>
+            <div id="focusWorkoutNotSet">
+                <div class="focus-row" style="margin-bottom: 12px;">
+                    <div class="focus-input-group">
+                        <label>Workout time</label>
+                        <input type="time" id="focusWorkoutTime" value="17:00">
+                    </div>
+                    <div class="focus-input-group">
+                        <label>Duration (min)</label>
+                        <input type="number" id="focusWorkoutDuration" value="45" min="15" max="120" step="5">
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8em; color: #8b949e; display: block; margin-bottom: 8px;">Type</label>
+                    <div class="focus-workout-row">
+                        <div class="focus-workout-type active" data-type="lifting" onclick="focusSelectWorkoutType(this)">🏋️ Lift</div>
+                        <div class="focus-workout-type" data-type="zone2" onclick="focusSelectWorkoutType(this)">🚴 Zone 2</div>
+                        <div class="focus-workout-type" data-type="hiit" onclick="focusSelectWorkoutType(this)">⚡ HIIT</div>
+                        <div class="focus-workout-type" data-type="walk" onclick="focusSelectWorkoutType(this)">🚶 Walk</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                    <span style="font-size: 0.9em; color: #10b981;">🧖 Sauna right after</span>
+                    <span style="font-size: 0.8em; color: #8b949e;">(auto-enabled)</span>
+                </div>
+                <button class="focus-quick-btn primary" onclick="focusConfirmWorkout()" style="width: 100%;">
+                    ✓ Plan Workout
+                </button>
+            </div>
+            <div id="focusWorkoutConfirmed" style="display: none;">
+                <div class="focus-meds-confirmed" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3);">
+                    <div>
+                        <div style="font-weight: 600; color: #10b981;">✓ Workout Planned</div>
+                        <div style="font-size: 0.9em; color: #8b949e;" id="focusWorkoutSummary">5:00 PM - Lifting + Sauna</div>
+                    </div>
+                    <button class="focus-quick-btn secondary" onclick="focusEditWorkout()" style="padding: 8px 12px; font-size: 0.85em;">Edit</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nicotine (Evening Focus) -->
+        <div class="focus-card">
+            <div class="focus-card-title">🚬 Nicotine <span style="font-size: 0.8em; color: #6b7280;">(evening tracking)</span></div>
+            <div class="focus-nicotine-btns">
+                <button id="focusLogVape" onclick="focusLogNicotine('vape')">💨 Vape</button>
+                <button id="focusLogZyn" onclick="focusLogNicotine('pouch')">🫧 Zyn</button>
+            </div>
+            <div class="focus-nic-status" id="focusNicStatus">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Last hit:</span>
+                    <span id="focusNicTime">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                    <span>CV clear:</span>
+                    <span id="focusNicClear" style="color: #10b981;">--</span>
+                </div>
+                <button class="focus-quick-btn danger" onclick="focusClearNicotine()" style="width: 100%; margin-top: 10px; padding: 8px;">
+                    Clear
+                </button>
+            </div>
+        </div>
+        
+        <!-- Auto Modifiers Status -->
+        <div class="focus-card" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3);">
+            <div class="focus-card-title" style="color: #a855f7;">⚡ Auto-Enabled Modifiers</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span class="focus-status-pill success" id="focusVitCStatus">🍊 Vitamin C 1000mg</span>
+                <span class="focus-status-pill success" id="focusSaunaStatus" style="display: none;">🧖 Sauna</span>
+            </div>
+            <button class="focus-quick-btn secondary" onclick="focusToggleVitC()" style="margin-top: 10px; width: 100%; font-size: 0.85em;" id="focusVitCToggle">
+                Disable Vitamin C
+            </button>
+        </div>
+        
+        <!-- Blocking Factors Summary -->
+        <div class="focus-card" id="focusBlockingCard" style="display: none;">
+            <div class="focus-card-title" style="color: #f59e0b;">⏳ What's Blocking Sleep</div>
+            <div id="focusBlockingList" style="font-size: 0.9em;"></div>
+        </div>
+        
+        <!-- Full View Button -->
+        <button class="focus-full-view-btn" onclick="setViewMode('full')">
+            📊 Open Full View for Advanced Options
+        </button>
+    </div>
+
     <div class="container">
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1351,6 +1951,93 @@
                             <div class="input-group" id="saunaTimeGroup" style="display: none;">
                                 <label>Sauna session at:</label>
                                 <input type="time" id="saunaTime" value="18:00" onchange="recalculate(); saveState()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nicotine Tracker -->
+                <div class="card" id="nicotineTrackerCard">
+                    <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                        🚬 Nicotine Tracker
+                        <span class="help-icon" style="font-size: 0.6em;">?
+                            <div class="tooltip-content" style="width: 400px;">
+                                <div class="tooltip-title">💨 THE NICOTINE-SLEEP CONNECTION</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">Cardiovascular Stimulation</div>
+                                    <div class="tooltip-text">Nicotine elevates <strong>heart rate and blood pressure</strong> for 60-90 minutes after use. This sympathetic activation blocks sleep onset regardless of how tired you feel.</div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">The Dopamine Crash</div>
+                                    <div class="tooltip-text">When both <strong>Adderall AND nicotine</strong> clear simultaneously, you hit a "dopamine floor" causing <strong>restless legs</strong> and agitation. Stagger your withdrawals.</div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-label">Vape vs Pouch</div>
+                                    <div class="tooltip-text"><strong>Vaping:</strong> Rapid spike, 75 min cardiovascular cooldown.<br><strong>Zyn/Pouch:</strong> Gentler absorption, 45 min cooldown. Better for evening.</div>
+                                </div>
+                                <div class="tooltip-highlight tooltip-success">
+                                    <strong>Landing Strategy:</strong> Switch to pouches after 6 PM. Hard stop 90 min before target sleep.
+                                </div>
+                            </div>
+                        </span>
+                    </h2>
+                    
+                    <div id="nicotineControls" style="margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <button id="logVapeBtn" onclick="logNicotine('vape')" style="flex: 1; min-width: 120px; padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; background: linear-gradient(135deg, #6b7280, #4b5563); color: white; font-size: 0.95em; transition: all 0.2s;">
+                                💨 Log Vape Hit
+                            </button>
+                            <button id="logPouchBtn" onclick="logNicotine('pouch')" style="flex: 1; min-width: 120px; padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; background: linear-gradient(135deg, #6b7280, #4b5563); color: white; font-size: 0.95em; transition: all 0.2s;">
+                                🫧 Log Zyn/Pouch
+                            </button>
+                        </div>
+                        
+                        <div id="nicotineStatus" style="display: none; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="color: #8b949e; font-size: 0.9em;">Last nicotine:</span>
+                                <span id="lastNicotineDisplay" style="font-weight: 600; color: #e6edf3;">--</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="color: #8b949e; font-size: 0.9em;">Type:</span>
+                                <span id="nicotineTypeDisplay" style="font-weight: 600; color: #e6edf3;">--</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="color: #8b949e; font-size: 0.9em;">CV clear time:</span>
+                                <span id="nicotineClearDisplay" style="font-weight: 600; color: #10b981;">--</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                <input type="time" id="nicotineTimeInput" onchange="updateNicotineTime()" style="flex: 1; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); border-radius: 8px; color: #e6edf3; font-size: 0.9em;">
+                                <button onclick="clearNicotine()" style="padding: 8px 16px; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); color: #f87171; border-radius: 8px; cursor: pointer; font-size: 0.85em;">Clear</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Nicotine Warning/Status -->
+                        <div id="nicotineWarning" style="display: none; padding: 12px; border-radius: 10px; margin-bottom: 10px;"></div>
+                        
+                        <!-- Evening Strategy Recommendation -->
+                        <div id="nicotineRecommendation" style="display: none; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px;"></div>
+                    </div>
+                    
+                    <!-- RLS Emergency Protocol -->
+                    <div id="rlsEmergencyProtocol" style="display: none; padding: 15px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(251, 146, 60, 0.15)); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px;">
+                        <div style="font-weight: 700; color: #f87171; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                            ⚠️ DOPAMINE CRASH ZONE - RLS Risk
+                        </div>
+                        <div style="color: #e6edf3; font-size: 0.9em; margin-bottom: 12px;">
+                            Both stimulants are clearing. Your legs may feel restless. <strong>DO NOT VAPE</strong> – it's a trap that restarts the cycle.
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9em;">
+                            <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; color: #e6edf3;">
+                                🧊 <strong>Cold compress</strong> on legs for 2 minutes
+                            </div>
+                            <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; color: #e6edf3;">
+                                🧘 <strong>Wall calf stretch</strong> - 60 seconds each leg
+                            </div>
+                            <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; color: #e6edf3;">
+                                💊 <strong>Magnesium Glycinate 400mg</strong> if available
+                            </div>
+                            <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; color: #e6edf3;">
+                                🍎 <strong>Healthy snack:</strong> Greek yogurt, banana, cheese (tryptophan + keeps mouth busy)
                             </div>
                         </div>
                     </div>
@@ -1872,6 +2559,16 @@
                                 <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioSaunaSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
                                 <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioSaunaDelta">--</span></div>
                             </div>
+                            <div class="scenario-card" id="scenarioVapeHit" style="padding: 14px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer;" onclick="simulateScenario('vape')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #ef4444; margin-bottom: 6px;">💨 One More Vape?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioVapeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioVapeDelta">--</span></div>
+                            </div>
+                            <div class="scenario-card" id="scenarioZyn" style="padding: 14px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" onclick="simulateScenario('zyn')">
+                                <div style="font-size: 0.9em; font-weight: 600; color: #10b981; margin-bottom: 6px;">🫧 Switch to Zyn?</div>
+                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioZynSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioZynDelta">--</span></div>
+                            </div>
                         </div>
                     </div>
                     <div style="font-size: 0.8em; color: #6e7681; text-align: center;">Click a scenario to simulate • Predictions update in real-time</div>
@@ -2005,6 +2702,12 @@
                 vitaminC: { active: false, time: '17:00' },
                 heavyLift: { active: false },
                 sauna: { active: false, time: '18:00' }
+            },
+            // Nicotine tracking - cardiovascular stimulant effects
+            nicotine: {
+                active: false,
+                type: 'vape', // 'vape' or 'pouch'
+                lastHitTime: null // 'HH:MM' format
             },
             // Workout plan - integrated into main calculation
             workoutPlan: {
@@ -2216,7 +2919,11 @@
         // ============================================
         
         function timeToMinutes(timeStr) {
-            const [hours, mins] = timeStr.split(':').map(Number);
+            if (!timeStr || typeof timeStr !== 'string') return 0;
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return 0;
+            const [hours, mins] = parts.map(Number);
+            if (isNaN(hours) || isNaN(mins)) return 0;
             return hours * 60 + mins;
         }
 
@@ -2592,6 +3299,39 @@
                 // If sauna is scheduled for later today, don't apply benefit yet
             }
             
+            // =============================================
+            // NICOTINE INTEGRATION
+            // =============================================
+            // Nicotine elevates HR/BP for 45-75 min depending on delivery method
+            // This blocks sleep onset regardless of drug levels
+            if (state.nicotine && state.nicotine.active && state.nicotine.lastHitTime) {
+                const nicotineCooldownTime = getNicotineCooldownTime();
+                
+                if (nicotineCooldownTime !== null) {
+                    const now = getCurrentMinutes();
+                    
+                    // Normalize times for comparison
+                    let normalizedCooldown = nicotineCooldownTime;
+                    let normalizedNow = now;
+                    let normalizedSleep = sleepTime;
+                    
+                    if (nicotineCooldownTime < 6 * 60 && now > 18 * 60) normalizedCooldown += 24 * 60;
+                    if (sleepTime < 6 * 60 && now > 18 * 60) normalizedSleep += 24 * 60;
+                    
+                    // Only apply if cooldown hasn't passed
+                    if (normalizedCooldown > normalizedNow && normalizedCooldown > normalizedSleep) {
+                        sleepTime = nicotineCooldownTime;
+                        const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                        blockingFactors.push({
+                            name: `Nicotine (${typeInfo.description})`,
+                            clearsAt: nicotineCooldownTime,
+                            type: 'nicotine',
+                            note: `CV cooldown: ${typeInfo.cardiovascularCooldown} min`
+                        });
+                    }
+                }
+            }
+            
             // Sort blocking factors by clear time
             blockingFactors.sort((a, b) => {
                 let aTime = a.clearsAt;
@@ -2760,7 +3500,11 @@
         }
 
         function formatTime12(time24) {
-            const [hours, mins] = time24.split(':').map(Number);
+            if (!time24 || typeof time24 !== 'string') return '--:--';
+            const parts = time24.split(':');
+            if (parts.length !== 2) return '--:--';
+            const [hours, mins] = parts.map(Number);
+            if (isNaN(hours) || isNaN(mins)) return '--:--';
             const period = hours >= 12 ? 'PM' : 'AM';
             const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
             return `${hours12}:${mins.toString().padStart(2, '0')} ${period}`;
@@ -2826,9 +3570,11 @@
             // Calculate predicted sleep for the timeline end
             const { sleepTime } = calculateSleepTime();
             
-            // Update labels
-            document.getElementById('workoutWindowStart').textContent = formatTime12(state.wakeTime);
-            document.getElementById('workoutWindowEnd').textContent = minutesToTime(sleepTime > 24*60 ? sleepTime - 24*60 : sleepTime);
+            // Update labels (safely)
+            const workoutWindowStartEl = document.getElementById('workoutWindowStart');
+            const workoutWindowEndEl = document.getElementById('workoutWindowEnd');
+            if (workoutWindowStartEl) workoutWindowStartEl.textContent = formatTime12(state.wakeTime);
+            if (workoutWindowEndEl) workoutWindowEndEl.textContent = minutesToTime(sleepTime > 24*60 ? sleepTime - 24*60 : sleepTime);
             
             // Update timeline bar gradient based on actual wake time
             // Green: wake to golden end, Yellow: golden end to forbidden, Red: forbidden zone, Gray: after
@@ -2838,30 +3584,38 @@
             const sleepGatePercent = Math.min(100, Math.max(0, ((sleepGateStart - wakeMinutes) / totalWindow) * 100));
             
             const timelineBar = document.getElementById('workoutTimelineBar');
-            timelineBar.style.background = `linear-gradient(90deg, 
-                #10b981 0%, #10b981 ${goldenPercent}%, 
-                #f59e0b ${goldenPercent}%, #f59e0b ${forbiddenPercent}%, 
-                #ef4444 ${forbiddenPercent}%, #ef4444 ${sleepGatePercent}%, 
-                #6b7280 ${sleepGatePercent}%)`;
-            
-            // Add current time marker
-            const now = getCurrentMinutes();
-            if (now >= wakeMinutes && now <= sleepTime) {
-                const nowPercent = ((now - wakeMinutes) / totalWindow) * 100;
-                timelineBar.innerHTML = `<div class="workout-zone-marker" style="left: ${nowPercent}%;"><div class="workout-zone-label">Now</div></div>`;
+            if (timelineBar) {
+                timelineBar.style.background = `linear-gradient(90deg, 
+                    #10b981 0%, #10b981 ${goldenPercent}%, 
+                    #f59e0b ${goldenPercent}%, #f59e0b ${forbiddenPercent}%, 
+                    #ef4444 ${forbiddenPercent}%, #ef4444 ${sleepGatePercent}%, 
+                    #6b7280 ${sleepGatePercent}%)`;
+                
+                // Add current time marker
+                const now = getCurrentMinutes();
+                if (now >= wakeMinutes && now <= sleepTime) {
+                    const nowPercent = ((now - wakeMinutes) / totalWindow) * 100;
+                    timelineBar.innerHTML = `<div class="workout-zone-marker" style="left: ${nowPercent}%;"><div class="workout-zone-label">Now</div></div>`;
+                }
             }
         }
         
         function calculateWorkoutImpact() {
             const workoutTimeEl = document.getElementById('workoutTime');
+            const workoutDurationEl = document.getElementById('workoutDuration');
+            const workoutTypeEl = document.getElementById('workoutType');
+            const workoutIntensityEl = document.getElementById('workoutIntensity');
+            const workoutFastedEl = document.getElementById('workoutFasted');
+            const coldShowerEl = document.getElementById('coldShowerToggle');
+            
             if (!workoutTimeEl || !workoutTimeEl.value) return null;
             
             const workoutStart = timeToMinutes(workoutTimeEl.value);
-            const duration = parseInt(document.getElementById('workoutDuration').value) || 45;
-            const type = document.getElementById('workoutType').value;
-            const intensity = document.getElementById('workoutIntensity').value;
-            const isFasted = document.getElementById('workoutFasted').checked;
-            const coldShower = document.getElementById('coldShowerToggle').checked;
+            const duration = workoutDurationEl ? (parseInt(workoutDurationEl.value) || 45) : 45;
+            const type = workoutTypeEl ? workoutTypeEl.value : 'lifting';
+            const intensity = workoutIntensityEl ? workoutIntensityEl.value : 'medium';
+            const isFasted = workoutFastedEl ? workoutFastedEl.checked : false;
+            const coldShower = coldShowerEl ? coldShowerEl.checked : false;
             
             const wakeMinutes = timeToMinutes(state.wakeTime);
             const workoutEnd = workoutStart + duration;
@@ -2931,9 +3685,12 @@
                 }
             }
             
-            // RULE 4: Thermal cooldown (4 hours, or 2 with cold shower)
-            let cooldownHours = 4;
-            if (coldShower) cooldownHours = 2;
+            // RULE 4: Thermal cooldown (2 hours, or 45 min with cold shower)
+            // SCIENTIFIC NOTE: Core temp drops ~0.5°C/hour post-exercise
+            // Research shows 90-180 min for return to baseline
+            // Cold water immersion accelerates this significantly
+            let cooldownHours = 2;
+            if (coldShower) cooldownHours = 0.75; // 45 minutes
             if (type === 'walk') cooldownHours = 0; // Walk/yoga doesn't raise core temp significantly
             
             const cooldownComplete = workoutEnd + (cooldownHours * 60);
@@ -3228,9 +3985,12 @@
         // ============================================
         
         function recalculate() {
-            // Update state from inputs
-            state.wakeTime = document.getElementById('wakeTime').value;
-            const newHoursSlept = parseFloat(document.getElementById('hoursSlept').value) || 8;
+            // Update state from inputs (safely - elements might not exist in focus mode)
+            const wakeTimeEl = document.getElementById('wakeTime');
+            const hoursSleptEl = document.getElementById('hoursSlept');
+            
+            if (wakeTimeEl) state.wakeTime = wakeTimeEl.value || state.wakeTime;
+            const newHoursSlept = hoursSleptEl ? (parseFloat(hoursSleptEl.value) || 8) : state.hoursSleptLastNight;
             
             // Check if hours slept changed - update calendar and stacking warning
             if (newHoursSlept !== state.hoursSleptLastNight) {
@@ -3241,17 +4001,26 @@
                 state.hoursSleptLastNight = newHoursSlept;
             }
             
-            state.settings.ampHalfLife = parseFloat(document.getElementById('ampHalfLife').value);
-            state.settings.sleepThreshold = parseFloat(document.getElementById('sleepThreshold').value);
-            state.settings.caffHalfLife = parseFloat(document.getElementById('caffHalfLife').value);
-            state.settings.caffThreshold = parseFloat(document.getElementById('caffThreshold').value);
-            state.settings.weight = parseFloat(document.getElementById('weight').value);
+            // Safely get settings values
+            const ampHalfLifeEl = document.getElementById('ampHalfLife');
+            const sleepThresholdEl = document.getElementById('sleepThreshold');
+            const caffHalfLifeEl = document.getElementById('caffHalfLife');
+            const caffThresholdEl = document.getElementById('caffThreshold');
+            const weightEl = document.getElementById('weight');
             
-            if (state.modifiers.vitaminC.active) {
-                state.modifiers.vitaminC.time = document.getElementById('vitaminCTime').value;
+            if (ampHalfLifeEl) state.settings.ampHalfLife = parseFloat(ampHalfLifeEl.value) || state.settings.ampHalfLife;
+            if (sleepThresholdEl) state.settings.sleepThreshold = parseFloat(sleepThresholdEl.value) || state.settings.sleepThreshold;
+            if (caffHalfLifeEl) state.settings.caffHalfLife = parseFloat(caffHalfLifeEl.value) || state.settings.caffHalfLife;
+            if (caffThresholdEl) state.settings.caffThreshold = parseFloat(caffThresholdEl.value) || state.settings.caffThreshold;
+            if (weightEl) state.settings.weight = parseFloat(weightEl.value) || state.settings.weight;
+            
+            if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
+                const vitCTimeEl = document.getElementById('vitaminCTime');
+                if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
             }
-            if (state.modifiers.sauna.active) {
-                state.modifiers.sauna.time = document.getElementById('saunaTime').value;
+            if (state.modifiers.sauna && state.modifiers.sauna.active) {
+                const saunaTimeEl = document.getElementById('saunaTime');
+                if (saunaTimeEl) state.modifiers.sauna.time = saunaTimeEl.value || state.modifiers.sauna.time;
             }
 
             const now = getCurrentMinutes();
@@ -3262,7 +4031,7 @@
             const sleepDebtDisplay = document.getElementById('sleepDebtDisplay');
             
             // CRITICAL: Check for Hyperarousal Mode (acute deprivation < 4 hrs)
-            if (isHyperarousalMode()) {
+            if (sleepDebtDisplay && isHyperarousalMode()) {
                 sleepDebtDisplay.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #ef4444; font-weight: 700;">🚨 ACUTE DEPRIVATION DETECTED</span>
@@ -3285,7 +4054,7 @@
                 `;
                 sleepDebtDisplay.style.borderLeft = '4px solid #ef4444';
                 sleepDebtDisplay.style.background = 'rgba(239, 68, 68, 0.1)';
-            } else if (sleepDebtBonus > 0) {
+            } else if (sleepDebtDisplay && sleepDebtBonus > 0) {
                 sleepDebtDisplay.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #f59e0b;">😴 Sleep Debt Detected</span>
@@ -3298,7 +4067,7 @@
                 `;
                 sleepDebtDisplay.style.borderLeft = '3px solid #f59e0b';
                 sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
-            } else {
+            } else if (sleepDebtDisplay) {
                 sleepDebtDisplay.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #10b981;">✓ Well Rested</span>
@@ -3312,14 +4081,18 @@
                 sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
             }
             
-            // Update Circadian Timeline Display
+            // Update Circadian Timeline Display (safely)
             const forbiddenZone = getForbiddenZone();
             const sleepGate = getSleepGate();
             
-            document.getElementById('wakeTimeDisplay').textContent = formatTime12(state.wakeTime);
-            document.getElementById('forbiddenZoneTime').textContent = 
+            const wakeTimeDisplayEl = document.getElementById('wakeTimeDisplay');
+            const forbiddenZoneTimeEl = document.getElementById('forbiddenZoneTime');
+            const sleepGateTimeEl = document.getElementById('sleepGateTime');
+            
+            if (wakeTimeDisplayEl) wakeTimeDisplayEl.textContent = formatTime12(state.wakeTime);
+            if (forbiddenZoneTimeEl) forbiddenZoneTimeEl.textContent = 
                 `${minutesToTime(forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start)} - ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}`;
-            document.getElementById('sleepGateTime').textContent = 
+            if (sleepGateTimeEl) sleepGateTimeEl.textContent = 
                 `${minutesToTime(sleepGate.start > 24*60 ? sleepGate.start - 24*60 : sleepGate.start)} - ${minutesToTime(sleepGate.end > 24*60 ? sleepGate.end - 24*60 : sleepGate.end)}`;
             
             // Update Circadian Status - now reflects ACTUAL circadian health from 7-day data
@@ -3334,62 +4107,66 @@
             const avgSleep = circadianAnalysis.avgSleep;
             const dataPoints = circadianAnalysis.dataPoints;
             
-            if (dataPoints >= 2 && avgSleep < 4.5) {
-                // CRITICAL: Severe sleep deprivation
-                circadianStatusEl.textContent = 'CRITICAL DEBT';
-                circadianIndicatorEl.textContent = '🚨';
-                circadianItem.className = 'status-item blocking';
-                circadianItem.style.borderLeftColor = '#ef4444';
-            } else if (dataPoints >= 2 && avgSleep < 6) {
-                // WARNING: Accumulating debt
-                circadianStatusEl.textContent = 'Sleep Debt';
-                circadianIndicatorEl.textContent = '⚠️';
-                circadianItem.className = 'status-item blocking';
-                circadianItem.style.borderLeftColor = '#f59e0b';
-            } else if (circadianAnalysis.phase === 'danger-delayed' || circadianAnalysis.phase === 'delayed') {
-                // Delayed phase
-                circadianStatusEl.textContent = circadianAnalysis.label;
-                circadianIndicatorEl.textContent = circadianAnalysis.icon;
-                circadianItem.className = 'status-item blocking';
-                circadianItem.style.borderLeftColor = circadianAnalysis.color;
-            } else if (circadianAnalysis.stdDev > 120 && dataPoints >= 2) {
-                // High variability
-                circadianStatusEl.textContent = 'Irregular';
-                circadianIndicatorEl.textContent = '🔀';
-                circadianItem.className = 'status-item blocking';
-                circadianItem.style.borderLeftColor = '#f59e0b';
-            } else if (inForbiddenZone) {
-                circadianStatusEl.textContent = 'Forbidden Zone';
-                circadianIndicatorEl.textContent = '⚠️';
-                circadianItem.className = 'status-item blocking';
-                circadianItem.style.borderLeftColor = '#ef4444';
-            } else if (inSleepGate) {
-                circadianStatusEl.textContent = 'Sleep Gate Open';
-                circadianIndicatorEl.textContent = '🌙';
-                circadianItem.className = 'status-item ok';
-                circadianItem.style.borderLeftColor = '#10b981';
-            } else if (circadianAnalysis.phase === 'normal' && avgSleep >= 6.5) {
-                circadianStatusEl.textContent = 'Healthy';
-                circadianIndicatorEl.textContent = '✓';
-                circadianItem.className = 'status-item ok';
-                circadianItem.style.borderLeftColor = '#10b981';
-            } else {
-                // Default - not enough data or borderline
-                circadianStatusEl.textContent = circadianAnalysis.label || 'Monitoring';
-                circadianIndicatorEl.textContent = circadianAnalysis.icon || '📊';
-                circadianItem.className = 'status-item ok';
-                circadianItem.style.borderLeftColor = circadianAnalysis.color || '#8b949e';
+            if (circadianStatusEl && circadianIndicatorEl && circadianItem) {
+                if (dataPoints >= 2 && avgSleep < 4.5) {
+                    // CRITICAL: Severe sleep deprivation
+                    circadianStatusEl.textContent = 'CRITICAL DEBT';
+                    circadianIndicatorEl.textContent = '🚨';
+                    circadianItem.className = 'status-item blocking';
+                    circadianItem.style.borderLeftColor = '#ef4444';
+                } else if (dataPoints >= 2 && avgSleep < 6) {
+                    // WARNING: Accumulating debt
+                    circadianStatusEl.textContent = 'Sleep Debt';
+                    circadianIndicatorEl.textContent = '⚠️';
+                    circadianItem.className = 'status-item blocking';
+                    circadianItem.style.borderLeftColor = '#f59e0b';
+                } else if (circadianAnalysis.phase === 'danger-delayed' || circadianAnalysis.phase === 'delayed') {
+                    // Delayed phase
+                    circadianStatusEl.textContent = circadianAnalysis.label;
+                    circadianIndicatorEl.textContent = circadianAnalysis.icon;
+                    circadianItem.className = 'status-item blocking';
+                    circadianItem.style.borderLeftColor = circadianAnalysis.color;
+                } else if (circadianAnalysis.stdDev > 120 && dataPoints >= 2) {
+                    // High variability
+                    circadianStatusEl.textContent = 'Irregular';
+                    circadianIndicatorEl.textContent = '🔀';
+                    circadianItem.className = 'status-item blocking';
+                    circadianItem.style.borderLeftColor = '#f59e0b';
+                } else if (inForbiddenZone) {
+                    circadianStatusEl.textContent = 'Forbidden Zone';
+                    circadianIndicatorEl.textContent = '⚠️';
+                    circadianItem.className = 'status-item blocking';
+                    circadianItem.style.borderLeftColor = '#ef4444';
+                } else if (inSleepGate) {
+                    circadianStatusEl.textContent = 'Sleep Gate Open';
+                    circadianIndicatorEl.textContent = '🌙';
+                    circadianItem.className = 'status-item ok';
+                    circadianItem.style.borderLeftColor = '#10b981';
+                } else if (circadianAnalysis.phase === 'normal' && avgSleep >= 6.5) {
+                    circadianStatusEl.textContent = 'Healthy';
+                    circadianIndicatorEl.textContent = '✓';
+                    circadianItem.className = 'status-item ok';
+                    circadianItem.style.borderLeftColor = '#10b981';
+                } else {
+                    // Default - not enough data or borderline
+                    circadianStatusEl.textContent = circadianAnalysis.label || 'Monitoring';
+                    circadianIndicatorEl.textContent = circadianAnalysis.icon || '📊';
+                    circadianItem.className = 'status-item ok';
+                    circadianItem.style.borderLeftColor = circadianAnalysis.color || '#8b949e';
+                }
             }
             
             // Calculate current loads
             const currentAmpLoad = calculateAmpLoad(now);
             const currentCaffLoad = calculateCaffLoad(now);
             
-            // Update current status display
+            // Update current status display (safely)
             const caffThreshold = state.settings.caffThreshold;
             
-            document.getElementById('currentAmpLoad').textContent = currentAmpLoad.toFixed(1) + ' mg';
-            document.getElementById('currentCaffLoad').textContent = currentCaffLoad.toFixed(1) + ' mg';
+            const currentAmpLoadEl = document.getElementById('currentAmpLoad');
+            const currentCaffLoadEl = document.getElementById('currentCaffLoad');
+            if (currentAmpLoadEl) currentAmpLoadEl.textContent = currentAmpLoad.toFixed(1) + ' mg';
+            if (currentCaffLoadEl) currentCaffLoadEl.textContent = currentCaffLoad.toFixed(1) + ' mg';
             
             const ampOk = currentAmpLoad < effectiveThreshold;
             const caffOk = currentCaffLoad < caffThreshold;
@@ -3404,7 +4181,7 @@
             // Calculate sleep time
             const { sleepTime, blockingFactors } = calculateSleepTime();
             
-            // Update main countdown display
+            // Update main countdown display (safely)
             const sleepTimeDisplay = document.getElementById('sleepTime');
             const timeRemainingEl = document.getElementById('timeRemaining');
             const sleepQualityEl = document.getElementById('sleepQuality');
@@ -3415,14 +4192,14 @@
                 displaySleepTime = sleepTime - 24 * 60;
             }
             
-            sleepTimeDisplay.textContent = minutesToTime(displaySleepTime);
+            if (sleepTimeDisplay) sleepTimeDisplay.textContent = minutesToTime(displaySleepTime);
             
             // Calculate time remaining
             let remaining = sleepTime - now;
             if (remaining < 0) remaining += 24 * 60; // Handle day rollover
             const remainingHours = Math.floor(remaining / 60);
             const remainingMins = Math.floor(remaining % 60);
-            timeRemainingEl.textContent = `${remainingHours}h ${remainingMins}m`;
+            if (timeRemainingEl) timeRemainingEl.textContent = `${remainingHours}h ${remainingMins}m`;
             
             // Calculate sleep hours available
             const wakeMinutes = timeToMinutes(state.wakeTime);
@@ -3454,24 +4231,28 @@
                 qualityText = `🚨 SLEEP IMPOSSIBLE TONIGHT - drugs won't clear before wake time`;
             }
             
-            sleepTimeDisplay.className = `countdown-time ${colorClass} time-display`;
-            sleepQualityEl.className = `sleep-quality ${colorClass}`;
-            sleepQualityEl.textContent = qualityText;
+            if (sleepTimeDisplay) sleepTimeDisplay.className = `countdown-time ${colorClass} time-display`;
+            if (sleepQualityEl) {
+                sleepQualityEl.className = `sleep-quality ${colorClass}`;
+                sleepQualityEl.textContent = qualityText;
+            }
             
-            // Update blocking factors
+            // Update blocking factors (safely)
             const blockingContainer = document.getElementById('blockingFactors');
             const blockingList = document.getElementById('blockingList');
             
-            if (blockingFactors.length > 0 && !(ampOk && caffOk && !inForbiddenZone)) {
-                blockingContainer.style.display = 'block';
-                blockingList.innerHTML = blockingFactors.map(f => `
+            if (blockingContainer && blockingList) {
+                if (blockingFactors.length > 0 && !(ampOk && caffOk && !inForbiddenZone)) {
+                    blockingContainer.style.display = 'block';
+                    blockingList.innerHTML = blockingFactors.map(f => `
                     <div class="blocking-factor">
                         <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #8b949e;">(${f.note})</span>` : ''}</span>
                         <span class="clears-at">Clears at ${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
                     </div>
                 `).join('');
-            } else {
-                blockingContainer.style.display = 'none';
+                } else {
+                    blockingContainer.style.display = 'none';
+                }
             }
             
             // Update recommendations
@@ -3480,11 +4261,19 @@
             // Update feelings timeline
             updateFeelingsTimeline();
             
+            // Update nicotine tracker
+            updateNicotineDisplay();
+            
             // Update what-if scenarios
             updateScenarios();
             
             // Draw graph
             drawGraph();
+            
+            // Update Focus Mode (if active)
+            if (focusMode) {
+                renderFocusMode();
+            }
             
             // NOTE: Do NOT call saveState() here!
             // recalculate() is called every second for live UI updates.
@@ -3493,7 +4282,10 @@
 
         function updateStatusItem(indicatorId, isOk, current, threshold) {
             const indicator = document.getElementById(indicatorId);
+            if (!indicator) return;
+            
             const statusItem = indicator.closest('.status-item');
+            if (!statusItem) return;
             
             indicator.textContent = isOk ? '✓' : '⏳';
             statusItem.className = `status-item ${isOk ? 'ok' : 'blocking'}`;
@@ -3865,6 +4657,260 @@
         }
 
         // ============================================
+        // NICOTINE TRACKING FUNCTIONS
+        // ============================================
+        
+        // Nicotine pharmacokinetics constants
+        // Based on cardiovascular response research, not elimination half-life
+        const NICOTINE_CONSTANTS = {
+            vape: {
+                peakTime: 10, // minutes to peak blood level
+                cardiovascularCooldown: 75, // minutes for HR/BP normalization
+                description: '💨 Vape'
+            },
+            pouch: {
+                peakTime: 25, // slower buccal absorption
+                cardiovascularCooldown: 45, // gentler spike = faster recovery
+                description: '🫧 Zyn/Pouch'
+            }
+        };
+        
+        function logNicotine(type) {
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            state.nicotine.active = true;
+            state.nicotine.type = type;
+            state.nicotine.lastHitTime = timeStr;
+            
+            updateNicotineDisplay();
+            recalculate();
+            saveState();
+            
+            showToast(`${type === 'vape' ? '💨 Vape' : '🫧 Pouch'} logged at ${minutesToTime(timeToMinutes(timeStr))}`);
+        }
+        
+        function clearNicotine() {
+            state.nicotine.active = false;
+            state.nicotine.lastHitTime = null;
+            state.nicotine.type = 'vape';
+            
+            updateNicotineDisplay();
+            recalculate();
+            saveState();
+        }
+        
+        function updateNicotineTime() {
+            const timeInput = document.getElementById('nicotineTimeInput');
+            if (timeInput && timeInput.value) {
+                state.nicotine.active = true;
+                state.nicotine.lastHitTime = timeInput.value;
+                updateNicotineDisplay();
+                recalculate();
+                saveState();
+            }
+        }
+        
+        function updateNicotineDisplay() {
+            const statusEl = document.getElementById('nicotineStatus');
+            const warningEl = document.getElementById('nicotineWarning');
+            const recommendEl = document.getElementById('nicotineRecommendation');
+            const lastDisplayEl = document.getElementById('lastNicotineDisplay');
+            const typeDisplayEl = document.getElementById('nicotineTypeDisplay');
+            const clearDisplayEl = document.getElementById('nicotineClearDisplay');
+            const timeInputEl = document.getElementById('nicotineTimeInput');
+            const vapeBtn = document.getElementById('logVapeBtn');
+            const pouchBtn = document.getElementById('logPouchBtn');
+            
+            if (!statusEl) return;
+            
+            if (state.nicotine.active && state.nicotine.lastHitTime) {
+                statusEl.style.display = 'block';
+                
+                const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+                let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
+                if (clearTime >= 24 * 60) clearTime -= 24 * 60;
+                
+                if (lastDisplayEl) lastDisplayEl.textContent = minutesToTime(lastHitMins);
+                if (typeDisplayEl) typeDisplayEl.textContent = typeInfo.description;
+                if (clearDisplayEl) clearDisplayEl.textContent = minutesToTime(clearTime);
+                if (timeInputEl) timeInputEl.value = state.nicotine.lastHitTime;
+                
+                // Update button styles
+                if (vapeBtn && pouchBtn) {
+                    if (state.nicotine.type === 'vape') {
+                        vapeBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                        pouchBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+                    } else {
+                        vapeBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+                        pouchBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    }
+                }
+                
+                // Update warnings
+                updateNicotineWarnings();
+            } else {
+                statusEl.style.display = 'none';
+                if (warningEl) warningEl.style.display = 'none';
+                if (recommendEl) recommendEl.style.display = 'none';
+                
+                // Reset buttons
+                if (vapeBtn) vapeBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+                if (pouchBtn) pouchBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+            }
+            
+            checkRLSRisk();
+        }
+        
+        function updateNicotineWarnings() {
+            const warningEl = document.getElementById('nicotineWarning');
+            const recommendEl = document.getElementById('nicotineRecommendation');
+            if (!warningEl) return;
+            
+            const now = getCurrentMinutes();
+            const { sleepTime } = calculateSleepTime();
+            
+            if (!state.nicotine.active || !state.nicotine.lastHitTime) {
+                warningEl.style.display = 'none';
+                if (recommendEl) recommendEl.style.display = 'none';
+                return;
+            }
+            
+            const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+            const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+            let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
+            
+            // Normalize for comparison
+            let normalizedClear = clearTime;
+            let normalizedNow = now;
+            if (clearTime < 6 * 60 && now > 18 * 60) normalizedClear += 24 * 60;
+            if (now < 6 * 60 && clearTime > 18 * 60) normalizedNow += 24 * 60;
+            
+            if (normalizedClear > normalizedNow) {
+                // Still blocking
+                warningEl.style.display = 'block';
+                warningEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                warningEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+                
+                const displayClearTime = clearTime >= 24 * 60 ? clearTime - 24 * 60 : clearTime;
+                warningEl.innerHTML = `
+                    <div style="font-weight: 600; color: #f87171; margin-bottom: 6px;">
+                        🚫 CARDIOVASCULAR STILL ELEVATED
+                    </div>
+                    <div style="color: #e6edf3; font-size: 0.9em;">
+                        Heart rate won't normalize until <strong>${minutesToTime(displayClearTime)}</strong>.
+                        This may block sleep onset even if drugs have cleared.
+                    </div>
+                `;
+            } else {
+                // Cleared
+                warningEl.style.display = 'block';
+                warningEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                warningEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+                warningEl.innerHTML = `
+                    <div style="font-weight: 600; color: #10b981; margin-bottom: 6px;">
+                        ✅ CARDIOVASCULAR CLEAR
+                    </div>
+                    <div style="color: #e6edf3; font-size: 0.9em;">
+                        Heart rate normalized. Nicotine is not blocking sleep.
+                    </div>
+                `;
+            }
+            
+            // Evening recommendation
+            const hour = Math.floor(now / 60);
+            if (recommendEl) {
+                if (hour >= 18 && state.nicotine.type === 'vape') {
+                    recommendEl.style.display = 'block';
+                    recommendEl.innerHTML = `
+                        <div style="font-weight: 600; color: #10b981; margin-bottom: 6px;">
+                            💡 EVENING STRATEGY
+                        </div>
+                        <div style="color: #e6edf3; font-size: 0.9em;">
+                            Switch to <strong>Zyn/pouches</strong>. Slower absorption = 45 min cooldown vs 75 min for vaping.
+                            This helps you "land the plane" for sleep.
+                        </div>
+                    `;
+                } else {
+                    recommendEl.style.display = 'none';
+                }
+            }
+        }
+        
+        function checkRLSRisk() {
+            const rlsEl = document.getElementById('rlsEmergencyProtocol');
+            if (!rlsEl) return;
+            
+            const now = getCurrentMinutes();
+            const hour = Math.floor(now / 60);
+            
+            // Only check after 9 PM or before 5 AM
+            if (!((hour >= 21) || (hour < 5))) {
+                rlsEl.style.display = 'none';
+                return;
+            }
+            
+            // Check amphetamine level
+            const ampLoadNow = calculateAmpLoad(now);
+            const effectiveThreshold = getEffectiveThreshold();
+            const ampPercentage = (ampLoadNow / Math.max(effectiveThreshold, 1)) * 100;
+            
+            // Check nicotine status
+            let nicotineClearing = false;
+            if (state.nicotine.active && state.nicotine.lastHitTime) {
+                const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+                let timeSinceNic = now - lastHitMins;
+                if (timeSinceNic < 0) timeSinceNic += 24 * 60;
+                nicotineClearing = timeSinceNic >= 180; // 3+ hours since last hit
+            }
+            
+            // RLS risk when both are clearing
+            const highRisk = (ampPercentage < 30 && nicotineClearing) || 
+                            (ampPercentage < 20 && state.nicotine.active);
+            
+            rlsEl.style.display = highRisk ? 'block' : 'none';
+        }
+        
+        function getNicotineCooldownTime() {
+            if (!state.nicotine.active || !state.nicotine.lastHitTime) return null;
+            
+            const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+            const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+            let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
+            
+            const now = getCurrentMinutes();
+            
+            // Normalize for comparison
+            let normalizedClear = clearTime;
+            let normalizedNow = now;
+            if (clearTime < 6 * 60 && now > 18 * 60) normalizedClear += 24 * 60;
+            if (now < 6 * 60 && clearTime > 18 * 60) normalizedNow += 24 * 60;
+            
+            // If already cleared, return null
+            if (normalizedClear <= normalizedNow) return null;
+            
+            return clearTime >= 24 * 60 ? clearTime - 24 * 60 : clearTime;
+        }
+        
+        function showToast(message) {
+            const existing = document.querySelector('.toast-notification');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 8px; z-index: 10000; font-size: 0.9em; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ============================================
         // WHAT-IF SCENARIOS
         // ============================================
         
@@ -3887,6 +4933,14 @@
             // Scenario 4: Sauna session (if not already active)
             const saunaSleep = simulateSauna();
             updateScenarioDisplay('Sauna', saunaSleep, baseSleepTime);
+            
+            // Scenario 5: One more vape hit
+            const vapeSleep = simulateNicotineHit('vape');
+            updateScenarioDisplay('Vape', vapeSleep, baseSleepTime);
+            
+            // Scenario 6: Switch to Zyn
+            const zynSleep = simulateNicotineHit('pouch');
+            updateScenarioDisplay('Zyn', zynSleep, baseSleepTime);
         }
         
         function simulateCaffeineAddition(amount) {
@@ -3944,6 +4998,30 @@
             
             // Restore
             state.modifiers.sauna.active = wasActive;
+            
+            return sleepTime;
+        }
+        
+        function simulateNicotineHit(type) {
+            const now = getCurrentMinutes();
+            const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
+            
+            // Store current state
+            const wasActive = state.nicotine.active;
+            const oldType = state.nicotine.type;
+            const oldTime = state.nicotine.lastHitTime;
+            
+            // Temporarily set nicotine
+            state.nicotine.active = true;
+            state.nicotine.type = type;
+            state.nicotine.lastHitTime = nowTime;
+            
+            const { sleepTime } = calculateSleepTime();
+            
+            // Restore
+            state.nicotine.active = wasActive;
+            state.nicotine.type = oldType;
+            state.nicotine.lastHitTime = oldTime;
             
             return sleepTime;
         }
@@ -4842,8 +5920,16 @@
         
         function initFirebase() {
             try {
+                // Check if Firebase SDK loaded
+                if (typeof firebase === 'undefined') {
+                    console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
+                    firebaseSyncEnabled = false;
+                    updateSyncStatus('offline', 'Offline mode');
+                    return;
+                }
+                
                 // Initialize Firebase app if not already done
-                if (!firebase.apps.length) {
+                if (!firebase.apps || !firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
                 database = firebase.database();
@@ -4996,7 +6082,8 @@
                             modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                             settings: { ...state.settings, ...(firebaseState.settings || {}) },
                             sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
-                            workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) }
+                            workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
+                            nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
                         };
                         
                         // Ensure arrays are actually arrays (Firebase can turn empty arrays into null)
@@ -5131,7 +6218,8 @@
                         modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                         settings: { ...state.settings, ...(firebaseState.settings || {}) },
                         sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
-                        workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) }
+                        workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
+                        nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
                     };
                     
                     // Ensure arrays are actually arrays
@@ -5216,7 +6304,8 @@
                     modifiers: { ...state.modifiers, ...(loaded.modifiers || {}) },
                     settings: { ...state.settings, ...(loaded.settings || {}) },
                     sleepHistory: { ...state.sleepHistory, ...(loaded.sleepHistory || {}) },
-                    workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) }
+                    workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) },
+                    nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) }
                 };
                 
                 // Clear today's entries (fresh start each day)
@@ -5246,6 +6335,12 @@
                         cortisolDelay: 0,
                         thermalDelay: 0,
                         cooldownComplete: null
+                    };
+                    // Reset nicotine for new day
+                    state.nicotine = {
+                        active: false,
+                        type: 'vape',
+                        lastHitTime: null
                     };
                 }
                 
@@ -5320,22 +6415,34 @@
         // INITIALIZATION
         // ============================================
         
+        // Helper function to safely set element value
+        function safeSetValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        }
+        
+        // Helper function to safely get element value
+        function safeGetValue(id, defaultValue) {
+            const el = document.getElementById(id);
+            return el ? el.value : defaultValue;
+        }
+        
         function init() {
             loadState();
             
             // Initialize Firebase for cloud sync
             initFirebase();
             
-            // Set input values from state
-            document.getElementById('wakeTime').value = state.wakeTime;
-            document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-            document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
-            document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
-            document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
-            document.getElementById('caffThreshold').value = state.settings.caffThreshold;
-            document.getElementById('weight').value = state.settings.weight;
-            document.getElementById('vitaminCTime').value = state.modifiers.vitaminC.time;
-            document.getElementById('saunaTime').value = state.modifiers.sauna.time;
+            // Set input values from state (safely)
+            safeSetValue('wakeTime', state.wakeTime);
+            safeSetValue('hoursSlept', state.hoursSleptLastNight);
+            safeSetValue('ampHalfLife', state.settings.ampHalfLife);
+            safeSetValue('sleepThreshold', state.settings.sleepThreshold);
+            safeSetValue('caffHalfLife', state.settings.caffHalfLife);
+            safeSetValue('caffThreshold', state.settings.caffThreshold);
+            safeSetValue('weight', state.settings.weight);
+            safeSetValue('vitaminCTime', state.modifiers.vitaminC.time || '17:00');
+            safeSetValue('saunaTime', state.modifiers.sauna.time || '18:00');
             
             // Render existing entries
             renderMedEntries();
@@ -5381,7 +6488,623 @@
             setInterval(recalculate, 1000);
             
             // Redraw graph on resize
-            window.addEventListener('resize', drawGraph);
+            window.addEventListener('resize', () => {
+                drawGraph();
+                if (focusMode) drawFocusGraph();
+            });
+            
+            // Initialize Focus Mode
+            initFocusMode();
+        }
+
+        // ============================================
+        // FOCUS MODE FUNCTIONS
+        // ============================================
+        
+        let focusMode = true; // Start in focus mode
+        let focusWorkoutType = 'lifting';
+        let focusVitCEnabled = true;
+        
+        function setViewMode(mode) {
+            focusMode = (mode === 'focus');
+            
+            if (focusMode) {
+                document.body.classList.add('focus-mode');
+                renderFocusMode();
+            } else {
+                document.body.classList.remove('focus-mode');
+                recalculate(); // Refresh full view
+            }
+            
+            // Update toggle buttons
+            const toggleBtns = document.querySelectorAll('.view-toggle button');
+            toggleBtns.forEach((btn, i) => {
+                btn.classList.toggle('active', (i === 0 && focusMode) || (i === 1 && !focusMode));
+            });
+        }
+        
+        function renderFocusMode() {
+            if (!focusMode) return;
+            
+            // Sync inputs from main state
+            const focusHoursSlept = document.getElementById('focusHoursSlept');
+            const focusWakeTime = document.getElementById('focusWakeTime');
+            
+            if (focusHoursSlept) focusHoursSlept.value = state.hoursSleptLastNight;
+            if (focusWakeTime) focusWakeTime.value = state.wakeTime;
+            
+            // Update sleep window display
+            const { sleepTime, blockingFactors } = calculateSleepTime();
+            const focusSleepTimeEl = document.getElementById('focusSleepTime');
+            const focusCountdownEl = document.getElementById('focusCountdown');
+            const focusProgressBar = document.getElementById('focusProgressBar');
+            
+            if (focusSleepTimeEl) {
+                let displayTime = sleepTime;
+                if (displayTime > 24 * 60) displayTime -= 24 * 60;
+                focusSleepTimeEl.textContent = minutesToTime(displayTime);
+            }
+            
+            if (focusCountdownEl) {
+                const now = getCurrentMinutes();
+                let remaining = sleepTime - now;
+                if (remaining < 0) remaining += 24 * 60;
+                const hours = Math.floor(remaining / 60);
+                const mins = Math.floor(remaining % 60);
+                focusCountdownEl.textContent = `${hours}h ${mins}m remaining`;
+            }
+            
+            if (focusProgressBar) {
+                // Progress based on day (wake to sleep)
+                const wakeMinutes = timeToMinutes(state.wakeTime);
+                const now = getCurrentMinutes();
+                let normalizedNow = now;
+                let normalizedSleep = sleepTime;
+                let normalizedWake = wakeMinutes;
+                
+                if (now < wakeMinutes) normalizedNow += 24 * 60;
+                if (sleepTime < wakeMinutes) normalizedSleep += 24 * 60;
+                
+                const totalDay = normalizedSleep - normalizedWake;
+                const elapsed = normalizedNow - normalizedWake;
+                const progress = Math.min(100, Math.max(0, (elapsed / totalDay) * 100));
+                focusProgressBar.style.width = progress + '%';
+            }
+            
+            // Update blocking factors
+            const blockingCard = document.getElementById('focusBlockingCard');
+            const blockingList = document.getElementById('focusBlockingList');
+            
+            if (blockingCard && blockingList) {
+                if (blockingFactors.length > 0) {
+                    blockingCard.style.display = 'block';
+                    blockingList.innerHTML = blockingFactors.map(f => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <span>${f.name}</span>
+                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    blockingCard.style.display = 'none';
+                }
+            }
+            
+            // Update sleep history
+            renderFocusSleepHistory();
+            
+            // Update meds status
+            updateFocusMedsStatus();
+            
+            // Update coffee status
+            updateFocusCoffeeStatus();
+            
+            // Update workout status
+            updateFocusWorkoutStatus();
+            
+            // Update nicotine status
+            updateFocusNicotineStatus();
+            
+            // Update Vitamin C status
+            updateFocusVitCStatus();
+            
+            // Draw focus graph
+            drawFocusGraph();
+        }
+        
+        function renderFocusSleepHistory() {
+            const container = document.getElementById('focusSleepHistory');
+            if (!container) return;
+            
+            const days = [];
+            const today = new Date();
+            
+            // Today
+            days.push({
+                label: 'Today',
+                date: today.toISOString().split('T')[0],
+                hours: state.hoursSleptLastNight,
+                isToday: true
+            });
+            
+            // Past 3 days
+            for (let i = 1; i <= 3; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                const entry = state.sleepHistory[dateStr];
+                let hours = '--';
+                if (entry) {
+                    hours = typeof entry === 'object' ? entry.hoursSlept : entry;
+                }
+                
+                days.push({
+                    label: dayNames[date.getDay()],
+                    date: dateStr,
+                    hours: hours,
+                    isToday: false
+                });
+            }
+            
+            container.innerHTML = days.map(d => `
+                <div class="focus-sleep-day ${d.isToday ? 'active' : ''}" onclick="focusEditSleepDay('${d.date}', ${d.isToday})">
+                    <div class="focus-sleep-day-label">${d.label}</div>
+                    <div class="focus-sleep-day-value">${d.hours}h</div>
+                </div>
+            `).join('');
+        }
+        
+        function focusEditSleepDay(dateStr, isToday) {
+            const hours = prompt(`Hours slept on ${dateStr}:`, isToday ? state.hoursSleptLastNight : (state.sleepHistory[dateStr]?.hoursSlept || 7));
+            if (hours !== null && !isNaN(parseFloat(hours))) {
+                const h = parseFloat(hours);
+                if (isToday) {
+                    state.hoursSleptLastNight = h;
+                    document.getElementById('hoursSlept').value = h;
+                    document.getElementById('focusHoursSlept').value = h;
+                } else {
+                    if (!state.sleepHistory[dateStr]) {
+                        state.sleepHistory[dateStr] = {};
+                    }
+                    if (typeof state.sleepHistory[dateStr] === 'number') {
+                        state.sleepHistory[dateStr] = { hoursSlept: h };
+                    } else {
+                        state.sleepHistory[dateStr].hoursSlept = h;
+                    }
+                }
+                saveState();
+                recalculate();
+                renderFocusMode();
+            }
+        }
+        
+        function focusUpdateSleep() {
+            const hours = parseFloat(document.getElementById('focusHoursSlept').value) || 8;
+            state.hoursSleptLastNight = hours;
+            document.getElementById('hoursSlept').value = hours;
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function focusUpdateWake() {
+            const wake = document.getElementById('focusWakeTime').value;
+            state.wakeTime = wake;
+            document.getElementById('wakeTime').value = wake;
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        // Medication functions
+        function focusConfirmMeds() {
+            const time = document.getElementById('focusMedTime').value;
+            // Standard dose: 30mg + 20mg XR = 50mg total
+            state.medications = [{ id: Date.now(), dose: 50, time: time }];
+            
+            // Auto-enable Vitamin C
+            if (focusVitCEnabled) {
+                state.modifiers.vitaminC.active = true;
+                state.modifiers.vitaminC.time = '17:00'; // Default 5 PM
+            }
+            
+            renderMedEntries();
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function focusShowCustomDose() {
+            document.getElementById('focusCustomDose').style.display = 'block';
+        }
+        
+        function focusHideCustomDose() {
+            document.getElementById('focusCustomDose').style.display = 'none';
+            document.getElementById('focusCustomDoseInput').style.display = 'none';
+            document.getElementById('focusDoseSelect').value = '50';
+        }
+        
+        function focusDoseSelectChange() {
+            const select = document.getElementById('focusDoseSelect');
+            const customInput = document.getElementById('focusCustomDoseInput');
+            if (select.value === 'custom') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+        
+        function focusConfirmCustomDose() {
+            const time = document.getElementById('focusMedTime').value;
+            const select = document.getElementById('focusDoseSelect');
+            let dose;
+            
+            if (select.value === 'custom') {
+                dose = parseInt(document.getElementById('focusCustomDoseValue').value) || 50;
+            } else {
+                dose = parseInt(select.value);
+            }
+            
+            state.medications = [{ id: Date.now(), dose: dose, time: time }];
+            
+            // Auto-enable Vitamin C
+            if (focusVitCEnabled) {
+                state.modifiers.vitaminC.active = true;
+                state.modifiers.vitaminC.time = '17:00';
+            }
+            
+            renderMedEntries();
+            saveState();
+            recalculate();
+            focusHideCustomDose();
+            renderFocusMode();
+        }
+        
+        function focusEditMeds() {
+            state.medications = [];
+            renderMedEntries();
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function updateFocusMedsStatus() {
+            const notConfirmed = document.getElementById('focusMedsNotConfirmed');
+            const confirmed = document.getElementById('focusMedsConfirmed');
+            const summary = document.getElementById('focusMedsSummary');
+            
+            if (state.medications.length > 0) {
+                notConfirmed.style.display = 'none';
+                confirmed.style.display = 'block';
+                const totalDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
+                const time = state.medications[0].time;
+                summary.textContent = `${totalDose}mg XR at ${minutesToTime(timeToMinutes(time))}`;
+            } else {
+                notConfirmed.style.display = 'block';
+                confirmed.style.display = 'none';
+            }
+        }
+        
+        // Coffee functions
+        function focusUpdateCoffee(cup) {
+            const time = document.getElementById(`focusCoffee${cup}Time`).value;
+            if (!time) return;
+            
+            // Find or create coffee entry
+            const existingIndex = state.caffeine.findIndex(c => c.name === `Cup ${cup}`);
+            if (existingIndex >= 0) {
+                state.caffeine[existingIndex].time = time;
+            } else {
+                state.caffeine.push({
+                    id: Date.now() + cup,
+                    amount: 95, // Standard cup
+                    name: `Cup ${cup}`,
+                    time: time
+                });
+            }
+            
+            renderCaffeineEntries();
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function updateFocusCoffeeStatus() {
+            const statusEl = document.getElementById('focusCoffeeStatus');
+            const coffee1 = document.getElementById('focusCoffee1Time');
+            const coffee2 = document.getElementById('focusCoffee2Time');
+            
+            // Sync from state
+            const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
+            const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
+            
+            if (cup1 && coffee1) coffee1.value = cup1.time;
+            if (cup2 && coffee2) coffee2.value = cup2.time;
+            
+            if (state.caffeine.length === 0) {
+                statusEl.textContent = 'No coffee logged yet';
+            } else {
+                const total = state.caffeine.reduce((sum, c) => sum + c.amount, 0);
+                statusEl.textContent = `${state.caffeine.length} cup(s) • ${total}mg caffeine total`;
+            }
+        }
+        
+        // Workout functions
+        function focusSelectWorkoutType(el) {
+            document.querySelectorAll('.focus-workout-type').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            focusWorkoutType = el.dataset.type;
+        }
+        
+        function focusConfirmWorkout() {
+            const time = document.getElementById('focusWorkoutTime').value;
+            const duration = parseInt(document.getElementById('focusWorkoutDuration').value) || 45;
+            
+            // Set workout plan
+            state.workoutPlan.active = true;
+            state.workoutPlan.time = time;
+            state.workoutPlan.duration = duration;
+            state.workoutPlan.type = focusWorkoutType;
+            state.workoutPlan.intensity = 'medium';
+            state.workoutPlan.fasted = false;
+            state.workoutPlan.coldShower = false;
+            
+            // Auto-enable sauna (15 min after workout)
+            state.modifiers.sauna.active = true;
+            const workoutEnd = timeToMinutes(time) + duration;
+            const saunaTime = workoutEnd + 15;
+            state.modifiers.sauna.time = minutesToTimeValue(saunaTime);
+            
+            // Apply workout plan
+            applyWorkoutPlan();
+            
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function focusEditWorkout() {
+            state.workoutPlan.active = false;
+            state.workoutPlan.applied = false;
+            state.modifiers.sauna.active = false;
+            
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function updateFocusWorkoutStatus() {
+            const notSet = document.getElementById('focusWorkoutNotSet');
+            const confirmed = document.getElementById('focusWorkoutConfirmed');
+            const summary = document.getElementById('focusWorkoutSummary');
+            const saunaStatus = document.getElementById('focusSaunaStatus');
+            
+            if (state.workoutPlan.applied) {
+                notSet.style.display = 'none';
+                confirmed.style.display = 'block';
+                const typeLabels = { lifting: 'Lifting', zone2: 'Zone 2', hiit: 'HIIT', walk: 'Walk' };
+                summary.textContent = `${minutesToTime(timeToMinutes(state.workoutPlan.time))} - ${typeLabels[state.workoutPlan.type] || 'Workout'} + Sauna`;
+                if (saunaStatus) saunaStatus.style.display = 'inline-flex';
+            } else {
+                notSet.style.display = 'block';
+                confirmed.style.display = 'none';
+                if (saunaStatus) saunaStatus.style.display = 'none';
+            }
+        }
+        
+        // Nicotine functions
+        function focusLogNicotine(type) {
+            logNicotine(type);
+            renderFocusMode();
+        }
+        
+        function focusClearNicotine() {
+            clearNicotine();
+            renderFocusMode();
+        }
+        
+        function updateFocusNicotineStatus() {
+            const statusEl = document.getElementById('focusNicStatus');
+            const timeEl = document.getElementById('focusNicTime');
+            const clearEl = document.getElementById('focusNicClear');
+            const vapeBtn = document.getElementById('focusLogVape');
+            const zynBtn = document.getElementById('focusLogZyn');
+            
+            if (state.nicotine.active && state.nicotine.lastHitTime) {
+                statusEl.classList.add('show');
+                timeEl.textContent = minutesToTime(timeToMinutes(state.nicotine.lastHitTime)) + (state.nicotine.type === 'vape' ? ' 💨' : ' 🫧');
+                
+                const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+                let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
+                if (clearTime >= 24 * 60) clearTime -= 24 * 60;
+                clearEl.textContent = minutesToTime(clearTime);
+                
+                // Update button styles
+                if (state.nicotine.type === 'vape') {
+                    vapeBtn.classList.add('active');
+                    zynBtn.classList.remove('active');
+                } else {
+                    vapeBtn.classList.remove('active');
+                    zynBtn.classList.add('active');
+                }
+            } else {
+                statusEl.classList.remove('show');
+                vapeBtn.classList.remove('active');
+                zynBtn.classList.remove('active');
+            }
+        }
+        
+        // Vitamin C toggle
+        function focusToggleVitC() {
+            focusVitCEnabled = !focusVitCEnabled;
+            state.modifiers.vitaminC.active = focusVitCEnabled;
+            
+            saveState();
+            recalculate();
+            renderFocusMode();
+        }
+        
+        function updateFocusVitCStatus() {
+            const statusPill = document.getElementById('focusVitCStatus');
+            const toggleBtn = document.getElementById('focusVitCToggle');
+            
+            if (state.modifiers.vitaminC.active) {
+                focusVitCEnabled = true;
+                statusPill.classList.remove('warning');
+                statusPill.classList.add('success');
+                statusPill.textContent = '🍊 Vitamin C 1000mg';
+                toggleBtn.textContent = 'Disable Vitamin C';
+            } else {
+                focusVitCEnabled = false;
+                statusPill.classList.remove('success');
+                statusPill.classList.add('warning');
+                statusPill.textContent = '🍊 Vitamin C (off)';
+                toggleBtn.textContent = 'Enable Vitamin C';
+            }
+        }
+        
+        // Focus Mode Graph (simplified)
+        function drawFocusGraph() {
+            const canvas = document.getElementById('focusGraphCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            
+            canvas.width = container.clientWidth - 20;
+            canvas.height = container.clientHeight - 20;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = { left: 35, right: 15, top: 15, bottom: 25 };
+            const graphWidth = width - padding.left - padding.right;
+            const graphHeight = height - padding.top - padding.bottom;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Time range: 6am to 3am
+            const startTime = 6 * 60;
+            const endTime = 27 * 60;
+            const timeRange = endTime - startTime;
+            
+            // Find max
+            const effectiveThreshold = getEffectiveThreshold();
+            let maxY = effectiveThreshold * 2;
+            for (let t = startTime; t <= endTime; t += 30) {
+                maxY = Math.max(maxY, calculateAmpLoad(t));
+            }
+            
+            // Draw Sleep Gate
+            const sleepGate = getSleepGate();
+            let sgStart = sleepGate.start;
+            if (sgStart > 24 * 60) sgStart -= 24 * 60;
+            let sgEnd = sleepGate.end;
+            if (sgEnd > 24 * 60) sgEnd -= 24 * 60;
+            
+            if (sgStart >= startTime) {
+                const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
+                const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+                ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
+            }
+            
+            // Draw threshold line
+            const thresholdY = padding.top + (1 - effectiveThreshold / maxY) * graphHeight;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, thresholdY);
+            ctx.lineTo(width - padding.right, thresholdY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw amphetamine curve
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            let first = true;
+            for (let t = startTime; t <= endTime; t += 10) {
+                const load = calculateAmpLoad(t);
+                const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                const y = padding.top + (1 - load / maxY) * graphHeight;
+                if (first) {
+                    ctx.moveTo(x, y);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw caffeine curve
+            if (state.caffeine.length > 0) {
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                first = true;
+                for (let t = startTime; t <= endTime; t += 10) {
+                    const load = calculateCaffLoad(t);
+                    const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+                    const y = padding.top + (1 - load / maxY) * graphHeight;
+                    if (first) {
+                        ctx.moveTo(x, y);
+                        first = false;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Time labels
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            const labels = [
+                { time: 6, label: '6a' },
+                { time: 12, label: '12p' },
+                { time: 18, label: '6p' },
+                { time: 24, label: '12a' }
+            ];
+            labels.forEach(l => {
+                const x = padding.left + ((l.time * 60 - startTime) / timeRange) * graphWidth;
+                ctx.fillText(l.label, x, height - 5);
+            });
+            
+            // Current time marker
+            const now = getCurrentMinutes();
+            if (now >= startTime || now < 6 * 60) {
+                let displayNow = now;
+                if (now < 6 * 60) displayNow += 24 * 60;
+                const nowX = padding.left + ((displayNow - startTime) / timeRange) * graphWidth;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(nowX, padding.top);
+                ctx.lineTo(nowX, height - padding.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        // Initialize focus mode on load
+        function initFocusMode() {
+            // Start in focus mode
+            document.body.classList.add('focus-mode');
+            
+            // Set default med time to now if not set
+            const now = new Date();
+            const defaultTime = `${now.getHours().toString().padStart(2, '0')}:00`;
+            const medTimeInput = document.getElementById('focusMedTime');
+            if (medTimeInput && !state.medications.length) {
+                medTimeInput.value = defaultTime;
+            }
+            
+            renderFocusMode();
         }
 
         document.addEventListener('DOMContentLoaded', init);
