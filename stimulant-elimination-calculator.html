@@ -1697,6 +1697,11 @@
                     <span id="syncText">Connecting...</span>
                 </div>
             </div>
+            <!-- View Toggle for Full View -->
+            <div class="view-toggle" style="margin-bottom: 15px;">
+                <button onclick="setViewMode('focus')">🎯 Focus</button>
+                <button class="active" onclick="setViewMode('full')">📊 Full View</button>
+            </div>
             <h1>💊 Stimulant Elimination Calculator</h1>
             <p>Pharmacokinetic sleep prediction based on your personal physiology</p>
         </div>
@@ -6116,6 +6121,11 @@
                         
                         recalculate();
                         
+                        // Also update Focus Mode if active
+                        if (focusMode) {
+                            renderFocusMode();
+                        }
+                        
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
                         console.log('✅ Loaded from Firebase:', data.lastUpdated);
@@ -6245,6 +6255,11 @@
                     }
                     
                     recalculate();
+                    
+                    // Also update Focus Mode if active
+                    if (focusMode) {
+                        renderFocusMode();
+                    }
                     
                     updateSyncStatus('connected', '🔄 Updated');
                     showToast('📥 Synced from another device');
@@ -6517,11 +6532,18 @@
                 recalculate(); // Refresh full view
             }
             
-            // Update toggle buttons
-            const toggleBtns = document.querySelectorAll('.view-toggle button');
-            toggleBtns.forEach((btn, i) => {
-                btn.classList.toggle('active', (i === 0 && focusMode) || (i === 1 && !focusMode));
+            // Update ALL toggle buttons (both in Focus and Full views)
+            document.querySelectorAll('.view-toggle').forEach(toggle => {
+                const btns = toggle.querySelectorAll('button');
+                btns.forEach(btn => {
+                    const isFocusBtn = btn.textContent.includes('Focus');
+                    const isFullBtn = btn.textContent.includes('Full');
+                    btn.classList.toggle('active', (isFocusBtn && focusMode) || (isFullBtn && !focusMode));
+                });
             });
+            
+            // Save view preference
+            localStorage.setItem('stimCalcViewMode', mode);
         }
         
         function renderFocusMode() {
@@ -6787,11 +6809,15 @@
             }
         }
         
-        // Coffee functions - FIXED to prevent duplicates
+        // Coffee functions - FIXED to prevent duplicates and input clearing
+        let coffeeInputActive = false; // Track if user is actively typing
+        
         function focusUpdateCoffee(cup) {
             const timeEl = document.getElementById(`focusCoffee${cup}Time`);
             const time = timeEl ? timeEl.value : null;
             if (!time) return;
+            
+            coffeeInputActive = true; // Mark as active to prevent clearing during render
             
             // Clear any entries that might conflict - look for existing entries with similar times
             // or named "Cup 1"/"Cup 2" or matching Coffee entries
@@ -6816,7 +6842,71 @@
             renderCaffeineEntries();
             saveState();
             recalculate();
-            renderFocusMode();
+            
+            // Update focus mode but DON'T re-render coffee inputs
+            if (focusMode) {
+                updateFocusSleepDisplay();
+                updateFocusCoffeeStatus();
+            }
+            
+            coffeeInputActive = false;
+        }
+        
+        // Helper to update just the sleep display without full render
+        function updateFocusSleepDisplay() {
+            const { sleepTime, blockingFactors } = calculateSleepTime();
+            const focusSleepTimeEl = document.getElementById('focusSleepTime');
+            const focusCountdownEl = document.getElementById('focusCountdown');
+            const focusProgressBar = document.getElementById('focusProgressBar');
+            
+            if (focusSleepTimeEl) {
+                let displayTime = sleepTime;
+                if (displayTime > 24 * 60) displayTime -= 24 * 60;
+                focusSleepTimeEl.textContent = minutesToTime(displayTime);
+            }
+            
+            if (focusCountdownEl) {
+                const now = getCurrentMinutes();
+                let remaining = sleepTime - now;
+                if (remaining < 0) remaining += 24 * 60;
+                const hours = Math.floor(remaining / 60);
+                const mins = Math.floor(remaining % 60);
+                focusCountdownEl.textContent = `${hours}h ${mins}m remaining`;
+            }
+            
+            if (focusProgressBar) {
+                const wakeMinutes = timeToMinutes(state.wakeTime);
+                const now = getCurrentMinutes();
+                let normalizedNow = now;
+                let normalizedSleep = sleepTime;
+                let normalizedWake = wakeMinutes;
+                
+                if (now < wakeMinutes) normalizedNow += 24 * 60;
+                if (sleepTime < wakeMinutes) normalizedSleep += 24 * 60;
+                
+                const totalDay = normalizedSleep - normalizedWake;
+                const elapsed = normalizedNow - normalizedWake;
+                const progress = Math.min(100, Math.max(0, (elapsed / totalDay) * 100));
+                focusProgressBar.style.width = progress + '%';
+            }
+            
+            // Update blocking factors
+            const blockingCard = document.getElementById('focusBlockingCard');
+            const blockingList = document.getElementById('focusBlockingList');
+            
+            if (blockingCard && blockingList) {
+                if (blockingFactors.length > 0) {
+                    blockingCard.style.display = 'block';
+                    blockingList.innerHTML = blockingFactors.map(f => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <span>${f.name}</span>
+                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    blockingCard.style.display = 'none';
+                }
+            }
         }
         
         function focusClearAllCaffeine() {
@@ -6842,17 +6932,22 @@
             // Show total from ALL sources (Focus Mode + Full View)
             if (state.caffeine.length === 0) {
                 statusEl.innerHTML = 'No coffee logged yet';
-                if (coffee1) coffee1.value = '';
-                if (coffee2) coffee2.value = '';
+                // Only clear if user isn't actively editing
+                if (!coffeeInputActive) {
+                    if (coffee1) coffee1.value = '';
+                    if (coffee2) coffee2.value = '';
+                }
             } else {
                 const total = state.caffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
                 
-                // Sync Focus Mode inputs from state
-                const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
-                const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
-                
-                if (cup1 && coffee1) coffee1.value = cup1.time;
-                if (cup2 && coffee2) coffee2.value = cup2.time;
+                // Sync Focus Mode inputs from state ONLY if not actively editing
+                if (!coffeeInputActive) {
+                    const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
+                    const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
+                    
+                    if (cup1 && coffee1) coffee1.value = cup1.time;
+                    if (cup2 && coffee2) coffee2.value = cup2.time;
+                }
                 
                 // Show entry count with clear button hint
                 const entryText = state.caffeine.length === 1 ? 'entry' : 'entries';
@@ -7184,8 +7279,26 @@
         
         // Initialize focus mode on load
         function initFocusMode() {
-            // Start in focus mode
-            document.body.classList.add('focus-mode');
+            // Check for saved view preference
+            const savedViewMode = localStorage.getItem('stimCalcViewMode');
+            
+            if (savedViewMode === 'full') {
+                // Start in full view
+                focusMode = false;
+                document.body.classList.remove('focus-mode');
+                // Update toggle buttons
+                document.querySelectorAll('.view-toggle').forEach(toggle => {
+                    const btns = toggle.querySelectorAll('button');
+                    btns.forEach(btn => {
+                        const isFocusBtn = btn.textContent.includes('Focus');
+                        btn.classList.toggle('active', !isFocusBtn);
+                    });
+                });
+            } else {
+                // Default: Start in focus mode
+                focusMode = true;
+                document.body.classList.add('focus-mode');
+            }
             
             // Set default med time to now if not set
             const now = new Date();
@@ -7195,7 +7308,9 @@
                 medTimeInput.value = defaultTime;
             }
             
-            renderFocusMode();
+            if (focusMode) {
+                renderFocusMode();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', init);
