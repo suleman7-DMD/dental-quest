@@ -3111,6 +3111,7 @@
         let firebaseInitialized = false;
         let database = null;
         let currentUser = null;
+        let initialLoadComplete = false; // CRITICAL: Prevents saving empty data before Firebase loads
         let userPassword = null; // Simple password for privacy
 
         // ============================================
@@ -3725,6 +3726,13 @@
 
         // Save data to Firebase (or localStorage as fallback)
         function saveData() {
+            // CRITICAL: Don't save to Firebase until initial load completes
+            // This prevents empty data from overwriting Firebase when a new session starts
+            if (firebaseInitialized && !initialLoadComplete) {
+                console.log('⏳ Skipping Firebase save - initial load not complete yet');
+                return; // Don't save anything yet!
+            }
+            
             const data = { 
                 tasks, 
                 stats,
@@ -3735,8 +3743,12 @@
                 pillAssignments,
                 calendarEvents,
                 dailyPlanner,
-                focusModeData
+                focusModeData,
+                lastSaved: Date.now() // Timestamp for sync tracking
             };
+            
+            // Update our known save time to ignore our own updates
+            lastKnownSaveTime = data.lastSaved;
             
             // Always save to localStorage as backup
             try {
@@ -4106,6 +4118,7 @@
                 if (typeof firebase === 'undefined') {
                     console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
                     loadData();
+                    initialLoadComplete = true;
                     updateCategoryDisplay();
                     return;
                 }
@@ -4127,6 +4140,7 @@
                     if (!userPin || userPin.length < 4) {
                         alert('PIN must be at least 4 characters. Using localStorage only.');
                         loadData();
+                        initialLoadComplete = true;
                         updateCategoryDisplay();
                         return;
                     }
@@ -4152,6 +4166,7 @@
                 console.error('Firebase init error:', error);
                 firebaseInitialized = false;
                 loadData(); // Fallback to localStorage
+                initialLoadComplete = true;
                 updateCategoryDisplay();
             }
         }
@@ -4160,6 +4175,7 @@
         function loadDataFromFirebase() {
             if (!currentUser || !database) {
                 loadData(); // Fallback
+                initialLoadComplete = true;
                 return;
             }
             
@@ -4284,16 +4300,29 @@
                         // Setup real-time sync for daily planner
                         setupPlannerRealtimeSync();
                         
+                        // Setup real-time sync for ALL data
+                        setupMainDataRealtimeSync();
+                        
+                        // CRITICAL: Mark initial load as complete - now saves are allowed
+                        initialLoadComplete = true;
+                        console.log('✅ Initial load complete - saves now enabled');
+                        
                         showToast('Data loaded from cloud ☁️', '✅');
                     } else {
                         // No cloud data, check localStorage
                         console.log('No cloud data, checking localStorage');
                         loadData();
+                        // Mark load complete after localStorage load
+                        initialLoadComplete = true;
+                        console.log('✅ Initial load complete (from localStorage) - saves now enabled');
                     }
                 })
                 .catch((error) => {
                     console.error('Firebase load error:', error);
                     loadData(); // Fallback
+                    // Mark load complete even on error
+                    initialLoadComplete = true;
+                    console.log('✅ Initial load complete (fallback) - saves now enabled');
                 });
         }
 
@@ -4308,6 +4337,7 @@
         } else {
             console.log('Firebase not configured - using localStorage only');
             loadData();
+            initialLoadComplete = true; // No Firebase, so immediately ready
             updateCategoryDisplay();
         }
         
@@ -6656,6 +6686,91 @@
                     }
                 });
             }
+        }
+        
+        // Listen for real-time updates to ALL main data from other devices
+        let mainDataSyncEnabled = false;
+        let lastKnownSaveTime = null;
+        
+        function setupMainDataRealtimeSync() {
+            if (!firebaseInitialized || !database || !currentUser || mainDataSyncEnabled) return;
+            mainDataSyncEnabled = true;
+            
+            console.log('🔄 Setting up real-time sync for main data');
+            
+            let isFirstCallback = true;
+            
+            database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
+                // Skip the first callback (that's our initial load)
+                if (isFirstCallback) {
+                    isFirstCallback = false;
+                    const data = snapshot.val();
+                    if (data && data.lastSaved) {
+                        lastKnownSaveTime = data.lastSaved;
+                    }
+                    return;
+                }
+                
+                const data = snapshot.val();
+                if (!data) return;
+                
+                // Only process if this is a NEW update (different timestamp)
+                if (data.lastSaved && data.lastSaved === lastKnownSaveTime) {
+                    console.log('🔄 Skipping own update');
+                    return;
+                }
+                
+                lastKnownSaveTime = data.lastSaved;
+                console.log('📥 Received real-time update from another device');
+                
+                // Update local data
+                if (data.tasks) tasks = data.tasks;
+                if (data.stats) {
+                    stats = {
+                        ...stats,
+                        totalXPGained: data.stats.totalXPGained || 0,
+                        totalTasks: data.stats.totalTasks || 0,
+                        categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
+                    };
+                }
+                if (data.focusModeData) {
+                    focusModeData = {
+                        oneThingId: data.focusModeData.oneThingId || null,
+                        microSteps: data.focusModeData.microSteps || [],
+                        todaysTasks: {
+                            big: data.focusModeData.todaysTasks?.big || [],
+                            medium: data.focusModeData.todaysTasks?.medium || [],
+                            small: data.focusModeData.todaysTasks?.small || []
+                        },
+                        focusTimerSeconds: focusModeData.focusTimerSeconds || 0,
+                        focusTimerRunning: focusModeData.focusTimerRunning || false,
+                        focusTimerInterval: focusModeData.focusTimerInterval || null,
+                        lastPlanningDate: data.focusModeData.lastPlanningDate || null
+                    };
+                }
+                if (data.calendarEvents) calendarEvents = data.calendarEvents;
+                if (data.notebook) {
+                    notebook = {
+                        pages: data.notebook.pages || [],
+                        currentPageId: data.notebook.currentPageId || null
+                    };
+                }
+                if (data.financials) {
+                    financials = { ...financials, ...data.financials };
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                
+                // Re-render UI
+                updateStats();
+                renderTasks();
+                if (currentView === 'focus') {
+                    renderFocusMode();
+                }
+                
+                showToast('📥 Synced from another device', '🔄');
+            });
         }
 
         function openNotebook() {
