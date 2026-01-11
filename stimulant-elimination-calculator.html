@@ -491,10 +491,11 @@
         /* Graph */
         .graph-container {
             position: relative;
-            height: 250px;
+            height: 280px;
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
             padding: 20px;
+            padding-bottom: 45px;
             margin-top: 15px;
         }
 
@@ -1555,6 +1556,9 @@
                     <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="margin-top: 15px; width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 10px; color: white; font-weight: 600; font-size: 1em; cursor: pointer; display: none;">
                         ✓ Apply This Workout to Calculation
                     </button>
+                    <button id="resetWorkoutBtn" onclick="resetWorkoutPlan()" style="margin-top: 10px; width: 100%; padding: 10px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px; color: #ef4444; font-weight: 600; font-size: 0.9em; cursor: pointer; display: none;">
+                        🗑️ Reset Workout
+                    </button>
                 </div>
 
                 <!-- Settings -->
@@ -1718,6 +1722,15 @@
                             <div>
                                 <span class="status-value" id="circadianStatus">Normal</span>
                                 <span class="status-indicator" id="circadianIndicator">✓</span>
+                            </div>
+                        </div>
+                        <div class="status-item ok" id="workoutStatusItem" style="display: none;">
+                            <div class="status-label">
+                                <span>🏋️ Workout Impact</span>
+                            </div>
+                            <div>
+                                <span class="status-value" id="workoutStatus">None</span>
+                                <span class="status-indicator" id="workoutIndicator">✓</span>
                             </div>
                         </div>
                     </div>
@@ -1992,6 +2005,22 @@
                 vitaminC: { active: false, time: '17:00' },
                 heavyLift: { active: false },
                 sauna: { active: false, time: '18:00' }
+            },
+            // Workout plan - integrated into main calculation
+            workoutPlan: {
+                active: false,
+                time: null,
+                duration: 45,
+                type: 'lifting',
+                intensity: 'medium',
+                fasted: false,
+                coldShower: false,
+                applied: false,
+                // Calculated impacts (stored when applied)
+                adenosineBonus: 0,
+                cortisolDelay: 0,
+                thermalDelay: 0,
+                cooldownComplete: null
             },
             settings: {
                 ampHalfLife: 11,
@@ -2463,26 +2492,104 @@
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
             }
             
-            // Apply positive modifiers with timing consideration
-            if (state.modifiers.heavyLift.active) {
+            // =============================================
+            // WORKOUT PLAN INTEGRATION (FIXED)
+            // =============================================
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                const wp = state.workoutPlan;
+                const now = getCurrentMinutes();
+                
+                // 1. Apply adenosine bonus (reduces sleep time - good!)
+                if (wp.adenosineBonus > 0) {
+                    sleepTime -= wp.adenosineBonus;
+                }
+                
+                // 2. Apply cortisol delay (increases sleep time - bad)
+                if (wp.cortisolDelay > 0) {
+                    sleepTime += wp.cortisolDelay;
+                    blockingFactors.push({
+                        name: 'Workout Cortisol',
+                        clearsAt: sleepTime,
+                        type: 'workout',
+                        note: `+${wp.cortisolDelay} min from ${wp.fasted ? 'fasted training' : 'exercise stress'}`
+                    });
+                }
+                
+                // 3. Thermal cooldown is a HARD BLOCKER (can't sleep until cooled down)
+                // BUT only if we haven't already passed the cooldown time
+                if (wp.cooldownComplete !== null) {
+                    let cooldownTime = wp.cooldownComplete;
+                    
+                    // Normalize cooldown time for comparison with current time
+                    let normalizedCooldown = cooldownTime;
+                    let normalizedNow = now;
+                    
+                    // Handle times that cross midnight
+                    // If cooldown is in early morning hours (e.g., 1 AM = 60) and now is late evening (e.g., 11 PM = 1380)
+                    // then cooldown is TOMORROW, so add 24 hours to cooldown
+                    if (cooldownTime < 6 * 60 && now > 18 * 60) {
+                        normalizedCooldown += 24 * 60;
+                    }
+                    // If now is early morning and cooldown was yesterday evening, cooldown has passed
+                    if (now < 6 * 60 && cooldownTime > 18 * 60) {
+                        normalizedNow += 24 * 60;
+                    }
+                    
+                    // Only apply thermal block if cooldown is STILL IN THE FUTURE
+                    if (normalizedCooldown > normalizedNow) {
+                        // Check if thermal cooldown extends past current sleep time
+                        let normalizedSleep = sleepTime;
+                        if (sleepTime < 6 * 60 && now > 18 * 60) {
+                            normalizedSleep += 24 * 60;
+                        }
+                        
+                        if (normalizedCooldown > normalizedSleep) {
+                            sleepTime = cooldownTime > 24 * 60 ? cooldownTime - 24 * 60 : cooldownTime;
+                            blockingFactors.push({
+                                name: 'Thermal Cooldown',
+                                clearsAt: sleepTime,
+                                type: 'thermal',
+                                note: `Core temp won't drop until ${minutesToTime(sleepTime)}${wp.coldShower ? ' (cold shower helped)' : ''}`
+                            });
+                        }
+                    }
+                    // If cooldown has passed, thermal is no longer blocking - don't add to blocking factors
+                }
+            }
+            // Legacy support: If workout plan not applied but heavyLift modifier is active
+            else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
                 // Heavy lifting increases adenosine (good for sleep)
                 // Apply -15 min bonus
                 sleepTime -= 15;
             }
             
-            if (state.modifiers.sauna.active) {
-                // Sauna triggers parasympathetic response
-                // Only apply full bonus if taken in evening (after 5pm)
+            // Sauna modifier (separate from workout)
+            // SCIENTIFIC NOTE: Sauna causes initial hyperthermia followed by enhanced 
+            // parasympathetic response. The net effect on sleep depends on timing:
+            // - Evening sauna (after 5 PM): Allows thermal dump before bed, triggers melatonin
+            // - Earlier sauna: Benefit dissipates, body re-arouses
+            if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTime = timeToMinutes(state.modifiers.sauna.time);
                 const fivePM = 17 * 60;
+                const now = getCurrentMinutes();
                 
-                if (saunaTime >= fivePM) {
-                    // Evening sauna - full parasympathetic benefit
-                    sleepTime -= 30;
-                } else {
-                    // Earlier sauna - reduced benefit (body has time to re-arouse)
-                    sleepTime -= 15;
+                // Only apply sauna benefit if the sauna time has passed (you've done it)
+                // AND sauna was taken today (not a stale setting)
+                let normalizedSaunaTime = saunaTime;
+                let normalizedNow = now;
+                if (saunaTime > now && saunaTime - now > 12 * 60) {
+                    // Sauna time appears to be from yesterday, don't apply
+                } else if (normalizedNow >= normalizedSaunaTime || (saunaTime > 18 * 60 && now < 6 * 60)) {
+                    // Sauna has been taken
+                    if (saunaTime >= fivePM) {
+                        // Evening sauna - full parasympathetic benefit
+                        sleepTime -= 30;
+                    } else {
+                        // Earlier sauna - reduced benefit (body has time to re-arouse)
+                        sleepTime -= 15;
+                    }
                 }
+                // If sauna is scheduled for later today, don't apply benefit yet
             }
             
             // Sort blocking factors by clear time
@@ -2692,17 +2799,7 @@
         // WORKOUT PLANNER
         // ============================================
         
-        // Workout state
-        let workoutPlan = {
-            active: false,
-            time: null,
-            duration: 45,
-            type: 'lifting',
-            intensity: 'medium',
-            fasted: false,
-            coldShower: false,
-            applied: false
-        };
+        // Note: workoutPlan is now stored in state.workoutPlan
         
         function initWorkoutPlanner() {
             // Set default workout time to current time rounded to nearest 15 min
@@ -3032,18 +3129,8 @@
             
             const type = document.getElementById('workoutType').value;
             
-            // Auto-set the appropriate modifier
-            if (type === 'lifting' || type === 'zone2') {
-                // Enable heavy lifting modifier
-                const liftingEl = document.querySelector('[data-modifier="heavyLifting"]');
-                if (liftingEl && !state.modifiers.heavyLifting.active) {
-                    state.modifiers.heavyLifting.active = true;
-                    liftingEl.classList.add('active');
-                }
-            }
-            
-            // Store workout plan in state for reference
-            workoutPlan = {
+            // Store ALL workout impacts in state (CRITICAL FIX)
+            state.workoutPlan = {
                 active: true,
                 time: document.getElementById('workoutTime').value,
                 duration: parseInt(document.getElementById('workoutDuration').value),
@@ -3052,19 +3139,81 @@
                 fasted: document.getElementById('workoutFasted').checked,
                 coldShower: document.getElementById('coldShowerToggle').checked,
                 applied: true,
-                impact: impact
+                // Store calculated impacts for use in calculateSleepTime
+                adenosineBonus: impact.adenosineBonus || 0,
+                cortisolDelay: impact.cortisolDelay || 0,
+                thermalDelay: impact.thermalDelay || 0,
+                cooldownComplete: impact.cooldownComplete || null
             };
             
-            // Save and recalculate
+            // Also update the heavyLift modifier for backward compatibility
+            if (type === 'lifting' || type === 'zone2') {
+                state.modifiers.heavyLift.active = true;
+                const liftingEl = document.querySelector('[data-modifier="heavyLift"]');
+                if (liftingEl) liftingEl.classList.add('active');
+            }
+            
+            // Save and recalculate - THIS NOW ACTUALLY AFFECTS THE MAIN COUNTDOWN
             saveState();
             recalculate();
             
-            showToast('Workout plan applied! Sleep prediction updated.', '🏋️');
+            // Show success with actual impact
+            const netImpact = (impact.cortisolDelay + impact.thermalDelay) - impact.adenosineBonus;
+            const impactText = netImpact > 0 ? `+${netImpact} min` : `${netImpact} min`;
+            showToast(`Workout applied! Net impact: ${impactText} to sleep time`, '🏋️');
             
             // Update button to show it's applied
             const btn = document.getElementById('applyWorkoutBtn');
             btn.textContent = '✓ Workout Applied';
             btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+            
+            // Show reset button
+            const resetBtn = document.getElementById('resetWorkoutBtn');
+            if (resetBtn) resetBtn.style.display = 'block';
+        }
+        
+        function resetWorkoutPlan() {
+            // Reset workout plan in state
+            state.workoutPlan = {
+                active: false,
+                time: null,
+                duration: 45,
+                type: 'lifting',
+                intensity: 'medium',
+                fasted: false,
+                coldShower: false,
+                applied: false,
+                adenosineBonus: 0,
+                cortisolDelay: 0,
+                thermalDelay: 0,
+                cooldownComplete: null
+            };
+            
+            // Also reset the heavyLift modifier
+            state.modifiers.heavyLift.active = false;
+            const liftingEl = document.querySelector('[data-modifier="heavyLift"]');
+            if (liftingEl) liftingEl.classList.remove('active');
+            
+            // Reset UI
+            const applyBtn = document.getElementById('applyWorkoutBtn');
+            if (applyBtn) {
+                applyBtn.textContent = '✓ Apply This Workout to Calculation';
+                applyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            }
+            
+            const resetBtn = document.getElementById('resetWorkoutBtn');
+            if (resetBtn) resetBtn.style.display = 'none';
+            
+            // Reset form
+            document.getElementById('workoutFasted').checked = false;
+            document.getElementById('coldShowerToggle').checked = false;
+            
+            // Save and recalculate
+            saveState();
+            recalculate();
+            initWorkoutPlanner(); // Re-initialize preview
+            
+            showToast('Workout plan reset', '🔄');
         }
 
         function toggleSettings() {
@@ -3249,6 +3398,9 @@
             updateStatusItem('ampStatus', ampOk, currentAmpLoad, effectiveThreshold);
             updateStatusItem('caffStatus', caffOk, currentCaffLoad, caffThreshold);
             
+            // Update workout status display
+            updateWorkoutStatus();
+            
             // Calculate sleep time
             const { sleepTime, blockingFactors } = calculateSleepTime();
             
@@ -3345,6 +3497,49 @@
             
             indicator.textContent = isOk ? '✓' : '⏳';
             statusItem.className = `status-item ${isOk ? 'ok' : 'blocking'}`;
+        }
+        
+        function updateWorkoutStatus() {
+            const workoutItem = document.getElementById('workoutStatusItem');
+            const workoutStatusEl = document.getElementById('workoutStatus');
+            const workoutIndicatorEl = document.getElementById('workoutIndicator');
+            
+            if (!workoutItem || !workoutStatusEl || !workoutIndicatorEl) return;
+            
+            const wp = state.workoutPlan;
+            
+            if (wp && wp.applied) {
+                workoutItem.style.display = 'flex';
+                
+                const netImpact = (wp.cortisolDelay || 0) + (wp.thermalDelay || 0) - (wp.adenosineBonus || 0);
+                
+                if (netImpact > 30) {
+                    // Significant delay
+                    workoutStatusEl.textContent = `+${Math.round(netImpact)} min`;
+                    workoutIndicatorEl.textContent = '⚠️';
+                    workoutItem.className = 'status-item blocking';
+                    workoutItem.style.borderLeftColor = '#f59e0b';
+                } else if (netImpact > 0) {
+                    // Minor delay
+                    workoutStatusEl.textContent = `+${Math.round(netImpact)} min`;
+                    workoutIndicatorEl.textContent = '⏳';
+                    workoutItem.className = 'status-item ok';
+                    workoutItem.style.borderLeftColor = '#f59e0b';
+                } else if (netImpact < 0) {
+                    // Beneficial (adenosine bonus outweighs delays)
+                    workoutStatusEl.textContent = `${Math.round(netImpact)} min`;
+                    workoutIndicatorEl.textContent = '✓';
+                    workoutItem.className = 'status-item ok';
+                    workoutItem.style.borderLeftColor = '#10b981';
+                } else {
+                    workoutStatusEl.textContent = 'Neutral';
+                    workoutIndicatorEl.textContent = '✓';
+                    workoutItem.className = 'status-item ok';
+                    workoutItem.style.borderLeftColor = '#10b981';
+                }
+            } else {
+                workoutItem.style.display = 'none';
+            }
         }
 
         // ============================================
@@ -4074,6 +4269,44 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('NOW', nowX, padding.top - 5);
             }
+            
+            // Draw projected sleep time marker
+            const { sleepTime } = calculateSleepTime();
+            let displaySleepTime = sleepTime;
+            if (displaySleepTime < 0) displaySleepTime += 24 * 60;
+            if (displaySleepTime > 24 * 60) displaySleepTime -= 24 * 60;
+            
+            // Adjust for graph (which shows 6am to 3am next day)
+            let graphSleepTime = displaySleepTime;
+            if (displaySleepTime < startTime) graphSleepTime += 24 * 60; // Next day
+            
+            if (graphSleepTime >= startTime && graphSleepTime <= endTime) {
+                const sleepX = padding.left + ((graphSleepTime - startTime) / timeRange) * graphWidth;
+                
+                // Draw sleep time line
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(sleepX, padding.top);
+                ctx.lineTo(sleepX, height - padding.bottom);
+                ctx.stroke();
+                
+                // Sleep time arrow at bottom
+                ctx.fillStyle = '#a855f7';
+                ctx.beginPath();
+                ctx.moveTo(sleepX, height - padding.bottom + 5);
+                ctx.lineTo(sleepX - 6, height - padding.bottom + 12);
+                ctx.lineTo(sleepX + 6, height - padding.bottom + 12);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Label
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('💤 SLEEP', sleepX, height - padding.bottom + 24);
+                ctx.fillText(minutesToTime(displaySleepTime), sleepX, height - padding.bottom + 35);
+            }
         }
 
         // ============================================
@@ -4751,17 +4984,25 @@
                     if (data && data.state) {
                         const firebaseState = data.state;
                         
-                        // Smart merge - keep local data if Firebase data is empty/missing
+                        // Prefer Firebase data over local (Firebase is source of truth when available)
+                        // Only fallback to local if Firebase field is explicitly undefined/null
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            medications: (firebaseState.medications && firebaseState.medications.length > 0) ? firebaseState.medications : state.medications,
-                            caffeine: (firebaseState.caffeine && firebaseState.caffeine.length > 0) ? firebaseState.caffeine : state.caffeine,
-                            history: (firebaseState.history && firebaseState.history.length > 0) ? firebaseState.history : state.history,
+                            // For arrays: use Firebase data if it exists (even if empty), otherwise keep local
+                            medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
+                            caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
+                            history: firebaseState.history !== undefined ? firebaseState.history : state.history,
                             modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                             settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
+                            sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
+                            workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) }
                         };
+                        
+                        // Ensure arrays are actually arrays (Firebase can turn empty arrays into null)
+                        if (!Array.isArray(state.medications)) state.medications = [];
+                        if (!Array.isArray(state.caffeine)) state.caffeine = [];
+                        if (!Array.isArray(state.history)) state.history = [];
                         
                         // Save merged state to localStorage
                         localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
@@ -4779,6 +5020,12 @@
                         renderCaffeineEntries();
                         renderSleepCalendar();
                         renderHistory();
+                        
+                        // Restore workout plan UI if applied
+                        if (state.workoutPlan && state.workoutPlan.applied) {
+                            restoreWorkoutPlanUI();
+                        }
+                        
                         recalculate();
                         
                         updateSyncStatus('connected', 'Synced ✓');
@@ -4801,6 +5048,42 @@
                     // Try to save anyway
                     saveToFirebase();
                 });
+        }
+        
+        // Restore workout plan UI from state
+        function restoreWorkoutPlanUI() {
+            const wp = state.workoutPlan;
+            if (!wp || !wp.applied) return;
+            
+            // Restore form values
+            const timeInput = document.getElementById('workoutTime');
+            const durationInput = document.getElementById('workoutDuration');
+            const typeSelect = document.getElementById('workoutType');
+            const intensitySelect = document.getElementById('workoutIntensity');
+            const fastedCheckbox = document.getElementById('workoutFasted');
+            const coldShowerCheckbox = document.getElementById('coldShowerToggle');
+            
+            if (timeInput && wp.time) timeInput.value = wp.time;
+            if (durationInput && wp.duration) durationInput.value = wp.duration;
+            if (typeSelect && wp.type) typeSelect.value = wp.type;
+            if (intensitySelect && wp.intensity) intensitySelect.value = wp.intensity;
+            if (fastedCheckbox) fastedCheckbox.checked = wp.fasted || false;
+            if (coldShowerCheckbox) coldShowerCheckbox.checked = wp.coldShower || false;
+            
+            // Update button to show applied state
+            const btn = document.getElementById('applyWorkoutBtn');
+            if (btn) {
+                btn.textContent = '✓ Workout Applied';
+                btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+                btn.style.display = 'block';
+            }
+            
+            // Show reset button
+            const resetBtn = document.getElementById('resetWorkoutBtn');
+            if (resetBtn) resetBtn.style.display = 'block';
+            
+            // Update the workout preview
+            updateWorkoutPlan();
         }
         
         // Real-time sync - listen for changes from other devices
@@ -4842,13 +5125,19 @@
                     state = {
                         wakeTime: firebaseState.wakeTime || state.wakeTime,
                         hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                        medications: firebaseState.medications || state.medications,
-                        caffeine: firebaseState.caffeine || state.caffeine,
-                        history: firebaseState.history || state.history,
+                        medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
+                        caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
+                        history: firebaseState.history !== undefined ? firebaseState.history : state.history,
                         modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                         settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) }
+                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
+                        workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) }
                     };
+                    
+                    // Ensure arrays are actually arrays
+                    if (!Array.isArray(state.medications)) state.medications = [];
+                    if (!Array.isArray(state.caffeine)) state.caffeine = [];
+                    if (!Array.isArray(state.history)) state.history = [];
                     
                     // Update localStorage
                     localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
@@ -4860,6 +5149,12 @@
                     renderCaffeineEntries();
                     renderSleepCalendar();
                     renderHistory();
+                    
+                    // Restore workout plan if applied
+                    if (state.workoutPlan && state.workoutPlan.applied) {
+                        restoreWorkoutPlanUI();
+                    }
+                    
                     recalculate();
                     
                     updateSyncStatus('connected', '🔄 Updated');
@@ -4918,9 +5213,10 @@
                 state = {
                     ...state,
                     ...loaded,
-                    modifiers: { ...state.modifiers, ...loaded.modifiers },
-                    settings: { ...state.settings, ...loaded.settings },
-                    sleepHistory: { ...state.sleepHistory, ...loaded.sleepHistory }
+                    modifiers: { ...state.modifiers, ...(loaded.modifiers || {}) },
+                    settings: { ...state.settings, ...(loaded.settings || {}) },
+                    sleepHistory: { ...state.sleepHistory, ...(loaded.sleepHistory || {}) },
+                    workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) }
                 };
                 
                 // Clear today's entries (fresh start each day)
@@ -4932,8 +5228,25 @@
                     state.medications = [];
                     state.caffeine = [];
                     Object.keys(state.modifiers).forEach(k => {
-                        state.modifiers[k].active = false;
+                        if (state.modifiers[k]) {
+                            state.modifiers[k].active = false;
+                        }
                     });
+                    // Reset workout plan for new day
+                    state.workoutPlan = {
+                        active: false,
+                        time: null,
+                        duration: 45,
+                        type: 'lifting',
+                        intensity: 'medium',
+                        fasted: false,
+                        coldShower: false,
+                        applied: false,
+                        adenosineBonus: 0,
+                        cortisolDelay: 0,
+                        thermalDelay: 0,
+                        cooldownComplete: null
+                    };
                 }
                 
                 // Clean up old sleep history entries (keep only last 14 days)
@@ -4956,14 +5269,42 @@
                 state.medications = [];
                 state.caffeine = [];
                 Object.keys(state.modifiers).forEach(k => {
-                    state.modifiers[k].active = false;
+                    if (state.modifiers[k]) {
+                        state.modifiers[k].active = false;
+                    }
                 });
+                
+                // Reset workout plan
+                state.workoutPlan = {
+                    active: false,
+                    time: null,
+                    duration: 45,
+                    type: 'lifting',
+                    intensity: 'medium',
+                    fasted: false,
+                    coldShower: false,
+                    applied: false,
+                    adenosineBonus: 0,
+                    cortisolDelay: 0,
+                    thermalDelay: 0,
+                    cooldownComplete: null
+                };
+                
+                // Reset workout planner UI
+                const applyBtn = document.getElementById('applyWorkoutBtn');
+                if (applyBtn) {
+                    applyBtn.textContent = '✓ Apply This Workout to Calculation';
+                    applyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    applyBtn.style.display = 'none';
+                }
                 
                 renderMedEntries();
                 renderCaffeineEntries();
                 document.querySelectorAll('.modifier-item').forEach(el => el.classList.remove('active'));
                 updateModifierTimeInputs();
+                initWorkoutPlanner(); // Re-initialize workout planner
                 recalculate();
+                saveState();
                 showToast('Today cleared');
             }
         }
@@ -5007,7 +5348,7 @@
             
             // Restore modifier states
             Object.keys(state.modifiers).forEach(key => {
-                if (state.modifiers[key].active) {
+                if (state.modifiers[key] && state.modifiers[key].active) {
                     const el = document.querySelector(`[data-modifier="${key}"]`);
                     if (el) el.classList.add('active');
                 }
@@ -5016,6 +5357,11 @@
             
             // Initialize workout planner
             initWorkoutPlanner();
+            
+            // Restore workout plan UI if previously applied
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                restoreWorkoutPlanUI();
+            }
             
             // Initial calculation
             recalculate();
