@@ -108,9 +108,9 @@
         .stat-card.clickable-card::after {
             content: '▼';
             position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 0.7em;
+            top: 8px;
+            right: 8px;
+            font-size: 0.6em;
             color: #999;
             transition: transform 0.3s ease;
         }
@@ -121,36 +121,66 @@
 
         .dashboard-expansion {
             display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            max-width: 90vw;
             background: white;
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            z-index: 100;
-            max-height: 250px;
-            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 2000;
+            max-height: 70vh;
+            overflow: hidden;
         }
 
         .dashboard-expansion.show {
-            display: block;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .expansion-header {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expansion-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .expansion-close:hover {
+            background: rgba(255,255,255,0.3);
         }
 
         .expansion-content {
-            padding: 8px;
+            padding: 12px;
+            overflow-y: auto;
+            flex: 1;
         }
 
         .expansion-task {
             display: flex;
             align-items: flex-start;
-            gap: 6px;
-            padding: 6px 8px;
-            margin-bottom: 4px;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
             background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 0.8em;
-            border-left: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 0.9em;
+            border-left: 3px solid #667eea;
             transition: background 0.2s ease;
         }
 
@@ -159,34 +189,48 @@
         }
 
         .expansion-task-check {
-            width: 16px;
-            height: 16px;
-            min-width: 16px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
             cursor: pointer;
-            margin-top: 1px;
+            margin-top: 2px;
             accent-color: #667eea;
         }
 
         .expansion-task-text {
             flex: 1;
-            line-height: 1.3;
+            line-height: 1.4;
             color: #333;
         }
 
         .expansion-task-category {
-            font-size: 0.7em;
-            color: #999;
+            font-size: 0.75em;
+            color: #888;
             font-weight: 600;
             display: block;
-            margin-top: 2px;
+            margin-top: 4px;
         }
 
         .expansion-empty {
             text-align: center;
             color: #999;
-            padding: 10px;
-            font-size: 0.85em;
-            font-style: italic;
+            padding: 30px;
+            font-size: 1em;
+        }
+
+        .expansion-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+        }
+
+        .expansion-backdrop.show {
+            display: block;
         }
 
         .stat-card h3 {
@@ -816,10 +860,10 @@
                 font-size: 0.5em;
             }
             
+            /* Dashboard expansion modal - mobile */
             .dashboard-expansion {
-                min-width: 250px;
-                left: auto;
-                right: 0;
+                width: 90vw;
+                max-width: 350px;
             }
             
             /* Category tabs smaller */
@@ -2681,34 +2725,46 @@
                 <h3>Do Today</h3>
                 <div class="level-display" id="tasksToDoToday">0</div>
                 <div class="xp-text">Critical 🔴</div>
-                <div class="dashboard-expansion" id="expansionDoToday">
-                    <div class="expansion-content" id="contentDoToday">
-                        <!-- Tasks will be inserted here -->
-                    </div>
-                </div>
             </div>
 
             <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('remaining')">
                 <h3>Remaining</h3>
                 <div class="level-display" id="tasksRemaining">0</div>
                 <div class="xp-text">Let's go 💪</div>
-                <div class="dashboard-expansion" id="expansionRemaining">
-                    <div class="expansion-content" id="contentRemaining">
-                        <!-- Tasks will be inserted here -->
-                    </div>
-                </div>
             </div>
 
-            <div class="stat-card clickable-card" onclick="toggleCompletedTasks()" style="cursor: pointer;">
+            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('completed')">
                 <h3>Completed</h3>
                 <div class="level-display" id="totalTasks">0</div>
                 <div class="xp-text">All-time 🏆</div>
-                
-                <!-- Expandable Completed Tasks List -->
-                <div id="completedTasksList" style="display: none; margin-top: 10px; max-height: 300px; overflow-y: auto; border-top: 1px solid #ddd; padding-top: 10px;">
-                    <!-- Completed tasks will be inserted here -->
-                </div>
             </div>
+        </div>
+
+        <!-- Dashboard Expansion Modals (moved outside stats container) -->
+        <div class="expansion-backdrop" id="expansionBackdrop" onclick="closeAllExpansions()"></div>
+        
+        <div class="dashboard-expansion" id="expansionDoToday">
+            <div class="expansion-header">
+                <span>🔴 Do Today Tasks</span>
+                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+            </div>
+            <div class="expansion-content" id="contentDoToday"></div>
+        </div>
+        
+        <div class="dashboard-expansion" id="expansionRemaining">
+            <div class="expansion-header">
+                <span>💪 Remaining Tasks</span>
+                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+            </div>
+            <div class="expansion-content" id="contentRemaining"></div>
+        </div>
+        
+        <div class="dashboard-expansion" id="expansionCompleted">
+            <div class="expansion-header">
+                <span>🏆 Completed Tasks</span>
+                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+            </div>
+            <div class="expansion-content" id="contentCompleted"></div>
         </div>
 
         <!-- ==================== FOCUS MODE CONTAINER ==================== -->
@@ -5019,6 +5075,23 @@
                 saveData();
             }
         }, 120000); // 2 minutes
+
+        // Global escape key handler to close any open modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close dashboard expansions
+                closeAllExpansions();
+                
+                // Close modals
+                const modals = document.querySelectorAll('.modal-overlay.show, .help-modal-overlay.show');
+                modals.forEach(modal => modal.classList.remove('show'));
+                
+                // Stop any active Pomodoro timer countdown sound if needed
+                if (typeof pomodoroAlarm !== 'undefined' && pomodoroAlarm) {
+                    pomodoroAlarm.pause();
+                }
+            }
+        });
 
         // Medication Tracking Functions
         function updateMedicationDisplay() {
@@ -8665,45 +8738,62 @@
             saveData();
         }
 
-        // Dashboard expansion functions
+        // Dashboard expansion functions - Modal Style
         function toggleDashboardExpansion(type) {
-            const expansion = document.getElementById(`expansion${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            const card = expansion.closest('.stat-card');
+            const expansionId = `expansion${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            const expansion = document.getElementById(expansionId);
+            const backdrop = document.getElementById('expansionBackdrop');
+            
+            if (!expansion) return;
             
             if (expansion.classList.contains('show')) {
-                expansion.classList.remove('show');
-                card.classList.remove('expanded');
+                closeAllExpansions();
             } else {
-                // Close other expansions
-                document.querySelectorAll('.dashboard-expansion').forEach(exp => {
-                    exp.classList.remove('show');
-                    exp.closest('.stat-card')?.classList.remove('expanded');
-                });
+                // Close any open expansions first
+                closeAllExpansions();
                 
                 // Open this one
                 expansion.classList.add('show');
-                card.classList.add('expanded');
+                backdrop.classList.add('show');
                 
                 // Populate content
                 updateDashboardExpansion(type);
             }
         }
 
+        function closeAllExpansions() {
+            document.querySelectorAll('.dashboard-expansion').forEach(exp => {
+                exp.classList.remove('show');
+            });
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.remove('expanded');
+            });
+            const backdrop = document.getElementById('expansionBackdrop');
+            if (backdrop) backdrop.classList.remove('show');
+        }
+
         function updateDashboardExpansion(type) {
-            const content = document.getElementById(`content${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const contentId = `content${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            const content = document.getElementById(contentId);
+            if (!content) return;
             
             let tasksToShow = [];
             
             if (type === 'doToday') {
-                // Show all uncompleted tasks marked as "Do Today"
                 tasksToShow = tasks.filter(t => t.doToday && !t.completed);
             } else if (type === 'remaining') {
-                // Show all uncompleted tasks
                 tasksToShow = tasks.filter(t => !t.completed);
+            } else if (type === 'completed') {
+                tasksToShow = tasks.filter(t => t.completed);
+                // Sort by completion time (newest first)
+                tasksToShow.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
             }
             
             if (tasksToShow.length === 0) {
-                content.innerHTML = '<div class="expansion-empty">No tasks here! 🎉</div>';
+                const emptyMessage = type === 'completed' 
+                    ? 'No completed tasks yet. Complete a task to see it here!' 
+                    : 'No tasks here! 🎉';
+                content.innerHTML = `<div class="expansion-empty">${emptyMessage}</div>`;
                 return;
             }
             
@@ -8727,124 +8817,71 @@
                 life: 'Life'
             };
             
-            content.innerHTML = tasksToShow.map(task => `
-                <div class="expansion-task">
-                    <input type="checkbox" 
-                           class="expansion-task-check" 
-                           onchange="toggleTaskFromDashboard(${task.id}, '${type}')"
-                           ${task.completed ? 'checked' : ''}>
-                    <span class="expansion-task-text">
-                        ${task.text}
-                        <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || task.category || 'Task'}</span>
-                    </span>
-                </div>
-            `).join('');
+            if (type === 'completed') {
+                // Completed tasks - show with uncomplete option
+                content.innerHTML = tasksToShow.map(task => `
+                    <div class="expansion-task" style="border-left-color: #10b981;">
+                        <input type="checkbox" 
+                               class="expansion-task-check" 
+                               checked
+                               onchange="uncompleteTaskFromDashboard(${task.id})"
+                               title="Click to mark as incomplete">
+                        <span class="expansion-task-text" style="text-decoration: line-through; opacity: 0.7;">
+                            ${task.text}
+                            <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || 'Task'}</span>
+                        </span>
+                    </div>
+                `).join('');
+            } else {
+                // Incomplete tasks
+                content.innerHTML = tasksToShow.map(task => `
+                    <div class="expansion-task">
+                        <input type="checkbox" 
+                               class="expansion-task-check" 
+                               onchange="toggleTaskFromDashboard(${task.id}, '${type}')"
+                               ${task.completed ? 'checked' : ''}>
+                        <span class="expansion-task-text">
+                            ${task.text}
+                            <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || task.category || 'Task'}</span>
+                        </span>
+                    </div>
+                `).join('');
+            }
         }
 
         function toggleTaskFromDashboard(taskId, expansionType) {
             toggleTask(taskId);
-            // Refresh the expansion
             updateDashboardExpansion(expansionType);
+            updateStats();
         }
 
-        // ============================================
-        // COMPLETED TASKS DROPDOWN FUNCTIONS
-        // ============================================
-        
-        function toggleCompletedTasks() {
-            const completedList = document.getElementById('completedTasksList');
-            const card = completedList.closest('.stat-card');
-            
-            if (completedList.style.display === 'none') {
-                completedList.style.display = 'block';
-                card.classList.add('expanded');
-                renderCompletedTasks();
-            } else {
-                completedList.style.display = 'none';
-                card.classList.remove('expanded');
-            }
-        }
-        
-        function renderCompletedTasks() {
-            const completedList = document.getElementById('completedTasksList');
-            const completedTasks = tasks.filter(t => t.completed);
-            
-            // Sort by completion time (newest first)
-            completedTasks.sort((a, b) => {
-                const timeA = a.completedAt || 0;
-                const timeB = b.completedAt || 0;
-                return timeB - timeA; // Newest first
-            });
-            
-            if (completedTasks.length === 0) {
-                completedList.innerHTML = `
-                    <div style="text-align: center; padding: 20px; color: #666;">
-                        <p>No completed tasks yet. Complete a task to see it here!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Category emoji mapping
-            const categoryIcons = {
-                financial: '💰',
-                clinic: '🏥',
-                health: '❤️',
-                school: '📚',
-                academic: '🎓',
-                future: '🚀',
-                life: '🌟'
-            };
-            
-            const categoryNames = {
-                financial: 'Financial',
-                clinic: 'Clinic Requirements',
-                health: 'Health & Wellbeing',
-                school: 'School Maintenance',
-                academic: 'Academic & Didactic',
-                future: 'Future Job & Life',
-                life: 'General Life Maintenance'
-            };
-            
-            completedList.innerHTML = completedTasks.map(task => {
-                const categoryIcon = categoryIcons[task.category] || '📋';
-                
-                return `
-                    <div style="padding: 4px 8px; margin-bottom: 3px; border-radius: 3px; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 8px;"
-                         onmouseover="this.style.background='#f0f0f0'" 
-                         onmouseout="this.style.background='transparent'"
-                         onclick="uncompleteTask(${task.id})">
-                        <span style="font-size: 0.85em; opacity: 0.7;">✓</span>
-                        <span style="flex: 1; font-size: 0.9em; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${task.text}</span>
-                        <span style="font-size: 0.8em; opacity: 0.6;">${categoryIcon}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function uncompleteTask(taskId) {
+        function uncompleteTaskFromDashboard(taskId) {
             const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-            
-            const xpValue = task.xp || 20;
-            
-            if (confirm(`Mark "${task.text}" as incomplete?\n\nThis will:\n• Return it to ${task.category}\n• Subtract ${xpValue} XP`)) {
-                // Remove XP
-                stats.totalXPGained = Math.max(0, stats.totalXPGained - xpValue);
-                stats.categoryXPGained[task.category] = Math.max(0, (stats.categoryXPGained[task.category] || 0) - xpValue);
-                stats.totalTasks = Math.max(0, stats.totalTasks - 1);
-                
-                // Mark as incomplete and clear timestamp
+            if (task && task.completed) {
                 task.completed = false;
-                task.completedAt = null;
-                
+                delete task.completedAt;
+                stats.totalXPGained -= 20;
+                stats.totalTasks--;
                 saveData();
                 updateStats();
                 renderTasks();
-                renderCompletedTasks();
-                
-                showToast(`Task returned to ${task.category}`, '↩️');
+                updateDashboardExpansion('completed');
+                showToast('Task marked as incomplete', '↩️');
             }
+        }
+
+        // Legacy function - redirect to new system
+        function toggleCompletedTasks() {
+            toggleDashboardExpansion('completed');
+        }
+        
+        function renderCompletedTasks() {
+            updateDashboardExpansion('completed');
+        }
+
+        // Legacy uncomplete function - uses the new system  
+        function uncompleteTask(taskId) {
+            uncompleteTaskFromDashboard(taskId);
         }
 
         function updateStats() {
