@@ -82,6 +82,7 @@
             gap: 12px;
             margin-bottom: 20px;
             justify-content: center;
+            align-items: flex-start;
         }
 
         .stat-card {
@@ -90,9 +91,8 @@
             padding: 12px 16px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             animation: slideUp 0.5s ease-out;
-            flex: 1;
-            min-width: 140px;
-            max-width: 180px;
+            flex: 0 0 auto;
+            width: 150px;
         }
 
         .stat-card.clickable-card {
@@ -120,21 +120,25 @@
         }
 
         .dashboard-expansion {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            margin-top: 0;
-        }
-
-        .dashboard-expansion.show {
-            max-height: 300px;
-            margin-top: 10px;
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            z-index: 100;
+            max-height: 250px;
             overflow-y: auto;
         }
 
+        .dashboard-expansion.show {
+            display: block;
+        }
+
         .expansion-content {
-            border-top: 1px solid #e0e0e0;
-            padding-top: 8px;
+            padding: 8px;
         }
 
         .expansion-task {
@@ -142,7 +146,7 @@
             align-items: flex-start;
             gap: 6px;
             padding: 6px 8px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             background: #f8f9fa;
             border-radius: 6px;
             font-size: 0.8em;
@@ -173,7 +177,8 @@
             font-size: 0.7em;
             color: #999;
             font-weight: 600;
-            margin-left: 4px;
+            display: block;
+            margin-top: 2px;
         }
 
         .expansion-empty {
@@ -1604,283 +1609,220 @@
             max-height: 85vh;
         }
 
-        /* Daily Planner Styles */
+        /* Daily Planner Styles - Google Calendar Style */
         .planner-modal {
-            max-width: 500px;
+            max-width: 400px;
             max-height: 90vh;
-            overflow-y: auto;
-            padding: 20px;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .planner-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .planner-header h3 {
+            margin: 0;
+            font-size: 1.1em;
         }
 
         .planner-date {
-            font-size: 0.95em;
-            color: #666;
+            font-size: 0.85em;
+            opacity: 0.9;
         }
 
-        .planner-goal {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 15px;
+        .planner-input-bar {
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        .planner-goal-label {
-            font-size: 0.8em;
-            color: #92400e;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .planner-goal-input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 2px solid #fbbf24;
-            border-radius: 6px;
-            font-size: 0.9em;
-            background: white;
-        }
-
-        .planner-times {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .planner-time-box {
-            flex: 1;
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .planner-time-box.sleep {
-            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-        }
-
-        .planner-time-label {
-            font-size: 0.7em;
-            color: #1e40af;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .planner-time-input {
-            width: 100%;
-            padding: 6px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .planner-blocks {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 15px;
-            max-height: 280px;
-            overflow-y: auto;
-        }
-
-        .planner-block {
+        .planner-quick-add {
             display: flex;
             gap: 8px;
-            align-items: center;
-            background: white;
+        }
+
+        .planner-task-input {
+            flex: 1;
+            padding: 10px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
-            padding: 8px 10px;
-            transition: all 0.2s ease;
+            font-size: 0.9em;
         }
 
-        .planner-block:hover {
-            border-color: #667eea;
-        }
-
-        .planner-block.completed {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-color: #10b981;
-        }
-
-        .planner-block.current {
-            border-color: #f59e0b;
-            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
-        }
-
-        .planner-block-time {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            min-width: 160px;
-            flex-shrink: 0;
-            font-size: 0.85em;
-        }
-
-        .planner-block-time input {
-            width: 70px;
-            padding: 4px 6px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 0.85em;
-            text-align: center;
-        }
-
-        .planner-block-task {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 0.85em;
-            min-width: 80px;
-        }
-
-        .planner-block-task:focus {
+        .planner-task-input:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        .planner-block-check {
-            width: 20px;
-            height: 20px;
+        .planner-time-select {
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9em;
+            background: white;
             cursor: pointer;
-            accent-color: #10b981;
-        }
-
-        .planner-block-delete {
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 1em;
-            padding: 4px;
-            transition: color 0.2s;
-        }
-
-        .planner-block-delete:hover {
-            color: #ef4444;
         }
 
         .planner-add-btn {
-            width: 100%;
-            padding: 10px;
+            padding: 10px 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 0.9em;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .planner-add-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            opacity: 0.9;
         }
 
-        /* Planner Stats - Compact */
-        .planner-stats {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            padding: 10px;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border-radius: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .planner-stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 6px 12px;
+        .planner-timeline-container {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
             background: white;
-            border-radius: 6px;
-            min-width: 60px;
+            min-height: 400px;
+            max-height: 60vh;
         }
 
-        .planner-stat-icon {
-            font-size: 1em;
-            margin-bottom: 2px;
+        .planner-timeline {
+            position: relative;
+            min-height: 1200px; /* 20 hours * 60px per hour */
         }
 
-        .planner-stat-value {
-            font-size: 0.95em;
-            font-weight: 700;
-            color: #1e40af;
+        .planner-hour-row {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 60px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
         }
 
-        .planner-stat-label {
-            font-size: 0.6em;
+        .planner-hour-label {
+            width: 50px;
+            padding: 4px 8px;
+            font-size: 0.75em;
             color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            text-align: right;
+            flex-shrink: 0;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .planner-hour-slot {
+            flex: 1;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .planner-hour-slot:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .planner-current-time-line {
+            position: absolute;
+            left: 50px;
+            right: 0;
+            height: 2px;
+            background: #ef4444;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .planner-current-time-line::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+        }
+
+        .planner-event {
+            position: absolute;
+            left: 54px;
+            right: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.8em;
+            overflow: hidden;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .planner-event:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .planner-event.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            opacity: 0.8;
+        }
+
+        .planner-event-title {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planner-event-time {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .planner-footer {
+            padding: 10px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .planner-footer-stats {
+            font-size: 0.8em;
+            color: #6b7280;
+        }
+
+        .planner-close-btn {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         @media (max-width: 500px) {
-            .planner-stats {
-                gap: 6px;
+            .planner-modal {
+                max-width: 100%;
+                max-height: 100vh;
+                border-radius: 0;
             }
-            .planner-stat {
-                padding: 4px 8px;
-                min-width: 50px;
+            .planner-quick-add {
+                flex-wrap: wrap;
             }
-            .planner-block-time {
-                min-width: 120px;
+            .planner-task-input {
+                width: 100%;
             }
-            .planner-block-time input {
-                width: 55px;
-            }
-        }
-
-        .planner-progress {
-            margin-top: 12px;
-            padding: 10px;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-radius: 8px;
-        }
-
-        .planner-progress-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-
-        .planner-progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-
-        .planner-progress-text {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8em;
-            color: #065f46;
-            font-weight: 600;
-        }
-
-        .planner-reset-info {
-            text-align: center;
-            font-size: 0.7em;
-            color: #9ca3af;
-            margin-top: 10px;
         }
 
         .notebook-tabs {
@@ -2963,7 +2905,7 @@
                     </div>
                 </div>
 
-                <!-- Daily Planner Modal -->
+                <!-- Daily Planner Modal - Google Calendar Style -->
                 <div class="modal-overlay" id="dailyPlannerModal" onclick="closeDailyPlanner()">
                     <div class="modal-content planner-modal" onclick="event.stopPropagation()">
                         <div class="planner-header">
@@ -2971,54 +2913,39 @@
                             <div class="planner-date" id="plannerDate">Today</div>
                         </div>
 
-                        <div class="planner-goal">
-                            <div class="planner-goal-label">🎯 Today's Main Goal</div>
-                            <input type="text" class="planner-goal-input" id="plannerGoal" placeholder="What's the ONE thing you must accomplish today?" oninput="saveDailyPlanner()">
-                        </div>
-
-                        <div class="planner-times">
-                            <div class="planner-time-box">
-                                <div class="planner-time-label">⏰ Now</div>
-                                <div id="plannerCurrentTime" style="font-size: 1.1em; font-weight: 700; color: #1e40af;">--:--</div>
-                            </div>
-                            <div class="planner-time-box sleep">
-                                <div class="planner-time-label">🌙 Bedtime</div>
-                                <input type="time" class="planner-time-input" id="plannerBedtime" value="23:00" oninput="saveDailyPlanner()">
-                            </div>
-                        </div>
-
-                        <div class="planner-blocks" id="plannerBlocks">
-                            <!-- Time blocks will be inserted here -->
-                        </div>
-
-                        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                            <button class="planner-add-btn" onclick="addPlannerBlock()" style="flex: 1;">+ Add Block</button>
-                            <button class="planner-add-btn" onclick="addQuickBreak()" style="flex: 0; padding: 10px 12px; background: linear-gradient(135deg, #f59e0b, #d97706); font-size: 0.8em;">☕ Break</button>
-                            <button class="planner-add-btn" onclick="addQuickPomodoro()" style="flex: 0; padding: 10px 12px; background: linear-gradient(135deg, #ef4444, #dc2626); font-size: 0.8em;">🍅 Focus</button>
-                        </div>
-
-                        <!-- Day at a Glance Stats -->
-                        <div class="planner-stats" id="plannerStatsContainer">
-                            <!-- Stats will be inserted here -->
-                        </div>
-
-                        <div class="planner-progress">
-                            <div class="planner-progress-text">
-                                <span>Tasks Progress</span>
-                                <span id="plannerProgressPercent">0%</span>
-                            </div>
-                            <div class="planner-progress-bar">
-                                <div class="planner-progress-fill" id="plannerProgressFill" style="width: 0%"></div>
+                        <!-- Quick Add Input -->
+                        <div class="planner-input-bar">
+                            <div class="planner-quick-add">
+                                <input type="text" class="planner-task-input" id="plannerNewTask" placeholder="What do you need to do?" onkeypress="if(event.key==='Enter')addPlannerEvent()">
+                                <input type="time" class="planner-time-select" id="plannerNewTime" value="09:00">
+                                <select class="planner-time-select" id="plannerNewDuration" style="width: 70px;">
+                                    <option value="15">15m</option>
+                                    <option value="30" selected>30m</option>
+                                    <option value="45">45m</option>
+                                    <option value="60">1h</option>
+                                    <option value="90">1.5h</option>
+                                    <option value="120">2h</option>
+                                </select>
+                                <button class="planner-add-btn" onclick="addPlannerEvent()">+</button>
                             </div>
                         </div>
 
-                        <div class="planner-reset-info">
-                            ⏰ Planner auto-resets daily at 5:00 AM • Tasks auto-sort by time
+                        <!-- Timeline -->
+                        <div class="planner-timeline-container" id="plannerTimelineContainer">
+                            <div class="planner-timeline" id="plannerTimeline">
+                                <!-- Hour rows and events will be inserted here by JS -->
+                            </div>
                         </div>
 
-                        <div style="margin-top: 12px; display: flex; gap: 8px;">
-                            <button class="modal-btn" onclick="clearDailyPlanner()" style="background: #ef4444; flex: 1; padding: 10px;">Clear All</button>
-                            <button class="modal-btn primary" onclick="closeDailyPlanner()" style="flex: 2; padding: 10px;">Close</button>
+                        <!-- Footer -->
+                        <div class="planner-footer">
+                            <div class="planner-footer-stats" id="plannerFooterStats">
+                                0 tasks • 0h planned
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="clearDailyPlanner()" style="padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">Clear</button>
+                                <button class="planner-close-btn" onclick="closeDailyPlanner()">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6528,12 +6455,6 @@
         }
 
         function saveDailyPlanner() {
-            // Update goal and bedtime from inputs if modal is open
-            const goalInput = document.getElementById('plannerGoal');
-            const bedtimeInput = document.getElementById('plannerBedtime');
-            if (goalInput) dailyPlanner.goal = goalInput.value;
-            if (bedtimeInput) dailyPlanner.bedtime = bedtimeInput.value;
-            
             localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
             
             // Save to main Firebase data (under user's path)
@@ -6556,8 +6477,6 @@
                 if (!dailyPlanner) {
                     dailyPlanner = {
                         date: getTodayDateString(),
-                        goal: '',
-                        bedtime: '23:00',
                         blocks: []
                     };
                 }
@@ -6573,17 +6492,20 @@
                 const dateEl = document.getElementById('plannerDate');
                 if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', options);
                 
-                // Load values
-                const goalEl = document.getElementById('plannerGoal');
-                const bedtimeEl = document.getElementById('plannerBedtime');
-                if (goalEl) goalEl.value = dailyPlanner.goal || '';
-                if (bedtimeEl) bedtimeEl.value = dailyPlanner.bedtime || '23:00';
+                // Set default time to current time rounded up
+                const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                const roundedNow = new Date(now);
+                roundedNow.setMinutes(minutes);
+                const timeInput = document.getElementById('plannerNewTime');
+                if (timeInput) timeInput.value = roundedNow.toTimeString().slice(0, 5);
                 
-                renderPlannerBlocks();
-                updatePlannerProgress();
+                renderPlannerTimeline();
                 startPlannerClock();
                 
                 modal.classList.add('show');
+                
+                // Scroll to current time
+                setTimeout(() => scrollToCurrentTime(), 100);
             } catch (error) {
                 console.error('Error opening daily planner:', error);
             }
@@ -6593,402 +6515,271 @@
             saveDailyPlanner();
             const modal = document.getElementById('dailyPlannerModal');
             if (modal) modal.classList.remove('show');
+            if (plannerClockInterval) clearInterval(plannerClockInterval);
         }
 
         let plannerClockInterval = null;
         function startPlannerClock() {
             if (plannerClockInterval) clearInterval(plannerClockInterval);
             
-            function updateClock() {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                const el = document.getElementById('plannerCurrentTime');
-                if (el) el.textContent = timeStr;
-                
-                // Also highlight current time block and update stats (for bedtime countdown)
-                highlightCurrentBlock();
-                updatePlannerStats();
+            function updateTimeLine() {
+                updateCurrentTimeLine();
             }
             
-            updateClock();
-            plannerClockInterval = setInterval(updateClock, 60000); // Update every minute
+            updateTimeLine();
+            plannerClockInterval = setInterval(updateTimeLine, 60000); // Update every minute
         }
 
-        function highlightCurrentBlock() {
+        function updateCurrentTimeLine() {
+            const line = document.getElementById('plannerCurrentTimeLine');
+            if (!line) return;
+            
             const now = new Date();
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
             
-            document.querySelectorAll('.planner-block').forEach((block, index) => {
-                block.classList.remove('current');
-                
-                const plannerBlock = dailyPlanner.blocks[index];
-                if (plannerBlock && plannerBlock.startTime && plannerBlock.endTime) {
-                    const startParts = plannerBlock.startTime.split(':').map(Number);
-                    const endParts = plannerBlock.endTime.split(':').map(Number);
-                    const startMinutes = startParts[0] * 60 + startParts[1];
-                    const endMinutes = endParts[0] * 60 + endParts[1];
-                    
-                    if (currentMinutes >= startMinutes && currentMinutes < endMinutes && !plannerBlock.completed) {
-                        block.classList.add('current');
-                    }
-                }
-            });
-        }
-
-        function sortPlannerBlocks() {
-            // Ensure blocks array exists
-            if (!dailyPlanner.blocks) {
-                dailyPlanner.blocks = [];
-                return;
-            }
-            // Sort blocks by start time
-            dailyPlanner.blocks.sort((a, b) => {
-                if (!a.startTime) return 1;
-                if (!b.startTime) return -1;
-                return a.startTime.localeCompare(b.startTime);
-            });
-        }
-
-        function calculatePlannerStats() {
-            let totalMinutes = 0;
-            let completedMinutes = 0;
-            let breakMinutes = 0;
-            
-            // Ensure blocks array exists
-            if (!dailyPlanner.blocks) {
-                dailyPlanner.blocks = [];
+            // Day starts at 5 AM (hour 5) and ends at 1 AM next day (hour 25 conceptually)
+            let adjustedHour = hours;
+            if (hours < 5) {
+                adjustedHour = hours + 24; // 1 AM = 25, etc.
             }
             
-            dailyPlanner.blocks.forEach(block => {
-                if (block.startTime && block.endTime) {
-                    const start = block.startTime.split(':').map(Number);
-                    const end = block.endTime.split(':').map(Number);
-                    const startMins = start[0] * 60 + start[1];
-                    const endMins = end[0] * 60 + end[1];
-                    const duration = endMins - startMins;
-                    
-                    if (duration > 0) {
-                        // Check if it's a break (task contains "break" or "lunch" or "rest")
-                        const isBreak = block.task && /break|lunch|rest|relax|eat/i.test(block.task);
-                        
-                        if (isBreak) {
-                            breakMinutes += duration;
-                        } else {
-                            totalMinutes += duration;
-                            if (block.completed) {
-                                completedMinutes += duration;
-                            }
-                        }
-                    }
-                }
-            });
+            // Calculate position (5 AM = 0, 1 AM = 20 hours later)
+            const hoursSince5AM = adjustedHour - 5;
+            const totalMinutes = hoursSince5AM * 60 + minutes;
+            const position = totalMinutes; // 1 pixel per minute
             
-            return {
-                totalWork: totalMinutes,
-                completedWork: completedMinutes,
-                breakTime: breakMinutes,
-                remainingWork: totalMinutes - completedMinutes
-            };
+            if (hoursSince5AM >= 0 && hoursSince5AM <= 20) {
+                line.style.display = 'block';
+                line.style.top = position + 'px';
+            } else {
+                line.style.display = 'none';
+            }
         }
 
-        function formatMinutesToHours(mins) {
-            const hours = Math.floor(mins / 60);
-            const minutes = mins % 60;
-            if (hours === 0) return `${minutes}m`;
-            if (minutes === 0) return `${hours}h`;
-            return `${hours}h ${minutes}m`;
-        }
-
-        function renderPlannerBlocks() {
-            const container = document.getElementById('plannerBlocks');
+        function scrollToCurrentTime() {
+            const container = document.getElementById('plannerTimelineContainer');
             if (!container) return;
             
-            // Ensure blocks array exists
-            if (!dailyPlanner.blocks) {
-                dailyPlanner.blocks = [];
-            }
+            const now = new Date();
+            let adjustedHour = now.getHours();
+            if (adjustedHour < 5) adjustedHour += 24;
             
-            // Sort blocks by time before rendering
-            sortPlannerBlocks();
+            const hoursSince5AM = adjustedHour - 5;
+            const scrollPosition = Math.max(0, (hoursSince5AM - 2) * 60); // Scroll to 2 hours before current time
+            container.scrollTop = scrollPosition;
+        }
+
+        function renderPlannerTimeline() {
+            const timeline = document.getElementById('plannerTimeline');
+            if (!timeline) return;
             
-            if (dailyPlanner.blocks.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 30px; color: #9ca3af;">
-                        <div style="font-size: 2em; margin-bottom: 10px;">📝</div>
-                        <div>No time blocks yet. Click "Add Time Block" to start planning!</div>
+            // Generate hours from 5 AM to 1 AM (5, 6, 7... 23, 0, 1)
+            const hours = [];
+            for (let h = 5; h <= 24; h++) hours.push(h % 24);
+            hours.push(1); // Add 1 AM at the end
+            
+            // Create hour rows (21 hours total: 5 AM to 1 AM)
+            let html = '';
+            for (let i = 0; i < 21; i++) {
+                const hour = hours[i];
+                const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                const ampm = hour < 12 || hour === 24 ? 'AM' : 'PM';
+                const top = i * 60;
+                
+                html += `
+                    <div class="planner-hour-row" style="top: ${top}px;">
+                        <div class="planner-hour-label">${displayHour} ${ampm}</div>
+                        <div class="planner-hour-slot" onclick="quickAddAtHour(${hour})"></div>
                     </div>
                 `;
-                updatePlannerStats();
-                return;
             }
             
-            container.innerHTML = dailyPlanner.blocks.map((block, index) => {
-                // Calculate duration for display
-                let durationBadge = '';
-                if (block.startTime && block.endTime) {
-                    const start = block.startTime.split(':').map(Number);
-                    const end = block.endTime.split(':').map(Number);
-                    const duration = (end[0] * 60 + end[1]) - (start[0] * 60 + start[1]);
-                    if (duration > 0) {
-                        durationBadge = `<span style="font-size: 0.7em; background: ${block.completed ? '#10b981' : '#6366f1'}; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">${formatMinutesToHours(duration)}</span>`;
-                    }
-                }
-                
-                return `
-                <div class="planner-block ${block.completed ? 'completed' : ''}" data-index="${index}">
-                    <input type="checkbox" class="planner-block-check" 
-                           ${block.completed ? 'checked' : ''} 
-                           onchange="togglePlannerBlock(${index})">
-                    <div class="planner-block-time">
-                        <input type="time" value="${block.startTime || ''}" 
-                               onchange="updatePlannerBlock(${index}, 'startTime', this.value)"
-                               placeholder="Start">
-                        <span>→</span>
-                        <input type="time" value="${block.endTime || ''}" 
-                               onchange="updatePlannerBlock(${index}, 'endTime', this.value)"
-                               placeholder="End">
-                        ${durationBadge}
-                    </div>
-                    <input type="text" class="planner-block-task" 
-                           value="${block.task || ''}" 
-                           placeholder="What will you do?"
-                           oninput="updatePlannerBlock(${index}, 'task', this.value)"
-                           style="${block.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">
-                    <button class="planner-block-delete" onclick="deletePlannerBlock(${index})">×</button>
-                </div>
-            `}).join('');
+            // Add current time line
+            html += '<div class="planner-current-time-line" id="plannerCurrentTimeLine"></div>';
             
-            highlightCurrentBlock();
-            updatePlannerProgress();
-            updatePlannerStats();
-        }
-
-        function addPlannerBlock() {
-            // Default to current time rounded to nearest 15 min
-            const now = new Date();
-            const minutes = Math.ceil(now.getMinutes() / 15) * 15;
-            now.setMinutes(minutes);
-            const startTime = now.toTimeString().slice(0, 5);
-            
-            now.setHours(now.getHours() + 1);
-            const endTime = now.toTimeString().slice(0, 5);
-            
-            dailyPlanner.blocks.push({
-                id: Date.now(),
-                startTime: startTime,
-                endTime: endTime,
-                task: '',
-                completed: false
-            });
-            
-            saveDailyPlanner();
-            renderPlannerBlocks();
-            
-            // Focus the new task input (find the one that was just added based on time)
-            setTimeout(() => {
-                const inputs = document.querySelectorAll('.planner-block-task');
-                // Find the input for the block we just added
-                const newBlockIndex = dailyPlanner.blocks.findIndex(b => b.id === dailyPlanner.blocks[dailyPlanner.blocks.length - 1]?.id);
-                if (inputs[newBlockIndex]) {
-                    inputs[newBlockIndex].focus();
-                } else if (inputs.length > 0) {
-                    inputs[inputs.length - 1].focus();
-                }
-            }, 100);
-        }
-
-        function addQuickBreak() {
-            const now = new Date();
-            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
-            now.setMinutes(minutes);
-            const startTime = now.toTimeString().slice(0, 5);
-            
-            now.setMinutes(now.getMinutes() + 15);
-            const endTime = now.toTimeString().slice(0, 5);
-            
-            dailyPlanner.blocks.push({
-                id: Date.now(),
-                startTime: startTime,
-                endTime: endTime,
-                task: '☕ Break',
-                completed: false
-            });
-            
-            saveDailyPlanner();
-            renderPlannerBlocks();
-            showToast('15min break added!', '☕');
-        }
-
-        function addQuickPomodoro() {
-            const now = new Date();
-            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
-            now.setMinutes(minutes);
-            const startTime = now.toTimeString().slice(0, 5);
-            
-            now.setMinutes(now.getMinutes() + 25);
-            const endTime = now.toTimeString().slice(0, 5);
-            
-            dailyPlanner.blocks.push({
-                id: Date.now(),
-                startTime: startTime,
-                endTime: endTime,
-                task: '🍅 Focus session',
-                completed: false
-            });
-            
-            saveDailyPlanner();
-            renderPlannerBlocks();
-            showToast('25min focus block added!', '🍅');
-        }
-
-        function updatePlannerBlock(index, field, value) {
-            if (dailyPlanner.blocks[index]) {
-                dailyPlanner.blocks[index][field] = value;
-                
-                // Update goal from input
-                dailyPlanner.goal = document.getElementById('plannerGoal').value;
-                dailyPlanner.bedtime = document.getElementById('plannerBedtime').value;
-                
-                saveDailyPlanner();
-                
-                // Re-sort and re-render if time changed
-                if (field === 'startTime' || field === 'endTime') {
-                    renderPlannerBlocks();
-                } else {
-                    updatePlannerStats();
-                }
-            }
-        }
-
-        function togglePlannerBlock(index) {
-            if (dailyPlanner.blocks[index]) {
-                dailyPlanner.blocks[index].completed = !dailyPlanner.blocks[index].completed;
-                saveDailyPlanner();
-                renderPlannerBlocks();
-                
-                // Show celebration if all blocks completed
-                const allCompleted = dailyPlanner.blocks.length > 0 && 
-                                     dailyPlanner.blocks.every(b => b.completed);
-                if (allCompleted) {
-                    showToast('🎉 All tasks completed! Amazing work!', '🏆');
-                }
-            }
-        }
-
-        function deletePlannerBlock(index) {
-            dailyPlanner.blocks.splice(index, 1);
-            saveDailyPlanner();
-            renderPlannerBlocks();
-        }
-
-        function updatePlannerProgress() {
-            // Ensure blocks array exists
-            if (!dailyPlanner.blocks) {
-                dailyPlanner.blocks = [];
-            }
-            
-            const total = dailyPlanner.blocks.length;
-            const completed = dailyPlanner.blocks.filter(b => b.completed).length;
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-            
-            const percentEl = document.getElementById('plannerProgressPercent');
-            const fillEl = document.getElementById('plannerProgressFill');
-            
-            if (percentEl) percentEl.textContent = `${percent}% (${completed}/${total})`;
-            if (fillEl) fillEl.style.width = `${percent}%`;
-        }
-
-        function updatePlannerStats() {
-            const statsEl = document.getElementById('plannerStatsContainer');
-            if (!statsEl) return;
-            
-            const stats = calculatePlannerStats();
-            
-            // Calculate time until bedtime
-            let bedtimeCountdown = '';
-            let bedtimeClass = '';
-            if (dailyPlanner.bedtime) {
-                const now = new Date();
-                const [bedH, bedM] = dailyPlanner.bedtime.split(':').map(Number);
-                const bedTime = new Date();
-                bedTime.setHours(bedH, bedM, 0);
-                const diff = bedTime - now;
-                if (diff > 0) {
-                    const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-                    const minsLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    bedtimeCountdown = `${hoursLeft}h ${minsLeft}m`;
-                    bedtimeClass = hoursLeft < 2 ? 'color: #ef4444;' : hoursLeft < 4 ? 'color: #f59e0b;' : 'color: #10b981;';
-                } else {
-                    bedtimeCountdown = 'Past!';
-                    bedtimeClass = 'color: #ef4444;';
-                }
-            }
-            
-            statsEl.innerHTML = `
-                <div class="planner-stat">
-                    <span class="planner-stat-icon">⏱️</span>
-                    <span class="planner-stat-value">${formatMinutesToHours(stats.totalWork)}</span>
-                    <span class="planner-stat-label">Work Planned</span>
-                </div>
-                <div class="planner-stat" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
-                    <span class="planner-stat-icon">✅</span>
-                    <span class="planner-stat-value" style="color: #065f46;">${formatMinutesToHours(stats.completedWork)}</span>
-                    <span class="planner-stat-label">Done</span>
-                </div>
-                <div class="planner-stat">
-                    <span class="planner-stat-icon">🎯</span>
-                    <span class="planner-stat-value">${formatMinutesToHours(stats.remainingWork)}</span>
-                    <span class="planner-stat-label">Remaining</span>
-                </div>
-                <div class="planner-stat">
-                    <span class="planner-stat-icon">☕</span>
-                    <span class="planner-stat-value">${formatMinutesToHours(stats.breakTime)}</span>
-                    <span class="planner-stat-label">Breaks</span>
-                </div>
-                ${bedtimeCountdown ? `
-                <div class="planner-stat" style="grid-column: span 4; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); flex-direction: row; gap: 10px; justify-content: center;">
-                    <span class="planner-stat-icon" style="margin: 0;">🌙</span>
-                    <span style="font-weight: 600; ${bedtimeClass}">${bedtimeCountdown} until bedtime</span>
-                </div>
-                ` : ''}
-            `;
-        }
-
-        function clearDailyPlanner() {
-            if (confirm('Clear all time blocks for today? This cannot be undone.')) {
-                dailyPlanner.blocks = [];
-                dailyPlanner.goal = '';
-                document.getElementById('plannerGoal').value = '';
-                saveDailyPlanner();
-                renderPlannerBlocks();
-                showToast('Daily planner cleared', '🗑️');
-            }
-        }
-
-        // Listen for real-time updates from other devices
-        function setupPlannerRealtimeSync() {
-            if (firebaseInitialized && database && currentUser) {
-                database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').on('value', snapshot => {
-                    const data = snapshot.val();
-                    if (data && data.date === dailyPlanner.date) {
-                        // Only update if it's the same day's data
-                        const modal = document.getElementById('dailyPlannerModal');
-                        if (modal && !modal.classList.contains('show')) {
-                            // Only auto-update if modal is closed
-                            dailyPlanner = {
-                                date: data.date || dailyPlanner.date,
-                                goal: data.goal || '',
-                                bedtime: data.bedtime || '23:00',
-                                blocks: data.blocks || [],
-                                lastReset: data.lastReset || null
-                            };
-                            localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
-                        }
+            // Add events
+            if (dailyPlanner.blocks && dailyPlanner.blocks.length > 0) {
+                dailyPlanner.blocks.forEach((block, index) => {
+                    if (block.startTime && block.task) {
+                        const eventHtml = renderPlannerEvent(block, index);
+                        html += eventHtml;
                     }
                 });
             }
+            
+            timeline.innerHTML = html;
+            updateCurrentTimeLine();
+            updatePlannerFooterStats();
         }
-        
+
+        function renderPlannerEvent(block, index) {
+            const [startH, startM] = block.startTime.split(':').map(Number);
+            const duration = block.duration || 30;
+            
+            // Adjust for 5 AM start
+            let adjustedStartH = startH;
+            if (startH < 5) adjustedStartH = startH + 24;
+            
+            const top = (adjustedStartH - 5) * 60 + startM;
+            const height = Math.max(20, duration);
+            
+            // Color based on completion
+            const bgColor = block.completed 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+            
+            return `
+                <div class="planner-event ${block.completed ? 'completed' : ''}" 
+                     style="top: ${top}px; height: ${height}px; background: ${bgColor};"
+                     onclick="togglePlannerEvent(${index})"
+                     oncontextmenu="deletePlannerEvent(event, ${index})">
+                    <div class="planner-event-title">${block.task}</div>
+                    ${height >= 35 ? `<div class="planner-event-time">${formatTime(block.startTime)} • ${duration}m</div>` : ''}
+                </div>
+            `;
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const [h, m] = timeStr.split(':').map(Number);
+            const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            const ampm = h < 12 ? 'AM' : 'PM';
+            return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`;
+        }
+
+        function addPlannerEvent() {
+            const taskInput = document.getElementById('plannerNewTask');
+            const timeInput = document.getElementById('plannerNewTime');
+            const durationSelect = document.getElementById('plannerNewDuration');
+            
+            const task = taskInput?.value?.trim();
+            const time = timeInput?.value;
+            const duration = parseInt(durationSelect?.value) || 30;
+            
+            if (!task) {
+                taskInput?.focus();
+                return;
+            }
+            
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: time,
+                duration: duration,
+                task: task,
+                completed: false
+            });
+            
+            // Clear input
+            if (taskInput) taskInput.value = '';
+            
+            // Advance time by duration for next entry
+            if (timeInput) {
+                const [h, m] = time.split(':').map(Number);
+                const newMinutes = h * 60 + m + duration;
+                const newH = Math.floor(newMinutes / 60) % 24;
+                const newM = newMinutes % 60;
+                timeInput.value = `${newH.toString().padStart(2, '0')}:${newM.toString().padStart(2, '0')}`;
+            }
+            
+            saveDailyPlanner();
+            renderPlannerTimeline();
+            
+            showToast('Task added!', '✅');
+        }
+
+        function quickAddAtHour(hour) {
+            const timeInput = document.getElementById('plannerNewTime');
+            const taskInput = document.getElementById('plannerNewTask');
+            
+            if (timeInput) {
+                timeInput.value = `${hour.toString().padStart(2, '0')}:00`;
+            }
+            if (taskInput) {
+                taskInput.focus();
+            }
+        }
+
+        function togglePlannerEvent(index) {
+            if (dailyPlanner.blocks[index]) {
+                dailyPlanner.blocks[index].completed = !dailyPlanner.blocks[index].completed;
+                saveDailyPlanner();
+                renderPlannerTimeline();
+                
+                if (dailyPlanner.blocks[index].completed) {
+                    showToast('Task completed!', '✅');
+                }
+            }
+        }
+
+        function deletePlannerEvent(event, index) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (confirm('Delete this task?')) {
+                dailyPlanner.blocks.splice(index, 1);
+                saveDailyPlanner();
+                renderPlannerTimeline();
+                showToast('Task deleted', '🗑️');
+            }
+        }
+
+        function updatePlannerFooterStats() {
+            const statsEl = document.getElementById('plannerFooterStats');
+            if (!statsEl || !dailyPlanner.blocks) return;
+            
+            const total = dailyPlanner.blocks.length;
+            const completed = dailyPlanner.blocks.filter(b => b.completed).length;
+            const totalMinutes = dailyPlanner.blocks.reduce((sum, b) => sum + (b.duration || 30), 0);
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            
+            const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+            statsEl.textContent = `${completed}/${total} done • ${timeStr} planned`;
+        }
+
+        function clearDailyPlanner() {
+            if (confirm('Clear all tasks for today?')) {
+                dailyPlanner.blocks = [];
+                saveDailyPlanner();
+                renderPlannerTimeline();
+                showToast('Planner cleared', '🗑️');
+            }
+        }
+
+        // Legacy function stubs for compatibility
+        function renderPlannerBlocks() { renderPlannerTimeline(); }
+        function updatePlannerProgress() { updatePlannerFooterStats(); }
+        function updatePlannerStats() { updatePlannerFooterStats(); }
+        function addPlannerBlock() { document.getElementById('plannerNewTask')?.focus(); }
+        function addQuickBreak() {
+            const timeInput = document.getElementById('plannerNewTime');
+            const time = timeInput?.value || '12:00';
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: time,
+                duration: 15,
+                task: '☕ Break',
+                completed: false
+            });
+            saveDailyPlanner();
+            renderPlannerTimeline();
+            showToast('Break added!', '☕');
+        }
+        function addQuickPomodoro() {
+            const timeInput = document.getElementById('plannerNewTime');
+            const time = timeInput?.value || '12:00';
+            dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: time,
+                duration: 25,
+                task: '🍅 Focus',
+                completed: false
+            });
+            saveDailyPlanner();
+            renderPlannerTimeline();
+            showToast('Focus block added!', '🍅');
+        }
         // Listen for real-time updates to ALL main data from other devices
         let mainDataSyncEnabled = false;
         let lastKnownSaveTime = null;
@@ -8297,7 +8088,7 @@
                            ${task.completed ? 'checked' : ''}>
                     <span class="expansion-task-text">
                         ${task.text}
-                        <span class="expansion-task-category">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>
+                        <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || task.category || 'Task'}</span>
                     </span>
                 </div>
             `).join('');
@@ -8315,15 +8106,15 @@
         
         function toggleCompletedTasks() {
             const completedList = document.getElementById('completedTasksList');
-            const indicator = document.querySelector('.expand-indicator');
+            const card = completedList.closest('.stat-card');
             
             if (completedList.style.display === 'none') {
                 completedList.style.display = 'block';
-                indicator.textContent = '▲ Click to hide';
+                card.classList.add('expanded');
                 renderCompletedTasks();
             } else {
                 completedList.style.display = 'none';
-                indicator.textContent = '▼ Click to view';
+                card.classList.remove('expanded');
             }
         }
         
