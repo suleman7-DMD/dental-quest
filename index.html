@@ -2267,6 +2267,21 @@
     </style>
 </head>
 <body>
+    <!-- Loading overlay - shown until Firebase data loads -->
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
+        <div style="font-size: 4em; margin-bottom: 20px;">🦷</div>
+        <div style="color: #e6edf3; font-size: 1.5em; font-weight: 600;">Dental Student Quest</div>
+        <div style="color: #8b949e; font-size: 1em; margin-top: 10px;">Loading your data...</div>
+        <div style="margin-top: 20px; width: 200px; height: 4px; background: #21262d; border-radius: 2px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6); animation: loading 1.5s infinite;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
     <div class="toast-notification" id="toast">
         <span class="toast-icon" id="toastIcon">✅</span>
         <span class="toast-message" id="toastMessage">Success!</span>
@@ -3113,6 +3128,39 @@
         let currentUser = null;
         let initialLoadComplete = false; // CRITICAL: Prevents saving empty data before Firebase loads
         let userPassword = null; // Simple password for privacy
+        let saveDebounceTimer = null; // Debounce timer for Firebase saves
+        let pendingSaveData = null; // Store pending save data
+        
+        // Hide loading overlay and mark initial load complete
+        function markInitialLoadComplete() {
+            initialLoadComplete = true;
+            console.log('✅ Initial load complete - saves now enabled');
+            
+            // Hide loading overlay with fade
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.transition = 'opacity 0.3s ease';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300);
+            }
+        }
+        
+        // Failsafe: Hide loading overlay after 10 seconds no matter what
+        setTimeout(() => {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay && overlay.style.display !== 'none') {
+                console.warn('⚠️ Loading timeout - forcing overlay hide');
+                overlay.style.display = 'none';
+                if (!initialLoadComplete) {
+                    loadData(); // Try loading from localStorage as fallback
+                    initialLoadComplete = true;
+                    updateStats();
+                    renderTasks();
+                }
+            }
+        }, 10000);
 
         // ============================================
         // APP VARIABLES
@@ -3757,7 +3805,7 @@
             // Update our known save time to ignore our own updates
             lastKnownSaveTime = data.lastSaved;
             
-            // Always save to localStorage as backup
+            // Always save to localStorage IMMEDIATELY as backup
             try {
                 localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
                 console.log('✅ Saved to localStorage');
@@ -3765,67 +3813,143 @@
                 console.error('❌ localStorage save failed:', e);
             }
             
-            // Save to Firebase if initialized and authenticated
+            // Debounce Firebase saves to prevent rapid fire overwrites
+            // This ensures the last save wins after rapid changes
             if (firebaseInitialized && currentUser && database) {
-                // Remove old indicator if exists
-                const oldIndicator = document.getElementById('savingIndicator');
-                if (oldIndicator) oldIndicator.remove();
+                // Clear any pending save
+                if (saveDebounceTimer) {
+                    clearTimeout(saveDebounceTimer);
+                }
                 
-                // Show saving indicator
-                const savingToast = document.createElement('div');
-                savingToast.id = 'savingIndicator';
-                savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
-                savingToast.textContent = '☁️ Syncing...';
-                document.body.appendChild(savingToast);
+                // Store the data to be saved
+                pendingSaveData = data;
                 
-                database.ref('users/' + currentUser.uid + '/appData').set(data)
-                    .then(() => {
-                        console.log('✅ Data saved to Firebase successfully');
-                        // Update indicator
-                        savingToast.style.background = '#10b981';
-                        savingToast.textContent = '✓ Synced';
-                        setTimeout(() => {
-                            if (savingToast && savingToast.parentNode) {
-                                savingToast.remove();
-                            }
-                        }, 2000);
-                    })
-                    .catch((error) => {
-                        console.error('❌ Firebase save error:', error);
-                        savingToast.style.background = '#dc2626';
-                        savingToast.textContent = '✗ Sync failed - Retrying...';
-                        
-                        // Retry after 2 seconds
-                        setTimeout(() => {
-                            console.log('🔄 Retrying Firebase save...');
-                            database.ref('users/' + currentUser.uid + '/appData').set(data)
-                                .then(() => {
-                                    console.log('✅ Retry successful');
-                                    savingToast.style.background = '#10b981';
-                                    savingToast.textContent = '✓ Synced (retry)';
-                                    setTimeout(() => {
-                                        if (savingToast && savingToast.parentNode) {
-                                            savingToast.remove();
-                                        }
-                                    }, 2000);
-                                })
-                                .catch(err => {
-                                    console.error('❌ Retry failed:', err);
-                                    savingToast.textContent = '✗ Sync failed';
-                                    setTimeout(() => {
-                                        if (savingToast && savingToast.parentNode) {
-                                            savingToast.remove();
-                                        }
-                                    }, 3000);
-                                });
-                        }, 2000);
-                    });
+                // Schedule the Firebase save after 500ms of no changes
+                saveDebounceTimer = setTimeout(() => {
+                    if (!pendingSaveData) return;
+                    
+                    const dataToSave = pendingSaveData;
+                    pendingSaveData = null;
+                    
+                    // Remove old indicator if exists
+                    const oldIndicator = document.getElementById('savingIndicator');
+                    if (oldIndicator) oldIndicator.remove();
+                    
+                    // Show saving indicator
+                    const savingToast = document.createElement('div');
+                    savingToast.id = 'savingIndicator';
+                    savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                    savingToast.textContent = '☁️ Syncing...';
+                    document.body.appendChild(savingToast);
+                    
+                    database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
+                        .then(() => {
+                            console.log('✅ Data saved to Firebase successfully');
+                            savingToast.style.background = '#10b981';
+                            savingToast.textContent = '✓ Synced';
+                            setTimeout(() => {
+                                if (savingToast && savingToast.parentNode) {
+                                    savingToast.remove();
+                                }
+                            }, 2000);
+                        })
+                        .catch((error) => {
+                            console.error('❌ Firebase save error:', error);
+                            savingToast.style.background = '#dc2626';
+                            savingToast.textContent = '✗ Sync failed - Retrying...';
+                            
+                            // Retry after 2 seconds
+                            setTimeout(() => {
+                                console.log('🔄 Retrying Firebase save...');
+                                database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
+                                    .then(() => {
+                                        console.log('✅ Retry successful');
+                                        savingToast.style.background = '#10b981';
+                                        savingToast.textContent = '✓ Synced (retry)';
+                                        setTimeout(() => {
+                                            if (savingToast && savingToast.parentNode) {
+                                                savingToast.remove();
+                                            }
+                                        }, 2000);
+                                    })
+                                    .catch(err => {
+                                        console.error('❌ Retry failed:', err);
+                                        savingToast.textContent = '✗ Sync failed';
+                                        setTimeout(() => {
+                                            if (savingToast && savingToast.parentNode) {
+                                                savingToast.remove();
+                                            }
+                                        }, 3000);
+                                    });
+                            }, 2000);
+                        });
+                }, 200); // 200ms debounce - fast enough to feel instant
             } else {
                 console.warn('⚠️ Firebase not ready:', {
                     firebaseInitialized,
                     hasUser: !!currentUser,
                     hasDatabase: !!database
                 });
+            }
+        }
+        
+        // Force immediate save to Firebase (for critical operations like checkpoints)
+        function saveDataImmediate() {
+            if (saveDebounceTimer) {
+                clearTimeout(saveDebounceTimer);
+                saveDebounceTimer = null;
+            }
+            pendingSaveData = null;
+            
+            // Call saveData but with no debounce by directly saving
+            if (!firebaseInitialized || !initialLoadComplete) {
+                saveData();
+                return;
+            }
+            
+            const data = { 
+                tasks, 
+                stats,
+                medications,
+                calendarNotes,
+                notebook,
+                financials,
+                pillAssignments,
+                calendarEvents,
+                dailyPlanner,
+                focusModeData,
+                lastCriticalEODReset,
+                lastSaved: Date.now()
+            };
+            
+            lastKnownSaveTime = data.lastSaved;
+            
+            // Save to localStorage
+            try {
+                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+            } catch (e) {
+                console.error('localStorage save failed:', e);
+            }
+            
+            // Save to Firebase immediately
+            if (firebaseInitialized && currentUser && database) {
+                const savingToast = document.createElement('div');
+                savingToast.id = 'savingIndicator';
+                savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                savingToast.textContent = '☁️ Saving...';
+                document.body.appendChild(savingToast);
+                
+                database.ref('users/' + currentUser.uid + '/appData').set(data)
+                    .then(() => {
+                        savingToast.style.background = '#10b981';
+                        savingToast.textContent = '✓ Saved!';
+                        setTimeout(() => savingToast.remove(), 2000);
+                    })
+                    .catch(err => {
+                        savingToast.style.background = '#dc2626';
+                        savingToast.textContent = '✗ Save failed';
+                        setTimeout(() => savingToast.remove(), 3000);
+                    });
             }
         }
 
@@ -4125,7 +4249,7 @@
                 if (typeof firebase === 'undefined') {
                     console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
                     loadData();
-                    initialLoadComplete = true;
+                    markInitialLoadComplete();
                     updateCategoryDisplay();
                     return;
                 }
@@ -4147,7 +4271,7 @@
                     if (!userPin || userPin.length < 4) {
                         alert('PIN must be at least 4 characters. Using localStorage only.');
                         loadData();
-                        initialLoadComplete = true;
+                        markInitialLoadComplete();
                         updateCategoryDisplay();
                         return;
                     }
@@ -4173,7 +4297,7 @@
                 console.error('Firebase init error:', error);
                 firebaseInitialized = false;
                 loadData(); // Fallback to localStorage
-                initialLoadComplete = true;
+                markInitialLoadComplete();
                 updateCategoryDisplay();
             }
         }
@@ -4182,7 +4306,7 @@
         function loadDataFromFirebase() {
             if (!currentUser || !database) {
                 loadData(); // Fallback
-                initialLoadComplete = true;
+                markInitialLoadComplete();
                 return;
             }
             
@@ -4319,8 +4443,7 @@
                         setupMainDataRealtimeSync();
                         
                         // CRITICAL: Mark initial load as complete - now saves are allowed
-                        initialLoadComplete = true;
-                        console.log('✅ Initial load complete - saves now enabled');
+                        markInitialLoadComplete();
                         
                         showToast('Data loaded from cloud ☁️', '✅');
                     } else {
@@ -4328,16 +4451,14 @@
                         console.log('No cloud data, checking localStorage');
                         loadData();
                         // Mark load complete after localStorage load
-                        initialLoadComplete = true;
-                        console.log('✅ Initial load complete (from localStorage) - saves now enabled');
+                        markInitialLoadComplete();
                     }
                 })
                 .catch((error) => {
                     console.error('Firebase load error:', error);
                     loadData(); // Fallback
                     // Mark load complete even on error
-                    initialLoadComplete = true;
-                    console.log('✅ Initial load complete (fallback) - saves now enabled');
+                    markInitialLoadComplete();
                 });
         }
 
@@ -4352,7 +4473,7 @@
         } else {
             console.log('Firebase not configured - using localStorage only');
             loadData();
-            initialLoadComplete = true; // No Firebase, so immediately ready
+            markInitialLoadComplete();
             updateCategoryDisplay();
         }
         
@@ -4361,6 +4482,142 @@
         
         // Only set up category display
         updateCategoryDisplay();
+        
+        // Save data before user leaves the page
+        window.addEventListener('beforeunload', function(e) {
+            if (pendingSaveData && firebaseInitialized && currentUser && database) {
+                // Force a synchronous save on exit
+                navigator.sendBeacon && console.log('Attempting to save on exit...');
+                // Do a final localStorage save at minimum
+                try {
+                    const finalData = { 
+                        tasks, stats, medications, calendarNotes, notebook, financials,
+                        pillAssignments, calendarEvents, dailyPlanner, focusModeData,
+                        lastCriticalEODReset, lastSaved: Date.now()
+                    };
+                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(finalData));
+                } catch (e) {}
+            }
+        });
+        
+        // Handle visibility changes - save when hiding, refresh when showing
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                // Tab is being hidden - force save any pending changes
+                if (saveDebounceTimer) {
+                    clearTimeout(saveDebounceTimer);
+                    saveDebounceTimer = null;
+                }
+                if (pendingSaveData && firebaseInitialized && currentUser && database) {
+                    console.log('👁️ Tab hidden - forcing save');
+                    database.ref('users/' + currentUser.uid + '/appData').set(pendingSaveData)
+                        .then(() => console.log('✅ Hidden save completed'))
+                        .catch(err => console.error('Hidden save failed:', err));
+                    pendingSaveData = null;
+                }
+            } else if (document.visibilityState === 'visible') {
+                // Tab is visible again - refresh from Firebase to get any updates
+                if (firebaseInitialized && currentUser && database && initialLoadComplete) {
+                    console.log('👁️ Tab visible - checking for updates');
+                    database.ref('users/' + currentUser.uid + '/appData').once('value')
+                        .then(snapshot => {
+                            const data = snapshot.val();
+                            if (data && data.lastSaved && data.lastSaved > lastKnownSaveTime) {
+                                console.log('📥 Found newer data, refreshing ALL data...');
+                                lastKnownSaveTime = data.lastSaved;
+                                
+                                // Update ALL local data - COMPLETE LIST
+                                if (data.tasks) tasks = data.tasks;
+                                
+                                if (data.stats) {
+                                    stats = {
+                                        ...stats,
+                                        totalXPGained: data.stats.totalXPGained || 0,
+                                        totalTasks: data.stats.totalTasks || 0,
+                                        categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
+                                    };
+                                }
+                                
+                                if (data.medications) {
+                                    medications = { ...medications, ...data.medications };
+                                }
+                                
+                                if (data.calendarNotes) {
+                                    calendarNotes = data.calendarNotes;
+                                }
+                                
+                                if (data.notebook) {
+                                    notebook = {
+                                        pages: data.notebook.pages || [],
+                                        currentPageId: data.notebook.currentPageId || null
+                                    };
+                                }
+                                
+                                if (data.financials) {
+                                    financials = { ...financials, ...data.financials };
+                                }
+                                
+                                if (data.pillAssignments) {
+                                    pillAssignments = {
+                                        '30mg': data.pillAssignments['30mg'] || {},
+                                        '20mg': data.pillAssignments['20mg'] || {}
+                                    };
+                                }
+                                
+                                if (data.calendarEvents) {
+                                    calendarEvents = data.calendarEvents;
+                                }
+                                
+                                if (data.dailyPlanner) {
+                                    dailyPlanner = {
+                                        date: data.dailyPlanner.date || null,
+                                        goal: data.dailyPlanner.goal || '',
+                                        bedtime: data.dailyPlanner.bedtime || '23:00',
+                                        blocks: data.dailyPlanner.blocks || [],
+                                        lastReset: data.dailyPlanner.lastReset || null
+                                    };
+                                }
+                                
+                                if (data.focusModeData) {
+                                    focusModeData = {
+                                        ...focusModeData,
+                                        oneThingId: data.focusModeData.oneThingId || null,
+                                        microSteps: data.focusModeData.microSteps || [],
+                                        todaysTasks: data.focusModeData.todaysTasks || { big: [], medium: [], small: [] },
+                                        lastPlanningDate: data.focusModeData.lastPlanningDate || null
+                                    };
+                                }
+                                
+                                if (data.lastCriticalEODReset) {
+                                    lastCriticalEODReset = data.lastCriticalEODReset;
+                                }
+                                
+                                // Save to localStorage as backup
+                                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                                
+                                // Re-render ALL UI
+                                updateStats();
+                                renderTasks();
+                                updateMedicationDisplay();
+                                if (currentView === 'focus') {
+                                    renderFocusMode();
+                                }
+                                
+                                showToast('📥 Refreshed from cloud', '🔄');
+                            }
+                        })
+                        .catch(err => console.error('Visibility refresh failed:', err));
+                }
+            }
+        });
+        
+        // Periodic heartbeat save every 2 minutes to ensure data is synced
+        setInterval(() => {
+            if (initialLoadComplete && firebaseInitialized) {
+                console.log('💓 Heartbeat save');
+                saveData();
+            }
+        }, 120000); // 2 minutes
 
         // Medication Tracking Functions
         function updateMedicationDisplay() {
@@ -6166,7 +6423,8 @@
         }
         
         // CRITICAL/EOD AUTO-RESET AT 5 AM
-        // Clears all doToday and mustComplete flags daily
+        // Clears ONLY mustComplete (EOD) flags and Focus Mode daily
+        // NOTE: doToday flags are NOT reset - they persist until user removes them
         function checkCriticalEODReset() {
             const now = new Date();
             const hours = now.getHours();
@@ -6181,18 +6439,19 @@
             
             // Reset at 5 AM if it's a new day
             if (effectiveLastReset !== todayStr && hours >= 5) {
-                console.log('🔄 Resetting Critical/EOD flags for new day...');
+                console.log('🔄 Resetting EOD flags and Focus Mode for new day...');
                 
                 let resetCount = 0;
                 (tasks || []).forEach(task => {
-                    if (task.doToday || task.mustComplete) {
-                        task.doToday = false;
+                    // ONLY reset mustComplete (EOD) flag
+                    // doToday flag is NOT touched - it persists until user removes it
+                    if (task.mustComplete) {
                         task.mustComplete = false;
                         resetCount++;
                     }
                 });
                 
-                // Also clear Focus Mode today's tasks
+                // Clear Focus Mode today's tasks (this resets daily)
                 if (focusModeData) {
                     focusModeData.oneThingId = null;
                     focusModeData.microSteps = [];
@@ -6206,7 +6465,11 @@
                 
                 if (resetCount > 0) {
                     saveData();
-                    console.log(`✅ Reset ${resetCount} tasks' Critical/EOD flags`);
+                    console.log(`✅ Reset ${resetCount} EOD flags (doToday flags preserved)`);
+                } else {
+                    // Still save to sync the lastCriticalEODReset
+                    saveData();
+                    console.log('✅ Focus Mode reset (no EOD flags to clear)');
                 }
                 
                 return true;
@@ -6746,8 +7009,9 @@
                 lastKnownSaveTime = data.lastSaved;
                 console.log('📥 Received real-time update from another device');
                 
-                // Update local data
+                // Update ALL local data - COMPLETE LIST
                 if (data.tasks) tasks = data.tasks;
+                
                 if (data.stats) {
                     stats = {
                         ...stats,
@@ -6756,6 +7020,32 @@
                         categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
                     };
                 }
+                
+                if (data.medications) {
+                    medications = { ...medications, ...data.medications };
+                }
+                
+                if (data.calendarNotes) {
+                    calendarNotes = data.calendarNotes;
+                }
+                
+                if (data.pillAssignments) {
+                    pillAssignments = {
+                        '30mg': data.pillAssignments['30mg'] || {},
+                        '20mg': data.pillAssignments['20mg'] || {}
+                    };
+                }
+                
+                if (data.dailyPlanner) {
+                    dailyPlanner = {
+                        date: data.dailyPlanner.date || null,
+                        goal: data.dailyPlanner.goal || '',
+                        bedtime: data.dailyPlanner.bedtime || '23:00',
+                        blocks: data.dailyPlanner.blocks || [],
+                        lastReset: data.dailyPlanner.lastReset || null
+                    };
+                }
+                
                 if (data.focusModeData) {
                     focusModeData = {
                         oneThingId: data.focusModeData.oneThingId || null,
@@ -6771,13 +7061,16 @@
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                     };
                 }
+                
                 if (data.calendarEvents) calendarEvents = data.calendarEvents;
+                
                 if (data.notebook) {
                     notebook = {
                         pages: data.notebook.pages || [],
                         currentPageId: data.notebook.currentPageId || null
                     };
                 }
+                
                 if (data.financials) {
                     financials = { ...financials, ...data.financials };
                 }
@@ -6791,9 +7084,10 @@
                 // Save to localStorage
                 localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
                 
-                // Re-render UI
+                // Re-render ALL UI
                 updateStats();
                 renderTasks();
+                updateMedicationDisplay();
                 if (currentView === 'focus') {
                     renderFocusMode();
                 }
