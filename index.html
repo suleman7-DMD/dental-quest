@@ -749,7 +749,88 @@
 
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 2em;
+                font-size: 1.8em;
+            }
+            
+            .header p {
+                font-size: 0.85em;
+                margin-bottom: 10px;
+            }
+            
+            /* Mobile header buttons - much smaller */
+            .data-controls {
+                gap: 6px;
+                margin-top: 10px;
+            }
+            
+            .data-btn {
+                padding: 6px 10px;
+                font-size: 0.7em;
+                border-radius: 6px;
+            }
+            
+            /* View toggle smaller */
+            .view-toggle-container {
+                margin-top: 10px !important;
+                gap: 6px !important;
+            }
+            
+            .view-toggle-btn, #focusModeBtn, #fullViewBtn {
+                padding: 8px 14px !important;
+                font-size: 0.8em !important;
+            }
+            
+            /* Mobile Dashboard Cards - Compact */
+            .stats-container {
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+            
+            .stat-card {
+                width: auto;
+                min-width: 60px;
+                max-width: 70px;
+                padding: 6px 8px;
+                border-radius: 8px;
+            }
+            
+            .stat-card h3 {
+                font-size: 0.5em;
+                margin-bottom: 2px;
+                letter-spacing: 0;
+            }
+            
+            .level-display {
+                font-size: 1.2em;
+                margin: 0;
+            }
+            
+            .xp-text {
+                font-size: 0.5em;
+                line-height: 1.1;
+            }
+            
+            .stat-card.clickable-card::after {
+                top: 4px;
+                right: 4px;
+                font-size: 0.5em;
+            }
+            
+            .dashboard-expansion {
+                min-width: 250px;
+                left: auto;
+                right: 0;
+            }
+            
+            /* Category tabs smaller */
+            .category-tab {
+                padding: 8px 12px;
+                font-size: 0.75em;
+            }
+            
+            /* Task section smaller padding */
+            .tasks-section {
+                padding: 15px;
             }
 
             .timer-clock {
@@ -1609,52 +1690,103 @@
             max-height: 85vh;
         }
 
-        /* Daily Planner Styles - Google Calendar Style */
+        /* Daily Planner Styles - Full Featured */
         .planner-modal {
-            max-width: 400px;
+            max-width: 700px;
+            width: 95%;
             max-height: 90vh;
             padding: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            border-radius: 16px;
         }
 
         .planner-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: 16px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .planner-header h3 {
-            margin: 0;
-            font-size: 1.1em;
+        .planner-header-left h3 {
+            margin: 0 0 4px 0;
+            font-size: 1.3em;
         }
 
-        .planner-date {
-            font-size: 0.85em;
+        .planner-header-left .planner-date {
+            font-size: 0.9em;
             opacity: 0.9;
         }
 
-        .planner-input-bar {
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e5e7eb;
+        .planner-header-right {
+            text-align: right;
         }
 
-        .planner-quick-add {
+        .planner-current-time-display {
+            font-size: 2em;
+            font-weight: 700;
+            font-family: 'Monaco', monospace;
+        }
+
+        .planner-header-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+
+        .planner-header-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .planner-body {
             display: flex;
-            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .planner-input-panel {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .planner-input-section {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .planner-input-label {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
         }
 
         .planner-task-input {
-            flex: 1;
+            width: 100%;
             padding: 10px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 0.9em;
+            resize: none;
         }
 
         .planner-task-input:focus {
@@ -1662,41 +1794,111 @@
             border-color: #667eea;
         }
 
-        .planner-time-select {
+        .planner-task-dropdown {
+            width: 100%;
             padding: 10px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             background: white;
             cursor: pointer;
         }
 
+        .planner-time-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .planner-time-input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .planner-now-btn {
+            padding: 8px 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8em;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .planner-now-btn:hover {
+            background: #dc2626;
+        }
+
+        .planner-duration-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .planner-duration-btn {
+            padding: 8px 4px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .planner-duration-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .planner-duration-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .planner-endby-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
         .planner-add-btn {
-            padding: 10px 16px;
+            width: 100%;
+            padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 1em;
             cursor: pointer;
+            margin-top: 8px;
         }
 
         .planner-add-btn:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
         }
 
-        .planner-timeline-container {
+        .planner-timeline-panel {
             flex: 1;
             overflow-y: auto;
             position: relative;
             background: white;
-            min-height: 400px;
-            max-height: 60vh;
         }
 
         .planner-timeline {
             position: relative;
-            min-height: 1200px; /* 20 hours * 60px per hour */
+            min-height: 1260px; /* 21 hours * 60px */
         }
 
         .planner-hour-row {
@@ -1709,13 +1911,14 @@
         }
 
         .planner-hour-label {
-            width: 50px;
+            width: 55px;
             padding: 4px 8px;
             font-size: 0.75em;
             color: #6b7280;
             text-align: right;
             flex-shrink: 0;
             border-right: 1px solid #e5e7eb;
+            background: #fafafa;
         }
 
         .planner-hour-slot {
@@ -1725,12 +1928,12 @@
         }
 
         .planner-hour-slot:hover {
-            background: rgba(102, 126, 234, 0.05);
+            background: rgba(102, 126, 234, 0.08);
         }
 
         .planner-current-time-line {
             position: absolute;
-            left: 50px;
+            left: 55px;
             right: 0;
             height: 2px;
             background: #ef4444;
@@ -1742,37 +1945,42 @@
             content: '';
             position: absolute;
             left: -6px;
-            top: -4px;
-            width: 10px;
-            height: 10px;
+            top: -5px;
+            width: 12px;
+            height: 12px;
             background: #ef4444;
             border-radius: 50%;
         }
 
         .planner-event {
             position: absolute;
-            left: 54px;
+            left: 60px;
             right: 8px;
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
             border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.8em;
+            padding: 6px 10px;
+            font-size: 0.85em;
             overflow: hidden;
             cursor: pointer;
             z-index: 5;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .planner-event:hover {
             transform: scale(1.02);
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            z-index: 15;
         }
 
         .planner-event.completed {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            opacity: 0.8;
+            text-decoration: line-through;
+            opacity: 0.85;
         }
 
         .planner-event-title {
@@ -1783,8 +1991,122 @@
         }
 
         .planner-event-time {
-            font-size: 0.85em;
+            font-size: 0.8em;
             opacity: 0.9;
+        }
+
+        .planner-event-actions {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: none;
+            gap: 4px;
+        }
+
+        .planner-event:hover .planner-event-actions {
+            display: flex;
+        }
+
+        .planner-event-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.3);
+            color: white;
+            font-size: 0.7em;
+            cursor: pointer;
+        }
+
+        .planner-event-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .planner-footer {
+            padding: 12px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .planner-footer-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+
+        .planner-footer-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .planner-footer-stat strong {
+            color: #374151;
+        }
+
+        .planner-footer-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .planner-clear-btn {
+            padding: 8px 16px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .planner-clear-btn:hover {
+            background: #fecaca;
+        }
+
+        .planner-close-btn {
+            padding: 8px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @media (max-width: 700px) {
+            .planner-modal {
+                max-width: 100%;
+                max-height: 100vh;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .planner-body {
+                flex-direction: column;
+            }
+            
+            .planner-input-panel {
+                width: 100%;
+                max-height: 45vh;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .planner-timeline-panel {
+                max-height: 55vh;
+            }
+            
+            .planner-header {
+                padding: 12px 16px;
+            }
+            
+            .planner-current-time-display {
+                font-size: 1.5em;
+            }
         }
 
         .planner-footer {
@@ -1822,6 +2144,82 @@
             }
             .planner-task-input {
                 width: 100%;
+            }
+            
+            /* Extra small phone - super compact */
+            .header h1 {
+                font-size: 1.4em;
+            }
+            
+            .header p {
+                font-size: 0.75em;
+                margin-bottom: 8px;
+            }
+            
+            .data-controls {
+                gap: 4px;
+                margin-top: 8px;
+            }
+            
+            .data-btn {
+                padding: 5px 8px;
+                font-size: 0.65em;
+            }
+            
+            .view-toggle-btn, #focusModeBtn, #fullViewBtn {
+                padding: 6px 12px !important;
+                font-size: 0.75em !important;
+            }
+            
+            /* Dashboard cards - even smaller */
+            .stats-container {
+                gap: 4px;
+                margin-bottom: 10px;
+                padding: 0 5px;
+            }
+            
+            .stat-card {
+                min-width: 55px;
+                max-width: 65px;
+                padding: 5px 6px;
+            }
+            
+            .stat-card h3 {
+                font-size: 0.45em;
+            }
+            
+            .level-display {
+                font-size: 1.1em;
+            }
+            
+            .xp-text {
+                display: none; /* Hide description on tiny screens */
+            }
+            
+            /* Category tabs - smaller */
+            .category-tab {
+                padding: 6px 10px;
+                font-size: 0.7em;
+            }
+            
+            /* Task section */
+            .tasks-section {
+                padding: 10px;
+                border-radius: 10px;
+            }
+            
+            /* Task items - more compact */
+            .task-item {
+                padding: 8px 10px;
+            }
+            
+            .task-text {
+                font-size: 0.85em;
+            }
+            
+            /* Container padding */
+            .container {
+                padding: 10px;
             }
         }
 
@@ -2905,46 +3303,107 @@
                     </div>
                 </div>
 
-                <!-- Daily Planner Modal - Google Calendar Style -->
+                <!-- Daily Planner Modal - Full Featured -->
                 <div class="modal-overlay" id="dailyPlannerModal" onclick="closeDailyPlanner()">
                     <div class="modal-content planner-modal" onclick="event.stopPropagation()">
+                        <!-- Header with live time -->
                         <div class="planner-header">
-                            <h3>📋 Daily Planner</h3>
-                            <div class="planner-date" id="plannerDate">Today</div>
-                        </div>
-
-                        <!-- Quick Add Input -->
-                        <div class="planner-input-bar">
-                            <div class="planner-quick-add">
-                                <input type="text" class="planner-task-input" id="plannerNewTask" placeholder="What do you need to do?" onkeypress="if(event.key==='Enter')addPlannerEvent()">
-                                <input type="time" class="planner-time-select" id="plannerNewTime" value="09:00">
-                                <select class="planner-time-select" id="plannerNewDuration" style="width: 70px;">
-                                    <option value="15">15m</option>
-                                    <option value="30" selected>30m</option>
-                                    <option value="45">45m</option>
-                                    <option value="60">1h</option>
-                                    <option value="90">1.5h</option>
-                                    <option value="120">2h</option>
-                                </select>
-                                <button class="planner-add-btn" onclick="addPlannerEvent()">+</button>
+                            <div class="planner-header-left">
+                                <h3>📋 Daily Planner</h3>
+                                <div class="planner-date" id="plannerDate">Loading...</div>
+                            </div>
+                            <div class="planner-header-right" style="display: flex; align-items: center;">
+                                <div class="planner-current-time-display" id="plannerLiveTime">--:--</div>
+                                <button class="planner-header-close" onclick="closeDailyPlanner()">✕</button>
                             </div>
                         </div>
 
-                        <!-- Timeline -->
-                        <div class="planner-timeline-container" id="plannerTimelineContainer">
-                            <div class="planner-timeline" id="plannerTimeline">
-                                <!-- Hour rows and events will be inserted here by JS -->
+                        <!-- Body: Input Panel + Timeline -->
+                        <div class="planner-body">
+                            <!-- Left: Input Panel -->
+                            <div class="planner-input-panel">
+                                <!-- Task Input -->
+                                <div class="planner-input-section">
+                                    <label class="planner-input-label">📝 Task</label>
+                                    <textarea class="planner-task-input" id="plannerNewTask" rows="2" placeholder="What do you need to do?" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();addPlannerEvent();}"></textarea>
+                                </div>
+
+                                <!-- Or Select from Tasks -->
+                                <div class="planner-input-section">
+                                    <label class="planner-input-label">📋 Or pick from your tasks</label>
+                                    <select class="planner-task-dropdown" id="plannerTaskDropdown" onchange="selectTaskFromDropdown()">
+                                        <option value="">-- Select a task --</option>
+                                    </select>
+                                </div>
+
+                                <!-- Start Time -->
+                                <div class="planner-input-section">
+                                    <label class="planner-input-label">⏰ Start Time</label>
+                                    <div class="planner-time-row">
+                                        <input type="time" class="planner-time-input" id="plannerNewTime" value="09:00">
+                                        <button class="planner-now-btn" onclick="setTimeToNow()">⚡ NOW</button>
+                                    </div>
+                                </div>
+
+                                <!-- Duration -->
+                                <div class="planner-input-section">
+                                    <label class="planner-input-label">⏱️ Duration</label>
+                                    <div class="planner-duration-grid" id="plannerDurationGrid">
+                                        <button class="planner-duration-btn" data-duration="5" onclick="selectDuration(5)">5m</button>
+                                        <button class="planner-duration-btn" data-duration="10" onclick="selectDuration(10)">10m</button>
+                                        <button class="planner-duration-btn" data-duration="15" onclick="selectDuration(15)">15m</button>
+                                        <button class="planner-duration-btn" data-duration="20" onclick="selectDuration(20)">20m</button>
+                                        <button class="planner-duration-btn" data-duration="25" onclick="selectDuration(25)">25m</button>
+                                        <button class="planner-duration-btn active" data-duration="30" onclick="selectDuration(30)">30m</button>
+                                        <button class="planner-duration-btn" data-duration="45" onclick="selectDuration(45)">45m</button>
+                                        <button class="planner-duration-btn" data-duration="50" onclick="selectDuration(50)">50m</button>
+                                        <button class="planner-duration-btn" data-duration="60" onclick="selectDuration(60)">1h</button>
+                                        <button class="planner-duration-btn" data-duration="90" onclick="selectDuration(90)">1.5h</button>
+                                        <button class="planner-duration-btn" data-duration="120" onclick="selectDuration(120)">2h</button>
+                                        <button class="planner-duration-btn" data-duration="180" onclick="selectDuration(180)">3h</button>
+                                    </div>
+                                    
+                                    <!-- End By Option -->
+                                    <div class="planner-endby-toggle">
+                                        <input type="checkbox" id="plannerUseEndTime" onchange="toggleEndTimeMode()">
+                                        <label for="plannerUseEndTime">Or set end time:</label>
+                                        <input type="time" class="planner-time-input" id="plannerEndTime" style="width: 100px; display: none;" onchange="calculateDurationFromEndTime()">
+                                    </div>
+                                </div>
+
+                                <!-- Add Button -->
+                                <button class="planner-add-btn" onclick="addPlannerEvent()">
+                                    ➕ Add to Schedule
+                                </button>
+                            </div>
+
+                            <!-- Right: Timeline -->
+                            <div class="planner-timeline-panel" id="plannerTimelineContainer">
+                                <div class="planner-timeline" id="plannerTimeline">
+                                    <!-- Hour rows and events will be inserted here by JS -->
+                                </div>
                             </div>
                         </div>
 
                         <!-- Footer -->
                         <div class="planner-footer">
                             <div class="planner-footer-stats" id="plannerFooterStats">
-                                0 tasks • 0h planned
+                                <div class="planner-footer-stat">
+                                    <span>📋</span>
+                                    <span><strong id="plannerTaskCount">0</strong> tasks</span>
+                                </div>
+                                <div class="planner-footer-stat">
+                                    <span>⏱️</span>
+                                    <span><strong id="plannerTotalTime">0h</strong> planned</span>
+                                </div>
+                                <div class="planner-footer-stat">
+                                    <span>✅</span>
+                                    <span><strong id="plannerCompletedCount">0</strong> done</span>
+                                </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="clearDailyPlanner()" style="padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">Clear</button>
-                                <button class="planner-close-btn" onclick="closeDailyPlanner()">Close</button>
+                            <div class="planner-footer-buttons">
+                                <button class="planner-clear-btn" onclick="clearDailyPlanner()">🗑️ Clear All</button>
+                                <button class="planner-close-btn" onclick="closeDailyPlanner()">Done</button>
                             </div>
                         </div>
                     </div>
@@ -6454,6 +6913,9 @@
             }
         }
 
+        // Global planner state
+        let plannerSelectedDuration = 30;
+        
         function saveDailyPlanner() {
             localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
             
@@ -6488,24 +6950,38 @@
                 
                 // Update date display
                 const now = new Date();
-                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
                 const dateEl = document.getElementById('plannerDate');
                 if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', options);
                 
-                // Set default time to current time rounded up
-                const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+                // Set default time to current time rounded up to next 5 min
+                const minutes = Math.ceil(now.getMinutes() / 5) * 5;
                 const roundedNow = new Date(now);
                 roundedNow.setMinutes(minutes);
+                if (roundedNow.getMinutes() === 60) {
+                    roundedNow.setHours(roundedNow.getHours() + 1);
+                    roundedNow.setMinutes(0);
+                }
                 const timeInput = document.getElementById('plannerNewTime');
                 if (timeInput) timeInput.value = roundedNow.toTimeString().slice(0, 5);
+                
+                // Populate task dropdown with existing tasks
+                populateTaskDropdown();
+                
+                // Reset duration selection
+                selectDuration(30);
+                
+                // Clear inputs
+                const taskInput = document.getElementById('plannerNewTask');
+                if (taskInput) taskInput.value = '';
                 
                 renderPlannerTimeline();
                 startPlannerClock();
                 
                 modal.classList.add('show');
                 
-                // Scroll to current time
-                setTimeout(() => scrollToCurrentTime(), 100);
+                // Scroll to current time after a brief delay
+                setTimeout(() => scrollToCurrentTime(), 150);
             } catch (error) {
                 console.error('Error opening daily planner:', error);
             }
@@ -6522,12 +6998,23 @@
         function startPlannerClock() {
             if (plannerClockInterval) clearInterval(plannerClockInterval);
             
-            function updateTimeLine() {
+            function updateClock() {
+                // Update live time display
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+                const liveTimeEl = document.getElementById('plannerLiveTime');
+                if (liveTimeEl) liveTimeEl.textContent = timeStr;
+                
+                // Update time line position
                 updateCurrentTimeLine();
             }
             
-            updateTimeLine();
-            plannerClockInterval = setInterval(updateTimeLine, 60000); // Update every minute
+            updateClock();
+            plannerClockInterval = setInterval(updateClock, 1000); // Update every second for live clock
         }
 
         function updateCurrentTimeLine() {
@@ -6538,16 +7025,15 @@
             const hours = now.getHours();
             const minutes = now.getMinutes();
             
-            // Day starts at 5 AM (hour 5) and ends at 1 AM next day (hour 25 conceptually)
+            // Day starts at 5 AM (hour 5) and ends at 1 AM next day
             let adjustedHour = hours;
             if (hours < 5) {
-                adjustedHour = hours + 24; // 1 AM = 25, etc.
+                adjustedHour = hours + 24;
             }
             
-            // Calculate position (5 AM = 0, 1 AM = 20 hours later)
             const hoursSince5AM = adjustedHour - 5;
             const totalMinutes = hoursSince5AM * 60 + minutes;
-            const position = totalMinutes; // 1 pixel per minute
+            const position = totalMinutes;
             
             if (hoursSince5AM >= 0 && hoursSince5AM <= 20) {
                 line.style.display = 'block';
@@ -6566,20 +7052,163 @@
             if (adjustedHour < 5) adjustedHour += 24;
             
             const hoursSince5AM = adjustedHour - 5;
-            const scrollPosition = Math.max(0, (hoursSince5AM - 2) * 60); // Scroll to 2 hours before current time
+            const scrollPosition = Math.max(0, (hoursSince5AM - 1) * 60);
             container.scrollTop = scrollPosition;
+        }
+
+        function populateTaskDropdown() {
+            const dropdown = document.getElementById('plannerTaskDropdown');
+            if (!dropdown || !tasks) return;
+            
+            const incompleteTasks = tasks.filter(t => !t.completed);
+            
+            // Group by category
+            const categories = {
+                dotoday: { name: '🔴 Critical - Do Today', tasks: [] },
+                financial: { name: '💰 Financial', tasks: [] },
+                clinic: { name: '🦷 Clinic', tasks: [] },
+                health: { name: '❤️ Health', tasks: [] },
+                school: { name: '📋 School', tasks: [] },
+                academic: { name: '📚 Academic', tasks: [] },
+                future: { name: '🚀 Future', tasks: [] },
+                life: { name: '🏡 Life', tasks: [] }
+            };
+            
+            // Sort tasks into doToday first, then by category
+            incompleteTasks.forEach(task => {
+                if (task.doToday) {
+                    categories.dotoday.tasks.push(task);
+                } else if (categories[task.category]) {
+                    categories[task.category].tasks.push(task);
+                }
+            });
+            
+            let html = '<option value="">-- Select a task --</option>';
+            
+            for (const [key, cat] of Object.entries(categories)) {
+                if (cat.tasks.length > 0) {
+                    html += `<optgroup label="${cat.name}">`;
+                    cat.tasks.forEach(task => {
+                        const truncatedText = task.text.length > 60 ? task.text.substring(0, 60) + '...' : task.text;
+                        html += `<option value="${task.id}">${truncatedText}</option>`;
+                    });
+                    html += '</optgroup>';
+                }
+            }
+            
+            dropdown.innerHTML = html;
+        }
+
+        function selectTaskFromDropdown() {
+            const dropdown = document.getElementById('plannerTaskDropdown');
+            const taskInput = document.getElementById('plannerNewTask');
+            
+            if (!dropdown || !taskInput) return;
+            
+            const taskId = parseInt(dropdown.value);
+            if (!taskId) return;
+            
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                taskInput.value = task.text;
+            }
+            
+            // Reset dropdown
+            dropdown.value = '';
+        }
+
+        function setTimeToNow() {
+            const timeInput = document.getElementById('plannerNewTime');
+            if (!timeInput) return;
+            
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
+            now.setMinutes(minutes);
+            if (now.getMinutes() >= 60) {
+                now.setHours(now.getHours() + 1);
+                now.setMinutes(0);
+            }
+            
+            timeInput.value = now.toTimeString().slice(0, 5);
+            showToast('Time set to now!', '⚡');
+        }
+
+        function selectDuration(duration) {
+            plannerSelectedDuration = duration;
+            
+            // Update button styles
+            document.querySelectorAll('.planner-duration-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.duration) === duration) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Uncheck end time mode
+            const endTimeCheckbox = document.getElementById('plannerUseEndTime');
+            if (endTimeCheckbox) endTimeCheckbox.checked = false;
+            const endTimeInput = document.getElementById('plannerEndTime');
+            if (endTimeInput) endTimeInput.style.display = 'none';
+        }
+
+        function toggleEndTimeMode() {
+            const checkbox = document.getElementById('plannerUseEndTime');
+            const endTimeInput = document.getElementById('plannerEndTime');
+            const startTimeInput = document.getElementById('plannerNewTime');
+            
+            if (!checkbox || !endTimeInput) return;
+            
+            if (checkbox.checked) {
+                endTimeInput.style.display = 'block';
+                
+                // Set default end time to start + current duration
+                if (startTimeInput) {
+                    const [h, m] = startTimeInput.value.split(':').map(Number);
+                    const endMinutes = h * 60 + m + plannerSelectedDuration;
+                    const endH = Math.floor(endMinutes / 60) % 24;
+                    const endM = endMinutes % 60;
+                    endTimeInput.value = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+                }
+                
+                // Deselect duration buttons
+                document.querySelectorAll('.planner-duration-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            } else {
+                endTimeInput.style.display = 'none';
+                selectDuration(plannerSelectedDuration);
+            }
+        }
+
+        function calculateDurationFromEndTime() {
+            const startInput = document.getElementById('plannerNewTime');
+            const endInput = document.getElementById('plannerEndTime');
+            
+            if (!startInput || !endInput) return;
+            
+            const [startH, startM] = startInput.value.split(':').map(Number);
+            const [endH, endM] = endInput.value.split(':').map(Number);
+            
+            let startMinutes = startH * 60 + startM;
+            let endMinutes = endH * 60 + endM;
+            
+            // Handle overnight
+            if (endMinutes <= startMinutes) {
+                endMinutes += 24 * 60;
+            }
+            
+            plannerSelectedDuration = endMinutes - startMinutes;
         }
 
         function renderPlannerTimeline() {
             const timeline = document.getElementById('plannerTimeline');
             if (!timeline) return;
             
-            // Generate hours from 5 AM to 1 AM (5, 6, 7... 23, 0, 1)
+            // Generate hours from 5 AM to 1 AM (21 hours)
             const hours = [];
             for (let h = 5; h <= 24; h++) hours.push(h % 24);
-            hours.push(1); // Add 1 AM at the end
+            hours.push(1);
             
-            // Create hour rows (21 hours total: 5 AM to 1 AM)
             let html = '';
             for (let i = 0; i < 21; i++) {
                 const hour = hours[i];
@@ -6598,12 +7227,16 @@
             // Add current time line
             html += '<div class="planner-current-time-line" id="plannerCurrentTimeLine"></div>';
             
-            // Add events
+            // Add events (sorted by time)
             if (dailyPlanner.blocks && dailyPlanner.blocks.length > 0) {
-                dailyPlanner.blocks.forEach((block, index) => {
+                const sortedBlocks = [...dailyPlanner.blocks].sort((a, b) => {
+                    return (a.startTime || '').localeCompare(b.startTime || '');
+                });
+                
+                sortedBlocks.forEach((block, index) => {
+                    const originalIndex = dailyPlanner.blocks.indexOf(block);
                     if (block.startTime && block.task) {
-                        const eventHtml = renderPlannerEvent(block, index);
-                        html += eventHtml;
+                        html += renderPlannerEvent(block, originalIndex);
                     }
                 });
             }
@@ -6622,20 +7255,24 @@
             if (startH < 5) adjustedStartH = startH + 24;
             
             const top = (adjustedStartH - 5) * 60 + startM;
-            const height = Math.max(20, duration);
+            const height = Math.max(24, duration);
             
-            // Color based on completion
-            const bgColor = block.completed 
-                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+            // Calculate end time for display
+            const endMinutes = startH * 60 + startM + duration;
+            const endH = Math.floor(endMinutes / 60) % 24;
+            const endM = endMinutes % 60;
+            const endTimeStr = formatTime(`${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`);
             
             return `
                 <div class="planner-event ${block.completed ? 'completed' : ''}" 
-                     style="top: ${top}px; height: ${height}px; background: ${bgColor};"
+                     style="top: ${top}px; height: ${height}px;"
                      onclick="togglePlannerEvent(${index})"
-                     oncontextmenu="deletePlannerEvent(event, ${index})">
+                     title="Click to mark ${block.completed ? 'incomplete' : 'complete'}. Right-click to delete.">
+                    <div class="planner-event-actions">
+                        <button class="planner-event-btn" onclick="event.stopPropagation(); deletePlannerEvent(event, ${index})" title="Delete">×</button>
+                    </div>
                     <div class="planner-event-title">${block.task}</div>
-                    ${height >= 35 ? `<div class="planner-event-time">${formatTime(block.startTime)} • ${duration}m</div>` : ''}
+                    ${height >= 40 ? `<div class="planner-event-time">${formatTime(block.startTime)} - ${endTimeStr}</div>` : ''}
                 </div>
             `;
         }
@@ -6651,14 +7288,19 @@
         function addPlannerEvent() {
             const taskInput = document.getElementById('plannerNewTask');
             const timeInput = document.getElementById('plannerNewTime');
-            const durationSelect = document.getElementById('plannerNewDuration');
             
             const task = taskInput?.value?.trim();
             const time = timeInput?.value;
-            const duration = parseInt(durationSelect?.value) || 30;
+            const duration = plannerSelectedDuration;
             
             if (!task) {
                 taskInput?.focus();
+                showToast('Please enter a task!', '⚠️');
+                return;
+            }
+            
+            if (!time) {
+                showToast('Please select a time!', '⚠️');
                 return;
             }
             
@@ -6686,6 +7328,9 @@
             renderPlannerTimeline();
             
             showToast('Task added!', '✅');
+            
+            // Focus back to input for quick entry
+            taskInput?.focus();
         }
 
         function quickAddAtHour(hour) {
@@ -6716,17 +7361,14 @@
             event.preventDefault();
             event.stopPropagation();
             
-            if (confirm('Delete this task?')) {
-                dailyPlanner.blocks.splice(index, 1);
-                saveDailyPlanner();
-                renderPlannerTimeline();
-                showToast('Task deleted', '🗑️');
-            }
+            dailyPlanner.blocks.splice(index, 1);
+            saveDailyPlanner();
+            renderPlannerTimeline();
+            showToast('Task deleted', '🗑️');
         }
 
         function updatePlannerFooterStats() {
-            const statsEl = document.getElementById('plannerFooterStats');
-            if (!statsEl || !dailyPlanner.blocks) return;
+            if (!dailyPlanner.blocks) return;
             
             const total = dailyPlanner.blocks.length;
             const completed = dailyPlanner.blocks.filter(b => b.completed).length;
@@ -6734,8 +7376,13 @@
             const hours = Math.floor(totalMinutes / 60);
             const mins = totalMinutes % 60;
             
-            const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-            statsEl.textContent = `${completed}/${total} done • ${timeStr} planned`;
+            const taskCountEl = document.getElementById('plannerTaskCount');
+            const totalTimeEl = document.getElementById('plannerTotalTime');
+            const completedCountEl = document.getElementById('plannerCompletedCount');
+            
+            if (taskCountEl) taskCountEl.textContent = total;
+            if (totalTimeEl) totalTimeEl.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+            if (completedCountEl) completedCountEl.textContent = completed;
         }
 
         function clearDailyPlanner() {
