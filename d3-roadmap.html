@@ -2554,7 +2554,7 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="date"
                                     data-original="${formatDate(d.date)}"
-                                    onchange="handleDeadlineEdit(this)"
+                                    onblur="handleDeadlineEdit(this)"
                                     onkeydown="handleDeadlineKeydown(event, this)"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 80px;">
                             </td>
@@ -2566,7 +2566,7 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="what"
                                     data-original="${escapeHtml(d.what)}"
-                                    onchange="handleDeadlineEdit(this)"
+                                    onblur="handleDeadlineEdit(this)"
                                     onkeydown="handleDeadlineKeydown(event, this)"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">
                             </td>
@@ -2576,7 +2576,7 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="course"
                                     data-original="${escapeHtml(d.course)}"
-                                    onchange="handleDeadlineEdit(this)"
+                                    onblur="handleDeadlineEdit(this)"
                                     onkeydown="handleDeadlineKeydown(event, this)"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">
                             </td>
@@ -2586,7 +2586,7 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="weight"
                                     data-original="${escapeHtml(d.weight)}"
-                                    onchange="handleDeadlineEdit(this)"
+                                    onblur="handleDeadlineEdit(this)"
                                     onkeydown="handleDeadlineKeydown(event, this)"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">
                             </td>
@@ -2600,7 +2600,7 @@
         function handleDeadlineKeydown(event, inputEl) {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                inputEl.blur(); // Trigger onchange via blur
+                inputEl.blur(); // Trigger onblur to save
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 inputEl.value = inputEl.dataset.original || '';
