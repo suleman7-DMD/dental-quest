@@ -761,6 +761,64 @@
             </div>
         </div>
 
+        <!-- Section 3: Immediate Action Items (Next 14 Days) -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📋 Immediate Action Items (Next 14 Days)</span>
+            </div>
+            
+            <!-- THIS WEEK -->
+            <div class="month-header" style="margin-top: 0;">📅 THIS WEEK (Jan 15-19)</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Priority</th><th>Task</th><th>Due</th><th>Course</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴 TODAY/TOMORROW</span></td><td>Complete Oral Med Quiz 1</td><td>Jan 16</td><td>Oral Med</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Review Neville readings for Friday lecture</td><td>Jan 17</td><td>Oral Med</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Start working on Rx #1</td><td>Jan 22</td><td>Pain Control 2</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Begin studying for PC2 Midterm (18 days)</td><td>Feb 2</td><td>Pain Control 2</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Begin studying for Ortho Final (22 days)</td><td>Feb 6</td><td>Orthodontics</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- NEXT WEEK -->
+            <div class="month-header">📅 NEXT WEEK (Jan 20-26)</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Priority</th><th>Task</th><th>Due</th><th>Course</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Submit Rx #1</td><td>Jan 22</td><td>Pain Control 2</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Complete Oral Med Quiz 2</td><td>Jan 23</td><td>Oral Med</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Work on PC2 Take Home Exam 1</td><td>Jan 29</td><td>Pain Control 2</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Complete Acute Dental Pain online module</td><td>Jan 29</td><td>Pain Control 2</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Study for Critical Thinking Quiz 2</td><td>Jan 29</td><td>Critical Thinking</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- WEEK OF JAN 27-FEB 2 -->
+            <div class="month-header brutal">⚠️ WEEK OF JAN 27-FEB 2</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Priority</th><th>Task</th><th>Due</th><th>Course</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Submit Take Home Exam 1 (before class)</td><td>Jan 29</td><td>Pain Control 2</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Complete Crit Think Quiz 2 (evening window)</td><td>Jan 29</td><td>Critical Thinking</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>Acute Dental Pain module done</td><td>Jan 29</td><td>Pain Control 2</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td><span class="risk-critical">🔴</span></td><td>PC2 MIDTERM</td><td>Feb 2</td><td>Pain Control 2</td></tr>
+                        <tr><td><span class="risk-medium">🟡</span></td><td>Final Ortho prep</td><td>Feb 6</td><td>Orthodontics</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Reality Check (Gym Only) -->
         <div class="gym-reminder">
             💪 HIT THE GYM EVERY DAY — It keeps your head clear
@@ -773,6 +831,9 @@
             <div class="card-header">
                 <span class="card-title">📅 Master Deadline Calendar</span>
                 <button onclick="addNewDeadline()" style="padding: 8px 15px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">+ Add Deadline</button>
+            </div>
+            <div class="note" style="margin-bottom: 15px;">
+                <strong>💡 Tip:</strong> Click on any <span class="editable" style="display: inline;">date, name, course, or weight</span> to edit it directly. Changes save automatically.
             </div>
 
             <!-- January -->
@@ -2043,23 +2104,49 @@
                 const tbody = document.getElementById(month + 'Body');
                 const monthDeadlines = deadlines.filter(d => d.month === month);
                 
-                tbody.innerHTML = monthDeadlines.map(d => {
+                tbody.innerHTML = monthDeadlines.map((d, index) => {
                     const days = getCountdown(d.date);
                     const isPassed = days < 0;
+                    const deadlineIndex = deadlines.indexOf(d);
                     
                     return `
                         <tr class="${isPassed ? 'passed' : ''}">
-                            <td>${formatDate(d.date)}</td>
+                            <td class="editable" contenteditable="true" data-field="date" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'date', this.textContent)">${formatDate(d.date)}</td>
                             <td>${d.day}</td>
                             <td>${getCountdownBadge(days, d.tbd)}</td>
-                            <td>${d.what}</td>
-                            <td>${d.course}</td>
-                            <td>${d.weight}</td>
+                            <td class="editable" contenteditable="true" data-field="what" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'what', this.textContent)">${d.what}</td>
+                            <td class="editable" contenteditable="true" data-field="course" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'course', this.textContent)">${d.course}</td>
+                            <td class="editable" contenteditable="true" data-field="weight" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'weight', this.textContent)">${d.weight}</td>
                             <td>${d.type}</td>
                         </tr>
                     `;
                 }).join('');
             });
+        }
+
+        function editDeadline(index, field, value) {
+            if (field === 'date') {
+                // Try to parse the new date
+                const parsed = new Date(value + ' 2026');
+                if (!isNaN(parsed)) {
+                    const year = parsed.getFullYear() || 2026;
+                    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const day = String(parsed.getDate()).padStart(2, '0');
+                    deadlines[index].date = `${year}-${month}-${day}`;
+                    deadlines[index].day = parsed.toLocaleString('en-US', { weekday: 'short' });
+                    deadlines[index].month = parsed.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                }
+            } else {
+                deadlines[index][field] = value;
+            }
+            
+            // Track edited deadlines
+            if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+            roadmapData.editedDeadlines[index] = deadlines[index];
+            
+            saveData();
+            renderDeadlines();
+            renderDashboard();
         }
 
         function renderExamCountdown() {
@@ -2365,6 +2452,16 @@
             const pedsLockedEl2 = document.getElementById('pedsLockedIn2');
             if (pedsLockedEl) pedsLockedEl.textContent = roadmapData.pedsLockedIn;
             if (pedsLockedEl2) pedsLockedEl2.textContent = roadmapData.pedsLockedIn;
+            
+            // Restore edited deadlines
+            if (roadmapData.editedDeadlines) {
+                Object.keys(roadmapData.editedDeadlines).forEach(index => {
+                    const edited = roadmapData.editedDeadlines[index];
+                    if (deadlines[index]) {
+                        Object.assign(deadlines[index], edited);
+                    }
+                });
+            }
             
             // Add any custom deadlines
             if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
