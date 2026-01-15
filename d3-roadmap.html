@@ -70,6 +70,13 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .tab-nav::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-btn {
@@ -82,11 +89,16 @@
             white-space: nowrap;
             transition: all 0.3s;
             border-bottom: 3px solid transparent;
+            flex-shrink: 0;
         }
 
         .tab-btn:hover {
             background: rgba(255,255,255,0.05);
             color: #e5e7eb;
+        }
+        
+        .tab-btn:active {
+            background: rgba(255,255,255,0.08);
         }
 
         .tab-btn.active {
@@ -312,6 +324,29 @@
             border-color: #3b82f6;
             background: rgba(59, 130, 246, 0.1);
         }
+        
+        /* Deadline Edit Inputs */
+        .deadline-edit-input {
+            background: rgba(255,255,255,0.1) !important;
+            border: 1px dashed #4b5563 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            color: #e2e8f0 !important;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .deadline-edit-input:hover {
+            background: rgba(255,255,255,0.15) !important;
+            border-color: #6b7280 !important;
+        }
+        
+        .deadline-edit-input:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important;
+            border-style: solid !important;
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
 
         /* Priority List */
         .priority-item {
@@ -323,6 +358,12 @@
             border-radius: 8px;
             margin-bottom: 10px;
             border-left: 4px solid #dc2626;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .priority-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .priority-item.yellow {
@@ -334,15 +375,16 @@
         }
 
         .priority-number {
+            width: 32px;
+            height: 32px;
             background: #dc2626;
             color: white;
-            width: 28px;
-            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 0.9em;
             flex-shrink: 0;
         }
 
@@ -353,6 +395,11 @@
             margin-bottom: 20px;
             overflow: hidden;
             border: 1px solid #374151;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .course-card:hover {
+            border-color: #4b5563;
         }
 
         .course-header {
@@ -362,10 +409,15 @@
             justify-content: space-between;
             align-items: center;
             transition: background 0.2s;
+            user-select: none;
         }
 
         .course-header:hover {
             background: rgba(255,255,255,0.05);
+        }
+        
+        .course-header:active {
+            background: rgba(255,255,255,0.08);
         }
 
         .course-header.at-risk {
@@ -439,23 +491,38 @@
         /* Checklist */
         .checklist-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             padding: 15px;
             background: #0f172a;
             border-radius: 8px;
             margin-bottom: 10px;
             border: 2px solid #374151;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .checklist-item:hover {
+            border-color: #4b5563;
+            background: rgba(15, 23, 42, 0.8);
         }
 
         .checklist-item.checked {
             border-color: #059669;
-            background: rgba(5, 150, 105, 0.1);
+            background: rgba(5, 150, 105, 0.15);
+        }
+        
+        .checklist-item.checked:hover {
+            background: rgba(5, 150, 105, 0.2);
         }
 
         .checklist-item.unchecked {
             border-color: #dc2626;
+            background: rgba(220, 38, 38, 0.05);
+        }
+        
+        .checklist-item.unchecked:hover {
+            background: rgba(220, 38, 38, 0.1);
         }
 
         .checklist-checkbox {
@@ -463,6 +530,8 @@
             height: 24px;
             cursor: pointer;
             accent-color: #059669;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
 
         /* Month Headers */
@@ -518,6 +587,13 @@
             text-align: center;
             flex: 1;
             min-width: 150px;
+            border: 1px solid #374151;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        
+        .stat-box:hover {
+            border-color: #4b5563;
+            transform: translateY(-2px);
         }
 
         .stat-box .number {
@@ -560,27 +636,54 @@
             border-radius: 8px;
             margin-bottom: 8px;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.2s, background 0.2s;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .action-item:hover {
+            background: #253449;
+            transform: translateX(4px);
         }
 
         .action-item .icon {
             font-size: 1.2em;
+            flex-shrink: 0;
         }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+            
             .header h1 {
-                font-size: 1.5em;
+                font-size: 1.3em;
+                margin-top: 5px;
+            }
+            
+            .header p {
+                font-size: 0.85em;
             }
 
+            .tab-nav {
+                gap: 2px;
+                padding: 5px;
+                background: #0f172a;
+            }
+            
             .tab-btn {
-                padding: 12px 15px;
-                font-size: 0.9em;
+                padding: 10px 12px;
+                font-size: 0.75em;
+                border-radius: 6px;
+                flex: 1;
+                text-align: center;
+                min-width: auto;
             }
 
             .tab-content {
-                padding: 15px;
+                padding: 12px;
             }
 
             .grid-2, .grid-3 {
@@ -591,16 +694,268 @@
                 position: relative;
                 top: 0;
                 left: 0;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 display: inline-block;
+                padding: 8px 15px;
+                font-size: 0.85em;
             }
-
+            
+            /* Card improvements for mobile */
+            .card {
+                padding: 15px;
+                margin-bottom: 15px;
+                border-radius: 10px;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .card-title {
+                font-size: 1em;
+            }
+            
+            /* Alert improvements */
+            .alert {
+                padding: 12px 15px;
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            .alert span[style*="font-size: 2em"] {
+                font-size: 1.5em !important;
+            }
+            
+            /* Stats row - stack on mobile */
+            .stats-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stat-box {
+                padding: 12px 15px;
+                min-width: auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+            
+            .stat-box .number {
+                font-size: 1.5em;
+                order: 2;
+            }
+            
+            .stat-box .label {
+                order: 1;
+                margin-top: 0;
+                font-size: 0.9em;
+            }
+            
+            /* Tables - much better mobile handling */
+            .table-container {
+                margin: 10px -15px;
+                padding: 0 15px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
             table {
-                font-size: 0.8em;
+                font-size: 0.75em;
+                min-width: 600px;
             }
 
             th, td {
-                padding: 8px 10px;
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+            
+            th {
+                font-size: 0.7em;
+                position: sticky;
+                top: 0;
+            }
+            
+            /* Deadline edit inputs on mobile */
+            .deadline-edit-input {
+                font-size: 0.8em !important;
+                padding: 4px 6px !important;
+                width: auto !important;
+                min-width: 60px !important;
+            }
+            
+            /* Priority items */
+            .priority-item {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            
+            .priority-number {
+                width: 28px;
+                height: 28px;
+                font-size: 0.85em;
+                flex-shrink: 0;
+            }
+            
+            /* Course cards */
+            .course-card {
+                margin-bottom: 12px;
+            }
+            
+            .course-header {
+                padding: 12px 15px;
+            }
+            
+            .course-header strong {
+                font-size: 0.95em !important;
+            }
+            
+            .course-header span[style*="margin-left"] {
+                display: block;
+                margin-left: 0 !important;
+                margin-top: 4px;
+                font-size: 0.8em;
+            }
+            
+            .course-body {
+                padding: 0 12px 12px;
+            }
+            
+            /* Checklist items */
+            .checklist-item {
+                padding: 12px;
+                flex-wrap: wrap;
+            }
+            
+            .checklist-checkbox {
+                width: 28px;
+                height: 28px;
+            }
+            
+            /* Study phases - stack on mobile */
+            .study-split {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .study-split-item {
+                padding: 12px;
+            }
+            
+            .study-split-item .percent {
+                font-size: 1.3em;
+            }
+            
+            /* Month headers */
+            .month-header {
+                padding: 10px 15px;
+                font-size: 0.95em;
+                margin: 15px 0 10px;
+            }
+            
+            /* Action items */
+            .action-item {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+            
+            /* Grade calculator */
+            .grade-input-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .grade-input-row label {
+                min-width: auto;
+            }
+            
+            .grade-input-row select,
+            .grade-input-row input,
+            .grade-input-row button {
+                width: 100%;
+            }
+            
+            /* Notes */
+            .note {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+            
+            /* Gym reminder */
+            .gym-reminder {
+                padding: 15px;
+                font-size: 1.1em;
+            }
+            
+            /* Share sections */
+            .share-section {
+                padding: 15px;
+            }
+            
+            /* Countdown badges */
+            .countdown {
+                padding: 3px 8px;
+                font-size: 0.75em;
+            }
+            
+            /* Status badges */
+            .status {
+                padding: 3px 6px;
+                font-size: 0.7em;
+            }
+            
+            /* Risk badges */
+            .risk-critical, .risk-high, .risk-medium, .risk-low {
+                padding: 3px 8px;
+                font-size: 0.75em;
+            }
+            
+            /* Toast on mobile */
+            .toast {
+                left: 15px;
+                right: 15px;
+                bottom: 15px;
+                text-align: center;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1em;
+            }
+            
+            .tab-btn {
+                padding: 8px 6px;
+                font-size: 0.65em;
+            }
+            
+            .tab-content {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 12px;
+            }
+            
+            table {
+                font-size: 0.7em;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+            }
+            
+            .alert {
+                padding: 10px;
+            }
+            
+            .priority-item {
+                padding: 8px;
+                font-size: 0.85em;
             }
         }
 
@@ -719,6 +1074,12 @@
             </div>
         </div>
 
+        <!-- Current Date Display -->
+        <div class="card" style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); text-align: center; padding: 15px;">
+            <div style="font-size: 0.9em; color: #93c5fd; margin-bottom: 5px;">📅 TODAY'S DATE</div>
+            <div id="currentDateDisplay" style="font-size: 1.3em; font-weight: 700;">Loading...</div>
+        </div>
+
         <!-- Stats Row -->
         <div class="stats-row" id="dashboardStats">
             <!-- Populated by JS -->
@@ -728,8 +1089,31 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">⏰ Next 7 Days</span>
+                <span id="next7Count" style="background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700;">0</span>
             </div>
             <div id="next7Days">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Next 14 Days -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📅 Next 8-14 Days</span>
+                <span id="next14Count" style="background: #d97706; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700;">0</span>
+            </div>
+            <div id="next14Days">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Next Month -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📆 Next 15-30 Days</span>
+                <span id="nextMonthCount" style="background: #059669; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700;">0</span>
+            </div>
+            <div id="nextMonthDays">
                 <!-- Populated by JS -->
             </div>
         </div>
@@ -833,7 +1217,7 @@
                 <button onclick="addNewDeadline()" style="padding: 8px 15px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">+ Add Deadline</button>
             </div>
             <div class="note" style="margin-bottom: 15px;">
-                <strong>💡 Tip:</strong> Click on any <span class="editable" style="display: inline;">date, name, course, or weight</span> to edit it directly. Changes save automatically.
+                <strong>💡 Tip:</strong> Edit any <span style="color: #60a5fa;">date, name, course, or weight</span> directly in the fields below. Press <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Enter</code> or click away to save. For dates, use: <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Jan 20</code> or <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">1/20</code>. Press <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Esc</code> to cancel. Changes sync to Dashboard automatically.
             </div>
 
             <!-- January -->
@@ -1747,7 +2131,7 @@
                 perio: { midterm: null, writtenAssignment: 100 },
                 ortho: { midterm: null }
             },
-            editedDates: {},
+            editedDeadlines: {},
             customDeadlines: [],
             lastSaved: null
         };
@@ -1859,6 +2243,7 @@
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
+                    console.log('Firebase data loaded:', data);
                     if (data) {
                         // Merge Firebase data with defaults
                         roadmapData = {
@@ -1866,14 +2251,14 @@
                             pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
                             mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
                             grades: { ...roadmapData.grades, ...(data.grades || {}) },
-                            editedDates: { ...roadmapData.editedDates, ...(data.editedDates || {}) },
+                            editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
                             lastSaved: data.lastSaved
                         };
                         
                         // Also save to localStorage as backup
                         localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                        console.log('✅ Loaded from Firebase');
+                        console.log('✅ Loaded from Firebase, roadmapData:', roadmapData);
                         updateSyncStatus('connected', 'Synced');
                     } else {
                         // No Firebase data, load from localStorage
@@ -2054,10 +2439,17 @@
 
         // ==================== RENDER FUNCTIONS ====================
         function renderDashboard() {
-            // Stats row
+            // Get current date for all calculations
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Stats row - dynamically calculated from deadlines array
             const upcomingExams = exams.filter(e => getCountdown(e.date) >= 0 && getCountdown(e.date) <= 30).length;
             const urgentDeadlines = deadlines.filter(d => getCountdown(d.date) >= 0 && getCountdown(d.date) <= 7).length;
+            const next14Deadlines = deadlines.filter(d => {
+                const days = getCountdown(d.date);
+                return days > 7 && days <= 14;
+            }).length;
             const mandatoryDone = Object.values(roadmapData.mandatoryItems).filter(v => v).length;
             
             document.getElementById('dashboardStats').innerHTML = `
@@ -2070,30 +2462,73 @@
                     <div class="label">Due in 7 days</div>
                 </div>
                 <div class="stat-box">
+                    <div class="number" style="color: #d97706;">${next14Deadlines}</div>
+                    <div class="label">Due in 8-14 days</div>
+                </div>
+                <div class="stat-box">
                     <div class="number">${mandatoryDone}/5</div>
                     <div class="label">Mandatory Done</div>
                 </div>
             `;
             
-            // Next 7 days
+            // Helper function to render deadline items
+            function renderDeadlineItems(items, emptyMessage) {
+                if (items.length === 0) {
+                    return `<p style="color: #10b981; padding: 20px;">✅ ${emptyMessage}</p>`;
+                }
+                return items.map(d => {
+                    const days = getCountdown(d.date);
+                    return `
+                        <div class="action-item">
+                            ${getCountdownBadge(days, d.tbd)}
+                            <div style="flex: 1;">
+                                <strong>${d.what}</strong>
+                                <span style="color: #94a3b8; margin-left: 10px;">${d.course}</span>
+                            </div>
+                            <span style="color: #94a3b8;">${d.weight}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Next 7 days - directly from deadlines array (synced with Deadlines tab)
             const next7 = deadlines.filter(d => {
                 const days = getCountdown(d.date);
                 return days >= 0 && days <= 7;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            if (next7.length === 0) {
-                document.getElementById('next7Days').innerHTML = '<p style="color: #10b981; padding: 20px;">✅ No deadlines in the next 7 days!</p>';
-            } else {
-                document.getElementById('next7Days').innerHTML = next7.map(d => `
-                    <div class="action-item">
-                        ${getCountdownBadge(getCountdown(d.date))}
-                        <div style="flex: 1;">
-                            <strong>${d.what}</strong>
-                            <span style="color: #94a3b8; margin-left: 10px;">${d.course}</span>
-                        </div>
-                        <span style="color: #94a3b8;">${d.weight}</span>
-                    </div>
-                `).join('');
+            document.getElementById('next7Days').innerHTML = renderDeadlineItems(next7, 'No deadlines in the next 7 days!');
+            document.getElementById('next7Count').textContent = next7.length;
+            document.getElementById('next7Count').style.background = next7.length > 0 ? '#dc2626' : '#059669';
+            
+            // Next 8-14 days
+            const next14 = deadlines.filter(d => {
+                const days = getCountdown(d.date);
+                return days > 7 && days <= 14;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            document.getElementById('next14Days').innerHTML = renderDeadlineItems(next14, 'No deadlines in days 8-14!');
+            document.getElementById('next14Count').textContent = next14.length;
+            document.getElementById('next14Count').style.background = next14.length > 0 ? '#d97706' : '#059669';
+            
+            // Next 15-30 days (next month)
+            const nextMonth = deadlines.filter(d => {
+                const days = getCountdown(d.date);
+                return days > 14 && days <= 30;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            document.getElementById('nextMonthDays').innerHTML = renderDeadlineItems(nextMonth, 'No deadlines in days 15-30!');
+            document.getElementById('nextMonthCount').textContent = nextMonth.length;
+            
+            // Update current date display
+            const dateDisplay = document.getElementById('currentDateDisplay');
+            if (dateDisplay) {
+                dateDisplay.textContent = today.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
             }
         }
 
@@ -2102,51 +2537,216 @@
             
             months.forEach(month => {
                 const tbody = document.getElementById(month + 'Body');
+                if (!tbody) return;
+                
                 const monthDeadlines = deadlines.filter(d => d.month === month);
                 
-                tbody.innerHTML = monthDeadlines.map((d, index) => {
+                tbody.innerHTML = monthDeadlines.map((d, idx) => {
                     const days = getCountdown(d.date);
                     const isPassed = days < 0;
                     const deadlineIndex = deadlines.indexOf(d);
                     
                     return `
-                        <tr class="${isPassed ? 'passed' : ''}">
-                            <td class="editable" contenteditable="true" data-field="date" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'date', this.textContent)">${formatDate(d.date)}</td>
+                        <tr class="${isPassed ? 'passed' : ''}" data-deadline-index="${deadlineIndex}">
+                            <td>
+                                <input type="text" class="deadline-edit-input" 
+                                    value="${formatDate(d.date)}" 
+                                    data-index="${deadlineIndex}" 
+                                    data-field="date"
+                                    data-original="${formatDate(d.date)}"
+                                    onchange="handleDeadlineEdit(this)"
+                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 80px;">
+                            </td>
                             <td>${d.day}</td>
                             <td>${getCountdownBadge(days, d.tbd)}</td>
-                            <td class="editable" contenteditable="true" data-field="what" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'what', this.textContent)">${d.what}</td>
-                            <td class="editable" contenteditable="true" data-field="course" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'course', this.textContent)">${d.course}</td>
-                            <td class="editable" contenteditable="true" data-field="weight" data-index="${deadlineIndex}" onblur="editDeadline(${deadlineIndex}, 'weight', this.textContent)">${d.weight}</td>
+                            <td>
+                                <input type="text" class="deadline-edit-input" 
+                                    value="${escapeHtml(d.what)}" 
+                                    data-index="${deadlineIndex}" 
+                                    data-field="what"
+                                    data-original="${escapeHtml(d.what)}"
+                                    onchange="handleDeadlineEdit(this)"
+                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">
+                            </td>
+                            <td>
+                                <input type="text" class="deadline-edit-input" 
+                                    value="${escapeHtml(d.course)}" 
+                                    data-index="${deadlineIndex}" 
+                                    data-field="course"
+                                    data-original="${escapeHtml(d.course)}"
+                                    onchange="handleDeadlineEdit(this)"
+                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">
+                            </td>
+                            <td>
+                                <input type="text" class="deadline-edit-input" 
+                                    value="${escapeHtml(d.weight)}" 
+                                    data-index="${deadlineIndex}" 
+                                    data-field="weight"
+                                    data-original="${escapeHtml(d.weight)}"
+                                    onchange="handleDeadlineEdit(this)"
+                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">
+                            </td>
                             <td>${d.type}</td>
                         </tr>
                     `;
                 }).join('');
             });
         }
-
-        function editDeadline(index, field, value) {
-            if (field === 'date') {
-                // Try to parse the new date
-                const parsed = new Date(value + ' 2026');
-                if (!isNaN(parsed)) {
-                    const year = parsed.getFullYear() || 2026;
-                    const month = String(parsed.getMonth() + 1).padStart(2, '0');
-                    const day = String(parsed.getDate()).padStart(2, '0');
-                    deadlines[index].date = `${year}-${month}-${day}`;
-                    deadlines[index].day = parsed.toLocaleString('en-US', { weekday: 'short' });
-                    deadlines[index].month = parsed.toLocaleString('en-US', { month: 'long' }).toLowerCase();
-                }
-            } else {
-                deadlines[index][field] = value;
+        
+        function handleDeadlineKeydown(event, inputEl) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                inputEl.blur(); // Trigger onchange via blur
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                inputEl.value = inputEl.dataset.original || '';
+                inputEl.blur();
+            }
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        function handleDeadlineEdit(inputEl) {
+            const index = parseInt(inputEl.dataset.index, 10);
+            const field = inputEl.dataset.field;
+            const value = inputEl.value.trim();
+            const original = inputEl.dataset.original || '';
+            
+            console.log('handleDeadlineEdit:', { index, field, value, original });
+            
+            // If value unchanged, do nothing
+            if (value === original) {
+                console.log('Value unchanged, skipping save');
+                return;
             }
             
-            // Track edited deadlines
-            if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-            roadmapData.editedDeadlines[index] = deadlines[index];
+            if (isNaN(index) || index < 0 || index >= deadlines.length) {
+                console.error('Invalid deadline index:', index);
+                showToast('Error: Invalid deadline');
+                return;
+            }
             
-            saveData();
-            renderDeadlines();
-            renderDashboard();
+            const deadline = deadlines[index];
+            let changed = false;
+            let oldValue = '';
+            
+            if (field === 'date') {
+                const newDate = parseFlexibleDate(value);
+                if (newDate) {
+                    const year = newDate.getFullYear();
+                    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(newDate.getDate()).padStart(2, '0');
+                    
+                    oldValue = deadline.date;
+                    deadline.date = `${year}-${month}-${day}`;
+                    deadline.day = newDate.toLocaleString('en-US', { weekday: 'short' });
+                    deadline.month = newDate.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                    changed = true;
+                    console.log('Date updated:', oldValue, '->', deadline.date, 'month:', deadline.month);
+                } else {
+                    showToast('Invalid date. Try: Jan 20, 1/20, or 2026-01-20');
+                    inputEl.value = original; // Reset to original
+                    return;
+                }
+            } else if (field === 'what') {
+                if (deadline.what !== value) {
+                    oldValue = deadline.what;
+                    deadline.what = value;
+                    changed = true;
+                }
+            } else if (field === 'course') {
+                if (deadline.course !== value) {
+                    oldValue = deadline.course;
+                    deadline.course = value;
+                    changed = true;
+                }
+            } else if (field === 'weight') {
+                if (deadline.weight !== value) {
+                    oldValue = deadline.weight;
+                    deadline.weight = value;
+                    changed = true;
+                }
+            }
+            
+            if (changed) {
+                // Store the edit in roadmapData for persistence
+                if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+                roadmapData.editedDeadlines[index] = {
+                    date: deadline.date,
+                    day: deadline.day,
+                    month: deadline.month,
+                    what: deadline.what,
+                    course: deadline.course,
+                    weight: deadline.weight,
+                    type: deadline.type,
+                    tbd: deadline.tbd
+                };
+                
+                console.log('Storing edit for index', index, ':', roadmapData.editedDeadlines[index]);
+                
+                // Save to localStorage immediately
+                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                
+                // Save to Firebase (debounced)
+                saveData();
+                
+                // Re-render BOTH tabs to ensure sync
+                setTimeout(() => {
+                    renderDeadlines();
+                    renderDashboard();
+                    console.log('Re-rendered after edit');
+                }, 50);
+                
+                showToast(`Updated: ${field} changed!`);
+            }
+        }
+        
+        function parseFlexibleDate(value) {
+            if (!value) return null;
+            
+            const v = value.trim();
+            let parsed = null;
+            
+            // Try: "Jan 20" or "January 20"
+            parsed = new Date(v + ' 2026');
+            if (!isNaN(parsed) && parsed.getFullYear() === 2026) return parsed;
+            
+            // Try: "Jan 20, 2026"
+            parsed = new Date(v);
+            if (!isNaN(parsed) && parsed.getFullYear() >= 2025 && parsed.getFullYear() <= 2027) return parsed;
+            
+            // Try: "1/20" or "01/20"
+            if (/^\d{1,2}\/\d{1,2}$/.test(v)) {
+                parsed = new Date(v + '/2026');
+                if (!isNaN(parsed)) return parsed;
+            }
+            
+            // Try: "1-20" or "01-20"
+            if (/^\d{1,2}-\d{1,2}$/.test(v)) {
+                const parts = v.split('-');
+                parsed = new Date(`2026-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`);
+                if (!isNaN(parsed)) return parsed;
+            }
+            
+            // Try: "2026-01-20"
+            if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+                parsed = new Date(v);
+                if (!isNaN(parsed)) return parsed;
+            }
+            
+            return null;
         }
 
         function renderExamCountdown() {
@@ -2434,6 +3034,8 @@
 
         // ==================== INITIALIZE ====================
         function initUI() {
+            console.log('initUI called, roadmapData:', roadmapData);
+            
             // Restore mandatory checkboxes
             Object.keys(roadmapData.mandatoryItems).forEach(key => {
                 if (roadmapData.mandatoryItems[key]) {
@@ -2453,12 +3055,22 @@
             if (pedsLockedEl) pedsLockedEl.textContent = roadmapData.pedsLockedIn;
             if (pedsLockedEl2) pedsLockedEl2.textContent = roadmapData.pedsLockedIn;
             
-            // Restore edited deadlines
+            // Restore edited deadlines - DEEP MERGE each property
             if (roadmapData.editedDeadlines) {
-                Object.keys(roadmapData.editedDeadlines).forEach(index => {
-                    const edited = roadmapData.editedDeadlines[index];
-                    if (deadlines[index]) {
-                        Object.assign(deadlines[index], edited);
+                console.log('Restoring edited deadlines:', roadmapData.editedDeadlines);
+                Object.keys(roadmapData.editedDeadlines).forEach(indexStr => {
+                    const index = parseInt(indexStr, 10);
+                    const edited = roadmapData.editedDeadlines[indexStr];
+                    if (deadlines[index] && edited) {
+                        // Deep copy each property
+                        deadlines[index].date = edited.date || deadlines[index].date;
+                        deadlines[index].day = edited.day || deadlines[index].day;
+                        deadlines[index].what = edited.what || deadlines[index].what;
+                        deadlines[index].course = edited.course || deadlines[index].course;
+                        deadlines[index].weight = edited.weight || deadlines[index].weight;
+                        deadlines[index].type = edited.type || deadlines[index].type;
+                        deadlines[index].month = edited.month || deadlines[index].month;
+                        console.log('Restored deadline', index, ':', deadlines[index]);
                     }
                 });
             }
@@ -2483,6 +3095,8 @@
             renderDeadlines();
             loadCourseGrades();
             renderExamCountdown();
+            
+            console.log('initUI complete');
         }
         
         function init() {
@@ -2493,7 +3107,9 @@
         // Handle visibility changes - save when hiding, refresh when showing
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
-                // Tab is being hidden - ensure data is saved
+                // Tab is being hidden - ensure data is saved immediately
+                console.log('Tab hidden - saving data...');
+                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).set(roadmapData)
                         .then(() => console.log('✅ Saved on hide'))
@@ -2501,9 +3117,21 @@
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
+                console.log('Tab visible - refreshing data...');
                 if (firebaseSyncEnabled && database && userPath) {
                     loadFromFirebase();
                 }
+            }
+        });
+
+        // Save before page unload
+        window.addEventListener('beforeunload', function() {
+            console.log('Page unloading - saving data...');
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            if (firebaseSyncEnabled && database && userPath) {
+                // Use sendBeacon for reliable save on unload
+                const data = JSON.stringify(roadmapData);
+                navigator.sendBeacon && navigator.sendBeacon('about:blank', ''); // Trigger any pending requests
             }
         });
 
