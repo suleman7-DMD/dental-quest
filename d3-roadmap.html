@@ -347,6 +347,40 @@
             border-style: solid !important;
             background: rgba(59, 130, 246, 0.15) !important;
         }
+        
+        /* Date Picker Styling */
+        .deadline-date-picker {
+            background: #1e293b;
+            border: 1px solid #4b5563;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        
+        .deadline-date-picker:hover {
+            background: #2d3a4f;
+            border-color: #6b7280;
+        }
+        
+        .deadline-date-picker:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Style the calendar icon */
+        .deadline-date-picker::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .deadline-date-picker::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
 
         /* Priority List */
         .priority-item {
@@ -1217,7 +1251,7 @@
                 <button onclick="addNewDeadline()" style="padding: 8px 15px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">+ Add Deadline</button>
             </div>
             <div class="note" style="margin-bottom: 15px;">
-                <strong>💡 Tip:</strong> Edit any <span style="color: #60a5fa;">date, name, course, or weight</span> directly in the fields below. Press <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Enter</code> or click away to save. For dates, use: <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Jan 20</code> or <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">1/20</code>. Press <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px;">Esc</code> to cancel. Changes sync to Dashboard automatically.
+                <strong>💡 Tip:</strong> Click the <span style="color: #60a5fa;">📅 date field</span> to open calendar picker. Edit <span style="color: #60a5fa;">name, course, or weight</span> directly in the text fields. Changes sync to Dashboard automatically.
             </div>
 
             <!-- January -->
@@ -2549,14 +2583,11 @@
                     return `
                         <tr class="${isPassed ? 'passed' : ''}" data-deadline-index="${deadlineIndex}">
                             <td>
-                                <input type="text" class="deadline-edit-input" 
-                                    value="${formatDate(d.date)}" 
-                                    data-index="${deadlineIndex}" 
-                                    data-field="date"
-                                    data-original="${formatDate(d.date)}"
-                                    onblur="handleDeadlineEdit(this)"
-                                    onkeydown="handleDeadlineKeydown(event, this)"
-                                    style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 80px;">
+                                <input type="date" class="deadline-date-picker" 
+                                    value="${d.date}" 
+                                    data-index="${deadlineIndex}"
+                                    onchange="handleDateChange(this)"
+                                    style="background: #1e293b; border: 1px solid #4b5563; padding: 6px 8px; border-radius: 6px; color: #e2e8f0; cursor: pointer;">
                             </td>
                             <td>${d.day}</td>
                             <td>${getCountdownBadge(days, d.tbd)}</td>
@@ -2566,8 +2597,8 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="what"
                                     data-original="${escapeHtml(d.what)}"
-                                    onblur="handleDeadlineEdit(this)"
-                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    onblur="handleTextEdit(this)"
+                                    onkeydown="if(event.key==='Enter'){this.blur();}"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">
                             </td>
                             <td>
@@ -2576,8 +2607,8 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="course"
                                     data-original="${escapeHtml(d.course)}"
-                                    onblur="handleDeadlineEdit(this)"
-                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    onblur="handleTextEdit(this)"
+                                    onkeydown="if(event.key==='Enter'){this.blur();}"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">
                             </td>
                             <td>
@@ -2586,8 +2617,8 @@
                                     data-index="${deadlineIndex}" 
                                     data-field="weight"
                                     data-original="${escapeHtml(d.weight)}"
-                                    onblur="handleDeadlineEdit(this)"
-                                    onkeydown="handleDeadlineKeydown(event, this)"
+                                    onblur="handleTextEdit(this)"
+                                    onkeydown="if(event.key==='Enter'){this.blur();}"
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">
                             </td>
                             <td>${d.type}</td>
@@ -2597,10 +2628,117 @@
             });
         }
         
+        // Handle date picker changes
+        function handleDateChange(inputEl) {
+            const index = parseInt(inputEl.dataset.index, 10);
+            const newDate = inputEl.value; // Already in YYYY-MM-DD format
+            
+            console.log('handleDateChange:', { index, newDate });
+            
+            if (isNaN(index) || index < 0 || index >= deadlines.length) {
+                console.error('Invalid deadline index:', index);
+                return;
+            }
+            
+            if (!newDate) {
+                console.log('No date selected');
+                return;
+            }
+            
+            const deadline = deadlines[index];
+            const oldDate = deadline.date;
+            
+            if (oldDate === newDate) {
+                console.log('Date unchanged');
+                return;
+            }
+            
+            // Parse the new date
+            const dateObj = new Date(newDate + 'T12:00:00'); // Add time to avoid timezone issues
+            
+            // Update the deadline object
+            deadline.date = newDate;
+            deadline.day = dateObj.toLocaleString('en-US', { weekday: 'short' });
+            deadline.month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+            
+            console.log('Date updated:', oldDate, '->', newDate, 'month:', deadline.month);
+            
+            // Store the edit
+            if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+            roadmapData.editedDeadlines[index] = {
+                date: deadline.date,
+                day: deadline.day,
+                month: deadline.month,
+                what: deadline.what,
+                course: deadline.course,
+                weight: deadline.weight,
+                type: deadline.type,
+                tbd: deadline.tbd
+            };
+            
+            // Save immediately
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            saveData();
+            
+            // Re-render
+            renderDeadlines();
+            renderDashboard();
+            
+            showToast('Date updated!');
+        }
+        
+        // Handle text field edits (name, course, weight)
+        function handleTextEdit(inputEl) {
+            const index = parseInt(inputEl.dataset.index, 10);
+            const field = inputEl.dataset.field;
+            const value = inputEl.value.trim();
+            const original = inputEl.dataset.original || '';
+            
+            console.log('handleTextEdit:', { index, field, value, original });
+            
+            if (value === original) {
+                console.log('Value unchanged');
+                return;
+            }
+            
+            if (isNaN(index) || index < 0 || index >= deadlines.length) {
+                console.error('Invalid deadline index:', index);
+                return;
+            }
+            
+            const deadline = deadlines[index];
+            
+            // Update the field
+            deadline[field] = value;
+            
+            // Store the edit
+            if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+            roadmapData.editedDeadlines[index] = {
+                date: deadline.date,
+                day: deadline.day,
+                month: deadline.month,
+                what: deadline.what,
+                course: deadline.course,
+                weight: deadline.weight,
+                type: deadline.type,
+                tbd: deadline.tbd
+            };
+            
+            // Save immediately
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            saveData();
+            
+            // Re-render
+            renderDeadlines();
+            renderDashboard();
+            
+            showToast(`${field} updated!`);
+        }
+        
         function handleDeadlineKeydown(event, inputEl) {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                inputEl.blur(); // Trigger onblur to save
+                inputEl.blur();
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 inputEl.value = inputEl.dataset.original || '';
@@ -2618,137 +2756,6 @@
                 .replace(/'/g, '&#039;');
         }
         
-        function handleDeadlineEdit(inputEl) {
-            const index = parseInt(inputEl.dataset.index, 10);
-            const field = inputEl.dataset.field;
-            const value = inputEl.value.trim();
-            const original = inputEl.dataset.original || '';
-            
-            console.log('handleDeadlineEdit:', { index, field, value, original });
-            
-            // If value unchanged, do nothing
-            if (value === original) {
-                console.log('Value unchanged, skipping save');
-                return;
-            }
-            
-            if (isNaN(index) || index < 0 || index >= deadlines.length) {
-                console.error('Invalid deadline index:', index);
-                showToast('Error: Invalid deadline');
-                return;
-            }
-            
-            const deadline = deadlines[index];
-            let changed = false;
-            let oldValue = '';
-            
-            if (field === 'date') {
-                const newDate = parseFlexibleDate(value);
-                if (newDate) {
-                    const year = newDate.getFullYear();
-                    const month = String(newDate.getMonth() + 1).padStart(2, '0');
-                    const day = String(newDate.getDate()).padStart(2, '0');
-                    
-                    oldValue = deadline.date;
-                    deadline.date = `${year}-${month}-${day}`;
-                    deadline.day = newDate.toLocaleString('en-US', { weekday: 'short' });
-                    deadline.month = newDate.toLocaleString('en-US', { month: 'long' }).toLowerCase();
-                    changed = true;
-                    console.log('Date updated:', oldValue, '->', deadline.date, 'month:', deadline.month);
-                } else {
-                    showToast('Invalid date. Try: Jan 20, 1/20, or 2026-01-20');
-                    inputEl.value = original; // Reset to original
-                    return;
-                }
-            } else if (field === 'what') {
-                if (deadline.what !== value) {
-                    oldValue = deadline.what;
-                    deadline.what = value;
-                    changed = true;
-                }
-            } else if (field === 'course') {
-                if (deadline.course !== value) {
-                    oldValue = deadline.course;
-                    deadline.course = value;
-                    changed = true;
-                }
-            } else if (field === 'weight') {
-                if (deadline.weight !== value) {
-                    oldValue = deadline.weight;
-                    deadline.weight = value;
-                    changed = true;
-                }
-            }
-            
-            if (changed) {
-                // Store the edit in roadmapData for persistence
-                if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-                roadmapData.editedDeadlines[index] = {
-                    date: deadline.date,
-                    day: deadline.day,
-                    month: deadline.month,
-                    what: deadline.what,
-                    course: deadline.course,
-                    weight: deadline.weight,
-                    type: deadline.type,
-                    tbd: deadline.tbd
-                };
-                
-                console.log('Storing edit for index', index, ':', roadmapData.editedDeadlines[index]);
-                
-                // Save to localStorage immediately
-                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                
-                // Save to Firebase (debounced)
-                saveData();
-                
-                // Re-render BOTH tabs to ensure sync
-                setTimeout(() => {
-                    renderDeadlines();
-                    renderDashboard();
-                    console.log('Re-rendered after edit');
-                }, 50);
-                
-                showToast(`Updated: ${field} changed!`);
-            }
-        }
-        
-        function parseFlexibleDate(value) {
-            if (!value) return null;
-            
-            const v = value.trim();
-            let parsed = null;
-            
-            // Try: "Jan 20" or "January 20"
-            parsed = new Date(v + ' 2026');
-            if (!isNaN(parsed) && parsed.getFullYear() === 2026) return parsed;
-            
-            // Try: "Jan 20, 2026"
-            parsed = new Date(v);
-            if (!isNaN(parsed) && parsed.getFullYear() >= 2025 && parsed.getFullYear() <= 2027) return parsed;
-            
-            // Try: "1/20" or "01/20"
-            if (/^\d{1,2}\/\d{1,2}$/.test(v)) {
-                parsed = new Date(v + '/2026');
-                if (!isNaN(parsed)) return parsed;
-            }
-            
-            // Try: "1-20" or "01-20"
-            if (/^\d{1,2}-\d{1,2}$/.test(v)) {
-                const parts = v.split('-');
-                parsed = new Date(`2026-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`);
-                if (!isNaN(parsed)) return parsed;
-            }
-            
-            // Try: "2026-01-20"
-            if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-                parsed = new Date(v);
-                if (!isNaN(parsed)) return parsed;
-            }
-            
-            return null;
-        }
-
         function renderExamCountdown() {
             const tbody = document.getElementById('examCountdownTable').querySelector('tbody');
             
