@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3 Spring Roadmap | Dental Student Quest</title>
+    
+    <!-- Firebase SDK - Same as Dental Quest App -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: #1a1a2e;
+            border-bottom: 2px solid #374151;
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .tab-btn {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: #e5e7eb;
+        }
+
+        .tab-btn.active {
+            color: #f87171;
+            border-bottom-color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        /* Alert Banners */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-critical {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 2px solid #fca5a5;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            border: 2px solid #fcd34d;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            border: 2px solid #93c5fd;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: 2px solid #6ee7b7;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #374151;
+        }
+
+        th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tr.passed {
+            opacity: 0.5;
+        }
+
+        tr.passed td {
+            text-decoration: line-through;
+        }
+
+        /* Countdown Badges */
+        .countdown {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85em;
+        }
+
+        .countdown-critical {
+            background: #dc2626;
+            color: white;
+        }
+
+        .countdown-warning {
+            background: #d97706;
+            color: white;
+        }
+
+        .countdown-normal {
+            background: #059669;
+            color: white;
+        }
+
+        .countdown-passed {
+            background: #374151;
+            color: #9ca3af;
+        }
+
+        /* Status Badges */
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8em;
+        }
+
+        .status-done {
+            background: #059669;
+            color: white;
+        }
+
+        .status-pending {
+            background: #dc2626;
+            color: white;
+        }
+
+        .status-tbd {
+            background: #d97706;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Risk Badges */
+        .risk-critical {
+            background: #dc2626;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .risk-high {
+            background: #ea580c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .risk-medium {
+            background: #d97706;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .risk-low {
+            background: #059669;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        /* Editable Fields */
+        .editable {
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed #4b5563;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .editable:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #6b7280;
+        }
+
+        .editable:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Priority List */
+        .priority-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .priority-item.yellow {
+            border-left-color: #d97706;
+        }
+
+        .priority-item.green {
+            border-left-color: #059669;
+        }
+
+        .priority-number {
+            background: #dc2626;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Course Cards */
+        .course-card {
+            background: #1e293b;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #374151;
+        }
+
+        .course-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .course-header:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .course-header.at-risk {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(153, 27, 27, 0.3) 100%);
+            border-left: 4px solid #dc2626;
+        }
+
+        .course-body {
+            padding: 0 20px 20px;
+            display: none;
+        }
+
+        .course-body.show {
+            display: block;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+
+        .course-header.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Grade Calculator */
+        .grade-calc {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .grade-input-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .grade-input-row label {
+            min-width: 150px;
+            color: #94a3b8;
+        }
+
+        .grade-input-row input, .grade-input-row select {
+            padding: 8px 12px;
+            background: #1e293b;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 1em;
+        }
+
+        .grade-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .grade-result.passing {
+            border-left: 4px solid #059669;
+        }
+
+        .grade-result.failing {
+            border-left: 4px solid #dc2626;
+        }
+
+        /* Checklist */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #374151;
+            transition: all 0.2s;
+        }
+
+        .checklist-item.checked {
+            border-color: #059669;
+            background: rgba(5, 150, 105, 0.1);
+        }
+
+        .checklist-item.unchecked {
+            border-color: #dc2626;
+        }
+
+        .checklist-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #059669;
+        }
+
+        /* Month Headers */
+        .month-header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 20px 0 15px;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .month-header.brutal {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        /* Gym Reminder */
+        .gym-reminder {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-top: 20px;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #0f172a;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #f87171;
+        }
+
+        .stat-box .label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        /* Classmate Share */
+        .share-section {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .share-section h4 {
+            color: #f87171;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #374151;
+        }
+
+        /* Scrollable sections */
+        .scroll-section {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* Action items */
+        .action-item {
+            background: #1e293b;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-item .icon {
+            font-size: 1.2em;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .tab-btn {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+
+            .tab-content {
+                padding: 15px;
+            }
+
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .back-btn {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 15px;
+                display: inline-block;
+            }
+
+            table {
+                font-size: 0.8em;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #059669;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Find Date Warning */
+        .find-date {
+            background: #dc2626;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            animation: pulse 1.5s infinite;
+            cursor: pointer;
+        }
+
+        /* Footnotes & Notes */
+        .note {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .warning-note {
+            background: rgba(220, 38, 38, 0.1);
+            border-left: 4px solid #dc2626;
+        }
+
+        /* Study Phase */
+        .study-phase {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .study-phase h4 {
+            color: #f87171;
+            margin-bottom: 15px;
+        }
+
+        .study-split {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .study-split-item {
+            flex: 1;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .study-split-item .percent {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back-btn">← Back to Quest</a>
+        <h1>📚 D3 Spring 2026 Roadmap</h1>
+        <p>Your complete academic survival guide</p>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85em;">
+            <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
+            <span id="syncText" style="color: #8b949e;">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">🎯 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('deadlines')">📅 Deadlines</button>
+        <button class="tab-btn" onclick="switchTab('courses')">📚 Courses</button>
+        <button class="tab-btn" onclick="switchTab('grades')">📊 Grades</button>
+        <button class="tab-btn" onclick="switchTab('classmates')">👥 Classmate Share</button>
+        <button class="tab-btn" onclick="switchTab('mandatory')">⚠️ Mandatory</button>
+    </nav>
+
+    <!-- ==================== DASHBOARD TAB ==================== -->
+    <div id="tab-dashboard" class="tab-content active">
+        <!-- At-Risk Alert -->
+        <div class="alert alert-critical">
+            <span style="font-size: 2em;">🚨</span>
+            <div>
+                <strong style="font-size: 1.2em;">PEDS IS AT RISK</strong><br>
+                You have <span id="pedsLockedIn" class="editable" contenteditable="true" onblur="saveData()">33.3</span> points locked in. 
+                Need ~70% average on remaining 57.5% to pass with C-. 
+                <strong>Aim for 80%+ on Exam 2.</strong>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="dashboardStats">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Next 7 Days -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">⏰ Next 7 Days</span>
+            </div>
+            <div id="next7Days">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Top 5 Priorities -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🎯 Top 5 Priorities Right Now</span>
+            </div>
+            <div class="priority-item">
+                <span class="priority-number">1</span>
+                <div><strong>TODAY/TOMORROW:</strong> Complete Oral Med Quiz 1 before Friday class</div>
+            </div>
+            <div class="priority-item">
+                <span class="priority-number">2</span>
+                <div><strong>THIS WEEK:</strong> Find out exact dates for Peds mandatory items (NPI, Ortho Module, IPS) — email course director or check Blackboard</div>
+            </div>
+            <div class="priority-item yellow">
+                <span class="priority-number" style="background: #d97706;">3</span>
+                <div><strong>SCHEDULE:</strong> Book your Perio 2 in-person discussion with Dr. Fleisher (5% free points you control)</div>
+            </div>
+            <div class="priority-item yellow">
+                <span class="priority-number" style="background: #d97706;">4</span>
+                <div><strong>SCHEDULE:</strong> Book pre-meeting with Maseli for Feb 6 Tx Plan apt</div>
+            </div>
+            <div class="priority-item green">
+                <span class="priority-number" style="background: #059669;">5</span>
+                <div><strong>STUDY PRIORITY:</strong> PC2 Midterm (Feb 2) and Ortho Final (Feb 6) are your immediate exam targets. Then Peds Exam 2 (Feb 18) is your survival exam.</div>
+            </div>
+        </div>
+
+        <!-- Reality Check (Gym Only) -->
+        <div class="gym-reminder">
+            💪 HIT THE GYM EVERY DAY — It keeps your head clear
+        </div>
+    </div>
+
+    <!-- ==================== DEADLINES TAB ==================== -->
+    <div id="tab-deadlines" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📅 Master Deadline Calendar</span>
+                <button onclick="addNewDeadline()" style="padding: 8px 15px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">+ Add Deadline</button>
+            </div>
+
+            <!-- January -->
+            <div class="month-header">📅 JANUARY 2026</div>
+            <div class="table-container">
+                <table id="januaryTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Countdown</th>
+                            <th>What</th>
+                            <th>Course</th>
+                            <th>% of Grade</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="januaryBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- February -->
+            <div class="month-header brutal">⚠️ FEBRUARY 2026 — BRUTAL MONTH ⚠️</div>
+            <div class="table-container">
+                <table id="februaryTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Countdown</th>
+                            <th>What</th>
+                            <th>Course</th>
+                            <th>% of Grade</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="februaryBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- March -->
+            <div class="month-header">📅 MARCH 2026</div>
+            <div class="table-container">
+                <table id="marchTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Countdown</th>
+                            <th>What</th>
+                            <th>Course</th>
+                            <th>% of Grade</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marchBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- April -->
+            <div class="month-header">📅 APRIL 2026</div>
+            <div class="table-container">
+                <table id="aprilTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Countdown</th>
+                            <th>What</th>
+                            <th>Course</th>
+                            <th>% of Grade</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aprilBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== COURSES TAB ==================== -->
+    <div id="tab-courses" class="tab-content">
+        <!-- ORAL MEDICINE -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('oralmed')">
+                <div>
+                    <strong style="font-size: 1.1em;">📖 ORAL MEDICINE (OD 531)</strong>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Laurel Henderson</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-oralmed">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Participation (cold-calling)</td><td>12.5% (50 pts)</td><td><span class="status status-pending">Ongoing</span></td><td>—</td><td>Cold-calling, lose points if absent</td></tr>
+                            <tr><td>Weekly Quizzes (10)</td><td>25% (100 pts)</td><td><span class="status status-pending">Quiz 1 due TOMORROW</span></td><td>Before each Friday lecture</td><td>NO MAKEUP for missed quizzes</td></tr>
+                            <tr><td>Midterm</td><td>25% (100 pts)</td><td><span class="status status-pending">❌</span></td><td>Feb 27</td><td>Notecard allowed (5"×8" handwritten)</td></tr>
+                            <tr><td>Final</td><td>25% (100 pts)</td><td><span class="status status-pending">❌</span></td><td>Apr 17</td><td>Notecard allowed</td></tr>
+                            <tr><td>Passion Project</td><td>12.5% (50 pts)</td><td><span class="status status-pending">❌</span></td><td>Apr 17 by 4pm</td><td>Open format, 5 references, reflection</td></tr>
+                            <tr><td>Extra Credit</td><td>Up to 5% (20 pts)</td><td>—</td><td>—</td><td>At director's discretion</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note warning-note">
+                    <strong>⚠️ Attendance:</strong> Mandatory, tracked, fixed seating chart, cold-calling<br>
+                    <strong>📚 Textbook:</strong> Neville 5th Edition (required)
+                </div>
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 93.34%+ | B: 83.34-86.66% | C: 73.34-76.66% | D-: 60-63.33% | F: Below 60%<br>
+                    <strong>To Pass (D-):</strong> 60%+ (240/400 points)
+                </div>
+            </div>
+        </div>
+
+        <!-- PAIN CONTROL 2 -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('paincontrol')">
+                <div>
+                    <strong style="font-size: 1.1em;">💉 PAIN CONTROL 2 (OS 532)</strong>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. D'Innocenzo</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-paincontrol">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Rx #1</td><td>2%</td><td><span class="status status-pending">❌</span></td><td>Jan 22</td><td>Prescription writing exercise</td></tr>
+                            <tr><td>Take Home Exam 1</td><td>12%</td><td><span class="status status-pending">❌</span></td><td>Jan 29 (before class)</td><td>Covers lectures 1-4</td></tr>
+                            <tr><td>Midterm</td><td>30%</td><td><span class="status status-pending">❌</span></td><td>Feb 2 (Mon 4pm)</td><td>Lectures 1-4</td></tr>
+                            <tr><td>Medical Consultation</td><td>2%</td><td><span class="status status-pending">❌</span></td><td>Feb 19</td><td></td></tr>
+                            <tr><td>Rx #2</td><td>2%</td><td><span class="status status-pending">❌</span></td><td>Feb 26</td><td></td></tr>
+                            <tr><td>Take Home Exam 2</td><td>12%</td><td><span class="status status-pending">❌</span></td><td>Mar 5 (before class)</td><td></td></tr>
+                            <tr><td>Final</td><td>40%</td><td><span class="status status-pending">❌</span></td><td>Mar 19 (Thu 4pm)</td><td>Lectures 6-11</td></tr>
+                            <tr><td>Attendance Bonus</td><td>+2 pts</td><td>—</td><td>—</td><td>2 random checks, 1pt each</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note warning-note">
+                    <strong>⚠️ Required Module:</strong> Complete Acute Dental Pain online course BEFORE Jan 29<br>
+                    <a href="https://www.scopeofpain.org/supplemental-training/safe-opioid-prescribing-for-acute-dental-pain/activity.php" target="_blank" style="color: #60a5fa;">https://www.scopeofpain.org/...</a><br>
+                    <strong>📚 Textbook:</strong> Malamed - Sedation 6th ed (required)
+                </div>
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 92%+ | B: 80-84% | C: 70-74% | D: 60-65% | F: Below 60%<br>
+                    <strong>To Pass (D):</strong> 60%+
+                </div>
+            </div>
+        </div>
+
+        <!-- CRITICAL THINKING -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('critthink')">
+                <div>
+                    <strong style="font-size: 1.1em;">🧠 CRITICAL THINKING (GD 660)</strong>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-critthink">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Quiz 1</td><td>20%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Quiz 2</td><td>20%</td><td><span class="status status-pending">❌</span></td><td>Jan 29 evening</td><td>1hr window, open Blackboard ONLY</td></tr>
+                            <tr><td>PICO</td><td>3%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Individual Article</td><td>12%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Group Articles</td><td>6%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Group PowerPoint</td><td>12%</td><td><span class="status status-pending">❌</span></td><td>Mar 18 (8am)</td><td></td></tr>
+                            <tr><td>Group Video</td><td>9%</td><td><span class="status status-pending">❌</span></td><td>Mar 18 (8am)</td><td></td></tr>
+                            <tr><td>Systematic Review</td><td>12%</td><td><span class="status status-pending">❌</span></td><td>Mar 23 (8am)</td><td></td></tr>
+                            <tr><td>Peer Review</td><td>6%</td><td><span class="status status-pending">❌</span></td><td>TBD</td><td></td></tr>
+                            <tr><td>Live Presentations</td><td>Part of 60%</td><td><span class="status status-pending">❌</span></td><td>Apr 1, 14, 16</td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note warning-note">
+                    <strong>⚠️ Late submissions = 0.</strong> Unexcused absence = letter grade deduction per absence.
+                </div>
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 93%+ | B: 83-86% | C: 73-76% | D: 60-69% | F: Below 60%<br>
+                    <strong>To Pass (D):</strong> 60%+
+                </div>
+            </div>
+        </div>
+
+        <!-- PEDIATRIC DENTISTRY - AT RISK -->
+        <div class="course-card">
+            <div class="course-header at-risk" onclick="toggleCourse('peds')">
+                <div>
+                    <strong style="font-size: 1.1em;">👶 PEDIATRIC DENTISTRY (PD 530)</strong>
+                    <span class="risk-critical" style="margin-left: 10px;">⚠️ AT RISK</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body show" id="course-peds">
+                <div class="alert alert-critical" style="margin-bottom: 15px;">
+                    <strong>🚨 YOUR SITUATION:</strong> You have <span id="pedsLockedIn2" class="editable" contenteditable="true" onblur="saveData()">33.3</span> pts locked in (Exam 1: 77% × 40% = 30.8 + Headstart 2.5). 
+                    Need ~70% avg on remaining 57.5% to pass with C-.
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Exam 1 (Midterm)</td><td>40%</td><td><span class="status status-done">✅ 77%</span></td><td>—</td><td>= 30.8 pts</td></tr>
+                            <tr><td>Exam 2 (Cumulative)</td><td>45%</td><td><span class="status status-pending">❌</span></td><td>Feb 18</td><td><strong>YOUR MAKE-OR-BREAK</strong></td></tr>
+                            <tr><td>Exam 3 + Attendance</td><td>7.5%</td><td><span class="status status-pending">❌</span></td><td>Mar 30</td><td>Non-cumulative or lower stakes</td></tr>
+                            <tr><td>Headstart Rotation</td><td>2.5%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>Orthodontic Module</td><td>5%</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="saveData()">TBD</td><td><strong>MANDATORY - FAIL COURSE IF NOT DONE</strong></td></tr>
+                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>IPS Session</td><td>Extra credit</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="saveData()">TBD</td><td><strong>MANDATORY - FAIL COURSE IF NOT DONE</strong></td></tr>
+                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>NPI Exercise</td><td>—</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="saveData()">~Late Feb</td><td><strong>MANDATORY - FAIL COURSE IF NOT DONE</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Peds Math Breakdown -->
+                <div class="card" style="background: #0f172a; margin-top: 15px;">
+                    <div class="card-header">
+                        <span class="card-title">🧮 PEDS GRADE MATH</span>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <h4 style="color: #94a3b8; margin-bottom: 10px;">What You Have</h4>
+                            <table>
+                                <tr><td>Exam 1 (77% × 40)</td><td><strong>30.8 pts</strong></td></tr>
+                                <tr><td>Headstart (100% × 2.5)</td><td><strong>2.5 pts</strong></td></tr>
+                                <tr style="background: rgba(5, 150, 105, 0.2);"><td><strong>LOCKED IN</strong></td><td><strong>33.3 pts</strong></td></tr>
+                            </table>
+                        </div>
+                        <div>
+                            <h4 style="color: #94a3b8; margin-bottom: 10px;">What You Need</h4>
+                            <table>
+                                <tr><td>C- (70%)</td><td>36.7 pts → <strong>63.8% avg</strong></td></tr>
+                                <tr><td>C (73%)</td><td>39.7 pts → <strong>69.0% avg</strong></td></tr>
+                                <tr><td>C+ (77%)</td><td>43.7 pts → <strong>76.0% avg</strong></td></tr>
+                                <tr><td>B- (80%)</td><td>46.7 pts → <strong>81.2% avg</strong></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="note warning-note" style="margin-top: 15px;">
+                        <strong>TRANSLATION:</strong> You need ~70% average on Exam 2 + Exam 3 + mandatory items to pass with a C.<br>
+                        <strong>On Exam 2 specifically (45%):</strong> If you get 75%, that's 33.75 pts. Combined with 33.3 locked = 67.05. Still need strong Exam 3 + Attendance + Ortho Module.<br>
+                        <strong>BOTTOM LINE: You need to score ~80%+ on Exam 2 to be comfortable.</strong>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 93%+ | B: 83-86% | C: 73-76% | D: 60-69% | F: Below 60%<br>
+                    <strong>To Pass (D):</strong> 60%+ <strong>AND</strong> all mandatory items completed
+                </div>
+            </div>
+        </div>
+
+        <!-- PERIODONTOLOGY 2 -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('perio')">
+                <div>
+                    <strong style="font-size: 1.1em;">🦷 PERIODONTOLOGY 2 (PE 530)</strong>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-perio">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Midterm</td><td>40%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Written Assignment</td><td>10%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>In-Person Discussion</td><td>5%</td><td><span class="status status-pending">❌</span></td><td>SCHEDULE NOW</td><td>15-20 min with Dr. Fleisher</td></tr>
+                            <tr><td>Final (MCQ 70% + Essay 30%)</td><td>45%</td><td><span class="status status-pending">❌</span></td><td>Mar 11</td><td>Comprehensive</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note warning-note">
+                    <strong>⚠️ Attendance:</strong> Letter grade deduction PER absence. 10+ min late = absence. Up to 10 min late = 0.5 grade deduction.
+                </div>
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 93%+ | B: 83-86% | C: 73-76% | D: 65-69% | F: Below 65%<br>
+                    <strong>To Pass (D):</strong> 65%+ ← <strong>NOTE: Higher than most courses!</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORTHODONTICS -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('ortho')">
+                <div>
+                    <strong style="font-size: 1.1em;">😬 ORTHODONTICS (OR 530)</strong>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-ortho">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Midterm</td><td>50%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
+                            <tr><td>Final</td><td>50%</td><td><span class="status status-pending">❌</span></td><td>Feb 6</td><td>Cumulative</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note">
+                    <strong>📚 Study tip:</strong> Old exams on course website — questions will be similar!
+                </div>
+                <div class="note">
+                    <strong>Grading Scale:</strong> A: 93%+ | B: 83-86% | C: 73-76% | D: 60-69% | F: Below 60%<br>
+                    <strong>To Pass (D):</strong> 60%+
+                </div>
+            </div>
+        </div>
+
+        <!-- GERIATRICS -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('geriatrics')">
+                <div>
+                    <strong style="font-size: 1.1em;">👴 GERIATRICS</strong>
+                    <span style="color: #d97706; margin-left: 10px;">Syllabus TBD</span>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-geriatrics">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Midterm</td><td class="editable" contenteditable="true" onblur="saveData()">TBD</td><td><span class="status status-pending">❌</span></td><td>Feb 11</td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- OTHER OBLIGATIONS -->
+        <div class="course-card">
+            <div class="course-header" onclick="toggleCourse('other')">
+                <div>
+                    <strong style="font-size: 1.1em;">📋 OTHER OBLIGATIONS</strong>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="course-body" id="course-other">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>What</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Feb 6</td><td>Tx Plan Apt (Keisha/Maseli)</td><td>Need: mounted models, written analysis, pre-meeting with Maseli</td></tr>
+                            <tr><td>Feb 9</td><td>Group Practice 9 Assignment</td><td>Practice management</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Summary -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">📋 ATTENDANCE SEVERITY SUMMARY</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Course</th><th>Strictness</th><th>Grade Impact</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Perio 2</td><td><span class="risk-critical">🔴 MOST SEVERE</span></td><td>Letter grade deduction PER absence; late = 0.5 deduction</td></tr>
+                        <tr><td>Critical Thinking</td><td><span class="risk-high">🔴 SEVERE</span></td><td>Letter grade deduction PER absence</td></tr>
+                        <tr><td>Oral Medicine</td><td><span class="risk-medium">🟡 MODERATE</span></td><td>Cold-calling affects 12.5% participation grade</td></tr>
+                        <tr><td>Peds</td><td><span class="risk-medium">🟡 MODERATE</span></td><td>Affects 7.5% Exam 3 + Attendance component</td></tr>
+                        <tr><td>Pain Control 2</td><td><span class="risk-low">🟢 LENIENT</span></td><td>Attendance = bonus points only</td></tr>
+                        <tr><td>Orthodontics</td><td><span class="risk-low">🟢 LENIENT</span></td><td>Tracked but no stated penalty</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== GRADES TAB ==================== -->
+    <div id="tab-grades" class="tab-content">
+        <div class="alert alert-info">
+            <span style="font-size: 1.5em;">📊</span>
+            <div>
+                <strong>Grade Calculator</strong><br>
+                Enter your grades below to calculate what you need on remaining assignments to hit your target grade.
+            </div>
+        </div>
+
+        <!-- Course Selector -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Select Course</span>
+            </div>
+            <div class="grade-input-row">
+                <select id="gradeCoursePicker" onchange="loadCourseGrades()" style="flex: 1; padding: 12px; font-size: 1em;">
+                    <option value="oralmed">Oral Medicine (OD 531)</option>
+                    <option value="paincontrol">Pain Control 2 (OS 532)</option>
+                    <option value="critthink">Critical Thinking (GD 660)</option>
+                    <option value="peds" selected>Pediatric Dentistry (PD 530) ⚠️</option>
+                    <option value="perio">Periodontology 2 (PE 530)</option>
+                    <option value="ortho">Orthodontics (OR 530)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Grade Entry -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📝 Enter Your Grades</span>
+            </div>
+            <div id="gradeEntrySection">
+                <!-- Populated by JS based on course selection -->
+            </div>
+        </div>
+
+        <!-- Target Grade -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🎯 Target Grade</span>
+            </div>
+            <div class="grade-input-row">
+                <label>I want to achieve:</label>
+                <select id="targetGrade" onchange="calculateNeeded()" style="padding: 12px; font-size: 1em;">
+                    <option value="60">D (60% - Just Pass)</option>
+                    <option value="65">D+ (65%)</option>
+                    <option value="70" selected>C- (70%)</option>
+                    <option value="73">C (73%)</option>
+                    <option value="77">C+ (77%)</option>
+                    <option value="80">B- (80%)</option>
+                    <option value="83">B (83%)</option>
+                    <option value="87">B+ (87%)</option>
+                    <option value="90">A- (90%)</option>
+                    <option value="93">A (93%)</option>
+                </select>
+                <button onclick="calculateNeeded()" style="padding: 12px 25px; background: #059669; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Calculate</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📈 What You Need</span>
+            </div>
+            <div id="gradeResults">
+                <p style="color: #94a3b8;">Select a course and enter your grades to see calculations.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CLASSMATE SHARE TAB ==================== -->
+    <div id="tab-classmates" class="tab-content">
+        <div class="alert alert-warning">
+            <span style="font-size: 1.5em;">👥</span>
+            <div>
+                <strong>Classmate Collaboration Guide</strong><br>
+                These are the take-home quizzes, assignments, and deliverables that get passed around between classmates. You need a reliable system for getting these.
+            </div>
+        </div>
+
+        <!-- Risk Summary -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📊 Your "Classmate Dependency" Risk</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Course</th><th>Outside Work % of Grade</th><th>Dependency Level</th><th>Risk If Isolated</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Pain Control 2</td><td>30%</td><td><span class="risk-critical">🔴 HIGH</span></td><td>Take-home exams need collaboration</td></tr>
+                        <tr><td>Peds</td><td>5% + AUTO-FAIL items</td><td><span class="risk-critical">🔴 CRITICAL</span></td><td>Mandatory items need reminders/sharing</td></tr>
+                        <tr><td>Oral Medicine</td><td>37.5%</td><td><span class="risk-medium">🟡 MEDIUM</span></td><td>Quizzes on BB, but intel helps</td></tr>
+                        <tr><td>Critical Thinking</td><td>59%</td><td><span class="risk-low">🟢 LOW</span></td><td>Group project = built-in help</td></tr>
+                        <tr><td>Perio 2</td><td>5%</td><td><span class="risk-low">🟢 LOW</span></td><td>Individual discussion</td></tr>
+                        <tr><td>Ortho</td><td>0%</td><td><span class="risk-low">🟢 LOW</span></td><td>Old exams publicly available</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ORAL MEDICINE Shareable -->
+        <div class="share-section">
+            <h4>📖 ORAL MEDICINE (OD 531) — 37.5% Outside Work</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Assignment</th><th>Due Date</th><th>% of Grade</th><th>Shareable?</th><th>What You Need</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Quiz 1</td><td>Jan 16 (TOMORROW)</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 2</td><td>Jan 23</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 3</td><td>Feb 6</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 4</td><td>Feb 20</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 5</td><td>Before midterm?</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 6</td><td>Mar 6</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 7</td><td>Mar 13</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 8</td><td>Mar 20</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 9</td><td>Apr 3</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Quiz 10</td><td>Before final?</td><td>2.5%</td><td>⚠️ Maybe</td><td>Quiz access on Blackboard</td></tr>
+                        <tr><td>Passion Project</td><td>Apr 17 (4pm)</td><td>12.5%</td><td>✅ Yes</td><td>Ideas, format examples, peer feedback</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>What Classmates Typically Share:</strong> Quiz questions/answers from previous years, Passion project ideas and examples, Study guides for quiz content, Neville reading summaries<br>
+                <strong>Your Risk If Isolated:</strong> 🟡 MEDIUM — Quizzes are on Blackboard so you have access. But knowing what's ON the quiz helps.
+            </div>
+        </div>
+
+        <!-- PAIN CONTROL 2 Shareable -->
+        <div class="share-section">
+            <h4>💉 PAIN CONTROL 2 (OS 532) — 30% Outside Work — <span class="risk-critical">🔴 HIGH RISK</span></h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Assignment</th><th>Due Date</th><th>% of Grade</th><th>Shareable?</th><th>What You Need</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Rx Writing #1</td><td>Jan 22</td><td>2%</td><td>✅ Yes</td><td>Prescription format, examples</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>Take Home Exam 1</td><td>Jan 29 (before class)</td><td>12%</td><td><strong>✅ YES</strong></td><td><strong>Questions, answers, collaboration</strong></td></tr>
+                        <tr><td>Online Acute Dental Pain Module</td><td>Jan 29</td><td>Required</td><td>❌ No</td><td>Just complete it yourself</td></tr>
+                        <tr><td>Medical Consultation Assignment</td><td>Feb 19</td><td>2%</td><td>✅ Yes</td><td>Format, examples</td></tr>
+                        <tr><td>Rx Writing #2</td><td>Feb 26</td><td>2%</td><td>✅ Yes</td><td>Prescription format, examples</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>Take Home Exam 2</td><td>Mar 5 (before class)</td><td>12%</td><td><strong>✅ YES</strong></td><td><strong>Questions, answers, collaboration</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note warning-note">
+                <strong>What Classmates Typically Share:</strong> Take home exam questions and answers ← THIS IS BIG, Rx writing templates and examples, Medical consultation format, Old take-home exams from previous years<br>
+                <strong>Your Risk If Isolated:</strong> 🔴 HIGH — Take-home exams are 24% of your grade combined. These are exactly the type of thing study groups collaborate on. <strong>You NEED a source for these.</strong>
+            </div>
+        </div>
+
+        <!-- CRITICAL THINKING Shareable -->
+        <div class="share-section">
+            <h4>🧠 CRITICAL THINKING (GD 660) — 59% Remaining Outside Work</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Assignment</th><th>Due Date</th><th>% of Grade</th><th>Shareable?</th><th>What You Need</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Quiz 2</td><td>Jan 29 (evening, 1hr window)</td><td>20%</td><td>⚠️ Limited</td><td>Open Blackboard only, timed</td></tr>
+                        <tr><td>Group PowerPoint</td><td>Mar 18 (8am)</td><td>12%</td><td>✅ Group</td><td>Your group handles this</td></tr>
+                        <tr><td>Group Video Recording</td><td>Mar 18 (8am)</td><td>9%</td><td>✅ Group</td><td>Your group handles this</td></tr>
+                        <tr><td>Systematic Review</td><td>Mar 23 (8am)</td><td>12%</td><td>✅ Group</td><td>Your group handles this</td></tr>
+                        <tr><td>Peer Review</td><td>TBD</td><td>6%</td><td>❌ Individual</td><td>You review peers</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>Already Completed:</strong> Quiz 1 (20%), PICO (3%), Individual Article (12%), Group Articles (6%)<br>
+                <strong>What Classmates Share:</strong> Quiz 2 study materials (Paul & Elder framework), Old quiz questions, PowerPoint templates, Systematic review examples<br>
+                <strong>Your Risk If Isolated:</strong> 🟢 LOW — Quiz 2 is open Blackboard. Group project means built-in collaborators.
+            </div>
+        </div>
+
+        <!-- PEDS Shareable -->
+        <div class="share-section">
+            <h4>👶 PEDIATRIC DENTISTRY (PD 530) — <span class="risk-critical">🔴 CRITICAL RISK</span></h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Assignment</th><th>Due Date</th><th>% of Grade</th><th>Shareable?</th><th>What You Need</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>NPI Exercise</td><td>~Late Feb (FIND EXACT DATE)</td><td>MANDATORY</td><td>✅ Yes</td><td><strong>Format, examples, answers</strong></td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>Orthodontic Module</td><td>TBD</td><td>5% + MANDATORY</td><td>✅ Yes</td><td><strong>Module access, answers</strong></td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>IPS Session Prep</td><td>TBD</td><td>MANDATORY</td><td>✅ Yes</td><td>Case prep materials</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note warning-note">
+                <strong>What Classmates Share:</strong> NPI exercise answers/format ← CRITICAL, Orthodontic module answers ← CRITICAL, IPS case discussion prep, Study guides for cumulative exams<br>
+                <strong>Your Risk If Isolated:</strong> 🔴 CRITICAL — The mandatory items WILL fail you if not completed. These are exactly the things classmates remind each other about and share. <strong>You NEED someone tracking these for you or with you.</strong>
+            </div>
+        </div>
+
+        <!-- PERIO Shareable -->
+        <div class="share-section">
+            <h4>🦷 PERIODONTOLOGY 2 (PE 530) — 5% Outside Work</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Assignment</th><th>Due Date</th><th>% of Grade</th><th>Shareable?</th><th>What You Need</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>In-Person Discussion</td><td>YOU SCHEDULE</td><td>5%</td><td>❌ Individual</td><td>Schedule with Dr. Fleisher</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>Already Completed:</strong> Written Assignment (10%)<br>
+                <strong>What Classmates Share:</strong> Discussion topics/questions Dr. Fleisher asks, Essay portion study guides, Comprehensive review materials<br>
+                <strong>Your Risk If Isolated:</strong> 🟢 LOW — Main deliverable is in-person with professor.
+            </div>
+        </div>
+
+        <!-- ORTHO Shareable -->
+        <div class="share-section">
+            <h4>😬 ORTHODONTICS (OR 530) — 0% Outside Work</h4>
+            <div class="note">
+                <strong>What Classmates Share:</strong> Old exams ← Syllabus literally says current exams have similar questions, Study guides, Invisalign module tips<br>
+                <strong>Your Risk If Isolated:</strong> 🟢 LOW — Old exams are officially available on course website. This is the most self-sufficient course.
+            </div>
+        </div>
+
+        <!-- Collaboration Plan -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">📱 Your Collaboration Plan</span>
+            </div>
+            <p style="margin-bottom: 15px;">You need ONE reliable person (or a small group) who will:</p>
+            <ul style="margin-left: 20px; margin-bottom: 15px; line-height: 1.8;">
+                <li>Share take-home exam info (PC2)</li>
+                <li>Remind you about mandatory items (Peds)</li>
+                <li>Forward quiz alerts (Oral Med)</li>
+            </ul>
+
+            <h4 style="color: #f87171; margin: 20px 0 10px;">Your Current Resources</h4>
+            <ul style="margin-left: 20px; margin-bottom: 15px; line-height: 1.8;">
+                <li><strong>Gym buddy</strong> — already helps, but sometimes last-minute</li>
+                <li><strong>Antonio</strong> — best friend, but is he in your class?</li>
+                <li><strong>Group project team</strong> — built-in for Critical Thinking</li>
+            </ul>
+
+            <h4 style="color: #f87171; margin: 20px 0 10px;">Who To Ask (Script)</h4>
+            <div class="note">
+                <strong>Text to 2-3 classmates TODAY:</strong><br><br>
+                <em>"Hey, I'm trying to stay more on top of assignments this semester. Mind if we start a small group chat to share quiz reminders and take-home exam info? Happy to contribute what I find too."</em>
+            </div>
+
+            <h4 style="color: #f87171; margin: 20px 0 10px;">Target Classmates</h4>
+            <ul style="margin-left: 20px; margin-bottom: 15px; line-height: 1.8;">
+                <li>Someone in your group practice</li>
+                <li>Someone you've sat near in lectures</li>
+                <li>Someone from your Critical Thinking group</li>
+            </ul>
+
+            <h4 style="color: #f87171; margin: 20px 0 10px;">What You're Asking For</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Item</th><th>Frequency</th><th>Who Can Provide</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Oral Med quiz reminders</td><td>Weekly</td><td>Any classmate</td></tr>
+                        <tr><td>PC2 take-home exam collaboration</td><td>2x semester</td><td>Study group</td></tr>
+                        <tr><td>Peds mandatory item alerts</td><td>As they come</td><td>Any classmate</td></tr>
+                        <tr><td>Rx writing examples</td><td>2x semester</td><td>Any classmate</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- High Risk Calendar -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">🔴 Specific High-Risk Items Calendar</span>
+            </div>
+            <p style="margin-bottom: 15px;">These are the outside assignments most likely to trigger a spiral if you don't have a collaboration plan:</p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>Assignment</th><th>Course</th><th>%</th><th>Your Plan</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Jan 22</td><td>Rx #1</td><td>PC2</td><td>2%</td><td>Get example from gym buddy or classmate</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>Jan 29</td><td>Take Home Exam 1</td><td>PC2</td><td>12%</td><td><strong>🔴 Need study group collaboration</strong></td></tr>
+                        <tr><td>Jan 29</td><td>Quiz 2 (timed)</td><td>Crit Think</td><td>20%</td><td>Open BB — study notes beforehand</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>~Late Feb</td><td>NPI Exercise</td><td>Peds</td><td>MANDATORY</td><td><strong>🔴 Find date NOW, get format from classmate</strong></td></tr>
+                        <tr><td>Feb 19</td><td>Medical Consultation</td><td>PC2</td><td>2%</td><td>Get example from classmate</td></tr>
+                        <tr><td>Feb 26</td><td>Rx #2</td><td>PC2</td><td>2%</td><td>Same as Rx #1</td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>Mar 5</td><td>Take Home Exam 2</td><td>PC2</td><td>12%</td><td><strong>🔴 Need study group collaboration</strong></td></tr>
+                        <tr style="background: rgba(220, 38, 38, 0.2);"><td>TBD</td><td>Ortho Module</td><td>Peds</td><td>5% + MANDATORY</td><td><strong>🔴 Find date, share answers</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Items Reference -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">✅ Action Items Reference</span>
+            </div>
+            <div class="action-item">
+                <span class="icon">📱</span>
+                <div>Text 2-3 classmates about forming a quiz/assignment sharing group</div>
+            </div>
+            <div class="action-item">
+                <span class="icon">🔍</span>
+                <div>Find out TODAY: Exact NPI Exercise due date (Peds), Exact Orthodontic Module due date (Peds), When IPS session is (Peds)</div>
+            </div>
+            <div class="action-item">
+                <span class="icon">📝</span>
+                <div>For Jan 22 Rx #1: Ask gym buddy or one classmate for an example format</div>
+            </div>
+            <div class="action-item">
+                <span class="icon">👥</span>
+                <div>For Jan 29 Take Home Exam 1: Identify 1-2 people you can work through it with</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MANDATORY TAB ==================== -->
+    <div id="tab-mandatory" class="tab-content">
+        <div class="alert alert-critical">
+            <span style="font-size: 2em;">⚠️</span>
+            <div>
+                <strong style="font-size: 1.2em;">AUTO-FAIL ITEMS</strong><br>
+                These items, if missed, result in automatic course failure regardless of exam scores.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🚨 Mandatory Items Checklist</span>
+            </div>
+
+            <div class="checklist-item unchecked" id="mandatory-npi">
+                <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('npi')">
+                <div style="flex: 1;">
+                    <strong>NPI Exercise</strong><br>
+                    <span style="color: #94a3b8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">~Late Feb (FIND EXACT DATE)</span></span><br>
+                    <span style="color: #f87171;">Action: FIND EXACT DATE (check Jan 5/12 lecture or email course director)</span>
+                </div>
+            </div>
+
+            <div class="checklist-item unchecked" id="mandatory-orthomodule">
+                <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('orthomodule')">
+                <div style="flex: 1;">
+                    <strong>Orthodontic Module</strong><br>
+                    <span style="color: #94a3b8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DUE DATE)</span></span><br>
+                    <span style="color: #f87171;">Action: FIND DUE DATE</span>
+                </div>
+            </div>
+
+            <div class="checklist-item unchecked" id="mandatory-ips">
+                <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('ips')">
+                <div style="flex: 1;">
+                    <strong>IPS Session</strong><br>
+                    <span style="color: #94a3b8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DATE & ATTEND)</span></span><br>
+                    <span style="color: #f87171;">Action: FIND DATE & ATTEND</span>
+                </div>
+            </div>
+
+            <div class="checklist-item unchecked" id="mandatory-acutepain">
+                <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('acutepain')">
+                <div style="flex: 1;">
+                    <strong>Acute Dental Pain Module</strong><br>
+                    <span style="color: #94a3b8;">Course: Pain Control 2 | Due: Jan 29</span><br>
+                    <span style="color: #f87171;">Action: Complete online at <a href="https://www.scopeofpain.org/supplemental-training/safe-opioid-prescribing-for-acute-dental-pain/activity.php" target="_blank" style="color: #60a5fa;">scopeofpain.org</a></span>
+                </div>
+            </div>
+
+            <div class="checklist-item unchecked" id="mandatory-periodiscussion">
+                <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('periodiscussion')">
+                <div style="flex: 1;">
+                    <strong>In-Person Discussion</strong><br>
+                    <span style="color: #94a3b8;">Course: Perio 2 | Due: Anytime (YOU SCHEDULE)</span><br>
+                    <span style="color: #f87171;">Action: SCHEDULE WITH DR. FLEISHER (5% free points)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Plan -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">📖 Suggested Study Allocation (Now through Feb 18)</span>
+            </div>
+            <p style="margin-bottom: 15px; color: #94a3b8;">You have 34 days until Peds Exam 2 (your make-or-break). But you also have PC2 Midterm (Day 18) and Ortho Final (Day 22) first.</p>
+
+            <div class="study-phase">
+                <h4>PHASE 1: Jan 15 - Feb 2 (18 days)</h4>
+                <p style="color: #94a3b8; margin-bottom: 10px;">Primary focus: PC2 Midterm + Ortho Final | Secondary: Keep up with weekly quizzes/assignments</p>
+                <div class="study-split">
+                    <div class="study-split-item">
+                        <div class="percent">40%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Pain Control 2<br>(midterm prep)</div>
+                    </div>
+                    <div class="study-split-item">
+                        <div class="percent">40%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Orthodontics<br>(final prep - use old exams!)</div>
+                    </div>
+                    <div class="study-split-item">
+                        <div class="percent">20%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Weekly quiz/assignment maintenance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="study-phase">
+                <h4>PHASE 2: Feb 3-6 (4 days)</h4>
+                <p style="color: #94a3b8; margin-bottom: 10px;">Primary focus: Ortho Final (Feb 6) | Secondary: Start Peds review</p>
+                <div class="study-split">
+                    <div class="study-split-item">
+                        <div class="percent">70%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Ortho Final</div>
+                    </div>
+                    <div class="study-split-item">
+                        <div class="percent">30%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Start Peds review</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="study-phase" style="border: 2px solid #dc2626;">
+                <h4>PHASE 3: Feb 7-18 (12 days) — ALL IN ON PEDS</h4>
+                <p style="color: #f87171; margin-bottom: 10px; font-weight: 600;">This is your at-risk course.</p>
+                <div class="study-split">
+                    <div class="study-split-item" style="border: 2px solid #dc2626;">
+                        <div class="percent" style="color: #dc2626;">70%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Peds Exam 2<br>(cumulative, 45% of grade)</div>
+                    </div>
+                    <div class="study-split-item">
+                        <div class="percent">20%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Other quizzes/assignments</div>
+                    </div>
+                    <div class="study-split-item">
+                        <div class="percent">10%</div>
+                        <div style="color: #94a3b8; font-size: 0.9em;">Geriatrics midterm (Feb 11)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam Countdown -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">⏰ Exam Countdown & Priorities</span>
+            </div>
+            <div class="table-container">
+                <table id="examCountdownTable">
+                    <thead>
+                        <tr><th>Exam</th><th>Date</th><th>Countdown</th><th>Weight</th><th>Priority</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Saved!</div>
+
+    <script>
+        // ==================== FIREBASE CONFIGURATION ====================
+        // Same config as Dental Quest main app
+        const firebaseConfig = {
+            apiKey: "AIzaSyCq0zU4Gm2kXKHDaCHzRD70p1B2NRXxKJc",
+            authDomain: "dental-student-quest.firebaseapp.com",
+            databaseURL: "https://dental-student-quest-default-rtdb.firebaseio.com",
+            projectId: "dental-student-quest",
+            storageBucket: "dental-student-quest.firebasestorage.app",
+            messagingSenderId: "894381493570",
+            appId: "1:894381493570:web:857d7d8fe247ef985e4cdb"
+        };
+        
+        let firebaseInitialized = false;
+        let database = null;
+        let firebaseSyncEnabled = false;
+        let currentUser = null;
+        let userPath = null;
+        let saveDebounceTimer = null;
+        
+        // ==================== DATA ====================
+        let roadmapData = {
+            pedsLockedIn: 33.3,
+            mandatoryItems: {
+                npi: false,
+                orthomodule: false,
+                ips: false,
+                acutepain: false,
+                periodiscussion: false
+            },
+            grades: {
+                oralmed: {},
+                paincontrol: {},
+                critthink: { quiz1: 100 }, // Already done
+                peds: { exam1: 77, headstart: 100 },
+                perio: { midterm: null, writtenAssignment: 100 },
+                ortho: { midterm: null }
+            },
+            editedDates: {},
+            customDeadlines: [],
+            lastSaved: null
+        };
+
+        // ==================== FIREBASE FUNCTIONS ====================
+        function updateSyncStatus(status, text) {
+            const iconEl = document.getElementById('syncIcon');
+            const textEl = document.getElementById('syncText');
+            if (iconEl && textEl) {
+                if (status === 'connected') {
+                    iconEl.textContent = '☁️';
+                    iconEl.style.color = '#10b981';
+                    textEl.textContent = text || 'Synced';
+                    textEl.style.color = '#10b981';
+                } else if (status === 'syncing') {
+                    iconEl.textContent = '🔄';
+                    iconEl.style.color = '#f59e0b';
+                    textEl.textContent = text || 'Syncing...';
+                    textEl.style.color = '#f59e0b';
+                } else if (status === 'offline') {
+                    iconEl.textContent = '📴';
+                    iconEl.style.color = '#ef4444';
+                    textEl.textContent = text || 'Offline';
+                    textEl.style.color = '#ef4444';
+                } else {
+                    iconEl.textContent = '☁️';
+                    iconEl.style.color = '#8b949e';
+                    textEl.textContent = text || 'Connecting...';
+                    textEl.style.color = '#8b949e';
+                }
+            }
+        }
+        
+        function initFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
+                    firebaseSyncEnabled = false;
+                    updateSyncStatus('offline', 'Offline mode');
+                    loadFromLocalStorage();
+                    return;
+                }
+                
+                if (!firebase.apps || !firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                firebaseInitialized = true;
+                console.log('✅ Firebase app initialized');
+                
+                // Check for saved PIN (same as Dental Quest uses)
+                const savedPin = localStorage.getItem('dentalQuestPin');
+                
+                if (savedPin) {
+                    setupUserAuth(savedPin);
+                } else {
+                    console.log('No PIN found, prompting...');
+                    setTimeout(() => promptForPin(), 500);
+                }
+            } catch (error) {
+                console.error('❌ Firebase init error:', error);
+                firebaseSyncEnabled = false;
+                updateSyncStatus('offline', 'Init failed');
+                loadFromLocalStorage();
+            }
+        }
+        
+        function setupUserAuth(pin) {
+            const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
+            currentUser = { uid: hashedPin };
+            userPath = 'users/' + hashedPin + '/d3Roadmap';
+            firebaseSyncEnabled = true;
+            
+            console.log('✅ User authenticated, path:', userPath);
+            updateSyncStatus('syncing', 'Syncing...');
+            
+            // Load from Firebase
+            loadFromFirebase();
+        }
+        
+        function promptForPin() {
+            const pin = prompt('Enter your Dental Quest PIN to sync data across devices:\n\n(Use the same PIN as your main Dental Quest app)');
+            
+            if (pin && pin.length >= 4) {
+                localStorage.setItem('dentalQuestPin', pin);
+                setupUserAuth(pin);
+            } else {
+                console.log('No valid PIN entered, using local storage only');
+                firebaseSyncEnabled = false;
+                updateSyncStatus('offline', 'Local only');
+                loadFromLocalStorage();
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('d3RoadmapData');
+            if (saved) {
+                roadmapData = { ...roadmapData, ...JSON.parse(saved) };
+            }
+            initUI();
+        }
+        
+        function loadFromFirebase() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                loadFromLocalStorage();
+                return;
+            }
+            
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // Merge Firebase data with defaults
+                        roadmapData = {
+                            ...roadmapData,
+                            pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
+                            mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
+                            grades: { ...roadmapData.grades, ...(data.grades || {}) },
+                            editedDates: { ...roadmapData.editedDates, ...(data.editedDates || {}) },
+                            customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                            lastSaved: data.lastSaved
+                        };
+                        
+                        // Also save to localStorage as backup
+                        localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                        console.log('✅ Loaded from Firebase');
+                        updateSyncStatus('connected', 'Synced');
+                    } else {
+                        // No Firebase data, load from localStorage
+                        loadFromLocalStorage();
+                        updateSyncStatus('connected', 'Synced');
+                    }
+                    initUI();
+                })
+                .catch(error => {
+                    console.error('❌ Firebase load error:', error);
+                    updateSyncStatus('offline', 'Load failed');
+                    loadFromLocalStorage();
+                });
+        }
+
+        // Save data with debounce
+        function saveData() {
+            roadmapData.lastSaved = Date.now();
+            
+            // Always save to localStorage immediately
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            
+            // Debounce Firebase saves
+            if (saveDebounceTimer) {
+                clearTimeout(saveDebounceTimer);
+            }
+            
+            if (firebaseSyncEnabled && database && userPath) {
+                updateSyncStatus('syncing', 'Saving...');
+                
+                saveDebounceTimer = setTimeout(() => {
+                    database.ref(userPath).set(roadmapData)
+                        .then(() => {
+                            console.log('✅ Saved to Firebase');
+                            updateSyncStatus('connected', 'Synced');
+                            showToast('Saved!');
+                        })
+                        .catch(error => {
+                            console.error('❌ Firebase save error:', error);
+                            updateSyncStatus('offline', 'Save failed');
+                            showToast('Saved locally');
+                        });
+                }, 300);
+            } else {
+                showToast('Saved locally');
+            }
+        }
+
+        // ==================== DEADLINES DATA ====================
+        const deadlines = [
+            // January
+            { date: '2026-01-16', day: 'Thu', what: 'Quiz 1 due (before class)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january' },
+            { date: '2026-01-22', day: 'Wed', what: 'Rx #1 due', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'january' },
+            { date: '2026-01-23', day: 'Thu', what: 'Quiz 2 due (before class)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january' },
+            { date: '2026-01-29', day: 'Wed', what: 'Take Home Exam 1 due (before class)', course: 'Pain Control 2', weight: '12%', type: 'Take-home', month: 'january' },
+            { date: '2026-01-29', day: 'Wed', what: 'Quiz 2 (evening, 1hr window, open BB)', course: 'Critical Thinking', weight: '20%', type: 'Quiz', month: 'january' },
+            { date: '2026-01-29', day: 'Wed', what: 'Online Acute Dental Pain module completed', course: 'Pain Control 2', weight: 'Required', type: 'Module', month: 'january' },
+            
+            // February
+            { date: '2026-02-02', day: 'Mon', what: 'MIDTERM EXAM (4-5:15pm, L1101)', course: 'Pain Control 2', weight: '30%', type: 'EXAM', month: 'february' },
+            { date: '2026-02-06', day: 'Thu', what: 'FINAL EXAM (cumulative)', course: 'Orthodontics', weight: '50%', type: 'EXAM', month: 'february' },
+            { date: '2026-02-06', day: 'Thu', what: 'Quiz 3 due (before class)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'february' },
+            { date: '2026-02-06', day: 'Thu', what: 'Tx Plan Apt (Keisha/Maseli) - need mounted models + written analysis + pre-meeting', course: 'Clinic', weight: '—', type: 'Clinical', month: 'february' },
+            { date: '2026-02-09', day: 'Sun', what: 'Practice Management Assignment', course: 'Group Practice 9', weight: 'TBD', type: 'Assignment', month: 'february' },
+            { date: '2026-02-11', day: 'Wed', what: 'MIDTERM EXAM', course: 'Geriatrics', weight: 'TBD', type: 'EXAM', month: 'february' },
+            { date: '2026-02-18', day: 'Wed', what: 'EXAM 2 (cumulative)', course: 'Peds ⚠️', weight: '45%', type: 'EXAM', month: 'february' },
+            { date: '2026-02-19', day: 'Thu', what: 'Medical Consultation due', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'february' },
+            { date: '2026-02-20', day: 'Thu', what: 'Quiz 4 due (before class)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'february' },
+            { date: '2026-02-26', day: 'Thu', what: 'Rx #2 due', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'february' },
+            { date: '2026-02-27', day: 'Fri', what: 'MIDTERM EXAM (4-5:50pm, L1101)', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'february' },
+            { date: '2026-02-28', day: 'TBD', what: 'NPI Exercise due', course: 'Peds ⚠️', weight: 'MANDATORY', type: 'Assignment', month: 'february', tbd: true },
+            
+            // March
+            { date: '2026-03-05', day: 'Thu', what: 'Take Home Exam 2 due (before class)', course: 'Pain Control 2', weight: '12%', type: 'Take-home', month: 'march' },
+            { date: '2026-03-11', day: 'Wed', what: 'FINAL EXAM (MCQ 70% + Essay 30%)', course: 'Perio 2', weight: '45%', type: 'EXAM', month: 'march' },
+            { date: '2026-03-18', day: 'Wed', what: 'Group PowerPoint uploaded (8am)', course: 'Critical Thinking', weight: '12%', type: 'Project', month: 'march' },
+            { date: '2026-03-18', day: 'Wed', what: 'Group Video Recording uploaded (8am)', course: 'Critical Thinking', weight: '9%', type: 'Project', month: 'march' },
+            { date: '2026-03-19', day: 'Thu', what: 'FINAL EXAM (4-5:30pm, L1101)', course: 'Pain Control 2', weight: '40%', type: 'EXAM', month: 'march' },
+            { date: '2026-03-23', day: 'Mon', what: 'Systematic Review due (8am)', course: 'Critical Thinking', weight: '12%', type: 'Project', month: 'march' },
+            { date: '2026-03-30', day: 'Mon', what: 'EXAM 3 + Attendance component', course: 'Peds', weight: '7.5%', type: 'EXAM', month: 'march' },
+            
+            // April
+            { date: '2026-04-01', day: 'Wed', what: 'Live Presentation (1-3:20pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
+            { date: '2026-04-14', day: 'Tue', what: 'Live Presentation (1-3:20pm)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
+            { date: '2026-04-16', day: 'Thu', what: 'Live Presentation (1-2:50pm)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
+            { date: '2026-04-17', day: 'Fri', what: 'FINAL EXAM (4-5:50pm, L1101)', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'april' },
+            { date: '2026-04-17', day: 'Fri', what: 'Passion Project due (4pm)', course: 'Oral Med', weight: '12.5%', type: 'Project', month: 'april' }
+        ];
+
+        const exams = [
+            { name: 'PC2 Midterm', date: '2026-02-02', weight: '30%', priority: '🔴 HIGH' },
+            { name: 'Ortho Final', date: '2026-02-06', weight: '50%', priority: '🔴 HIGH' },
+            { name: 'Geriatrics Midterm', date: '2026-02-11', weight: 'TBD', priority: '🟡 MEDIUM' },
+            { name: 'Peds Exam 2', date: '2026-02-18', weight: '45%', priority: '🔴 CRITICAL' },
+            { name: 'Oral Med Midterm', date: '2026-02-27', weight: '25%', priority: '🟡 MEDIUM' },
+            { name: 'Perio 2 Final', date: '2026-03-11', weight: '45%', priority: '🟡 MEDIUM' },
+            { name: 'PC2 Final', date: '2026-03-19', weight: '40%', priority: '🟡 MEDIUM' },
+            { name: 'Peds Exam 3', date: '2026-03-30', weight: '7.5%', priority: '🟢 LOW' },
+            { name: 'Oral Med Final', date: '2026-04-17', weight: '25%', priority: '🟢 LOW' }
+        ];
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function getCountdown(dateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(dateStr);
+            const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+            return diff;
+        }
+
+        function getCountdownBadge(days, isTbd = false) {
+            if (isTbd) {
+                return `<span class="find-date">⚠️ FIND DATE</span>`;
+            }
+            if (days < 0) {
+                return `<span class="countdown countdown-passed">PASSED</span>`;
+            } else if (days === 0) {
+                return `<span class="countdown countdown-critical">TODAY</span>`;
+            } else if (days === 1) {
+                return `<span class="countdown countdown-critical">TOMORROW</span>`;
+            } else if (days <= 7) {
+                return `<span class="countdown countdown-critical">${days} DAYS</span>`;
+            } else if (days <= 14) {
+                return `<span class="countdown countdown-warning">${days} days</span>`;
+            } else {
+                return `<span class="countdown countdown-normal">${days} days</span>`;
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // ==================== TAB SWITCHING ====================
+        function switchTab(tabId) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // Refresh dynamic content
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'deadlines') renderDeadlines();
+            if (tabId === 'grades') loadCourseGrades();
+            if (tabId === 'mandatory') renderExamCountdown();
+        }
+
+        // ==================== COURSE ACCORDION ====================
+        function toggleCourse(courseId) {
+            const body = document.getElementById('course-' + courseId);
+            const header = body.previousElementSibling;
+            
+            body.classList.toggle('show');
+            header.classList.toggle('expanded');
+        }
+
+        // ==================== MANDATORY CHECKBOXES ====================
+        function toggleMandatory(itemId) {
+            const item = document.getElementById('mandatory-' + itemId);
+            const checkbox = item.querySelector('input');
+            
+            roadmapData.mandatoryItems[itemId] = checkbox.checked;
+            
+            if (checkbox.checked) {
+                item.classList.remove('unchecked');
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+                item.classList.add('unchecked');
+            }
+            
+            saveData();
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderDashboard() {
+            // Stats row
+            const today = new Date();
+            const upcomingExams = exams.filter(e => getCountdown(e.date) >= 0 && getCountdown(e.date) <= 30).length;
+            const urgentDeadlines = deadlines.filter(d => getCountdown(d.date) >= 0 && getCountdown(d.date) <= 7).length;
+            const mandatoryDone = Object.values(roadmapData.mandatoryItems).filter(v => v).length;
+            
+            document.getElementById('dashboardStats').innerHTML = `
+                <div class="stat-box">
+                    <div class="number">${upcomingExams}</div>
+                    <div class="label">Exams in 30 days</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" style="color: ${urgentDeadlines > 0 ? '#f87171' : '#10b981'};">${urgentDeadlines}</div>
+                    <div class="label">Due in 7 days</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">${mandatoryDone}/5</div>
+                    <div class="label">Mandatory Done</div>
+                </div>
+            `;
+            
+            // Next 7 days
+            const next7 = deadlines.filter(d => {
+                const days = getCountdown(d.date);
+                return days >= 0 && days <= 7;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (next7.length === 0) {
+                document.getElementById('next7Days').innerHTML = '<p style="color: #10b981; padding: 20px;">✅ No deadlines in the next 7 days!</p>';
+            } else {
+                document.getElementById('next7Days').innerHTML = next7.map(d => `
+                    <div class="action-item">
+                        ${getCountdownBadge(getCountdown(d.date))}
+                        <div style="flex: 1;">
+                            <strong>${d.what}</strong>
+                            <span style="color: #94a3b8; margin-left: 10px;">${d.course}</span>
+                        </div>
+                        <span style="color: #94a3b8;">${d.weight}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderDeadlines() {
+            const months = ['january', 'february', 'march', 'april'];
+            
+            months.forEach(month => {
+                const tbody = document.getElementById(month + 'Body');
+                const monthDeadlines = deadlines.filter(d => d.month === month);
+                
+                tbody.innerHTML = monthDeadlines.map(d => {
+                    const days = getCountdown(d.date);
+                    const isPassed = days < 0;
+                    
+                    return `
+                        <tr class="${isPassed ? 'passed' : ''}">
+                            <td>${formatDate(d.date)}</td>
+                            <td>${d.day}</td>
+                            <td>${getCountdownBadge(days, d.tbd)}</td>
+                            <td>${d.what}</td>
+                            <td>${d.course}</td>
+                            <td>${d.weight}</td>
+                            <td>${d.type}</td>
+                        </tr>
+                    `;
+                }).join('');
+            });
+        }
+
+        function renderExamCountdown() {
+            const tbody = document.getElementById('examCountdownTable').querySelector('tbody');
+            
+            tbody.innerHTML = exams.map(e => {
+                const days = getCountdown(e.date);
+                const isPassed = days < 0;
+                
+                return `
+                    <tr class="${isPassed ? 'passed' : ''}">
+                        <td><strong>${e.name}</strong></td>
+                        <td>${formatDate(e.date)}</td>
+                        <td>${getCountdownBadge(days)}</td>
+                        <td>${e.weight}</td>
+                        <td>${e.priority}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==================== GRADE CALCULATOR ====================
+        const courseStructures = {
+            oralmed: {
+                name: 'Oral Medicine',
+                passing: 60,
+                components: [
+                    { id: 'participation', name: 'Participation', weight: 12.5, editable: true },
+                    { id: 'quizzes', name: 'Quizzes (10 total)', weight: 25, editable: true },
+                    { id: 'midterm', name: 'Midterm', weight: 25, editable: true },
+                    { id: 'final', name: 'Final', weight: 25, editable: true },
+                    { id: 'passionProject', name: 'Passion Project', weight: 12.5, editable: true }
+                ]
+            },
+            paincontrol: {
+                name: 'Pain Control 2',
+                passing: 60,
+                components: [
+                    { id: 'rx1', name: 'Rx #1', weight: 2, editable: true },
+                    { id: 'takeHome1', name: 'Take Home Exam 1', weight: 12, editable: true },
+                    { id: 'midterm', name: 'Midterm', weight: 30, editable: true },
+                    { id: 'medConsult', name: 'Medical Consultation', weight: 2, editable: true },
+                    { id: 'rx2', name: 'Rx #2', weight: 2, editable: true },
+                    { id: 'takeHome2', name: 'Take Home Exam 2', weight: 12, editable: true },
+                    { id: 'final', name: 'Final', weight: 40, editable: true }
+                ]
+            },
+            critthink: {
+                name: 'Critical Thinking',
+                passing: 60,
+                components: [
+                    { id: 'quiz1', name: 'Quiz 1', weight: 20, editable: false, done: true },
+                    { id: 'quiz2', name: 'Quiz 2', weight: 20, editable: true },
+                    { id: 'pico', name: 'PICO', weight: 3, editable: false, done: true },
+                    { id: 'individualArticle', name: 'Individual Article', weight: 12, editable: false, done: true },
+                    { id: 'groupArticles', name: 'Group Articles', weight: 6, editable: false, done: true },
+                    { id: 'groupPpt', name: 'Group PowerPoint', weight: 12, editable: true },
+                    { id: 'groupVideo', name: 'Group Video', weight: 9, editable: true },
+                    { id: 'systematicReview', name: 'Systematic Review', weight: 12, editable: true },
+                    { id: 'peerReview', name: 'Peer Review', weight: 6, editable: true }
+                ]
+            },
+            peds: {
+                name: 'Pediatric Dentistry',
+                passing: 60,
+                components: [
+                    { id: 'exam1', name: 'Exam 1 (Midterm)', weight: 40, editable: true, done: true, defaultGrade: 77 },
+                    { id: 'exam2', name: 'Exam 2 (Cumulative)', weight: 45, editable: true },
+                    { id: 'exam3', name: 'Exam 3 + Attendance', weight: 7.5, editable: true },
+                    { id: 'headstart', name: 'Headstart Rotation', weight: 2.5, editable: false, done: true, defaultGrade: 100 },
+                    { id: 'orthoModule', name: 'Orthodontic Module', weight: 5, editable: true }
+                ]
+            },
+            perio: {
+                name: 'Periodontology 2',
+                passing: 65,
+                components: [
+                    { id: 'midterm', name: 'Midterm', weight: 40, editable: true, done: true },
+                    { id: 'writtenAssignment', name: 'Written Assignment', weight: 10, editable: false, done: true, defaultGrade: 100 },
+                    { id: 'discussion', name: 'In-Person Discussion', weight: 5, editable: true },
+                    { id: 'final', name: 'Final', weight: 45, editable: true }
+                ]
+            },
+            ortho: {
+                name: 'Orthodontics',
+                passing: 60,
+                components: [
+                    { id: 'midterm', name: 'Midterm', weight: 50, editable: true, done: true },
+                    { id: 'final', name: 'Final', weight: 50, editable: true }
+                ]
+            }
+        };
+
+        function loadCourseGrades() {
+            const courseId = document.getElementById('gradeCoursePicker').value;
+            const course = courseStructures[courseId];
+            const savedGrades = roadmapData.grades[courseId] || {};
+            
+            let html = '<div class="table-container"><table><thead><tr><th>Component</th><th>Weight</th><th>Your Grade (%)</th><th>Points Earned</th></tr></thead><tbody>';
+            
+            course.components.forEach(comp => {
+                const savedGrade = savedGrades[comp.id];
+                const defaultGrade = comp.defaultGrade || '';
+                const grade = savedGrade !== undefined ? savedGrade : defaultGrade;
+                const pointsEarned = grade !== '' ? (parseFloat(grade) / 100 * comp.weight).toFixed(2) : '—';
+                
+                html += `
+                    <tr>
+                        <td>${comp.name} ${comp.done ? '<span class="status status-done">✅</span>' : ''}</td>
+                        <td>${comp.weight}%</td>
+                        <td>
+                            ${comp.editable || !comp.done ? 
+                                `<input type="number" min="0" max="100" value="${grade}" 
+                                    onchange="updateGrade('${courseId}', '${comp.id}', this.value)"
+                                    style="width: 80px; padding: 8px; background: #1e293b; border: 1px solid #374151; border-radius: 4px; color: #e2e8f0;">` 
+                                : `<span style="color: #10b981; font-weight: 600;">${grade}%</span>`
+                            }
+                        </td>
+                        <td>${pointsEarned !== '—' ? pointsEarned + ' pts' : '—'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            html += `<p style="margin-top: 15px; color: #94a3b8;">Minimum to pass: <strong>${course.passing}%</strong></p>`;
+            
+            document.getElementById('gradeEntrySection').innerHTML = html;
+            
+            calculateNeeded();
+        }
+
+        function updateGrade(courseId, componentId, value) {
+            if (!roadmapData.grades[courseId]) {
+                roadmapData.grades[courseId] = {};
+            }
+            roadmapData.grades[courseId][componentId] = value === '' ? null : parseFloat(value);
+            saveData();
+            calculateNeeded();
+        }
+
+        function calculateNeeded() {
+            const courseId = document.getElementById('gradeCoursePicker').value;
+            const course = courseStructures[courseId];
+            const savedGrades = roadmapData.grades[courseId] || {};
+            const targetGrade = parseFloat(document.getElementById('targetGrade').value);
+            
+            let earnedPoints = 0;
+            let completedWeight = 0;
+            let remainingWeight = 0;
+            const remainingComponents = [];
+            
+            course.components.forEach(comp => {
+                const grade = savedGrades[comp.id];
+                if (grade !== null && grade !== undefined && grade !== '') {
+                    earnedPoints += (parseFloat(grade) / 100) * comp.weight;
+                    completedWeight += comp.weight;
+                } else {
+                    remainingWeight += comp.weight;
+                    remainingComponents.push(comp);
+                }
+            });
+            
+            const pointsNeeded = targetGrade - earnedPoints;
+            const avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
+            
+            let resultHtml = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="stat-box">
+                        <div class="number" style="color: #10b981;">${earnedPoints.toFixed(1)}</div>
+                        <div class="label">Points Earned</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number">${completedWeight}%</div>
+                        <div class="label">Completed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number">${remainingWeight}%</div>
+                        <div class="label">Remaining</div>
+                    </div>
+                </div>
+            `;
+            
+            if (remainingWeight === 0) {
+                const finalGrade = earnedPoints;
+                const passed = finalGrade >= course.passing;
+                resultHtml += `
+                    <div class="grade-result ${passed ? 'passing' : 'failing'}">
+                        <strong>Final Grade: ${finalGrade.toFixed(1)}%</strong><br>
+                        ${passed ? '✅ Passed!' : '❌ Below passing threshold'}
+                    </div>
+                `;
+            } else if (avgNeeded > 100) {
+                resultHtml += `
+                    <div class="grade-result failing">
+                        <strong>❌ Target of ${targetGrade}% is NOT achievable</strong><br>
+                        You would need ${avgNeeded.toFixed(1)}% average on remaining work, which exceeds 100%.
+                        <br><br>
+                        <strong>Maximum possible grade:</strong> ${(earnedPoints + remainingWeight).toFixed(1)}%
+                    </div>
+                `;
+            } else if (avgNeeded <= 0) {
+                resultHtml += `
+                    <div class="grade-result passing">
+                        <strong>✅ You've already secured ${targetGrade}%!</strong><br>
+                        You have ${earnedPoints.toFixed(1)} points. Even with 0% on remaining work, you'll pass this threshold.
+                    </div>
+                `;
+            } else {
+                const isAchievable = avgNeeded <= 100;
+                const difficulty = avgNeeded <= 60 ? 'Very achievable' : avgNeeded <= 75 ? 'Achievable with effort' : avgNeeded <= 85 ? 'Challenging but possible' : 'Very difficult';
+                
+                resultHtml += `
+                    <div class="grade-result ${isAchievable ? 'passing' : 'failing'}">
+                        <strong>To achieve ${targetGrade}% (${getGradeLetter(targetGrade)}):</strong><br><br>
+                        You need an average of <strong style="font-size: 1.3em; color: ${avgNeeded <= 70 ? '#10b981' : avgNeeded <= 85 ? '#d97706' : '#dc2626'};">${avgNeeded.toFixed(1)}%</strong> on remaining assignments.<br>
+                        <span style="color: #94a3b8;">${difficulty}</span>
+                    </div>
+                `;
+                
+                if (remainingComponents.length > 0) {
+                    resultHtml += `
+                        <div style="margin-top: 15px;">
+                            <strong>Remaining Components:</strong>
+                            <ul style="margin-top: 10px; margin-left: 20px; color: #94a3b8;">
+                                ${remainingComponents.map(c => `<li>${c.name} (${c.weight}%)</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+            
+            document.getElementById('gradeResults').innerHTML = resultHtml;
+        }
+
+        function getGradeLetter(percent) {
+            if (percent >= 93) return 'A';
+            if (percent >= 90) return 'A-';
+            if (percent >= 87) return 'B+';
+            if (percent >= 83) return 'B';
+            if (percent >= 80) return 'B-';
+            if (percent >= 77) return 'C+';
+            if (percent >= 73) return 'C';
+            if (percent >= 70) return 'C-';
+            if (percent >= 60) return 'D';
+            return 'F';
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // ==================== ADD NEW DEADLINE ====================
+        function addNewDeadline() {
+            const what = prompt('What is the deadline for?');
+            if (!what) return;
+            
+            const date = prompt('Date (YYYY-MM-DD):');
+            if (!date) return;
+            
+            const course = prompt('Course:');
+            const weight = prompt('Weight (e.g., "10%"):');
+            const type = prompt('Type (Quiz, Exam, Assignment, etc.):');
+            
+            const month = new Date(date).toLocaleString('en-US', { month: 'long' }).toLowerCase();
+            
+            deadlines.push({
+                date: date,
+                day: new Date(date).toLocaleString('en-US', { weekday: 'short' }),
+                what: what,
+                course: course || 'Other',
+                weight: weight || '—',
+                type: type || 'Other',
+                month: month
+            });
+            
+            roadmapData.customDeadlines.push({ date, what, course, weight, type });
+            saveData();
+            renderDeadlines();
+            showToast('Deadline added!');
+        }
+
+        // ==================== INITIALIZE ====================
+        function initUI() {
+            // Restore mandatory checkboxes
+            Object.keys(roadmapData.mandatoryItems).forEach(key => {
+                if (roadmapData.mandatoryItems[key]) {
+                    const item = document.getElementById('mandatory-' + key);
+                    if (item) {
+                        const checkbox = item.querySelector('input');
+                        checkbox.checked = true;
+                        item.classList.remove('unchecked');
+                        item.classList.add('checked');
+                    }
+                }
+            });
+            
+            // Restore Peds locked in value
+            const pedsLockedEl = document.getElementById('pedsLockedIn');
+            const pedsLockedEl2 = document.getElementById('pedsLockedIn2');
+            if (pedsLockedEl) pedsLockedEl.textContent = roadmapData.pedsLockedIn;
+            if (pedsLockedEl2) pedsLockedEl2.textContent = roadmapData.pedsLockedIn;
+            
+            // Add any custom deadlines
+            if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
+                roadmapData.customDeadlines.forEach(d => {
+                    const month = new Date(d.date).toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                    deadlines.push({
+                        date: d.date,
+                        day: new Date(d.date).toLocaleString('en-US', { weekday: 'short' }),
+                        what: d.what,
+                        course: d.course || 'Other',
+                        weight: d.weight || '—',
+                        type: d.type || 'Other',
+                        month: month
+                    });
+                });
+            }
+            
+            renderDashboard();
+            renderDeadlines();
+            loadCourseGrades();
+            renderExamCountdown();
+        }
+        
+        function init() {
+            // Start Firebase initialization
+            initFirebase();
+        }
+
+        // Handle visibility changes - save when hiding, refresh when showing
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                // Tab is being hidden - ensure data is saved
+                if (firebaseSyncEnabled && database && userPath) {
+                    database.ref(userPath).set(roadmapData)
+                        .then(() => console.log('✅ Saved on hide'))
+                        .catch(err => console.error('Save on hide failed:', err));
+                }
+            } else if (document.visibilityState === 'visible') {
+                // Tab is visible again - refresh from Firebase
+                if (firebaseSyncEnabled && database && userPath) {
+                    loadFromFirebase();
+                }
+            }
+        });
+
+        // Run on load
+        init();
+    </script>
+</body>
+</html>
