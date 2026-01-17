@@ -3736,4 +3736,23 @@
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
-                console.log('Tab visible
+                console.log('Tab visible - refresh from Firebase');
+                if (firebaseSyncEnabled && database && userPath) {
+                    database.ref(userPath).once('value')
+                        .then(snapshot => {
+                            if (snapshot.exists()) {
+                                const data = snapshot.val();
+                                Object.assign(roadmapData, data);
+                                initUI();
+                            }
+                        })
+                        .catch(err => console.error('Refresh on visible failed:', err));
+                }
+            }
+        });
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
