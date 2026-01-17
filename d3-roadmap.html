@@ -2284,9 +2284,19 @@
         }
         
         function initFirebase() {
+            // FALLBACK: Ensure UI loads within 3 seconds no matter what
+            const fallbackTimer = setTimeout(() => {
+                console.warn('⚠️ Firebase timeout - forcing UI init');
+                if (!document.getElementById('currentDateDisplay').textContent || 
+                    document.getElementById('currentDateDisplay').textContent === 'Loading...') {
+                    loadFromLocalStorage();
+                }
+            }, 3000);
+            
             try {
                 if (typeof firebase === 'undefined') {
                     console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
+                    clearTimeout(fallbackTimer);
                     firebaseSyncEnabled = false;
                     updateSyncStatus('offline', 'Offline mode');
                     loadFromLocalStorage();
@@ -2304,13 +2314,16 @@
                 const savedPin = localStorage.getItem('dentalQuestPin');
                 
                 if (savedPin) {
+                    clearTimeout(fallbackTimer);
                     setupUserAuth(savedPin);
                 } else {
                     console.log('No PIN found, prompting...');
+                    clearTimeout(fallbackTimer);
                     setTimeout(() => promptForPin(), 500);
                 }
             } catch (error) {
                 console.error('❌ Firebase init error:', error);
+                clearTimeout(fallbackTimer);
                 firebaseSyncEnabled = false;
                 updateSyncStatus('offline', 'Init failed');
                 loadFromLocalStorage();
@@ -3655,65 +3668,76 @@
         function initUI() {
             console.log('initUI called, roadmapData:', roadmapData);
             
-            // Restore mandatory checkboxes
-            Object.keys(roadmapData.mandatoryItems).forEach(key => {
-                if (roadmapData.mandatoryItems[key]) {
-                    const item = document.getElementById('mandatory-' + key);
-                    if (item) {
-                        const checkbox = item.querySelector('input');
-                        checkbox.checked = true;
-                        item.classList.remove('unchecked');
-                        item.classList.add('checked');
-                    }
-                }
-            });
-            
-            // Restore Peds locked in value
-            const pedsLockedEl = document.getElementById('pedsLockedIn');
-            const pedsLockedEl2 = document.getElementById('pedsLockedIn2');
-            if (pedsLockedEl) pedsLockedEl.textContent = roadmapData.pedsLockedIn;
-            if (pedsLockedEl2) pedsLockedEl2.textContent = roadmapData.pedsLockedIn;
-            
-            // Restore edited deadlines - DEEP MERGE each property
-            if (roadmapData.editedDeadlines) {
-                console.log('Restoring edited deadlines:', roadmapData.editedDeadlines);
-                Object.keys(roadmapData.editedDeadlines).forEach(indexStr => {
-                    const index = parseInt(indexStr, 10);
-                    const edited = roadmapData.editedDeadlines[indexStr];
-                    if (deadlines[index] && edited) {
-                        // Deep copy each property
-                        deadlines[index].date = edited.date || deadlines[index].date;
-                        deadlines[index].day = edited.day || deadlines[index].day;
-                        deadlines[index].what = edited.what || deadlines[index].what;
-                        deadlines[index].course = edited.course || deadlines[index].course;
-                        deadlines[index].weight = edited.weight || deadlines[index].weight;
-                        deadlines[index].type = edited.type || deadlines[index].type;
-                        deadlines[index].month = edited.month || deadlines[index].month;
-                        console.log('Restored deadline', index, ':', deadlines[index]);
+            try {
+                // Restore mandatory checkboxes
+                Object.keys(roadmapData.mandatoryItems).forEach(key => {
+                    if (roadmapData.mandatoryItems[key]) {
+                        const item = document.getElementById('mandatory-' + key);
+                        if (item) {
+                            const checkbox = item.querySelector('input');
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                item.classList.remove('unchecked');
+                                item.classList.add('checked');
+                            }
+                        }
                     }
                 });
-            }
+            } catch(e) { console.error('Error restoring mandatory items:', e); }
             
-            // Add any custom deadlines
-            if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
-                roadmapData.customDeadlines.forEach(d => {
-                    const month = new Date(d.date).toLocaleString('en-US', { month: 'long' }).toLowerCase();
-                    deadlines.push({
-                        date: d.date,
-                        day: new Date(d.date).toLocaleString('en-US', { weekday: 'short' }),
-                        what: d.what,
-                        course: d.course || 'Other',
-                        weight: d.weight || '—',
-                        type: d.type || 'Other',
-                        month: month
+            try {
+                // Restore Peds locked in value
+                const pedsLockedEl = document.getElementById('pedsLockedIn');
+                const pedsLockedEl2 = document.getElementById('pedsLockedIn2');
+                if (pedsLockedEl) pedsLockedEl.textContent = roadmapData.pedsLockedIn;
+                if (pedsLockedEl2) pedsLockedEl2.textContent = roadmapData.pedsLockedIn;
+            } catch(e) { console.error('Error restoring peds locked in:', e); }
+            
+            try {
+                // Restore edited deadlines - DEEP MERGE each property
+                if (roadmapData.editedDeadlines) {
+                    console.log('Restoring edited deadlines:', roadmapData.editedDeadlines);
+                    Object.keys(roadmapData.editedDeadlines).forEach(indexStr => {
+                        const index = parseInt(indexStr, 10);
+                        const edited = roadmapData.editedDeadlines[indexStr];
+                        if (deadlines[index] && edited) {
+                            // Deep copy each property
+                            deadlines[index].date = edited.date || deadlines[index].date;
+                            deadlines[index].day = edited.day || deadlines[index].day;
+                            deadlines[index].what = edited.what || deadlines[index].what;
+                            deadlines[index].course = edited.course || deadlines[index].course;
+                            deadlines[index].weight = edited.weight || deadlines[index].weight;
+                            deadlines[index].type = edited.type || deadlines[index].type;
+                            deadlines[index].month = edited.month || deadlines[index].month;
+                            console.log('Restored deadline', index, ':', deadlines[index]);
+                        }
                     });
-                });
-            }
+                }
+            } catch(e) { console.error('Error restoring edited deadlines:', e); }
             
-            renderDashboard();
-            renderDeadlines();
-            loadCourseGrades();
-            renderExamCountdown();
+            try {
+                // Add any custom deadlines
+                if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
+                    roadmapData.customDeadlines.forEach(d => {
+                        const month = new Date(d.date).toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                        deadlines.push({
+                            date: d.date,
+                            day: new Date(d.date).toLocaleString('en-US', { weekday: 'short' }),
+                            what: d.what,
+                            course: d.course || 'Other',
+                            weight: d.weight || '—',
+                            type: d.type || 'Other',
+                            month: month
+                        });
+                    });
+                }
+            } catch(e) { console.error('Error adding custom deadlines:', e); }
+            
+            // ALWAYS try to render, even if above steps failed
+            try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
+            try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }
+            try { loadCourseGrades(); } catch(e) { console.error('loadCourseGrades error:', e); }
+            try { renderExamCountdown(); } catch(e) { console.error('renderExamCountdown error:', e); }
             
             console.log('initUI complete');
         }
@@ -3753,6 +3777,32 @@
 
         // Initialize on page load
         init();
+        
+        // BULLETPROOF FALLBACK: If UI still hasn't loaded after 2 seconds, force it
+        setTimeout(() => {
+            const dateEl = document.getElementById('currentDateDisplay');
+            if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
+                console.warn('⚠️ Forcing UI initialization via fallback');
+                try {
+                    initUI();
+                } catch(e) {
+                    console.error('initUI failed, trying renderDashboard directly:', e);
+                    try { renderDashboard(); } catch(e2) { console.error('renderDashboard failed:', e2); }
+                    try { renderDeadlines(); } catch(e3) { console.error('renderDeadlines failed:', e3); }
+                }
+            }
+        }, 2000);
+        
+        // EXTRA FALLBACK: Also try on DOMContentLoaded just in case
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const dateEl = document.getElementById('currentDateDisplay');
+                if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
+                    console.warn('⚠️ DOMContentLoaded fallback triggered');
+                    try { initUI(); } catch(e) { console.error('DOMContentLoaded initUI failed:', e); }
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html>
