@@ -1101,12 +1101,12 @@
 
     <!-- Tab Navigation -->
     <nav class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('dashboard')">🎯 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('deadlines')">📅 Deadlines</button>
-        <button class="tab-btn" onclick="switchTab('courses')">📚 Courses</button>
-        <button class="tab-btn" onclick="switchTab('grades')">📊 Grades</button>
-        <button class="tab-btn" onclick="switchTab('classmates')">👥 Classmate Share</button>
-        <button class="tab-btn" onclick="switchTab('mandatory')">⚠️ Mandatory</button>
+        <button class="tab-btn active" onclick="switchTab('dashboard', event)">🎯 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('deadlines', event)">📅 Deadlines</button>
+        <button class="tab-btn" onclick="switchTab('courses', event)">📚 Courses</button>
+        <button class="tab-btn" onclick="switchTab('grades', event)">📊 Grades</button>
+        <button class="tab-btn" onclick="switchTab('classmates', event)">👥 Classmate Share</button>
+        <button class="tab-btn" onclick="switchTab('mandatory', event)">⚠️ Mandatory</button>
     </nav>
 
     <!-- ==================== DASHBOARD TAB ==================== -->
@@ -2209,7 +2209,7 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
         // ==================== FIREBASE CONFIGURATION ====================
         // Same config as Dental Quest main app
         const firebaseConfig = {
@@ -2519,10 +2519,10 @@
         }
 
         // ==================== TAB SWITCHING ====================
-        function switchTab(tabId) {
+        function switchTab(tabId, evt) {
             // Update buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if(evt && evt.target) evt.target.classList.add('active');
             
             // Update content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
