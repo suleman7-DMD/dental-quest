@@ -1274,6 +1274,7 @@
                 <table id="januaryTable">
                     <thead>
                         <tr>
+                            <th style="width: 45px;">✓</th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -1296,6 +1297,7 @@
                 <table id="februaryTable">
                     <thead>
                         <tr>
+                            <th style="width: 45px;">✓</th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -1318,6 +1320,7 @@
                 <table id="marchTable">
                     <thead>
                         <tr>
+                            <th style="width: 45px;">✓</th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -1340,6 +1343,7 @@
                 <table id="aprilTable">
                     <thead>
                         <tr>
+                            <th style="width: 45px;">✓</th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -1365,7 +1369,7 @@
             <div class="course-header" onclick="toggleCourse('oralmed')">
                 <div>
                     <strong style="font-size: 1.1em;">📖 ORAL MEDICINE (OD 531)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Henderson (drlaurel@bu.edu)</span>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Henderson (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1571677974606770795577603b707160">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -1403,7 +1407,7 @@
             <div class="course-header" onclick="toggleCourse('paincontrol')">
                 <div>
                     <strong style="font-size: 1.1em;">💉 PAIN CONTROL 2 (OS 532)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. D'Innocenzo (rdinno@bu.edu) | Co: Dr. Bhagania</span>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. D'Innocenzo (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0a786e636464654a687f246f6e7f">[email&#160;protected]</a>) | Co: Dr. Bhagania</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -1446,7 +1450,7 @@
             <div class="course-header" onclick="toggleCourse('critthink')">
                 <div>
                     <strong style="font-size: 1.1em;">🧠 CRITICAL THINKING (GD 660)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (neefly@bu.edu)</span>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="39575c5c5f5540795b4c175c5d4c">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -1557,7 +1561,7 @@
             <div class="course-header" onclick="toggleCourse('perio')">
                 <div>
                     <strong style="font-size: 1.1em;">🦷 PERIODONTOLOGY 2 (PE 530)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (neefly@bu.edu)</span>
+                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a141f1f1c16033a180f541f1e0f">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -2117,8 +2121,8 @@
                 <span class="card-title">📋 Absence Procedures (All Courses)</span>
             </div>
             <div class="note">
-                <strong>PLANNED:</strong> Submit form 10-14 business days in advance → sdmaa@bu.edu<br>
-                <strong>UNPLANNED:</strong> Email sdmaa@bu.edu by 10 AM with documentation<br>
+                <strong>PLANNED:</strong> Submit form 10-14 business days in advance → <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d6a5b2bbb7b796b4a3f8b3b2a3">[email&#160;protected]</a><br>
+                <strong>UNPLANNED:</strong> Email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="81f2e5ece0e0c1e3f4afe4e5f4">[email&#160;protected]</a> by 10 AM with documentation<br>
                 <strong>EXAM:</strong> Must be approved by 10 AM day-of or score = 0. Makeups = end of semester (early May for D3 Spring)
             </div>
         </div>
@@ -2205,7 +2209,7 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // ==================== FIREBASE CONFIGURATION ====================
         // Same config as Dental Quest main app
         const firebaseConfig = {
@@ -2671,9 +2675,28 @@
                     const isPassed = days < 0;
                     const deadlineIndex = deadlines.indexOf(d);
                     const isCustom = d.custom || false;
+                    const isDone = d.done || false;
+                    const grade = d.grade !== undefined ? d.grade : null;
+                    
+                    // Row styling based on done status
+                    const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
+                    const rowClass = isPassed ? 'passed' : '';
                     
                     return `
-                        <tr class="${isPassed ? 'passed' : ''}" data-deadline-index="${deadlineIndex}">
+                        <tr class="${rowClass}" data-deadline-index="${deadlineIndex}" style="${rowStyle}">
+                            <td>
+                                <button onclick="toggleDeadlineDone(${deadlineIndex})" 
+                                    style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'}; 
+                                           border: 2px solid ${isDone ? '#059669' : '#4b5563'}; 
+                                           color: ${isDone ? 'white' : '#94a3b8'}; 
+                                           width: 32px; height: 32px; 
+                                           border-radius: 6px; cursor: pointer; 
+                                           font-size: 1.1em; display: flex; 
+                                           align-items: center; justify-content: center;"
+                                    title="${isDone ? 'Mark incomplete' : 'Mark complete'}">
+                                    ${isDone ? '✓' : '○'}
+                                </button>
+                            </td>
                             <td>
                                 <input type="date" class="deadline-date-picker" 
                                     value="${d.date}" 
@@ -2681,7 +2704,7 @@
                                     onchange="handleDateChange(this)">
                             </td>
                             <td>${d.day}</td>
-                            <td>${getCountdownBadge(days, d.tbd)}</td>
+                            <td>${isDone && grade !== null ? `<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">${grade}%</span>` : getCountdownBadge(days, d.tbd)}</td>
                             <td>
                                 <input type="text" class="deadline-edit-input" 
                                     value="${escapeHtml(d.what)}" 
@@ -2878,7 +2901,16 @@
                 passing: 60,
                 components: [
                     { id: 'participation', name: 'Participation', weight: 12.5, editable: true },
-                    { id: 'quizzes', name: 'Quizzes (10 total)', weight: 25, editable: true },
+                    { id: 'quiz1', name: 'Quiz 1', weight: 2.5, editable: true },
+                    { id: 'quiz2', name: 'Quiz 2', weight: 2.5, editable: true },
+                    { id: 'quiz3', name: 'Quiz 3', weight: 2.5, editable: true },
+                    { id: 'quiz4', name: 'Quiz 4', weight: 2.5, editable: true },
+                    { id: 'quiz5', name: 'Quiz 5', weight: 2.5, editable: true },
+                    { id: 'quiz6', name: 'Quiz 6', weight: 2.5, editable: true },
+                    { id: 'quiz7', name: 'Quiz 7', weight: 2.5, editable: true },
+                    { id: 'quiz8', name: 'Quiz 8', weight: 2.5, editable: true },
+                    { id: 'quiz9', name: 'Quiz 9', weight: 2.5, editable: true },
+                    { id: 'quiz10', name: 'Quiz 10', weight: 2.5, editable: true },
                     { id: 'midterm', name: 'Midterm', weight: 25, editable: true },
                     { id: 'final', name: 'Final', weight: 25, editable: true },
                     { id: 'passionProject', name: 'Passion Project', weight: 12.5, editable: true }
@@ -2889,11 +2921,11 @@
                 passing: 60,
                 components: [
                     { id: 'rx1', name: 'Rx #1', weight: 2, editable: true },
-                    { id: 'takeHome1', name: 'Take Home Exam 1', weight: 12, editable: true },
+                    { id: 'takehome1', name: 'Take Home Exam 1', weight: 12, editable: true },
                     { id: 'midterm', name: 'Midterm', weight: 30, editable: true },
                     { id: 'medConsult', name: 'Medical Consultation', weight: 2, editable: true },
                     { id: 'rx2', name: 'Rx #2', weight: 2, editable: true },
-                    { id: 'takeHome2', name: 'Take Home Exam 2', weight: 12, editable: true },
+                    { id: 'takehome2', name: 'Take Home Exam 2', weight: 12, editable: true },
                     { id: 'final', name: 'Final', weight: 40, editable: true }
                 ]
             },
@@ -2901,11 +2933,11 @@
                 name: 'Critical Thinking',
                 passing: 60,
                 components: [
-                    { id: 'quiz1', name: 'Quiz 1', weight: 20, editable: false, done: true },
+                    { id: 'quiz1', name: 'Quiz 1', weight: 20, editable: true },
                     { id: 'quiz2', name: 'Quiz 2', weight: 20, editable: true },
-                    { id: 'pico', name: 'PICO', weight: 3, editable: false, done: true },
-                    { id: 'individualArticle', name: 'Individual Article', weight: 12, editable: false, done: true },
-                    { id: 'groupArticles', name: 'Group Articles', weight: 6, editable: false, done: true },
+                    { id: 'pico', name: 'PICO', weight: 3, editable: true },
+                    { id: 'individualArticle', name: 'Individual Article', weight: 12, editable: true },
+                    { id: 'groupArticles', name: 'Group Articles', weight: 6, editable: true },
                     { id: 'groupPpt', name: 'Group PowerPoint', weight: 12, editable: true },
                     { id: 'groupVideo', name: 'Group Video', weight: 9, editable: true },
                     { id: 'systematicReview', name: 'Systematic Review', weight: 12, editable: true },
@@ -2916,10 +2948,10 @@
                 name: 'Pediatric Dentistry',
                 passing: 60,
                 components: [
-                    { id: 'exam1', name: 'Exam 1 (Midterm)', weight: 40, editable: true, done: true, defaultGrade: 77 },
+                    { id: 'exam1', name: 'Exam 1 (Midterm)', weight: 40, editable: true, defaultGrade: 77 },
                     { id: 'exam2', name: 'Exam 2 (Cumulative)', weight: 45, editable: true },
                     { id: 'exam3', name: 'Exam 3 + Attendance', weight: 7.5, editable: true },
-                    { id: 'headstart', name: 'Headstart Rotation', weight: 2.5, editable: false, done: true, defaultGrade: 100 },
+                    { id: 'headstart', name: 'Headstart Rotation', weight: 2.5, editable: true, defaultGrade: 100 },
                     { id: 'orthoModule', name: 'Orthodontic Module', weight: 5, editable: true }
                 ]
             },
@@ -2927,8 +2959,8 @@
                 name: 'Periodontology 2',
                 passing: 65,
                 components: [
-                    { id: 'midterm', name: 'Midterm', weight: 40, editable: true, done: true },
-                    { id: 'writtenAssignment', name: 'Written Assignment', weight: 10, editable: false, done: true, defaultGrade: 100 },
+                    { id: 'midterm', name: 'Midterm', weight: 40, editable: true },
+                    { id: 'writtenAssignment', name: 'Written Assignment', weight: 10, editable: true, defaultGrade: 100 },
                     { id: 'discussion', name: 'In-Person Discussion', weight: 5, editable: true },
                     { id: 'final', name: 'Final', weight: 45, editable: true }
                 ]
@@ -2937,7 +2969,7 @@
                 name: 'Orthodontics',
                 passing: 60,
                 components: [
-                    { id: 'midterm', name: 'Midterm', weight: 50, editable: true, done: true },
+                    { id: 'midterm', name: 'Midterm', weight: 50, editable: true },
                     { id: 'final', name: 'Final', weight: 50, editable: true }
                 ]
             }
@@ -2948,33 +2980,91 @@
             const course = courseStructures[courseId];
             const savedGrades = roadmapData.grades[courseId] || {};
             
-            let html = '<div class="table-container"><table><thead><tr><th>Component</th><th>Weight</th><th>Your Grade (%)</th><th>Points Earned</th></tr></thead><tbody>';
+            // Calculate running totals first
+            let earnedPoints = 0;
+            let completedWeight = 0;
+            let totalComponents = course.components.length;
+            let completedComponents = 0;
             
             course.components.forEach(comp => {
                 const savedGrade = savedGrades[comp.id];
+                const defaultGrade = comp.defaultGrade;
+                const grade = savedGrade !== undefined && savedGrade !== null ? savedGrade : defaultGrade;
+                if (grade !== undefined && grade !== null && grade !== '') {
+                    earnedPoints += (parseFloat(grade) / 100) * comp.weight;
+                    completedWeight += comp.weight;
+                    completedComponents++;
+                }
+            });
+            
+            const remainingWeight = 100 - completedWeight;
+            const currentGrade = completedWeight > 0 ? (earnedPoints / completedWeight * 100) : 0;
+            
+            // Running total header
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; padding: 15px; background: rgba(5, 150, 105, 0.1); border-radius: 8px; border: 1px solid #059669;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #10b981;">${earnedPoints.toFixed(1)}</div>
+                        <div style="font-size: 0.8em; color: #94a3b8;">Points Earned</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #60a5fa;">${completedWeight.toFixed(1)}%</div>
+                        <div style="font-size: 0.8em; color: #94a3b8;">Completed</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #d97706;">${remainingWeight.toFixed(1)}%</div>
+                        <div style="font-size: 0.8em; color: #94a3b8;">Remaining</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: ${currentGrade >= course.passing ? '#10b981' : '#f87171'};">${currentGrade.toFixed(1)}%</div>
+                        <div style="font-size: 0.8em; color: #94a3b8;">Current Avg</div>
+                    </div>
+                </div>
+            `;
+            
+            html += '<div class="table-container"><table><thead><tr><th>Component</th><th>Weight</th><th>Your Grade (%)</th><th>Points Earned</th></tr></thead><tbody>';
+            
+            // For Oral Med, group quizzes together visually
+            let inQuizSection = false;
+            
+            course.components.forEach((comp, idx) => {
+                const savedGrade = savedGrades[comp.id];
                 const defaultGrade = comp.defaultGrade || '';
-                const grade = savedGrade !== undefined ? savedGrade : defaultGrade;
-                const pointsEarned = grade !== '' ? (parseFloat(grade) / 100 * comp.weight).toFixed(2) : '—';
+                const grade = savedGrade !== undefined && savedGrade !== null ? savedGrade : defaultGrade;
+                const hasGrade = grade !== '' && grade !== null && grade !== undefined;
+                const pointsEarned = hasGrade ? (parseFloat(grade) / 100 * comp.weight).toFixed(2) : '—';
+                
+                // Check if this is a quiz (for Oral Med grouping)
+                const isQuiz = comp.id.startsWith('quiz') && courseId === 'oralmed';
+                
+                // Add quiz section header
+                if (isQuiz && !inQuizSection) {
+                    html += `<tr style="background: rgba(96, 165, 250, 0.1);"><td colspan="4" style="font-weight: 600; color: #60a5fa; padding: 10px;">📝 Weekly Quizzes (10 × 2.5% = 25% total)</td></tr>`;
+                    inQuizSection = true;
+                }
+                if (!isQuiz && inQuizSection) {
+                    inQuizSection = false;
+                }
+                
+                const rowStyle = hasGrade ? 'background: rgba(5, 150, 105, 0.05);' : '';
+                const statusIcon = hasGrade ? '<span style="color: #10b981; margin-left: 5px;">✓</span>' : '';
                 
                 html += `
-                    <tr>
-                        <td>${comp.name} ${comp.done ? '<span class="status status-done">✅</span>' : ''}</td>
+                    <tr style="${rowStyle}">
+                        <td>${comp.name}${statusIcon}</td>
                         <td>${comp.weight}%</td>
                         <td>
-                            ${comp.editable || !comp.done ? 
-                                `<input type="number" min="0" max="100" value="${grade}" 
-                                    onchange="updateGrade('${courseId}', '${comp.id}', this.value)"
-                                    style="width: 80px; padding: 8px; background: #1e293b; border: 1px solid #374151; border-radius: 4px; color: #e2e8f0;">` 
-                                : `<span style="color: #10b981; font-weight: 600;">${grade}%</span>`
-                            }
+                            <input type="number" min="0" max="100" value="${grade}" 
+                                onchange="updateGrade('${courseId}', '${comp.id}', this.value)"
+                                style="width: 80px; padding: 8px; background: ${hasGrade ? 'rgba(5, 150, 105, 0.2)' : '#1e293b'}; border: 1px solid ${hasGrade ? '#059669' : '#374151'}; border-radius: 4px; color: #e2e8f0;">
                         </td>
-                        <td>${pointsEarned !== '—' ? pointsEarned + ' pts' : '—'}</td>
+                        <td style="color: ${hasGrade ? '#10b981' : '#94a3b8'};">${pointsEarned !== '—' ? pointsEarned + ' pts' : '—'}</td>
                     </tr>
                 `;
             });
             
             html += '</tbody></table></div>';
-            html += `<p style="margin-top: 15px; color: #94a3b8;">Minimum to pass: <strong>${course.passing}%</strong></p>`;
+            html += `<p style="margin-top: 15px; color: #94a3b8;">Minimum to pass: <strong style="color: ${course.passing > 60 ? '#f87171' : '#e2e8f0'};">${course.passing}%</strong>${course.passing > 60 ? ' ⚠️ Higher than standard!' : ''}</p>`;
             
             document.getElementById('gradeEntrySection').innerHTML = html;
             
@@ -2985,9 +3075,76 @@
             if (!roadmapData.grades[courseId]) {
                 roadmapData.grades[courseId] = {};
             }
-            roadmapData.grades[courseId][componentId] = value === '' ? null : parseFloat(value);
+            const grade = value === '' ? null : parseFloat(value);
+            roadmapData.grades[courseId][componentId] = grade;
+            
+            // Sync back to deadlines - find matching deadline and update
+            syncGradeToDeadline(courseId, componentId, grade);
+            
             saveData();
-            calculateNeeded();
+            loadCourseGrades(); // Refresh the display with new running totals
+        }
+        
+        // Sync grade changes from Grades tab back to Deadlines tab
+        function syncGradeToDeadline(courseId, componentId, grade) {
+            // Map course IDs to deadline course names
+            const courseMap = {
+                'oralmed': 'Oral Med',
+                'paincontrol': 'Pain Control 2',
+                'critthink': 'Critical Thinking',
+                'peds': 'Peds',
+                'perio': 'Perio 2',
+                'ortho': 'Orthodontics'
+            };
+            
+            const courseName = courseMap[courseId];
+            if (!courseName) return;
+            
+            // Find matching deadline
+            deadlines.forEach((d, idx) => {
+                const what = d.what.toLowerCase();
+                const course = d.course.toLowerCase();
+                
+                if (!course.includes(courseName.toLowerCase().split(' ')[0])) return;
+                
+                let isMatch = false;
+                
+                // Quiz matching
+                const quizMatch = componentId.match(/quiz(\d+)/);
+                if (quizMatch) {
+                    const quizNum = quizMatch[1];
+                    if (what.includes('quiz') && what.includes(quizNum)) {
+                        isMatch = true;
+                    }
+                }
+                
+                // Exam/Midterm/Final matching
+                if (componentId === 'midterm' && what.includes('midterm')) isMatch = true;
+                if (componentId === 'final' && what.includes('final') && !what.includes('passion')) isMatch = true;
+                if (componentId === 'exam1' && what.includes('exam 1')) isMatch = true;
+                if (componentId === 'exam2' && what.includes('exam 2')) isMatch = true;
+                if (componentId === 'exam3' && what.includes('exam 3')) isMatch = true;
+                
+                // Assignment matching
+                if (componentId === 'rx1' && (what.includes('rx #1') || what.includes('rx#1'))) isMatch = true;
+                if (componentId === 'rx2' && (what.includes('rx #2') || what.includes('rx#2'))) isMatch = true;
+                if (componentId === 'takehome1' && what.includes('take home') && what.includes('1')) isMatch = true;
+                if (componentId === 'takehome2' && what.includes('take home') && what.includes('2')) isMatch = true;
+                
+                if (isMatch) {
+                    if (grade !== null) {
+                        d.done = true;
+                        d.grade = grade;
+                    } else {
+                        d.done = false;
+                        d.grade = null;
+                    }
+                }
+            });
+            
+            // Re-render deadlines to show updated status
+            renderDeadlines();
+            renderDashboard();
         }
 
         function calculateNeeded() {
@@ -3227,6 +3384,228 @@
             showToast('✅ Deadline added!');
         }
         
+        // ==================== TOGGLE DEADLINE DONE ====================
+        function toggleDeadlineDone(index) {
+            if (index < 0 || index >= deadlines.length) {
+                console.error('Invalid deadline index:', index);
+                return;
+            }
+            
+            const deadline = deadlines[index];
+            
+            if (deadline.done) {
+                // Unchecking - mark as incomplete
+                deadline.done = false;
+                deadline.grade = null;
+                
+                // Remove from completedDeadlines
+                if (roadmapData.completedDeadlines) {
+                    delete roadmapData.completedDeadlines[index];
+                }
+                
+                // Update grades if this was synced
+                syncDeadlineToGrades(deadline, false);
+                
+                saveData();
+                renderDeadlines();
+                renderDashboard();
+                loadCourseGrades();
+                
+                showToast('Marked incomplete');
+            } else {
+                // Checking - show grade input modal
+                showGradeInputModal(index, deadline);
+            }
+        }
+        
+        function showGradeInputModal(index, deadline) {
+            const modal = document.createElement('div');
+            modal.id = 'gradeInputModal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+                    <div style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
+                        <h3 style="color: #10b981; margin-bottom: 15px;">✓ Mark Complete</h3>
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>${escapeHtml(deadline.what)}</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="color: #94a3b8; display: block; margin-bottom: 8px;">What grade did you get? (Leave blank if N/A)</label>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="number" id="gradeInput" min="0" max="100" placeholder="e.g., 85" 
+                                    style="flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 1.1em;">
+                                <span style="color: #94a3b8; font-size: 1.2em;">%</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="document.getElementById('gradeInputModal').remove()" 
+                                style="padding: 10px 20px; background: #374151; border: none; border-radius: 6px; color: #e2e8f0; cursor: pointer;">Cancel</button>
+                            <button onclick="submitDeadlineGrade(${index})" 
+                                style="padding: 10px 20px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">✓ Complete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('gradeInput').focus();
+            
+            // Allow Enter to submit
+            document.getElementById('gradeInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitDeadlineGrade(index);
+            });
+        }
+        
+        function submitDeadlineGrade(index) {
+            const gradeInput = document.getElementById('gradeInput').value;
+            const grade = gradeInput ? parseFloat(gradeInput) : null;
+            
+            if (grade !== null && (grade < 0 || grade > 100)) {
+                alert('Grade must be between 0 and 100');
+                return;
+            }
+            
+            const deadline = deadlines[index];
+            deadline.done = true;
+            deadline.grade = grade;
+            
+            // Store in completedDeadlines
+            if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
+            roadmapData.completedDeadlines[index] = {
+                date: deadline.date,
+                what: deadline.what,
+                course: deadline.course,
+                weight: deadline.weight,
+                grade: grade,
+                completedAt: new Date().toISOString()
+            };
+            
+            // Sync to grades tab
+            syncDeadlineToGrades(deadline, true, grade);
+            
+            // Close modal
+            document.getElementById('gradeInputModal').remove();
+            
+            saveData();
+            renderDeadlines();
+            renderDashboard();
+            loadCourseGrades();
+            
+            showToast(grade !== null ? `✓ Completed with ${grade}%` : '✓ Completed');
+        }
+        
+        // Sync deadline completion to grades tab
+        function syncDeadlineToGrades(deadline, isComplete, grade = null) {
+            const course = deadline.course.toLowerCase();
+            const what = deadline.what.toLowerCase();
+            
+            // Oral Med quizzes
+            if (course.includes('oral med')) {
+                const quizMatch = what.match(/quiz\s*(\d+)/i);
+                if (quizMatch) {
+                    const quizNum = parseInt(quizMatch[1]);
+                    if (!roadmapData.grades.oralmed) roadmapData.grades.oralmed = {};
+                    if (isComplete && grade !== null) {
+                        roadmapData.grades.oralmed['quiz' + quizNum] = grade;
+                    } else {
+                        delete roadmapData.grades.oralmed['quiz' + quizNum];
+                    }
+                }
+                // Midterm
+                if (what.includes('midterm')) {
+                    if (isComplete && grade !== null) {
+                        roadmapData.grades.oralmed.midterm = grade;
+                    } else {
+                        delete roadmapData.grades.oralmed.midterm;
+                    }
+                }
+                // Final
+                if (what.includes('final') && !what.includes('passion')) {
+                    if (isComplete && grade !== null) {
+                        roadmapData.grades.oralmed.final = grade;
+                    } else {
+                        delete roadmapData.grades.oralmed.final;
+                    }
+                }
+            }
+            
+            // Pain Control 2
+            if (course.includes('pain control')) {
+                if (what.includes('rx #1') || what.includes('rx#1')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.rx1 = grade;
+                    else delete roadmapData.grades.paincontrol.rx1;
+                }
+                if (what.includes('rx #2') || what.includes('rx#2')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.rx2 = grade;
+                    else delete roadmapData.grades.paincontrol.rx2;
+                }
+                if (what.includes('take home') && what.includes('1')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.takehome1 = grade;
+                    else delete roadmapData.grades.paincontrol.takehome1;
+                }
+                if (what.includes('take home') && what.includes('2')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.takehome2 = grade;
+                    else delete roadmapData.grades.paincontrol.takehome2;
+                }
+                if (what.includes('midterm')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.midterm = grade;
+                    else delete roadmapData.grades.paincontrol.midterm;
+                }
+                if (what.includes('final')) {
+                    roadmapData.grades.paincontrol = roadmapData.grades.paincontrol || {};
+                    if (isComplete && grade !== null) roadmapData.grades.paincontrol.final = grade;
+                    else delete roadmapData.grades.paincontrol.final;
+                }
+            }
+            
+            // Critical Thinking
+            if (course.includes('critical thinking')) {
+                const quizMatch = what.match(/quiz\s*(\d+)/i);
+                if (quizMatch) {
+                    const quizNum = parseInt(quizMatch[1]);
+                    roadmapData.grades.critthink = roadmapData.grades.critthink || {};
+                    if (isComplete && grade !== null) roadmapData.grades.critthink['quiz' + quizNum] = grade;
+                    else delete roadmapData.grades.critthink['quiz' + quizNum];
+                }
+            }
+            
+            // Peds
+            if (course.includes('peds')) {
+                if (what.includes('exam 2')) {
+                    roadmapData.grades.peds = roadmapData.grades.peds || {};
+                    if (isComplete && grade !== null) roadmapData.grades.peds.exam2 = grade;
+                    else delete roadmapData.grades.peds.exam2;
+                }
+                if (what.includes('exam 3')) {
+                    roadmapData.grades.peds = roadmapData.grades.peds || {};
+                    if (isComplete && grade !== null) roadmapData.grades.peds.exam3 = grade;
+                    else delete roadmapData.grades.peds.exam3;
+                }
+            }
+            
+            // Perio 2
+            if (course.includes('perio')) {
+                if (what.includes('final')) {
+                    roadmapData.grades.perio = roadmapData.grades.perio || {};
+                    if (isComplete && grade !== null) roadmapData.grades.perio.final = grade;
+                    else delete roadmapData.grades.perio.final;
+                }
+            }
+            
+            // Ortho
+            if (course.includes('orthodontics')) {
+                if (what.includes('final')) {
+                    roadmapData.grades.ortho = roadmapData.grades.ortho || {};
+                    if (isComplete && grade !== null) roadmapData.grades.ortho.final = grade;
+                    else delete roadmapData.grades.ortho.final;
+                }
+            }
+        }
+        
         // ==================== DELETE DEADLINE ====================
         function deleteDeadline(index) {
             if (index < 0 || index >= deadlines.length) {
@@ -3357,26 +3736,4 @@
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
-                console.log('Tab visible - refreshing data...');
-                if (firebaseSyncEnabled && database && userPath) {
-                    loadFromFirebase();
-                }
-            }
-        });
-
-        // Save before page unload
-        window.addEventListener('beforeunload', function() {
-            console.log('Page unloading - saving data...');
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-            if (firebaseSyncEnabled && database && userPath) {
-                // Use sendBeacon for reliable save on unload
-                const data = JSON.stringify(roadmapData);
-                navigator.sendBeacon && navigator.sendBeacon('about:blank', ''); // Trigger any pending requests
-            }
-        });
-
-        // Run on load
-        init();
-    </script>
-</body>
-</html>
+                console.log('Tab visible
