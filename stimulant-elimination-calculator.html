@@ -3362,8 +3362,14 @@
             // =============================================
             // PHASE 2: CIRCADIAN CONSTRAINTS
             // =============================================
-            // Forbidden Zone is a HARD BLOCKER
-            // Wake Maintenance Zone (2 hours before Forbidden Zone) also resists sleep
+            // CRITICAL: Both Forbidden Zone AND Wake Maintenance Zone are HARD BLOCKERS
+            // You CANNOT fall asleep during these periods - biology prevents it
+            //
+            // Timeline (example with 9:50 AM wake):
+            // - Wake Maintenance Zone: 8:50 PM - 10:50 PM (2 hours before FZ)
+            // - Forbidden Zone: 10:50 PM - 12:50 AM (13-15 hours after wake)
+            // - Sleep Gate: 12:50 AM+ (optimal window opens)
+            
             const forbiddenZone = getForbiddenZone();
             const wakeMaintenanceStart = forbiddenZone.start - (2 * 60); // 2 hours before forbidden zone
             
@@ -3372,8 +3378,21 @@
                 sleepTimeNormalized = sleepTime + 24 * 60;
             }
             
+            // Check if in Wake Maintenance Zone - this is a HARD BLOCKER
+            // During WMZ, circadian alerting signal is at maximum
+            if (sleepTimeNormalized >= wakeMaintenanceStart && sleepTimeNormalized < forbiddenZone.start) {
+                const forbiddenEnd = forbiddenZone.end;
+                blockingFactors.push({
+                    name: 'Wake Maintenance Zone',
+                    clearsAt: forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd,
+                    type: 'circadian',
+                    note: 'Pre-forbidden zone - circadian alerting prevents sleep onset'
+                });
+                sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
+                console.log(`🚫 WAKE MAINTENANCE ZONE: Sleep at ${minutesToTime(sleepTimeNormalized > 24*60 ? sleepTimeNormalized - 24*60 : sleepTimeNormalized)} blocked → pushed to ${minutesToTime(sleepTime)}`);
+            }
             // Check if in Forbidden Zone - push to after it ends
-            if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
+            else if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
                 const forbiddenEnd = forbiddenZone.end;
                 blockingFactors.push({
                     name: 'Forbidden Zone (Circadian)',
@@ -3382,17 +3401,7 @@
                     note: 'Peak alertness period - your body strongly resists sleep'
                 });
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
-            }
-            // Check if in Wake Maintenance Zone (2 hours before Forbidden Zone)
-            // Sleep is harder here but not impossible - add it as a warning
-            else if (sleepTimeNormalized >= wakeMaintenanceStart && sleepTimeNormalized < forbiddenZone.start) {
-                blockingFactors.push({
-                    name: 'Wake Maintenance Zone',
-                    clearsAt: forbiddenZone.start > 24 * 60 ? forbiddenZone.start - 24 * 60 : forbiddenZone.start,
-                    type: 'circadian-warning',
-                    note: 'Pre-forbidden zone - sleep onset is difficult'
-                });
-                // Don't force push, but warn user
+                console.log(`🚫 FORBIDDEN ZONE: Sleep blocked → pushed to ${minutesToTime(sleepTime)}`);
             }
             
             // =============================================
@@ -3504,20 +3513,27 @@
             // =============================================
             // PHASE 5: FINAL CIRCADIAN CLAMP
             // =============================================
-            // Sleep time should NEVER be before the forbidden zone ends
-            // This is a biological hard stop - you cannot enter Stage 1 sleep
-            // during the 2 hours of maximum daily alertness
+            // After all other factors (cortisol, thermal), re-check circadian constraints
+            // Sleep time should NEVER be in WMZ or FZ after all adjustments
             let normalizedFinalSleep = sleepTime;
             if (sleepTime < timeToMinutes(state.wakeTime)) {
                 normalizedFinalSleep = sleepTime + 24 * 60;
             }
             
-            // If sleep time is before forbidden zone ends, clamp it
-            if (normalizedFinalSleep < forbiddenZone.end) {
-                // Check if we're in forbidden zone
-                if (normalizedFinalSleep >= forbiddenZone.start) {
-                    console.log(`🌙 CIRCADIAN CLAMP: Sleep at ${minutesToTime(sleepTime)} blocked by Forbidden Zone`);
-                    sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
+            // Check both Wake Maintenance Zone AND Forbidden Zone
+            if (normalizedFinalSleep >= wakeMaintenanceStart && normalizedFinalSleep < forbiddenZone.end) {
+                console.log(`🌙 FINAL CIRCADIAN CLAMP: Sleep at ${minutesToTime(sleepTime)} blocked → pushed to ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}`);
+                sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
+                
+                // Add blocking factor if not already present
+                const hasCircadianBlocker = blockingFactors.some(f => f.type === 'circadian');
+                if (!hasCircadianBlocker) {
+                    blockingFactors.push({
+                        name: normalizedFinalSleep < forbiddenZone.start ? 'Wake Maintenance Zone' : 'Forbidden Zone',
+                        clearsAt: sleepTime,
+                        type: 'circadian',
+                        note: 'Circadian alerting prevents sleep in this window'
+                    });
                 }
             }
             
