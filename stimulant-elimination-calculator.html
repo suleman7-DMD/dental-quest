@@ -2716,6 +2716,26 @@
                 <span id="sleepPerfToggleIcon" style="float: right; transition: transform 0.3s;">▼</span>
             </div>
             <div id="sleepPerformanceContent" style="display: block;">
+                <!-- Interactive Explainer Panel -->
+                <div id="sleepExplainer" style="
+                    display: none;
+                    margin-bottom: 12px;
+                    padding: 14px 16px;
+                    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+                    border: 1px solid rgba(139, 92, 246, 0.3);
+                    border-radius: 12px;
+                    animation: fadeIn 0.2s ease;
+                ">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div id="explainerIcon" style="font-size: 1.5em;"></div>
+                        <div style="flex: 1;">
+                            <div id="explainerTitle" style="font-weight: 700; color: #e6edf3; margin-bottom: 4px;"></div>
+                            <div id="explainerDesc" style="font-size: 0.85em; color: rgba(255,255,255,0.7); line-height: 1.5;"></div>
+                            <div id="explainerAction" style="font-size: 0.8em; color: #8b5cf6; margin-top: 8px; font-style: italic;"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Stats Summary - Modern Glass Cards (Row 1) -->
                 <div id="sleepStatsBar" style="
                     display: grid;
@@ -2723,46 +2743,54 @@
                     gap: 10px;
                     margin-bottom: 10px;
                 ">
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('avg')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 14px 8px;
                         background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.05));
                         border: 1px solid rgba(96, 165, 250, 0.2);
                         border-radius: 12px;
                         backdrop-filter: blur(10px);
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.5em; font-weight: 700; color: #60a5fa; text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);" id="sleepStatAvg">--</div>
                         <div style="font-size: 0.65em; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Average</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('best')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 14px 8px;
                         background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
                         border: 1px solid rgba(16, 185, 129, 0.2);
                         border-radius: 12px;
                         backdrop-filter: blur(10px);
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.5em; font-weight: 700; color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);" id="sleepStatBest">--</div>
                         <div style="font-size: 0.65em; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Best</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('worst')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 14px 8px;
                         background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
                         border: 1px solid rgba(239, 68, 68, 0.2);
                         border-radius: 12px;
                         backdrop-filter: blur(10px);
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.5em; font-weight: 700; color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);" id="sleepStatWorst">--</div>
                         <div style="font-size: 0.65em; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Worst</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('trend')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 14px 8px;
                         background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
                         border: 1px solid rgba(139, 92, 246, 0.2);
                         border-radius: 12px;
                         backdrop-filter: blur(10px);
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.5em; font-weight: 700; text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);" id="sleepStatTrend">--</div>
                         <div style="font-size: 0.65em; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Trend</div>
@@ -2776,42 +2804,50 @@
                     gap: 10px;
                     margin-bottom: 16px;
                 ">
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('streak')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 12px 8px;
                         background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05));
                         border: 1px solid rgba(251, 191, 36, 0.2);
                         border-radius: 12px;
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.4em; font-weight: 700; color: #fbbf24;" id="sleepStatStreak">0🔥</div>
                         <div style="font-size: 0.6em; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 2px;">Streak</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('debt')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 12px 8px;
                         background: linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(244, 114, 182, 0.05));
                         border: 1px solid rgba(244, 114, 182, 0.2);
                         border-radius: 12px;
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.4em; font-weight: 700; color: #f472b6;" id="sleepStatDebt">0h</div>
                         <div style="font-size: 0.6em; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 2px;">Sleep Debt</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('score')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 12px 8px;
                         background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.05));
                         border: 1px solid rgba(34, 211, 238, 0.2);
                         border-radius: 12px;
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.4em; font-weight: 700; color: #22d3ee;" id="sleepStatScore">--</div>
                         <div style="font-size: 0.6em; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 2px;">Week Score</div>
                     </div>
-                    <div style="
+                    <div class="stat-card" onmouseenter="showExplainer('recovery')" onmouseleave="hideExplainer()" style="
                         text-align: center;
                         padding: 12px 8px;
                         background: linear-gradient(135deg, rgba(168, 162, 158, 0.15), rgba(168, 162, 158, 0.05));
                         border: 1px solid rgba(168, 162, 158, 0.2);
                         border-radius: 12px;
+                        cursor: help;
+                        transition: all 0.2s;
                     ">
                         <div style="font-size: 1.4em; font-weight: 700; color: #a8a29e;" id="sleepStatRecovery">--</div>
                         <div style="font-size: 0.6em; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 2px;">To Recover</div>
@@ -2912,6 +2948,44 @@
                     <label>Wake Time (when you woke up this day)</label>
                     <input type="time" id="sleepEditWakeTime" value="07:00" style="width: 100%;">
                 </div>
+                
+                <!-- Quick Actions -->
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                    <button onclick="setAllNighter()" style="
+                        flex: 1;
+                        padding: 10px;
+                        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+                        border: 1px solid rgba(239, 68, 68, 0.4);
+                        border-radius: 8px;
+                        color: #ef4444;
+                        font-size: 0.85em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))'">
+                        🚫 All-Nighter<br><span style="font-size: 0.8em; opacity: 0.8;">0 hours</span>
+                    </button>
+                    <button onclick="clearSleepEntry()" style="
+                        flex: 1;
+                        padding: 10px;
+                        background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.1));
+                        border: 1px solid rgba(107, 114, 128, 0.4);
+                        border-radius: 8px;
+                        color: #9ca3af;
+                        font-size: 0.85em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='rgba(107, 114, 128, 0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.1))'">
+                        🗑️ Clear Entry<br><span style="font-size: 0.8em; opacity: 0.8;">Remove data</span>
+                    </button>
+                </div>
+                
+                <div style="font-size: 0.75em; color: #6b7280; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+                    💡 <strong>All-Nighter</strong> = You got 0 sleep (counts in stats)<br>
+                    💡 <strong>Clear Entry</strong> = No data for this day (ignored in stats)
+                </div>
+                
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="closeSleepEditModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="saveSleepEdit()">Save</button>
@@ -6461,6 +6535,35 @@
             currentEditingDate = null;
         }
         
+        function setAllNighter() {
+            // Set hours to 0 (all-nighter) and save
+            document.getElementById('sleepEditHours').value = 0;
+            saveSleepEdit();
+            showToast('🚫 All-nighter logged (0h sleep)');
+        }
+        
+        function clearSleepEntry() {
+            if (!currentEditingDate) return;
+            
+            // Remove the entry entirely (null = unlogged)
+            delete state.sleepHistory[currentEditingDate];
+            
+            saveState();
+            
+            // If clearing today, reset main inputs to defaults
+            const today = new Date().toISOString().split('T')[0];
+            if (currentEditingDate === today) {
+                state.hoursSleptLastNight = 7; // Reset to default
+                document.getElementById('hoursSlept').value = 7;
+                recalculate();
+            }
+            
+            renderSleepCalendar();
+            renderSleepPerformance();
+            closeSleepEditModal();
+            showToast('🗑️ Entry cleared (no data for this day)');
+        }
+        
         function saveSleepEdit() {
             if (!currentEditingDate) return;
             
@@ -6579,6 +6682,7 @@
         
         function renderSleepPerformance() {
             const data = getSleepDataForDays(30);
+            // null = unlogged, 0 = all-nighter (valid data)
             const validData = data.filter(d => d.hoursSlept !== null);
             
             // Store data globally for tooltip access
@@ -6590,7 +6694,7 @@
                 const hours = validData.map(d => d.hoursSlept);
                 avg = hours.reduce((a, b) => a + b, 0) / hours.length;
                 best = Math.max(...hours);
-                worst = Math.min(...hours);
+                worst = Math.min(...hours); // 0 is valid (all-nighter)
                 
                 document.getElementById('sleepStatAvg').textContent = avg.toFixed(1) + 'h';
                 document.getElementById('sleepStatBest').textContent = best.toFixed(1) + 'h';
@@ -6712,6 +6816,14 @@
             // Render Achievements
             renderSleepAchievements(data, validData, currentStreak, longestStreak, weekScore, sleepDebt, avg);
             
+            // Store stats globally for explainer
+            window.sleepStats = {
+                avg, best, worst, currentStreak, longestStreak, sleepDebt, weekScore,
+                daysLogged: validData.length,
+                last7Avg: last7.length > 0 ? last7.reduce((a, d) => a + d.hoursSlept, 0) / last7.length : 0,
+                daysToRecover: sleepDebt > 0 ? Math.ceil(sleepDebt / 1.5) : 0
+            };
+            
             // Draw graph
             drawSleepPerformanceGraph(data);
             
@@ -6722,95 +6834,195 @@
             renderSleepHistoryList(data);
         }
         
+        // Explainer content for stats and achievements
+        const explainerContent = {
+            // Stats Row 1
+            avg: {
+                icon: '📊',
+                title: '30-Day Average Sleep',
+                getDesc: (s) => `Your average sleep over the last 30 days is ${s.avg.toFixed(1)} hours per night. The recommended amount for adults is 7-9 hours. ${s.avg >= 7 ? '✓ You\'re meeting the minimum!' : `You're ${(7 - s.avg).toFixed(1)}h below the minimum recommendation.`}`,
+                getAction: (s) => s.avg >= 7 ? 'Keep it up! Consistency is key.' : 'Try to add 30 minutes to your sleep each night.'
+            },
+            best: {
+                icon: '🌙',
+                title: 'Best Night (30 Days)',
+                getDesc: (s) => `Your longest sleep in the past 30 days was ${s.best.toFixed(1)} hours. This shows your recovery potential when you prioritize rest.`,
+                getAction: (s) => s.best >= 9 ? 'Great recovery capacity! Use this on weekends.' : 'Try for a 9+ hour recovery night when you can.'
+            },
+            worst: {
+                icon: '⚠️',
+                title: 'Worst Night (30 Days)',
+                getDesc: (s) => `Your shortest sleep was ${s.worst.toFixed(1)} hours. ${s.worst === 0 ? '🚫 This was an all-nighter! Complete sleep deprivation causes severe cognitive impairment equivalent to being legally drunk.' : s.worst < 4 ? 'This is in the dangerous zone - cognitive function drops ~40% below 4 hours.' : s.worst < 6 ? 'This is functional but accumulates sleep debt.' : 'Not too bad, but try to avoid going below 6 hours.'}`,
+                getAction: (s) => s.worst === 0 ? 'All-nighters require 2-3 full recovery nights (9+ hours) to clear.' : 'Even one bad night takes 2-3 good nights to fully recover from.'
+            },
+            trend: {
+                icon: '📈',
+                title: '7-Day Trend',
+                getDesc: (s) => `Compares your last 7 days average to the previous 7 days. This shows if your sleep is improving, declining, or stable over time.`,
+                getAction: (s) => 'A positive trend means your habits are working. Keep going!'
+            },
+            // Stats Row 2
+            streak: {
+                icon: '🔥',
+                title: 'Good Night Streak',
+                getDesc: (s) => `Current streak: ${s.currentStreak} consecutive nights of 7+ hours. ${s.currentStreak > 0 ? `You've maintained good sleep for ${s.currentStreak} night${s.currentStreak > 1 ? 's' : ''} in a row!` : 'Start building your streak by getting 7+ hours tonight.'} Your longest streak ever: ${s.longestStreak} nights.`,
+                getAction: (s) => s.currentStreak >= 7 ? '🎉 Amazing! A full week of good sleep!' : `Get 7+ hours tonight to ${s.currentStreak > 0 ? 'extend your streak!' : 'start a new streak!'}`
+            },
+            debt: {
+                icon: '💤',
+                title: 'Sleep Debt (Last 7 Days)',
+                getDesc: (s) => `Sleep debt is the cumulative hours below 8h over the past week. Your current debt: ${s.sleepDebt.toFixed(1)}h. ${s.sleepDebt === 0 ? '✓ You\'re fully recovered!' : s.sleepDebt > 10 ? '🚨 High debt - expect reduced focus, mood issues, and slower reactions.' : s.sleepDebt > 5 ? '⚠️ Moderate debt - you may feel tired in the afternoon.' : 'Mild debt - a couple good nights will clear this.'}`,
+                getAction: (s) => s.sleepDebt > 0 ? `To clear this debt, get ${(8 + 1.5).toFixed(0)}+ hours for the next ${Math.ceil(s.sleepDebt / 1.5)} nights.` : 'Maintain 7-8h nightly to stay debt-free!'
+            },
+            score: {
+                icon: '🎯',
+                title: 'Weekly Sleep Score (0-100)',
+                getDesc: (s) => `Your score: ${s.weekScore}/100. Calculated from: Average hours (70 pts max) + Consistency bonus (20 pts) + Streak bonus (10 pts). ${s.weekScore >= 80 ? '🏆 Excellent!' : s.weekScore >= 60 ? '👍 Good, room to improve.' : s.weekScore >= 40 ? '⚠️ Needs work.' : '🚨 Critical - prioritize sleep.'}`,
+                getAction: (s) => {
+                    if (s.weekScore >= 80) return 'You\'re in the top tier! Maintain this level.';
+                    if (s.weekScore >= 60) return 'Boost your score: more consistency + longer streaks.';
+                    return 'Focus on getting 7+ hours consistently to improve.';
+                }
+            },
+            recovery: {
+                icon: '⏱️',
+                title: 'Days to Full Recovery',
+                getDesc: (s) => s.sleepDebt > 0 
+                    ? `Based on your ${s.sleepDebt.toFixed(1)}h sleep debt, sleeping 9.5h/night (1.5h extra) would clear your debt in ${s.daysToRecover} days. Sleep debt compounds interest-free, but clearing it takes consistent effort.`
+                    : '✓ No recovery needed! You\'re fully rested. Maintain your current habits to stay debt-free.',
+                getAction: (s) => s.sleepDebt > 0 
+                    ? `Tonight's goal: Get at least 9 hours to start recovering.`
+                    : 'Keep getting 7-8 hours to maintain your clear status!'
+            },
+            // Achievements
+            first_log: {
+                icon: '📝',
+                title: 'Achievement: First Log',
+                getDesc: (s) => s.daysLogged >= 1 
+                    ? `✓ UNLOCKED! You've logged ${s.daysLogged} days of sleep data. The journey of a thousand miles begins with a single step.`
+                    : 'Log your first night of sleep to unlock this achievement.',
+                getAction: (s) => s.daysLogged >= 1 ? 'Keep logging daily to unlock more achievements!' : 'Enter your sleep hours above to get started.'
+            },
+            week_warrior: {
+                icon: '📅',
+                title: 'Achievement: Week Warrior',
+                getDesc: (s) => s.daysLogged >= 7 
+                    ? `✓ UNLOCKED! You've logged ${s.daysLogged} days. A full week of tracking gives meaningful insights into your patterns.`
+                    : `Log ${7 - s.daysLogged} more days to unlock. Current: ${s.daysLogged}/7 days.`,
+                getAction: (s) => s.daysLogged >= 7 ? 'You\'re building a habit! Next goal: Month Master.' : 'Keep logging daily - you\'re almost there!'
+            },
+            month_master: {
+                icon: '🗓️',
+                title: 'Achievement: Month Master',
+                getDesc: (s) => s.daysLogged >= 30 
+                    ? `✓ UNLOCKED! You've logged ${s.daysLogged} days - a full month! You now have meaningful trend data.`
+                    : `Log ${30 - s.daysLogged} more days to unlock. Current: ${s.daysLogged}/30 days.`,
+                getAction: (s) => s.daysLogged >= 30 ? 'Amazing commitment! Your data is now statistically significant.' : 'Consistency is key - keep logging every day!'
+            },
+            streak_3: {
+                icon: '🔥',
+                title: 'Achievement: 3-Day Streak',
+                getDesc: (s) => s.longestStreak >= 3 
+                    ? `✓ UNLOCKED! You've achieved ${s.longestStreak} consecutive nights of 7+ hours sleep.`
+                    : `Get 7+ hours for 3 nights in a row. Current best streak: ${s.longestStreak}. ${3 - s.currentStreak > 0 ? `Need ${3 - s.currentStreak} more nights.` : ''}`,
+                getAction: (s) => s.longestStreak >= 3 ? 'Proven you can do it! Now aim for 7-Day Streak.' : 'Each 7+ hour night adds to your streak. Tonight counts!'
+            },
+            streak_7: {
+                icon: '⚡',
+                title: 'Achievement: Week Streak',
+                getDesc: (s) => s.longestStreak >= 7 
+                    ? `✓ UNLOCKED! You've achieved ${s.longestStreak} consecutive nights of optimal sleep. This is elite-level consistency.`
+                    : `Get 7+ hours for 7 nights in a row. Current best: ${s.longestStreak}. Need ${7 - s.longestStreak} more consecutive nights.`,
+                getAction: (s) => s.longestStreak >= 7 ? 'You\'ve proven you can sustain healthy sleep for a full week!' : 'This is the gold standard. Keep building that streak!'
+            },
+            debt_free: {
+                icon: '💎',
+                title: 'Achievement: Debt Free',
+                getDesc: (s) => s.sleepDebt === 0 && s.daysLogged >= 7 
+                    ? `✓ UNLOCKED! Zero sleep debt with 7+ days tracked. Your body and mind are operating at full capacity.`
+                    : `Clear your sleep debt to unlock. Current debt: ${s.sleepDebt.toFixed(1)}h. ${s.daysLogged < 7 ? `Also need ${7 - s.daysLogged} more days logged.` : ''}`,
+                getAction: (s) => s.sleepDebt === 0 ? 'This is the optimal state! Maintain it.' : `Get 9+ hours for ${Math.ceil(s.sleepDebt / 1.5)} nights to clear debt.`
+            },
+            perfect_night: {
+                icon: '🌟',
+                title: 'Achievement: Perfect Night',
+                getDesc: (s) => s.best >= 8 
+                    ? `✓ UNLOCKED! You've logged ${s.best.toFixed(1)}h - a full 8+ hour night of sleep.`
+                    : `Log a night with 8+ hours of sleep. Your current best: ${s.best.toFixed(1)}h. Need ${(8 - s.best).toFixed(1)}h more.`,
+                getAction: (s) => s.best >= 8 ? 'You know what a full night feels like. Chase that feeling!' : 'Tonight, aim for 8 hours. You\'re so close!'
+            },
+            recovery_king: {
+                icon: '👑',
+                title: 'Achievement: Recovery King',
+                getDesc: (s) => s.best >= 10 
+                    ? `✓ UNLOCKED! You've logged ${s.best.toFixed(1)}h - a massive recovery sleep! This shows you prioritize rest when needed.`
+                    : `Log a 10+ hour recovery night. Your current best: ${s.best.toFixed(1)}h. These mega-sleeps are essential for clearing big deficits.`,
+                getAction: (s) => s.best >= 10 ? 'Use these recovery nights strategically after hard weeks.' : 'Try a weekend recovery sleep - go to bed early, sleep in late.'
+            },
+            score_80: {
+                icon: '🏆',
+                title: 'Achievement: A+ Student',
+                getDesc: (s) => s.weekScore >= 80 
+                    ? `✓ UNLOCKED! Week score of ${s.weekScore}/100. You're in the top tier of sleep optimization.`
+                    : `Achieve a weekly score of 80+. Current: ${s.weekScore}. Need ${80 - s.weekScore} more points. Score = Avg (70 max) + Consistency (20 max) + Streak (10 max).`,
+                getAction: (s) => s.weekScore >= 80 ? 'Elite status! This is where cognitive performance peaks.' : 'Focus on consistency (same bedtime) and building your streak.'
+            },
+            consistent: {
+                icon: '🎯',
+                title: 'Achievement: Consistent',
+                getDesc: (s) => s.avg >= 7 && s.daysLogged >= 7 
+                    ? `✓ UNLOCKED! 30-day average of ${s.avg.toFixed(1)}h with 7+ days tracked. Consistency beats intensity.`
+                    : `Maintain 7+ hour average over 30 days. Current: ${s.avg.toFixed(1)}h avg, ${s.daysLogged} days logged. ${s.avg < 7 ? `Need +${(7 - s.avg).toFixed(1)}h/night avg.` : 'Keep logging!'}`,
+                getAction: (s) => s.avg >= 7 ? 'The most important achievement - you\'ve built sustainable habits!' : 'Small consistent improvements compound over time.'
+            }
+        };
+        
+        let explainerTimeout = null;
+        
+        function showExplainer(key) {
+            clearTimeout(explainerTimeout);
+            const explainer = document.getElementById('sleepExplainer');
+            const content = explainerContent[key];
+            const stats = window.sleepStats || { avg: 0, best: 0, worst: 0, currentStreak: 0, longestStreak: 0, sleepDebt: 0, weekScore: 0, daysLogged: 0, daysToRecover: 0 };
+            
+            if (!explainer || !content) return;
+            
+            document.getElementById('explainerIcon').textContent = content.icon;
+            document.getElementById('explainerTitle').textContent = content.title;
+            document.getElementById('explainerDesc').textContent = content.getDesc(stats);
+            document.getElementById('explainerAction').textContent = '💡 ' + content.getAction(stats);
+            
+            explainer.style.display = 'block';
+        }
+        
+        function hideExplainer() {
+            explainerTimeout = setTimeout(() => {
+                const explainer = document.getElementById('sleepExplainer');
+                if (explainer) explainer.style.display = 'none';
+            }, 100);
+        }
+        
         function renderSleepAchievements(data, validData, currentStreak, longestStreak, weekScore, sleepDebt, avg) {
             const container = document.getElementById('sleepAchievements');
             if (!container) return;
             
+            const best = validData.length > 0 ? Math.max(...validData.map(d => d.hoursSlept)) : 0;
+            
             const achievements = [
-                { 
-                    id: 'first_log', 
-                    icon: '📝', 
-                    name: 'First Log', 
-                    desc: 'Logged your first sleep',
-                    unlocked: validData.length >= 1,
-                    color: '#60a5fa'
-                },
-                { 
-                    id: 'week_warrior', 
-                    icon: '📅', 
-                    name: 'Week Warrior', 
-                    desc: '7 days logged',
-                    unlocked: validData.length >= 7,
-                    color: '#8b5cf6'
-                },
-                { 
-                    id: 'month_master', 
-                    icon: '🗓️', 
-                    name: 'Month Master', 
-                    desc: '30 days logged',
-                    unlocked: validData.length >= 30,
-                    color: '#f59e0b'
-                },
-                { 
-                    id: 'streak_3', 
-                    icon: '🔥', 
-                    name: '3-Day Streak', 
-                    desc: '3 good nights in a row',
-                    unlocked: longestStreak >= 3,
-                    color: '#ef4444'
-                },
-                { 
-                    id: 'streak_7', 
-                    icon: '⚡', 
-                    name: 'Week Streak', 
-                    desc: '7 good nights in a row',
-                    unlocked: longestStreak >= 7,
-                    color: '#fbbf24'
-                },
-                { 
-                    id: 'debt_free', 
-                    icon: '💎', 
-                    name: 'Debt Free', 
-                    desc: 'Zero sleep debt',
-                    unlocked: sleepDebt === 0 && validData.length >= 7,
-                    color: '#22d3ee'
-                },
-                { 
-                    id: 'perfect_night', 
-                    icon: '🌟', 
-                    name: 'Perfect Night', 
-                    desc: '8+ hours logged',
-                    unlocked: validData.some(d => d.hoursSlept >= 8),
-                    color: '#10b981'
-                },
-                { 
-                    id: 'recovery_king', 
-                    icon: '👑', 
-                    name: 'Recovery King', 
-                    desc: '10+ hours in one night',
-                    unlocked: validData.some(d => d.hoursSlept >= 10),
-                    color: '#f472b6'
-                },
-                { 
-                    id: 'score_80', 
-                    icon: '🏆', 
-                    name: 'A+ Student', 
-                    desc: 'Week score 80+',
-                    unlocked: weekScore >= 80,
-                    color: '#10b981'
-                },
-                { 
-                    id: 'consistent', 
-                    icon: '🎯', 
-                    name: 'Consistent', 
-                    desc: 'Average 7+ hours',
-                    unlocked: avg >= 7 && validData.length >= 7,
-                    color: '#6366f1'
-                }
+                { id: 'first_log', icon: '📝', name: 'First Log', unlocked: validData.length >= 1, color: '#60a5fa' },
+                { id: 'week_warrior', icon: '📅', name: 'Week Warrior', unlocked: validData.length >= 7, color: '#8b5cf6' },
+                { id: 'month_master', icon: '🗓️', name: 'Month Master', unlocked: validData.length >= 30, color: '#f59e0b' },
+                { id: 'streak_3', icon: '🔥', name: '3-Day Streak', unlocked: longestStreak >= 3, color: '#ef4444' },
+                { id: 'streak_7', icon: '⚡', name: 'Week Streak', unlocked: longestStreak >= 7, color: '#fbbf24' },
+                { id: 'debt_free', icon: '💎', name: 'Debt Free', unlocked: sleepDebt === 0 && validData.length >= 7, color: '#22d3ee' },
+                { id: 'perfect_night', icon: '🌟', name: 'Perfect Night', unlocked: best >= 8, color: '#10b981' },
+                { id: 'recovery_king', icon: '👑', name: 'Recovery King', unlocked: best >= 10, color: '#f472b6' },
+                { id: 'score_80', icon: '🏆', name: 'A+ Student', unlocked: weekScore >= 80, color: '#10b981' },
+                { id: 'consistent', icon: '🎯', name: 'Consistent', unlocked: avg >= 7 && validData.length >= 7, color: '#6366f1' }
             ];
             
             container.innerHTML = achievements.map(a => `
-                <div style="
+                <div onmouseenter="showExplainer('${a.id}')" onmouseleave="hideExplainer()" style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -6821,8 +7033,8 @@
                     border-radius: 10px;
                     opacity: ${a.unlocked ? 1 : 0.4};
                     transition: all 0.3s;
-                    cursor: default;
-                " title="${a.name}: ${a.desc}${a.unlocked ? ' ✓ Unlocked!' : ' (locked)'}">
+                    cursor: help;
+                ">
                     <div style="font-size: 1.4em; ${a.unlocked ? '' : 'filter: grayscale(100%);'}">${a.icon}</div>
                     <div style="font-size: 0.55em; color: ${a.unlocked ? a.color : '#6b7280'}; margin-top: 4px; text-align: center; white-space: nowrap;">${a.name}</div>
                 </div>
