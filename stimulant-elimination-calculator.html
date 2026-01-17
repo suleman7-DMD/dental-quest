@@ -1584,14 +1584,14 @@
         
         <!-- Coffee Entry -->
         <div class="focus-card">
-            <div class="focus-card-title">☕ Coffee</div>
+            <div class="focus-card-title">☕ Caffeine</div>
             <div class="focus-row" style="margin-bottom: 10px;">
                 <div class="focus-input-group">
-                    <label>1st cup</label>
+                    <label id="focusCoffee1Label">Slot 1</label>
                     <input type="time" id="focusCoffee1Time" onchange="focusUpdateCoffee(1)">
                 </div>
                 <div class="focus-input-group">
-                    <label>2nd cup</label>
+                    <label id="focusCoffee2Label">Slot 2</label>
                     <input type="time" id="focusCoffee2Time" onchange="focusUpdateCoffee(2)">
                 </div>
             </div>
@@ -2954,29 +2954,139 @@
         // Global hyperarousal flag
         let hyperarousalMode = false;
         
+        // ============================================
+        // PROCESS S: Sleep Debt / Adenosine Pressure
+        // ============================================
+        // Scientific basis: Sleep pressure (Process S) is CUMULATIVE.
+        // Sleeping 4 hours Mon/Tue doesn't reset with 8 hours on Wed.
+        // The adenosine "debt" carries forward and affects your threshold.
+        
         function calculateSleepDebtBonus() {
-            // For every hour under 8, add 1.5mg to threshold
-            const hoursSlept = state.hoursSleptLastNight;
-            const deficit = Math.max(0, 8 - hoursSlept);
+            const today = new Date();
+            let totalDeficit = 0;
+            let daysWithData = 0;
             
-            // CRITICAL: Hyperarousal detection
+            // Start with today's deficit
+            const todayDeficit = Math.max(0, 8 - state.hoursSleptLastNight);
+            totalDeficit += todayDeficit;
+            daysWithData++;
+            
+            // CRITICAL: Hyperarousal detection for TODAY
             // Acute deprivation (<4 hrs) triggers cortisol/adrenaline response
             // This makes sleep HARDER, not easier - the adenosine is counteracted
-            if (hoursSlept < 4) {
+            if (state.hoursSleptLastNight < 4) {
                 hyperarousalMode = true;
                 // Return ZERO bonus - the adrenaline negates the sleep pressure
                 // The user will feel exhausted but wired
                 return 0;
             }
-            
             hyperarousalMode = false;
-            return deficit * 1.5;
+            
+            // Add deficit from previous 2 days (3-day rolling total)
+            // Weight: Today = 100%, Yesterday = 70%, Day before = 40%
+            // This models how sleep debt decays but doesn't fully clear
+            const weights = [0.7, 0.4]; // Yesterday, day before
+            
+            for (let i = 1; i <= 2; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const entry = state.sleepHistory[dateStr];
+                if (entry) {
+                    let hoursSlept = 8; // Default assumption
+                    
+                    // Handle both old format (number) and new format (object)
+                    if (typeof entry === 'number') {
+                        hoursSlept = entry;
+                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
+                        hoursSlept = entry.hoursSlept;
+                    }
+                    
+                    const dayDeficit = Math.max(0, 8 - hoursSlept);
+                    totalDeficit += dayDeficit * weights[i - 1];
+                    daysWithData++;
+                }
+            }
+            
+            // Convert deficit to threshold bonus
+            // Each hour of deficit adds ~1.0mg to threshold (reduced from 1.5 since we're cumulative now)
+            // Cap at +6mg to prevent unrealistic values
+            const bonus = Math.min(6, totalDeficit * 1.0);
+            
+            // Log for debugging
+            if (totalDeficit > 0) {
+                console.log(`💤 Sleep Debt: ${totalDeficit.toFixed(1)}h deficit over ${daysWithData} days → +${bonus.toFixed(1)}mg threshold`);
+            }
+            
+            return bonus;
         }
 
+        // ============================================
+        // EFFECTIVE THRESHOLD CALCULATION
+        // ============================================
+        // Scientific basis: Modifiers don't make drugs leave faster.
+        // They change your TOLERANCE via different mechanisms:
+        // - Sleep debt → Adenosine accumulation → Higher tolerance
+        // - Heavy lifting → Adenosine flood → Higher tolerance  
+        // - Sauna → Parasympathetic drive → Higher tolerance
+        // This means you can fall asleep with MORE drug in your system.
+        
         function getEffectiveThreshold() {
             const baseThreshold = state.settings.sleepThreshold;
-            const sleepDebtBonus = calculateSleepDebtBonus();
-            return baseThreshold + sleepDebtBonus;
+            let threshold = baseThreshold;
+            
+            // 1. Sleep Debt Bonus (Process S - Adenosine pressure)
+            threshold += calculateSleepDebtBonus();
+            
+            // 2. Exercise Bonus (Adenosine from muscle breakdown)
+            // Heavy lifting floods the brain with adenosine, which can override
+            // the dopaminergic arousal from amphetamines
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                // Workout plan provides adenosine bonus
+                if (state.workoutPlan.adenosineBonus > 0) {
+                    // Convert time bonus to threshold bonus
+                    // ~15 min adenosine bonus ≈ +1.0mg threshold
+                    const thresholdBonus = Math.min(3.0, state.workoutPlan.adenosineBonus / 15);
+                    threshold += thresholdBonus;
+                }
+            } else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
+                // Legacy heavy lift modifier
+                threshold += 2.0;
+            }
+            
+            // 3. Sauna Bonus (Parasympathetic activation)
+            // Sauna triggers heat shock proteins and subsequent parasympathetic
+            // rebound, increasing sleep drive independent of adenosine
+            if (state.modifiers.sauna && state.modifiers.sauna.active) {
+                const saunaTime = timeToMinutes(state.modifiers.sauna.time);
+                const now = getCurrentMinutes();
+                const fivePM = 17 * 60;
+                
+                // Only apply if sauna has been taken
+                let saunaTaken = false;
+                if (saunaTime > now && saunaTime - now > 12 * 60) {
+                    // Stale setting from yesterday
+                    saunaTaken = false;
+                } else if (now >= saunaTime || (saunaTime > 18 * 60 && now < 6 * 60)) {
+                    saunaTaken = true;
+                }
+                
+                if (saunaTaken) {
+                    if (saunaTime >= fivePM) {
+                        // Evening sauna - maximum parasympathetic benefit
+                        threshold += 2.0;
+                    } else {
+                        // Earlier sauna - reduced benefit (body re-arouses)
+                        threshold += 1.0;
+                    }
+                }
+            }
+            
+            // Cap the total threshold to prevent unrealistic values
+            // Max effective threshold = base + 8mg (extreme sleep debt + all modifiers)
+            const maxThreshold = baseThreshold + 8;
+            return Math.min(threshold, maxThreshold);
         }
         
         function isHyperarousalMode() {
@@ -3028,57 +3138,110 @@
         }
 
         // Calculate amphetamine load at a given time (in minutes from midnight)
+        // FIXED: Now handles date stamps and midnight rollovers correctly
         function calculateAmpLoad(atMinutes) {
             let totalLoad = 0;
             const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
             const vitCTime = state.modifiers.vitaminC.active ? timeToMinutes(state.modifiers.vitaminC.time) : Infinity;
             const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
+            const today = new Date().toISOString().split('T')[0];
 
             state.medications.forEach(med => {
                 const doseTime = timeToMinutes(med.time);
                 const totalDose = med.dose;
+                
+                // PHASE 3: Date filtering
+                // If medication has a date stamp, only include if it's today
+                // If no date stamp (legacy), assume it's today
+                if (med.date && med.date !== today) {
+                    // This medication is from a different day - skip it
+                    // Unless it's from yesterday and could still be active
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    
+                    if (med.date === yesterdayStr) {
+                        // Yesterday's dose - adjust timing for decay calculation
+                        // doseTime was yesterday, so effective elapsed time is longer
+                        const yesterdayDoseMinutes = doseTime; // Time of dose yesterday
+                        const effectiveDoseTime = -((24 * 60) - yesterdayDoseMinutes); // Negative = hours ago
+                        
+                        // Calculate decay for yesterday's dose
+                        const elapsed = atMinutes - effectiveDoseTime;
+                        if (elapsed > 0 && elapsed < 36 * 60) { // Only if within 36 hours
+                            // Add full decayed dose (no XR split needed for old doses)
+                            const remaining = totalDose * Math.pow(0.5, elapsed / baseHalfLife);
+                            totalLoad += remaining;
+                        }
+                    }
+                    return; // Skip normal processing for dated medications
+                }
                 
                 // XR splits into two releases
                 const immediateRelease = totalDose * 0.5;
                 const delayedRelease = totalDose * 0.5;
                 const delayedTime = doseTime + 240; // T+4 hours
                 
+                // DEBUG: Log XR calculation details (can be removed in production)
+                // console.log(`XR Calc: dose=${totalDose}mg at ${minutesToTime(doseTime)}, checking at ${minutesToTime(atMinutes)}`);
+                // console.log(`  Immediate: ${immediateRelease}mg, Delayed: ${delayedRelease}mg at ${minutesToTime(delayedTime)}`);
+                
+                // Handle midnight rollover for atMinutes
+                // If atMinutes is early morning (< 6 AM) and dose was evening (> 18:00)
+                // Then we're checking tomorrow's time against yesterday's dose
+                let effectiveAtMinutes = atMinutes;
+                if (atMinutes < 6 * 60 && doseTime > 18 * 60) {
+                    effectiveAtMinutes = atMinutes + 24 * 60; // Treat as next day
+                }
+                
+                let immediateLoad = 0;
+                let delayedLoad = 0;
+                
                 // Calculate immediate release component
-                if (atMinutes >= doseTime) {
-                    const elapsed = atMinutes - doseTime;
-                    let effectiveHalfLife = baseHalfLife;
+                if (effectiveAtMinutes >= doseTime) {
+                    const elapsed = effectiveAtMinutes - doseTime;
                     
                     // If Vitamin C was taken, use reduced half-life for time after it
-                    if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                    if (state.modifiers.vitaminC.active && effectiveAtMinutes > vitCTime) {
                         const beforeVitC = Math.max(0, vitCTime - doseTime);
-                        const afterVitC = atMinutes - Math.max(doseTime, vitCTime);
+                        const afterVitC = effectiveAtMinutes - Math.max(doseTime, vitCTime);
                         
                         // Decay before Vitamin C
                         let remaining = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
                         // Then faster decay after
                         remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
-                        totalLoad += remaining;
+                        immediateLoad = remaining;
                     } else {
-                        totalLoad += immediateRelease * Math.pow(0.5, elapsed / baseHalfLife);
+                        immediateLoad = immediateRelease * Math.pow(0.5, elapsed / baseHalfLife);
                     }
+                    totalLoad += immediateLoad;
                 }
                 
                 // Calculate delayed release component
-                if (atMinutes >= delayedTime) {
-                    const elapsed = atMinutes - delayedTime;
-                    let effectiveHalfLife = baseHalfLife;
+                // CRITICAL FIX: Handle midnight rollover for delayed time too
+                let effectiveDelayedTime = delayedTime;
+                if (delayedTime > 24 * 60) {
+                    effectiveDelayedTime = delayedTime; // Keep as is for comparison
+                }
+                
+                if (effectiveAtMinutes >= effectiveDelayedTime) {
+                    const elapsed = effectiveAtMinutes - effectiveDelayedTime;
                     
-                    if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
-                        const beforeVitC = Math.max(0, vitCTime - delayedTime);
-                        const afterVitC = atMinutes - Math.max(delayedTime, vitCTime);
+                    if (state.modifiers.vitaminC.active && effectiveAtMinutes > vitCTime) {
+                        const beforeVitC = Math.max(0, vitCTime - effectiveDelayedTime);
+                        const afterVitC = effectiveAtMinutes - Math.max(effectiveDelayedTime, vitCTime);
                         
                         let remaining = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
                         remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
-                        totalLoad += remaining;
+                        delayedLoad = remaining;
                     } else {
-                        totalLoad += delayedRelease * Math.pow(0.5, elapsed / baseHalfLife);
+                        delayedLoad = delayedRelease * Math.pow(0.5, elapsed / baseHalfLife);
                     }
+                    totalLoad += delayedLoad;
                 }
+                
+                // DEBUG: Log component totals
+                // console.log(`  Result: immediate=${immediateLoad.toFixed(2)}mg, delayed=${delayedLoad.toFixed(2)}mg, total=${totalLoad.toFixed(2)}mg`);
             });
             
             return totalLoad;
@@ -3163,11 +3326,21 @@
         function calculateSleepTime() {
             const ampClear = findAmpClearTime();
             const caffClear = findCaffClearTime();
+            const effectiveThreshold = getEffectiveThreshold();
+            const now = getCurrentMinutes();
             
-            let sleepTime = getCurrentMinutes();
+            let sleepTime = now;
             let blockingFactors = [];
             
-            if (ampClear !== null && ampClear > sleepTime) {
+            // =============================================
+            // PHASE 1: ESTABLISH HARD PHARMACOKINETIC FLOOR
+            // =============================================
+            // This is the EARLIEST possible sleep time based on drug clearance
+            // NO modifier can push sleep time earlier than this
+            let pharmacokineticFloor = now;
+            
+            if (ampClear !== null && ampClear > pharmacokineticFloor) {
+                pharmacokineticFloor = ampClear;
                 sleepTime = ampClear;
                 blockingFactors.push({
                     name: 'Amphetamine',
@@ -3176,7 +3349,8 @@
                 });
             }
             
-            if (caffClear !== null && caffClear > sleepTime) {
+            if (caffClear !== null && caffClear > pharmacokineticFloor) {
+                pharmacokineticFloor = caffClear;
                 sleepTime = caffClear;
                 blockingFactors.push({
                     name: 'Caffeine',
@@ -3185,39 +3359,64 @@
                 });
             }
             
-            // PROCESS C: Forbidden Zone is a HARD BLOCKER
-            // If sleep time falls within forbidden zone, push to after it ends
+            // =============================================
+            // PHASE 2: CIRCADIAN CONSTRAINTS
+            // =============================================
+            // Forbidden Zone is a HARD BLOCKER
+            // Wake Maintenance Zone (2 hours before Forbidden Zone) also resists sleep
             const forbiddenZone = getForbiddenZone();
+            const wakeMaintenanceStart = forbiddenZone.start - (2 * 60); // 2 hours before forbidden zone
+            
             let sleepTimeNormalized = sleepTime;
             if (sleepTime < timeToMinutes(state.wakeTime)) {
                 sleepTimeNormalized = sleepTime + 24 * 60;
             }
             
+            // Check if in Forbidden Zone - push to after it ends
             if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
-                // Sleep time is in forbidden zone - push to end of zone
                 const forbiddenEnd = forbiddenZone.end;
                 blockingFactors.push({
                     name: 'Forbidden Zone (Circadian)',
                     clearsAt: forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd,
                     type: 'circadian',
-                    note: 'Second wind period - your body resists sleep'
+                    note: 'Peak alertness period - your body strongly resists sleep'
                 });
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
             }
+            // Check if in Wake Maintenance Zone (2 hours before Forbidden Zone)
+            // Sleep is harder here but not impossible - add it as a warning
+            else if (sleepTimeNormalized >= wakeMaintenanceStart && sleepTimeNormalized < forbiddenZone.start) {
+                blockingFactors.push({
+                    name: 'Wake Maintenance Zone',
+                    clearsAt: forbiddenZone.start > 24 * 60 ? forbiddenZone.start - 24 * 60 : forbiddenZone.start,
+                    type: 'circadian-warning',
+                    note: 'Pre-forbidden zone - sleep onset is difficult'
+                });
+                // Don't force push, but warn user
+            }
             
             // =============================================
-            // WORKOUT PLAN INTEGRATION (FIXED)
+            // PHASE 3: TIME-BASED BLOCKERS ONLY
             // =============================================
+            // SCIENTIFIC NOTE: The threshold-based modifiers (lifting, sauna) have 
+            // been moved to getEffectiveThreshold(). This section now only handles
+            // TRUE TIME-BASED BLOCKERS - things that physically prevent sleep onset.
+            //
+            // Threshold modifiers (now in getEffectiveThreshold):
+            //   - Sleep debt → raises threshold (adenosine accumulation)
+            //   - Lifting → raises threshold (adenosine from muscle)
+            //   - Sauna → raises threshold (parasympathetic drive)
+            //
+            // Time-based blockers (kept here):
+            //   - Cortisol delay → pushes sleep later (HPA axis activation)
+            //   - Thermal cooldown → pushes sleep later (can't sleep while hot)
+            
+            // WORKOUT PLAN - TIME-BASED BLOCKERS ONLY
             if (state.workoutPlan && state.workoutPlan.applied) {
                 const wp = state.workoutPlan;
-                const now = getCurrentMinutes();
                 
-                // 1. Apply adenosine bonus (reduces sleep time - good!)
-                if (wp.adenosineBonus > 0) {
-                    sleepTime -= wp.adenosineBonus;
-                }
-                
-                // 2. Apply cortisol delay (increases sleep time - bad)
+                // Cortisol delay (increases sleep time - this is a REAL time blocker)
+                // Fasted training or intense exercise elevates cortisol for ~2-3 hours
                 if (wp.cortisolDelay > 0) {
                     sleepTime += wp.cortisolDelay;
                     blockingFactors.push({
@@ -3228,29 +3427,25 @@
                     });
                 }
                 
-                // 3. Thermal cooldown is a HARD BLOCKER (can't sleep until cooled down)
-                // BUT only if we haven't already passed the cooldown time
+                // Thermal cooldown is a HARD BLOCKER (can't sleep until cooled down)
+                // Core body temperature must drop for sleep onset - this is physics, not chemistry
                 if (wp.cooldownComplete !== null) {
                     let cooldownTime = wp.cooldownComplete;
                     
-                    // Normalize cooldown time for comparison with current time
+                    // Normalize cooldown time for comparison
                     let normalizedCooldown = cooldownTime;
                     let normalizedNow = now;
                     
                     // Handle times that cross midnight
-                    // If cooldown is in early morning hours (e.g., 1 AM = 60) and now is late evening (e.g., 11 PM = 1380)
-                    // then cooldown is TOMORROW, so add 24 hours to cooldown
                     if (cooldownTime < 6 * 60 && now > 18 * 60) {
                         normalizedCooldown += 24 * 60;
                     }
-                    // If now is early morning and cooldown was yesterday evening, cooldown has passed
                     if (now < 6 * 60 && cooldownTime > 18 * 60) {
                         normalizedNow += 24 * 60;
                     }
                     
                     // Only apply thermal block if cooldown is STILL IN THE FUTURE
                     if (normalizedCooldown > normalizedNow) {
-                        // Check if thermal cooldown extends past current sleep time
                         let normalizedSleep = sleepTime;
                         if (sleepTime < 6 * 60 && now > 18 * 60) {
                             normalizedSleep += 24 * 60;
@@ -3266,82 +3461,70 @@
                             });
                         }
                     }
-                    // If cooldown has passed, thermal is no longer blocking - don't add to blocking factors
                 }
             }
-            // Legacy support: If workout plan not applied but heavyLift modifier is active
-            else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
-                // Heavy lifting increases adenosine (good for sleep)
-                // Apply -15 min bonus
-                sleepTime -= 15;
-            }
             
-            // Sauna modifier (separate from workout)
-            // SCIENTIFIC NOTE: Sauna causes initial hyperthermia followed by enhanced 
-            // parasympathetic response. The net effect on sleep depends on timing:
-            // - Evening sauna (after 5 PM): Allows thermal dump before bed, triggers melatonin
-            // - Earlier sauna: Benefit dissipates, body re-arouses
-            if (state.modifiers.sauna && state.modifiers.sauna.active) {
-                const saunaTime = timeToMinutes(state.modifiers.sauna.time);
-                const fivePM = 17 * 60;
-                const now = getCurrentMinutes();
-                
-                // Only apply sauna benefit if the sauna time has passed (you've done it)
-                // AND sauna was taken today (not a stale setting)
-                let normalizedSaunaTime = saunaTime;
-                let normalizedNow = now;
-                if (saunaTime > now && saunaTime - now > 12 * 60) {
-                    // Sauna time appears to be from yesterday, don't apply
-                } else if (normalizedNow >= normalizedSaunaTime || (saunaTime > 18 * 60 && now < 6 * 60)) {
-                    // Sauna has been taken
-                    if (saunaTime >= fivePM) {
-                        // Evening sauna - full parasympathetic benefit
-                        sleepTime -= 30;
-                    } else {
-                        // Earlier sauna - reduced benefit (body has time to re-arouse)
-                        sleepTime -= 15;
-                    }
-                }
-                // If sauna is scheduled for later today, don't apply benefit yet
-            }
+            // NOTE: Sauna and Heavy Lift bonuses are NO LONGER applied as time modifiers.
+            // They now raise the sleep threshold in getEffectiveThreshold(), which
+            // naturally causes the drug curve to cross the (higher) threshold earlier.
+            // This is the scientifically accurate model - these activities don't make
+            // drugs leave your body faster, they increase your tolerance to sleep
+            // with higher drug levels.
             
             // =============================================
-            // NICOTINE INTEGRATION
+            // NICOTINE INTEGRATION - ADVISORY ONLY
             // =============================================
-            // Nicotine elevates HR/BP for 45-75 min depending on delivery method
-            // This blocks sleep onset regardless of drug levels
+            // Nicotine is a QUALITY MODIFIER, not a hard blocker
+            // Sleep IS possible with recent nicotine, just may be lighter or delayed
             if (state.nicotine && state.nicotine.active && state.nicotine.lastHitTime) {
-                const nicotineCooldownTime = getNicotineCooldownTime();
+                const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+                let elapsed = now - lastHitMins;
+                if (elapsed < 0) elapsed += 24 * 60;
                 
-                if (nicotineCooldownTime !== null) {
-                    const now = getCurrentMinutes();
+                // Only show as advisory if within impact window
+                if (elapsed < typeInfo.minimalImpactEnd) {
+                    let impactLevel = 'MINIMAL';
+                    if (elapsed < typeInfo.highImpactEnd) impactLevel = 'HIGH';
+                    else if (elapsed < typeInfo.moderateImpactEnd) impactLevel = 'MODERATE';
+                    else if (elapsed < typeInfo.minimalImpactEnd) impactLevel = 'LOW';
                     
-                    // Normalize times for comparison
-                    let normalizedCooldown = nicotineCooldownTime;
-                    let normalizedNow = now;
-                    let normalizedSleep = sleepTime;
-                    
-                    if (nicotineCooldownTime < 6 * 60 && now > 18 * 60) normalizedCooldown += 24 * 60;
-                    if (sleepTime < 6 * 60 && now > 18 * 60) normalizedSleep += 24 * 60;
-                    
-                    // Only apply if cooldown hasn't passed
-                    if (normalizedCooldown > normalizedNow && normalizedCooldown > normalizedSleep) {
-                        sleepTime = nicotineCooldownTime;
-                        const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                    if (impactLevel === 'HIGH' || impactLevel === 'MODERATE') {
                         blockingFactors.push({
                             name: `Nicotine (${typeInfo.description})`,
-                            clearsAt: nicotineCooldownTime,
-                            type: 'nicotine',
-                            note: `CV cooldown: ${typeInfo.cardiovascularCooldown} min`
+                            clearsAt: null,
+                            type: 'nicotine-advisory',
+                            impact: impactLevel,
+                            note: impactLevel === 'HIGH' ? 'Peak arousal' : 'Moderate arousal'
                         });
                     }
                 }
             }
             
+            // =============================================
+            // PHASE 5: FINAL CIRCADIAN CLAMP
+            // =============================================
+            // Sleep time should NEVER be before the forbidden zone ends
+            // This is a biological hard stop - you cannot enter Stage 1 sleep
+            // during the 2 hours of maximum daily alertness
+            let normalizedFinalSleep = sleepTime;
+            if (sleepTime < timeToMinutes(state.wakeTime)) {
+                normalizedFinalSleep = sleepTime + 24 * 60;
+            }
+            
+            // If sleep time is before forbidden zone ends, clamp it
+            if (normalizedFinalSleep < forbiddenZone.end) {
+                // Check if we're in forbidden zone
+                if (normalizedFinalSleep >= forbiddenZone.start) {
+                    console.log(`🌙 CIRCADIAN CLAMP: Sleep at ${minutesToTime(sleepTime)} blocked by Forbidden Zone`);
+                    sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
+                }
+            }
+            
             // Sort blocking factors by clear time
             blockingFactors.sort((a, b) => {
-                let aTime = a.clearsAt;
-                let bTime = b.clearsAt;
+                let aTime = a.clearsAt || 0;
+                let bTime = b.clearsAt || 0;
                 // Normalize for comparison
                 if (aTime < 6 * 60) aTime += 24 * 60;
                 if (bTime < 6 * 60) bTime += 24 * 60;
@@ -3363,12 +3546,36 @@
         function addMedEntry(dose = 50, time = null) {
             const now = new Date();
             const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
             
-            const entry = { id: Date.now(), dose, time: defaultTime };
+            // PHASE 3: Add date stamp to prevent phantom loads
+            const entry = { id: Date.now(), dose, time: defaultTime, date: today };
             state.medications.push(entry);
             renderMedEntries();
             recalculate();
             saveState();
+        }
+        
+        // Clean up old medications from previous days
+        // Called on init and day change
+        function cleanupOldMedications() {
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            // Keep today's meds and yesterday's meds (for overnight decay)
+            // Remove anything older
+            const originalCount = state.medications.length;
+            state.medications = state.medications.filter(med => {
+                if (!med.date) return true; // Legacy entries without date - keep for now
+                return med.date === today || med.date === yesterdayStr;
+            });
+            
+            if (state.medications.length !== originalCount) {
+                console.log(`🧹 Cleaned up ${originalCount - state.medications.length} old medication entries`);
+                saveState();
+            }
         }
 
         function removeMedEntry(id) {
@@ -4248,14 +4455,40 @@
             const blockingList = document.getElementById('blockingList');
             
             if (blockingContainer && blockingList) {
-                if (blockingFactors.length > 0 && !(ampOk && caffOk && !inForbiddenZone)) {
+                // Separate real blockers from advisory items
+                const realBlockers = blockingFactors.filter(f => f.type !== 'nicotine-advisory' && f.type !== 'circadian-warning');
+                const advisoryItems = blockingFactors.filter(f => f.type === 'nicotine-advisory' || f.type === 'circadian-warning');
+                
+                if (realBlockers.length > 0 && !(ampOk && caffOk && !inForbiddenZone)) {
                     blockingContainer.style.display = 'block';
-                    blockingList.innerHTML = blockingFactors.map(f => `
+                    
+                    let html = realBlockers.map(f => `
                     <div class="blocking-factor">
                         <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #8b949e;">(${f.note})</span>` : ''}</span>
                         <span class="clears-at">Clears at ${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
                     </div>
-                `).join('');
+                    `).join('');
+                    
+                    // Add advisory items with different styling
+                    if (advisoryItems.length > 0) {
+                        html += advisoryItems.map(f => `
+                        <div class="blocking-factor" style="border-left-color: #f59e0b; opacity: 0.85;">
+                            <span>${f.name} <span style="font-size: 0.8em; color: #f59e0b;">(${f.note})</span></span>
+                            <span class="clears-at" style="color: #f59e0b;">${f.type === 'nicotine-advisory' ? 'Quality modifier' : 'Advisory'}</span>
+                        </div>
+                        `).join('');
+                    }
+                    
+                    blockingList.innerHTML = html;
+                } else if (advisoryItems.length > 0) {
+                    // Only advisory items
+                    blockingContainer.style.display = 'block';
+                    blockingList.innerHTML = advisoryItems.map(f => `
+                    <div class="blocking-factor" style="border-left-color: #f59e0b; opacity: 0.85;">
+                        <span>${f.name} <span style="font-size: 0.8em; color: #f59e0b;">(${f.note})</span></span>
+                        <span class="clears-at" style="color: #f59e0b;">May affect sleep quality</span>
+                    </div>
+                    `).join('');
                 } else {
                     blockingContainer.style.display = 'none';
                 }
@@ -4668,16 +4901,30 @@
         
         // Nicotine pharmacokinetics constants
         // Based on cardiovascular response research, not elimination half-life
+        // Nicotine pharmacokinetics - REDESIGNED for accuracy
+        // Key insight: nicotine is FRONT-LOADED (first 10-30 min most activating)
+        // Half-life ~2 hours, but subjective effects don't follow linear decay
+        // Sleep impact is probabilistic, not a hard blocker
         const NICOTINE_CONSTANTS = {
             vape: {
-                peakTime: 10, // minutes to peak blood level
-                cardiovascularCooldown: 75, // minutes for HR/BP normalization
-                description: '💨 Vape'
+                // Inhaled nicotine - rapid spike
+                onsetMinutes: 0.5,       // Seconds to feel it
+                peakMinutes: 5,          // Peak plasma in 1-5 min
+                highImpactEnd: 30,       // HIGH arousal zone ends
+                moderateImpactEnd: 60,   // MODERATE zone ends
+                minimalImpactEnd: 120,   // Meaningful effects mostly gone
+                description: '💨 Vape',
+                shortDesc: 'Vape'
             },
             pouch: {
-                peakTime: 25, // slower buccal absorption
-                cardiovascularCooldown: 45, // gentler spike = faster recovery
-                description: '🫧 Zyn/Pouch'
+                // Buccal absorption - slower, flatter curve
+                onsetMinutes: 5,         // Takes 5-15 min to feel
+                peakMinutes: 30,         // Peak at 30-45 min
+                highImpactEnd: 45,       // HIGH zone ends
+                moderateImpactEnd: 75,   // MODERATE zone ends
+                minimalImpactEnd: 120,   // Minimal by 2 hours
+                description: '🫧 Zyn/Pouch',
+                shortDesc: 'Zyn'
             }
         };
         
@@ -4735,12 +4982,44 @@
                 
                 const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
                 const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-                let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
-                if (clearTime >= 24 * 60) clearTime -= 24 * 60;
+                const now = getCurrentMinutes();
+                
+                // Calculate elapsed time and impact level
+                let elapsed = now - lastHitMins;
+                if (elapsed < 0) elapsed += 24 * 60;
+                
+                let impactLevel = 'MINIMAL';
+                let timeUntilNext = 0;
+                let nextPhase = '';
+                
+                if (elapsed < typeInfo.highImpactEnd) {
+                    impactLevel = 'HIGH';
+                    timeUntilNext = typeInfo.highImpactEnd - elapsed;
+                    nextPhase = 'moderate';
+                } else if (elapsed < typeInfo.moderateImpactEnd) {
+                    impactLevel = 'MODERATE';
+                    timeUntilNext = typeInfo.moderateImpactEnd - elapsed;
+                    nextPhase = 'low';
+                } else if (elapsed < typeInfo.minimalImpactEnd) {
+                    impactLevel = 'LOW';
+                    timeUntilNext = typeInfo.minimalImpactEnd - elapsed;
+                    nextPhase = 'minimal';
+                }
                 
                 if (lastDisplayEl) lastDisplayEl.textContent = minutesToTime(lastHitMins);
                 if (typeDisplayEl) typeDisplayEl.textContent = typeInfo.description;
-                if (clearDisplayEl) clearDisplayEl.textContent = minutesToTime(clearTime);
+                
+                // Show impact level instead of exact clear time
+                if (clearDisplayEl) {
+                    const levelColors = { 'HIGH': '#f87171', 'MODERATE': '#f59e0b', 'LOW': '#10b981', 'MINIMAL': '#10b981' };
+                    clearDisplayEl.style.color = levelColors[impactLevel];
+                    
+                    if (impactLevel === 'MINIMAL') {
+                        clearDisplayEl.textContent = '✓ Minimal';
+                    } else {
+                        clearDisplayEl.textContent = `${impactLevel} (~${Math.round(timeUntilNext)}m)`;
+                    }
+                }
                 if (timeInputEl) timeInputEl.value = state.nicotine.lastHitTime;
                 
                 // Update button styles
@@ -4775,7 +5054,8 @@
             if (!warningEl) return;
             
             const now = getCurrentMinutes();
-            const { sleepTime } = calculateSleepTime();
+            const hour = Math.floor(now / 60);
+            const isLateEvening = (hour >= 21) || (hour < 3);
             
             if (!state.nicotine.active || !state.nicotine.lastHitTime) {
                 warningEl.style.display = 'none';
@@ -4785,63 +5065,148 @@
             
             const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
             const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-            let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
+            let elapsed = now - lastHitMins;
+            if (elapsed < 0) elapsed += 24 * 60;
             
-            // Normalize for comparison
-            let normalizedClear = clearTime;
-            let normalizedNow = now;
-            if (clearTime < 6 * 60 && now > 18 * 60) normalizedClear += 24 * 60;
-            if (now < 6 * 60 && clearTime > 18 * 60) normalizedNow += 24 * 60;
+            // Determine impact level
+            let impactLevel = 'MINIMAL';
+            let timeUntilNext = 0;
             
-            if (normalizedClear > normalizedNow) {
-                // Still blocking
-                warningEl.style.display = 'block';
-                warningEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                warningEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
-                
-                const displayClearTime = clearTime >= 24 * 60 ? clearTime - 24 * 60 : clearTime;
-                warningEl.innerHTML = `
-                    <div style="font-weight: 600; color: #f87171; margin-bottom: 6px;">
-                        🚫 CARDIOVASCULAR STILL ELEVATED
-                    </div>
-                    <div style="color: #e6edf3; font-size: 0.9em;">
-                        Heart rate won't normalize until <strong>${minutesToTime(displayClearTime)}</strong>.
-                        This may block sleep onset even if drugs have cleared.
-                    </div>
-                `;
-            } else {
-                // Cleared
-                warningEl.style.display = 'block';
+            if (elapsed < typeInfo.highImpactEnd) {
+                impactLevel = 'HIGH';
+                timeUntilNext = typeInfo.highImpactEnd - elapsed;
+            } else if (elapsed < typeInfo.moderateImpactEnd) {
+                impactLevel = 'MODERATE';
+                timeUntilNext = typeInfo.moderateImpactEnd - elapsed;
+            } else if (elapsed < typeInfo.minimalImpactEnd) {
+                impactLevel = 'LOW';
+                timeUntilNext = typeInfo.minimalImpactEnd - elapsed;
+            }
+            
+            // Build visual bar
+            const bars = {
+                'HIGH': '<span style="color: #f87171;">████████</span><span style="color: #3f3f46;">░░</span>',
+                'MODERATE': '<span style="color: #f59e0b;">█████</span><span style="color: #3f3f46;">░░░░░</span>',
+                'LOW': '<span style="color: #10b981;">██</span><span style="color: #3f3f46;">░░░░░░░░</span>',
+                'MINIMAL': '<span style="color: #3f3f46;">░░░░░░░░░░</span>'
+            };
+            
+            warningEl.style.display = 'block';
+            
+            if (impactLevel === 'MINIMAL') {
                 warningEl.style.background = 'rgba(16, 185, 129, 0.15)';
                 warningEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
                 warningEl.innerHTML = `
-                    <div style="font-weight: 600; color: #10b981; margin-bottom: 6px;">
-                        ✅ CARDIOVASCULAR CLEAR
+                    <div style="font-weight: 600; color: #10b981; margin-bottom: 8px;">
+                        ✅ Nicotine Impact: Minimal
                     </div>
-                    <div style="color: #e6edf3; font-size: 0.9em;">
-                        Heart rate normalized. Nicotine is not blocking sleep.
+                    <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
+                        ${bars[impactLevel]}
+                    </div>
+                    <div style="color: #a1a1aa; font-size: 0.85em;">
+                        2+ hours since last hit. Effects largely cleared.
                     </div>
                 `;
-            }
-            
-            // Evening recommendation
-            const hour = Math.floor(now / 60);
-            if (recommendEl) {
-                if (hour >= 18 && state.nicotine.type === 'vape') {
+                if (recommendEl) recommendEl.style.display = 'none';
+            } else if (impactLevel === 'LOW') {
+                warningEl.style.background = 'rgba(16, 185, 129, 0.1)';
+                warningEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                warningEl.innerHTML = `
+                    <div style="font-weight: 600; color: #10b981; margin-bottom: 8px;">
+                        🚬 Nicotine Impact: Low
+                    </div>
+                    <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
+                        ${bars[impactLevel]}
+                    </div>
+                    <div style="color: #e6edf3; font-size: 0.9em;">
+                        ~${Math.round(timeUntilNext)} min until minimal. Sleep usually possible, quality may be slightly reduced.
+                    </div>
+                `;
+                if (recommendEl) recommendEl.style.display = 'none';
+            } else if (impactLevel === 'MODERATE') {
+                warningEl.style.background = 'rgba(245, 158, 11, 0.15)';
+                warningEl.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+                warningEl.innerHTML = `
+                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">
+                        🚬 Nicotine Impact: Moderate
+                    </div>
+                    <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
+                        ${bars[impactLevel]}
+                    </div>
+                    <div style="color: #e6edf3; font-size: 0.9em; margin-bottom: 6px;">
+                        ~${Math.round(timeUntilNext)} min until low impact. Arousal may delay sleep 15-45 min.
+                    </div>
+                    <div style="color: #a1a1aa; font-size: 0.85em;">
+                        Chronic users often sleep fine but may notice lighter sleep.
+                    </div>
+                `;
+                if (recommendEl && isLateEvening) {
+                    recommendEl.style.display = 'block';
+                    recommendEl.innerHTML = getRelaxationProtocol();
+                } else if (recommendEl) {
+                    recommendEl.style.display = 'none';
+                }
+            } else {
+                // HIGH impact
+                warningEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                warningEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+                warningEl.innerHTML = `
+                    <div style="font-weight: 600; color: #f87171; margin-bottom: 8px;">
+                        🚬 Nicotine Impact: High
+                    </div>
+                    <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
+                        ${bars[impactLevel]}
+                    </div>
+                    <div style="color: #e6edf3; font-size: 0.9em; margin-bottom: 6px;">
+                        ~${Math.round(timeUntilNext)} min until moderate. Peak alertness window - sleep onset difficult.
+                    </div>
+                    <div style="color: #a1a1aa; font-size: 0.85em;">
+                        ${state.nicotine.type === 'vape' ? 'Vaping hits fast, clears fast.' : 'Pouches have a flatter, longer curve.'}
+                    </div>
+                `;
+                if (recommendEl && isLateEvening) {
+                    recommendEl.style.display = 'block';
+                    recommendEl.innerHTML = getRelaxationProtocol();
+                } else if (recommendEl && hour >= 18 && state.nicotine.type === 'vape') {
                     recommendEl.style.display = 'block';
                     recommendEl.innerHTML = `
                         <div style="font-weight: 600; color: #10b981; margin-bottom: 6px;">
                             💡 EVENING STRATEGY
                         </div>
                         <div style="color: #e6edf3; font-size: 0.9em;">
-                            Switch to <strong>Zyn/pouches</strong>. Slower absorption = 45 min cooldown vs 75 min for vaping.
-                            This helps you "land the plane" for sleep.
+                            Consider <strong>Zyn/pouches</strong> for evening. Slower onset, flatter curve, easier to "land the plane" for sleep.
                         </div>
                     `;
-                } else {
+                } else if (recommendEl) {
                     recommendEl.style.display = 'none';
                 }
             }
+        }
+        
+        // Relaxation protocol for late-night nicotine use
+        function getRelaxationProtocol() {
+            return `
+                <div style="font-weight: 600; color: #8b5cf6; margin-bottom: 10px;">
+                    😴 Wind-Down Protocol
+                </div>
+                <div style="color: #e6edf3; font-size: 0.9em; line-height: 1.6;">
+                    <div style="margin-bottom: 8px;">
+                        <strong>1. Dim lights</strong>, put phone away (or night mode)
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>2. Physiologic sigh</strong> (5x):<br>
+                        <span style="color: #a1a1aa; font-size: 0.85em; margin-left: 12px; display: block;">
+                            Inhale nose → small top-up inhale → long slow exhale
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>3. If not sleepy in 20 min:</strong> get up, do something boring in dim light, return when drowsy
+                    </div>
+                </div>
+                <div style="color: #f87171; font-size: 0.85em; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    ❌ Avoid: Clock-watching, calculating when you'll sleep — this itself triggers arousal
+                </div>
+            `;
         }
         
         function checkRLSRisk() {
@@ -4878,25 +5243,12 @@
             rlsEl.style.display = highRisk ? 'block' : 'none';
         }
         
+        // Legacy function - kept for backward compatibility
+        // Nicotine is now advisory-only, doesn't hard-block sleep
         function getNicotineCooldownTime() {
-            if (!state.nicotine.active || !state.nicotine.lastHitTime) return null;
-            
-            const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
-            const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-            let clearTime = lastHitMins + typeInfo.cardiovascularCooldown;
-            
-            const now = getCurrentMinutes();
-            
-            // Normalize for comparison
-            let normalizedClear = clearTime;
-            let normalizedNow = now;
-            if (clearTime < 6 * 60 && now > 18 * 60) normalizedClear += 24 * 60;
-            if (now < 6 * 60 && clearTime > 18 * 60) normalizedNow += 24 * 60;
-            
-            // If already cleared, return null
-            if (normalizedClear <= normalizedNow) return null;
-            
-            return clearTime >= 24 * 60 ? clearTime - 24 * 60 : clearTime;
+            // Nicotine no longer blocks sleep calculation
+            // Return null to indicate no blocking
+            return null;
         }
         
         function showToast(message) {
@@ -5516,7 +5868,8 @@
             };
             
             state.history.unshift(entry);
-            if (state.history.length > 30) state.history.pop(); // Keep last 30 days
+            // History limit REMOVED - keep full history for long-term tracking
+            // Text data is minimal; 10 years of history < 1MB
             
             saveState();
             renderHistory();
@@ -5534,7 +5887,11 @@
                 return;
             }
             
-            container.innerHTML = state.history.slice(0, 10).map(entry => {
+            // Show up to 30 entries (expanded from 10)
+            const displayCount = 30;
+            const entriesToShow = state.history.slice(0, displayCount);
+            
+            let html = entriesToShow.map(entry => {
                 const date = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                 const totalDose = entry.medications ? entry.medications.reduce((sum, m) => sum + m.dose, 0) : 0;
                 const totalCaff = entry.caffeine ? entry.caffeine.reduce((sum, c) => sum + c.amount, 0) : 0;
@@ -5575,6 +5932,15 @@
                     </div>
                 `;
             }).join('');
+            
+            // Add count indicator if there are more entries
+            if (state.history.length > displayCount) {
+                html += `<p style="color: #8b949e; text-align: center; padding: 10px; font-size: 0.85em;">
+                    Showing ${displayCount} of ${state.history.length} entries
+                </p>`;
+            }
+            
+            container.innerHTML = html;
         }
         
         // Clean up corrupted history entries
@@ -6360,10 +6726,11 @@
                     };
                 }
                 
-                // Clean up old sleep history entries (keep only last 14 days)
-                const twoWeeksAgo = new Date();
-                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-                const cutoffDate = twoWeeksAgo.toISOString().split('T')[0];
+                // Clean up old sleep history entries (keep last 365 days for long-term tracking)
+                // This allows chronic sleep debt calculation while preventing unbounded growth
+                const oneYearAgo = new Date();
+                oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+                const cutoffDate = oneYearAgo.toISOString().split('T')[0];
                 
                 Object.keys(state.sleepHistory).forEach(dateStr => {
                     if (dateStr < cutoffDate) {
@@ -6445,6 +6812,9 @@
         
         function init() {
             loadState();
+            
+            // PHASE 3: Clean up old medications to prevent phantom loads
+            cleanupOldMedications();
             
             // Initialize Firebase for cloud sync
             initFirebase();
@@ -6599,14 +6969,31 @@
             const blockingList = document.getElementById('focusBlockingList');
             
             if (blockingCard && blockingList) {
-                if (blockingFactors.length > 0) {
+                // Separate real blockers from advisory items
+                const realBlockers = blockingFactors.filter(f => f.type !== 'nicotine-advisory' && f.type !== 'circadian-warning');
+                const advisoryItems = blockingFactors.filter(f => f.type === 'nicotine-advisory' || f.type === 'circadian-warning');
+                
+                if (realBlockers.length > 0 || advisoryItems.length > 0) {
                     blockingCard.style.display = 'block';
-                    blockingList.innerHTML = blockingFactors.map(f => `
+                    
+                    let html = realBlockers.map(f => `
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <span>${f.name}</span>
                             <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
                         </div>
                     `).join('');
+                    
+                    // Add advisory items with different styling
+                    if (advisoryItems.length > 0) {
+                        html += advisoryItems.map(f => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); opacity: 0.8;">
+                            <span>${f.name}</span>
+                            <span style="color: #a78bfa; font-size: 0.85em;">~quality</span>
+                        </div>
+                        `).join('');
+                    }
+                    
+                    blockingList.innerHTML = html;
                 } else {
                     blockingCard.style.display = 'none';
                 }
@@ -6812,38 +7199,67 @@
         // Coffee functions - FIXED to prevent duplicates and input clearing
         let coffeeInputActive = false; // Track if user is actively typing
         
-        function focusUpdateCoffee(cup) {
-            const timeEl = document.getElementById(`focusCoffee${cup}Time`);
+        // FIXED: Use slot-based indexing instead of name-based search
+        // Slot 1 = state.caffeine[0], Slot 2 = state.caffeine[1]
+        // This ensures Focus View edits the EXISTING entries from Full View
+        function focusUpdateCoffee(slot) {
+            const timeEl = document.getElementById(`focusCoffee${slot}Time`);
             const time = timeEl ? timeEl.value : null;
-            if (!time) return;
             
             coffeeInputActive = true; // Mark as active to prevent clearing during render
             
-            // Clear any entries that might conflict - look for existing entries with similar times
-            // or named "Cup 1"/"Cup 2" or matching Coffee entries
-            const targetName = `Cup ${cup}`;
+            const index = slot - 1; // Convert slot (1,2) to array index (0,1)
             
-            // First, try to find an existing Focus Mode entry
-            let existingIndex = state.caffeine.findIndex(c => c.name === targetName);
-            
-            if (existingIndex >= 0) {
-                // Update existing Focus Mode entry
-                state.caffeine[existingIndex].time = time;
-            } else {
-                // Create new entry
-                state.caffeine.push({
-                    id: Date.now() + cup,
-                    amount: 95, // Standard cup
-                    name: targetName,
-                    time: time
-                });
+            // FIXED: If time is cleared (empty), DELETE the entry at this slot
+            if (!time || time === '') {
+                if (state.caffeine[index]) {
+                    const removed = state.caffeine[index];
+                    console.log(`☕ Deleted caffeine slot ${slot}: ${removed.name} (${removed.amount}mg)`);
+                    state.caffeine.splice(index, 1);
+                    
+                    renderCaffeineEntries();
+                    saveState();
+                    recalculate();
+                    
+                    if (focusMode) {
+                        updateFocusSleepDisplay();
+                        updateFocusCoffeeStatus();
+                    }
+                }
+                coffeeInputActive = false;
+                return;
             }
+            
+            // Check if an entry already exists at this index
+            if (state.caffeine[index]) {
+                // UPDATE EXISTING ENTRY - only change the time, preserve name/amount
+                state.caffeine[index].time = time;
+                console.log(`☕ Updated caffeine slot ${slot}: ${state.caffeine[index].name} (${state.caffeine[index].amount}mg) at ${time}`);
+            } else {
+                // No entry at this index - create new with default values
+                // But first, check if we need to fill gaps
+                while (state.caffeine.length < index) {
+                    // Fill gaps with null placeholders (shouldn't happen normally)
+                    state.caffeine.push(null);
+                }
+                
+                state.caffeine[index] = {
+                    id: Date.now() + slot,
+                    amount: 95, // Standard cup
+                    name: `Cup ${slot}`,
+                    time: time
+                };
+                console.log(`☕ Created new caffeine slot ${slot}: Cup ${slot} (95mg) at ${time}`);
+            }
+            
+            // Clean up any null entries
+            state.caffeine = state.caffeine.filter(c => c !== null);
             
             renderCaffeineEntries();
             saveState();
             recalculate();
             
-            // Update focus mode but DON'T re-render coffee inputs
+            // Update focus mode displays
             if (focusMode) {
                 updateFocusSleepDisplay();
                 updateFocusCoffeeStatus();
@@ -6895,14 +7311,31 @@
             const blockingList = document.getElementById('focusBlockingList');
             
             if (blockingCard && blockingList) {
-                if (blockingFactors.length > 0) {
+                // Separate real blockers from advisory items
+                const realBlockers = blockingFactors.filter(f => f.type !== 'nicotine-advisory' && f.type !== 'circadian-warning');
+                const advisoryItems = blockingFactors.filter(f => f.type === 'nicotine-advisory' || f.type === 'circadian-warning');
+                
+                if (realBlockers.length > 0 || advisoryItems.length > 0) {
                     blockingCard.style.display = 'block';
-                    blockingList.innerHTML = blockingFactors.map(f => `
+                    
+                    let html = realBlockers.map(f => `
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <span>${f.name}</span>
                             <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
                         </div>
                     `).join('');
+                    
+                    // Add advisory items with different styling
+                    if (advisoryItems.length > 0) {
+                        html += advisoryItems.map(f => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); opacity: 0.8;">
+                            <span>${f.name}</span>
+                            <span style="color: #a78bfa; font-size: 0.85em;">~quality</span>
+                        </div>
+                        `).join('');
+                    }
+                    
+                    blockingList.innerHTML = html;
                 } else {
                     blockingCard.style.display = 'none';
                 }
@@ -6922,16 +7355,46 @@
             }
         }
         
+        // FIXED: Use index-based sync and dynamic labels
         function updateFocusCoffeeStatus() {
             const statusEl = document.getElementById('focusCoffeeStatus');
             const coffee1 = document.getElementById('focusCoffee1Time');
             const coffee2 = document.getElementById('focusCoffee2Time');
+            const label1 = document.getElementById('focusCoffee1Label');
+            const label2 = document.getElementById('focusCoffee2Label');
             
             if (!statusEl) return;
             
-            // Show total from ALL sources (Focus Mode + Full View)
+            // Phase 3: Filter out entries with empty time values for display
+            const validEntries = state.caffeine.filter(c => c && c.time);
+            
+            // Update dynamic labels to show what's in each slot
+            if (label1) {
+                if (state.caffeine[0]) {
+                    // Show actual drink name and amount
+                    const entry = state.caffeine[0];
+                    label1.textContent = `${entry.name} (${entry.amount}mg)`;
+                    label1.style.color = '#10b981'; // Green to indicate it's synced
+                } else {
+                    label1.textContent = 'Slot 1 (empty)';
+                    label1.style.color = '#8b949e';
+                }
+            }
+            
+            if (label2) {
+                if (state.caffeine[1]) {
+                    const entry = state.caffeine[1];
+                    label2.textContent = `${entry.name} (${entry.amount}mg)`;
+                    label2.style.color = '#10b981';
+                } else {
+                    label2.textContent = 'Slot 2 (empty)';
+                    label2.style.color = '#8b949e';
+                }
+            }
+            
+            // Show total from ALL sources
             if (state.caffeine.length === 0) {
-                statusEl.innerHTML = 'No coffee logged yet';
+                statusEl.innerHTML = 'No caffeine logged yet. Add in Full View or enter time above.';
                 // Only clear if user isn't actively editing
                 if (!coffeeInputActive) {
                     if (coffee1) coffee1.value = '';
@@ -6940,16 +7403,24 @@
             } else {
                 const total = state.caffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
                 
-                // Sync Focus Mode inputs from state ONLY if not actively editing
+                // INDEX-BASED SYNC: Use array position, not name
                 if (!coffeeInputActive) {
-                    const cup1 = state.caffeine.find(c => c.name === 'Cup 1');
-                    const cup2 = state.caffeine.find(c => c.name === 'Cup 2');
+                    // Slot 1 = state.caffeine[0]
+                    if (state.caffeine[0] && coffee1) {
+                        coffee1.value = state.caffeine[0].time || '';
+                    } else if (coffee1) {
+                        coffee1.value = '';
+                    }
                     
-                    if (cup1 && coffee1) coffee1.value = cup1.time;
-                    if (cup2 && coffee2) coffee2.value = cup2.time;
+                    // Slot 2 = state.caffeine[1]
+                    if (state.caffeine[1] && coffee2) {
+                        coffee2.value = state.caffeine[1].time || '';
+                    } else if (coffee2) {
+                        coffee2.value = '';
+                    }
                 }
                 
-                // Show entry count with clear button hint
+                // Show entry count with clear button
                 const entryText = state.caffeine.length === 1 ? 'entry' : 'entries';
                 statusEl.innerHTML = `<span>${state.caffeine.length} ${entryText} • ${total}mg total</span>
                     <button onclick="focusClearAllCaffeine()" style="margin-left: 10px; padding: 4px 10px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 0.8em; cursor: pointer;">Clear All</button>`;
