@@ -1764,7 +1764,7 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate(); saveState()">
+                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate(); updateTodaySleepHistory(); saveState()">
                         </div>
                     </div>
                     <div id="sleepDebtDisplay" style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9em;">
@@ -2634,6 +2634,49 @@
                         <!-- Will be populated dynamically -->
                     </div>
                 </div>
+
+                <!-- Today's Forecast Logic - Explainer Section -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="section-header" onclick="toggleForecastLogic()" style="cursor: pointer;">
+                        <span class="icon">🔬</span> Today's Forecast Logic
+                        <span id="forecastToggleIcon" style="float: right; transition: transform 0.3s;">▼</span>
+                    </div>
+                    <p style="color: #8b949e; font-size: 0.85em; margin: 10px 0;">
+                        Complete breakdown of how your sleep window is calculated. Copy this to verify the algorithm.
+                    </p>
+                    <div id="forecastLogicContent" style="display: block;">
+                        <div id="forecastLogicText" style="
+                            background: rgba(0,0,0,0.3);
+                            border: 1px solid rgba(99,102,241,0.3);
+                            border-radius: 10px;
+                            padding: 20px;
+                            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+                            font-size: 0.85em;
+                            line-height: 1.6;
+                            color: #c9d1d9;
+                            white-space: pre-wrap;
+                            max-height: 600px;
+                            overflow-y: auto;
+                        ">
+                            Loading forecast logic...
+                        </div>
+                        <button onclick="copyForecastLogic()" style="
+                            margin-top: 12px;
+                            padding: 10px 20px;
+                            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 0.9em;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                            📋 Copy Forecast Logic
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3020,6 +3063,63 @@
             }
             
             return bonus;
+        }
+        
+        // Get detailed breakdown of 3-day sleep debt for display
+        function getSleepDebtBreakdown() {
+            const today = new Date();
+            const breakdown = [];
+            
+            // Today
+            const todayDeficit = Math.max(0, 8 - state.hoursSleptLastNight);
+            breakdown.push({
+                label: 'Today',
+                hours: state.hoursSleptLastNight,
+                deficit: todayDeficit,
+                weight: 1.0,
+                weighted: todayDeficit * 1.0
+            });
+            
+            // Yesterday and day before
+            const weights = [0.7, 0.4];
+            const labels = ['Yesterday', '2 days ago'];
+            
+            for (let i = 1; i <= 2; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const entry = state.sleepHistory[dateStr];
+                if (entry) {
+                    let hoursSlept = 8;
+                    if (typeof entry === 'number') {
+                        hoursSlept = entry;
+                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
+                        hoursSlept = entry.hoursSlept;
+                    }
+                    
+                    const dayDeficit = Math.max(0, 8 - hoursSlept);
+                    breakdown.push({
+                        label: labels[i - 1],
+                        hours: hoursSlept,
+                        deficit: dayDeficit,
+                        weight: weights[i - 1],
+                        weighted: dayDeficit * weights[i - 1],
+                        hasData: true
+                    });
+                } else {
+                    breakdown.push({
+                        label: labels[i - 1],
+                        hours: null,
+                        deficit: 0,
+                        weight: weights[i - 1],
+                        weighted: 0,
+                        hasData: false
+                    });
+                }
+            }
+            
+            return breakdown;
         }
 
         // ============================================
@@ -4052,6 +4152,9 @@
             const sleepTimeFormatted = minutesToTime(impact.predictedSleep > 24*60 ? impact.predictedSleep - 24*60 : impact.predictedSleep);
             const baseSleepFormatted = minutesToTime(impact.baseSleepTime > 24*60 ? impact.baseSleepTime - 24*60 : impact.baseSleepTime);
             
+            // Convert adenosine bonus to threshold bonus for display
+            const thresholdBonus = Math.min(3.0, (impact.adenosineBonus || 0) / 15);
+            
             let detailsContent = `
                 <div class="workout-impact-item">
                     <span>Base Sleep Time (drugs only)</span>
@@ -4059,11 +4162,11 @@
                 </div>
             `;
             
-            if (impact.adenosineBonus > 0) {
+            if (thresholdBonus > 0) {
                 detailsContent += `
                     <div class="workout-impact-item">
-                        <span>Adenosine Bonus</span>
-                        <span class="workout-impact-positive">-${impact.adenosineBonus} min</span>
+                        <span>Adenosine Bonus (threshold↑)</span>
+                        <span class="workout-impact-positive">+${thresholdBonus.toFixed(1)}mg tolerance</span>
                     </div>
                 `;
             }
@@ -4284,14 +4387,25 @@
                 sleepDebtDisplay.style.borderLeft = '4px solid #ef4444';
                 sleepDebtDisplay.style.background = 'rgba(239, 68, 68, 0.1)';
             } else if (sleepDebtDisplay && sleepDebtBonus > 0) {
+                const breakdown = getSleepDebtBreakdown();
+                const breakdownHtml = breakdown.map(d => {
+                    if (!d.hasData && d.label !== 'Today') {
+                        return `<span style="color: #6e7681;">${d.label}: no data</span>`;
+                    }
+                    const deficitColor = d.deficit > 0 ? '#f59e0b' : '#10b981';
+                    return `<span style="color: ${deficitColor};">${d.label}: ${d.hours}h${d.deficit > 0 ? ` (-${d.deficit}h × ${d.weight})` : ''}</span>`;
+                }).join(' · ');
+                
                 sleepDebtDisplay.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #f59e0b;">😴 Sleep Debt Detected</span>
+                        <span style="color: #f59e0b;">😴 Sleep Debt Detected (3-Day Rolling)</span>
                         <span style="color: #f59e0b; font-weight: 600;">+${sleepDebtBonus.toFixed(1)}mg to threshold</span>
                     </div>
-                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 6px;">
+                    <div style="font-size: 0.8em; color: #8b949e; margin-top: 6px;">
+                        ${breakdownHtml}
+                    </div>
+                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 4px;">
                         Base threshold: ${state.settings.sleepThreshold}mg → Effective: <strong style="color: #10b981;">${effectiveThreshold.toFixed(1)}mg</strong>
-                        <br>Your exhaustion will help you fall asleep with more drug in your system.
                     </div>
                 `;
                 sleepDebtDisplay.style.borderLeft = '3px solid #f59e0b';
@@ -4530,6 +4644,9 @@
                 renderFocusMode();
             }
             
+            // Update Today's Forecast Logic (explainer section)
+            updateForecastLogic();
+            
             // NOTE: Do NOT call saveState() here!
             // recalculate() is called every second for live UI updates.
             // saveState() should only be called when user makes actual changes.
@@ -4558,26 +4675,31 @@
             if (wp && wp.applied) {
                 workoutItem.style.display = 'flex';
                 
-                const netImpact = (wp.cortisolDelay || 0) + (wp.thermalDelay || 0) - (wp.adenosineBonus || 0);
+                // NEW: Show threshold impact, not time impact
+                // Adenosine bonus converts to threshold: 15 min ≈ +1.0mg
+                const thresholdBonus = Math.min(3.0, (wp.adenosineBonus || 0) / 15);
                 
-                if (netImpact > 30) {
-                    // Significant delay
-                    workoutStatusEl.textContent = `+${Math.round(netImpact)} min`;
-                    workoutIndicatorEl.textContent = '⚠️';
-                    workoutItem.className = 'status-item blocking';
-                    workoutItem.style.borderLeftColor = '#f59e0b';
-                } else if (netImpact > 0) {
-                    // Minor delay
-                    workoutStatusEl.textContent = `+${Math.round(netImpact)} min`;
-                    workoutIndicatorEl.textContent = '⏳';
-                    workoutItem.className = 'status-item ok';
-                    workoutItem.style.borderLeftColor = '#f59e0b';
-                } else if (netImpact < 0) {
-                    // Beneficial (adenosine bonus outweighs delays)
-                    workoutStatusEl.textContent = `${Math.round(netImpact)} min`;
+                // Time-based penalties still apply (cortisol, thermal)
+                const timeDelay = (wp.cortisolDelay || 0) + (wp.thermalDelay || 0);
+                
+                if (thresholdBonus > 0 && timeDelay === 0) {
+                    // Pure benefit
+                    workoutStatusEl.textContent = `+${thresholdBonus.toFixed(1)}mg threshold`;
                     workoutIndicatorEl.textContent = '✓';
                     workoutItem.className = 'status-item ok';
                     workoutItem.style.borderLeftColor = '#10b981';
+                } else if (thresholdBonus > 0 && timeDelay > 0) {
+                    // Mixed: threshold benefit + time delay
+                    workoutStatusEl.textContent = `+${thresholdBonus.toFixed(1)}mg, +${timeDelay}min delay`;
+                    workoutIndicatorEl.textContent = '⏳';
+                    workoutItem.className = 'status-item ok';
+                    workoutItem.style.borderLeftColor = '#f59e0b';
+                } else if (timeDelay > 0) {
+                    // Only delay
+                    workoutStatusEl.textContent = `+${timeDelay} min delay`;
+                    workoutIndicatorEl.textContent = '⚠️';
+                    workoutItem.className = 'status-item blocking';
+                    workoutItem.style.borderLeftColor = '#f59e0b';
                 } else {
                     workoutStatusEl.textContent = 'Neutral';
                     workoutIndicatorEl.textContent = '✓';
@@ -6808,6 +6930,351 @@
             document.getElementById('toastMessage').textContent = message;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ============================================
+        // TODAY'S FORECAST LOGIC - EXPLAINER SECTION
+        // ============================================
+        
+        let forecastExpanded = true;
+        
+        function toggleForecastLogic() {
+            forecastExpanded = !forecastExpanded;
+            const content = document.getElementById('forecastLogicContent');
+            const icon = document.getElementById('forecastToggleIcon');
+            
+            if (content) {
+                content.style.display = forecastExpanded ? 'block' : 'none';
+            }
+            if (icon) {
+                icon.textContent = forecastExpanded ? '▼' : '▶';
+            }
+        }
+        
+        function copyForecastLogic() {
+            const text = document.getElementById('forecastLogicText');
+            if (text) {
+                navigator.clipboard.writeText(text.textContent).then(() => {
+                    showToast('📋 Forecast logic copied to clipboard!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const range = document.createRange();
+                    range.selectNode(text);
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(range);
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    showToast('📋 Forecast logic copied!');
+                });
+            }
+        }
+        
+        function generateForecastLogic() {
+            const now = new Date();
+            const currentTime = minutesToTime(getCurrentMinutes());
+            const { sleepTime, blockingFactors } = calculateSleepTime();
+            const effectiveThreshold = getEffectiveThreshold();
+            const baseThreshold = state.settings.sleepThreshold;
+            const sleepDebtBonus = calculateSleepDebtBonus();
+            const ampLoad = calculateAmpLoad(getCurrentMinutes());
+            const caffLoad = calculateCaffLoad(getCurrentMinutes());
+            const forbiddenZone = getForbiddenZone();
+            const sleepGate = getSleepGate();
+            
+            // Calculate modifier bonuses
+            let liftBonus = 0;
+            let saunaBonus = 0;
+            let workoutBonus = 0;
+            
+            if (state.workoutPlan && state.workoutPlan.applied && state.workoutPlan.adenosineBonus > 0) {
+                workoutBonus = Math.min(3.0, state.workoutPlan.adenosineBonus / 15);
+            } else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
+                liftBonus = 2.0;
+            }
+            
+            if (state.modifiers.sauna && state.modifiers.sauna.active) {
+                const saunaTime = timeToMinutes(state.modifiers.sauna.time);
+                const nowMins = getCurrentMinutes();
+                const fivePM = 17 * 60;
+                let saunaTaken = false;
+                if (saunaTime > nowMins && saunaTime - nowMins > 12 * 60) {
+                    saunaTaken = false;
+                } else if (nowMins >= saunaTime || (saunaTime > 18 * 60 && nowMins < 6 * 60)) {
+                    saunaTaken = true;
+                }
+                if (saunaTaken) {
+                    saunaBonus = saunaTime >= fivePM ? 2.0 : 1.0;
+                }
+            }
+            
+            // Calculate rolling sleep debt details
+            const today = new Date();
+            let debtDetails = [];
+            const todayDeficit = Math.max(0, 8 - state.hoursSleptLastNight);
+            debtDetails.push(`Today: ${state.hoursSleptLastNight}h slept → ${todayDeficit.toFixed(1)}h deficit (100% weight)`);
+            
+            const weights = [0.7, 0.4];
+            for (let i = 1; i <= 2; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const entry = state.sleepHistory[dateStr];
+                
+                if (entry) {
+                    let hoursSlept = 8;
+                    if (typeof entry === 'number') hoursSlept = entry;
+                    else if (typeof entry === 'object' && entry.hoursSlept !== undefined) hoursSlept = entry.hoursSlept;
+                    
+                    const dayDeficit = Math.max(0, 8 - hoursSlept);
+                    const weighted = dayDeficit * weights[i - 1];
+                    const dayName = i === 1 ? 'Yesterday' : '2 days ago';
+                    debtDetails.push(`${dayName}: ${hoursSlept}h slept → ${dayDeficit.toFixed(1)}h deficit × ${weights[i-1]} = ${weighted.toFixed(1)}h`);
+                } else {
+                    const dayName = i === 1 ? 'Yesterday' : '2 days ago';
+                    debtDetails.push(`${dayName}: No data (assumed 8h)`);
+                }
+            }
+            
+            // Build caffeine details
+            let caffeineDetails = [];
+            if (state.caffeine.length === 0) {
+                caffeineDetails.push('None logged');
+            } else {
+                state.caffeine.forEach((c, i) => {
+                    caffeineDetails.push(`${i+1}. ${c.name || 'Cup'}: ${c.amount}mg at ${c.time}`);
+                });
+            }
+            
+            // Build medication details
+            let medDetails = [];
+            if (state.medications.length === 0) {
+                medDetails.push('None logged');
+            } else {
+                state.medications.forEach((m, i) => {
+                    const type = m.dose >= 20 ? 'XR' : 'IR';
+                    medDetails.push(`${i+1}. ${m.dose}mg ${type} at ${m.time}`);
+                });
+            }
+            
+            // Build modifiers summary
+            let modifierDetails = [];
+            if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
+                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time} → Half-life reduced to 70% after this time`);
+            }
+            if (state.modifiers.sauna && state.modifiers.sauna.active) {
+                modifierDetails.push(`• Sauna: Scheduled at ${state.modifiers.sauna.time} → +${saunaBonus.toFixed(1)}mg threshold (parasympathetic)`);
+            }
+            if (state.modifiers.heavyLift && state.modifiers.heavyLift.active && !state.workoutPlan?.applied) {
+                modifierDetails.push(`• Heavy Lifting: Active → +${liftBonus.toFixed(1)}mg threshold (adenosine)`);
+            }
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                modifierDetails.push(`• Workout Plan: Applied`);
+                if (state.workoutPlan.adenosineBonus > 0) {
+                    modifierDetails.push(`  - Adenosine bonus: ${state.workoutPlan.adenosineBonus} min → +${workoutBonus.toFixed(1)}mg threshold`);
+                }
+                if (state.workoutPlan.cortisolDelay > 0) {
+                    modifierDetails.push(`  - Cortisol delay: +${state.workoutPlan.cortisolDelay} min (HPA axis)`);
+                }
+                if (state.workoutPlan.cooldownComplete) {
+                    modifierDetails.push(`  - Thermal cooldown until: ${minutesToTime(state.workoutPlan.cooldownComplete)}`);
+                }
+            }
+            if (state.nicotine && state.nicotine.active && state.nicotine.lastHitTime) {
+                const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
+                const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
+                let elapsed = getCurrentMinutes() - lastHitMins;
+                if (elapsed < 0) elapsed += 24 * 60;
+                
+                let impact = 'MINIMAL';
+                if (elapsed < typeInfo.highImpactEnd) impact = 'HIGH';
+                else if (elapsed < typeInfo.moderateImpactEnd) impact = 'MODERATE';
+                else if (elapsed < typeInfo.minimalImpactEnd) impact = 'LOW';
+                
+                modifierDetails.push(`• Nicotine (${state.nicotine.type}): Last at ${state.nicotine.lastHitTime} → ${impact} impact (advisory only)`);
+            }
+            if (modifierDetails.length === 0) {
+                modifierDetails.push('None active');
+            }
+            
+            // Build blocking factors
+            let blockingDetails = [];
+            blockingFactors.forEach(f => {
+                if (f.type === 'nicotine-advisory') {
+                    blockingDetails.push(`• ${f.name}: ${f.impact} impact (quality modifier, not blocker)`);
+                } else {
+                    const clearTime = f.clearsAt !== null ? minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt) : 'N/A';
+                    blockingDetails.push(`• ${f.name}: Clears at ${clearTime}${f.note ? ' - ' + f.note : ''}`);
+                }
+            });
+            if (blockingDetails.length === 0) {
+                blockingDetails.push('None - sleep possible now');
+            }
+            
+            // Calculate crash time
+            let crashTime = null;
+            if (state.medications.length > 0) {
+                const latestDose = state.medications.reduce((latest, m) => {
+                    const t = timeToMinutes(m.time);
+                    return t > latest ? t : latest;
+                }, 0);
+                crashTime = latestDose + (6 * 60); // ~6 hours after dose
+            }
+            
+            // Format sleep time
+            let sleepTimeDisplay = sleepTime;
+            if (sleepTimeDisplay > 24 * 60) sleepTimeDisplay -= 24 * 60;
+            if (sleepTimeDisplay < 0) sleepTimeDisplay += 24 * 60;
+            
+            // Calculate Wake Maintenance Zone
+            const wmzStart = forbiddenZone.start - (2 * 60);
+            
+            // Build the forecast text
+            const forecastText = `
+═══════════════════════════════════════════════════════════════
+TODAY'S FORECAST LOGIC — ${now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+Generated at: ${currentTime}
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│ 1. PERSONAL CALIBRATION SETTINGS                            │
+└─────────────────────────────────────────────────────────────┘
+  • Amphetamine half-life: ${state.settings.ampHalfLife} hours
+  • Sleep threshold (base): ${baseThreshold} mg
+  • Caffeine half-life: ${state.settings.caffHalfLife} hours
+  • Caffeine threshold: ${state.settings.caffThreshold} mg
+  • Body weight: ${state.settings.weight} lbs
+  
+  HOW THIS IS USED:
+  → Half-life determines decay rate: Drug = Dose × 0.5^(elapsed_hours / half_life)
+  → Threshold is the drug level below which sleep becomes possible
+  → Weight affects drug distribution volume (heavier = slightly faster clearance)
+
+┌─────────────────────────────────────────────────────────────┐
+│ 2. TODAY'S SLEEP CONTEXT                                    │
+└─────────────────────────────────────────────────────────────┘
+  • Wake time: ${state.wakeTime}
+  • Hours slept last night: ${state.hoursSleptLastNight}
+  • Hyperarousal mode: ${isHyperarousalMode() ? 'YES (< 4 hrs sleep negates sleep pressure!)' : 'No'}
+  
+  ROLLING 3-DAY SLEEP DEBT CALCULATION:
+  ${debtDetails.join('\n  ')}
+  ─────────────────────────────────
+  Total weighted deficit: ${(sleepDebtBonus / 1.0).toFixed(1)}h → +${sleepDebtBonus.toFixed(1)}mg threshold bonus
+  
+  HOW THIS IS USED:
+  → Sleep debt increases adenosine (Process S)
+  → Higher adenosine = can sleep with more drug in system
+  → Threshold raised by ~1.0mg per hour of deficit (capped at +6mg)
+  → CRITICAL: If < 4 hours sleep, hyperarousal kicks in (cortisol surge)
+    This NEGATES the bonus - you feel wired despite exhaustion
+
+┌─────────────────────────────────────────────────────────────┐
+│ 3. TODAY'S MEDICATIONS                                      │
+└─────────────────────────────────────────────────────────────┘
+  ${medDetails.join('\n  ')}
+  
+  CURRENT AMPHETAMINE LOAD: ${ampLoad.toFixed(1)} mg
+  
+  HOW THIS IS USED:
+  → XR releases 50% immediately, 50% at T+4 hours
+  → Each pulse decays independently via half-life
+  → Sleep possible when load drops below effective threshold
+  → Vitamin C (if active) reduces half-life to 70% after specified time
+
+┌─────────────────────────────────────────────────────────────┐
+│ 4. TODAY'S CAFFEINE                                         │
+└─────────────────────────────────────────────────────────────┘
+  ${caffeineDetails.join('\n  ')}
+  
+  CURRENT CAFFEINE LOAD: ${caffLoad.toFixed(0)} mg
+  
+  HOW THIS IS USED:
+  → Caffeine blocks adenosine receptors (counteracts sleep pressure)
+  → Sleep possible when load drops below ${state.settings.caffThreshold}mg threshold
+  → Decays via half-life: ~${state.settings.caffHalfLife} hours
+
+┌─────────────────────────────────────────────────────────────┐
+│ 5. ACTIVE MODIFIERS                                         │
+└─────────────────────────────────────────────────────────────┘
+  ${modifierDetails.join('\n  ')}
+  
+  HOW MODIFIERS AFFECT THRESHOLD:
+  → Modifiers do NOT make drugs leave faster
+  → They RAISE your tolerance (effective threshold goes UP)
+  → Heavy lifting floods brain with adenosine from muscle breakdown
+  → Sauna triggers parasympathetic rebound
+  → Higher threshold = drug curve crosses it EARLIER = earlier sleep
+
+┌─────────────────────────────────────────────────────────────┐
+│ 6. EFFECTIVE THRESHOLD CALCULATION                          │
+└─────────────────────────────────────────────────────────────┘
+  Base threshold:              ${baseThreshold.toFixed(1)} mg
+  + Sleep debt bonus:          +${sleepDebtBonus.toFixed(1)} mg
+  + Workout/Lift bonus:        +${(workoutBonus + liftBonus).toFixed(1)} mg
+  + Sauna bonus:               +${saunaBonus.toFixed(1)} mg
+  ─────────────────────────────────
+  EFFECTIVE THRESHOLD:         ${effectiveThreshold.toFixed(1)} mg
+  
+  (Capped at base + 8mg max = ${baseThreshold + 8} mg)
+
+┌─────────────────────────────────────────────────────────────┐
+│ 7. CIRCADIAN RHYTHM (Process C)                             │
+└─────────────────────────────────────────────────────────────┘
+  Wake Maintenance Zone: ${minutesToTime(wmzStart > 24*60 ? wmzStart - 24*60 : wmzStart)} - ${minutesToTime(forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start)}
+  Forbidden Zone:        ${minutesToTime(forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start)} - ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}
+  Sleep Gate (optimal):  ${minutesToTime(sleepGate.start > 24*60 ? sleepGate.start - 24*60 : sleepGate.start)} - ${minutesToTime(sleepGate.end > 24*60 ? sleepGate.end - 24*60 : sleepGate.end)}
+  
+  HOW THIS IS USED:
+  → Wake Maintenance Zone: 2 hours before Forbidden Zone
+    Your brain's alerting signal is ramping up - HARD BLOCKER
+  → Forbidden Zone: 13-15 hours after wake time
+    Peak circadian alertness - CANNOT fall asleep - HARD BLOCKER
+  → Sleep Gate: 15-17 hours after wake time
+    Circadian trough - optimal sleep onset window
+  → Both WMZ and FZ push sleep time to AFTER Forbidden Zone ends
+
+┌─────────────────────────────────────────────────────────────┐
+│ 8. BLOCKING FACTORS                                         │
+└─────────────────────────────────────────────────────────────┘
+  ${blockingDetails.join('\n  ')}
+
+┌─────────────────────────────────────────────────────────────┐
+│ 9. WHAT YOU'LL FEEL TONIGHT                                 │
+└─────────────────────────────────────────────────────────────┘
+  ${crashTime ? `• Crash begins: ~${minutesToTime(crashTime > 24*60 ? crashTime - 24*60 : crashTime)} (amphetamine dropping fast)` : '• No medication crash expected'}
+  • Sleep onset: ${minutesToTime(sleepTimeDisplay)}
+  • Second wind: ${minutesToTime((forbiddenZone.end + 30) > 24*60 ? (forbiddenZone.end + 30) - 24*60 : (forbiddenZone.end + 30))} (circadian alerting may cause brief wakefulness)
+
+═══════════════════════════════════════════════════════════════
+FINAL PROJECTED SLEEP WINDOW: ${minutesToTime(sleepTimeDisplay)}
+═══════════════════════════════════════════════════════════════
+
+ALGORITHM SUMMARY:
+1. Calculate drug clearance times (when amp < threshold AND caff < threshold)
+2. Apply circadian constraints (WMZ and FZ are hard blockers)
+3. Apply thermal cooldown if workout active
+4. The LATEST of all these factors determines your sleep window
+
+Current status at ${currentTime}:
+  • Amphetamine: ${ampLoad.toFixed(1)}mg (threshold: ${effectiveThreshold.toFixed(1)}mg) ${ampLoad < effectiveThreshold ? '✓ BELOW' : '✗ ABOVE'}
+  • Caffeine: ${caffLoad.toFixed(0)}mg (threshold: ${state.settings.caffThreshold}mg) ${caffLoad < state.settings.caffThreshold ? '✓ BELOW' : '✗ ABOVE'}
+  • Circadian: ${(() => {
+      const nowNorm = getCurrentMinutes() + (getCurrentMinutes() < timeToMinutes(state.wakeTime) ? 24*60 : 0);
+      if (nowNorm >= wmzStart && nowNorm < forbiddenZone.start) return '⚠️ IN WAKE MAINTENANCE ZONE';
+      if (nowNorm >= forbiddenZone.start && nowNorm < forbiddenZone.end) return '🚫 IN FORBIDDEN ZONE';
+      if (nowNorm >= sleepGate.start && nowNorm < sleepGate.end) return '✓ IN SLEEP GATE';
+      return '○ Normal phase';
+  })()}
+`.trim();
+            
+            return forecastText;
+        }
+        
+        function updateForecastLogic() {
+            const container = document.getElementById('forecastLogicText');
+            if (container && !focusMode) {
+                container.textContent = generateForecastLogic();
+            }
         }
 
         // ============================================
