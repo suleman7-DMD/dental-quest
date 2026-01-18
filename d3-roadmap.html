@@ -2163,6 +2163,55 @@
             font-size: 0.9em;
         }
 
+        .mp-week-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mp-add-week-btn {
+            background: rgba(255,255,255,0.9);
+            color: #1e293b;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mp-add-week-btn:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .mp-delete-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .mp-delete-btn:hover {
+            opacity: 1;
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .mp-custom-row {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .mp-type.other {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
         .mp-table {
             width: 100%;
             border-collapse: collapse;
@@ -3850,7 +3899,10 @@
                 <div class="card mp-week-card">
                     <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
                         <span class="mp-week-title">WEEK 1: Jan 18-22</span>
-                        <span class="mp-week-days">4 days</span>
+                        <div class="mp-week-header-right">
+                            <span class="mp-week-days">4 days</span>
+                            <button onclick="mpAddTaskToWeek(1)" class="mp-add-week-btn">+ Add</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="mp-table">
@@ -3861,29 +3913,33 @@
                                     <th>Item</th>
                                     <th style="width: 90px;">Type</th>
                                     <th style="width: 100px;">Notes</th>
+                                    <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="mpWeek1Body">
-                                <tr>
+                                <tr data-date="2026-01-22" data-static="true">
                                     <td><strong>Jan 22</strong></td>
                                     <td>8:30AM</td>
                                     <td>Periodic oral exam (9E)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-01-22" data-static="true">
                                     <td><strong>Jan 22</strong></td>
                                     <td>11:59PM</td>
                                     <td>Quiz 2</td>
                                     <td><span class="mp-type academic">Oral Med</span></td>
                                     <td>2.5%</td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-01-22" data-static="true">
                                     <td><strong>Jan 22</strong></td>
                                     <td>—</td>
                                     <td>Rx #1 due (print, both names)</td>
                                     <td><span class="mp-type academic">PC2</span></td>
                                     <td>2%</td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3894,7 +3950,10 @@
                 <div class="card mp-week-card">
                     <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
                         <span class="mp-week-title">WEEK 2: Jan 23-29</span>
-                        <span class="mp-week-days">5-11 days out</span>
+                        <div class="mp-week-header-right">
+                            <span class="mp-week-days">5-11 days out</span>
+                            <button onclick="mpAddTaskToWeek(2)" class="mp-add-week-btn">+ Add</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="mp-table">
@@ -3905,50 +3964,57 @@
                                     <th>Item</th>
                                     <th style="width: 90px;">Type</th>
                                     <th style="width: 100px;">Notes</th>
+                                    <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="mpWeek2Body">
-                                <tr>
+                                <tr data-date="2026-01-24" data-static="true">
                                     <td><strong>Jan 24</strong></td>
                                     <td>8:30AM</td>
                                     <td>Composite 2-surf posterior (9F)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-warning-row">
+                                <tr class="mp-warning-row" data-date="2026-01-24" data-static="true">
                                     <td><strong>Jan 24</strong></td>
                                     <td>12:30PM</td>
                                     <td>Upper + Lower denture try-in (9F)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td>⚠️ NEEDS PREP</td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-01-26" data-static="true">
                                     <td><strong>Jan 26</strong></td>
                                     <td>12:30PM</td>
                                     <td>Semi-precision replacement (9E)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-01-29" data-static="true">
                                     <td><strong>Jan 29</strong></td>
                                     <td>—</td>
                                     <td>Take Home Exam 1 (PAIRS)</td>
                                     <td><span class="mp-type academic">PC2</span></td>
                                     <td>12%</td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-01-29" data-static="true">
                                     <td><strong>Jan 29</strong></td>
                                     <td>evening</td>
                                     <td>Quiz 2 (1hr, open)</td>
                                     <td><span class="mp-type academic">Crit Think</span></td>
                                     <td>20%</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-mandatory-row">
+                                <tr class="mp-mandatory-row" data-date="2026-01-29" data-static="true">
                                     <td><strong>Jan 29</strong></td>
                                     <td>—</td>
                                     <td>Acute Dental Pain module + print</td>
                                     <td><span class="mp-type mandatory">PC2</span></td>
                                     <td>MANDATORY</td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3959,7 +4025,10 @@
                 <div class="card mp-week-card">
                     <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
                         <span class="mp-week-title">⚠️ WEEK 3: Jan 30 - Feb 6</span>
-                        <span class="mp-week-days">12-19 days out</span>
+                        <div class="mp-week-header-right">
+                            <span class="mp-week-days">12-19 days out</span>
+                            <button onclick="mpAddTaskToWeek(3)" class="mp-add-week-btn">+ Add</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="mp-table">
@@ -3970,70 +4039,80 @@
                                     <th>Item</th>
                                     <th style="width: 90px;">Type</th>
                                     <th style="width: 100px;">Notes</th>
+                                    <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="mpWeek3Body">
-                                <tr class="mp-exam-row">
+                                <tr class="mp-exam-row" data-date="2026-02-02" data-static="true">
                                     <td><strong>Feb 2</strong></td>
                                     <td>4PM</td>
                                     <td>🔴 <strong>PC2 MIDTERM</strong></td>
                                     <td><span class="mp-type exam">PC2</span></td>
                                     <td style="color: #f87171;">30% - HAVEN'T STARTED</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-life-row">
+                                <tr class="mp-life-row" data-date="2026-02-03" data-static="true">
                                     <td><strong>Feb 3</strong></td>
                                     <td>10:45AM</td>
                                     <td>💊 Psych apt → meds sent</td>
                                     <td><span class="mp-type life">LIFE</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-02-03" data-static="true">
                                     <td><strong>Feb 3</strong></td>
                                     <td>12:30PM</td>
                                     <td>Limited oral eval (9J)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-life-row">
+                                <tr class="mp-life-row" data-date="2026-02-05" data-static="true">
                                     <td><strong>Feb 5</strong></td>
                                     <td>—</td>
                                     <td>💊 Insurance covers meds</td>
                                     <td><span class="mp-type life">LIFE</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-02-05" data-static="true">
                                     <td><strong>Feb 5</strong></td>
                                     <td>11:59PM</td>
                                     <td>Quiz 3</td>
                                     <td><span class="mp-type academic">Oral Med</span></td>
                                     <td>2.5%</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-mandatory-row">
+                                <tr class="mp-mandatory-row" data-date="2026-02-05" data-static="true">
                                     <td><strong>Feb 5</strong></td>
                                     <td>—</td>
                                     <td>PE of Extremities video</td>
                                     <td><span class="mp-type mandatory">PC2</span></td>
                                     <td>Required</td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-02-06" data-static="true">
                                     <td><strong>Feb 6</strong></td>
                                     <td>8:30AM</td>
                                     <td>Tx Plan Creation (9D)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td style="color: #fbbf24;">Maseli meeting BEFORE this</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-exam-row">
+                                <tr class="mp-exam-row" data-date="2026-02-06" data-static="true">
                                     <td><strong>Feb 6</strong></td>
                                     <td>4PM</td>
                                     <td>🔴 <strong>ORTHO FINAL (cumulative)</strong></td>
                                     <td><span class="mp-type exam">Ortho</span></td>
                                     <td style="color: #f87171;">50% - HAVEN'T STARTED</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-life-row">
+                                <tr class="mp-life-row" data-date="2026-02-06" data-static="true">
                                     <td><strong>Feb 6</strong></td>
                                     <td>post-exam</td>
                                     <td>💊 Meds pickup</td>
                                     <td><span class="mp-type life">LIFE</span></td>
+                                    <td></td>
                                     <td></td>
                                 </tr>
                             </tbody>
@@ -4045,7 +4124,10 @@
                 <div class="card mp-week-card">
                     <div class="mp-week-header" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
                         <span class="mp-week-title">WEEK 4: Feb 7-11</span>
-                        <span class="mp-week-days">20-24 days out</span>
+                        <div class="mp-week-header-right">
+                            <span class="mp-week-days">20-24 days out</span>
+                            <button onclick="mpAddTaskToWeek(4)" class="mp-add-week-btn">+ Add</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="mp-table">
@@ -4056,29 +4138,33 @@
                                     <th>Item</th>
                                     <th style="width: 90px;">Type</th>
                                     <th style="width: 100px;">Notes</th>
+                                    <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="mpWeek4Body">
-                                <tr>
+                                <tr data-date="2026-02-07" data-static="true">
                                     <td><strong>Feb 7</strong></td>
                                     <td>12:30PM</td>
                                     <td>Composite 2-surf posterior (9G)</td>
                                     <td><span class="mp-type clinic">CLINIC</span></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
-                                <tr>
+                                <tr data-date="2026-02-09" data-static="true">
                                     <td><strong>Feb 9</strong></td>
                                     <td>—</td>
                                     <td>Practice Management Assignment</td>
                                     <td><span class="mp-type academic">GP9</span></td>
                                     <td>TBD</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-exam-row">
+                                <tr class="mp-exam-row" data-date="2026-02-11" data-static="true">
                                     <td><strong>Feb 11</strong></td>
                                     <td>4PM</td>
                                     <td>🟡 <strong>GERIATRICS FINAL</strong></td>
                                     <td><span class="mp-type exam">Geri</span></td>
                                     <td style="color: #a3e635;">Crammable</td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -4089,7 +4175,10 @@
                 <div class="card mp-week-card">
                     <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); border: 2px solid #fef08a;">
                         <span class="mp-week-title">🔴🔴🔴 WEEK 5: Feb 12-18 — PEDS WEEK</span>
-                        <span class="mp-week-days">25-31 days out</span>
+                        <div class="mp-week-header-right">
+                            <span class="mp-week-days">25-31 days out</span>
+                            <button onclick="mpAddTaskToWeek(5)" class="mp-add-week-btn">+ Add</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="mp-table">
@@ -4100,22 +4189,25 @@
                                     <th>Item</th>
                                     <th style="width: 90px;">Type</th>
                                     <th style="width: 100px;">Notes</th>
+                                    <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="mpWeek5Body">
-                                <tr style="background: rgba(34, 197, 94, 0.1);">
+                                <tr style="background: rgba(34, 197, 94, 0.1);" data-date="2026-02-13" data-static="true">
                                     <td><strong>Feb 13</strong></td>
                                     <td>—</td>
                                     <td>NO CLASS</td>
                                     <td><span class="mp-type academic">Oral Med</span></td>
                                     <td style="color: #22c55e;">Free study day</td>
+                                    <td></td>
                                 </tr>
-                                <tr class="mp-critical-exam-row">
+                                <tr class="mp-critical-exam-row" data-date="2026-02-18" data-static="true">
                                     <td><strong>Feb 18</strong></td>
                                     <td>4PM</td>
                                     <td>🔴🔴🔴 <strong>PEDS EXAM 2</strong></td>
                                     <td><span class="mp-type exam" style="background: #991b1b;">Peds</span></td>
                                     <td style="color: #fca5a5; font-weight: 600;">45%, need 70%, 20 lectures untouched</td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -4168,20 +4260,6 @@
                     </div>
                     <div class="note" style="margin-top: 15px; background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
                         ⚠️ <strong>Conflict:</strong> Step 1 overlaps with PC2 Midterm prep crunch.
-                    </div>
-                </div>
-
-                <!-- Custom Tasks Section -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
-                        <span class="mp-week-title">➕ Custom Tasks</span>
-                        <button onclick="mpAddTask()" style="background: white; color: #6366f1; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85em;">+ Add Task</button>
-                    </div>
-                    <div id="mpCustomTasksContainer">
-                        <!-- Custom tasks will be rendered here -->
-                    </div>
-                    <div id="mpNoTasksMessage" style="padding: 20px; text-align: center; color: #64748b;">
-                        No custom tasks yet. Click "+ Add Task" to add one.
                     </div>
                 </div>
             </div>
@@ -7776,7 +7854,7 @@
             }
             
             mpRenderNotes();
-            mpRenderCustomTasks();
+            mpRenderAllWeekTasks();
         }
         
         // ===== NOTES FUNCTIONS =====
@@ -7897,94 +7975,164 @@
         }
         
         // ===== CUSTOM TASKS FUNCTIONS =====
-        function mpAddTask() {
-            const task = prompt('Enter task description:');
-            if (!task || !task.trim()) return;
+        // Week date ranges (for validation)
+        const weekDateRanges = {
+            1: { start: '2026-01-18', end: '2026-01-22' },
+            2: { start: '2026-01-23', end: '2026-01-29' },
+            3: { start: '2026-01-30', end: '2026-02-06' },
+            4: { start: '2026-02-07', end: '2026-02-11' },
+            5: { start: '2026-02-12', end: '2026-02-18' }
+        };
+        
+        function mpAddTaskToWeek(weekNum) {
+            const item = prompt('Enter task/item name:');
+            if (!item || !item.trim()) return;
             
-            const date = prompt('Enter date (e.g., Feb 10) or leave blank:') || '';
-            const type = prompt('Enter type (CLINIC, ACADEMIC, LIFE, or leave blank):') || 'CUSTOM';
+            const dateStr = prompt('Enter date (e.g., Jan 25, Feb 3):');
+            if (!dateStr || !dateStr.trim()) {
+                alert('Date is required');
+                return;
+            }
+            
+            // Parse the date
+            const parsedDate = mpParseDate(dateStr.trim());
+            if (!parsedDate) {
+                alert('Could not parse date. Use format like "Jan 25" or "Feb 3"');
+                return;
+            }
+            
+            const notes = prompt('Enter notes (optional):') || '';
             
             const newTask = {
                 id: Date.now(),
-                text: task.trim(),
-                date: date.trim(),
-                type: type.trim().toUpperCase(),
+                week: weekNum,
+                item: item.trim(),
+                date: parsedDate, // ISO format: 2026-01-25
+                dateDisplay: dateStr.trim(),
+                notes: notes.trim(),
                 createdAt: new Date().toISOString()
             };
             
+            if (!roadmapData.monthlyPlanner.customTasks) {
+                roadmapData.monthlyPlanner.customTasks = [];
+            }
+            
             roadmapData.monthlyPlanner.customTasks.push(newTask);
             saveRoadmapData();
-            mpRenderCustomTasks();
+            mpRenderWeekTasks(weekNum);
             showToast('Task added!');
         }
         
-        function mpRenderCustomTasks() {
-            const container = document.getElementById('mpCustomTasksContainer');
-            const noTasksMsg = document.getElementById('mpNoTasksMessage');
+        function mpParseDate(dateStr) {
+            // Parse dates like "Jan 25", "Feb 3", "January 25"
+            const months = {
+                'jan': '01', 'january': '01',
+                'feb': '02', 'february': '02',
+                'mar': '03', 'march': '03',
+                'apr': '04', 'april': '04',
+                'may': '05',
+                'jun': '06', 'june': '06',
+                'jul': '07', 'july': '07',
+                'aug': '08', 'august': '08',
+                'sep': '09', 'sept': '09', 'september': '09',
+                'oct': '10', 'october': '10',
+                'nov': '11', 'november': '11',
+                'dec': '12', 'december': '12'
+            };
             
-            if (!container) return;
+            const match = dateStr.toLowerCase().match(/([a-z]+)\s*(\d{1,2})/);
+            if (!match) return null;
             
-            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
+            const monthStr = match[1];
+            const day = match[2].padStart(2, '0');
+            const month = months[monthStr];
             
-            if (tasks.length === 0) {
-                container.innerHTML = '';
-                if (noTasksMsg) noTasksMsg.style.display = 'block';
-                return;
-            }
+            if (!month) return null;
             
-            if (noTasksMsg) noTasksMsg.style.display = 'none';
-            
-            container.innerHTML = tasks.map(task => {
-                const typeClass = task.type === 'CLINIC' ? 'clinic' : 
-                                  task.type === 'LIFE' ? 'life' : 
-                                  task.type === 'ACADEMIC' ? 'academic' : 'academic';
-                
-                return `
-                    <div class="mp-custom-task" data-id="${task.id}">
-                        <div class="mp-task-content">
-                            <div class="mp-task-text">${escapeHtml(task.text)}</div>
-                            <div class="mp-task-meta">
-                                ${task.date ? `<strong>${escapeHtml(task.date)}</strong> • ` : ''}
-                                <span class="mp-type ${typeClass}">${escapeHtml(task.type)}</span>
-                            </div>
-                        </div>
-                        <div class="mp-task-actions">
-                            <button class="mp-task-btn" onclick="mpEditTask(${task.id})">Edit</button>
-                            <button class="mp-task-btn delete" onclick="mpDeleteTask(${task.id})">Delete</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            // Assume 2026 for Jan/Feb, adjust if needed
+            const year = '2026';
+            return `${year}-${month}-${day}`;
         }
         
-        function mpEditTask(taskId) {
-            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
+        function mpRenderWeekTasks(weekNum) {
+            const tbody = document.getElementById(`mpWeek${weekNum}Body`);
+            if (!tbody) return;
             
-            const newText = prompt('Edit task description:', task.text);
-            if (newText === null) return; // Cancelled
-            if (!newText.trim()) {
-                alert('Task cannot be empty');
-                return;
-            }
+            // Get all rows (static + custom for this week)
+            const staticRows = Array.from(tbody.querySelectorAll('tr[data-static="true"]'));
+            const customTasks = (roadmapData.monthlyPlanner?.customTasks || [])
+                .filter(t => t.week === weekNum);
             
-            const newDate = prompt('Edit date (or leave blank):', task.date);
-            if (newDate === null) return; // Cancelled
+            // Build combined list with dates for sorting
+            const allItems = [];
             
-            const newType = prompt('Edit type (CLINIC, ACADEMIC, LIFE, CUSTOM):', task.type);
-            if (newType === null) return; // Cancelled
+            // Add static rows with their dates
+            staticRows.forEach(row => {
+                allItems.push({
+                    type: 'static',
+                    date: row.getAttribute('data-date'),
+                    element: row
+                });
+            });
             
-            task.text = newText.trim();
-            task.date = newDate.trim();
-            task.type = newType.trim().toUpperCase() || 'CUSTOM';
+            // Add custom tasks
+            customTasks.forEach(task => {
+                allItems.push({
+                    type: 'custom',
+                    date: task.date,
+                    task: task
+                });
+            });
             
-            saveRoadmapData();
-            mpRenderCustomTasks();
-            showToast('Task updated!');
+            // Sort by date
+            allItems.sort((a, b) => {
+                if (a.date === b.date) {
+                    // Static items before custom on same date
+                    if (a.type === 'static' && b.type === 'custom') return -1;
+                    if (a.type === 'custom' && b.type === 'static') return 1;
+                    return 0;
+                }
+                return a.date.localeCompare(b.date);
+            });
+            
+            // Clear tbody
+            tbody.innerHTML = '';
+            
+            // Re-add sorted items
+            allItems.forEach(item => {
+                if (item.type === 'static') {
+                    tbody.appendChild(item.element);
+                } else {
+                    const tr = mpCreateCustomTaskRow(item.task);
+                    tbody.appendChild(tr);
+                }
+            });
         }
         
-        function mpDeleteTask(taskId) {
+        function mpCreateCustomTaskRow(task) {
+            const tr = document.createElement('tr');
+            tr.className = 'mp-custom-row';
+            tr.setAttribute('data-date', task.date);
+            tr.setAttribute('data-task-id', task.id);
+            
+            // Format date for display
+            const dateObj = new Date(task.date + 'T12:00:00');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const displayDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}`;
+            
+            tr.innerHTML = `
+                <td><strong>${displayDate}</strong></td>
+                <td>—</td>
+                <td>${escapeHtml(task.item)}</td>
+                <td><span class="mp-type other">OTHER</span></td>
+                <td>${escapeHtml(task.notes || '')}</td>
+                <td><button class="mp-delete-btn" onclick="mpDeleteWeekTask(${task.id}, ${task.week})" title="Delete">🗑️</button></td>
+            `;
+            
+            return tr;
+        }
+        
+        function mpDeleteWeekTask(taskId, weekNum) {
             if (!confirm('Delete this task?')) return;
             
             const tasks = roadmapData.monthlyPlanner?.customTasks || [];
@@ -7993,8 +8141,14 @@
             
             tasks.splice(taskIndex, 1);
             saveRoadmapData();
-            mpRenderCustomTasks();
+            mpRenderWeekTasks(weekNum);
             showToast('Task deleted');
+        }
+        
+        function mpRenderAllWeekTasks() {
+            for (let i = 1; i <= 5; i++) {
+                mpRenderWeekTasks(i);
+            }
         }
     </script>
 </body>
