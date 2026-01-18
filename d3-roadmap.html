@@ -208,6 +208,10 @@
             opacity: 0.5;
         }
 
+        tr.passed td {
+            text-decoration: line-through;
+        }
+
         /* Deadline What column - show full text */
         .deadline-what-cell {
             min-width: 250px;
@@ -217,10 +221,6 @@
         .deadline-what-cell .deadline-edit-input {
             min-width: 220px;
             width: 100%;
-        }
-
-        tr.passed td {
-            text-decoration: line-through;
         }
 
         /* Countdown Badges */
@@ -1516,6 +1516,610 @@
         .filter-bar input[type="checkbox"] {
             accent-color: #dc2626;
         }
+
+        /* ==================== DAILY PLANNER STYLES ==================== */
+        .planner-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        @media (max-width: 900px) {
+            .planner-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .planner-header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .planner-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .planner-date-section h2 {
+            font-size: 1.8em;
+            margin: 0 0 5px 0;
+        }
+
+        .planner-date-section .planner-date-sub {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .planner-time-section {
+            text-align: right;
+        }
+
+        .planner-live-time {
+            font-size: 3em;
+            font-weight: 700;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1;
+        }
+
+        .planner-countdown-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+            font-size: 0.95em;
+            opacity: 0.95;
+        }
+
+        .planner-countdown-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pomodoro Timer Section */
+        .pomodoro-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .pomodoro-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pomodoro-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: #0f172a;
+        }
+
+        .pomodoro-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .pomodoro-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .pomodoro-option .pomo-time {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .pomodoro-option.active .pomo-time {
+            color: white;
+        }
+
+        .pomodoro-option .pomo-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .pomodoro-option.active .pomo-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .timer-display {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .timer-mode {
+            font-size: 1em;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timer-clock {
+            font-size: 4em;
+            font-weight: 700;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #e2e8f0;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timer-btn.start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .timer-btn.pause {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .timer-btn.reset {
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        .timer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Task Input Panel */
+        .planner-input-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .planner-input-section {
+            margin-bottom: 15px;
+        }
+
+        .planner-input-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+            letter-spacing: 0.5px;
+        }
+
+        .planner-task-input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.95em;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        .planner-task-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .planner-task-dropdown {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .planner-time-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .planner-time-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.95em;
+        }
+
+        .planner-now-btn {
+            padding: 10px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .planner-now-btn:hover {
+            background: #dc2626;
+        }
+
+        .planner-duration-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .planner-duration-btn {
+            padding: 10px 4px;
+            border: 2px solid #334155;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .planner-duration-btn:hover {
+            border-color: #667eea;
+            color: #e2e8f0;
+        }
+
+        .planner-duration-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .planner-add-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .planner-add-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Timeline Panel */
+        .planner-timeline-card {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .planner-timeline-header {
+            padding: 15px 20px;
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .planner-timeline-container {
+            height: 500px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .planner-timeline {
+            position: relative;
+            min-height: 1260px;
+        }
+
+        .planner-hour-row {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 60px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+        }
+
+        .planner-hour-label {
+            width: 60px;
+            padding: 4px 10px;
+            font-size: 0.75em;
+            color: #64748b;
+            text-align: right;
+            flex-shrink: 0;
+            border-right: 1px solid #334155;
+            background: #0f172a;
+        }
+
+        .planner-hour-slot {
+            flex: 1;
+            position: relative;
+            cursor: pointer;
+            background: #1e293b;
+        }
+
+        .planner-hour-slot:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .planner-current-time-line {
+            position: absolute;
+            left: 60px;
+            right: 0;
+            height: 2px;
+            background: #ef4444;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .planner-current-time-line::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: -5px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+        }
+
+        .planner-event {
+            position: absolute;
+            left: 65px;
+            right: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            overflow: hidden;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .planner-event:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 15;
+        }
+
+        .planner-event.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .planner-event-title {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planner-event-time {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .planner-event-actions {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: none;
+            gap: 4px;
+        }
+
+        .planner-event:hover .planner-event-actions {
+            display: flex;
+        }
+
+        .planner-event-btn {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.3);
+            color: white;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+
+        .planner-event-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Stats Footer */
+        .planner-stats-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px 20px;
+            border: 1px solid #334155;
+            margin-top: 20px;
+        }
+
+        .planner-stats-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .planner-stat {
+            text-align: center;
+        }
+
+        .planner-stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .planner-stat-label {
+            font-size: 0.8em;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        /* Today's Focus Section */
+        .today-focus-card {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .today-focus-title {
+            color: #fca5a5;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .today-focus-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            color: #fecaca;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .today-focus-input::placeholder {
+            color: rgba(252, 165, 165, 0.5);
+        }
+
+        /* Quick Actions */
+        .planner-actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .planner-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .planner-action-btn:hover {
+            border-color: #667eea;
+            color: #e2e8f0;
+        }
+
+        .planner-action-btn.danger {
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .planner-action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        /* Daily Notes */
+        .daily-notes-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.9em;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .daily-notes-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .planner-header-top {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .planner-time-section {
+                text-align: center;
+            }
+
+            .planner-live-time {
+                font-size: 2.5em;
+            }
+
+            .planner-countdown-row {
+                justify-content: center;
+            }
+
+            .planner-duration-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .timer-clock {
+                font-size: 3em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1532,6 +2136,7 @@
     <!-- Tab Navigation -->
     <nav class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('dashboard', event)">🎯 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('dailyplanner', event)">📋 Daily Planner</button>
         <button class="tab-btn" onclick="switchTab('deadlines', event)">📅 Deadlines</button>
         <button class="tab-btn" onclick="switchTab('courses', event)">📚 Courses</button>
         <button class="tab-btn" onclick="switchTab('grades', event)">📊 Grades</button>
@@ -1685,6 +2290,175 @@
         <!-- Reality Check (Gym Only) -->
         <div class="gym-reminder">
             💪 HIT THE GYM EVERY DAY — It keeps your head clear
+        </div>
+    </div>
+
+    <!-- ==================== DAILY PLANNER TAB ==================== -->
+    <div id="tab-dailyplanner" class="tab-content">
+        <!-- Header with Date, Time, Countdowns -->
+        <div class="planner-header-card">
+            <div class="planner-header-top">
+                <div class="planner-date-section">
+                    <h2>📋 Daily Planner</h2>
+                    <div class="planner-date-sub" id="dpDate">Loading...</div>
+                </div>
+                <div class="planner-time-section">
+                    <div class="planner-live-time" id="dpLiveTime">--:--</div>
+                    <div class="planner-countdown-row">
+                        <div class="planner-countdown-item">
+                            <span>🌙</span>
+                            <span id="dpMidnightCountdown">--h --m to midnight</span>
+                        </div>
+                        <div class="planner-countdown-item">
+                            <span>😴</span>
+                            <span id="dpSleepCountdown">--h --m to bedtime</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="planner-container">
+            <!-- Left Column: Timeline -->
+            <div class="planner-main-column">
+                <!-- Today's ONE Focus -->
+                <div class="today-focus-card">
+                    <div class="today-focus-title">
+                        🎯 TODAY'S #1 FOCUS — What MUST get done?
+                    </div>
+                    <input type="text" class="today-focus-input" id="dpTodayFocus" 
+                        placeholder="e.g., Study Peds Exam 2 Lectures 16-20" 
+                        onchange="saveDailyPlannerData()">
+                </div>
+
+                <!-- Timeline Card -->
+                <div class="planner-timeline-card">
+                    <div class="planner-timeline-header">
+                        <span style="color: #e2e8f0; font-weight: 600;">📅 Today's Schedule</span>
+                        <span style="color: #94a3b8; font-size: 0.85em;" id="dpTaskSummary">0 tasks • 0h planned</span>
+                    </div>
+                    <div class="planner-timeline-container" id="dpTimelineContainer">
+                        <div class="planner-timeline" id="dpTimeline">
+                            <!-- Hour rows and events will be inserted here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Footer -->
+                <div class="planner-stats-card">
+                    <div class="planner-stats-row">
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatTasks">0</div>
+                            <div class="planner-stat-label">Tasks</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatPlanned">0h</div>
+                            <div class="planner-stat-label">Planned</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatCompleted">0</div>
+                            <div class="planner-stat-label">Done</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatPomodoros">0</div>
+                            <div class="planner-stat-label">Pomodoros</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls -->
+            <div class="planner-sidebar">
+                <!-- Pomodoro Timer -->
+                <div class="pomodoro-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px; text-align: center;">⏱️ Pomodoro Timer</div>
+                    
+                    <div class="pomodoro-options">
+                        <div class="pomodoro-option active" onclick="dpSelectPomodoro(25, 5, this)">
+                            <div class="pomo-time">25/5</div>
+                            <div class="pomo-label">minutes</div>
+                        </div>
+                        <div class="pomodoro-option" onclick="dpSelectPomodoro(50, 10, this)">
+                            <div class="pomo-time">50/10</div>
+                            <div class="pomo-label">minutes</div>
+                        </div>
+                    </div>
+
+                    <div class="timer-display">
+                        <div class="timer-mode" id="dpTimerMode">Work Session</div>
+                        <div class="timer-clock" id="dpTimerClock">25:00</div>
+                    </div>
+
+                    <div class="timer-controls">
+                        <button class="timer-btn start" id="dpStartBtn" onclick="dpStartTimer()">Start</button>
+                        <button class="timer-btn pause" id="dpPauseBtn" onclick="dpPauseTimer()" style="display: none;">Pause</button>
+                        <button class="timer-btn reset" onclick="dpResetTimer()">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Add Task Panel -->
+                <div class="planner-input-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">➕ Add to Schedule</div>
+                    
+                    <!-- Task Input -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">📝 Task</label>
+                        <textarea class="planner-task-input" id="dpNewTask" rows="2" 
+                            placeholder="What do you need to do?"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();dpAddEvent();}"></textarea>
+                    </div>
+
+                    <!-- Import from Deadlines -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">📋 Or pick from deadlines</label>
+                        <select class="planner-task-dropdown" id="dpTaskDropdown" onchange="dpSelectFromDropdown()">
+                            <option value="">-- Select a deadline --</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Time -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">⏰ Start Time</label>
+                        <div class="planner-time-row">
+                            <input type="time" class="planner-time-input" id="dpNewTime" value="09:00">
+                            <button class="planner-now-btn" onclick="dpSetTimeToNow()">⚡ NOW</button>
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">⏱️ Duration</label>
+                        <div class="planner-duration-grid" id="dpDurationGrid">
+                            <button class="planner-duration-btn" data-duration="15" onclick="dpSelectDuration(15)">15m</button>
+                            <button class="planner-duration-btn" data-duration="25" onclick="dpSelectDuration(25)">25m</button>
+                            <button class="planner-duration-btn active" data-duration="30" onclick="dpSelectDuration(30)">30m</button>
+                            <button class="planner-duration-btn" data-duration="45" onclick="dpSelectDuration(45)">45m</button>
+                            <button class="planner-duration-btn" data-duration="50" onclick="dpSelectDuration(50)">50m</button>
+                            <button class="planner-duration-btn" data-duration="60" onclick="dpSelectDuration(60)">1h</button>
+                            <button class="planner-duration-btn" data-duration="90" onclick="dpSelectDuration(90)">1.5h</button>
+                            <button class="planner-duration-btn" data-duration="120" onclick="dpSelectDuration(120)">2h</button>
+                        </div>
+                    </div>
+
+                    <button class="planner-add-btn" onclick="dpAddEvent()">
+                        ➕ Add to Schedule
+                    </button>
+                </div>
+
+                <!-- Daily Notes -->
+                <div class="planner-input-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">📝 Daily Notes</div>
+                    <textarea class="daily-notes-input" id="dpDailyNotes" 
+                        placeholder="Thoughts, reflections, wins, learnings..."
+                        onchange="saveDailyPlannerData()"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="planner-actions-row">
+                    <button class="planner-action-btn" onclick="dpScrollToNow()">📍 Jump to Now</button>
+                    <button class="planner-action-btn danger" onclick="dpClearDay()">🗑️ Clear Day</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2731,8 +3505,25 @@
             editedDeadlines: {},
             customDeadlines: [],
             examStudyProgress: {}, // Tracks which lectures have been studied: { 'peds-exam2-lec11': true, ... }
+            dailyPlanner: {
+                date: null,
+                focus: '',
+                notes: '',
+                blocks: [],
+                pomodorosCompleted: 0,
+                bedtime: '23:00'
+            },
             lastSaved: null
         };
+        
+        // ==================== DAILY PLANNER STATE ====================
+        let dpWorkMinutes = 25;
+        let dpBreakMinutes = 5;
+        let dpCurrentSeconds = 25 * 60;
+        let dpIsWorkSession = true;
+        let dpTimerInterval = null;
+        let dpSelectedDuration = 30;
+        let dpClockInterval = null;
         
         // ==================== EXAM CONTENT DATA ====================
         const examContentData = {
@@ -3580,6 +4371,7 @@
             if (tabId === 'deadlines') renderDeadlines();
             if (tabId === 'grades') loadCourseGrades();
             if (tabId === 'mandatory') renderExamCountdown();
+            if (tabId === 'dailyplanner') initDailyPlanner();
         }
 
         // ==================== COURSE ACCORDION ====================
@@ -5615,6 +6407,566 @@
                 }
             }, 1000);
         });
+
+        // ==================== DAILY PLANNER FUNCTIONS ====================
+        
+        function initDailyPlanner() {
+            // Check if we need to reset for a new day
+            const today = new Date().toISOString().split('T')[0];
+            if (!roadmapData.dailyPlanner) {
+                roadmapData.dailyPlanner = {
+                    date: today,
+                    focus: '',
+                    notes: '',
+                    blocks: [],
+                    pomodorosCompleted: 0,
+                    bedtime: '23:00'
+                };
+            }
+            
+            // DON'T auto-reset - user controls when to clear
+            if (roadmapData.dailyPlanner.date !== today) {
+                // Just update the date, but keep the data until user manually clears
+                roadmapData.dailyPlanner.date = today;
+            }
+            
+            // Load UI
+            dpPopulateDeadlineDropdown();
+            dpRenderTimeline();
+            dpUpdateStats();
+            dpStartClock();
+            
+            // Load saved focus and notes
+            const focusInput = document.getElementById('dpTodayFocus');
+            const notesInput = document.getElementById('dpDailyNotes');
+            if (focusInput) focusInput.value = roadmapData.dailyPlanner.focus || '';
+            if (notesInput) notesInput.value = roadmapData.dailyPlanner.notes || '';
+            
+            // Set default time to now
+            dpSetTimeToNow();
+        }
+        
+        function dpStartClock() {
+            if (dpClockInterval) clearInterval(dpClockInterval);
+            
+            function updateClock() {
+                const now = new Date();
+                
+                // Update live time
+                const timeStr = now.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true 
+                });
+                const liveTimeEl = document.getElementById('dpLiveTime');
+                if (liveTimeEl) liveTimeEl.textContent = timeStr;
+                
+                // Update date display
+                const dateEl = document.getElementById('dpDate');
+                if (dateEl) {
+                    const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+                    dateEl.textContent = now.toLocaleDateString('en-US', options);
+                }
+                
+                // Update midnight countdown
+                const midnight = new Date(now);
+                midnight.setHours(24, 0, 0, 0);
+                const msToMidnight = midnight - now;
+                const hrsToMidnight = Math.floor(msToMidnight / (1000 * 60 * 60));
+                const minsToMidnight = Math.floor((msToMidnight % (1000 * 60 * 60)) / (1000 * 60));
+                const midnightEl = document.getElementById('dpMidnightCountdown');
+                if (midnightEl) midnightEl.textContent = `${hrsToMidnight}h ${minsToMidnight}m to midnight`;
+                
+                // Update bedtime countdown (default 11 PM)
+                const bedtime = roadmapData.dailyPlanner?.bedtime || '23:00';
+                const [bedH, bedM] = bedtime.split(':').map(Number);
+                const bedtimeDate = new Date(now);
+                bedtimeDate.setHours(bedH, bedM, 0, 0);
+                if (bedtimeDate < now) bedtimeDate.setDate(bedtimeDate.getDate() + 1);
+                const msToBed = bedtimeDate - now;
+                const hrsToBed = Math.floor(msToBed / (1000 * 60 * 60));
+                const minsToBed = Math.floor((msToBed % (1000 * 60 * 60)) / (1000 * 60));
+                const sleepEl = document.getElementById('dpSleepCountdown');
+                if (sleepEl) sleepEl.textContent = `${hrsToBed}h ${minsToBed}m to bedtime`;
+                
+                // Update current time line
+                dpUpdateCurrentTimeLine();
+            }
+            
+            updateClock();
+            dpClockInterval = setInterval(updateClock, 1000);
+        }
+        
+        function dpUpdateCurrentTimeLine() {
+            const line = document.getElementById('dpCurrentTimeLine');
+            if (!line) return;
+            
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            
+            // Day starts at 5 AM and ends at 1 AM next day
+            let adjustedHour = hours;
+            if (hours < 5) adjustedHour = hours + 24;
+            
+            const hoursSince5AM = adjustedHour - 5;
+            const totalMinutes = hoursSince5AM * 60 + minutes;
+            
+            if (hoursSince5AM >= 0 && hoursSince5AM <= 20) {
+                line.style.display = 'block';
+                line.style.top = totalMinutes + 'px';
+            } else {
+                line.style.display = 'none';
+            }
+        }
+        
+        // Pomodoro Timer Functions
+        function dpSelectPomodoro(work, breakTime, el) {
+            dpWorkMinutes = work;
+            dpBreakMinutes = breakTime;
+            
+            document.querySelectorAll('.pomodoro-option').forEach(opt => opt.classList.remove('active'));
+            if (el) el.classList.add('active');
+            
+            dpResetTimer();
+        }
+        
+        function dpStartTimer() {
+            if (dpTimerInterval) return;
+            
+            document.getElementById('dpStartBtn').style.display = 'none';
+            document.getElementById('dpPauseBtn').style.display = 'inline-block';
+            
+            dpTimerInterval = setInterval(() => {
+                dpCurrentSeconds--;
+                dpUpdateTimerDisplay();
+                
+                if (dpCurrentSeconds <= 0) {
+                    dpCompleteSession();
+                }
+            }, 1000);
+        }
+        
+        function dpPauseTimer() {
+            clearInterval(dpTimerInterval);
+            dpTimerInterval = null;
+            document.getElementById('dpStartBtn').style.display = 'inline-block';
+            document.getElementById('dpPauseBtn').style.display = 'none';
+        }
+        
+        function dpResetTimer() {
+            clearInterval(dpTimerInterval);
+            dpTimerInterval = null;
+            dpIsWorkSession = true;
+            dpCurrentSeconds = dpWorkMinutes * 60;
+            dpUpdateTimerDisplay();
+            document.getElementById('dpTimerMode').textContent = 'Work Session';
+            document.getElementById('dpStartBtn').style.display = 'inline-block';
+            document.getElementById('dpPauseBtn').style.display = 'none';
+        }
+        
+        function dpUpdateTimerDisplay() {
+            const minutes = Math.floor(dpCurrentSeconds / 60);
+            const seconds = dpCurrentSeconds % 60;
+            const clockEl = document.getElementById('dpTimerClock');
+            if (clockEl) {
+                clockEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function dpCompleteSession() {
+            clearInterval(dpTimerInterval);
+            dpTimerInterval = null;
+            
+            // Play notification
+            dpPlayNotification();
+            
+            if (dpIsWorkSession) {
+                // Work session completed - increment pomodoro count
+                roadmapData.dailyPlanner.pomodorosCompleted = (roadmapData.dailyPlanner.pomodorosCompleted || 0) + 1;
+                dpUpdateStats();
+                saveDailyPlannerData();
+                
+                // Switch to break
+                dpIsWorkSession = false;
+                dpCurrentSeconds = dpBreakMinutes * 60;
+                document.getElementById('dpTimerMode').textContent = 'Break Time! 🎉';
+                dpUpdateTimerDisplay();
+                
+                alert('Great work! Time for a break! 🎉\n\nPomodoros completed today: ' + roadmapData.dailyPlanner.pomodorosCompleted);
+            } else {
+                // Break completed
+                dpIsWorkSession = true;
+                dpCurrentSeconds = dpWorkMinutes * 60;
+                document.getElementById('dpTimerMode').textContent = 'Work Session';
+                dpUpdateTimerDisplay();
+                
+                alert('Break over! Ready for another session? 💪');
+            }
+            
+            document.getElementById('dpStartBtn').style.display = 'inline-block';
+            document.getElementById('dpPauseBtn').style.display = 'none';
+        }
+        
+        function dpPlayNotification() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch(e) {
+                console.log('Could not play notification sound');
+            }
+        }
+        
+        // Task Management Functions
+        function dpPopulateDeadlineDropdown() {
+            const dropdown = document.getElementById('dpTaskDropdown');
+            if (!dropdown) return;
+            
+            // Get upcoming deadlines from the deadlines array
+            const now = new Date();
+            const upcomingDeadlines = deadlines.filter(d => {
+                const deadlineDate = new Date(d.date);
+                return deadlineDate >= now && !d.done;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 20);
+            
+            let html = '<option value="">-- Select a deadline --</option>';
+            
+            // Group by urgency
+            const urgent = upcomingDeadlines.filter(d => {
+                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                return days <= 7;
+            });
+            const upcoming = upcomingDeadlines.filter(d => {
+                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                return days > 7 && days <= 14;
+            });
+            const later = upcomingDeadlines.filter(d => {
+                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                return days > 14;
+            });
+            
+            if (urgent.length > 0) {
+                html += '<optgroup label="🔴 Due within 7 days">';
+                urgent.forEach(d => {
+                    const truncated = d.what.length > 50 ? d.what.substring(0, 50) + '...' : d.what;
+                    html += `<option value="${escapeHtml(d.what)}">${truncated} (${d.course})</option>`;
+                });
+                html += '</optgroup>';
+            }
+            
+            if (upcoming.length > 0) {
+                html += '<optgroup label="🟡 Due in 1-2 weeks">';
+                upcoming.forEach(d => {
+                    const truncated = d.what.length > 50 ? d.what.substring(0, 50) + '...' : d.what;
+                    html += `<option value="${escapeHtml(d.what)}">${truncated} (${d.course})</option>`;
+                });
+                html += '</optgroup>';
+            }
+            
+            if (later.length > 0) {
+                html += '<optgroup label="🟢 Due in 2+ weeks">';
+                later.forEach(d => {
+                    const truncated = d.what.length > 50 ? d.what.substring(0, 50) + '...' : d.what;
+                    html += `<option value="${escapeHtml(d.what)}">${truncated} (${d.course})</option>`;
+                });
+                html += '</optgroup>';
+            }
+            
+            dropdown.innerHTML = html;
+        }
+        
+        function dpSelectFromDropdown() {
+            const dropdown = document.getElementById('dpTaskDropdown');
+            const taskInput = document.getElementById('dpNewTask');
+            
+            if (!dropdown || !taskInput) return;
+            
+            if (dropdown.value) {
+                taskInput.value = dropdown.value;
+            }
+            
+            dropdown.value = '';
+        }
+        
+        function dpSetTimeToNow() {
+            const timeInput = document.getElementById('dpNewTime');
+            if (!timeInput) return;
+            
+            const now = new Date();
+            const minutes = Math.ceil(now.getMinutes() / 5) * 5;
+            now.setMinutes(minutes);
+            if (now.getMinutes() >= 60) {
+                now.setHours(now.getHours() + 1);
+                now.setMinutes(0);
+            }
+            
+            timeInput.value = now.toTimeString().slice(0, 5);
+        }
+        
+        function dpSelectDuration(duration) {
+            dpSelectedDuration = duration;
+            
+            document.querySelectorAll('.planner-duration-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.duration) === duration) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        function dpAddEvent() {
+            const taskInput = document.getElementById('dpNewTask');
+            const timeInput = document.getElementById('dpNewTime');
+            
+            const task = taskInput?.value?.trim();
+            const time = timeInput?.value;
+            const duration = dpSelectedDuration;
+            
+            if (!task) {
+                taskInput?.focus();
+                alert('Please enter a task!');
+                return;
+            }
+            
+            if (!time) {
+                alert('Please select a time!');
+                return;
+            }
+            
+            if (!roadmapData.dailyPlanner.blocks) {
+                roadmapData.dailyPlanner.blocks = [];
+            }
+            
+            roadmapData.dailyPlanner.blocks.push({
+                id: Date.now(),
+                startTime: time,
+                duration: duration,
+                task: task,
+                completed: false
+            });
+            
+            // Clear input
+            if (taskInput) taskInput.value = '';
+            
+            // Advance time by duration for next entry
+            if (timeInput) {
+                const [h, m] = time.split(':').map(Number);
+                const newMinutes = h * 60 + m + duration;
+                const newH = Math.floor(newMinutes / 60) % 24;
+                const newM = newMinutes % 60;
+                timeInput.value = `${newH.toString().padStart(2, '0')}:${newM.toString().padStart(2, '0')}`;
+            }
+            
+            saveDailyPlannerData();
+            dpRenderTimeline();
+            dpUpdateStats();
+            
+            taskInput?.focus();
+        }
+        
+        function dpRenderTimeline() {
+            const timeline = document.getElementById('dpTimeline');
+            if (!timeline) return;
+            
+            // Generate hours from 5 AM to 1 AM (21 hours)
+            const hours = [];
+            for (let h = 5; h <= 24; h++) hours.push(h % 24);
+            hours.push(1);
+            
+            let html = '';
+            for (let i = 0; i < 21; i++) {
+                const hour = hours[i];
+                const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                const ampm = hour < 12 || hour === 24 ? 'AM' : 'PM';
+                const top = i * 60;
+                
+                html += `
+                    <div class="planner-hour-row" style="top: ${top}px;">
+                        <div class="planner-hour-label">${displayHour} ${ampm}</div>
+                        <div class="planner-hour-slot" onclick="dpQuickAddAtHour(${hour})"></div>
+                    </div>
+                `;
+            }
+            
+            // Add current time line
+            html += '<div class="planner-current-time-line" id="dpCurrentTimeLine"></div>';
+            
+            // Add events (sorted by time)
+            const blocks = roadmapData.dailyPlanner?.blocks || [];
+            if (blocks.length > 0) {
+                const sortedBlocks = [...blocks].sort((a, b) => {
+                    return (a.startTime || '').localeCompare(b.startTime || '');
+                });
+                
+                sortedBlocks.forEach((block, index) => {
+                    const originalIndex = blocks.indexOf(block);
+                    if (block.startTime && block.task) {
+                        html += dpRenderEvent(block, originalIndex);
+                    }
+                });
+            }
+            
+            timeline.innerHTML = html;
+            dpUpdateCurrentTimeLine();
+        }
+        
+        function dpRenderEvent(block, index) {
+            const [startH, startM] = block.startTime.split(':').map(Number);
+            const duration = block.duration || 30;
+            
+            // Adjust for 5 AM start
+            let adjustedStartH = startH;
+            if (startH < 5) adjustedStartH = startH + 24;
+            
+            const top = (adjustedStartH - 5) * 60 + startM;
+            const height = Math.max(24, duration);
+            
+            // Calculate end time for display
+            const endMinutes = startH * 60 + startM + duration;
+            const endH = Math.floor(endMinutes / 60) % 24;
+            const endM = endMinutes % 60;
+            const endTimeStr = dpFormatTime(`${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`);
+            
+            return `
+                <div class="planner-event ${block.completed ? 'completed' : ''}" 
+                     style="top: ${top}px; height: ${height}px;"
+                     onclick="dpToggleEvent(${index})"
+                     title="Click to mark ${block.completed ? 'incomplete' : 'complete'}">
+                    <div class="planner-event-actions">
+                        <button class="planner-event-btn" onclick="event.stopPropagation(); dpDeleteEvent(${index})" title="Delete">×</button>
+                    </div>
+                    <div class="planner-event-title">${escapeHtml(block.task)}</div>
+                    ${height >= 40 ? `<div class="planner-event-time">${dpFormatTime(block.startTime)} - ${endTimeStr}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        function dpFormatTime(timeStr) {
+            if (!timeStr) return '';
+            const [h, m] = timeStr.split(':').map(Number);
+            const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            const ampm = h < 12 ? 'AM' : 'PM';
+            return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`;
+        }
+        
+        function dpQuickAddAtHour(hour) {
+            const timeInput = document.getElementById('dpNewTime');
+            const taskInput = document.getElementById('dpNewTask');
+            
+            if (timeInput) {
+                timeInput.value = `${hour.toString().padStart(2, '0')}:00`;
+            }
+            if (taskInput) {
+                taskInput.focus();
+            }
+        }
+        
+        function dpToggleEvent(index) {
+            const blocks = roadmapData.dailyPlanner?.blocks;
+            if (blocks && blocks[index]) {
+                blocks[index].completed = !blocks[index].completed;
+                saveDailyPlannerData();
+                dpRenderTimeline();
+                dpUpdateStats();
+            }
+        }
+        
+        function dpDeleteEvent(index) {
+            const blocks = roadmapData.dailyPlanner?.blocks;
+            if (blocks) {
+                blocks.splice(index, 1);
+                saveDailyPlannerData();
+                dpRenderTimeline();
+                dpUpdateStats();
+            }
+        }
+        
+        function dpUpdateStats() {
+            const blocks = roadmapData.dailyPlanner?.blocks || [];
+            const total = blocks.length;
+            const completed = blocks.filter(b => b.completed).length;
+            const totalMinutes = blocks.reduce((sum, b) => sum + (b.duration || 30), 0);
+            const hours = (totalMinutes / 60).toFixed(1);
+            const pomodoros = roadmapData.dailyPlanner?.pomodorosCompleted || 0;
+            
+            const statTasks = document.getElementById('dpStatTasks');
+            const statPlanned = document.getElementById('dpStatPlanned');
+            const statCompleted = document.getElementById('dpStatCompleted');
+            const statPomodoros = document.getElementById('dpStatPomodoros');
+            const summary = document.getElementById('dpTaskSummary');
+            
+            if (statTasks) statTasks.textContent = total;
+            if (statPlanned) statPlanned.textContent = hours + 'h';
+            if (statCompleted) statCompleted.textContent = completed;
+            if (statPomodoros) statPomodoros.textContent = pomodoros;
+            if (summary) summary.textContent = `${total} tasks • ${hours}h planned • ${completed} done`;
+        }
+        
+        function dpScrollToNow() {
+            const container = document.getElementById('dpTimelineContainer');
+            if (!container) return;
+            
+            const now = new Date();
+            let adjustedHour = now.getHours();
+            if (adjustedHour < 5) adjustedHour += 24;
+            
+            const hoursSince5AM = adjustedHour - 5;
+            const scrollPosition = Math.max(0, (hoursSince5AM - 1) * 60);
+            container.scrollTop = scrollPosition;
+        }
+        
+        function dpClearDay() {
+            if (!confirm('Are you sure you want to clear all tasks and reset the day?\n\nThis will remove all scheduled tasks, notes, and reset the pomodoro count.')) {
+                return;
+            }
+            
+            roadmapData.dailyPlanner = {
+                date: new Date().toISOString().split('T')[0],
+                focus: '',
+                notes: '',
+                blocks: [],
+                pomodorosCompleted: 0,
+                bedtime: '23:00'
+            };
+            
+            // Clear UI
+            const focusInput = document.getElementById('dpTodayFocus');
+            const notesInput = document.getElementById('dpDailyNotes');
+            if (focusInput) focusInput.value = '';
+            if (notesInput) notesInput.value = '';
+            
+            saveDailyPlannerData();
+            dpRenderTimeline();
+            dpUpdateStats();
+            
+            alert('Day cleared! Start fresh. 💪');
+        }
+        
+        function saveDailyPlannerData() {
+            // Save focus and notes from inputs
+            const focusInput = document.getElementById('dpTodayFocus');
+            const notesInput = document.getElementById('dpDailyNotes');
+            
+            if (focusInput) roadmapData.dailyPlanner.focus = focusInput.value;
+            if (notesInput) roadmapData.dailyPlanner.notes = notesInput.value;
+            
+            // Trigger main save
+            saveRoadmapData();
+        }
     </script>
 </body>
 </html>
