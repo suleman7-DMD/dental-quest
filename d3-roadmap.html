@@ -208,6 +208,17 @@
             opacity: 0.5;
         }
 
+        /* Deadline What column - show full text */
+        .deadline-what-cell {
+            min-width: 250px;
+            max-width: 400px;
+        }
+        
+        .deadline-what-cell .deadline-edit-input {
+            min-width: 220px;
+            width: 100%;
+        }
+
         tr.passed td {
             text-decoration: line-through;
         }
@@ -826,6 +837,19 @@
                 padding: 4px 6px !important;
                 width: auto !important;
                 min-width: 60px !important;
+            }
+            
+            /* What column - allow full text display on mobile */
+            .deadline-what-cell {
+                white-space: normal !important;
+                min-width: 180px !important;
+                max-width: 280px !important;
+            }
+            
+            .deadline-what-cell .deadline-edit-input {
+                min-width: 160px !important;
+                width: 100% !important;
+                white-space: normal !important;
             }
             
             /* Date picker on mobile */
@@ -1685,7 +1709,7 @@
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
-                            <th>What</th>
+                            <th class="deadline-what-cell">What</th>
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
@@ -1708,7 +1732,7 @@
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
-                            <th>What</th>
+                            <th class="deadline-what-cell">What</th>
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
@@ -1731,7 +1755,7 @@
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
-                            <th>What</th>
+                            <th class="deadline-what-cell">What</th>
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
@@ -1754,7 +1778,7 @@
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
-                            <th>What</th>
+                            <th class="deadline-what-cell">What</th>
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
@@ -3728,7 +3752,7 @@
                             </td>
                             <td>${d.day}</td>
                             <td>${isDone && grade !== null ? `<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">${grade}%</span>` : getCountdownBadge(days, d.tbd)}</td>
-                            <td>
+                            <td class="deadline-what-cell">
                                 <input type="text" class="deadline-edit-input" 
                                     value="${escapeHtml(d.what)}" 
                                     data-index="${deadlineIndex}" 
