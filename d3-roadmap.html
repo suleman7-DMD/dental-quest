@@ -2120,6 +2120,381 @@
                 font-size: 3em;
             }
         }
+
+        /* ==================== MONTHLY PLANNER STYLES ==================== */
+        .mp-main-column {
+            flex: 1;
+        }
+
+        .mp-sidebar {
+            width: 350px;
+        }
+
+        @media (max-width: 900px) {
+            #tab-monthlyplanner > div:last-child {
+                grid-template-columns: 1fr !important;
+            }
+            .mp-sidebar {
+                width: 100%;
+            }
+        }
+
+        .mp-week-card {
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .mp-week-header {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: -20px -20px 15px -20px;
+        }
+
+        .mp-week-title {
+            color: white;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .mp-week-days {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9em;
+        }
+
+        .mp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .mp-table th {
+            text-align: left;
+            padding: 8px 10px;
+            background: #1e293b;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .mp-table td {
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0;
+        }
+
+        .mp-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mp-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .mp-type.clinic {
+            background: #0e7490;
+            color: #cffafe;
+        }
+
+        .mp-type.academic {
+            background: #4f46e5;
+            color: #e0e7ff;
+        }
+
+        .mp-type.exam {
+            background: #dc2626;
+            color: white;
+        }
+
+        .mp-type.life {
+            background: #059669;
+            color: #d1fae5;
+        }
+
+        .mp-type.mandatory {
+            background: #d97706;
+            color: #fef3c7;
+        }
+
+        .mp-warning-row {
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        .mp-mandatory-row {
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+        .mp-life-row {
+            background: rgba(5, 150, 105, 0.08);
+        }
+
+        .mp-exam-row {
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .mp-critical-exam-row {
+            background: rgba(153, 27, 27, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Notebook Styles */
+        .mp-notebook {
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+
+        .mp-notebook-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            margin: -20px -20px 15px -20px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .mp-notebook-input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mp-note-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.9em;
+            resize: none;
+            min-height: 40px;
+            font-family: inherit;
+        }
+
+        .mp-note-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .mp-add-note-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mp-add-note-btn:hover {
+            opacity: 0.9;
+        }
+
+        .mp-notes-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .mp-note-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .mp-note-item:hover {
+            border-color: #475569;
+        }
+
+        .mp-note-text {
+            color: #e2e8f0;
+            font-size: 0.9em;
+            line-height: 1.5;
+            padding-right: 60px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .mp-note-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .mp-note-item:hover .mp-note-actions {
+            opacity: 1;
+        }
+
+        .mp-note-action-btn {
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 4px;
+            background: #334155;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .mp-note-action-btn:hover {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
+        .mp-note-action-btn.delete:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .mp-note-timestamp {
+            color: #64748b;
+            font-size: 0.75em;
+            margin-top: 8px;
+        }
+
+        .mp-no-notes {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .mp-note-edit-input {
+            width: 100%;
+            padding: 8px;
+            background: #1e293b;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 0.9em;
+            resize: none;
+            font-family: inherit;
+        }
+
+        /* Quick Stats */
+        .mp-quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .mp-stat-item {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .mp-stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .mp-stat-label {
+            font-size: 0.8em;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .mp-stat-exams {
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+        .mp-stat-exams .mp-stat-number {
+            color: #f87171;
+        }
+
+        .mp-stat-clinic {
+            border-color: rgba(14, 116, 144, 0.3);
+        }
+        .mp-stat-clinic .mp-stat-number {
+            color: #22d3ee;
+        }
+
+        .mp-stat-assignments {
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+        .mp-stat-assignments .mp-stat-number {
+            color: #a5b4fc;
+        }
+
+        .mp-stat-life {
+            border-color: rgba(5, 150, 105, 0.3);
+        }
+        .mp-stat-life .mp-stat-number {
+            color: #34d399;
+        }
+
+        /* Custom Tasks */
+        .mp-custom-task {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mp-custom-task:hover {
+            border-color: #475569;
+        }
+
+        .mp-task-content {
+            flex: 1;
+        }
+
+        .mp-task-text {
+            color: #e2e8f0;
+            font-size: 0.95em;
+        }
+
+        .mp-task-meta {
+            color: #64748b;
+            font-size: 0.8em;
+            margin-top: 4px;
+        }
+
+        .mp-task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mp-task-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        .mp-task-btn:hover {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
+        .mp-task-btn.delete:hover {
+            background: #dc2626;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -2136,13 +2511,14 @@
     <!-- Tab Navigation -->
     <nav class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('dashboard', event)">🎯 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('dailyplanner', event)">📋 Daily Planner</button>
         <button class="tab-btn" onclick="switchTab('deadlines', event)">📅 Deadlines</button>
         <button class="tab-btn" onclick="switchTab('courses', event)">📚 Courses</button>
         <button class="tab-btn" onclick="switchTab('grades', event)">📊 Grades</button>
         <button class="tab-btn" onclick="switchTab('examcontent', event)">📖 Exam Content</button>
         <button class="tab-btn" onclick="switchTab('classmates', event)">👥 Classmate Share</button>
         <button class="tab-btn" onclick="switchTab('mandatory', event)">⚠️ Mandatory</button>
+        <button class="tab-btn" onclick="switchTab('dailyplanner', event)">📋 Daily Planner</button>
+        <button class="tab-btn" onclick="switchTab('monthlyplanner', event)">🗓️ Monthly</button>
     </nav>
 
     <!-- ==================== DASHBOARD TAB ==================== -->
@@ -2290,175 +2666,6 @@
         <!-- Reality Check (Gym Only) -->
         <div class="gym-reminder">
             💪 HIT THE GYM EVERY DAY — It keeps your head clear
-        </div>
-    </div>
-
-    <!-- ==================== DAILY PLANNER TAB ==================== -->
-    <div id="tab-dailyplanner" class="tab-content">
-        <!-- Header with Date, Time, Countdowns -->
-        <div class="planner-header-card">
-            <div class="planner-header-top">
-                <div class="planner-date-section">
-                    <h2>📋 Daily Planner</h2>
-                    <div class="planner-date-sub" id="dpDate">Loading...</div>
-                </div>
-                <div class="planner-time-section">
-                    <div class="planner-live-time" id="dpLiveTime">--:--</div>
-                    <div class="planner-countdown-row">
-                        <div class="planner-countdown-item">
-                            <span>🌙</span>
-                            <span id="dpMidnightCountdown">--h --m to midnight</span>
-                        </div>
-                        <div class="planner-countdown-item">
-                            <span>😴</span>
-                            <span id="dpSleepCountdown">--h --m to bedtime</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="planner-container">
-            <!-- Left Column: Timeline -->
-            <div class="planner-main-column">
-                <!-- Today's ONE Focus -->
-                <div class="today-focus-card">
-                    <div class="today-focus-title">
-                        🎯 TODAY'S #1 FOCUS — What MUST get done?
-                    </div>
-                    <input type="text" class="today-focus-input" id="dpTodayFocus" 
-                        placeholder="e.g., Study Peds Exam 2 Lectures 16-20" 
-                        onchange="saveDailyPlannerData()">
-                </div>
-
-                <!-- Timeline Card -->
-                <div class="planner-timeline-card">
-                    <div class="planner-timeline-header">
-                        <span style="color: #e2e8f0; font-weight: 600;">📅 Today's Schedule</span>
-                        <span style="color: #94a3b8; font-size: 0.85em;" id="dpTaskSummary">0 tasks • 0h planned</span>
-                    </div>
-                    <div class="planner-timeline-container" id="dpTimelineContainer">
-                        <div class="planner-timeline" id="dpTimeline">
-                            <!-- Hour rows and events will be inserted here by JS -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stats Footer -->
-                <div class="planner-stats-card">
-                    <div class="planner-stats-row">
-                        <div class="planner-stat">
-                            <div class="planner-stat-value" id="dpStatTasks">0</div>
-                            <div class="planner-stat-label">Tasks</div>
-                        </div>
-                        <div class="planner-stat">
-                            <div class="planner-stat-value" id="dpStatPlanned">0h</div>
-                            <div class="planner-stat-label">Planned</div>
-                        </div>
-                        <div class="planner-stat">
-                            <div class="planner-stat-value" id="dpStatCompleted">0</div>
-                            <div class="planner-stat-label">Done</div>
-                        </div>
-                        <div class="planner-stat">
-                            <div class="planner-stat-value" id="dpStatPomodoros">0</div>
-                            <div class="planner-stat-label">Pomodoros</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Controls -->
-            <div class="planner-sidebar">
-                <!-- Pomodoro Timer -->
-                <div class="pomodoro-card">
-                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px; text-align: center;">⏱️ Pomodoro Timer</div>
-                    
-                    <div class="pomodoro-options">
-                        <div class="pomodoro-option active" onclick="dpSelectPomodoro(25, 5, this)">
-                            <div class="pomo-time">25/5</div>
-                            <div class="pomo-label">minutes</div>
-                        </div>
-                        <div class="pomodoro-option" onclick="dpSelectPomodoro(50, 10, this)">
-                            <div class="pomo-time">50/10</div>
-                            <div class="pomo-label">minutes</div>
-                        </div>
-                    </div>
-
-                    <div class="timer-display">
-                        <div class="timer-mode" id="dpTimerMode">Work Session</div>
-                        <div class="timer-clock" id="dpTimerClock">25:00</div>
-                    </div>
-
-                    <div class="timer-controls">
-                        <button class="timer-btn start" id="dpStartBtn" onclick="dpStartTimer()">Start</button>
-                        <button class="timer-btn pause" id="dpPauseBtn" onclick="dpPauseTimer()" style="display: none;">Pause</button>
-                        <button class="timer-btn reset" onclick="dpResetTimer()">Reset</button>
-                    </div>
-                </div>
-
-                <!-- Add Task Panel -->
-                <div class="planner-input-card">
-                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">➕ Add to Schedule</div>
-                    
-                    <!-- Task Input -->
-                    <div class="planner-input-section">
-                        <label class="planner-input-label">📝 Task</label>
-                        <textarea class="planner-task-input" id="dpNewTask" rows="2" 
-                            placeholder="What do you need to do?"
-                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();dpAddEvent();}"></textarea>
-                    </div>
-
-                    <!-- Import from Deadlines -->
-                    <div class="planner-input-section">
-                        <label class="planner-input-label">📋 Or pick from deadlines</label>
-                        <select class="planner-task-dropdown" id="dpTaskDropdown" onchange="dpSelectFromDropdown()">
-                            <option value="">-- Select a deadline --</option>
-                        </select>
-                    </div>
-
-                    <!-- Start Time -->
-                    <div class="planner-input-section">
-                        <label class="planner-input-label">⏰ Start Time</label>
-                        <div class="planner-time-row">
-                            <input type="time" class="planner-time-input" id="dpNewTime" value="09:00">
-                            <button class="planner-now-btn" onclick="dpSetTimeToNow()">⚡ NOW</button>
-                        </div>
-                    </div>
-
-                    <!-- Duration -->
-                    <div class="planner-input-section">
-                        <label class="planner-input-label">⏱️ Duration</label>
-                        <div class="planner-duration-grid" id="dpDurationGrid">
-                            <button class="planner-duration-btn" data-duration="15" onclick="dpSelectDuration(15)">15m</button>
-                            <button class="planner-duration-btn" data-duration="25" onclick="dpSelectDuration(25)">25m</button>
-                            <button class="planner-duration-btn active" data-duration="30" onclick="dpSelectDuration(30)">30m</button>
-                            <button class="planner-duration-btn" data-duration="45" onclick="dpSelectDuration(45)">45m</button>
-                            <button class="planner-duration-btn" data-duration="50" onclick="dpSelectDuration(50)">50m</button>
-                            <button class="planner-duration-btn" data-duration="60" onclick="dpSelectDuration(60)">1h</button>
-                            <button class="planner-duration-btn" data-duration="90" onclick="dpSelectDuration(90)">1.5h</button>
-                            <button class="planner-duration-btn" data-duration="120" onclick="dpSelectDuration(120)">2h</button>
-                        </div>
-                    </div>
-
-                    <button class="planner-add-btn" onclick="dpAddEvent()">
-                        ➕ Add to Schedule
-                    </button>
-                </div>
-
-                <!-- Daily Notes -->
-                <div class="planner-input-card">
-                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">📝 Daily Notes</div>
-                    <textarea class="daily-notes-input" id="dpDailyNotes" 
-                        placeholder="Thoughts, reflections, wins, learnings..."
-                        onchange="saveDailyPlannerData()"></textarea>
-                </div>
-
-                <!-- Actions -->
-                <div class="planner-actions-row">
-                    <button class="planner-action-btn" onclick="dpScrollToNow()">📍 Jump to Now</button>
-                    <button class="planner-action-btn danger" onclick="dpClearDay()">🗑️ Clear Day</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -3459,6 +3666,584 @@
         </div>
     </div>
 
+    <!-- ==================== DAILY PLANNER TAB ==================== -->
+    <div id="tab-dailyplanner" class="tab-content">
+        <!-- Header with Date, Time, Countdowns -->
+        <div class="planner-header-card">
+            <div class="planner-header-top">
+                <div class="planner-date-section">
+                    <h2>📋 Daily Planner</h2>
+                    <div class="planner-date-sub" id="dpDate">Loading...</div>
+                </div>
+                <div class="planner-time-section">
+                    <div class="planner-live-time" id="dpLiveTime">--:--</div>
+                    <div class="planner-countdown-row">
+                        <div class="planner-countdown-item">
+                            <span>🌙</span>
+                            <span id="dpMidnightCountdown">--h --m to midnight</span>
+                        </div>
+                        <div class="planner-countdown-item">
+                            <span>😴</span>
+                            <span id="dpSleepCountdown">--h --m to bedtime</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="planner-container">
+            <!-- Left Column: Timeline -->
+            <div class="planner-main-column">
+                <!-- Today's ONE Focus -->
+                <div class="today-focus-card">
+                    <div class="today-focus-title">
+                        🎯 TODAY'S #1 FOCUS — What MUST get done?
+                    </div>
+                    <input type="text" class="today-focus-input" id="dpTodayFocus" 
+                        placeholder="e.g., Study Peds Exam 2 Lectures 16-20" 
+                        onchange="saveDailyPlannerData()">
+                </div>
+
+                <!-- Timeline Card -->
+                <div class="planner-timeline-card">
+                    <div class="planner-timeline-header">
+                        <span style="color: #e2e8f0; font-weight: 600;">📅 Today's Schedule</span>
+                        <span style="color: #94a3b8; font-size: 0.85em;" id="dpTaskSummary">0 tasks • 0h planned</span>
+                    </div>
+                    <div class="planner-timeline-container" id="dpTimelineContainer">
+                        <div class="planner-timeline" id="dpTimeline">
+                            <!-- Hour rows and events will be inserted here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Footer -->
+                <div class="planner-stats-card">
+                    <div class="planner-stats-row">
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatTasks">0</div>
+                            <div class="planner-stat-label">Tasks</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatPlanned">0h</div>
+                            <div class="planner-stat-label">Planned</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatCompleted">0</div>
+                            <div class="planner-stat-label">Done</div>
+                        </div>
+                        <div class="planner-stat">
+                            <div class="planner-stat-value" id="dpStatPomodoros">0</div>
+                            <div class="planner-stat-label">Pomodoros</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls -->
+            <div class="planner-sidebar">
+                <!-- Pomodoro Timer -->
+                <div class="pomodoro-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px; text-align: center;">⏱️ Pomodoro Timer</div>
+                    
+                    <div class="pomodoro-options">
+                        <div class="pomodoro-option active" onclick="dpSelectPomodoro(25, 5, this)">
+                            <div class="pomo-time">25/5</div>
+                            <div class="pomo-label">minutes</div>
+                        </div>
+                        <div class="pomodoro-option" onclick="dpSelectPomodoro(50, 10, this)">
+                            <div class="pomo-time">50/10</div>
+                            <div class="pomo-label">minutes</div>
+                        </div>
+                    </div>
+
+                    <div class="timer-display">
+                        <div class="timer-mode" id="dpTimerMode">Work Session</div>
+                        <div class="timer-clock" id="dpTimerClock">25:00</div>
+                    </div>
+
+                    <div class="timer-controls">
+                        <button class="timer-btn start" id="dpStartBtn" onclick="dpStartTimer()">Start</button>
+                        <button class="timer-btn pause" id="dpPauseBtn" onclick="dpPauseTimer()" style="display: none;">Pause</button>
+                        <button class="timer-btn reset" onclick="dpResetTimer()">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Add Task Panel -->
+                <div class="planner-input-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">➕ Add to Schedule</div>
+                    
+                    <!-- Task Input -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">📝 Task</label>
+                        <textarea class="planner-task-input" id="dpNewTask" rows="2" 
+                            placeholder="What do you need to do?"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();dpAddEvent();}"></textarea>
+                    </div>
+
+                    <!-- Import from Deadlines -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">📋 Or pick from deadlines</label>
+                        <select class="planner-task-dropdown" id="dpTaskDropdown" onchange="dpSelectFromDropdown()">
+                            <option value="">-- Select a deadline --</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Time -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">⏰ Start Time</label>
+                        <div class="planner-time-row">
+                            <input type="time" class="planner-time-input" id="dpNewTime" value="09:00">
+                            <button class="planner-now-btn" onclick="dpSetTimeToNow()">⚡ NOW</button>
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="planner-input-section">
+                        <label class="planner-input-label">⏱️ Duration</label>
+                        <div class="planner-duration-grid" id="dpDurationGrid">
+                            <button class="planner-duration-btn" data-duration="15" onclick="dpSelectDuration(15)">15m</button>
+                            <button class="planner-duration-btn" data-duration="25" onclick="dpSelectDuration(25)">25m</button>
+                            <button class="planner-duration-btn active" data-duration="30" onclick="dpSelectDuration(30)">30m</button>
+                            <button class="planner-duration-btn" data-duration="45" onclick="dpSelectDuration(45)">45m</button>
+                            <button class="planner-duration-btn" data-duration="50" onclick="dpSelectDuration(50)">50m</button>
+                            <button class="planner-duration-btn" data-duration="60" onclick="dpSelectDuration(60)">1h</button>
+                            <button class="planner-duration-btn" data-duration="90" onclick="dpSelectDuration(90)">1.5h</button>
+                            <button class="planner-duration-btn" data-duration="120" onclick="dpSelectDuration(120)">2h</button>
+                        </div>
+                    </div>
+
+                    <button class="planner-add-btn" onclick="dpAddEvent()">
+                        ➕ Add to Schedule
+                    </button>
+                </div>
+
+                <!-- Daily Notes -->
+                <div class="planner-input-card">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">📝 Daily Notes</div>
+                    <textarea class="daily-notes-input" id="dpDailyNotes" 
+                        placeholder="Thoughts, reflections, wins, learnings..."
+                        onchange="saveDailyPlannerData()"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="planner-actions-row">
+                    <button class="planner-action-btn" onclick="dpScrollToNow()">📍 Jump to Now</button>
+                    <button class="planner-action-btn danger" onclick="dpClearDay()">🗑️ Clear Day</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MONTHLY PLANNER TAB ==================== -->
+    <div id="tab-monthlyplanner" class="tab-content">
+        <!-- Header -->
+        <div class="card" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; margin-bottom: 20px;">
+            <h2 style="color: white; margin: 0 0 5px 0; font-size: 1.8em;">🗓️ COMPLETE BATTLE MAP</h2>
+            <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 1em;">Updated Jan 18 — The next 5 weeks of critical deadlines</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 20px;">
+            <!-- Left Column: Battle Map -->
+            <div class="mp-main-column">
+                <!-- WEEK 1 -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                        <span class="mp-week-title">WEEK 1: Jan 18-22</span>
+                        <span class="mp-week-days">4 days</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Date</th>
+                                    <th style="width: 70px;">Time</th>
+                                    <th>Item</th>
+                                    <th style="width: 90px;">Type</th>
+                                    <th style="width: 100px;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpWeek1Body">
+                                <tr>
+                                    <td><strong>Jan 22</strong></td>
+                                    <td>8:30AM</td>
+                                    <td>Periodic oral exam (9E)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jan 22</strong></td>
+                                    <td>11:59PM</td>
+                                    <td>Quiz 2</td>
+                                    <td><span class="mp-type academic">Oral Med</span></td>
+                                    <td>2.5%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jan 22</strong></td>
+                                    <td>—</td>
+                                    <td>Rx #1 due (print, both names)</td>
+                                    <td><span class="mp-type academic">PC2</span></td>
+                                    <td>2%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- WEEK 2 -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                        <span class="mp-week-title">WEEK 2: Jan 23-29</span>
+                        <span class="mp-week-days">5-11 days out</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Date</th>
+                                    <th style="width: 70px;">Time</th>
+                                    <th>Item</th>
+                                    <th style="width: 90px;">Type</th>
+                                    <th style="width: 100px;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpWeek2Body">
+                                <tr>
+                                    <td><strong>Jan 24</strong></td>
+                                    <td>8:30AM</td>
+                                    <td>Composite 2-surf posterior (9F)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr class="mp-warning-row">
+                                    <td><strong>Jan 24</strong></td>
+                                    <td>12:30PM</td>
+                                    <td>Upper + Lower denture try-in (9F)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td>⚠️ NEEDS PREP</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jan 26</strong></td>
+                                    <td>12:30PM</td>
+                                    <td>Semi-precision replacement (9E)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jan 29</strong></td>
+                                    <td>—</td>
+                                    <td>Take Home Exam 1 (PAIRS)</td>
+                                    <td><span class="mp-type academic">PC2</span></td>
+                                    <td>12%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jan 29</strong></td>
+                                    <td>evening</td>
+                                    <td>Quiz 2 (1hr, open)</td>
+                                    <td><span class="mp-type academic">Crit Think</span></td>
+                                    <td>20%</td>
+                                </tr>
+                                <tr class="mp-mandatory-row">
+                                    <td><strong>Jan 29</strong></td>
+                                    <td>—</td>
+                                    <td>Acute Dental Pain module + print</td>
+                                    <td><span class="mp-type mandatory">PC2</span></td>
+                                    <td>MANDATORY</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- WEEK 3 -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
+                        <span class="mp-week-title">⚠️ WEEK 3: Jan 30 - Feb 6</span>
+                        <span class="mp-week-days">12-19 days out</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Date</th>
+                                    <th style="width: 70px;">Time</th>
+                                    <th>Item</th>
+                                    <th style="width: 90px;">Type</th>
+                                    <th style="width: 100px;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpWeek3Body">
+                                <tr class="mp-exam-row">
+                                    <td><strong>Feb 2</strong></td>
+                                    <td>4PM</td>
+                                    <td>🔴 <strong>PC2 MIDTERM</strong></td>
+                                    <td><span class="mp-type exam">PC2</span></td>
+                                    <td style="color: #f87171;">30% - HAVEN'T STARTED</td>
+                                </tr>
+                                <tr class="mp-life-row">
+                                    <td><strong>Feb 3</strong></td>
+                                    <td>10:45AM</td>
+                                    <td>💊 Psych apt → meds sent</td>
+                                    <td><span class="mp-type life">LIFE</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Feb 3</strong></td>
+                                    <td>12:30PM</td>
+                                    <td>Limited oral eval (9J)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr class="mp-life-row">
+                                    <td><strong>Feb 5</strong></td>
+                                    <td>—</td>
+                                    <td>💊 Insurance covers meds</td>
+                                    <td><span class="mp-type life">LIFE</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Feb 5</strong></td>
+                                    <td>11:59PM</td>
+                                    <td>Quiz 3</td>
+                                    <td><span class="mp-type academic">Oral Med</span></td>
+                                    <td>2.5%</td>
+                                </tr>
+                                <tr class="mp-mandatory-row">
+                                    <td><strong>Feb 5</strong></td>
+                                    <td>—</td>
+                                    <td>PE of Extremities video</td>
+                                    <td><span class="mp-type mandatory">PC2</span></td>
+                                    <td>Required</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Feb 6</strong></td>
+                                    <td>8:30AM</td>
+                                    <td>Tx Plan Creation (9D)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td style="color: #fbbf24;">Maseli meeting BEFORE this</td>
+                                </tr>
+                                <tr class="mp-exam-row">
+                                    <td><strong>Feb 6</strong></td>
+                                    <td>4PM</td>
+                                    <td>🔴 <strong>ORTHO FINAL (cumulative)</strong></td>
+                                    <td><span class="mp-type exam">Ortho</span></td>
+                                    <td style="color: #f87171;">50% - HAVEN'T STARTED</td>
+                                </tr>
+                                <tr class="mp-life-row">
+                                    <td><strong>Feb 6</strong></td>
+                                    <td>post-exam</td>
+                                    <td>💊 Meds pickup</td>
+                                    <td><span class="mp-type life">LIFE</span></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- WEEK 4 -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
+                        <span class="mp-week-title">WEEK 4: Feb 7-11</span>
+                        <span class="mp-week-days">20-24 days out</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Date</th>
+                                    <th style="width: 70px;">Time</th>
+                                    <th>Item</th>
+                                    <th style="width: 90px;">Type</th>
+                                    <th style="width: 100px;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpWeek4Body">
+                                <tr>
+                                    <td><strong>Feb 7</strong></td>
+                                    <td>12:30PM</td>
+                                    <td>Composite 2-surf posterior (9G)</td>
+                                    <td><span class="mp-type clinic">CLINIC</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Feb 9</strong></td>
+                                    <td>—</td>
+                                    <td>Practice Management Assignment</td>
+                                    <td><span class="mp-type academic">GP9</span></td>
+                                    <td>TBD</td>
+                                </tr>
+                                <tr class="mp-exam-row">
+                                    <td><strong>Feb 11</strong></td>
+                                    <td>4PM</td>
+                                    <td>🟡 <strong>GERIATRICS FINAL</strong></td>
+                                    <td><span class="mp-type exam">Geri</span></td>
+                                    <td style="color: #a3e635;">Crammable</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- WEEK 5 -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); border: 2px solid #fef08a;">
+                        <span class="mp-week-title">🔴🔴🔴 WEEK 5: Feb 12-18 — PEDS WEEK</span>
+                        <span class="mp-week-days">25-31 days out</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Date</th>
+                                    <th style="width: 70px;">Time</th>
+                                    <th>Item</th>
+                                    <th style="width: 90px;">Type</th>
+                                    <th style="width: 100px;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mpWeek5Body">
+                                <tr style="background: rgba(34, 197, 94, 0.1);">
+                                    <td><strong>Feb 13</strong></td>
+                                    <td>—</td>
+                                    <td>NO CLASS</td>
+                                    <td><span class="mp-type academic">Oral Med</span></td>
+                                    <td style="color: #22c55e;">Free study day</td>
+                                </tr>
+                                <tr class="mp-critical-exam-row">
+                                    <td><strong>Feb 18</strong></td>
+                                    <td>4PM</td>
+                                    <td>🔴🔴🔴 <strong>PEDS EXAM 2</strong></td>
+                                    <td><span class="mp-type exam" style="background: #991b1b;">Peds</span></td>
+                                    <td style="color: #fca5a5; font-weight: 600;">45%, need 70%, 20 lectures untouched</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TX PLAN PREP CHAIN -->
+                <div class="card mp-week-card" style="border: 2px solid #f59e0b;">
+                    <div class="mp-week-header" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
+                        <span class="mp-week-title">📋 PREP CHAIN: TX PLAN (Feb 6 8:30AM)</span>
+                        <span class="mp-week-days">ACTION REQUIRED</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">Step</th>
+                                    <th>Task</th>
+                                    <th style="width: 100px;">Time Needed</th>
+                                    <th style="width: 100px;">Deadline</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="text-align: center; font-weight: 700;">1</td>
+                                    <td>Mount models + written analysis</td>
+                                    <td>1-2 days</td>
+                                    <td>~Feb 2-3</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center; font-weight: 700;">2</td>
+                                    <td>Schedule Maseli meeting</td>
+                                    <td>—</td>
+                                    <td>After step 1</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center; font-weight: 700;">3</td>
+                                    <td>Meet with Dr. Maseli</td>
+                                    <td>—</td>
+                                    <td>Feb 4-5</td>
+                                </tr>
+                                <tr style="background: rgba(249, 115, 22, 0.1);">
+                                    <td style="text-align: center; font-weight: 700;">4</td>
+                                    <td><strong>Tx Plan presentation</strong></td>
+                                    <td>—</td>
+                                    <td><strong>Feb 6 8:30AM</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="note" style="margin-top: 15px; background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
+                        ⚠️ <strong>Conflict:</strong> Step 1 overlaps with PC2 Midterm prep crunch.
+                    </div>
+                </div>
+
+                <!-- Custom Tasks Section -->
+                <div class="card mp-week-card">
+                    <div class="mp-week-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                        <span class="mp-week-title">➕ Custom Tasks</span>
+                        <button onclick="mpAddTask()" style="background: white; color: #6366f1; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85em;">+ Add Task</button>
+                    </div>
+                    <div id="mpCustomTasksContainer">
+                        <!-- Custom tasks will be rendered here -->
+                    </div>
+                    <div id="mpNoTasksMessage" style="padding: 20px; text-align: center; color: #64748b;">
+                        No custom tasks yet. Click "+ Add Task" to add one.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Notes -->
+            <div class="mp-sidebar">
+                <!-- Mental Notes Notebook -->
+                <div class="card mp-notebook">
+                    <div class="mp-notebook-header">
+                        <span>📓 Mental Notes</span>
+                    </div>
+                    <div class="mp-notebook-input-area">
+                        <textarea id="mpNewNote" class="mp-note-input" 
+                            placeholder="Enter a mental note... (press Enter to add)"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpAddNote();}"></textarea>
+                        <button onclick="mpAddNote()" class="mp-add-note-btn">+ Add Note</button>
+                    </div>
+                    <div class="mp-notes-list" id="mpNotesList">
+                        <!-- Notes will be rendered here -->
+                    </div>
+                    <div id="mpNoNotesMessage" class="mp-no-notes">
+                        No notes yet. Start typing above to add your first note.
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card" style="margin-top: 20px;">
+                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">📊 Upcoming Summary</div>
+                    <div class="mp-quick-stats">
+                        <div class="mp-stat-item mp-stat-exams">
+                            <div class="mp-stat-number">4</div>
+                            <div class="mp-stat-label">Major Exams</div>
+                        </div>
+                        <div class="mp-stat-item mp-stat-clinic">
+                            <div class="mp-stat-number">7</div>
+                            <div class="mp-stat-label">Clinic Sessions</div>
+                        </div>
+                        <div class="mp-stat-item mp-stat-assignments">
+                            <div class="mp-stat-number">5</div>
+                            <div class="mp-stat-label">Assignments</div>
+                        </div>
+                        <div class="mp-stat-item mp-stat-life">
+                            <div class="mp-stat-number">3</div>
+                            <div class="mp-stat-label">Life Tasks</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Reminders -->
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div style="color: #fca5a5; font-weight: 600; margin-bottom: 12px;">🚨 Critical Reminders</div>
+                    <ul style="color: #e2e8f0; font-size: 0.9em; margin: 0; padding-left: 20px; line-height: 1.8;">
+                        <li><strong style="color: #f87171;">PEDS</strong> is your at-risk course — 77% on Exam 1, need 70% on Exam 2</li>
+                        <li><strong style="color: #fbbf24;">PC2 Midterm</strong> on Feb 2 — 30% of grade</li>
+                        <li><strong style="color: #fbbf24;">Ortho Final</strong> on Feb 6 — Cumulative, 50% of grade</li>
+                        <li><strong style="color: #60a5fa;">Maseli meeting</strong> needed before Feb 6 clinic</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
@@ -3512,6 +4297,10 @@
                 blocks: [],
                 pomodorosCompleted: 0,
                 bedtime: '23:00'
+            },
+            monthlyPlanner: {
+                notes: [],
+                customTasks: []
             },
             lastSaved: null
         };
@@ -4372,6 +5161,7 @@
             if (tabId === 'grades') loadCourseGrades();
             if (tabId === 'mandatory') renderExamCountdown();
             if (tabId === 'dailyplanner') initDailyPlanner();
+            if (tabId === 'monthlyplanner') initMonthlyPlanner();
         }
 
         // ==================== COURSE ACCORDION ====================
@@ -6966,6 +7756,245 @@
             
             // Trigger main save
             saveRoadmapData();
+        }
+
+        // ==================== MONTHLY PLANNER FUNCTIONS ====================
+        
+        function initMonthlyPlanner() {
+            // Initialize data structure if not exists
+            if (!roadmapData.monthlyPlanner) {
+                roadmapData.monthlyPlanner = {
+                    notes: [],
+                    customTasks: []
+                };
+            }
+            if (!roadmapData.monthlyPlanner.notes) {
+                roadmapData.monthlyPlanner.notes = [];
+            }
+            if (!roadmapData.monthlyPlanner.customTasks) {
+                roadmapData.monthlyPlanner.customTasks = [];
+            }
+            
+            mpRenderNotes();
+            mpRenderCustomTasks();
+        }
+        
+        // ===== NOTES FUNCTIONS =====
+        function mpAddNote() {
+            const input = document.getElementById('mpNewNote');
+            const text = input?.value?.trim();
+            
+            if (!text) {
+                input?.focus();
+                return;
+            }
+            
+            const note = {
+                id: Date.now(),
+                text: text,
+                createdAt: new Date().toISOString()
+            };
+            
+            roadmapData.monthlyPlanner.notes.unshift(note); // Add to beginning
+            input.value = '';
+            
+            saveRoadmapData();
+            mpRenderNotes();
+            showToast('Note added!');
+        }
+        
+        function mpRenderNotes() {
+            const container = document.getElementById('mpNotesList');
+            const noNotesMsg = document.getElementById('mpNoNotesMessage');
+            
+            if (!container) return;
+            
+            const notes = roadmapData.monthlyPlanner?.notes || [];
+            
+            if (notes.length === 0) {
+                container.innerHTML = '';
+                if (noNotesMsg) noNotesMsg.style.display = 'block';
+                return;
+            }
+            
+            if (noNotesMsg) noNotesMsg.style.display = 'none';
+            
+            container.innerHTML = notes.map(note => {
+                const date = new Date(note.createdAt);
+                const dateStr = date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="mp-note-item" data-id="${note.id}">
+                        <div class="mp-note-text">${escapeHtml(note.text)}</div>
+                        <div class="mp-note-actions">
+                            <button class="mp-note-action-btn" onclick="mpEditNote(${note.id})" title="Edit">✏️</button>
+                            <button class="mp-note-action-btn delete" onclick="mpDeleteNote(${note.id})" title="Delete">🗑️</button>
+                        </div>
+                        <div class="mp-note-timestamp">${dateStr}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function mpEditNote(noteId) {
+            const notes = roadmapData.monthlyPlanner?.notes || [];
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+            
+            const noteEl = document.querySelector(`.mp-note-item[data-id="${noteId}"]`);
+            if (!noteEl) return;
+            
+            const textEl = noteEl.querySelector('.mp-note-text');
+            const currentText = note.text;
+            
+            textEl.innerHTML = `
+                <textarea class="mp-note-edit-input" id="mpEditInput-${noteId}" 
+                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpSaveNoteEdit(${noteId});}"
+                    onblur="mpSaveNoteEdit(${noteId})">${escapeHtml(currentText)}</textarea>
+            `;
+            
+            const editInput = document.getElementById(`mpEditInput-${noteId}`);
+            editInput?.focus();
+            editInput?.select();
+        }
+        
+        function mpSaveNoteEdit(noteId) {
+            const editInput = document.getElementById(`mpEditInput-${noteId}`);
+            if (!editInput) return;
+            
+            const newText = editInput.value.trim();
+            if (!newText) {
+                mpRenderNotes(); // Cancel edit if empty
+                return;
+            }
+            
+            const notes = roadmapData.monthlyPlanner?.notes || [];
+            const noteIndex = notes.findIndex(n => n.id === noteId);
+            if (noteIndex === -1) return;
+            
+            notes[noteIndex].text = newText;
+            saveRoadmapData();
+            mpRenderNotes();
+            showToast('Note updated!');
+        }
+        
+        function mpDeleteNote(noteId) {
+            if (!confirm('Delete this note?')) return;
+            
+            const notes = roadmapData.monthlyPlanner?.notes || [];
+            const noteIndex = notes.findIndex(n => n.id === noteId);
+            if (noteIndex === -1) return;
+            
+            notes.splice(noteIndex, 1);
+            saveRoadmapData();
+            mpRenderNotes();
+            showToast('Note deleted');
+        }
+        
+        // ===== CUSTOM TASKS FUNCTIONS =====
+        function mpAddTask() {
+            const task = prompt('Enter task description:');
+            if (!task || !task.trim()) return;
+            
+            const date = prompt('Enter date (e.g., Feb 10) or leave blank:') || '';
+            const type = prompt('Enter type (CLINIC, ACADEMIC, LIFE, or leave blank):') || 'CUSTOM';
+            
+            const newTask = {
+                id: Date.now(),
+                text: task.trim(),
+                date: date.trim(),
+                type: type.trim().toUpperCase(),
+                createdAt: new Date().toISOString()
+            };
+            
+            roadmapData.monthlyPlanner.customTasks.push(newTask);
+            saveRoadmapData();
+            mpRenderCustomTasks();
+            showToast('Task added!');
+        }
+        
+        function mpRenderCustomTasks() {
+            const container = document.getElementById('mpCustomTasksContainer');
+            const noTasksMsg = document.getElementById('mpNoTasksMessage');
+            
+            if (!container) return;
+            
+            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '';
+                if (noTasksMsg) noTasksMsg.style.display = 'block';
+                return;
+            }
+            
+            if (noTasksMsg) noTasksMsg.style.display = 'none';
+            
+            container.innerHTML = tasks.map(task => {
+                const typeClass = task.type === 'CLINIC' ? 'clinic' : 
+                                  task.type === 'LIFE' ? 'life' : 
+                                  task.type === 'ACADEMIC' ? 'academic' : 'academic';
+                
+                return `
+                    <div class="mp-custom-task" data-id="${task.id}">
+                        <div class="mp-task-content">
+                            <div class="mp-task-text">${escapeHtml(task.text)}</div>
+                            <div class="mp-task-meta">
+                                ${task.date ? `<strong>${escapeHtml(task.date)}</strong> • ` : ''}
+                                <span class="mp-type ${typeClass}">${escapeHtml(task.type)}</span>
+                            </div>
+                        </div>
+                        <div class="mp-task-actions">
+                            <button class="mp-task-btn" onclick="mpEditTask(${task.id})">Edit</button>
+                            <button class="mp-task-btn delete" onclick="mpDeleteTask(${task.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function mpEditTask(taskId) {
+            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            const newText = prompt('Edit task description:', task.text);
+            if (newText === null) return; // Cancelled
+            if (!newText.trim()) {
+                alert('Task cannot be empty');
+                return;
+            }
+            
+            const newDate = prompt('Edit date (or leave blank):', task.date);
+            if (newDate === null) return; // Cancelled
+            
+            const newType = prompt('Edit type (CLINIC, ACADEMIC, LIFE, CUSTOM):', task.type);
+            if (newType === null) return; // Cancelled
+            
+            task.text = newText.trim();
+            task.date = newDate.trim();
+            task.type = newType.trim().toUpperCase() || 'CUSTOM';
+            
+            saveRoadmapData();
+            mpRenderCustomTasks();
+            showToast('Task updated!');
+        }
+        
+        function mpDeleteTask(taskId) {
+            if (!confirm('Delete this task?')) return;
+            
+            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex === -1) return;
+            
+            tasks.splice(taskIndex, 1);
+            saveRoadmapData();
+            mpRenderCustomTasks();
+            showToast('Task deleted');
         }
     </script>
 </body>
