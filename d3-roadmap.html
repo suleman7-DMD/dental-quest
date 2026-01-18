@@ -7987,7 +7987,7 @@
             if (notesInput) roadmapData.dailyPlanner.notes = notesInput.value;
             
             // Trigger main save
-            saveRoadmapData();
+            saveData();
         }
 
         // ==================== MONTHLY PLANNER FUNCTIONS ====================
@@ -8030,7 +8030,7 @@
             roadmapData.monthlyPlanner.notes.unshift(note); // Add to beginning
             input.value = '';
             
-            saveRoadmapData();
+            saveData();
             mpRenderNotes();
             showToast('Note added!');
         }
@@ -8110,7 +8110,7 @@
             if (noteIndex === -1) return;
             
             notes[noteIndex].text = newText;
-            saveRoadmapData();
+            saveData();
             mpRenderNotes();
             showToast('Note updated!');
         }
@@ -8123,7 +8123,7 @@
             if (noteIndex === -1) return;
             
             notes.splice(noteIndex, 1);
-            saveRoadmapData();
+            saveData();
             mpRenderNotes();
             showToast('Note deleted');
         }
@@ -8211,7 +8211,7 @@
             console.log('Adding task:', newTask);
             
             roadmapData.monthlyPlanner.customTasks.push(newTask);
-            saveRoadmapData();
+            saveData();
             
             // Add the task row directly
             mpInsertCustomTaskRow(newTask);
@@ -8307,7 +8307,7 @@
             if (taskIndex === -1) return;
             
             tasks.splice(taskIndex, 1);
-            saveRoadmapData();
+            saveData();
             mpRenderWeekTasks(weekNum);
             showToast('Task deleted');
         }
