@@ -5226,6 +5226,11 @@
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                            monthlyPlanner: {
+                                notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
+                                customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || []
+                            },
+                            dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
                             lastSaved: data.lastSaved
                         };
                         
@@ -7363,6 +7368,7 @@
             try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }
             try { loadCourseGrades(); } catch(e) { console.error('loadCourseGrades error:', e); }
             try { renderExamCountdown(); } catch(e) { console.error('renderExamCountdown error:', e); }
+            try { initMonthlyPlanner(); } catch(e) { console.error('initMonthlyPlanner error:', e); }
             // Exam Content tab uses dropdown - no auto-load needed
             
             console.log('initUI complete');
@@ -7993,6 +7999,8 @@
         // ==================== MONTHLY PLANNER FUNCTIONS ====================
         
         function initMonthlyPlanner() {
+            console.log('initMonthlyPlanner called, customTasks:', roadmapData.monthlyPlanner?.customTasks);
+            
             // Initialize data structure if not exists
             if (!roadmapData.monthlyPlanner) {
                 roadmapData.monthlyPlanner = {
@@ -8006,6 +8014,8 @@
             if (!roadmapData.monthlyPlanner.customTasks) {
                 roadmapData.monthlyPlanner.customTasks = [];
             }
+            
+            console.log('initMonthlyPlanner rendering, tasks count:', roadmapData.monthlyPlanner.customTasks.length);
             
             mpRenderNotes();
             mpRenderAllWeekTasks();
@@ -8283,7 +8293,10 @@
         // Render all custom tasks on page load (called from initMonthlyPlanner)
         function mpRenderWeekTasks(weekNum) {
             const tbody = document.getElementById(`mpWeek${weekNum}Body`);
-            if (!tbody) return;
+            if (!tbody) {
+                console.log('mpRenderWeekTasks: tbody not found for week', weekNum);
+                return;
+            }
             
             // Remove existing custom rows only
             const existingCustomRows = tbody.querySelectorAll('.mp-custom-row');
@@ -8293,8 +8306,11 @@
             const customTasks = (roadmapData.monthlyPlanner?.customTasks || [])
                 .filter(t => t.week === weekNum);
             
+            console.log(`mpRenderWeekTasks week ${weekNum}: found ${customTasks.length} tasks`);
+            
             // Add each custom task
             customTasks.forEach(task => {
+                console.log('Rendering task:', task);
                 mpInsertCustomTaskRow(task);
             });
         }
