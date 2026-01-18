@@ -8176,6 +8176,8 @@
             const dateValue = document.getElementById('mpModalDate').value;
             const notes = document.getElementById('mpModalNotes').value.trim();
             
+            console.log('mpSubmitTask called', { item, dateValue, notes, mpCurrentWeek });
+            
             // Validate
             if (!item) {
                 alert('Task name is required');
@@ -8189,96 +8191,45 @@
                 return;
             }
             
-            const newTask = {
-                id: Date.now(),
-                week: mpCurrentWeek,
-                item: item,
-                date: dateValue, // Already in YYYY-MM-DD format from date input
-                notes: notes,
-                createdAt: new Date().toISOString()
-            };
-            
+            // Ensure data structure exists
+            if (!roadmapData.monthlyPlanner) {
+                roadmapData.monthlyPlanner = { notes: [], customTasks: [] };
+            }
             if (!roadmapData.monthlyPlanner.customTasks) {
                 roadmapData.monthlyPlanner.customTasks = [];
             }
             
+            const newTask = {
+                id: Date.now(),
+                week: mpCurrentWeek,
+                item: item,
+                date: dateValue,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+            
+            console.log('Adding task:', newTask);
+            
             roadmapData.monthlyPlanner.customTasks.push(newTask);
             saveRoadmapData();
-            mpRenderWeekTasks(mpCurrentWeek);
+            
+            // Add the task row directly
+            mpInsertCustomTaskRow(newTask);
+            
+            // Close modal
             mpCloseModal();
             showToast('Task added!');
         }
         
-        // Close modal on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('mpAddTaskModal').style.display === 'flex') {
-                mpCloseModal();
+        // Insert a custom task row in the correct position by date
+        function mpInsertCustomTaskRow(task) {
+            const tbody = document.getElementById(`mpWeek${task.week}Body`);
+            if (!tbody) {
+                console.error('Could not find tbody for week', task.week);
+                return;
             }
-        });
-        
-        // Close modal when clicking outside
-        document.getElementById('mpAddTaskModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                mpCloseModal();
-            }
-        });
-        
-        function mpRenderWeekTasks(weekNum) {
-            const tbody = document.getElementById(`mpWeek${weekNum}Body`);
-            if (!tbody) return;
             
-            // Get all rows (static + custom for this week)
-            const staticRows = Array.from(tbody.querySelectorAll('tr[data-static="true"]'));
-            const customTasks = (roadmapData.monthlyPlanner?.customTasks || [])
-                .filter(t => t.week === weekNum);
-            
-            // Build combined list with dates for sorting
-            const allItems = [];
-            
-            // Add static rows with their dates
-            staticRows.forEach(row => {
-                allItems.push({
-                    type: 'static',
-                    date: row.getAttribute('data-date'),
-                    element: row
-                });
-            });
-            
-            // Add custom tasks
-            customTasks.forEach(task => {
-                allItems.push({
-                    type: 'custom',
-                    date: task.date,
-                    task: task
-                });
-            });
-            
-            // Sort by date
-            allItems.sort((a, b) => {
-                if (a.date === b.date) {
-                    // Static items before custom on same date
-                    if (a.type === 'static' && b.type === 'custom') return -1;
-                    if (a.type === 'custom' && b.type === 'static') return 1;
-                    return 0;
-                }
-                return a.date.localeCompare(b.date);
-            });
-            
-            // Clear tbody
-            tbody.innerHTML = '';
-            
-            // Re-add sorted items
-            allItems.forEach(item => {
-                if (item.type === 'static') {
-                    tbody.appendChild(item.element);
-                } else {
-                    const tr = mpCreateCustomTaskRow(item.task);
-                    tbody.appendChild(tr);
-                }
-            });
-        }
-        
-        function mpCreateCustomTaskRow(task) {
+            // Create the new row
             const tr = document.createElement('tr');
             tr.className = 'mp-custom-row';
             tr.setAttribute('data-date', task.date);
@@ -8298,7 +8249,54 @@
                 <td><button class="mp-delete-btn" onclick="mpDeleteWeekTask(${task.id}, ${task.week})" title="Delete">🗑️</button></td>
             `;
             
-            return tr;
+            // Find correct position based on date
+            const rows = tbody.querySelectorAll('tr');
+            let inserted = false;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const rowDate = rows[i].getAttribute('data-date');
+                if (rowDate && task.date < rowDate) {
+                    tbody.insertBefore(tr, rows[i]);
+                    inserted = true;
+                    break;
+                }
+            }
+            
+            // If not inserted yet, add at end
+            if (!inserted) {
+                tbody.appendChild(tr);
+            }
+            
+            console.log('Task row inserted');
+        }
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('mpAddTaskModal');
+                if (modal && modal.style.display === 'flex') {
+                    mpCloseModal();
+                }
+            }
+        });
+        
+        // Render all custom tasks on page load (called from initMonthlyPlanner)
+        function mpRenderWeekTasks(weekNum) {
+            const tbody = document.getElementById(`mpWeek${weekNum}Body`);
+            if (!tbody) return;
+            
+            // Remove existing custom rows only
+            const existingCustomRows = tbody.querySelectorAll('.mp-custom-row');
+            existingCustomRows.forEach(row => row.remove());
+            
+            // Get custom tasks for this week
+            const customTasks = (roadmapData.monthlyPlanner?.customTasks || [])
+                .filter(t => t.week === weekNum);
+            
+            // Add each custom task
+            customTasks.forEach(task => {
+                mpInsertCustomTaskRow(task);
+            });
         }
         
         function mpDeleteWeekTask(taskId, weekNum) {
