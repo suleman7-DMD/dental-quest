@@ -1086,6 +1086,412 @@
             font-weight: 700;
             color: #f87171;
         }
+
+        /* ==================== EXAM CONTENT TAB STYLES ==================== */
+        .exam-content-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .exam-content-controls select {
+            padding: 10px 15px;
+            background: #1e293b;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1em;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .exam-content-controls select:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: #0f172a;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-toggle-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background: #dc2626;
+            color: white;
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .exam-card {
+            background: #1e293b;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+            overflow: hidden;
+        }
+
+        .exam-card.urgent {
+            border-color: #dc2626;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.2);
+        }
+
+        .exam-card.completed {
+            opacity: 0.7;
+            border-color: #059669;
+        }
+
+        .exam-card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(153, 27, 27, 0.1) 100%);
+            border-bottom: 1px solid #374151;
+        }
+
+        .exam-card-header.peds { background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(153, 27, 27, 0.1) 100%); }
+        .exam-card-header.ortho { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%); }
+        .exam-card-header.perio { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%); }
+        .exam-card-header.oralmed { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%); }
+        .exam-card-header.paincontrol { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%); }
+        .exam-card-header.geriatrics { background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(219, 39, 119, 0.1) 100%); }
+        .exam-card-header.critthink { background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%); }
+
+        .exam-card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .exam-card-title h3 {
+            font-size: 1.3em;
+            color: #f1f5f9;
+        }
+
+        .exam-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .exam-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .exam-badge.cumulative {
+            background: rgba(139, 92, 246, 0.3);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+        }
+
+        .exam-badge.weight {
+            background: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .exam-badge.days {
+            background: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .exam-badge.days.urgent {
+            background: rgba(220, 38, 38, 0.3);
+            color: #fca5a5;
+            border: 1px solid rgba(220, 38, 38, 0.5);
+        }
+
+        .exam-badge.days.warning {
+            background: rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+        }
+
+        .exam-badge.past {
+            background: rgba(107, 114, 128, 0.3);
+            color: #9ca3af;
+            border: 1px solid rgba(107, 114, 128, 0.5);
+        }
+
+        .exam-progress {
+            margin-top: 15px;
+        }
+
+        .exam-progress-bar {
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .exam-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626, #f87171);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .exam-progress-fill.good {
+            background: linear-gradient(90deg, #059669, #10b981);
+        }
+
+        .exam-progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #94a3b8;
+        }
+
+        .exam-card-body {
+            padding: 20px;
+        }
+
+        .content-section {
+            margin-bottom: 20px;
+        }
+
+        .content-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .content-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .content-section-header:hover {
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .content-section-header h4 {
+            font-size: 1em;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .content-section-header .toggle-icon {
+            transition: transform 0.2s;
+            color: #6b7280;
+        }
+
+        .content-section-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .content-section-body {
+            display: block;
+        }
+
+        .content-section-body.collapsed {
+            display: none;
+        }
+
+        .lecture-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .lecture-row:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: #374151;
+        }
+
+        .lecture-row.studied {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .lecture-row.studied .lecture-topic {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .lecture-checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #4b5563;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            accent-color: #10b981;
+        }
+
+        .lecture-checkbox:checked {
+            border-color: #10b981;
+        }
+
+        .lecture-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lecture-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .lecture-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lecture-topic {
+            font-size: 0.95em;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+
+        .lecture-lecturer {
+            font-size: 0.8em;
+            color: #8b5cf6;
+        }
+
+        .lecture-notes {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #a78bfa;
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .bulk-btn {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bulk-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: #e2e8f0;
+        }
+
+        .exam-score-badge {
+            padding: 6px 12px;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 6px;
+            color: #fcd34d;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .exam-score-badge.good {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+
+        .exam-score-badge.bad {
+            background: rgba(220, 38, 38, 0.2);
+            border-color: rgba(220, 38, 38, 0.4);
+            color: #fca5a5;
+        }
+
+        .discrepancy-note {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #fcd34d;
+        }
+
+        .discrepancy-note strong {
+            color: #f59e0b;
+        }
+
+        .mandatory-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 4px;
+            color: #fca5a5;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .filter-bar label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .filter-bar input[type="checkbox"] {
+            accent-color: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -1105,6 +1511,7 @@
         <button class="tab-btn" onclick="switchTab('deadlines', event)">📅 Deadlines</button>
         <button class="tab-btn" onclick="switchTab('courses', event)">📚 Courses</button>
         <button class="tab-btn" onclick="switchTab('grades', event)">📊 Grades</button>
+        <button class="tab-btn" onclick="switchTab('examcontent', event)">📖 Exam Content</button>
         <button class="tab-btn" onclick="switchTab('classmates', event)">👥 Classmate Share</button>
         <button class="tab-btn" onclick="switchTab('mandatory', event)">⚠️ Mandatory</button>
     </nav>
@@ -1780,6 +2187,80 @@
         </div>
     </div>
 
+    <!-- ==================== EXAM CONTENT TAB ==================== -->
+    <div id="tab-examcontent" class="tab-content">
+        <!-- View Controls -->
+        <div class="exam-content-controls">
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" onclick="setExamView('upcoming')">📅 Upcoming</button>
+                <button class="view-toggle-btn" onclick="setExamView('course')">📚 By Course</button>
+                <button class="view-toggle-btn" onclick="setExamView('timeline')">📊 Timeline</button>
+            </div>
+            
+            <select id="examCourseFilter" onchange="filterExamsByCourse()" style="display: none;">
+                <option value="all">All Courses</option>
+                <option value="peds">Pediatric Dentistry (PD530)</option>
+                <option value="ortho">Orthodontics (OR530)</option>
+                <option value="perio">Periodontology 2 (PE530)</option>
+                <option value="oralmed">Oral Medicine (OD531)</option>
+                <option value="paincontrol">Pain Control 2 (OS532)</option>
+                <option value="geriatrics">Geriatrics (PH541)</option>
+                <option value="critthink">Critical Thinking (GD660)</option>
+            </select>
+            
+            <div class="filter-bar">
+                <label>
+                    <input type="checkbox" id="hidePassedExams" onchange="renderExamContent()">
+                    Hide past exams
+                </label>
+            </div>
+        </div>
+
+        <!-- Exam Cards Container -->
+        <div id="examContentContainer">
+            <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Discrepancies Note -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <span class="card-title">⚠️ Known Discrepancies to Resolve</span>
+            </div>
+            <div id="discrepanciesList">
+                <!-- Peds Discrepancies -->
+                <div class="discrepancy-note">
+                    <strong>Peds - Feb 23 (Prenatal Oral Health):</strong> Blackboard says 2:00-3:20 PM in-person, but GCal says 8:00-9:20 AM REMOTE. Using GCal (8 AM Remote).
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Peds - Mar 2 (Behavior Management):</strong> Blackboard says 1:00-2:20 PM, GCal says 1:00-2:50 PM. Using GCal (slightly longer).
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Peds - Jan 5 Lecturer:</strong> Blackboard says Dr. Shokoohi, transcript says Dr. Shikui. Same person, different spelling.
+                </div>
+                <!-- Perio Discrepancies -->
+                <div class="discrepancy-note">
+                    <strong>Perio 2 - Oct 8 Topic:</strong> Two syllabus versions exist. Version 1 says "Osseous Surgery Part 2/Review assignment articles." Version 2 says "Crown Lengthening." Using Crown Lengthening.
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Perio 2 - Fall Time Variations:</strong> Sep 24 and Oct 8 were at 4 PM (not 1 PM). Oct 29 was 2:00-3:30 PM. Check GCal for Spring times.
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Perio 2 - Spring Topics:</strong> Syllabus doesn't list Spring 2026 topic names. Topics marked TBD - will update as semester progresses.
+                </div>
+                <!-- Ortho Discrepancies -->
+                <div class="discrepancy-note">
+                    <strong>Ortho - Time Variations:</strong> Fall lectures at 3 PM; Nov 7 shifted to 1 PM; Dec 5 shifted to 12 PM; Spring lectures at 1 PM; Final at 12 PM. Check each lecture time!
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Ortho - Room Variations:</strong> Alternates between Bakst Aud and 670 Aud. Final is in L-1101.
+                </div>
+                <div class="discrepancy-note">
+                    <strong>Ortho - Multi-Topic Lectures:</strong> Oct 24 covers 2 topics (Biomechanics/Bone Biology + Orthopedics). Jan 23 covers 2 topics (Invisalign + Retention/Relapse). Both count for exam!
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== CLASSMATE SHARE TAB ==================== -->
     <div id="tab-classmates" class="tab-content">
         <div class="alert alert-warning">
@@ -2251,7 +2732,236 @@
             },
             editedDeadlines: {},
             customDeadlines: [],
+            examStudyProgress: {}, // Tracks which lectures have been studied: { 'peds-exam2-lec11': true, ... }
             lastSaved: null
+        };
+        
+        // Current exam content view mode
+        let examContentView = 'upcoming';
+        
+        // ==================== EXAM CONTENT DATA ====================
+        const examContentData = {
+            peds: {
+                courseName: 'Pediatric Dentistry',
+                courseCode: 'PD530',
+                colorClass: 'peds',
+                exams: [
+                    {
+                        id: 'peds-exam1',
+                        name: 'Exam 1 (Midterm)',
+                        date: '2025-10-20',
+                        weight: 40,
+                        isCumulative: false,
+                        isPast: true,
+                        score: 77,
+                        room: 'L-1101',
+                        time: '4:00-6:00 PM',
+                        lectures: [
+                            { num: 1, date: '2025-08-04', day: 'Mon', time: '1:00-2:50 PM', topic: 'Introduction & Risk Assessment', lecturer: 'Dr. Reboucas', room: 'BAKST' },
+                            { num: 2, date: '2025-08-11', day: 'Mon', time: '5:00-6:50 PM', topic: 'Dietary Counseling for Pediatric Patients', lecturer: 'Dr. Alayyoubi', room: '670 Aud' },
+                            { num: 3, date: '2025-08-13', day: 'Wed', time: '1:00-2:50 PM', topic: 'Prevention: Fluoride, Oral Hygiene & Sealants', lecturer: 'Dr. Nguyen', room: '670 Aud' },
+                            { num: 4, date: '2025-08-18', day: 'Mon', time: '1:00-2:50 PM', topic: 'Infant Oral Health & ECC', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 5, date: '2025-08-20', day: 'Wed', time: '1:00-2:50 PM', topic: 'Radiology for Pediatric Patients + Head Start', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 6, date: '2025-08-25', day: 'Mon', time: '4:00-5:50 PM', topic: 'Managing the Developing Dentition', lecturer: 'Dr. Cella', room: 'BAKST' },
+                            { num: 7, date: '2025-09-08', day: 'Mon', time: '1:00-2:50 PM', topic: 'Operative Dentistry', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 8, date: '2025-09-15', day: 'Mon', time: '5:15-6:50 PM', topic: 'Growth and Development', lecturer: 'Dr. Tau', room: '670 Aud' },
+                            { num: 9, date: '2025-09-22', day: 'Mon', time: '5:15-6:50 PM', topic: 'Head Start Rotation Instructions', lecturer: 'Dr. Tau', room: '670 Aud' },
+                            { num: 10, date: '2025-10-06', day: 'Mon', time: '5:00-6:50 PM', topic: 'Space Maintenance + Problems of Eruption', lecturer: 'Dr. Baloul', room: '670 Aud' }
+                        ]
+                    },
+                    {
+                        id: 'peds-exam2',
+                        name: 'Exam 2',
+                        date: '2026-02-18',
+                        weight: 45,
+                        isCumulative: true,
+                        isPast: false,
+                        room: 'L-1101',
+                        time: '4:00-5:20 PM',
+                        notes: '55 questions from Dr. Shikui. SURVIVAL EXAM - you need ~70% to pass the course!',
+                        reviewContent: [
+                            { num: 1, date: '2025-08-04', day: 'Mon', time: '1:00-2:50 PM', topic: 'Introduction & Risk Assessment', lecturer: 'Dr. Reboucas', room: 'BAKST' },
+                            { num: 2, date: '2025-08-11', day: 'Mon', time: '5:00-6:50 PM', topic: 'Dietary Counseling for Pediatric Patients', lecturer: 'Dr. Alayyoubi', room: '670 Aud' },
+                            { num: 3, date: '2025-08-13', day: 'Wed', time: '1:00-2:50 PM', topic: 'Prevention: Fluoride, Oral Hygiene & Sealants', lecturer: 'Dr. Nguyen', room: '670 Aud' },
+                            { num: 4, date: '2025-08-18', day: 'Mon', time: '1:00-2:50 PM', topic: 'Infant Oral Health & ECC', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 5, date: '2025-08-20', day: 'Wed', time: '1:00-2:50 PM', topic: 'Radiology for Pediatric Patients + Head Start', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 6, date: '2025-08-25', day: 'Mon', time: '4:00-5:50 PM', topic: 'Managing the Developing Dentition', lecturer: 'Dr. Cella', room: 'BAKST' },
+                            { num: 7, date: '2025-09-08', day: 'Mon', time: '1:00-2:50 PM', topic: 'Operative Dentistry', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 8, date: '2025-09-15', day: 'Mon', time: '5:15-6:50 PM', topic: 'Growth and Development', lecturer: 'Dr. Tau', room: '670 Aud' },
+                            { num: 10, date: '2025-10-06', day: 'Mon', time: '5:00-6:50 PM', topic: 'Space Maintenance + Problems of Eruption', lecturer: 'Dr. Baloul', room: '670 Aud' }
+                        ],
+                        lectures: [
+                            { num: 11, date: '2025-10-27', day: 'Mon', time: '5:15-6:50 PM', topic: 'Dentistry for the Developmentally Disabled', lecturer: 'Dr. Tau', room: '670 Aud' },
+                            { num: 12, date: '2025-11-03', day: 'Mon', time: '1:00-2:50 PM', topic: 'Periodontal Diseases in Children', lecturer: 'Dr. Pani', room: '670 Aud' },
+                            { num: 13, date: '2025-11-17', day: 'Mon', time: '1:00-2:50 PM', topic: 'Pulp Therapy', lecturer: 'Dr. Reboucas', room: '670 Aud' },
+                            { num: 14, date: '2025-11-24', day: 'Mon', time: '1:00-2:50 PM', topic: 'Child Abuse', lecturer: 'Dr. Alayyoubi', room: '670 Aud' },
+                            { num: 15, date: '2025-12-01', day: 'Mon', time: '5:15-6:50 PM', topic: 'Dental Trauma', lecturer: 'Dr. Bakhtiari', room: '670 Aud' },
+                            { num: 16, date: '2026-01-05', day: 'Mon', time: '5:15-6:50 PM', topic: 'Behavior Management and Sedation', lecturer: 'Dr. Shokoohi/Shikui', room: '670 Aud' },
+                            { num: 17, date: '2026-01-12', day: 'Mon', time: '1:00-2:50 PM', topic: 'Oral Medicine/Oral Pathology + NPI Presentation', lecturer: 'Dr. Alayyoubi', room: '670 Aud' },
+                            { num: 18, date: '2026-01-26', day: 'Mon', time: '5:15-6:50 PM', topic: 'Pharmacology & Therapeutics', lecturer: 'Dr. Alayyoubi', room: '670 Aud' },
+                            { num: 19, date: '2026-02-02', day: 'Mon', time: '1:00-2:50 PM', topic: 'IPS Exercise', lecturer: 'Dr. Tau', room: '670 Aud', mandatory: true, mandatoryNote: 'MUST ATTEND - Auto-fail if missed' },
+                            { num: 20, date: '2026-02-09', day: 'Mon', time: '1:00-2:50 PM', topic: 'Treatment Planning + Wire Bending Exercise Instructions', lecturer: 'Dr. Reboucas', room: '670 Aud' }
+                        ]
+                    },
+                    {
+                        id: 'peds-exam3',
+                        name: 'Exam 3',
+                        date: '2026-03-30',
+                        weight: 7.5,
+                        isCumulative: false,
+                        isPast: false,
+                        room: 'L-1101',
+                        time: '4:00-5:00 PM',
+                        notes: 'Lighter exam - only 7.5% of grade. Also has attendance component.',
+                        lectures: [
+                            { num: 21, date: '2026-02-23', day: 'Mon', time: '8:00-9:20 AM', topic: 'Prenatal Oral Health', lecturer: 'Dr. Silk', room: 'REMOTE', note: '⚠️ TIME DISCREPANCY: BB says 2:00-3:20 PM in-person, using GCal 8 AM Remote' },
+                            { num: 22, date: '2026-03-02', day: 'Mon', time: '1:00-2:50 PM', topic: 'Behavior Management – Special Needs', lecturer: 'Dr. Bakhtiari', room: 'KEEFER' },
+                            { num: 23, date: '2026-03-09', day: 'Mon', time: '1:00-2:20 PM', topic: 'Autism Friendly Initiative', lecturer: 'BMC', room: 'BAKST' },
+                            { num: 24, date: '2026-03-16', day: 'Mon', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'TBD', room: '670 Aud' },
+                            { num: 25, date: '2026-03-23', day: 'Mon', time: '1:00-2:20 PM', topic: 'Autism Friendly Initiative', lecturer: 'BMC', room: 'BAKST' },
+                            { num: 26, date: '2026-03-30', day: 'Mon', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'TBD', room: '670 Aud' }
+                        ],
+                        slcSessions: [
+                            { date: '2026-03-16', day: 'Mon', time: '4:00-6:20 PM', topic: 'SLC - Wire Bending (AS ONLY)', lecturer: 'Dr. Reboucas', room: 'SLC' },
+                            { date: '2026-03-17', day: 'Tue', time: '4:00-6:20 PM', topic: 'SLC - Wire Bending (DMD ONLY)', lecturer: 'Dr. Reboucas', room: 'SLC' },
+                            { date: '2026-03-23', day: 'Mon', time: '4:00-6:20 PM', topic: 'SLC - Wire Bending (MAKEUP ONLY)', lecturer: 'Dr. Reboucas', room: 'SLC' }
+                        ]
+                    }
+                ]
+            },
+            
+            // ==================== PERIODONTOLOGY 2 (PE530) ====================
+            perio: {
+                courseName: 'Periodontology 2',
+                courseCode: 'PE530',
+                colorClass: 'perio',
+                otherComponents: [
+                    { name: 'Written Assignment', weight: 10, status: 'done' },
+                    { name: 'In-Person Discussion', weight: 5, status: 'pending', note: 'SCHEDULE WITH FLEISHER - 15-20 min, "The longer you wait, the more you need to know"' }
+                ],
+                exams: [
+                    {
+                        id: 'perio-midterm',
+                        name: 'Midterm',
+                        date: '2025-11-18',
+                        weight: 40,
+                        isCumulative: false,
+                        isPast: true,
+                        score: null, // Score unknown
+                        room: 'L-1101',
+                        time: '4:00-5:50 PM',
+                        lectures: [
+                            { num: 1, date: '2025-08-27', day: 'Wed', time: '1:00-2:20 PM', topic: 'Introduction', lecturer: 'Dr. Fleisher', room: 'Bakst Aud' },
+                            { num: 2, date: '2025-09-10', day: 'Wed', time: '1:00-2:20 PM', topic: 'Non-Surgical Therapy Part 1', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 24, 50, 51, 52', note: '📝 POSSIBLE ESSAY TOPIC' },
+                            { num: 3, date: '2025-09-17', day: 'Wed', time: '1:00-2:20 PM', topic: 'Non-Surgical Therapy Part 2', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 54', note: '📝 POSSIBLE ESSAY TOPIC' },
+                            { num: 4, date: '2025-09-24', day: 'Wed', time: '4:00 PM', topic: 'Basic Surgical Technique', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 56, 57, 60, 61', note: '⚠️ Different time (4 PM)' },
+                            { num: 5, date: '2025-10-01', day: 'Wed', time: '1:00-2:20 PM', topic: 'Osseous Resective Therapy/Diagnosis', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 62, Suppl. #3' },
+                            { num: 6, date: '2025-10-08', day: 'Wed', time: '4:00 PM', topic: 'Crown Lengthening', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 66', note: '📝 POSSIBLE ESSAY — Cite Gargiulo 1963: Biologic width = 1.07mm CT + 0.97mm JE = ~2.04mm. ⚠️ Different time (4 PM). Syllabus discrepancy: may be listed as "Osseous Surgery Part 2"' },
+                            { num: 7, date: '2025-10-22', day: 'Wed', time: '1:00-2:20 PM', topic: 'Occlusal Trauma', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 35', note: '📝 POSSIBLE ESSAY — Primary vs secondary trauma, diagnosis' },
+                            { num: 8, date: '2025-10-29', day: 'Wed', time: '2:00-3:30 PM', topic: 'Periodontal Emergencies', lecturer: 'Dr. Fleisher', room: '670 Aud', reading: 'Ch. 244-260, 320-323, 460-469', note: '⚠️ Different time (2:00-3:30 PM)' },
+                            { num: 9, date: '2025-11-05', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBA', lecturer: 'Dr. Fleisher', room: '670 Aud' }
+                        ]
+                    },
+                    {
+                        id: 'perio-final',
+                        name: 'Final',
+                        date: '2026-03-11',
+                        weight: 45,
+                        isCumulative: true,
+                        isPast: false,
+                        room: 'L-1101',
+                        time: '12:00-3:50 PM',
+                        notes: 'Format: MCQ (70%) + Break (~15 min) + 2 Essays (30%, ~45 min each). Blue book, MUST BE LEGIBLE or Fleisher gives 0. Need 1 reference per essay. Answer as numbered list matching question parts.',
+                        essayTopics: [
+                            { topic: 'Crown Lengthening', reference: 'Gargiulo 1963, Journal of Perio', keyPoints: 'Biologic width: 1.07mm CT + 0.97mm JE = ~2.04mm' },
+                            { topic: 'Guided Tissue Regeneration (GTR)', reference: 'Nieman 1981, Journal of Clinical Perio', keyPoints: 'Principles of GTR, membrane use' },
+                            { topic: 'Non-Surgical Therapy', reference: 'TBD', keyPoints: 'Scaling/root planing, outcomes' },
+                            { topic: 'Occlusal Trauma', reference: 'TBD', keyPoints: 'Primary vs secondary, diagnosis' }
+                        ],
+                        reviewContent: [
+                            { num: 1, date: '2025-08-27', day: 'Wed', time: '1:00-2:20 PM', topic: 'Introduction', lecturer: 'Dr. Fleisher', room: 'Bakst Aud' },
+                            { num: 2, date: '2025-09-10', day: 'Wed', time: '1:00-2:20 PM', topic: 'Non-Surgical Therapy Part 1', lecturer: 'Dr. Fleisher', room: '670 Aud', note: '📝 POSSIBLE ESSAY' },
+                            { num: 3, date: '2025-09-17', day: 'Wed', time: '1:00-2:20 PM', topic: 'Non-Surgical Therapy Part 2', lecturer: 'Dr. Fleisher', room: '670 Aud', note: '📝 POSSIBLE ESSAY' },
+                            { num: 4, date: '2025-09-24', day: 'Wed', time: '4:00 PM', topic: 'Basic Surgical Technique', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 5, date: '2025-10-01', day: 'Wed', time: '1:00-2:20 PM', topic: 'Osseous Resective Therapy/Diagnosis', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 6, date: '2025-10-08', day: 'Wed', time: '4:00 PM', topic: 'Crown Lengthening', lecturer: 'Dr. Fleisher', room: '670 Aud', note: '📝 POSSIBLE ESSAY — Cite Gargiulo 1963' },
+                            { num: 7, date: '2025-10-22', day: 'Wed', time: '1:00-2:20 PM', topic: 'Occlusal Trauma', lecturer: 'Dr. Fleisher', room: '670 Aud', note: '📝 POSSIBLE ESSAY' },
+                            { num: 8, date: '2025-10-29', day: 'Wed', time: '2:00-3:30 PM', topic: 'Periodontal Emergencies', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 9, date: '2025-11-05', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBA', lecturer: 'Dr. Fleisher', room: '670 Aud' }
+                        ],
+                        lectures: [
+                            { num: 10, date: '2026-01-07', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 11, date: '2026-01-14', day: 'Wed', time: '1:00-2:20 PM', topic: 'Diagnosis/Prognosis + Essay Preview + Feb 23 Block Announcement', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 12, date: '2026-01-21', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 13, date: '2026-01-28', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 14, date: '2026-02-04', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 15, date: '2026-02-11', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 16, date: '2026-02-18', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 17, date: '2026-02-25', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD', lecturer: 'Dr. Fleisher', room: '670 Aud' },
+                            { num: 18, date: '2026-03-04', day: 'Wed', time: '1:00-2:20 PM', topic: 'TBD (likely Review)', lecturer: 'Dr. Fleisher', room: '670 Aud' }
+                        ],
+                        blockedDates: [
+                            { date: '2026-02-23', day: 'Mon', note: '🚫 SLC BLOCKED — Stroman Implant Session (no patients!)' }
+                        ]
+                    }
+                ]
+            },
+            
+            // ==================== ORTHODONTICS (OR530) ====================
+            ortho: {
+                courseName: 'Orthodontics',
+                courseCode: 'OR530',
+                colorClass: 'ortho',
+                studyTip: '📚 "Old examinations have been released... current year\'s examinations will contain a large number of questions similar to those on old examinations." → USE THE OLD EXAMS on the course website!',
+                optionalInfo: 'Invisalign Certification: 2 modules in school + 1 after graduation. Not graded — professional development only.',
+                exams: [
+                    {
+                        id: 'ortho-midterm',
+                        name: 'Midterm',
+                        date: '2025-10-31',
+                        weight: 50,
+                        isCumulative: false,
+                        isPast: true,
+                        score: null, // Score unknown
+                        room: '670 Aud',
+                        time: '3:00-4:50 PM',
+                        lectures: [
+                            { num: 1, date: '2025-08-29', day: 'Fri', time: '3:00-4:50 PM', topic: 'Introduction / Ideal Occlusion', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 2, date: '2025-09-05', day: 'Fri', time: '3:00-4:50 PM', topic: 'Intraoral/Extraoral Exam', lecturer: 'Ortho Faculty', room: '670 Aud' },
+                            { num: 3, date: '2025-09-12', day: 'Fri', time: '3:00-4:50 PM', topic: 'Panos and Cephalometrics', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 4, date: '2025-10-03', day: 'Fri', time: '3:00-4:50 PM', topic: 'Growth and Development', lecturer: 'Ortho Faculty', room: '670 Aud' },
+                            { num: 5, date: '2025-10-10', day: 'Fri', time: '3:00-4:50 PM', topic: 'Etiology', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 6, date: '2025-10-24', day: 'Fri', time: '3:00-4:50 PM', topic: 'Biomechanics / Bone Biology + Biomechanics – Orthopedics', lecturer: 'Ortho Faculty', room: 'Bakst', note: '⚠️ 2 topics covered in this lecture' }
+                        ]
+                    },
+                    {
+                        id: 'ortho-final',
+                        name: 'Final',
+                        date: '2026-02-06',
+                        weight: 50,
+                        isCumulative: true,
+                        isPast: false,
+                        room: 'L-1101',
+                        time: '12:00-1:50 PM',
+                        notes: '📚 USE OLD EXAMS! "Current year\'s examinations will contain a large number of questions similar to those on old examinations." — Get them from course website!',
+                        reviewContent: [
+                            { num: 1, date: '2025-08-29', day: 'Fri', time: '3:00-4:50 PM', topic: 'Introduction / Ideal Occlusion', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 2, date: '2025-09-05', day: 'Fri', time: '3:00-4:50 PM', topic: 'Intraoral/Extraoral Exam', lecturer: 'Ortho Faculty', room: '670 Aud' },
+                            { num: 3, date: '2025-09-12', day: 'Fri', time: '3:00-4:50 PM', topic: 'Panos and Cephalometrics', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 4, date: '2025-10-03', day: 'Fri', time: '3:00-4:50 PM', topic: 'Growth and Development', lecturer: 'Ortho Faculty', room: '670 Aud' },
+                            { num: 5, date: '2025-10-10', day: 'Fri', time: '3:00-4:50 PM', topic: 'Etiology', lecturer: 'Ortho Faculty', room: 'Bakst' },
+                            { num: 6, date: '2025-10-24', day: 'Fri', time: '3:00-4:50 PM', topic: 'Biomechanics / Bone Biology + Biomechanics – Orthopedics', lecturer: 'Ortho Faculty', room: 'Bakst', note: '⚠️ 2 topics covered in this lecture' }
+                        ],
+                        lectures: [
+                            { num: 7, date: '2025-11-07', day: 'Fri', time: '1:00-2:50 PM', topic: 'Early Treatment', lecturer: 'Ortho Faculty', room: '670 Aud', note: '⚠️ TIME CHANGE: 1 PM (not 3 PM)' },
+                            { num: 8, date: '2025-12-05', day: 'Fri', time: '12:00-1:50 PM', topic: 'Interdisciplinary Ortho', lecturer: 'Ortho Faculty', room: '670 Aud', note: '⚠️ TIME CHANGE: 12 PM (not 3 PM)' },
+                            { num: 9, date: '2026-01-09', day: 'Fri', time: '1:00-2:50 PM', topic: 'Orthognathics', lecturer: 'Ortho Faculty', room: '670 Aud' },
+                            { num: 10, date: '2026-01-23', day: 'Fri', time: '1:00-2:50 PM', topic: 'Invisalign + Retention and Relapse', lecturer: 'Ortho Faculty', room: '670 Aud', note: '⚠️ 2 topics covered in this lecture' }
+                        ]
+                    }
+                ]
+            }
+            // More courses will be added here as we go
         };
 
         // ==================== FIREBASE FUNCTIONS ====================
@@ -2384,6 +3094,7 @@
                             grades: { ...roadmapData.grades, ...(data.grades || {}) },
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                            examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                             lastSaved: data.lastSaved
                         };
                         
@@ -3664,6 +4375,405 @@
             showToast('🗑️ Deadline deleted');
         }
 
+        // ==================== EXAM CONTENT FUNCTIONS ====================
+        
+        function setExamView(view) {
+            examContentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide course filter
+            const courseFilter = document.getElementById('examCourseFilter');
+            if (view === 'course') {
+                courseFilter.style.display = 'block';
+            } else {
+                courseFilter.style.display = 'none';
+            }
+            
+            renderExamContent();
+        }
+        
+        function filterExamsByCourse() {
+            renderExamContent();
+        }
+        
+        function getDaysUntil(dateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const examDate = new Date(dateStr);
+            examDate.setHours(0, 0, 0, 0);
+            const diffTime = examDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+        
+        function formatExamDate(dateStr) {
+            const date = new Date(dateStr + 'T12:00:00');
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        function getExamProgress(examId, lectures, reviewContent) {
+            let total = lectures ? lectures.length : 0;
+            let studied = 0;
+            
+            if (lectures) {
+                lectures.forEach((lec, idx) => {
+                    const key = `${examId}-lec${lec.num}`;
+                    if (roadmapData.examStudyProgress[key]) studied++;
+                });
+            }
+            
+            // For cumulative exams, also count review content
+            let reviewTotal = 0;
+            let reviewStudied = 0;
+            if (reviewContent) {
+                reviewTotal = reviewContent.length;
+                reviewContent.forEach((lec, idx) => {
+                    const key = `${examId}-review-lec${lec.num}`;
+                    if (roadmapData.examStudyProgress[key]) reviewStudied++;
+                });
+            }
+            
+            return {
+                newStudied: studied,
+                newTotal: total,
+                reviewStudied: reviewStudied,
+                reviewTotal: reviewTotal,
+                totalStudied: studied + reviewStudied,
+                totalCount: total + reviewTotal,
+                percent: total + reviewTotal > 0 ? Math.round(((studied + reviewStudied) / (total + reviewTotal)) * 100) : 0
+            };
+        }
+        
+        function toggleLectureStudied(examId, lecNum, isReview) {
+            const key = isReview ? `${examId}-review-lec${lecNum}` : `${examId}-lec${lecNum}`;
+            roadmapData.examStudyProgress[key] = !roadmapData.examStudyProgress[key];
+            saveData();
+            renderExamContent();
+        }
+        
+        function markAllStudied(examId, lectures, isReview, markAs) {
+            lectures.forEach(lec => {
+                const key = isReview ? `${examId}-review-lec${lec.num}` : `${examId}-lec${lec.num}`;
+                roadmapData.examStudyProgress[key] = markAs;
+            });
+            saveData();
+            renderExamContent();
+        }
+        
+        function toggleContentSection(sectionId) {
+            const header = document.getElementById(`section-header-${sectionId}`);
+            const body = document.getElementById(`section-body-${sectionId}`);
+            if (header && body) {
+                header.classList.toggle('collapsed');
+                body.classList.toggle('collapsed');
+            }
+        }
+        
+        function getAllExamsFlat() {
+            const allExams = [];
+            Object.keys(examContentData).forEach(courseKey => {
+                const course = examContentData[courseKey];
+                course.exams.forEach(exam => {
+                    allExams.push({
+                        ...exam,
+                        courseKey: courseKey,
+                        courseName: course.courseName,
+                        courseCode: course.courseCode,
+                        colorClass: course.colorClass,
+                        studyTip: course.studyTip || null
+                    });
+                });
+            });
+            return allExams;
+        }
+        
+        function renderExamContent() {
+            const container = document.getElementById('examContentContainer');
+            if (!container) return;
+            
+            const hidePast = document.getElementById('hidePassedExams')?.checked || false;
+            const courseFilter = document.getElementById('examCourseFilter')?.value || 'all';
+            
+            let allExams = getAllExamsFlat();
+            
+            // Filter by course if in course view
+            if (examContentView === 'course' && courseFilter !== 'all') {
+                allExams = allExams.filter(e => e.courseKey === courseFilter);
+            }
+            
+            // Filter out past exams if checked
+            if (hidePast) {
+                allExams = allExams.filter(e => !e.isPast && getDaysUntil(e.date) >= 0);
+            }
+            
+            // Sort based on view
+            if (examContentView === 'upcoming' || examContentView === 'timeline') {
+                // Sort by date, upcoming first
+                allExams.sort((a, b) => {
+                    const daysA = getDaysUntil(a.date);
+                    const daysB = getDaysUntil(b.date);
+                    // Past exams go to end
+                    if (daysA < 0 && daysB >= 0) return 1;
+                    if (daysB < 0 && daysA >= 0) return -1;
+                    return daysA - daysB;
+                });
+            }
+            
+            if (allExams.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align: center; color: #94a3b8; padding: 40px;">No exams found matching your filters.</p></div>';
+                return;
+            }
+            
+            let html = '';
+            allExams.forEach(exam => {
+                html += renderExamCard(exam);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function renderExamCard(exam) {
+            const daysUntil = getDaysUntil(exam.date);
+            const progress = getExamProgress(exam.id, exam.lectures, exam.reviewContent);
+            const isPast = exam.isPast || daysUntil < 0;
+            
+            // Determine urgency
+            let urgencyClass = '';
+            let daysClass = 'days';
+            if (!isPast) {
+                if (daysUntil <= 7 && progress.percent < 50) {
+                    urgencyClass = 'urgent';
+                    daysClass = 'days urgent';
+                } else if (daysUntil <= 7) {
+                    daysClass = 'days warning';
+                }
+            } else {
+                daysClass = 'days past';
+            }
+            
+            if (isPast && exam.score) {
+                urgencyClass = 'completed';
+            }
+            
+            let html = `
+                <div class="exam-card ${urgencyClass}">
+                    <div class="exam-card-header ${exam.colorClass}">
+                        <div class="exam-card-title">
+                            <div>
+                                <h3>${exam.courseName}</h3>
+                                <div style="color: #94a3b8; font-size: 0.9em; margin-top: 4px;">
+                                    ${exam.name} • ${formatExamDate(exam.date)}${exam.time ? ` • ${exam.time}` : ''}${exam.room ? ` • ${exam.room}` : ''}
+                                </div>
+                            </div>
+                            <div class="exam-badges">
+                                ${exam.isCumulative ? '<span class="exam-badge cumulative">📚 Cumulative</span>' : ''}
+                                <span class="exam-badge weight">${exam.weight}%</span>
+                                <span class="exam-badge ${daysClass}">
+                                    ${isPast ? (exam.score ? `Scored: ${exam.score}%` : 'Past') : `${daysUntil} days`}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        ${!isPast ? `
+                        <div class="exam-progress">
+                            <div class="exam-progress-bar">
+                                <div class="exam-progress-fill ${progress.percent >= 80 ? 'good' : ''}" style="width: ${progress.percent}%"></div>
+                            </div>
+                            <div class="exam-progress-text">
+                                <span>${progress.totalStudied} of ${progress.totalCount} topics studied</span>
+                                <span>${progress.percent}% complete</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${exam.studyTip ? `<div style="margin-top: 12px; padding: 10px 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; font-size: 0.85em; color: #6ee7b7;">${exam.studyTip}</div>` : ''}
+                        ${exam.notes ? `<div style="margin-top: 12px; padding: 10px 12px; background: rgba(220, 38, 38, 0.15); border-radius: 6px; font-size: 0.85em; color: #fca5a5;">⚠️ ${exam.notes}</div>` : ''}
+                    </div>
+                    
+                    <div class="exam-card-body">
+            `;
+            
+            // Render review content section for cumulative exams
+            if (exam.isCumulative && exam.reviewContent && exam.reviewContent.length > 0) {
+                const reviewProgress = getExamProgress(exam.id, null, exam.reviewContent);
+                html += `
+                    <div class="content-section">
+                        <div class="content-section-header" id="section-header-${exam.id}-review" onclick="toggleContentSection('${exam.id}-review')">
+                            <h4>
+                                <span class="toggle-icon">▼</span>
+                                📚 Review Content (from previous exam) 
+                                <span style="color: #6b7280; font-weight: 400;">(${reviewProgress.reviewStudied}/${reviewProgress.reviewTotal})</span>
+                            </h4>
+                        </div>
+                        <div class="content-section-body" id="section-body-${exam.id}-review">
+                            <div class="bulk-actions">
+                                <button class="bulk-btn" onclick="markAllStudied('${exam.id}', examContentData['${exam.courseKey}'].exams.find(e => e.id === '${exam.id}').reviewContent, true, true)">✓ Mark all reviewed</button>
+                                <button class="bulk-btn" onclick="markAllStudied('${exam.id}', examContentData['${exam.courseKey}'].exams.find(e => e.id === '${exam.id}').reviewContent, true, false)">✗ Clear all</button>
+                            </div>
+                            ${renderLectureList(exam.id, exam.reviewContent, true)}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render new content section
+            if (exam.lectures && exam.lectures.length > 0) {
+                const sectionTitle = exam.isCumulative ? '🆕 New Content for this Exam' : `📖 Content for ${exam.name}`;
+                html += `
+                    <div class="content-section">
+                        <div class="content-section-header" id="section-header-${exam.id}-new" onclick="toggleContentSection('${exam.id}-new')">
+                            <h4>
+                                <span class="toggle-icon">▼</span>
+                                ${sectionTitle}
+                                <span style="color: #6b7280; font-weight: 400;">(${progress.newStudied}/${progress.newTotal})</span>
+                            </h4>
+                        </div>
+                        <div class="content-section-body" id="section-body-${exam.id}-new">
+                            <div class="bulk-actions">
+                                <button class="bulk-btn" onclick="markAllStudied('${exam.id}', examContentData['${exam.courseKey}'].exams.find(e => e.id === '${exam.id}').lectures, false, true)">✓ Mark all studied</button>
+                                <button class="bulk-btn" onclick="markAllStudied('${exam.id}', examContentData['${exam.courseKey}'].exams.find(e => e.id === '${exam.id}').lectures, false, false)">✗ Clear all</button>
+                            </div>
+                            ${renderLectureList(exam.id, exam.lectures, false)}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render SLC sessions if any
+            if (exam.slcSessions && exam.slcSessions.length > 0) {
+                html += `
+                    <div class="content-section">
+                        <div class="content-section-header" id="section-header-${exam.id}-slc" onclick="toggleContentSection('${exam.id}-slc')">
+                            <h4>
+                                <span class="toggle-icon">▼</span>
+                                🔧 SLC Sessions (Wire Bending)
+                            </h4>
+                        </div>
+                        <div class="content-section-body" id="section-body-${exam.id}-slc">
+                            ${exam.slcSessions.map(slc => `
+                                <div class="lecture-row">
+                                    <div class="lecture-info">
+                                        <div class="lecture-meta">
+                                            <span>📅 ${formatExamDate(slc.date)}</span>
+                                            <span>🕐 ${slc.time}</span>
+                                            <span>📍 ${slc.room}</span>
+                                        </div>
+                                        <div class="lecture-topic">${slc.topic}</div>
+                                        <div class="lecture-lecturer">👤 ${slc.lecturer}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render Essay Topics if any (for Perio, etc.)
+            if (exam.essayTopics && exam.essayTopics.length > 0) {
+                html += `
+                    <div class="content-section">
+                        <div class="content-section-header" id="section-header-${exam.id}-essays" onclick="toggleContentSection('${exam.id}-essays')">
+                            <h4>
+                                <span class="toggle-icon">▼</span>
+                                ✍️ Essay Topics (Fleisher picks 2)
+                            </h4>
+                        </div>
+                        <div class="content-section-body" id="section-body-${exam.id}-essays">
+                            ${exam.essayTopics.map((essay, idx) => `
+                                <div class="lecture-row" style="border-left: 3px solid #8b5cf6;">
+                                    <div class="lecture-info">
+                                        <div class="lecture-topic" style="font-weight: 600; color: #a78bfa;">${idx + 1}. ${essay.topic}</div>
+                                        <div style="margin-top: 8px; font-size: 0.85em;">
+                                            <span style="color: #fbbf24;">📖 Reference:</span> 
+                                            <span style="color: #fcd34d;">${essay.reference}</span>
+                                        </div>
+                                        <div style="margin-top: 4px; font-size: 0.85em;">
+                                            <span style="color: #60a5fa;">🔑 Key Points:</span> 
+                                            <span style="color: #93c5fd;">${essay.keyPoints}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            <div style="margin-top: 10px; padding: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; font-size: 0.85em; color: #a78bfa;">
+                                💡 <strong>Essay Tips:</strong> ~45 min per essay. Must be LEGIBLE (or 0!). Blue book format. Answer as numbered list (1, 2, 3...) matching question parts. Need 1 reference per essay.
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render Blocked Dates if any
+            if (exam.blockedDates && exam.blockedDates.length > 0) {
+                html += `
+                    <div class="content-section">
+                        <div class="content-section-header" id="section-header-${exam.id}-blocked" onclick="toggleContentSection('${exam.id}-blocked')" style="background: rgba(220, 38, 38, 0.15);">
+                            <h4>
+                                <span class="toggle-icon">▼</span>
+                                🚫 Blocked Dates
+                            </h4>
+                        </div>
+                        <div class="content-section-body" id="section-body-${exam.id}-blocked">
+                            ${exam.blockedDates.map(blocked => `
+                                <div class="lecture-row" style="border-left: 3px solid #ef4444; background: rgba(220, 38, 38, 0.1);">
+                                    <div class="lecture-info">
+                                        <div class="lecture-meta">
+                                            <span>📅 ${formatExamDate(blocked.date)} (${blocked.day})</span>
+                                        </div>
+                                        <div class="lecture-topic" style="color: #fca5a5;">${blocked.note}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        function renderLectureList(examId, lectures, isReview) {
+            if (!lectures || lectures.length === 0) return '<p style="color: #6b7280; padding: 10px;">No lectures listed.</p>';
+            
+            return lectures.map(lec => {
+                const key = isReview ? `${examId}-review-lec${lec.num}` : `${examId}-lec${lec.num}`;
+                const isStudied = roadmapData.examStudyProgress[key] || false;
+                
+                return `
+                    <div class="lecture-row ${isStudied ? 'studied' : ''}">
+                        <input type="checkbox" class="lecture-checkbox" 
+                            ${isStudied ? 'checked' : ''} 
+                            onchange="toggleLectureStudied('${examId}', ${lec.num}, ${isReview})">
+                        <div class="lecture-info">
+                            <div class="lecture-meta">
+                                <span>📖 Lec ${lec.num}</span>
+                                <span>📅 ${formatExamDate(lec.date)} (${lec.day})</span>
+                                <span>🕐 ${lec.time}</span>
+                                <span>📍 ${lec.room}</span>
+                            </div>
+                            <div class="lecture-topic">
+                                ${lec.topic}
+                                ${lec.mandatory ? '<span class="mandatory-badge">⚠️ MANDATORY</span>' : ''}
+                            </div>
+                            <div class="lecture-lecturer">👤 ${lec.lecturer}</div>
+                            ${lec.reading ? `<div style="font-size: 0.8em; color: #60a5fa; margin-top: 4px;">📚 Reading: ${lec.reading}</div>` : ''}
+                            ${lec.mandatoryNote ? `<div class="lecture-notes">${lec.mandatoryNote}</div>` : ''}
+                            ${lec.note ? `<div class="lecture-notes">${lec.note}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // ==================== INITIALIZE ====================
         function initUI() {
             console.log('initUI called, roadmapData:', roadmapData);
@@ -3738,6 +4848,7 @@
             try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }
             try { loadCourseGrades(); } catch(e) { console.error('loadCourseGrades error:', e); }
             try { renderExamCountdown(); } catch(e) { console.error('renderExamCountdown error:', e); }
+            try { renderExamContent(); } catch(e) { console.error('renderExamContent error:', e); }
             
             console.log('initUI complete');
         }
