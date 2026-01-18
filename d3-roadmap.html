@@ -2212,6 +2212,132 @@
             color: #e2e8f0;
         }
 
+        /* Add Task Modal */
+        .mp-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .mp-modal {
+            background: #1e293b;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+
+        .mp-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mp-modal-header h3 {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 1.2em;
+        }
+
+        .mp-modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .mp-modal-close:hover {
+            color: #e2e8f0;
+        }
+
+        .mp-modal-body {
+            padding: 20px;
+        }
+
+        .mp-modal-field {
+            margin-bottom: 16px;
+        }
+
+        .mp-modal-field label {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        .mp-modal-field input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        .mp-modal-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .mp-modal-field input[type="date"] {
+            cursor: pointer;
+        }
+
+        .mp-modal-field input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+            cursor: pointer;
+        }
+
+        .mp-modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .mp-modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            border: none;
+        }
+
+        .mp-modal-btn.cancel {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .mp-modal-btn.cancel:hover {
+            background: #475569;
+        }
+
+        .mp-modal-btn.submit {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+        }
+
+        .mp-modal-btn.submit:hover {
+            opacity: 0.9;
+        }
+
         .mp-table {
             width: 100%;
             border-collapse: collapse;
@@ -4318,6 +4444,34 @@
                         <li><strong style="color: #60a5fa;">Maseli meeting</strong> needed before Feb 6 clinic</li>
                     </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="mpAddTaskModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal">
+            <div class="mp-modal-header">
+                <h3>➕ Add Task to <span id="mpModalWeekTitle">Week</span></h3>
+                <button class="mp-modal-close" onclick="mpCloseModal()">✕</button>
+            </div>
+            <div class="mp-modal-body">
+                <div class="mp-modal-field">
+                    <label>Task/Item Name *</label>
+                    <input type="text" id="mpModalItem" placeholder="e.g., Study Peds lectures 16-20">
+                </div>
+                <div class="mp-modal-field">
+                    <label>Date *</label>
+                    <input type="date" id="mpModalDate" min="2026-01-18" max="2026-02-28">
+                </div>
+                <div class="mp-modal-field">
+                    <label>Notes (optional)</label>
+                    <input type="text" id="mpModalNotes" placeholder="e.g., Focus on pharmacology section">
+                </div>
+            </div>
+            <div class="mp-modal-footer">
+                <button class="mp-modal-btn cancel" onclick="mpCloseModal()">Cancel</button>
+                <button class="mp-modal-btn submit" onclick="mpSubmitTask()">Add Task</button>
             </div>
         </div>
     </div>
@@ -7984,32 +8138,63 @@
             5: { start: '2026-02-12', end: '2026-02-18' }
         };
         
+        let mpCurrentWeek = null; // Track which week we're adding to
+        
         function mpAddTaskToWeek(weekNum) {
-            const item = prompt('Enter task/item name:');
-            if (!item || !item.trim()) return;
+            mpCurrentWeek = weekNum;
             
-            const dateStr = prompt('Enter date (e.g., Jan 25, Feb 3):');
-            if (!dateStr || !dateStr.trim()) {
+            // Update modal title
+            document.getElementById('mpModalWeekTitle').textContent = `Week ${weekNum}`;
+            
+            // Set default date based on week
+            const weekRange = weekDateRanges[weekNum];
+            const dateInput = document.getElementById('mpModalDate');
+            dateInput.value = weekRange.start;
+            dateInput.min = weekRange.start;
+            dateInput.max = weekRange.end;
+            
+            // Clear other fields
+            document.getElementById('mpModalItem').value = '';
+            document.getElementById('mpModalNotes').value = '';
+            
+            // Show modal
+            document.getElementById('mpAddTaskModal').style.display = 'flex';
+            
+            // Focus on item input
+            setTimeout(() => {
+                document.getElementById('mpModalItem').focus();
+            }, 100);
+        }
+        
+        function mpCloseModal() {
+            document.getElementById('mpAddTaskModal').style.display = 'none';
+            mpCurrentWeek = null;
+        }
+        
+        function mpSubmitTask() {
+            const item = document.getElementById('mpModalItem').value.trim();
+            const dateValue = document.getElementById('mpModalDate').value;
+            const notes = document.getElementById('mpModalNotes').value.trim();
+            
+            // Validate
+            if (!item) {
+                alert('Task name is required');
+                document.getElementById('mpModalItem').focus();
+                return;
+            }
+            
+            if (!dateValue) {
                 alert('Date is required');
+                document.getElementById('mpModalDate').focus();
                 return;
             }
-            
-            // Parse the date
-            const parsedDate = mpParseDate(dateStr.trim());
-            if (!parsedDate) {
-                alert('Could not parse date. Use format like "Jan 25" or "Feb 3"');
-                return;
-            }
-            
-            const notes = prompt('Enter notes (optional):') || '';
             
             const newTask = {
                 id: Date.now(),
-                week: weekNum,
-                item: item.trim(),
-                date: parsedDate, // ISO format: 2026-01-25
-                dateDisplay: dateStr.trim(),
-                notes: notes.trim(),
+                week: mpCurrentWeek,
+                item: item,
+                date: dateValue, // Already in YYYY-MM-DD format from date input
+                notes: notes,
                 createdAt: new Date().toISOString()
             };
             
@@ -8019,40 +8204,24 @@
             
             roadmapData.monthlyPlanner.customTasks.push(newTask);
             saveRoadmapData();
-            mpRenderWeekTasks(weekNum);
+            mpRenderWeekTasks(mpCurrentWeek);
+            mpCloseModal();
             showToast('Task added!');
         }
         
-        function mpParseDate(dateStr) {
-            // Parse dates like "Jan 25", "Feb 3", "January 25"
-            const months = {
-                'jan': '01', 'january': '01',
-                'feb': '02', 'february': '02',
-                'mar': '03', 'march': '03',
-                'apr': '04', 'april': '04',
-                'may': '05',
-                'jun': '06', 'june': '06',
-                'jul': '07', 'july': '07',
-                'aug': '08', 'august': '08',
-                'sep': '09', 'sept': '09', 'september': '09',
-                'oct': '10', 'october': '10',
-                'nov': '11', 'november': '11',
-                'dec': '12', 'december': '12'
-            };
-            
-            const match = dateStr.toLowerCase().match(/([a-z]+)\s*(\d{1,2})/);
-            if (!match) return null;
-            
-            const monthStr = match[1];
-            const day = match[2].padStart(2, '0');
-            const month = months[monthStr];
-            
-            if (!month) return null;
-            
-            // Assume 2026 for Jan/Feb, adjust if needed
-            const year = '2026';
-            return `${year}-${month}-${day}`;
-        }
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('mpAddTaskModal').style.display === 'flex') {
+                mpCloseModal();
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('mpAddTaskModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                mpCloseModal();
+            }
+        });
         
         function mpRenderWeekTasks(weekNum) {
             const tbody = document.getElementById(`mpWeek${weekNum}Body`);
