@@ -8459,6 +8459,21 @@
                 roadmapData.monthlyPlanner.completedTasks = [];
             }
             
+            // DATA INTEGRITY CHECK: Ensure all converted tasks have their static sources in overriddenStatic
+            let needsSave = false;
+            roadmapData.monthlyPlanner.customTasks.forEach(task => {
+                if (task.convertedFrom && !roadmapData.monthlyPlanner.overriddenStatic.includes(task.convertedFrom)) {
+                    console.log('Fixing missing overriddenStatic entry:', task.convertedFrom);
+                    roadmapData.monthlyPlanner.overriddenStatic.push(task.convertedFrom);
+                    needsSave = true;
+                }
+            });
+            
+            if (needsSave) {
+                console.log('Saving fixed data integrity issues');
+                saveData();
+            }
+            
             mpRenderAllCalendars();
             mpRenderNotes();
             mpUpdateStats();
@@ -8709,19 +8724,29 @@
             // Combine static and custom tasks for this week
             const allTasks = [];
             const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
+            const customTasks = roadmapData.monthlyPlanner?.customTasks || [];
             
-            // Add static tasks (if not overridden)
+            // Build a set of all static IDs that have been converted to custom tasks
+            // This catches cases where overriddenStatic wasn't updated properly
+            const convertedStaticIds = new Set(overridden);
+            customTasks.forEach(ct => {
+                if (ct.convertedFrom) {
+                    convertedStaticIds.add(ct.convertedFrom);
+                }
+            });
+            
+            // Add static tasks (if not overridden/converted)
             MP_STATIC_TASKS.forEach(task => {
                 if (task.date >= week.start && task.date <= week.end) {
                     const staticId = `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}`;
-                    if (!overridden.includes(staticId)) {
+                    if (!convertedStaticIds.has(staticId)) {
                         allTasks.push({ ...task, isStatic: true, id: staticId });
                     }
                 }
             });
             
-            // Add custom tasks
-            (roadmapData.monthlyPlanner?.customTasks || []).forEach(task => {
+            // Add custom tasks for this week
+            customTasks.forEach(task => {
                 if (task.date >= week.start && task.date <= week.end) {
                     allTasks.push({ ...task, isStatic: false });
                 }
@@ -9112,17 +9137,26 @@
             const today = new Date().toISOString().split('T')[0];
             let allTasks = [];
             const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
+            const customTasks = roadmapData.monthlyPlanner?.customTasks || [];
+            
+            // Build a set of all static IDs that have been converted to custom tasks
+            const convertedStaticIds = new Set(overridden);
+            customTasks.forEach(ct => {
+                if (ct.convertedFrom) {
+                    convertedStaticIds.add(ct.convertedFrom);
+                }
+            });
             
             // Add non-overridden static tasks
             MP_STATIC_TASKS.forEach(task => {
                 const staticId = `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}`;
-                if (!overridden.includes(staticId) && task.date >= today) {
+                if (!convertedStaticIds.has(staticId) && task.date >= today) {
                     allTasks.push(task);
                 }
             });
             
             // Add custom tasks (future only)
-            (roadmapData.monthlyPlanner?.customTasks || []).forEach(task => {
+            customTasks.forEach(task => {
                 if (task.date >= today) {
                     allTasks.push(task);
                 }
