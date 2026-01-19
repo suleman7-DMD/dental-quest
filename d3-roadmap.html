@@ -2142,6 +2142,7 @@
         .mp-week-card {
             margin-bottom: 20px;
             overflow: hidden;
+            border-radius: 12px;
         }
 
         .mp-week-header {
@@ -2149,7 +2150,31 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: -20px -20px 15px -20px;
+            margin: -20px -20px 0 -20px;
+            cursor: pointer;
+            user-select: none;
+            transition: filter 0.2s;
+        }
+        
+        .mp-week-header:hover {
+            filter: brightness(1.1);
+        }
+        
+        .mp-week-header.current-week {
+            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+        
+        .mp-week-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mp-week-collapse-icon {
+            font-size: 0.8em;
+            opacity: 0.8;
+            width: 16px;
+            color: white;
         }
 
         .mp-week-title {
@@ -2157,16 +2182,43 @@
             font-weight: 700;
             font-size: 1.1em;
         }
+        
+        .mp-exam-badge {
+            background: rgba(255, 255, 255, 0.9);
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 700;
+            animation: pulse-badge 2s infinite;
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
 
         .mp-week-days {
             color: rgba(255,255,255,0.8);
             font-size: 0.9em;
+        }
+        
+        .mp-week-task-count {
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.85);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 8px;
         }
 
         .mp-week-header-right {
             display: flex;
             align-items: center;
             gap: 12px;
+        }
+        
+        .mp-week-content {
+            padding: 15px 0 0 0;
         }
 
         .mp-add-week-btn {
@@ -2184,6 +2236,46 @@
         .mp-add-week-btn:hover {
             background: white;
             transform: scale(1.05);
+        }
+        
+        /* Toolbar for week controls */
+        .mp-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .mp-toolbar-btn {
+            padding: 8px 14px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .mp-toolbar-btn:hover {
+            background: #475569;
+        }
+        
+        .mp-toolbar-btn.primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        .mp-toolbar-btn.primary:hover {
+            background: #2563eb;
+        }
+        
+        .mp-toolbar-spacer {
+            flex: 1;
         }
 
         .mp-delete-btn {
@@ -2210,6 +2302,408 @@
         .mp-type.other {
             background: #475569;
             color: #e2e8f0;
+        }
+
+        /* ========== CALENDAR VIEW STYLES ========== */
+        .mp-calendar-wrapper {
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .mp-cal-header-row {
+            display: grid;
+            grid-template-columns: 50px repeat(7, 1fr);
+            background: #1e293b;
+            border-bottom: 2px solid #334155;
+        }
+
+        .mp-cal-corner {
+            padding: 8px;
+            border-right: 1px solid #334155;
+        }
+
+        .mp-cal-day-header {
+            padding: 8px 4px;
+            text-align: center;
+            border-right: 1px solid #334155;
+        }
+
+        .mp-cal-day-header:last-child {
+            border-right: none;
+        }
+
+        .mp-cal-day-header.past {
+            opacity: 0.4;
+        }
+
+        .mp-cal-day-header.today {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .mp-cal-day-name {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .mp-cal-day-date {
+            font-size: 1em;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .mp-cal-day-header.today .mp-cal-day-date {
+            color: #3b82f6;
+        }
+
+        .mp-cal-body {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .mp-cal-grid {
+            display: grid;
+            grid-template-columns: 50px repeat(7, 1fr);
+        }
+
+        .mp-cal-time-column {
+            border-right: 1px solid #1e293b;
+        }
+
+        .mp-cal-time-label {
+            padding: 2px 6px;
+            font-size: 0.65em;
+            color: #64748b;
+            text-align: right;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        .mp-cal-day-column {
+            position: relative;
+            border-right: 1px solid #1e293b;
+        }
+
+        .mp-cal-day-column:last-child {
+            border-right: none;
+        }
+
+        .mp-cal-day-column.past {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .mp-cal-cell {
+            border-bottom: 1px solid #1e293b;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .mp-cal-cell:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Task blocks - absolutely positioned within day column */
+        .mp-cal-task {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.72em;
+            cursor: pointer;
+            border-left: 3px solid;
+            transition: transform 0.1s, box-shadow 0.1s;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .mp-cal-task:hover {
+            transform: translateX(2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 10;
+            overflow: visible;
+        }
+
+        .mp-cal-task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+            gap: 4px;
+        }
+        
+        .mp-cal-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .mp-cal-checkbox {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #22c55e;
+            margin: 0;
+        }
+        
+        .mp-task-completed {
+            opacity: 0.6;
+        }
+        
+        .mp-task-completed::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: currentColor;
+            opacity: 0.4;
+        }
+
+        .mp-cal-task-name {
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .mp-cal-task-time {
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .mp-cal-task-notes {
+            font-size: 0.85em;
+            opacity: 0.75;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+
+        .mp-cal-task-type {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: 600;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* Task type colors */
+        .mp-cal-task.clinic {
+            background: rgba(14, 165, 233, 0.25);
+            border-color: #0ea5e9;
+            color: #7dd3fc;
+        }
+        .mp-cal-task.exam {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+        .mp-cal-task.academic {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: #a855f7;
+            color: #d8b4fe;
+        }
+        .mp-cal-task.life {
+            background: rgba(34, 197, 94, 0.25);
+            border-color: #22c55e;
+            color: #86efac;
+        }
+        .mp-cal-task.mandatory {
+            background: rgba(249, 115, 22, 0.3);
+            border-color: #f97316;
+            color: #fdba74;
+        }
+        .mp-cal-task.other {
+            background: rgba(100, 116, 139, 0.25);
+            border-color: #64748b;
+            color: #cbd5e1;
+        }
+
+        /* Task block header with type and edit button */
+        .mp-cal-task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        /* Edit button on calendar task blocks */
+        .mp-cal-edit-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 5px;
+            cursor: pointer;
+            font-size: 0.75em;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        .mp-cal-task:hover .mp-cal-edit-btn {
+            opacity: 1;
+        }
+
+        .mp-cal-edit-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Edit button in table rows */
+        .mp-edit-btn {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+
+        .mp-edit-btn:hover {
+            background: rgba(99, 102, 241, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Untimed tasks section */
+        .mp-untimed-section {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .mp-untimed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .mp-untimed-title {
+            font-weight: 600;
+            color: #94a3b8;
+            font-size: 0.85em;
+        }
+
+        .mp-untimed-count {
+            background: #334155;
+            color: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+        }
+
+        .mp-untimed-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        .mp-untimed-table th {
+            text-align: left;
+            padding: 6px 8px;
+            background: #0f172a;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+
+        .mp-untimed-table td {
+            padding: 8px;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0;
+            vertical-align: top;
+        }
+
+        .mp-untimed-table tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .mp-untimed-table tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .mp-untimed-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .mp-task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #22c55e;
+        }
+        
+        .mp-completed-row {
+            background: rgba(34, 197, 94, 0.08) !important;
+        }
+        
+        .mp-completed-row:hover {
+            background: rgba(34, 197, 94, 0.12) !important;
+        }
+        
+        .mp-completed-text {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .mp-untimed-empty {
+            text-align: center;
+            padding: 15px;
+            color: #64748b;
+            font-size: 0.85em;
+        }
+
+        /* Modal enhancements for time field */
+        .mp-modal-field select {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .mp-modal-field select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .mp-modal-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .mp-modal-field.type-field select {
+            padding: 12px;
+        }
+
+        .mp-modal-delete-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+        }
+
+        .mp-modal-btn.delete {
+            background: #7f1d1d;
+            color: #fca5a5;
+            width: 100%;
+        }
+
+        .mp-modal-btn.delete:hover {
+            background: #991b1b;
         }
 
         /* Add Task Modal */
@@ -2368,9 +2862,10 @@
             display: inline-block;
             padding: 3px 8px;
             border-radius: 4px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .mp-type.clinic {
@@ -2396,6 +2891,11 @@
         .mp-type.mandatory {
             background: #d97706;
             color: #fef3c7;
+        }
+
+        .mp-type.other {
+            background: #475569;
+            color: #e2e8f0;
         }
 
         .mp-warning-row {
@@ -2484,29 +2984,34 @@
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
-            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
 
         .mp-note-item:hover {
             border-color: #475569;
+            background: #1e293b;
+        }
+
+        .mp-note-content {
+            flex: 1;
+            min-width: 0;
         }
 
         .mp-note-text {
             color: #e2e8f0;
             font-size: 0.9em;
             line-height: 1.5;
-            padding-right: 60px;
             white-space: pre-wrap;
             word-break: break-word;
         }
 
         .mp-note-actions {
-            position: absolute;
-            top: 8px;
-            right: 8px;
             display: flex;
+            flex-direction: column;
             gap: 5px;
-            opacity: 0;
+            opacity: 0.5;
             transition: opacity 0.2s;
         }
 
@@ -2515,14 +3020,17 @@
         }
 
         .mp-note-action-btn {
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border: none;
             border-radius: 4px;
             background: #334155;
             color: #94a3b8;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .mp-note-action-btn:hover {
@@ -2537,8 +3045,8 @@
 
         .mp-note-timestamp {
             color: #64748b;
-            font-size: 0.75em;
-            margin-top: 8px;
+            font-size: 0.7em;
+            margin-top: 6px;
         }
 
         .mp-no-notes {
@@ -2550,14 +3058,56 @@
 
         .mp-note-edit-input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             background: #1e293b;
             border: 2px solid #667eea;
             border-radius: 6px;
             color: #e2e8f0;
             font-size: 0.9em;
-            resize: none;
+            resize: vertical;
+            min-height: 60px;
             font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .mp-note-edit-input:focus {
+            outline: none;
+            border-color: #818cf8;
+        }
+
+        .mp-note-edit-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .mp-note-save-btn {
+            padding: 6px 14px;
+            background: #22c55e;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .mp-note-save-btn:hover {
+            background: #16a34a;
+        }
+
+        .mp-note-cancel-btn {
+            padding: 6px 14px;
+            background: #475569;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .mp-note-cancel-btn:hover {
+            background: #64748b;
         }
 
         /* Quick Stats */
@@ -4015,382 +4565,28 @@
         <!-- Header -->
         <div class="card" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; margin-bottom: 20px;">
             <h2 style="color: white; margin: 0 0 5px 0; font-size: 1.8em;">🗓️ COMPLETE BATTLE MAP</h2>
-            <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 1em;">Updated Jan 18 — The next 5 weeks of critical deadlines</p>
+            <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 1em;">5-Week Calendar View — Click on time slots to add tasks</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 20px;">
-            <!-- Left Column: Battle Map -->
-            <div class="mp-main-column">
-                <!-- WEEK 1 -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                        <span class="mp-week-title">WEEK 1: Jan 18-22</span>
-                        <div class="mp-week-header-right">
-                            <span class="mp-week-days">4 days</span>
-                            <button onclick="mpAddTaskToWeek(1)" class="mp-add-week-btn">+ Add</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Date</th>
-                                    <th style="width: 70px;">Time</th>
-                                    <th>Item</th>
-                                    <th style="width: 90px;">Type</th>
-                                    <th style="width: 100px;">Notes</th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mpWeek1Body">
-                                <tr data-date="2026-01-22" data-static="true">
-                                    <td><strong>Jan 22</strong></td>
-                                    <td>8:30AM</td>
-                                    <td>Periodic oral exam (9E)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-01-22" data-static="true">
-                                    <td><strong>Jan 22</strong></td>
-                                    <td>11:59PM</td>
-                                    <td>Quiz 2</td>
-                                    <td><span class="mp-type academic">Oral Med</span></td>
-                                    <td>2.5%</td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-01-22" data-static="true">
-                                    <td><strong>Jan 22</strong></td>
-                                    <td>—</td>
-                                    <td>Rx #1 due (print, both names)</td>
-                                    <td><span class="mp-type academic">PC2</span></td>
-                                    <td>2%</td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 20px;">
+            <!-- Left Column: Week Calendars -->
+            <div>
+                <!-- Toolbar -->
+                <div class="mp-toolbar">
+                    <button onclick="mpJumpToCurrentWeek()" class="mp-toolbar-btn primary">📍 This Week</button>
+                    <button onclick="mpExpandAllWeeks()" class="mp-toolbar-btn">⬇️ Expand All</button>
+                    <button onclick="mpCollapseAllWeeks()" class="mp-toolbar-btn">⬆️ Collapse All</button>
+                    <div class="mp-toolbar-spacer"></div>
+                    <span style="color: #64748b; font-size: 0.85em;">Click week headers to expand/collapse</span>
                 </div>
-
-                <!-- WEEK 2 -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                        <span class="mp-week-title">WEEK 2: Jan 23-29</span>
-                        <div class="mp-week-header-right">
-                            <span class="mp-week-days">5-11 days out</span>
-                            <button onclick="mpAddTaskToWeek(2)" class="mp-add-week-btn">+ Add</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Date</th>
-                                    <th style="width: 70px;">Time</th>
-                                    <th>Item</th>
-                                    <th style="width: 90px;">Type</th>
-                                    <th style="width: 100px;">Notes</th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mpWeek2Body">
-                                <tr data-date="2026-01-24" data-static="true">
-                                    <td><strong>Jan 24</strong></td>
-                                    <td>8:30AM</td>
-                                    <td>Composite 2-surf posterior (9F)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-warning-row" data-date="2026-01-24" data-static="true">
-                                    <td><strong>Jan 24</strong></td>
-                                    <td>12:30PM</td>
-                                    <td>Upper + Lower denture try-in (9F)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td>⚠️ NEEDS PREP</td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-01-26" data-static="true">
-                                    <td><strong>Jan 26</strong></td>
-                                    <td>12:30PM</td>
-                                    <td>Semi-precision replacement (9E)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-01-29" data-static="true">
-                                    <td><strong>Jan 29</strong></td>
-                                    <td>—</td>
-                                    <td>Take Home Exam 1 (PAIRS)</td>
-                                    <td><span class="mp-type academic">PC2</span></td>
-                                    <td>12%</td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-01-29" data-static="true">
-                                    <td><strong>Jan 29</strong></td>
-                                    <td>evening</td>
-                                    <td>Quiz 2 (1hr, open)</td>
-                                    <td><span class="mp-type academic">Crit Think</span></td>
-                                    <td>20%</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-mandatory-row" data-date="2026-01-29" data-static="true">
-                                    <td><strong>Jan 29</strong></td>
-                                    <td>—</td>
-                                    <td>Acute Dental Pain module + print</td>
-                                    <td><span class="mp-type mandatory">PC2</span></td>
-                                    <td>MANDATORY</td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- WEEK 3 -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
-                        <span class="mp-week-title">⚠️ WEEK 3: Jan 30 - Feb 6</span>
-                        <div class="mp-week-header-right">
-                            <span class="mp-week-days">12-19 days out</span>
-                            <button onclick="mpAddTaskToWeek(3)" class="mp-add-week-btn">+ Add</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Date</th>
-                                    <th style="width: 70px;">Time</th>
-                                    <th>Item</th>
-                                    <th style="width: 90px;">Type</th>
-                                    <th style="width: 100px;">Notes</th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mpWeek3Body">
-                                <tr class="mp-exam-row" data-date="2026-02-02" data-static="true">
-                                    <td><strong>Feb 2</strong></td>
-                                    <td>4PM</td>
-                                    <td>🔴 <strong>PC2 MIDTERM</strong></td>
-                                    <td><span class="mp-type exam">PC2</span></td>
-                                    <td style="color: #f87171;">30% - HAVEN'T STARTED</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-life-row" data-date="2026-02-03" data-static="true">
-                                    <td><strong>Feb 3</strong></td>
-                                    <td>10:45AM</td>
-                                    <td>💊 Psych apt → meds sent</td>
-                                    <td><span class="mp-type life">LIFE</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-02-03" data-static="true">
-                                    <td><strong>Feb 3</strong></td>
-                                    <td>12:30PM</td>
-                                    <td>Limited oral eval (9J)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-life-row" data-date="2026-02-05" data-static="true">
-                                    <td><strong>Feb 5</strong></td>
-                                    <td>—</td>
-                                    <td>💊 Insurance covers meds</td>
-                                    <td><span class="mp-type life">LIFE</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-02-05" data-static="true">
-                                    <td><strong>Feb 5</strong></td>
-                                    <td>11:59PM</td>
-                                    <td>Quiz 3</td>
-                                    <td><span class="mp-type academic">Oral Med</span></td>
-                                    <td>2.5%</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-mandatory-row" data-date="2026-02-05" data-static="true">
-                                    <td><strong>Feb 5</strong></td>
-                                    <td>—</td>
-                                    <td>PE of Extremities video</td>
-                                    <td><span class="mp-type mandatory">PC2</span></td>
-                                    <td>Required</td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-02-06" data-static="true">
-                                    <td><strong>Feb 6</strong></td>
-                                    <td>8:30AM</td>
-                                    <td>Tx Plan Creation (9D)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td style="color: #fbbf24;">Maseli meeting BEFORE this</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-exam-row" data-date="2026-02-06" data-static="true">
-                                    <td><strong>Feb 6</strong></td>
-                                    <td>4PM</td>
-                                    <td>🔴 <strong>ORTHO FINAL (cumulative)</strong></td>
-                                    <td><span class="mp-type exam">Ortho</span></td>
-                                    <td style="color: #f87171;">50% - HAVEN'T STARTED</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-life-row" data-date="2026-02-06" data-static="true">
-                                    <td><strong>Feb 6</strong></td>
-                                    <td>post-exam</td>
-                                    <td>💊 Meds pickup</td>
-                                    <td><span class="mp-type life">LIFE</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- WEEK 4 -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
-                        <span class="mp-week-title">WEEK 4: Feb 7-11</span>
-                        <div class="mp-week-header-right">
-                            <span class="mp-week-days">20-24 days out</span>
-                            <button onclick="mpAddTaskToWeek(4)" class="mp-add-week-btn">+ Add</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Date</th>
-                                    <th style="width: 70px;">Time</th>
-                                    <th>Item</th>
-                                    <th style="width: 90px;">Type</th>
-                                    <th style="width: 100px;">Notes</th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mpWeek4Body">
-                                <tr data-date="2026-02-07" data-static="true">
-                                    <td><strong>Feb 7</strong></td>
-                                    <td>12:30PM</td>
-                                    <td>Composite 2-surf posterior (9G)</td>
-                                    <td><span class="mp-type clinic">CLINIC</span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr data-date="2026-02-09" data-static="true">
-                                    <td><strong>Feb 9</strong></td>
-                                    <td>—</td>
-                                    <td>Practice Management Assignment</td>
-                                    <td><span class="mp-type academic">GP9</span></td>
-                                    <td>TBD</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-exam-row" data-date="2026-02-11" data-static="true">
-                                    <td><strong>Feb 11</strong></td>
-                                    <td>4PM</td>
-                                    <td>🟡 <strong>GERIATRICS FINAL</strong></td>
-                                    <td><span class="mp-type exam">Geri</span></td>
-                                    <td style="color: #a3e635;">Crammable</td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- WEEK 5 -->
-                <div class="card mp-week-card">
-                    <div class="mp-week-header mp-critical" style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); border: 2px solid #fef08a;">
-                        <span class="mp-week-title">🔴🔴🔴 WEEK 5: Feb 12-18 — PEDS WEEK</span>
-                        <div class="mp-week-header-right">
-                            <span class="mp-week-days">25-31 days out</span>
-                            <button onclick="mpAddTaskToWeek(5)" class="mp-add-week-btn">+ Add</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Date</th>
-                                    <th style="width: 70px;">Time</th>
-                                    <th>Item</th>
-                                    <th style="width: 90px;">Type</th>
-                                    <th style="width: 100px;">Notes</th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mpWeek5Body">
-                                <tr style="background: rgba(34, 197, 94, 0.1);" data-date="2026-02-13" data-static="true">
-                                    <td><strong>Feb 13</strong></td>
-                                    <td>—</td>
-                                    <td>NO CLASS</td>
-                                    <td><span class="mp-type academic">Oral Med</span></td>
-                                    <td style="color: #22c55e;">Free study day</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="mp-critical-exam-row" data-date="2026-02-18" data-static="true">
-                                    <td><strong>Feb 18</strong></td>
-                                    <td>4PM</td>
-                                    <td>🔴🔴🔴 <strong>PEDS EXAM 2</strong></td>
-                                    <td><span class="mp-type exam" style="background: #991b1b;">Peds</span></td>
-                                    <td style="color: #fca5a5; font-weight: 600;">45%, need 70%, 20 lectures untouched</td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TX PLAN PREP CHAIN -->
-                <div class="card mp-week-card" style="border: 2px solid #f59e0b;">
-                    <div class="mp-week-header" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
-                        <span class="mp-week-title">📋 PREP CHAIN: TX PLAN (Feb 6 8:30AM)</span>
-                        <span class="mp-week-days">ACTION REQUIRED</span>
-                    </div>
-                    <div class="table-container">
-                        <table class="mp-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50px;">Step</th>
-                                    <th>Task</th>
-                                    <th style="width: 100px;">Time Needed</th>
-                                    <th style="width: 100px;">Deadline</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align: center; font-weight: 700;">1</td>
-                                    <td>Mount models + written analysis</td>
-                                    <td>1-2 days</td>
-                                    <td>~Feb 2-3</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: center; font-weight: 700;">2</td>
-                                    <td>Schedule Maseli meeting</td>
-                                    <td>—</td>
-                                    <td>After step 1</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: center; font-weight: 700;">3</td>
-                                    <td>Meet with Dr. Maseli</td>
-                                    <td>—</td>
-                                    <td>Feb 4-5</td>
-                                </tr>
-                                <tr style="background: rgba(249, 115, 22, 0.1);">
-                                    <td style="text-align: center; font-weight: 700;">4</td>
-                                    <td><strong>Tx Plan presentation</strong></td>
-                                    <td>—</td>
-                                    <td><strong>Feb 6 8:30AM</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="note" style="margin-top: 15px; background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
-                        ⚠️ <strong>Conflict:</strong> Step 1 overlaps with PC2 Midterm prep crunch.
-                    </div>
+                
+                <div class="mp-main-column" id="mpCalendarContainer">
+                    <!-- Week calendars will be generated by JavaScript -->
+                    <div style="text-align: center; padding: 40px; color: #64748b;">Loading calendar...</div>
                 </div>
             </div>
 
-            <!-- Right Column: Notes -->
+            <!-- Right Column: Notes & Reminders -->
             <div class="mp-sidebar">
                 <!-- Mental Notes Notebook -->
                 <div class="card mp-notebook">
@@ -4416,19 +4612,19 @@
                     <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 15px;">📊 Upcoming Summary</div>
                     <div class="mp-quick-stats">
                         <div class="mp-stat-item mp-stat-exams">
-                            <div class="mp-stat-number">4</div>
+                            <div class="mp-stat-number" id="mpStatExams">4</div>
                             <div class="mp-stat-label">Major Exams</div>
                         </div>
                         <div class="mp-stat-item mp-stat-clinic">
-                            <div class="mp-stat-number">7</div>
+                            <div class="mp-stat-number" id="mpStatClinic">7</div>
                             <div class="mp-stat-label">Clinic Sessions</div>
                         </div>
                         <div class="mp-stat-item mp-stat-assignments">
-                            <div class="mp-stat-number">5</div>
+                            <div class="mp-stat-number" id="mpStatAssignments">5</div>
                             <div class="mp-stat-label">Assignments</div>
                         </div>
                         <div class="mp-stat-item mp-stat-life">
-                            <div class="mp-stat-number">3</div>
+                            <div class="mp-stat-number" id="mpStatLife">3</div>
                             <div class="mp-stat-label">Life Tasks</div>
                         </div>
                     </div>
@@ -4448,12 +4644,12 @@
         </div>
     </div>
 
-    <!-- Add Task Modal -->
-    <div id="mpAddTaskModal" class="mp-modal-overlay" style="display: none;">
-        <div class="mp-modal">
+    <!-- Add/Edit Task Modal -->
+    <div id="mpTaskModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal" style="max-width: 520px;">
             <div class="mp-modal-header">
-                <h3>➕ Add Task to <span id="mpModalWeekTitle">Week</span></h3>
-                <button class="mp-modal-close" onclick="mpCloseModal()">✕</button>
+                <h3 id="mpModalTitle">➕ Add Task</h3>
+                <button class="mp-modal-close" onclick="mpCloseTaskModal()">✕</button>
             </div>
             <div class="mp-modal-body">
                 <div class="mp-modal-field">
@@ -4462,20 +4658,120 @@
                 </div>
                 <div class="mp-modal-field">
                     <label>Date *</label>
-                    <input type="date" id="mpModalDate" min="2026-01-18" max="2026-02-28">
+                    <input type="date" id="mpModalDate" min="2026-01-19" max="2026-02-22">
+                </div>
+                <div class="mp-modal-row">
+                    <div class="mp-modal-field">
+                        <label>Start Time</label>
+                        <select id="mpModalTime">
+                            <option value="">No specific time</option>
+                            <option value="06:00">6:00 AM</option>
+                            <option value="06:30">6:30 AM</option>
+                            <option value="07:00">7:00 AM</option>
+                            <option value="07:30">7:30 AM</option>
+                            <option value="08:00">8:00 AM</option>
+                            <option value="08:30">8:30 AM</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="09:30">9:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="10:45">10:45 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="12:30">12:30 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="13:30">1:30 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="14:30">2:30 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="15:30">3:30 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="16:30">4:30 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                            <option value="17:30">5:30 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="18:30">6:30 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="19:30">7:30 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                            <option value="20:30">8:30 PM</option>
+                            <option value="21:00">9:00 PM</option>
+                            <option value="21:30">9:30 PM</option>
+                            <option value="22:00">10:00 PM</option>
+                            <option value="22:30">10:30 PM</option>
+                            <option value="23:00">11:00 PM</option>
+                            <option value="23:59">11:59 PM</option>
+                        </select>
+                    </div>
+                    <div class="mp-modal-field">
+                        <label>End Time</label>
+                        <select id="mpModalEndTime">
+                            <option value="">No end time</option>
+                            <option value="06:30">6:30 AM</option>
+                            <option value="07:00">7:00 AM</option>
+                            <option value="07:30">7:30 AM</option>
+                            <option value="08:00">8:00 AM</option>
+                            <option value="08:30">8:30 AM</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="09:30">9:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="12:30">12:30 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="13:30">1:30 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="14:30">2:30 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="15:30">3:30 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="16:30">4:30 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                            <option value="17:30">5:30 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="18:30">6:30 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="19:30">7:30 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                            <option value="20:30">8:30 PM</option>
+                            <option value="21:00">9:00 PM</option>
+                            <option value="21:30">9:30 PM</option>
+                            <option value="22:00">10:00 PM</option>
+                            <option value="22:30">10:30 PM</option>
+                            <option value="23:00">11:00 PM</option>
+                            <option value="23:30">11:30 PM</option>
+                            <option value="23:59">11:59 PM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mp-modal-field type-field">
+                    <label>Type</label>
+                    <select id="mpModalType">
+                        <option value="other">Other</option>
+                        <option value="clinic">Clinic</option>
+                        <option value="exam">Exam</option>
+                        <option value="academic">Academic</option>
+                        <option value="life">Life</option>
+                        <option value="mandatory">Mandatory</option>
+                    </select>
                 </div>
                 <div class="mp-modal-field">
                     <label>Notes (optional)</label>
                     <input type="text" id="mpModalNotes" placeholder="e.g., Focus on pharmacology section">
                 </div>
+                <div class="mp-modal-delete-section" id="mpDeleteSection" style="display: none;">
+                    <button class="mp-modal-btn delete" onclick="mpDeleteCurrentTask()">🗑️ Delete Task</button>
+                </div>
             </div>
             <div class="mp-modal-footer">
-                <button class="mp-modal-btn cancel" onclick="mpCloseModal()">Cancel</button>
-                <button class="mp-modal-btn submit" onclick="mpSubmitTask()">Add Task</button>
+                <button class="mp-modal-btn cancel" onclick="mpCloseTaskModal()">Cancel</button>
+                <button class="mp-modal-btn submit" id="mpModalSubmitBtn" onclick="mpSaveTask()">Add Task</button>
             </div>
         </div>
     </div>
-
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
@@ -4532,7 +4828,9 @@
             },
             monthlyPlanner: {
                 notes: [],
-                customTasks: []
+                customTasks: [],
+                overriddenStatic: [],
+                completedTasks: []
             },
             lastSaved: null
         };
@@ -5212,6 +5510,7 @@
                 return;
             }
             
+            // One-time load first
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
@@ -5228,7 +5527,9 @@
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                             monthlyPlanner: {
                                 notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
-                                customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || []
+                                customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
+                                overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
+                                completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
                             },
                             dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
                             lastSaved: data.lastSaved
@@ -5244,6 +5545,9 @@
                         updateSyncStatus('connected', 'Synced');
                     }
                     initUI();
+                    
+                    // Set up real-time listener for cross-device sync
+                    setupRealtimeSync();
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
@@ -5251,37 +5555,111 @@
                     loadFromLocalStorage();
                 });
         }
+        
+        // Real-time sync listener for cross-device updates
+        let realtimeSyncRef = null;
+        let lastRemoteUpdate = 0;
+        
+        function setupRealtimeSync() {
+            if (!firebaseSyncEnabled || !database || !userPath) return;
+            
+            // Remove any existing listener
+            if (realtimeSyncRef) {
+                realtimeSyncRef.off();
+            }
+            
+            realtimeSyncRef = database.ref(userPath);
+            
+            realtimeSyncRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                // Only update if this is a newer save from another device
+                const remoteLastSaved = data.lastSaved || 0;
+                const localLastSaved = roadmapData.lastSaved || 0;
+                
+                // If remote is newer by at least 1 second, update
+                if (remoteLastSaved > localLastSaved + 1000 && remoteLastSaved > lastRemoteUpdate) {
+                    console.log('🔄 Remote update detected, syncing...');
+                    lastRemoteUpdate = remoteLastSaved;
+                    
+                    // Deep merge the data
+                    roadmapData = {
+                        ...roadmapData,
+                        ...data,
+                        monthlyPlanner: {
+                            notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
+                            customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
+                            overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
+                            completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                        }
+                    };
+                    
+                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                    
+                    // Re-render the Monthly Planner if on that tab
+                    const activeTab = document.querySelector('.tab-btn.active');
+                    if (activeTab && activeTab.textContent.includes('Monthly')) {
+                        initMonthlyPlanner();
+                    }
+                    
+                    updateSyncStatus('connected', 'Synced');
+                    showToast('Updated from another device');
+                }
+            });
+            
+            console.log('✅ Real-time sync listener active');
+        }
 
-        // Save data with debounce
+        // Save data with debounce - BULLETPROOF VERSION
+        let lastSaveTime = 0;
+        
         function saveData() {
-            roadmapData.lastSaved = Date.now();
+            const now = Date.now();
+            roadmapData.lastSaved = now;
             
-            // Always save to localStorage immediately
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            // Always save to localStorage IMMEDIATELY
+            try {
+                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                console.log('💾 Saved to localStorage');
+            } catch (e) {
+                console.error('localStorage save failed:', e);
+            }
             
-            // Debounce Firebase saves
+            // Debounce Firebase saves (300ms) but allow immediate if it's been > 2 seconds
             if (saveDebounceTimer) {
                 clearTimeout(saveDebounceTimer);
             }
+            
+            const timeSinceLastSave = now - lastSaveTime;
+            const delay = timeSinceLastSave > 2000 ? 0 : 300;
             
             if (firebaseSyncEnabled && database && userPath) {
                 updateSyncStatus('syncing', 'Saving...');
                 
                 saveDebounceTimer = setTimeout(() => {
+                    lastSaveTime = Date.now();
                     database.ref(userPath).set(roadmapData)
                         .then(() => {
                             console.log('✅ Saved to Firebase');
                             updateSyncStatus('connected', 'Synced');
-                            showToast('Saved!');
                         })
                         .catch(error => {
                             console.error('❌ Firebase save error:', error);
                             updateSyncStatus('offline', 'Save failed');
-                            showToast('Saved locally');
+                            // Retry once after 2 seconds
+                            setTimeout(() => {
+                                if (firebaseSyncEnabled && database && userPath) {
+                                    database.ref(userPath).set(roadmapData)
+                                        .then(() => {
+                                            console.log('✅ Retry save successful');
+                                            updateSyncStatus('connected', 'Synced');
+                                        })
+                                        .catch(e => console.error('Retry failed:', e));
+                                }
+                            }, 2000);
                         });
-                }, 300);
-            } else {
-                showToast('Saved locally');
+                }, delay);
             }
         }
 
@@ -7398,7 +7776,17 @@
                         .then(snapshot => {
                             if (snapshot.exists()) {
                                 const data = snapshot.val();
-                                Object.assign(roadmapData, data);
+                                // Proper deep merge for monthlyPlanner
+                                roadmapData = {
+                                    ...roadmapData,
+                                    ...data,
+                                    monthlyPlanner: {
+                                        notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
+                                        customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
+                                        overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
+                                        completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                                    }
+                                };
                                 initUI();
                             }
                         })
@@ -7998,15 +8386,65 @@
 
         // ==================== MONTHLY PLANNER FUNCTIONS ====================
         
+        // Week definitions (Mon-Sun)
+        const MP_WEEKS = [
+            { num: 1, start: '2026-01-19', end: '2026-01-25', label: 'WEEK 1: Jan 19-25', color: '#059669' },
+            { num: 2, start: '2026-01-26', end: '2026-02-01', label: 'WEEK 2: Jan 26 - Feb 1', color: '#059669' },
+            { num: 3, start: '2026-02-02', end: '2026-02-08', label: '⚠️ WEEK 3: Feb 2-8', color: '#dc2626', critical: true },
+            { num: 4, start: '2026-02-09', end: '2026-02-15', label: 'WEEK 4: Feb 9-15', color: '#7c3aed' },
+            { num: 5, start: '2026-02-16', end: '2026-02-22', label: '🔴 WEEK 5: Feb 16-22 — PEDS WEEK', color: '#991b1b', critical: true }
+        ];
+        
+        // Static tasks (from original data) - these are read-only base tasks
+        const MP_STATIC_TASKS = [
+            // Week 1 tasks (Jan 19-25)
+            { date: '2026-01-20', time: '', item: 'Geriatric Lecture', type: 'other', notes: '4-6pm G341' },
+            { date: '2026-01-21', time: '', item: 'Perio 2 Lecture', type: 'other', notes: '1:00-2:20pm in 670' },
+            { date: '2026-01-22', time: '08:30', item: 'Periodic oral exam (9E)', type: 'clinic', notes: '' },
+            { date: '2026-01-22', time: '23:59', item: 'Quiz 2', type: 'academic', notes: '2.5% - Oral Med' },
+            { date: '2026-01-22', time: '', item: 'Rx #1 due (print, both names)', type: 'academic', notes: '2% - PC2' },
+            { date: '2026-01-22', time: '', item: 'Pain Control 2 Lecture', type: 'other', notes: '3-5pm - Must turn in assignment' },
+            { date: '2026-01-23', time: '', item: 'Oral Med Lecture', type: 'other', notes: '3-5pm - email for seat change' },
+            // Week 2 tasks (Jan 26 - Feb 1)
+            { date: '2026-01-26', time: '08:30', item: 'Composite 2-surf posterior (9F)', type: 'clinic', notes: '' },
+            { date: '2026-01-26', time: '12:30', item: 'Upper + Lower denture try-in (9F)', type: 'clinic', notes: '⚠️ NEEDS PREP' },
+            { date: '2026-01-26', time: '', item: 'Pediatric Dent Lecture', type: 'other', notes: '5:15-6:50pm in 670' },
+            { date: '2026-01-27', time: '', item: 'Geriatric Lecture', type: 'other', notes: '4-6pm in 341' },
+            { date: '2026-01-28', time: '12:30', item: 'Semi-precision replacement (9E)', type: 'clinic', notes: '' },
+            { date: '2026-01-28', time: '', item: 'Perio 2 Lecture', type: 'other', notes: '1:00-2:20pm in 670' },
+            { date: '2026-01-29', time: '', item: 'Take Home Exam 1 (PAIRS)', type: 'academic', notes: '12% - PC2' },
+            { date: '2026-01-29', time: '20:00', item: 'Quiz 2 (1hr, open)', type: 'academic', notes: '20% - Crit Think' },
+            { date: '2026-01-29', time: '', item: 'Acute Dental Pain module + print', type: 'mandatory', notes: 'MANDATORY - PC2' },
+            // Week 3 tasks (Feb 2-8)
+            { date: '2026-02-02', time: '16:00', item: '🔴 PC2 MIDTERM', type: 'exam', notes: '30% - HAVEN\'T STARTED' },
+            { date: '2026-02-02', time: '', item: 'MANDATORY PEDS IPS LECTURE', type: 'mandatory', notes: 'confirm date, auto fail if missed' },
+            { date: '2026-02-03', time: '10:45', item: '💊 Psych apt → meds sent', type: 'life', notes: '' },
+            { date: '2026-02-03', time: '12:30', item: 'Limited oral eval (9J)', type: 'clinic', notes: '' },
+            { date: '2026-02-05', time: '', item: '💊 Insurance covers meds', type: 'life', notes: '' },
+            { date: '2026-02-05', time: '23:59', item: 'Quiz 3', type: 'academic', notes: '2.5% - Oral Med' },
+            { date: '2026-02-05', time: '', item: 'PE of Extremities video', type: 'mandatory', notes: 'Required - PC2' },
+            { date: '2026-02-06', time: '08:30', item: 'Tx Plan Creation (9D)', type: 'clinic', notes: 'Maseli meeting BEFORE this' },
+            { date: '2026-02-06', time: '16:00', item: '🔴 ORTHO FINAL (cumulative)', type: 'exam', notes: '50% - HAVEN\'T STARTED' },
+            { date: '2026-02-06', time: '', item: '💊 Meds pickup', type: 'life', notes: 'post-exam' },
+            // Week 4 tasks (Feb 9-15)
+            { date: '2026-02-09', time: '12:30', item: 'Composite 2-surf posterior (9G)', type: 'clinic', notes: '' },
+            { date: '2026-02-09', time: '', item: 'Practice Management Assignment', type: 'academic', notes: 'TBD - GP9' },
+            { date: '2026-02-11', time: '16:00', item: '🟡 GERIATRICS FINAL', type: 'exam', notes: 'Crammable' },
+            // Week 5 tasks (Feb 16-22)
+            { date: '2026-02-17', time: '', item: 'NO CLASS', type: 'academic', notes: 'Free study day - Oral Med' },
+            { date: '2026-02-18', time: '16:00', item: '🔴🔴🔴 PEDS EXAM 2', type: 'exam', notes: '45%, need 70%, 20 lectures untouched' }
+        ];
+        
+        // Current editing state
+        let mpCurrentTask = null;
+        let mpIsEditing = false;
+        
         function initMonthlyPlanner() {
-            console.log('initMonthlyPlanner called, customTasks:', roadmapData.monthlyPlanner?.customTasks);
+            console.log('initMonthlyPlanner called');
             
-            // Initialize data structure if not exists
+            // Initialize data structure
             if (!roadmapData.monthlyPlanner) {
-                roadmapData.monthlyPlanner = {
-                    notes: [],
-                    customTasks: []
-                };
+                roadmapData.monthlyPlanner = { notes: [], customTasks: [], overriddenStatic: [], completedTasks: [] };
             }
             if (!roadmapData.monthlyPlanner.notes) {
                 roadmapData.monthlyPlanner.notes = [];
@@ -8014,14 +8452,702 @@
             if (!roadmapData.monthlyPlanner.customTasks) {
                 roadmapData.monthlyPlanner.customTasks = [];
             }
+            if (!roadmapData.monthlyPlanner.overriddenStatic) {
+                roadmapData.monthlyPlanner.overriddenStatic = [];
+            }
+            if (!roadmapData.monthlyPlanner.completedTasks) {
+                roadmapData.monthlyPlanner.completedTasks = [];
+            }
             
-            console.log('initMonthlyPlanner rendering, tasks count:', roadmapData.monthlyPlanner.customTasks.length);
-            
+            mpRenderAllCalendars();
             mpRenderNotes();
-            mpRenderAllWeekTasks();
+            mpUpdateStats();
+        }
+        
+        function mpToggleTaskComplete(taskId) {
+            if (!roadmapData.monthlyPlanner.completedTasks) {
+                roadmapData.monthlyPlanner.completedTasks = [];
+            }
+            
+            const taskIdStr = String(taskId);
+            const index = roadmapData.monthlyPlanner.completedTasks.indexOf(taskIdStr);
+            
+            if (index === -1) {
+                roadmapData.monthlyPlanner.completedTasks.push(taskIdStr);
+                showToast('Task completed! 🎉');
+            } else {
+                roadmapData.monthlyPlanner.completedTasks.splice(index, 1);
+                showToast('Task unmarked');
+            }
+            
+            saveData();
+            mpRenderAllCalendars();
+            mpUpdateStats();
+        }
+        
+        function mpRenderAllCalendars() {
+            const container = document.getElementById('mpCalendarContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            MP_WEEKS.forEach(week => {
+                const weekEl = mpCreateWeekSection(week);
+                container.appendChild(weekEl);
+            });
+        }
+        
+        function mpCreateWeekSection(week) {
+            const div = document.createElement('div');
+            div.className = 'card mp-week-card';
+            div.id = `mpWeek${week.num}`;
+            
+            const criticalStyle = week.critical ? 'border: 2px solid #fef08a;' : '';
+            const today = new Date().toISOString().split('T')[0];
+            const daysOut = mpGetDaysOut(week.start);
+            
+            // Check if this is the current week
+            const isCurrentWeek = today >= week.start && today <= week.end;
+            const isPastWeek = today > week.end;
+            
+            // Count tasks for this week
+            const weekTasks = mpGetWeekTasks(week);
+            const timedCount = weekTasks.filter(t => t.time).length;
+            const untimedCount = weekTasks.filter(t => !t.time).length;
+            const totalCount = weekTasks.length;
+            
+            // Get exam count for urgency indicator
+            const examCount = weekTasks.filter(t => t.type === 'exam').length;
+            const examBadge = examCount > 0 ? `<span class="mp-exam-badge">${examCount} EXAM${examCount > 1 ? 'S' : ''}</span>` : '';
+            
+            // Default: current/future weeks expanded, past weeks collapsed
+            const isCollapsed = isPastWeek;
+            
+            div.innerHTML = `
+                <div class="mp-week-header ${isCurrentWeek ? 'current-week' : ''}" 
+                     style="background: linear-gradient(135deg, ${week.color} 0%, ${week.color}dd 100%); ${criticalStyle}"
+                     onclick="mpToggleWeek(${week.num})">
+                    <div class="mp-week-header-left">
+                        <span class="mp-week-collapse-icon" id="mpCollapseIcon${week.num}">${isCollapsed ? '▶' : '▼'}</span>
+                        <span class="mp-week-title">${week.label}</span>
+                        ${examBadge}
+                    </div>
+                    <div class="mp-week-header-right">
+                        <span class="mp-week-task-count">${totalCount} tasks</span>
+                        <span class="mp-week-days">${daysOut}</span>
+                        <button onclick="event.stopPropagation(); mpOpenAddModal(${week.num})" class="mp-add-week-btn">+ Add</button>
+                    </div>
+                </div>
+                <div class="mp-week-content" id="mpWeekContent${week.num}" style="${isCollapsed ? 'display: none;' : ''}">
+                    ${mpCreateCalendarGrid(week)}
+                    <div class="mp-untimed-section" id="mpUntimed${week.num}">
+                        ${mpCreateUntimedSection(week)}
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        function mpToggleWeek(weekNum) {
+            const content = document.getElementById(`mpWeekContent${weekNum}`);
+            const icon = document.getElementById(`mpCollapseIcon${weekNum}`);
+            
+            if (content && icon) {
+                const isHidden = content.style.display === 'none';
+                content.style.display = isHidden ? 'block' : 'none';
+                icon.textContent = isHidden ? '▼' : '▶';
+            }
+        }
+        
+        function mpExpandAllWeeks() {
+            MP_WEEKS.forEach(week => {
+                const content = document.getElementById(`mpWeekContent${week.num}`);
+                const icon = document.getElementById(`mpCollapseIcon${week.num}`);
+                if (content) content.style.display = 'block';
+                if (icon) icon.textContent = '▼';
+            });
+        }
+        
+        function mpCollapseAllWeeks() {
+            MP_WEEKS.forEach(week => {
+                const content = document.getElementById(`mpWeekContent${week.num}`);
+                const icon = document.getElementById(`mpCollapseIcon${week.num}`);
+                if (content) content.style.display = 'none';
+                if (icon) icon.textContent = '▶';
+            });
+        }
+        
+        function mpJumpToCurrentWeek() {
+            const today = new Date().toISOString().split('T')[0];
+            const currentWeek = MP_WEEKS.find(w => today >= w.start && today <= w.end);
+            
+            if (currentWeek) {
+                // Expand current week
+                const content = document.getElementById(`mpWeekContent${currentWeek.num}`);
+                const icon = document.getElementById(`mpCollapseIcon${currentWeek.num}`);
+                if (content) content.style.display = 'block';
+                if (icon) icon.textContent = '▼';
+                
+                // Scroll to it
+                const weekEl = document.getElementById(`mpWeek${currentWeek.num}`);
+                if (weekEl) {
+                    weekEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+        
+        function mpGetDaysOut(startDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(startDate + 'T00:00:00');
+            const diff = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+            if (diff < 0) return 'This week';
+            if (diff === 0) return 'Starts today';
+            return `${diff} days out`;
+        }
+        
+        function mpCreateCalendarGrid(week) {
+            const days = mpGetWeekDays(week.start, week.end);
+            const today = new Date().toISOString().split('T')[0];
+            const timedTasks = mpGetWeekTasks(week).filter(t => t.time);
+            
+            // Calculate hours that have tasks for row expansion
+            const hoursWithTasks = new Set();
+            timedTasks.forEach(t => {
+                const startHour = parseInt(t.time.split(':')[0]);
+                const endHour = t.endTime ? parseInt(t.endTime.split(':')[0]) : startHour;
+                for (let h = startHour; h <= endHour; h++) {
+                    hoursWithTasks.add(h);
+                }
+            });
+            
+            // Pixel height per hour (for positioning)
+            const hourHeight = 50;
+            
+            let html = '<div class="mp-calendar-wrapper">';
+            
+            // Header row with day names
+            html += '<div class="mp-cal-header-row">';
+            html += '<div class="mp-cal-corner"></div>';
+            days.forEach(day => {
+                const isPast = day.date < today;
+                const isToday = day.date === today;
+                let classes = 'mp-cal-day-header';
+                if (isPast) classes += ' past';
+                if (isToday) classes += ' today';
+                html += `<div class="${classes}">
+                    <div class="mp-cal-day-name">${day.dayName}</div>
+                    <div class="mp-cal-day-date">${day.dayNum}</div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            // Calendar body with time grid
+            html += '<div class="mp-cal-body">';
+            html += '<div class="mp-cal-grid">';
+            
+            // Time column
+            html += '<div class="mp-cal-time-column">';
+            for (let hour = 6; hour <= 23; hour++) {
+                const hasTask = hoursWithTasks.has(hour);
+                const rowHeight = hasTask ? hourHeight : 25;
+                const timeLabel = hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`;
+                html += `<div class="mp-cal-time-label" style="height: ${rowHeight}px;">${timeLabel}</div>`;
+            }
+            html += '</div>';
+            
+            // Day columns with tasks
+            days.forEach((day, dayIndex) => {
+                const isPast = day.date < today;
+                const dayClass = isPast ? 'mp-cal-day-column past' : 'mp-cal-day-column';
+                
+                html += `<div class="${dayClass}" data-date="${day.date}">`;
+                
+                // Background cells for each hour
+                for (let hour = 6; hour <= 23; hour++) {
+                    const hasTask = hoursWithTasks.has(hour);
+                    const rowHeight = hasTask ? hourHeight : 25;
+                    html += `<div class="mp-cal-cell" style="height: ${rowHeight}px;" onclick="mpClickCell('${day.date}', ${hour}, ${week.num})"></div>`;
+                }
+                
+                // Task blocks for this day (positioned absolutely)
+                const dayTasks = timedTasks.filter(t => t.date === day.date);
+                dayTasks.forEach(task => {
+                    html += mpCreateTaskBlock(task, week.num, hoursWithTasks);
+                });
+                
+                html += '</div>';
+            });
+            
+            html += '</div>'; // end grid
+            html += '</div>'; // end body
+            html += '</div>'; // end wrapper
+            
+            return html;
+        }
+        
+        function mpGetWeekDays(start, end) {
+            const days = [];
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const current = new Date(start + 'T12:00:00');
+            const endDate = new Date(end + 'T12:00:00');
+            
+            while (current <= endDate) {
+                days.push({
+                    date: current.toISOString().split('T')[0],
+                    dayName: dayNames[current.getDay()],
+                    dayNum: current.getDate()
+                });
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return days;
+        }
+        
+        function mpGetWeekTasks(week) {
+            // Combine static and custom tasks for this week
+            const allTasks = [];
+            const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
+            
+            // Add static tasks (if not overridden)
+            MP_STATIC_TASKS.forEach(task => {
+                if (task.date >= week.start && task.date <= week.end) {
+                    const staticId = `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}`;
+                    if (!overridden.includes(staticId)) {
+                        allTasks.push({ ...task, isStatic: true, id: staticId });
+                    }
+                }
+            });
+            
+            // Add custom tasks
+            (roadmapData.monthlyPlanner?.customTasks || []).forEach(task => {
+                if (task.date >= week.start && task.date <= week.end) {
+                    allTasks.push({ ...task, isStatic: false });
+                }
+            });
+            
+            return allTasks.sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                if (a.time && b.time) return a.time.localeCompare(b.time);
+                if (a.time) return -1;
+                if (b.time) return 1;
+                return 0;
+            });
+        }
+        
+        function mpCreateTaskBlock(task, weekNum, hoursWithTasks) {
+            const typeClass = task.type || 'other';
+            const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
+            const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
+            const isCompleted = completedTasks.includes(String(taskId));
+            
+            // Calculate position and height
+            const startHour = parseInt(task.time.split(':')[0]);
+            const startMin = parseInt(task.time.split(':')[1]) || 0;
+            
+            let endHour = startHour;
+            let endMin = startMin + 30; // Default 30 min if no end time
+            
+            if (task.endTime) {
+                endHour = parseInt(task.endTime.split(':')[0]);
+                endMin = parseInt(task.endTime.split(':')[1]) || 0;
+            }
+            
+            // Calculate top position based on hours from 6am
+            // Need to account for variable row heights (expanded vs collapsed)
+            let topPx = 0;
+            for (let h = 6; h < startHour; h++) {
+                topPx += hoursWithTasks.has(h) ? 50 : 25;
+            }
+            // Add offset for minutes within the hour
+            const hourHeight = hoursWithTasks.has(startHour) ? 50 : 25;
+            topPx += (startMin / 60) * hourHeight;
+            
+            // Calculate height
+            let heightPx = 0;
+            if (task.endTime) {
+                // Span from start to end
+                for (let h = startHour; h < endHour; h++) {
+                    heightPx += hoursWithTasks.has(h) ? 50 : 25;
+                }
+                // Add partial end hour
+                const endHourHeight = hoursWithTasks.has(endHour) ? 50 : 25;
+                heightPx += (endMin / 60) * endHourHeight;
+                // Subtract starting offset
+                const startHourHeight = hoursWithTasks.has(startHour) ? 50 : 25;
+                heightPx -= (startMin / 60) * startHourHeight;
+            } else {
+                // Auto-size: minimum height to fit content, at least 40px
+                heightPx = Math.max(45, hourHeight - 5);
+            }
+            
+            const timeDisplay = mpFormatTime(task.time) + (task.endTime ? ' - ' + mpFormatTime(task.endTime) : '');
+            const completedClass = isCompleted ? 'mp-task-completed' : '';
+            
+            return `
+                <div class="mp-cal-task ${typeClass} ${completedClass}" 
+                     style="top: ${topPx}px; height: ${heightPx}px; min-height: 40px;"
+                     data-task-id="${taskId}">
+                    <div class="mp-cal-task-header">
+                        <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
+                            <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''} 
+                                   onchange="mpToggleTaskComplete('${taskId}')" />
+                        </label>
+                        <span class="mp-cal-task-type">${typeClass.toUpperCase()}</span>
+                        <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
+                    </div>
+                    <div class="mp-cal-task-name ${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</div>
+                    <div class="mp-cal-task-time">${timeDisplay}</div>
+                    ${task.notes ? `<div class="mp-cal-task-notes">${escapeHtml(task.notes)}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        function mpFormatTime(time) {
+            if (!time) return '';
+            const [h, m] = time.split(':').map(Number);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            return m === 0 ? `${hour}${ampm}` : `${hour}:${String(m).padStart(2, '0')}${ampm}`;
+        }
+        
+        function mpCreateUntimedSection(week) {
+            const tasks = mpGetWeekTasks(week).filter(t => !t.time);
+            const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
+            
+            if (tasks.length === 0) {
+                return `
+                    <div class="mp-untimed-header">
+                        <span class="mp-untimed-title">📋 Untimed Tasks</span>
+                        <span class="mp-untimed-count">0</span>
+                    </div>
+                    <div class="mp-untimed-empty">No untimed tasks for this week</div>
+                `;
+            }
+            
+            const completedCount = tasks.filter(t => {
+                const taskId = t.isStatic ? `static-${t.date}-${t.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : t.id;
+                return completedTasks.includes(String(taskId));
+            }).length;
+            
+            let html = `
+                <div class="mp-untimed-header">
+                    <span class="mp-untimed-title">📋 Untimed Tasks</span>
+                    <span class="mp-untimed-count">${completedCount}/${tasks.length}</span>
+                </div>
+                <table class="mp-untimed-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">✓</th>
+                            <th style="width: 65px;">Date</th>
+                            <th>Item</th>
+                            <th style="width: 80px;">Type</th>
+                            <th>Notes</th>
+                            <th style="width: 40px;">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            tasks.forEach(task => {
+                const dateObj = new Date(task.date + 'T12:00:00');
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const typeClass = task.type || 'other';
+                const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
+                const isCompleted = completedTasks.includes(String(taskId));
+                const rowClass = isCompleted ? 'mp-completed-row' : '';
+                
+                html += `
+                    <tr class="${rowClass}">
+                        <td>
+                            <input type="checkbox" class="mp-task-checkbox" 
+                                   ${isCompleted ? 'checked' : ''} 
+                                   onchange="mpToggleTaskComplete('${taskId}')" />
+                        </td>
+                        <td><strong>${dateStr}</strong></td>
+                        <td class="${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</td>
+                        <td><span class="mp-type ${typeClass}">${typeClass.toUpperCase()}</span></td>
+                        <td style="color: #94a3b8; font-size: 0.85em;">${escapeHtml(task.notes || '')}</td>
+                        <td><button class="mp-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${week.num}, ${task.isStatic || false})" title="Edit Task">✏️</button></td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+        
+        // ===== MODAL FUNCTIONS =====
+        function mpOpenAddModal(weekNum) {
+            mpIsEditing = false;
+            mpCurrentTask = null;
+            
+            const week = MP_WEEKS.find(w => w.num === weekNum);
+            if (!week) return;
+            
+            document.getElementById('mpModalTitle').textContent = `➕ Add Task to ${week.label.replace(/[⚠️🔴]/g, '').trim()}`;
+            document.getElementById('mpModalItem').value = '';
+            document.getElementById('mpModalDate').value = '';
+            document.getElementById('mpModalDate').min = week.start;
+            document.getElementById('mpModalDate').max = week.end;
+            document.getElementById('mpModalTime').value = '';
+            document.getElementById('mpModalEndTime').value = '';
+            document.getElementById('mpModalType').value = 'other';
+            document.getElementById('mpModalNotes').value = '';
+            document.getElementById('mpDeleteSection').style.display = 'none';
+            document.getElementById('mpModalSubmitBtn').textContent = 'Add Task';
+            
+            document.getElementById('mpTaskModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('mpModalItem').focus(), 100);
+        }
+        
+        function mpClickCell(date, hour, weekNum) {
+            mpIsEditing = false;
+            mpCurrentTask = null;
+            
+            const week = MP_WEEKS.find(w => w.num === weekNum);
+            if (!week) return;
+            
+            document.getElementById('mpModalTitle').textContent = `➕ Add Task`;
+            document.getElementById('mpModalItem').value = '';
+            document.getElementById('mpModalDate').value = date;
+            document.getElementById('mpModalDate').min = week.start;
+            document.getElementById('mpModalDate').max = week.end;
+            document.getElementById('mpModalTime').value = String(hour).padStart(2, '0') + ':00';
+            document.getElementById('mpModalEndTime').value = String(hour + 1).padStart(2, '0') + ':00';
+            document.getElementById('mpModalType').value = 'other';
+            document.getElementById('mpModalNotes').value = '';
+            document.getElementById('mpDeleteSection').style.display = 'none';
+            document.getElementById('mpModalSubmitBtn').textContent = 'Add Task';
+            
+            document.getElementById('mpTaskModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('mpModalItem').focus(), 100);
+        }
+        
+        // Universal edit function - handles both static and custom tasks
+        function mpEditTaskFromBlock(taskId, weekNum, isStatic) {
+            console.log('mpEditTaskFromBlock called:', taskId, weekNum, isStatic);
+            
+            let task = null;
+            
+            if (isStatic) {
+                // Find in static tasks
+                const staticTask = MP_STATIC_TASKS.find(t => {
+                    const staticId = `static-${t.date}-${t.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}`;
+                    return staticId === taskId;
+                });
+                
+                if (staticTask) {
+                    // Convert to editable format
+                    task = {
+                        id: 'converting-' + Date.now(),
+                        item: staticTask.item,
+                        date: staticTask.date,
+                        time: staticTask.time,
+                        endTime: staticTask.endTime || '',
+                        type: staticTask.type,
+                        notes: staticTask.notes,
+                        isStatic: true,
+                        staticId: taskId
+                    };
+                }
+            } else {
+                // Find in custom tasks
+                task = (roadmapData.monthlyPlanner?.customTasks || []).find(t => t.id == taskId);
+            }
+            
+            if (!task) {
+                console.error('Task not found:', taskId);
+                return;
+            }
+            
+            mpIsEditing = true;
+            mpCurrentTask = task;
+            
+            document.getElementById('mpModalTitle').textContent = '✏️ Edit Task';
+            document.getElementById('mpModalItem').value = task.item || '';
+            document.getElementById('mpModalDate').value = task.date || '';
+            document.getElementById('mpModalDate').min = '2026-01-19';
+            document.getElementById('mpModalDate').max = '2026-02-22';
+            document.getElementById('mpModalTime').value = task.time || '';
+            document.getElementById('mpModalEndTime').value = task.endTime || '';
+            document.getElementById('mpModalType').value = task.type || 'other';
+            document.getElementById('mpModalNotes').value = task.notes || '';
+            document.getElementById('mpDeleteSection').style.display = 'block';
+            document.getElementById('mpModalSubmitBtn').textContent = 'Save Changes';
+            
+            document.getElementById('mpTaskModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('mpModalItem').focus(), 100);
+        }
+        
+        function mpEditTask(taskId, weekNum) {
+            mpEditTaskFromBlock(taskId, weekNum, false);
+        }
+        
+        function mpCloseTaskModal() {
+            document.getElementById('mpTaskModal').style.display = 'none';
+            mpCurrentTask = null;
+            mpIsEditing = false;
+        }
+        
+        function mpSaveTask() {
+            const item = document.getElementById('mpModalItem').value.trim();
+            const date = document.getElementById('mpModalDate').value;
+            const time = document.getElementById('mpModalTime').value;
+            const endTime = document.getElementById('mpModalEndTime').value;
+            const type = document.getElementById('mpModalType').value;
+            const notes = document.getElementById('mpModalNotes').value.trim();
+            
+            if (!item) {
+                alert('Task name is required');
+                document.getElementById('mpModalItem').focus();
+                return;
+            }
+            if (!date) {
+                alert('Date is required');
+                document.getElementById('mpModalDate').focus();
+                return;
+            }
+            
+            // Validate end time is after start time
+            if (time && endTime && endTime <= time) {
+                alert('End time must be after start time');
+                document.getElementById('mpModalEndTime').focus();
+                return;
+            }
+            
+            if (mpIsEditing && mpCurrentTask) {
+                // Check if this is a static task being converted
+                if (mpCurrentTask.isStatic) {
+                    // Mark static task as overridden
+                    if (!roadmapData.monthlyPlanner.overriddenStatic) {
+                        roadmapData.monthlyPlanner.overriddenStatic = [];
+                    }
+                    if (!roadmapData.monthlyPlanner.overriddenStatic.includes(mpCurrentTask.staticId)) {
+                        roadmapData.monthlyPlanner.overriddenStatic.push(mpCurrentTask.staticId);
+                    }
+                    
+                    // Create new custom task
+                    const newTask = {
+                        id: Date.now(),
+                        item: item,
+                        date: date,
+                        time: time,
+                        endTime: endTime,
+                        type: type,
+                        notes: notes,
+                        createdAt: new Date().toISOString(),
+                        convertedFrom: mpCurrentTask.staticId
+                    };
+                    roadmapData.monthlyPlanner.customTasks.push(newTask);
+                    console.log('Converted static task, new task:', newTask);
+                    showToast('Task updated!');
+                } else {
+                    // Update existing custom task
+                    mpCurrentTask.item = item;
+                    mpCurrentTask.date = date;
+                    mpCurrentTask.time = time;
+                    mpCurrentTask.endTime = endTime;
+                    mpCurrentTask.type = type;
+                    mpCurrentTask.notes = notes;
+                    console.log('Updated custom task:', mpCurrentTask);
+                    showToast('Task updated!');
+                }
+            } else {
+                // Create new task
+                const newTask = {
+                    id: Date.now(),
+                    item: item,
+                    date: date,
+                    time: time,
+                    endTime: endTime,
+                    type: type,
+                    notes: notes,
+                    createdAt: new Date().toISOString()
+                };
+                roadmapData.monthlyPlanner.customTasks.push(newTask);
+                console.log('Added new task:', newTask);
+                showToast('Task added!');
+            }
+            
+            // Save immediately and re-render
+            saveData();
+            mpCloseTaskModal();
+            mpRenderAllCalendars();
+            mpUpdateStats();
+        }
+        
+        function mpDeleteCurrentTask() {
+            if (!mpCurrentTask) return;
+            if (!confirm('Delete this task?')) return;
+            
+            if (mpCurrentTask.isStatic) {
+                // Mark static task as deleted/hidden
+                if (!roadmapData.monthlyPlanner.overriddenStatic) {
+                    roadmapData.monthlyPlanner.overriddenStatic = [];
+                }
+                if (!roadmapData.monthlyPlanner.overriddenStatic.includes(mpCurrentTask.staticId)) {
+                    roadmapData.monthlyPlanner.overriddenStatic.push(mpCurrentTask.staticId);
+                }
+                showToast('Task removed');
+            } else {
+                // Delete custom task
+                const tasks = roadmapData.monthlyPlanner?.customTasks || [];
+                const idx = tasks.findIndex(t => t.id === mpCurrentTask.id);
+                if (idx !== -1) {
+                    tasks.splice(idx, 1);
+                    showToast('Task deleted');
+                }
+            }
+            
+            saveData();
+            mpCloseTaskModal();
+            mpRenderAllCalendars();
+            mpUpdateStats();
+        }
+        
+        function mpUpdateStats() {
+            // Get all tasks from all weeks - only count FUTURE tasks
+            const today = new Date().toISOString().split('T')[0];
+            let allTasks = [];
+            const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
+            
+            // Add non-overridden static tasks
+            MP_STATIC_TASKS.forEach(task => {
+                const staticId = `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}`;
+                if (!overridden.includes(staticId) && task.date >= today) {
+                    allTasks.push(task);
+                }
+            });
+            
+            // Add custom tasks (future only)
+            (roadmapData.monthlyPlanner?.customTasks || []).forEach(task => {
+                if (task.date >= today) {
+                    allTasks.push(task);
+                }
+            });
+            
+            const exams = allTasks.filter(t => t.type === 'exam').length;
+            const clinic = allTasks.filter(t => t.type === 'clinic').length;
+            const academic = allTasks.filter(t => t.type === 'academic' || t.type === 'mandatory').length;
+            const life = allTasks.filter(t => t.type === 'life').length;
+            
+            const el1 = document.getElementById('mpStatExams');
+            const el2 = document.getElementById('mpStatClinic');
+            const el3 = document.getElementById('mpStatAssignments');
+            const el4 = document.getElementById('mpStatLife');
+            
+            if (el1) el1.textContent = exams;
+            if (el2) el2.textContent = clinic;
+            if (el3) el3.textContent = academic;
+            if (el4) el4.textContent = life;
         }
         
         // ===== NOTES FUNCTIONS =====
+        // Flag to prevent double saves during note editing
+        let mpNoteSaving = false;
+        
         function mpAddNote() {
             const input = document.getElementById('mpNewNote');
             const text = input?.value?.trim();
@@ -8037,7 +9163,15 @@
                 createdAt: new Date().toISOString()
             };
             
-            roadmapData.monthlyPlanner.notes.unshift(note); // Add to beginning
+            // Ensure array exists
+            if (!roadmapData.monthlyPlanner) {
+                roadmapData.monthlyPlanner = { notes: [], customTasks: [], overriddenStatic: [] };
+            }
+            if (!roadmapData.monthlyPlanner.notes) {
+                roadmapData.monthlyPlanner.notes = [];
+            }
+            
+            roadmapData.monthlyPlanner.notes.unshift(note);
             input.value = '';
             
             saveData();
@@ -8072,12 +9206,14 @@
                 
                 return `
                     <div class="mp-note-item" data-id="${note.id}">
-                        <div class="mp-note-text">${escapeHtml(note.text)}</div>
+                        <div class="mp-note-content">
+                            <div class="mp-note-text">${escapeHtml(note.text)}</div>
+                            <div class="mp-note-timestamp">${dateStr}</div>
+                        </div>
                         <div class="mp-note-actions">
                             <button class="mp-note-action-btn" onclick="mpEditNote(${note.id})" title="Edit">✏️</button>
                             <button class="mp-note-action-btn delete" onclick="mpDeleteNote(${note.id})" title="Delete">🗑️</button>
                         </div>
-                        <div class="mp-note-timestamp">${dateStr}</div>
                     </div>
                 `;
             }).join('');
@@ -8091,38 +9227,60 @@
             const noteEl = document.querySelector(`.mp-note-item[data-id="${noteId}"]`);
             if (!noteEl) return;
             
-            const textEl = noteEl.querySelector('.mp-note-text');
+            const contentEl = noteEl.querySelector('.mp-note-content');
             const currentText = note.text;
             
-            textEl.innerHTML = `
+            // Replace with editable textarea
+            contentEl.innerHTML = `
                 <textarea class="mp-note-edit-input" id="mpEditInput-${noteId}" 
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpSaveNoteEdit(${noteId});}"
-                    onblur="mpSaveNoteEdit(${noteId})">${escapeHtml(currentText)}</textarea>
+                    onkeyup="if(event.key==='Escape'){mpCancelNoteEdit(${noteId}, '${escapeHtml(currentText).replace(/'/g, "\\'")}');}">${escapeHtml(currentText)}</textarea>
+                <div class="mp-note-edit-actions">
+                    <button onclick="mpSaveNoteEdit(${noteId})" class="mp-note-save-btn">Save</button>
+                    <button onclick="mpCancelNoteEdit(${noteId})" class="mp-note-cancel-btn">Cancel</button>
+                </div>
             `;
             
-            const editInput = document.getElementById(`mpEditInput-${noteId}`);
-            editInput?.focus();
-            editInput?.select();
+            const textarea = document.getElementById(`mpEditInput-${noteId}`);
+            if (textarea) {
+                textarea.focus();
+                textarea.selectionStart = textarea.value.length;
+            }
+        }
+        
+        function mpCancelNoteEdit(noteId) {
+            mpRenderNotes();
         }
         
         function mpSaveNoteEdit(noteId) {
-            const editInput = document.getElementById(`mpEditInput-${noteId}`);
-            if (!editInput) return;
+            if (mpNoteSaving) return; // Prevent double saves
             
-            const newText = editInput.value.trim();
-            if (!newText) {
-                mpRenderNotes(); // Cancel edit if empty
+            const textarea = document.getElementById(`mpEditInput-${noteId}`);
+            if (!textarea) return;
+            
+            mpNoteSaving = true;
+            
+            const newText = textarea.value.trim();
+            const notes = roadmapData.monthlyPlanner?.notes || [];
+            const note = notes.find(n => n.id === noteId);
+            
+            if (!note) {
+                mpNoteSaving = false;
                 return;
             }
             
-            const notes = roadmapData.monthlyPlanner?.notes || [];
-            const noteIndex = notes.findIndex(n => n.id === noteId);
-            if (noteIndex === -1) return;
+            if (newText === '') {
+                mpNoteSaving = false;
+                mpDeleteNote(noteId);
+                return;
+            }
             
-            notes[noteIndex].text = newText;
+            note.text = newText;
             saveData();
             mpRenderNotes();
-            showToast('Note updated!');
+            showToast('Note updated');
+            
+            setTimeout(() => { mpNoteSaving = false; }, 100);
         }
         
         function mpDeleteNote(noteId) {
@@ -8138,201 +9296,47 @@
             showToast('Note deleted');
         }
         
-        // ===== CUSTOM TASKS FUNCTIONS =====
-        // Week date ranges (for validation)
-        const weekDateRanges = {
-            1: { start: '2026-01-18', end: '2026-01-22' },
-            2: { start: '2026-01-23', end: '2026-01-29' },
-            3: { start: '2026-01-30', end: '2026-02-06' },
-            4: { start: '2026-02-07', end: '2026-02-11' },
-            5: { start: '2026-02-12', end: '2026-02-18' }
-        };
-        
-        let mpCurrentWeek = null; // Track which week we're adding to
-        
-        function mpAddTaskToWeek(weekNum) {
-            mpCurrentWeek = weekNum;
-            
-            // Update modal title
-            document.getElementById('mpModalWeekTitle').textContent = `Week ${weekNum}`;
-            
-            // Set default date based on week
-            const weekRange = weekDateRanges[weekNum];
-            const dateInput = document.getElementById('mpModalDate');
-            dateInput.value = weekRange.start;
-            dateInput.min = weekRange.start;
-            dateInput.max = weekRange.end;
-            
-            // Clear other fields
-            document.getElementById('mpModalItem').value = '';
-            document.getElementById('mpModalNotes').value = '';
-            
-            // Show modal
-            document.getElementById('mpAddTaskModal').style.display = 'flex';
-            
-            // Focus on item input
-            setTimeout(() => {
-                document.getElementById('mpModalItem').focus();
-            }, 100);
-        }
-        
-        function mpCloseModal() {
-            document.getElementById('mpAddTaskModal').style.display = 'none';
-            mpCurrentWeek = null;
-        }
-        
-        function mpSubmitTask() {
-            const item = document.getElementById('mpModalItem').value.trim();
-            const dateValue = document.getElementById('mpModalDate').value;
-            const notes = document.getElementById('mpModalNotes').value.trim();
-            
-            console.log('mpSubmitTask called', { item, dateValue, notes, mpCurrentWeek });
-            
-            // Validate
-            if (!item) {
-                alert('Task name is required');
-                document.getElementById('mpModalItem').focus();
-                return;
-            }
-            
-            if (!dateValue) {
-                alert('Date is required');
-                document.getElementById('mpModalDate').focus();
-                return;
-            }
-            
-            // Ensure data structure exists
-            if (!roadmapData.monthlyPlanner) {
-                roadmapData.monthlyPlanner = { notes: [], customTasks: [] };
-            }
-            if (!roadmapData.monthlyPlanner.customTasks) {
-                roadmapData.monthlyPlanner.customTasks = [];
-            }
-            
-            const newTask = {
-                id: Date.now(),
-                week: mpCurrentWeek,
-                item: item,
-                date: dateValue,
-                notes: notes,
-                createdAt: new Date().toISOString()
-            };
-            
-            console.log('Adding task:', newTask);
-            
-            roadmapData.monthlyPlanner.customTasks.push(newTask);
-            saveData();
-            
-            // Add the task row directly
-            mpInsertCustomTaskRow(newTask);
-            
-            // Close modal
-            mpCloseModal();
-            showToast('Task added!');
-        }
-        
-        // Insert a custom task row in the correct position by date
-        function mpInsertCustomTaskRow(task) {
-            const tbody = document.getElementById(`mpWeek${task.week}Body`);
-            if (!tbody) {
-                console.error('Could not find tbody for week', task.week);
-                return;
-            }
-            
-            // Create the new row
-            const tr = document.createElement('tr');
-            tr.className = 'mp-custom-row';
-            tr.setAttribute('data-date', task.date);
-            tr.setAttribute('data-task-id', task.id);
-            
-            // Format date for display
-            const dateObj = new Date(task.date + 'T12:00:00');
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const displayDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}`;
-            
-            tr.innerHTML = `
-                <td><strong>${displayDate}</strong></td>
-                <td>—</td>
-                <td>${escapeHtml(task.item)}</td>
-                <td><span class="mp-type other">OTHER</span></td>
-                <td>${escapeHtml(task.notes || '')}</td>
-                <td><button class="mp-delete-btn" onclick="mpDeleteWeekTask(${task.id}, ${task.week})" title="Delete">🗑️</button></td>
-            `;
-            
-            // Find correct position based on date
-            const rows = tbody.querySelectorAll('tr');
-            let inserted = false;
-            
-            for (let i = 0; i < rows.length; i++) {
-                const rowDate = rows[i].getAttribute('data-date');
-                if (rowDate && task.date < rowDate) {
-                    tbody.insertBefore(tr, rows[i]);
-                    inserted = true;
-                    break;
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                const mpModal = document.getElementById('mpTaskModal');
+                if (mpModal && mpModal.style.display === 'flex') {
+                    mpCloseTaskModal();
+                    return;
                 }
             }
             
-            // If not inserted yet, add at end
-            if (!inserted) {
-                tbody.appendChild(tr);
+            // Quick add shortcuts (only when not in input/textarea)
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
             }
             
-            console.log('Task row inserted');
-        }
-        
-        // Close modal on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('mpAddTaskModal');
-                if (modal && modal.style.display === 'flex') {
-                    mpCloseModal();
+            // 'N' key to focus note input when on Monthly tab
+            if (e.key === 'n' || e.key === 'N') {
+                const monthlyTab = document.getElementById('monthlyPlannerTab');
+                if (monthlyTab && monthlyTab.style.display !== 'none') {
+                    const noteInput = document.getElementById('mpNewNote');
+                    if (noteInput) {
+                        e.preventDefault();
+                        noteInput.focus();
+                    }
                 }
             }
         });
         
-        // Render all custom tasks on page load (called from initMonthlyPlanner)
-        function mpRenderWeekTasks(weekNum) {
-            const tbody = document.getElementById(`mpWeek${weekNum}Body`);
-            if (!tbody) {
-                console.log('mpRenderWeekTasks: tbody not found for week', weekNum);
-                return;
+        // Handle Enter key in note input
+        document.addEventListener('DOMContentLoaded', function() {
+            const noteInput = document.getElementById('mpNewNote');
+            if (noteInput) {
+                noteInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        mpAddNote();
+                    }
+                });
             }
-            
-            // Remove existing custom rows only
-            const existingCustomRows = tbody.querySelectorAll('.mp-custom-row');
-            existingCustomRows.forEach(row => row.remove());
-            
-            // Get custom tasks for this week
-            const customTasks = (roadmapData.monthlyPlanner?.customTasks || [])
-                .filter(t => t.week === weekNum);
-            
-            console.log(`mpRenderWeekTasks week ${weekNum}: found ${customTasks.length} tasks`);
-            
-            // Add each custom task
-            customTasks.forEach(task => {
-                console.log('Rendering task:', task);
-                mpInsertCustomTaskRow(task);
-            });
-        }
-        
-        function mpDeleteWeekTask(taskId, weekNum) {
-            if (!confirm('Delete this task?')) return;
-            
-            const tasks = roadmapData.monthlyPlanner?.customTasks || [];
-            const taskIndex = tasks.findIndex(t => t.id === taskId);
-            if (taskIndex === -1) return;
-            
-            tasks.splice(taskIndex, 1);
-            saveData();
-            mpRenderWeekTasks(weekNum);
-            showToast('Task deleted');
-        }
-        
-        function mpRenderAllWeekTasks() {
-            for (let i = 1; i <= 5; i++) {
-                mpRenderWeekTasks(i);
-            }
-        }
+        });
     </script>
 </body>
 </html>
