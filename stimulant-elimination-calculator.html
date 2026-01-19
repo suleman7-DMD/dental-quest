@@ -9024,30 +9024,112 @@ Current status at ${currentTime}:
                 return;
             }
             
-            // Render each caffeine entry with editable time
-            container.innerHTML = state.caffeine.map((caff, index) => {
-                const isSipPart = caff.sipGroup !== undefined;
-                const sipBadge = isSipPart ? `<span class="sip-badge">sip ${caff.sipPart}/${caff.sipTotal}</span>` : '';
-                const entryClass = isSipPart ? 'focus-caffeine-entry sip-mode' : 'focus-caffeine-entry';
-                
-                return `
-                    <div class="${entryClass}">
+            // Group entries: separate regular vs sip mode
+            const sipGroups = {};
+            const regularEntries = [];
+            
+            state.caffeine.forEach((caff, index) => {
+                if (caff.sipGroup) {
+                    if (!sipGroups[caff.sipGroup]) {
+                        sipGroups[caff.sipGroup] = { entries: [], indices: [] };
+                    }
+                    sipGroups[caff.sipGroup].entries.push(caff);
+                    sipGroups[caff.sipGroup].indices.push(index);
+                } else {
+                    regularEntries.push({ ...caff, index });
+                }
+            });
+            
+            let html = '';
+            
+            // Render regular entries normally
+            regularEntries.forEach(caff => {
+                html += `
+                    <div class="focus-caffeine-entry">
                         <div class="caff-info">
-                            <span class="caff-name">${caff.name}</span>${sipBadge}
+                            <span class="caff-name">${caff.name}</span>
                             <span class="caff-amount">${caff.amount}mg</span>
                         </div>
-                        <input type="time" value="${caff.time}" onchange="focusUpdateCaffeineTime(${index}, this.value)">
-                        <button class="caff-remove" onclick="focusRemoveCaffeine(${index})">×</button>
+                        <input type="time" value="${caff.time}" onchange="focusUpdateCaffeineTime(${caff.index}, this.value)">
+                        <button class="caff-remove" onclick="focusRemoveCaffeine(${caff.index})">×</button>
                     </div>
                 `;
-            }).join('');
+            });
+            
+            // Render sip groups as collapsed summaries
+            Object.keys(sipGroups).forEach(groupId => {
+                const group = sipGroups[groupId];
+                const entries = group.entries;
+                const totalMg = Math.round(entries.reduce((sum, c) => sum + c.amount, 0));
+                const startTime = entries[0].time;
+                const endTime = entries[entries.length - 1].time;
+                const drinkName = entries[0].name;
+                const numDoses = entries.length;
+                
+                html += `
+                    <div class="focus-caffeine-entry sip-mode" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="caff-info" style="flex: 1;">
+                                <span class="caff-name">⏱️ ${drinkName}</span>
+                                <span class="sip-badge">${numDoses} sips</span>
+                                <span class="caff-amount">${totalMg}mg</span>
+                            </div>
+                            <span style="color: #8b949e; font-size: 0.85em;">${formatTime12(startTime)} → ${formatTime12(endTime)}</span>
+                            <button class="caff-remove" onclick="focusRemoveSipGroup(${groupId})" title="Remove all">×</button>
+                        </div>
+                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(139, 92, 246, 0.2);">
+                            <button onclick="toggleSipDetails(${groupId})" style="background: none; border: none; color: #a78bfa; font-size: 0.8em; cursor: pointer; padding: 0;">
+                                <span id="sipToggle${groupId}">▶</span> Show ${numDoses} micro-doses
+                            </button>
+                            <div id="sipDetails${groupId}" style="display: none; margin-top: 8px; max-height: 150px; overflow-y: auto;">
+                                ${entries.map((c, i) => `
+                                    <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8em; color: #8b949e;">
+                                        <span>${i + 1}/${numDoses}: ${c.amount}mg</span>
+                                        <span>${formatTime12(c.time)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
             
             // Update status
             if (statusEl) {
                 const total = state.caffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
                 const entryText = state.caffeine.length === 1 ? 'entry' : 'entries';
-                statusEl.innerHTML = `<span>${state.caffeine.length} ${entryText} • ${total}mg total</span>
+                statusEl.innerHTML = `<span>${state.caffeine.length} ${entryText} • ${Math.round(total)}mg total</span>
                     <button onclick="focusClearAllCaffeine()" style="margin-left: 10px; padding: 4px 10px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 0.8em; cursor: pointer;">Clear All</button>`;
+            }
+        }
+        
+        // Toggle sip mode details visibility
+        function toggleSipDetails(groupId) {
+            const details = document.getElementById(`sipDetails${groupId}`);
+            const toggle = document.getElementById(`sipToggle${groupId}`);
+            if (details && toggle) {
+                const isHidden = details.style.display === 'none';
+                details.style.display = isHidden ? 'block' : 'none';
+                toggle.textContent = isHidden ? '▼' : '▶';
+            }
+        }
+        
+        // Remove entire sip group
+        function focusRemoveSipGroup(groupId) {
+            if (confirm('Remove this entire sip session?')) {
+                state.caffeine = state.caffeine.filter(c => c.sipGroup !== groupId);
+                renderFocusCaffeineList();
+                renderCaffeineEntries();
+                recalculate();
+                saveState();
+                
+                if (focusMode) {
+                    updateFocusSleepDisplay();
+                }
+                
+                showToast('Sip session removed');
             }
         }
         
