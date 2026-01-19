@@ -2277,6 +2277,139 @@
         .mp-toolbar-spacer {
             flex: 1;
         }
+        
+        .mp-toolbar-hint {
+            color: #64748b;
+            font-size: 0.85em;
+        }
+        
+        /* Responsive Layout */
+        .mp-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+        }
+        
+        .mp-calendars-column {
+            min-width: 0; /* Prevent grid blowout */
+        }
+        
+        .mp-sidebar {
+            min-width: 0;
+        }
+        
+        /* Tablet - narrower sidebar */
+        @media (max-width: 1200px) {
+            .mp-layout {
+                grid-template-columns: 1fr 250px;
+                gap: 15px;
+            }
+            
+            .mp-toolbar-hint {
+                display: none;
+            }
+        }
+        
+        /* Mobile - stack vertically */
+        @media (max-width: 900px) {
+            .mp-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .mp-sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 15px;
+            }
+            
+            .mp-sidebar .card {
+                margin-top: 0 !important;
+            }
+            
+            .mp-cal-grid {
+                grid-template-columns: 35px repeat(7, 1fr);
+            }
+            
+            .mp-cal-day-header {
+                padding: 6px 2px;
+            }
+            
+            .mp-cal-day-name {
+                font-size: 0.6em;
+            }
+            
+            .mp-cal-day-date {
+                font-size: 0.9em;
+            }
+            
+            .mp-cal-task {
+                font-size: 0.65em;
+                padding: 2px 4px;
+            }
+            
+            .mp-cal-task-header {
+                margin-bottom: 1px;
+            }
+            
+            .mp-cal-task-type {
+                font-size: 0.7em;
+                padding: 0 3px;
+            }
+            
+            .mp-week-header {
+                padding: 10px 12px;
+            }
+            
+            .mp-week-title {
+                font-size: 0.95em;
+            }
+            
+            .mp-untimed-table {
+                font-size: 0.8em;
+            }
+            
+            .mp-untimed-table th,
+            .mp-untimed-table td {
+                padding: 6px 4px;
+            }
+        }
+        
+        /* Small mobile */
+        @media (max-width: 600px) {
+            .mp-toolbar {
+                flex-wrap: wrap;
+            }
+            
+            .mp-toolbar-btn {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+            
+            .mp-cal-grid {
+                grid-template-columns: 30px repeat(7, 1fr);
+            }
+            
+            .mp-cal-time-label {
+                font-size: 0.55em;
+                padding: 1px 2px;
+            }
+            
+            .mp-cal-task {
+                font-size: 0.6em;
+                padding: 2px 3px;
+                border-left-width: 2px;
+            }
+            
+            .mp-cal-checkbox {
+                width: 12px;
+                height: 12px;
+            }
+            
+            .mp-sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
 
         .mp-delete-btn {
             background: transparent;
@@ -2314,18 +2447,18 @@
 
         .mp-cal-header-row {
             display: grid;
-            grid-template-columns: 50px repeat(7, 1fr);
+            grid-template-columns: 40px repeat(7, 1fr);
             background: #1e293b;
             border-bottom: 2px solid #334155;
         }
 
         .mp-cal-corner {
-            padding: 8px;
+            padding: 4px;
             border-right: 1px solid #334155;
         }
 
         .mp-cal-day-header {
-            padding: 8px 4px;
+            padding: 4px 2px;
             text-align: center;
             border-right: 1px solid #334155;
         }
@@ -2343,14 +2476,14 @@
         }
 
         .mp-cal-day-name {
-            font-size: 0.7em;
+            font-size: 0.65em;
             text-transform: uppercase;
             color: #64748b;
             font-weight: 600;
         }
 
         .mp-cal-day-date {
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 700;
             color: #e2e8f0;
         }
@@ -2360,13 +2493,12 @@
         }
 
         .mp-cal-body {
-            max-height: 500px;
-            overflow-y: auto;
+            /* No max-height - show full calendar without scrolling */
         }
 
         .mp-cal-grid {
             display: grid;
-            grid-template-columns: 50px repeat(7, 1fr);
+            grid-template-columns: 40px repeat(7, 1fr);
         }
 
         .mp-cal-time-column {
@@ -2374,8 +2506,8 @@
         }
 
         .mp-cal-time-label {
-            padding: 2px 6px;
-            font-size: 0.65em;
+            padding: 1px 4px;
+            font-size: 0.6em;
             color: #64748b;
             text-align: right;
             border-bottom: 1px solid #1e293b;
@@ -2410,16 +2542,17 @@
         /* Task blocks - absolutely positioned within day column */
         .mp-cal-task {
             position: absolute;
-            left: 2px;
-            right: 2px;
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 0.72em;
+            left: 1px;
+            right: 1px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.68em;
             cursor: pointer;
             border-left: 3px solid;
             transition: transform 0.1s, box-shadow 0.1s;
             overflow: hidden;
             z-index: 1;
+            line-height: 1.2;
         }
 
         .mp-cal-task:hover {
@@ -2433,8 +2566,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2px;
-            gap: 4px;
+            margin-bottom: 1px;
+            gap: 2px;
         }
         
         .mp-cal-checkbox-wrapper {
@@ -2443,8 +2576,8 @@
         }
         
         .mp-cal-checkbox {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             cursor: pointer;
             accent-color: #22c55e;
             margin: 0;
@@ -2467,25 +2600,26 @@
 
         .mp-cal-task-name {
             font-weight: 600;
-            line-height: 1.2;
-            margin-bottom: 2px;
+            line-height: 1.15;
+            margin-bottom: 1px;
         }
 
         .mp-cal-task-time {
-            font-size: 0.9em;
+            font-size: 0.85em;
             opacity: 0.85;
         }
 
         .mp-cal-task-notes {
-            font-size: 0.85em;
+            font-size: 0.8em;
             opacity: 0.75;
-            margin-top: 2px;
-            line-height: 1.2;
+            margin-top: 1px;
+            line-height: 1.15;
         }
 
         .mp-cal-task-type {
             display: inline-block;
-            padding: 1px 4px;
+            padding: 0 3px;
+            font-size: 0.8em;
             border-radius: 3px;
             font-size: 0.8em;
             font-weight: 600;
@@ -4568,16 +4702,16 @@
             <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 1em;">5-Week Calendar View — Click on time slots to add tasks</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 20px;">
+        <div class="mp-layout">
             <!-- Left Column: Week Calendars -->
-            <div>
+            <div class="mp-calendars-column">
                 <!-- Toolbar -->
                 <div class="mp-toolbar">
                     <button onclick="mpJumpToCurrentWeek()" class="mp-toolbar-btn primary">📍 This Week</button>
                     <button onclick="mpExpandAllWeeks()" class="mp-toolbar-btn">⬇️ Expand All</button>
                     <button onclick="mpCollapseAllWeeks()" class="mp-toolbar-btn">⬆️ Collapse All</button>
                     <div class="mp-toolbar-spacer"></div>
-                    <span style="color: #64748b; font-size: 0.85em;">Click week headers to expand/collapse</span>
+                    <span class="mp-toolbar-hint">Click week headers to expand/collapse</span>
                 </div>
                 
                 <div class="mp-main-column" id="mpCalendarContainer">
@@ -8629,16 +8763,27 @@
             
             // Calculate hours that have tasks for row expansion
             const hoursWithTasks = new Set();
+            let minHour = 23;
+            let maxHour = 6;
+            
             timedTasks.forEach(t => {
                 const startHour = parseInt(t.time.split(':')[0]);
                 const endHour = t.endTime ? parseInt(t.endTime.split(':')[0]) : startHour;
                 for (let h = startHour; h <= endHour; h++) {
                     hoursWithTasks.add(h);
                 }
+                minHour = Math.min(minHour, startHour);
+                maxHour = Math.max(maxHour, endHour);
             });
             
-            // Pixel height per hour (for positioning)
-            const hourHeight = 50;
+            // Smart hour range: show 1 hour before first task to 1 hour after last task
+            // But always show at least 6am-9pm if no tasks
+            const rangeStart = timedTasks.length > 0 ? Math.max(6, minHour - 1) : 6;
+            const rangeEnd = timedTasks.length > 0 ? Math.min(23, maxHour + 1) : 21;
+            
+            // Compact pixel heights - no scrolling needed
+            const hourHeightWithTask = 38;  // Hours with tasks
+            const hourHeightEmpty = 18;     // Empty hours (very compact)
             
             let html = '<div class="mp-calendar-wrapper">';
             
@@ -8662,12 +8807,12 @@
             html += '<div class="mp-cal-body">';
             html += '<div class="mp-cal-grid">';
             
-            // Time column
+            // Time column - only show relevant hours
             html += '<div class="mp-cal-time-column">';
-            for (let hour = 6; hour <= 23; hour++) {
+            for (let hour = rangeStart; hour <= rangeEnd; hour++) {
                 const hasTask = hoursWithTasks.has(hour);
-                const rowHeight = hasTask ? hourHeight : 25;
-                const timeLabel = hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`;
+                const rowHeight = hasTask ? hourHeightWithTask : hourHeightEmpty;
+                const timeLabel = hour < 12 ? `${hour}A` : hour === 12 ? '12P' : `${hour - 12}P`;
                 html += `<div class="mp-cal-time-label" style="height: ${rowHeight}px;">${timeLabel}</div>`;
             }
             html += '</div>';
@@ -8679,17 +8824,17 @@
                 
                 html += `<div class="${dayClass}" data-date="${day.date}">`;
                 
-                // Background cells for each hour
-                for (let hour = 6; hour <= 23; hour++) {
+                // Background cells for each hour in range
+                for (let hour = rangeStart; hour <= rangeEnd; hour++) {
                     const hasTask = hoursWithTasks.has(hour);
-                    const rowHeight = hasTask ? hourHeight : 25;
+                    const rowHeight = hasTask ? hourHeightWithTask : hourHeightEmpty;
                     html += `<div class="mp-cal-cell" style="height: ${rowHeight}px;" onclick="mpClickCell('${day.date}', ${hour}, ${week.num})"></div>`;
                 }
                 
                 // Task blocks for this day (positioned absolutely)
                 const dayTasks = timedTasks.filter(t => t.date === day.date);
                 dayTasks.forEach(task => {
-                    html += mpCreateTaskBlock(task, week.num, hoursWithTasks);
+                    html += mpCreateTaskBlock(task, week.num, hoursWithTasks, rangeStart);
                 });
                 
                 html += '</div>';
@@ -8761,11 +8906,15 @@
             });
         }
         
-        function mpCreateTaskBlock(task, weekNum, hoursWithTasks) {
+        function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
             const typeClass = task.type || 'other';
             const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
             const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
             const isCompleted = completedTasks.includes(String(taskId));
+            
+            // Compact heights matching mpCreateCalendarGrid
+            const heightWithTask = 38;
+            const heightEmpty = 18;
             
             // Calculate position and height
             const startHour = parseInt(task.time.split(':')[0]);
@@ -8779,14 +8928,13 @@
                 endMin = parseInt(task.endTime.split(':')[1]) || 0;
             }
             
-            // Calculate top position based on hours from 6am
-            // Need to account for variable row heights (expanded vs collapsed)
+            // Calculate top position based on hours from rangeStart (not hardcoded 6am)
             let topPx = 0;
-            for (let h = 6; h < startHour; h++) {
-                topPx += hoursWithTasks.has(h) ? 50 : 25;
+            for (let h = rangeStart; h < startHour; h++) {
+                topPx += hoursWithTasks.has(h) ? heightWithTask : heightEmpty;
             }
             // Add offset for minutes within the hour
-            const hourHeight = hoursWithTasks.has(startHour) ? 50 : 25;
+            const hourHeight = hoursWithTasks.has(startHour) ? heightWithTask : heightEmpty;
             topPx += (startMin / 60) * hourHeight;
             
             // Calculate height
@@ -8794,17 +8942,17 @@
             if (task.endTime) {
                 // Span from start to end
                 for (let h = startHour; h < endHour; h++) {
-                    heightPx += hoursWithTasks.has(h) ? 50 : 25;
+                    heightPx += hoursWithTasks.has(h) ? heightWithTask : heightEmpty;
                 }
                 // Add partial end hour
-                const endHourHeight = hoursWithTasks.has(endHour) ? 50 : 25;
+                const endHourHeight = hoursWithTasks.has(endHour) ? heightWithTask : heightEmpty;
                 heightPx += (endMin / 60) * endHourHeight;
                 // Subtract starting offset
-                const startHourHeight = hoursWithTasks.has(startHour) ? 50 : 25;
+                const startHourHeight = hoursWithTasks.has(startHour) ? heightWithTask : heightEmpty;
                 heightPx -= (startMin / 60) * startHourHeight;
             } else {
-                // Auto-size: minimum height to fit content, at least 40px
-                heightPx = Math.max(45, hourHeight - 5);
+                // Auto-size: minimum height to fit content
+                heightPx = Math.max(34, hourHeight - 4);
             }
             
             const timeDisplay = mpFormatTime(task.time) + (task.endTime ? ' - ' + mpFormatTime(task.endTime) : '');
@@ -8812,7 +8960,7 @@
             
             return `
                 <div class="mp-cal-task ${typeClass} ${completedClass}" 
-                     style="top: ${topPx}px; height: ${heightPx}px; min-height: 40px;"
+                     style="top: ${topPx}px; height: ${heightPx}px; min-height: 32px;"
                      data-task-id="${taskId}">
                     <div class="mp-cal-task-header">
                         <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
