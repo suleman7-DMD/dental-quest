@@ -291,6 +291,62 @@ const avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 :
 
 ## RECENT UPDATES (January 2026)
 
+### v29 UI/UX Accessibility & Feedback Overhaul (All 3 Apps)
+
+#### Color Contrast Fixes (WCAG Compliance)
+- Replaced all low-contrast grays across apps:
+  - `#8b949e` → `#b0b8c4` (better readability)
+  - `#94a3b8` → `#b0bcc8` (d3-roadmap specific)
+  - `#888` → `#a3a3a3` (index.html specific)
+
+#### Motion Accessibility (prefers-reduced-motion)
+All apps now respect user's motion preferences:
+```css
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .pulse { animation: none; }
+}
+```
+
+#### Touch Targets (Mobile Accessibility)
+- All interactive elements now have 44px minimum hit areas
+- Applies to: buttons, checkboxes, data-btns, task items
+
+#### New CSS Classes Added (All Apps)
+```css
+.empty-state          /* Centered italic message for empty lists */
+.loading-spinner      /* 24px purple spinning loader */
+.btn-loading          /* Dimmed button with cursor:wait */
+```
+
+#### Visual Feedback Animations
+
+**index.html:**
+- Task checkboxes: 28px with bounce animation on completion
+- Clickable cards: Purple border highlight on hover
+- Medication buttons: Green success flash + pulse on log
+- Button click feedback: Subtle scale(0.97) on active
+
+**d3-roadmap.html:**
+- Editable fields: Pencil icon (✏️) appears on hover
+- Help tooltips: `?` icons reveal explanations on hover
+
+**stimulant-elimination-calculator.html:**
+- Caffeine buttons: Lift effect on hover + green flash on add
+- Sleep prediction: Added explanatory text below result
+
+#### Tooltip System (index.html & d3-roadmap.html)
+```css
+.help-icon            /* Small ? circle that reveals tooltip on hover */
+.help-tooltip         /* Hidden tooltip content, shown on parent hover */
+```
+- Added 1-3-5 Rule explanation tooltip in Focus Mode
+- Improved calendar legend with header and pill-style badges
+
 ### v28 Sync Status System (All 3 Apps)
 - Added sync status bar in header
 - Added "Sync Now" / refresh button for manual refresh
