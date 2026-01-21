@@ -3361,9 +3361,10 @@
         <a href="index.html" class="back-btn">← Back to Quest</a>
         <h1>📚 D3 Spring 2026 Roadmap</h1>
         <p>Your complete academic survival guide</p>
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85em;">
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
             <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
             <span id="syncText" style="color: #8b949e;">Connecting...</span>
+            <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄 Sync</button>
         </div>
     </div>
 
@@ -5533,25 +5534,30 @@
             const textEl = document.getElementById('syncText');
             if (iconEl && textEl) {
                 if (status === 'connected') {
-                    iconEl.textContent = '☁️';
+                    iconEl.textContent = '🟢';
                     iconEl.style.color = '#10b981';
                     textEl.textContent = text || 'Synced';
-                    textEl.style.color = '#10b981';
+                    textEl.style.color = '#86efac';
                 } else if (status === 'syncing') {
                     iconEl.textContent = '🔄';
                     iconEl.style.color = '#f59e0b';
                     textEl.textContent = text || 'Syncing...';
-                    textEl.style.color = '#f59e0b';
+                    textEl.style.color = '#93c5fd';
                 } else if (status === 'offline') {
-                    iconEl.textContent = '📴';
+                    iconEl.textContent = '🔴';
                     iconEl.style.color = '#ef4444';
                     textEl.textContent = text || 'Offline';
-                    textEl.style.color = '#ef4444';
+                    textEl.style.color = '#fca5a5';
+                } else if (status === 'error') {
+                    iconEl.textContent = '⚠️';
+                    iconEl.style.color = '#f59e0b';
+                    textEl.textContent = text || 'Sync error';
+                    textEl.style.color = '#fcd34d';
                 } else {
-                    iconEl.textContent = '☁️';
+                    iconEl.textContent = '⏳';
                     iconEl.style.color = '#8b949e';
                     textEl.textContent = text || 'Connecting...';
-                    textEl.style.color = '#8b949e';
+                    textEl.style.color = 'white';
                 }
             }
         }
@@ -5685,7 +5691,7 @@
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
-                    updateSyncStatus('offline', 'Load failed');
+                    updateSyncStatus('error', 'Load failed');
                     loadFromLocalStorage();
                 });
         }
@@ -5744,6 +5750,63 @@
             
             console.log('✅ Real-time sync listener active');
         }
+        
+        // Force sync from cloud - manual refresh button
+        function forceCloudSync() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                updateSyncStatus('offline', 'Not connected');
+                return;
+            }
+            
+            updateSyncStatus('syncing', 'Fetching from cloud...');
+            console.log('🔄 Force sync requested by user');
+            
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (!data) {
+                        showToast('No cloud data found');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+                    
+                    console.log('📥 Force sync: Loading ALL data from cloud');
+                    
+                    // Force update ALL local data
+                    roadmapData = {
+                        ...roadmapData,
+                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
+                        mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
+                        grades: { ...roadmapData.grades, ...(data.grades || {}) },
+                        editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
+                        customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                        examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                        monthlyPlanner: {
+                            notes: data.monthlyPlanner?.notes || [],
+                            customTasks: data.monthlyPlanner?.customTasks || [],
+                            overriddenStatic: data.monthlyPlanner?.overriddenStatic || [],
+                            completedTasks: data.monthlyPlanner?.completedTasks || []
+                        },
+                        dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                        lastSaved: data.lastSaved
+                    };
+                    
+                    // Save to localStorage as backup
+                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                    
+                    // Re-render current UI
+                    initUI();
+                    
+                    updateSyncStatus('connected', 'Synced');
+                    showToast('✅ Synced from cloud');
+                })
+                .catch(err => {
+                    console.error('Force sync failed:', err);
+                    updateSyncStatus('error', 'Sync failed');
+                    showToast('❌ Sync failed: ' + err.message);
+                });
+        }
 
         // Save data with debounce - BULLETPROOF VERSION
         let lastSaveTime = 0;
@@ -5780,7 +5843,7 @@
                         })
                         .catch(error => {
                             console.error('❌ Firebase save error:', error);
-                            updateSyncStatus('offline', 'Save failed');
+                            updateSyncStatus('error', 'Save failed - retrying...');
                             // Retry once after 2 seconds
                             setTimeout(() => {
                                 if (firebaseSyncEnabled && database && userPath) {
