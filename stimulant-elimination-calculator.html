@@ -1846,6 +1846,17 @@
             </div>
             <h1>💊 Stimulant Elimination Calculator</h1>
             <p>Pharmacokinetic sleep prediction based on your personal physiology</p>
+
+            <!-- All-Nighter Mode Toggle -->
+            <div id="allNighterToggleContainer" style="margin-top: 15px;">
+                <button id="allNighterToggleBtn" onclick="toggleAllNighterMode()" style="padding: 12px 24px; background: linear-gradient(135deg, #1e3a5f, #2d1b4e); border: 2px solid #6366f1; border-radius: 12px; color: #e6edf3; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+                    <span id="allNighterIcon">🌙</span>
+                    <span id="allNighterText">All-Nighter Mode: OFF</span>
+                </button>
+                <p id="allNighterHint" style="font-size: 0.8em; color: #8b949e; margin-top: 8px; display: none;">
+                    48-hour view active. Yesterday's doses are included in calculations.
+                </p>
+            </div>
         </div>
 
         <div class="main-grid">
@@ -1956,6 +1967,17 @@
                             </div>
                         </span>
                     </h3>
+                    <!-- Ghost Load Section (All-Nighter Mode) -->
+                    <div id="ghostLoadSection" style="display: none; margin-bottom: 15px; padding: 12px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px;">
+                        <div style="font-size: 0.85em; color: #a78bfa; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span>👻</span>
+                            <span style="font-weight: 600;">YESTERDAY'S GHOST LOAD</span>
+                        </div>
+                        <div id="ghostLoadContent" style="font-size: 0.9em; color: #c9d1d9;">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
                     <div id="medEntries">
                         <!-- Entries will be added here -->
                     </div>
@@ -2095,7 +2117,13 @@
                         <div class="input-row">
                             <div class="input-group" id="vitaminCTimeGroup" style="display: none;">
                                 <label>Vitamin C taken at:</label>
-                                <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState()">
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState()">
+                                    <select id="vitaminCDay" onchange="updateVitaminCDay(); recalculate(); saveState();" style="padding: 8px; border-radius: 6px; background: #161b22; border: 1px solid #30363d; color: #e6edf3;">
+                                        <option value="today">Today</option>
+                                        <option value="tomorrow">Tomorrow</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="input-group" id="saunaTimeGroup" style="display: none;">
                                 <label>Sauna session at:</label>
@@ -3154,8 +3182,10 @@
             hoursSleptLastNight: 8,
             medications: [],
             caffeine: [],
+            // All-Nighter Mode: enables 48-hour view with yesterday's ghost load
+            allNighterMode: false,
             modifiers: {
-                vitaminC: { active: false, time: '17:00' },
+                vitaminC: { active: false, time: '17:00', isNextDay: false },
                 heavyLift: { active: false },
                 sauna: { active: false, time: '18:00' }
             },
@@ -3646,10 +3676,11 @@
 
         // Calculate amphetamine load at a given time (in minutes from midnight)
         // FIXED: Now handles date stamps and midnight rollovers correctly
+        // UPDATED: Now supports Vitamin C "tomorrow" setting via getVitaminCTimeMinutes()
         function calculateAmpLoad(atMinutes) {
             let totalLoad = 0;
             const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
-            const vitCTime = state.modifiers.vitaminC.active ? timeToMinutes(state.modifiers.vitaminC.time) : Infinity;
+            const vitCTime = getVitaminCTimeMinutes(); // Handles today/tomorrow
             const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
             const today = new Date().toISOString().split('T')[0];
 
@@ -3755,14 +3786,48 @@
         }
 
         // Calculate caffeine load at a given time
+        // UPDATED: Now handles yesterday's caffeine in All-Nighter Mode
         function calculateCaffLoad(atMinutes) {
             let totalLoad = 0;
             const halfLife = state.settings.caffHalfLife * 60;
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
 
             state.caffeine.forEach(caff => {
                 const doseTime = timeToMinutes(caff.time);
-                if (atMinutes >= doseTime) {
-                    const elapsed = atMinutes - doseTime;
+
+                // Handle dated caffeine entries (All-Nighter Mode support)
+                if (caff.date && caff.date !== today) {
+                    // Check if it's yesterday's caffeine (still relevant)
+                    if (caff.date === yesterdayStr && state.allNighterMode) {
+                        // Yesterday's dose - adjust timing for decay calculation
+                        // If dose was at 11:30 PM yesterday (1410 mins) and it's now 3 AM today (180 mins)
+                        // Effective elapsed = (24*60 - 1410) + 180 = 210 minutes
+                        const effectiveElapsed = (24 * 60 - doseTime) + atMinutes;
+                        if (effectiveElapsed > 0 && effectiveElapsed < 24 * 60) { // Only if within 24 hours
+                            totalLoad += caff.amount * Math.pow(0.5, effectiveElapsed / halfLife);
+                        }
+                    }
+                    // Skip caffeine from other days
+                    return;
+                }
+
+                // Today's caffeine (or legacy entries without date)
+                // Handle midnight rollover for early morning queries
+                let effectiveAtMinutes = atMinutes;
+                if (atMinutes < 6 * 60 && doseTime > 18 * 60 && !caff.date) {
+                    // Early morning checking late evening dose without date = treat as yesterday
+                    if (state.allNighterMode) {
+                        const effectiveElapsed = (24 * 60 - doseTime) + atMinutes;
+                        totalLoad += caff.amount * Math.pow(0.5, effectiveElapsed / halfLife);
+                    }
+                    return;
+                }
+
+                if (effectiveAtMinutes >= doseTime) {
+                    const elapsed = effectiveAtMinutes - doseTime;
                     totalLoad += caff.amount * Math.pow(0.5, elapsed / halfLife);
                 }
             });
@@ -4211,7 +4276,8 @@
         function addCaffeine(amount, name) {
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            state.caffeine.push({ id: Date.now(), amount, name, time });
+            const today = now.toISOString().split('T')[0];
+            state.caffeine.push({ id: Date.now(), amount, name, time, date: today });
             renderCaffeineEntries();
             recalculate();
             saveState();
@@ -4287,13 +4353,199 @@
             const container = document.getElementById('modifierTimes');
             const vitCGroup = document.getElementById('vitaminCTimeGroup');
             const saunaGroup = document.getElementById('saunaTimeGroup');
-            
+
             const showVitC = state.modifiers.vitaminC.active;
             const showSauna = state.modifiers.sauna.active;
-            
+
             vitCGroup.style.display = showVitC ? 'flex' : 'none';
             saunaGroup.style.display = showSauna ? 'flex' : 'none';
             container.style.display = (showVitC || showSauna) ? 'block' : 'none';
+
+            // Update Vitamin C day dropdown to match state
+            const vitCDayEl = document.getElementById('vitaminCDay');
+            if (vitCDayEl) {
+                vitCDayEl.value = state.modifiers.vitaminC.isNextDay ? 'tomorrow' : 'today';
+            }
+        }
+
+        function updateVitaminCDay() {
+            const vitCDayEl = document.getElementById('vitaminCDay');
+            if (vitCDayEl) {
+                state.modifiers.vitaminC.isNextDay = (vitCDayEl.value === 'tomorrow');
+            }
+        }
+
+        // Helper to get Vitamin C time in minutes, accounting for "tomorrow" setting
+        function getVitaminCTimeMinutes() {
+            if (!state.modifiers.vitaminC.active) return Infinity;
+            const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
+            // If "tomorrow" is selected, add 24 hours (1440 minutes)
+            return state.modifiers.vitaminC.isNextDay ? baseMinutes + 24 * 60 : baseMinutes;
+        }
+
+        // ============================================
+        // ALL-NIGHTER MODE
+        // ============================================
+
+        function toggleAllNighterMode() {
+            state.allNighterMode = !state.allNighterMode;
+            updateAllNighterUI();
+            renderGhostLoad();
+            recalculate();
+            saveState();
+
+            if (state.allNighterMode) {
+                showToast('🌙 All-Nighter Mode ON - 48-hour view with yesterday\'s doses');
+            } else {
+                showToast('☀️ All-Nighter Mode OFF - Normal 24-hour view');
+            }
+        }
+
+        function updateAllNighterUI() {
+            const btn = document.getElementById('allNighterToggleBtn');
+            const icon = document.getElementById('allNighterIcon');
+            const text = document.getElementById('allNighterText');
+            const hint = document.getElementById('allNighterHint');
+
+            if (state.allNighterMode) {
+                btn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                btn.style.borderColor = '#a78bfa';
+                icon.textContent = '🔥';
+                text.textContent = 'All-Nighter Mode: ON';
+                hint.style.display = 'block';
+            } else {
+                btn.style.background = 'linear-gradient(135deg, #1e3a5f, #2d1b4e)';
+                btn.style.borderColor = '#6366f1';
+                icon.textContent = '🌙';
+                text.textContent = 'All-Nighter Mode: OFF';
+                hint.style.display = 'none';
+            }
+        }
+
+        // Get yesterday's medications for display
+        function getYesterdayMedications() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            return state.medications.filter(med => med.date === yesterdayStr);
+        }
+
+        // Get yesterday's caffeine for display
+        function getYesterdayCaffeine() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            return state.caffeine.filter(caff => caff.date === yesterdayStr);
+        }
+
+        // Calculate remaining load from a yesterday dose
+        function calculateYesterdayDoseRemaining(dose, doseTimeMinutes, halfLifeHours) {
+            const now = getCurrentMinutes();
+            // Effective elapsed time = time since midnight yesterday + time today
+            const effectiveElapsed = (24 * 60 - doseTimeMinutes) + now;
+            const halfLifeMinutes = halfLifeHours * 60;
+            return dose * Math.pow(0.5, effectiveElapsed / halfLifeMinutes);
+        }
+
+        // Render the ghost load section for All-Nighter Mode
+        function renderGhostLoad() {
+            const section = document.getElementById('ghostLoadSection');
+            const content = document.getElementById('ghostLoadContent');
+
+            if (!section || !content) return;
+
+            if (!state.allNighterMode) {
+                section.style.display = 'none';
+                return;
+            }
+
+            const yesterdayMeds = getYesterdayMedications();
+            const yesterdayCaff = getYesterdayCaffeine();
+
+            if (yesterdayMeds.length === 0 && yesterdayCaff.length === 0) {
+                section.style.display = 'block';
+                content.innerHTML = '<div style="color: #8b949e; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
+                return;
+            }
+
+            let html = '';
+            let totalAmpRemaining = 0;
+            let totalCaffRemaining = 0;
+
+            // Medications from yesterday
+            if (yesterdayMeds.length > 0) {
+                html += '<div style="margin-bottom: 10px;"><strong style="color: #a78bfa;">💊 Amphetamine:</strong></div>';
+                yesterdayMeds.forEach(med => {
+                    const doseTime = timeToMinutes(med.time);
+                    const remaining = calculateYesterdayDoseRemaining(med.dose, doseTime, state.settings.ampHalfLife);
+                    totalAmpRemaining += remaining;
+                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                        ${med.dose}mg XR @ ${formatTime12(med.time)} → <span style="color: #10b981;">${remaining.toFixed(1)}mg remaining</span>
+                    </div>`;
+                });
+                html += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+                    Total Ghost Amp: ${totalAmpRemaining.toFixed(1)}mg
+                </div>`;
+            }
+
+            // Caffeine from yesterday
+            if (yesterdayCaff.length > 0) {
+                // Group sip entries
+                const sipGroups = {};
+                const regularCaff = [];
+
+                yesterdayCaff.forEach(caff => {
+                    if (caff.sipGroup) {
+                        if (!sipGroups[caff.sipGroup]) {
+                            sipGroups[caff.sipGroup] = [];
+                        }
+                        sipGroups[caff.sipGroup].push(caff);
+                    } else {
+                        regularCaff.push(caff);
+                    }
+                });
+
+                html += '<div style="margin-top: 12px; margin-bottom: 10px;"><strong style="color: #f59e0b;">☕ Caffeine:</strong></div>';
+
+                // Regular caffeine entries
+                regularCaff.forEach(caff => {
+                    const doseTime = timeToMinutes(caff.time);
+                    const remaining = calculateYesterdayDoseRemaining(caff.amount, doseTime, state.settings.caffHalfLife);
+                    totalCaffRemaining += remaining;
+                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                        ${caff.name} (${caff.amount}mg) @ ${formatTime12(caff.time)} → <span style="color: #10b981;">${remaining.toFixed(1)}mg remaining</span>
+                    </div>`;
+                });
+
+                // Sip group entries (show as combined)
+                Object.values(sipGroups).forEach(group => {
+                    const firstEntry = group.find(g => g.sipMeta) || group[0];
+                    const totalMg = group.reduce((sum, g) => sum + g.amount, 0);
+                    let groupRemaining = 0;
+                    group.forEach(caff => {
+                        const doseTime = timeToMinutes(caff.time);
+                        groupRemaining += calculateYesterdayDoseRemaining(caff.amount, doseTime, state.settings.caffHalfLife);
+                    });
+                    totalCaffRemaining += groupRemaining;
+
+                    const sipMeta = firstEntry.sipMeta;
+                    const displayName = sipMeta ? sipMeta.drinkName : firstEntry.name;
+                    const timeRange = sipMeta ? `${sipMeta.startTime} - ${sipMeta.endTime}` : formatTime12(firstEntry.time);
+
+                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                        ⏱️ ${displayName} (${totalMg.toFixed(0)}mg sipped ${timeRange}) → <span style="color: #10b981;">${groupRemaining.toFixed(1)}mg remaining</span>
+                    </div>`;
+                });
+
+                html += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+                    Total Ghost Caff: ${totalCaffRemaining.toFixed(1)}mg
+                </div>`;
+            }
+
+            section.style.display = 'block';
+            content.innerHTML = html;
         }
 
         // ============================================
@@ -4776,7 +5028,9 @@
             
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
                 const vitCTimeEl = document.getElementById('vitaminCTime');
+                const vitCDayEl = document.getElementById('vitaminCDay');
                 if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
+                if (vitCDayEl) state.modifiers.vitaminC.isNextDay = (vitCDayEl.value === 'tomorrow');
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTimeEl = document.getElementById('saunaTime');
@@ -5060,10 +5314,13 @@
             
             // Update nicotine tracker
             updateNicotineDisplay();
-            
+
             // Update what-if scenarios
             updateScenarios();
-            
+
+            // Update Ghost Load display (All-Nighter Mode)
+            renderGhostLoad();
+
             // Draw graph
             drawGraph();
             
@@ -8249,7 +8506,15 @@
                 state = {
                     ...state,
                     ...loaded,
-                    modifiers: { ...state.modifiers, ...(loaded.modifiers || {}) },
+                    modifiers: {
+                        ...state.modifiers,
+                        ...(loaded.modifiers || {}),
+                        // Deep merge vitaminC to preserve isNextDay field
+                        vitaminC: {
+                            ...state.modifiers.vitaminC,
+                            ...(loaded.modifiers?.vitaminC || {})
+                        }
+                    },
                     settings: { ...state.settings, ...(loaded.settings || {}) },
                     sleepHistory: { ...state.sleepHistory, ...(loaded.sleepHistory || {}) },
                     workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) },
@@ -8532,7 +8797,8 @@
             // Build modifiers summary
             let modifierDetails = [];
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
-                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time} → Half-life reduced to 70% after this time`);
+                const vitCDayLabel = state.modifiers.vitaminC.isNextDay ? ' (TOMORROW)' : '';
+                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDayLabel} → Half-life reduced to 70% after this time`);
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 modifierDetails.push(`• Sauna: Scheduled at ${state.modifiers.sauna.time} → +${saunaBonus.toFixed(1)}mg threshold (parasympathetic)`);
@@ -8601,13 +8867,55 @@
             // Calculate Wake Maintenance Zone
             const wmzStart = forbiddenZone.start - (2 * 60);
             
+            // Build All-Nighter Mode section if active
+            let allNighterSection = '';
+            if (state.allNighterMode) {
+                const yesterdayMeds = getYesterdayMedications();
+                const yesterdayCaff = getYesterdayCaffeine();
+                let ghostAmpTotal = 0;
+                let ghostCaffTotal = 0;
+
+                yesterdayMeds.forEach(med => {
+                    const doseTime = timeToMinutes(med.time);
+                    ghostAmpTotal += calculateYesterdayDoseRemaining(med.dose, doseTime, state.settings.ampHalfLife);
+                });
+
+                yesterdayCaff.forEach(caff => {
+                    const doseTime = timeToMinutes(caff.time);
+                    ghostCaffTotal += calculateYesterdayDoseRemaining(caff.amount, doseTime, state.settings.caffHalfLife);
+                });
+
+                allNighterSection = `
+┌─────────────────────────────────────────────────────────────┐
+│ 🔥 ALL-NIGHTER MODE ACTIVE (48-HOUR VIEW)                   │
+└─────────────────────────────────────────────────────────────┘
+  Yesterday's medications: ${yesterdayMeds.length} doses
+  Yesterday's caffeine: ${yesterdayCaff.length} entries
+
+  GHOST LOAD (Remaining from yesterday):
+  • Amphetamine: ${ghostAmpTotal.toFixed(1)}mg still active
+  • Caffeine: ${ghostCaffTotal.toFixed(1)}mg still active
+
+  NOTE: These residual amounts are ADDED to today's calculations.
+  The sleep prediction accounts for this 48-hour cumulative load.
+
+`;
+            }
+
+            // Build Vitamin C info
+            let vitCInfo = '';
+            if (state.modifiers.vitaminC.active) {
+                const dayLabel = state.modifiers.vitaminC.isNextDay ? 'TOMORROW' : 'today';
+                vitCInfo = `  • Vitamin C: Active at ${state.modifiers.vitaminC.time} ${dayLabel} → Half-life reduced to 70% after this time\n`;
+            }
+
             // Build the forecast text
             const forecastText = `
 ═══════════════════════════════════════════════════════════════
 TODAY'S FORECAST LOGIC — ${now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
 Generated at: ${currentTime}
 ═══════════════════════════════════════════════════════════════
-
+${allNighterSection}
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. PERSONAL CALIBRATION SETTINGS                            │
 └─────────────────────────────────────────────────────────────┘
@@ -8804,7 +9112,16 @@ Current status at ${currentTime}:
                 }
             });
             updateModifierTimeInputs();
-            
+
+            // Restore Vitamin C day selector
+            const vitCDayEl = document.getElementById('vitaminCDay');
+            if (vitCDayEl && state.modifiers.vitaminC.isNextDay) {
+                vitCDayEl.value = 'tomorrow';
+            }
+
+            // Update All-Nighter Mode UI
+            updateAllNighterUI();
+
             // Initialize workout planner
             initWorkoutPlanner();
             
@@ -9281,23 +9598,25 @@ Current status at ${currentTime}:
         function focusAddCaffeine(amount, name) {
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            state.caffeine.push({ 
-                id: Date.now(), 
-                amount, 
-                name, 
-                time 
+            const today = now.toISOString().split('T')[0];
+
+            state.caffeine.push({
+                id: Date.now(),
+                amount,
+                name,
+                time,
+                date: today
             });
-            
+
             renderFocusCaffeineList();
             renderCaffeineEntries();
             recalculate();
             saveState();
-            
+
             if (focusMode) {
                 updateFocusSleepDisplay();
             }
-            
+
             showToast(`☕ ${name} (${amount}mg) added`);
         }
         
@@ -9477,10 +9796,11 @@ Current status at ${currentTime}:
             
             // Create micro-dose entries
             let runningTotal = 0;
+            const sipDate = new Date().toISOString().split('T')[0];
             for (let i = 0; i < numDoses; i++) {
                 const doseMins = startMins + (i * intervalMins);
                 const doseTime = minutesToTimeValue(doseMins % (24 * 60));
-                
+
                 // Last dose gets remainder to ensure exact total
                 let thisDoseMg;
                 if (i === numDoses - 1) {
@@ -9489,12 +9809,13 @@ Current status at ${currentTime}:
                     thisDoseMg = mgPerDose;
                     runningTotal += mgPerDose;
                 }
-                
+
                 state.caffeine.push({
                     id: sipGroupId + i,
                     amount: thisDoseMg,
                     name: drinkName,
                     time: doseTime,
+                    date: sipDate,
                     sipGroup: sipGroupId,
                     sipPart: i + 1,
                     sipTotal: numDoses,
