@@ -1833,9 +1833,10 @@
                 <a href="index.html" style="color: #58a6ff; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
                     ← Back to Quest
                 </a>
-                <div id="syncStatus" style="font-size: 0.8em; color: #8b949e; display: flex; align-items: center; gap: 6px;">
-                    <span id="syncIcon">☁️</span>
+                <div id="syncStatus" style="font-size: 0.8em; color: #8b949e; display: flex; align-items: center; gap: 8px;">
+                    <span id="syncIcon">⏳</span>
                     <span id="syncText">Connecting...</span>
+                    <button onclick="forceCloudSync()" style="padding: 3px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄</button>
                 </div>
             </div>
             <!-- View Toggle for Full View -->
@@ -7687,34 +7688,48 @@
             const textEl = document.getElementById('syncText');
             if (iconEl && textEl) {
                 if (status === 'connected') {
-                    iconEl.textContent = '☁️';
+                    iconEl.textContent = '🟢';
                     iconEl.style.color = '#10b981';
                     textEl.textContent = text || 'Synced';
-                    textEl.style.color = '#10b981';
+                    textEl.style.color = '#86efac';
                 } else if (status === 'syncing') {
                     iconEl.textContent = '🔄';
-                    iconEl.style.color = '#f59e0b';
+                    iconEl.style.color = '#60a5fa';
                     textEl.textContent = text || 'Syncing...';
-                    textEl.style.color = '#f59e0b';
+                    textEl.style.color = '#93c5fd';
                 } else if (status === 'offline') {
-                    iconEl.textContent = '📴';
+                    iconEl.textContent = '🔴';
                     iconEl.style.color = '#ef4444';
                     textEl.textContent = text || 'Offline';
-                    textEl.style.color = '#ef4444';
+                    textEl.style.color = '#fca5a5';
+                } else if (status === 'error') {
+                    iconEl.textContent = '⚠️';
+                    iconEl.style.color = '#f59e0b';
+                    textEl.textContent = text || 'Sync error';
+                    textEl.style.color = '#fcd34d';
                 } else {
-                    iconEl.textContent = '☁️';
+                    iconEl.textContent = '⏳';
                     iconEl.style.color = '#8b949e';
                     textEl.textContent = text || 'Connecting...';
-                    textEl.style.color = '#8b949e';
+                    textEl.style.color = 'white';
                 }
             }
         }
         
         function initFirebase() {
+            // FALLBACK: Ensure app works within 3 seconds even if Firebase is slow
+            const fallbackTimer = setTimeout(() => {
+                if (!firebaseSyncEnabled) {
+                    console.warn('⚠️ Firebase timeout - running in offline mode');
+                    updateSyncStatus('offline', 'Offline mode');
+                }
+            }, 3000);
+            
             try {
                 // Check if Firebase SDK loaded
                 if (typeof firebase === 'undefined') {
                     console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
+                    clearTimeout(fallbackTimer);
                     firebaseSyncEnabled = false;
                     updateSyncStatus('offline', 'Offline mode');
                     return;
@@ -7727,6 +7742,7 @@
                 database = firebase.database();
                 firebaseInitialized = true;
                 console.log('✅ Firebase app initialized');
+                clearTimeout(fallbackTimer);
                 
                 // Check for saved PIN (same as Dental Quest uses)
                 const savedPin = localStorage.getItem('dentalQuestPin');
@@ -7740,8 +7756,9 @@
                 }
             } catch (error) {
                 console.error('❌ Firebase init error:', error);
+                clearTimeout(fallbackTimer);
                 firebaseSyncEnabled = false;
-                updateSyncStatus('offline', 'Init failed');
+                updateSyncStatus('error', 'Init failed');
             }
         }
         
@@ -8054,6 +8071,133 @@
                 }
             });
         }
+        
+        // Force sync from cloud - manual refresh button
+        function forceCloudSync() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                updateSyncStatus('offline', 'Not connected');
+                return;
+            }
+            
+            updateSyncStatus('syncing', 'Fetching...');
+            console.log('🔄 Force sync requested by user');
+            
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (!data || !data.state) {
+                        showToast('No cloud data found');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+                    
+                    console.log('📥 Force sync: Loading ALL data from cloud');
+                    const firebaseState = data.state;
+                    
+                    // Force update ALL local data
+                    state = {
+                        wakeTime: firebaseState.wakeTime || state.wakeTime,
+                        hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                        medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
+                        caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
+                        history: firebaseState.history !== undefined ? firebaseState.history : state.history,
+                        modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
+                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
+                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
+                        workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
+                        nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
+                    };
+                    
+                    // Ensure arrays are actually arrays
+                    if (!Array.isArray(state.medications)) state.medications = [];
+                    if (!Array.isArray(state.caffeine)) state.caffeine = [];
+                    if (!Array.isArray(state.history)) state.history = [];
+                    
+                    // Update localStorage
+                    localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                    
+                    // Re-render everything
+                    document.getElementById('wakeTime').value = state.wakeTime;
+                    document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                    document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
+                    document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
+                    document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
+                    document.getElementById('caffThreshold').value = state.settings.caffThreshold;
+                    document.getElementById('weight').value = state.settings.weight;
+                    
+                    renderMedEntries();
+                    renderCaffeineEntries();
+                    renderSleepCalendar();
+                    renderSleepPerformance();
+                    renderHistory();
+                    
+                    if (state.workoutPlan && state.workoutPlan.applied) {
+                        restoreWorkoutPlanUI();
+                    }
+                    
+                    recalculate();
+                    
+                    if (focusMode) {
+                        renderFocusMode();
+                    }
+                    
+                    updateSyncStatus('connected', 'Synced ✓');
+                    showToast('✅ Synced from cloud');
+                })
+                .catch(err => {
+                    console.error('Force sync failed:', err);
+                    updateSyncStatus('error', 'Sync failed');
+                    showToast('❌ Sync failed: ' + err.message);
+                });
+        }
+        
+        // Handle tab visibility changes - save on hide, refresh on show
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                // Tab is being hidden - ensure data is saved immediately
+                console.log('Tab hidden - saving data...');
+                localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                if (firebaseSyncEnabled && database && userPath) {
+                    database.ref(userPath).set({
+                        state: state,
+                        lastUpdated: new Date().toISOString()
+                    }).catch(err => console.error('Save on hide failed:', err));
+                }
+            } else if (document.visibilityState === 'visible') {
+                // Tab is visible again - refresh from Firebase
+                console.log('Tab visible - checking for updates...');
+                if (firebaseSyncEnabled && database && userPath) {
+                    database.ref(userPath).once('value')
+                        .then(snapshot => {
+                            const data = snapshot.val();
+                            if (data && data.state && data.lastUpdated > lastKnownTimestamp) {
+                                console.log('📥 Found newer data, updating...');
+                                lastKnownTimestamp = data.lastUpdated;
+                                const fs = data.state;
+                                state = {
+                                    ...state,
+                                    ...fs,
+                                    modifiers: { ...state.modifiers, ...(fs.modifiers || {}) },
+                                    settings: { ...state.settings, ...(fs.settings || {}) },
+                                    sleepHistory: { ...state.sleepHistory, ...(fs.sleepHistory || {}) },
+                                    workoutPlan: { ...state.workoutPlan, ...(fs.workoutPlan || {}) },
+                                    nicotine: { ...state.nicotine, ...(fs.nicotine || {}) }
+                                };
+                                if (!Array.isArray(state.medications)) state.medications = [];
+                                if (!Array.isArray(state.caffeine)) state.caffeine = [];
+                                if (!Array.isArray(state.history)) state.history = [];
+                                
+                                renderMedEntries();
+                                renderCaffeineEntries();
+                                recalculate();
+                                if (focusMode) renderFocusMode();
+                            }
+                        })
+                        .catch(err => console.error('Refresh on visible failed:', err));
+                }
+            }
+        });
         
         // ============================================
         // STORAGE (Local + Firebase)
