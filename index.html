@@ -4245,23 +4245,33 @@
                 return; // Don't save anything yet!
             }
             
+            // Generate timestamp FIRST so we can track it
+            const saveTimestamp = Date.now();
+            
             const data = { 
-                tasks, 
+                tasks: tasks || [], 
                 stats,
                 medications,
-                calendarNotes,
+                calendarNotes: calendarNotes || {},
                 notebook,
                 financials,
                 pillAssignments,
-                calendarEvents,
+                calendarEvents: calendarEvents || [],
                 dailyPlanner,
-                focusModeData,
+                focusModeData: {
+                    oneThingId: focusModeData.oneThingId,
+                    microSteps: focusModeData.microSteps,
+                    todaysTasks: focusModeData.todaysTasks,
+                    lastPlanningDate: focusModeData.lastPlanningDate
+                    // Don't save timer state - it's local only
+                },
                 lastCriticalEODReset, // Sync reset date across devices
-                lastSaved: Date.now() // Timestamp for sync tracking
+                lastSaved: saveTimestamp // Timestamp for sync tracking
             };
             
-            // Update our known save time to ignore our own updates
-            lastKnownSaveTime = data.lastSaved;
+            // Update our known save time BEFORE saving to ignore our own updates
+            lastKnownSaveTime = saveTimestamp;
+            console.log('💾 Saving with timestamp:', saveTimestamp);
             
             // Always save to localStorage IMMEDIATELY as backup
             try {
@@ -4282,12 +4292,15 @@
                 // Store the data to be saved
                 pendingSaveData = data;
                 
-                // Schedule the Firebase save after 500ms of no changes
+                // Schedule the Firebase save after 200ms of no changes
                 saveDebounceTimer = setTimeout(() => {
                     if (!pendingSaveData) return;
                     
                     const dataToSave = pendingSaveData;
                     pendingSaveData = null;
+                    
+                    // Update lastKnownSaveTime again in case it changed
+                    lastKnownSaveTime = dataToSave.lastSaved;
                     
                     // Remove old indicator if exists
                     const oldIndicator = document.getElementById('savingIndicator');
@@ -4302,7 +4315,7 @@
                     
                     database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
                         .then(() => {
-                            console.log('✅ Data saved to Firebase successfully');
+                            console.log('✅ Data saved to Firebase successfully, timestamp:', dataToSave.lastSaved);
                             savingToast.style.background = '#10b981';
                             savingToast.textContent = '✓ Synced';
                             setTimeout(() => {
@@ -4768,11 +4781,16 @@
                 return;
             }
             
+            console.log('📥 Loading data from Firebase for user:', currentUser.uid);
+            
             database.ref('users/' + currentUser.uid + '/appData').once('value')
                 .then((snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        console.log('Loading data from Firebase');
+                        console.log('✅ Loading data from Firebase, timestamp:', data.lastSaved);
+                        
+                        // CRITICAL: Set lastKnownSaveTime FIRST to prevent realtime sync from re-processing
+                        lastKnownSaveTime = data.lastSaved || Date.now();
                         
                         // Load all data
                         tasks = data.tasks || [];
@@ -4980,9 +4998,12 @@
                     database.ref('users/' + currentUser.uid + '/appData').once('value')
                         .then(snapshot => {
                             const data = snapshot.val();
-                            if (data && data.lastSaved && data.lastSaved > lastKnownSaveTime) {
-                                console.log('📥 Found newer data, refreshing ALL data...');
-                                lastKnownSaveTime = data.lastSaved;
+                            const incomingTime = data?.lastSaved || 0;
+                            
+                            // Only update if incoming data is NEWER
+                            if (data && incomingTime > lastKnownSaveTime) {
+                                console.log('📥 Found newer data, refreshing ALL data...', incomingTime, '>', lastKnownSaveTime);
+                                lastKnownSaveTime = incomingTime;
                                 
                                 // Update ALL local data - COMPLETE LIST
                                 if (data.tasks) tasks = data.tasks;
@@ -7503,41 +7524,56 @@
         }
         // Listen for real-time updates to ALL main data from other devices
         let mainDataSyncEnabled = false;
-        let lastKnownSaveTime = null;
+        let lastKnownSaveTime = 0; // Initialize to 0 instead of null for safe comparisons
+        let realtimeSyncListener = null; // Store the listener reference for cleanup
         
         function setupMainDataRealtimeSync() {
-            if (!firebaseInitialized || !database || !currentUser || mainDataSyncEnabled) return;
-            mainDataSyncEnabled = true;
+            if (!firebaseInitialized || !database || !currentUser) {
+                console.warn('⚠️ Cannot setup realtime sync - Firebase not ready');
+                return;
+            }
             
+            // If already enabled, detach old listener first to prevent duplicates
+            if (mainDataSyncEnabled && realtimeSyncListener) {
+                console.log('🔄 Detaching old realtime listener before creating new one');
+                database.ref('users/' + currentUser.uid + '/appData').off('value', realtimeSyncListener);
+            }
+            
+            mainDataSyncEnabled = true;
             console.log('🔄 Setting up real-time sync for main data');
             
             let isFirstCallback = true;
             
-            database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
+            realtimeSyncListener = database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
                 // Skip the first callback (that's our initial load)
                 if (isFirstCallback) {
                     isFirstCallback = false;
                     const data = snapshot.val();
                     if (data && data.lastSaved) {
                         lastKnownSaveTime = data.lastSaved;
+                        console.log('📍 Initial lastKnownSaveTime set to:', lastKnownSaveTime);
                     }
                     return;
                 }
                 
                 const data = snapshot.val();
-                if (!data) return;
-                
-                // Only process if this is a NEW update (different timestamp)
-                if (data.lastSaved && data.lastSaved === lastKnownSaveTime) {
-                    console.log('🔄 Skipping own update');
+                if (!data) {
+                    console.log('🔄 Empty data received, skipping');
                     return;
                 }
                 
-                lastKnownSaveTime = data.lastSaved;
-                console.log('📥 Received real-time update from another device');
+                // Only process if this is a NEW update (different timestamp AND newer)
+                const incomingTime = data.lastSaved || 0;
+                if (incomingTime <= lastKnownSaveTime) {
+                    console.log('🔄 Skipping old or own update:', incomingTime, '<=', lastKnownSaveTime);
+                    return;
+                }
+                
+                lastKnownSaveTime = incomingTime;
+                console.log('📥 Received real-time update from another device, timestamp:', incomingTime);
                 
                 // Update ALL local data - COMPLETE LIST
-                if (data.tasks) tasks = data.tasks;
+                if (data.tasks !== undefined) tasks = data.tasks || [];
                 
                 if (data.stats) {
                     stats = {
@@ -7552,8 +7588,8 @@
                     medications = { ...medications, ...data.medications };
                 }
                 
-                if (data.calendarNotes) {
-                    calendarNotes = data.calendarNotes;
+                if (data.calendarNotes !== undefined) {
+                    calendarNotes = data.calendarNotes || {};
                 }
                 
                 if (data.pillAssignments) {
@@ -7589,7 +7625,7 @@
                     };
                 }
                 
-                if (data.calendarEvents) calendarEvents = data.calendarEvents;
+                if (data.calendarEvents !== undefined) calendarEvents = data.calendarEvents || [];
                 
                 if (data.notebook) {
                     notebook = {
