@@ -193,7 +193,7 @@
 
         th {
             background: #0f172a;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.8em;
@@ -282,6 +282,20 @@
             50% { opacity: 0.7; }
         }
 
+        /* Motion reduction for users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Minimum touch targets for accessibility (44x44px) */
+        button, .tab-btn, input[type="checkbox"] {
+            min-height: 44px;
+        }
+
         /* Risk Badges */
         .risk-critical {
             background: #dc2626;
@@ -313,6 +327,50 @@
             padding: 4px 10px;
             border-radius: 4px;
             font-weight: 700;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            color: #b0bcc8;
+            padding: 30px;
+            font-size: 1em;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            opacity: 0.6;
+        }
+
+        /* Button click feedback */
+        button:active, .tab-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #60a5fa;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
         }
 
         /* Editable Fields */
@@ -512,7 +570,7 @@
 
         .grade-input-row label {
             min-width: 150px;
-            color: #94a3b8;
+            color: #b0bcc8;
         }
 
         .grade-input-row input, .grade-input-row select {
@@ -655,7 +713,7 @@
         }
 
         .stat-box .label {
-            color: #94a3b8;
+            color: #b0bcc8;
             font-size: 0.85em;
             margin-top: 5px;
         }
@@ -720,18 +778,29 @@
             }
 
             .tab-nav {
-                gap: 2px;
-                padding: 5px;
+                gap: 6px;
+                padding: 8px;
                 background: #0f172a;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                /* Fade effect to indicate more content */
+                mask-image: linear-gradient(to right, transparent, black 10px, black 90%, transparent);
+                -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black 90%, transparent);
             }
-            
+
+            .tab-nav::-webkit-scrollbar {
+                display: none;
+            }
+
             .tab-btn {
-                padding: 10px 12px;
-                font-size: 0.75em;
-                border-radius: 6px;
-                flex: 1;
+                padding: 12px 16px;
+                font-size: 0.85em;
+                border-radius: 8px;
+                flex: 0 0 auto;
                 text-align: center;
-                min-width: auto;
+                min-width: max-content;
+                white-space: nowrap;
             }
 
             .tab-content {
@@ -1284,7 +1353,7 @@
             justify-content: space-between;
             margin-top: 8px;
             font-size: 0.85em;
-            color: #94a3b8;
+            color: #b0bcc8;
         }
 
         .exam-card-body {
@@ -1629,7 +1698,7 @@
 
         .pomodoro-option .pomo-label {
             font-size: 0.75em;
-            color: #94a3b8;
+            color: #b0bcc8;
             margin-top: 2px;
         }
 
@@ -1644,7 +1713,7 @@
 
         .timer-mode {
             font-size: 1em;
-            color: #94a3b8;
+            color: #b0bcc8;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -1686,7 +1755,7 @@
 
         .timer-btn.reset {
             background: #334155;
-            color: #94a3b8;
+            color: #b0bcc8;
         }
 
         .timer-btn:hover {
@@ -1710,7 +1779,7 @@
         .planner-input-label {
             font-size: 0.8em;
             font-weight: 600;
-            color: #94a3b8;
+            color: #b0bcc8;
             text-transform: uppercase;
             margin-bottom: 8px;
             display: block;
@@ -1788,7 +1857,7 @@
             border: 2px solid #334155;
             border-radius: 6px;
             background: #0f172a;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-size: 0.85em;
             font-weight: 600;
             cursor: pointer;
@@ -2002,7 +2071,7 @@
 
         .planner-stat-label {
             font-size: 0.8em;
-            color: #94a3b8;
+            color: #b0bcc8;
             text-transform: uppercase;
         }
 
@@ -2053,7 +2122,7 @@
             border: 1px solid #334155;
             border-radius: 8px;
             background: #0f172a;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-size: 0.85em;
             cursor: pointer;
             transition: all 0.2s;
@@ -2722,7 +2791,7 @@
 
         .mp-untimed-title {
             font-weight: 600;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-size: 0.85em;
         }
 
@@ -2901,7 +2970,7 @@
 
         .mp-modal-field label {
             display: block;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-size: 0.9em;
             margin-bottom: 6px;
         }
@@ -2976,7 +3045,7 @@
             text-align: left;
             padding: 8px 10px;
             background: #1e293b;
-            color: #94a3b8;
+            color: #b0bcc8;
             font-weight: 600;
             font-size: 0.85em;
             text-transform: uppercase;
@@ -3159,7 +3228,7 @@
             border: none;
             border-radius: 4px;
             background: #334155;
-            color: #94a3b8;
+            color: #b0bcc8;
             cursor: pointer;
             font-size: 0.85em;
             display: flex;
@@ -3267,7 +3336,7 @@
 
         .mp-stat-label {
             font-size: 0.8em;
-            color: #94a3b8;
+            color: #b0bcc8;
             margin-top: 4px;
         }
 
@@ -3342,7 +3411,7 @@
             font-size: 0.8em;
             cursor: pointer;
             background: #334155;
-            color: #94a3b8;
+            color: #b0bcc8;
         }
 
         .mp-task-btn:hover {
@@ -3363,7 +3432,7 @@
         <p>Your complete academic survival guide</p>
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
             <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
-            <span id="syncText" style="color: #8b949e;">Connecting...</span>
+            <span id="syncText" style="color: #b0b8c4;">Connecting...</span>
             <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync</button>
         </div>
     </div>
@@ -3641,7 +3710,7 @@
             <div class="course-header" onclick="toggleCourse('oralmed')">
                 <div>
                     <strong style="font-size: 1.1em;">📖 ORAL MEDICINE (OD 531)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Henderson (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1571677974606770795577603b707160">[email&#160;protected]</a>)</span>
+                    <span style="color: #b0bcc8; margin-left: 10px;">Dr. Henderson (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1571677974606770795577603b707160">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -3679,7 +3748,7 @@
             <div class="course-header" onclick="toggleCourse('paincontrol')">
                 <div>
                     <strong style="font-size: 1.1em;">💉 PAIN CONTROL 2 (OS 532)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. D'Innocenzo (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0a786e636464654a687f246f6e7f">[email&#160;protected]</a>) | Co: Dr. Bhagania</span>
+                    <span style="color: #b0bcc8; margin-left: 10px;">Dr. D'Innocenzo (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0a786e636464654a687f246f6e7f">[email&#160;protected]</a>) | Co: Dr. Bhagania</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -3722,7 +3791,7 @@
             <div class="course-header" onclick="toggleCourse('critthink')">
                 <div>
                     <strong style="font-size: 1.1em;">🧠 CRITICAL THINKING (GD 660)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="39575c5c5f5540795b4c175c5d4c">[email&#160;protected]</a>)</span>
+                    <span style="color: #b0bcc8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="39575c5c5f5540795b4c175c5d4c">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -3797,7 +3866,7 @@
                     </div>
                     <div class="grid-2">
                         <div>
-                            <h4 style="color: #94a3b8; margin-bottom: 10px;">What You Have</h4>
+                            <h4 style="color: #b0bcc8; margin-bottom: 10px;">What You Have</h4>
                             <table>
                                 <tr><td>Exam 1 (77% × 40)</td><td><strong>30.8 pts</strong></td></tr>
                                 <tr><td>Headstart (100% × 2.5)</td><td><strong>2.5 pts</strong></td></tr>
@@ -3805,7 +3874,7 @@
                             </table>
                         </div>
                         <div>
-                            <h4 style="color: #94a3b8; margin-bottom: 10px;">What You Need</h4>
+                            <h4 style="color: #b0bcc8; margin-bottom: 10px;">What You Need</h4>
                             <table>
                                 <tr><td>C- (70%)</td><td>36.7 pts → <strong>63.8% avg</strong></td></tr>
                                 <tr><td>C (73%)</td><td>39.7 pts → <strong>69.0% avg</strong></td></tr>
@@ -3833,7 +3902,7 @@
             <div class="course-header" onclick="toggleCourse('perio')">
                 <div>
                     <strong style="font-size: 1.1em;">🦷 PERIODONTOLOGY 2 (PE 530)</strong>
-                    <span style="color: #94a3b8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a141f1f1c16033a180f541f1e0f">[email&#160;protected]</a>)</span>
+                    <span style="color: #b0bcc8; margin-left: 10px;">Dr. Fleisher (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a141f1f1c16033a180f541f1e0f">[email&#160;protected]</a>)</span>
                 </div>
                 <span class="expand-icon">▼</span>
             </div>
@@ -3858,7 +3927,7 @@
                         <span class="card-title">📝 4 POSSIBLE ESSAY TOPICS (Fleisher picks 2 on exam day)</span>
                     </div>
                     <div style="padding: 10px 0;">
-                        <p style="margin-bottom: 10px; color: #94a3b8;">Each essay needs 1 reference. ~45 min each. Learning these covers 4 major final topics!</p>
+                        <p style="margin-bottom: 10px; color: #b0bcc8;">Each essay needs 1 reference. ~45 min each. Learning these covers 4 major final topics!</p>
                         <table>
                             <tr style="background: rgba(59, 130, 246, 0.1);"><td><strong>1. Crown Lengthening</strong> (5 parts)</td><td>Ref: Gargiulo 1963, J of Perio | Biologic width: 1.07mm CT + 0.97mm JE</td></tr>
                             <tr style="background: rgba(59, 130, 246, 0.1);"><td><strong>2. Guided Tissue Regen</strong> (9 parts)</td><td>Ref: Nieman 1981, J of Clinical Perio</td></tr>
@@ -4047,7 +4116,7 @@
                 <span class="card-title">📈 What You Need</span>
             </div>
             <div id="gradeResults">
-                <p style="color: #94a3b8;">Select a course and enter your grades to see calculations.</p>
+                <p style="color: #b0bcc8;">Select a course and enter your grades to see calculations.</p>
             </div>
         </div>
     </div>
@@ -4085,7 +4154,7 @@
         <!-- Exam Cards Container (populated by JS) -->
         <div id="examContentContainer">
             <div class="card" style="text-align: center; padding: 40px;">
-                <p style="color: #94a3b8; font-size: 1.1em;">👆 Select a course above to view exam content and track your study progress.</p>
+                <p style="color: #b0bcc8; font-size: 1.1em;">👆 Select a course above to view exam content and track your study progress.</p>
             </div>
         </div>
         
@@ -4375,7 +4444,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('gatecontrol')">
                 <div style="flex: 1;">
                     <strong>🎬 Gate Control Theory Video</strong><br>
-                    <span style="color: #94a3b8;">Course: Pain Control 2 | Due: Was Jan 15</span><br>
+                    <span style="color: #b0bcc8;">Course: Pain Control 2 | Due: Was Jan 15</span><br>
                     <span style="color: #d97706;">Action: ❓ CONFIRM DONE — On Blackboard</span>
                 </div>
             </div>
@@ -4384,7 +4453,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('acutepain')">
                 <div style="flex: 1;">
                     <strong>🎬 Acute Dental Pain Module</strong><br>
-                    <span style="color: #94a3b8;">Course: Pain Control 2 | Due: Thu Jan 29</span><br>
+                    <span style="color: #b0bcc8;">Course: Pain Control 2 | Due: Thu Jan 29</span><br>
                     <span style="color: #f87171;">Action: <a href="https://www.scopeofpain.org/supplemental-training/safe-opioid-prescribing-for-acute-dental-pain/activity.php" target="_blank" style="color: #60a5fa;">scopeofpain.org</a> — <strong>Print TWO certificates!</strong> Q's on exam</span>
                 </div>
             </div>
@@ -4393,7 +4462,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('peextremities')">
                 <div style="flex: 1;">
                     <strong>🎬 PE of Extremities Video</strong><br>
-                    <span style="color: #94a3b8;">Course: Pain Control 2 | Due: Before Mar 5</span><br>
+                    <span style="color: #b0bcc8;">Course: Pain Control 2 | Due: Before Mar 5</span><br>
                     <span style="color: #f87171;">Action: Complete on Blackboard</span>
                 </div>
             </div>
@@ -4402,7 +4471,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('npi')">
                 <div style="flex: 1;">
                     <strong>NPI Exercise</strong><br>
-                    <span style="color: #94a3b8;">Course: Peds | Due: ~Mon Mar 30 (same day as Exam 3)</span><br>
+                    <span style="color: #b0bcc8;">Course: Peds | Due: ~Mon Mar 30 (same day as Exam 3)</span><br>
                     <span style="color: #f87171;">Action: Google Form on BB ("NPI mandatory" folder). Code: 39. BU address. <strong>No SSN = 3 MONTH paper process!</strong></span>
                 </div>
             </div>
@@ -4411,7 +4480,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('orthomodule')">
                 <div style="flex: 1;">
                     <strong>Orthodontic Module</strong><br>
-                    <span style="color: #94a3b8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DUE DATE)</span></span><br>
+                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DUE DATE)</span></span><br>
                     <span style="color: #f87171;">Action: FIND DUE DATE — 5% of grade + MANDATORY</span>
                 </div>
             </div>
@@ -4420,7 +4489,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('ips')">
                 <div style="flex: 1;">
                     <strong>IPS Session</strong><br>
-                    <span style="color: #94a3b8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DATE & ATTEND)</span></span><br>
+                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DATE & ATTEND)</span></span><br>
                     <span style="color: #f87171;">Action: FIND DATE & ATTEND</span>
                 </div>
             </div>
@@ -4429,7 +4498,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('periodiscussion')">
                 <div style="flex: 1;">
                     <strong>In-Person Discussion (5% FREE POINTS!)</strong><br>
-                    <span style="color: #94a3b8;">Course: Perio 2 | Due: Anytime (YOU SCHEDULE)</span><br>
+                    <span style="color: #b0bcc8;">Course: Perio 2 | Due: Anytime (YOU SCHEDULE)</span><br>
                     <span style="color: #059669;">Action: 15-20 min with Fleisher. "The longer you wait, the more you need to know" — <strong>SCHEDULE NOW!</strong></span>
                 </div>
             </div>
@@ -4452,38 +4521,38 @@
             <div class="card-header">
                 <span class="card-title">📖 Suggested Study Allocation (Now through Feb 18)</span>
             </div>
-            <p style="margin-bottom: 15px; color: #94a3b8;">You have 34 days until Peds Exam 2 (your make-or-break). But you also have PC2 Midterm (Day 18) and Ortho Final (Day 22) first.</p>
+            <p style="margin-bottom: 15px; color: #b0bcc8;">You have 34 days until Peds Exam 2 (your make-or-break). But you also have PC2 Midterm (Day 18) and Ortho Final (Day 22) first.</p>
 
             <div class="study-phase">
                 <h4>PHASE 1: Jan 15 - Feb 2 (18 days)</h4>
-                <p style="color: #94a3b8; margin-bottom: 10px;">Primary focus: PC2 Midterm + Ortho Final | Secondary: Keep up with weekly quizzes/assignments</p>
+                <p style="color: #b0bcc8; margin-bottom: 10px;">Primary focus: PC2 Midterm + Ortho Final | Secondary: Keep up with weekly quizzes/assignments</p>
                 <div class="study-split">
                     <div class="study-split-item">
                         <div class="percent">40%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Pain Control 2<br>(midterm prep)</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Pain Control 2<br>(midterm prep)</div>
                     </div>
                     <div class="study-split-item">
                         <div class="percent">40%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Orthodontics<br>(final prep - use old exams!)</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Orthodontics<br>(final prep - use old exams!)</div>
                     </div>
                     <div class="study-split-item">
                         <div class="percent">20%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Weekly quiz/assignment maintenance</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Weekly quiz/assignment maintenance</div>
                     </div>
                 </div>
             </div>
 
             <div class="study-phase">
                 <h4>PHASE 2: Feb 3-6 (4 days)</h4>
-                <p style="color: #94a3b8; margin-bottom: 10px;">Primary focus: Ortho Final (Feb 6) | Secondary: Start Peds review</p>
+                <p style="color: #b0bcc8; margin-bottom: 10px;">Primary focus: Ortho Final (Feb 6) | Secondary: Start Peds review</p>
                 <div class="study-split">
                     <div class="study-split-item">
                         <div class="percent">70%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Ortho Final</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Ortho Final</div>
                     </div>
                     <div class="study-split-item">
                         <div class="percent">30%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Start Peds review</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Start Peds review</div>
                     </div>
                 </div>
             </div>
@@ -4494,15 +4563,15 @@
                 <div class="study-split">
                     <div class="study-split-item" style="border: 2px solid #dc2626;">
                         <div class="percent" style="color: #dc2626;">70%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Peds Exam 2<br>(cumulative, 45% of grade)</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Peds Exam 2<br>(cumulative, 45% of grade)</div>
                     </div>
                     <div class="study-split-item">
                         <div class="percent">20%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Other quizzes/assignments</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Other quizzes/assignments</div>
                     </div>
                     <div class="study-split-item">
                         <div class="percent">10%</div>
-                        <div style="color: #94a3b8; font-size: 0.9em;">Geriatrics midterm (Feb 11)</div>
+                        <div style="color: #b0bcc8; font-size: 0.9em;">Geriatrics midterm (Feb 11)</div>
                     </div>
                 </div>
             </div>
@@ -4568,7 +4637,7 @@
                 <div class="planner-timeline-card">
                     <div class="planner-timeline-header">
                         <span style="color: #e2e8f0; font-weight: 600;">📅 Today's Schedule</span>
-                        <span style="color: #94a3b8; font-size: 0.85em;" id="dpTaskSummary">0 tasks • 0h planned</span>
+                        <span style="color: #b0bcc8; font-size: 0.85em;" id="dpTaskSummary">0 tasks • 0h planned</span>
                     </div>
                     <div class="planner-timeline-container" id="dpTimelineContainer">
                         <div class="planner-timeline" id="dpTimeline">
@@ -6138,9 +6207,9 @@
                             ${getCountdownBadge(days, d.tbd)}
                             <div style="flex: 1;">
                                 <strong>${d.what}</strong>
-                                <span style="color: #94a3b8; margin-left: 10px;">${d.course}</span>
+                                <span style="color: #b0bcc8; margin-left: 10px;">${d.course}</span>
                             </div>
-                            <span style="color: #94a3b8;">${d.weight}</span>
+                            <span style="color: #b0bcc8;">${d.weight}</span>
                         </div>
                     `;
                 }).join('');
@@ -6529,19 +6598,19 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; padding: 15px; background: rgba(5, 150, 105, 0.1); border-radius: 8px; border: 1px solid #059669;">
                     <div style="text-align: center;">
                         <div style="font-size: 1.5em; font-weight: bold; color: #10b981;">${earnedPoints.toFixed(1)}</div>
-                        <div style="font-size: 0.8em; color: #94a3b8;">Points Earned</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Points Earned</div>
                     </div>
                     <div style="text-align: center;">
                         <div style="font-size: 1.5em; font-weight: bold; color: #60a5fa;">${completedWeight.toFixed(1)}%</div>
-                        <div style="font-size: 0.8em; color: #94a3b8;">Completed</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Completed</div>
                     </div>
                     <div style="text-align: center;">
                         <div style="font-size: 1.5em; font-weight: bold; color: #d97706;">${remainingWeight.toFixed(1)}%</div>
-                        <div style="font-size: 0.8em; color: #94a3b8;">Remaining</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Remaining</div>
                     </div>
                     <div style="text-align: center;">
                         <div style="font-size: 1.5em; font-weight: bold; color: ${currentGrade >= course.passing ? '#10b981' : '#f87171'};">${currentGrade.toFixed(1)}%</div>
-                        <div style="font-size: 0.8em; color: #94a3b8;">Current Avg</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Current Avg</div>
                     </div>
                 </div>
             `;
@@ -6588,7 +6657,7 @@
             });
             
             html += '</tbody></table></div>';
-            html += `<p style="margin-top: 15px; color: #94a3b8;">Minimum to pass: <strong style="color: ${course.passing > 60 ? '#f87171' : '#e2e8f0'};">${course.passing}%</strong>${course.passing > 60 ? ' ⚠️ Higher than standard!' : ''}</p>`;
+            html += `<p style="margin-top: 15px; color: #b0bcc8;">Minimum to pass: <strong style="color: ${course.passing > 60 ? '#f87171' : '#e2e8f0'};">${course.passing}%</strong>${course.passing > 60 ? ' ⚠️ Higher than standard!' : ''}</p>`;
             
             document.getElementById('gradeEntrySection').innerHTML = html;
             
@@ -6746,7 +6815,7 @@
                     <div class="grade-result ${isAchievable ? 'passing' : 'failing'}">
                         <strong>To achieve ${targetGrade}% (${getGradeLetter(targetGrade)}):</strong><br><br>
                         You need an average of <strong style="font-size: 1.3em; color: ${avgNeeded <= 70 ? '#10b981' : avgNeeded <= 85 ? '#d97706' : '#dc2626'};">${avgNeeded.toFixed(1)}%</strong> on remaining assignments.<br>
-                        <span style="color: #94a3b8;">${difficulty}</span>
+                        <span style="color: #b0bcc8;">${difficulty}</span>
                     </div>
                 `;
                 
@@ -6754,7 +6823,7 @@
                     resultHtml += `
                         <div style="margin-top: 15px;">
                             <strong>Remaining Components:</strong>
-                            <ul style="margin-top: 10px; margin-left: 20px; color: #94a3b8;">
+                            <ul style="margin-top: 10px; margin-left: 20px; color: #b0bcc8;">
                                 ${remainingComponents.map(c => `<li>${c.name} (${c.weight}%)</li>`).join('')}
                             </ul>
                         </div>
@@ -6836,18 +6905,18 @@
                         <h3 style="color: #60a5fa; margin-bottom: 20px; font-size: 1.2em;">➕ Add New Deadline</h3>
                         
                         <div style="margin-bottom: 15px;">
-                            <label style="color: #94a3b8; display: block; margin-bottom: 5px;">What is it?</label>
+                            <label style="color: #b0bcc8; display: block; margin-bottom: 5px;">What is it?</label>
                             <input type="text" id="newDeadlineWhat" placeholder="e.g., Quiz 5 due" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; box-sizing: border-box;">
                         </div>
                         
                         <div style="margin-bottom: 15px;">
-                            <label style="color: #94a3b8; display: block; margin-bottom: 5px;">Date</label>
+                            <label style="color: #b0bcc8; display: block; margin-bottom: 5px;">Date</label>
                             <input type="date" id="newDeadlineDate" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; box-sizing: border-box;">
                         </div>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div>
-                                <label style="color: #94a3b8; display: block; margin-bottom: 5px;">Course</label>
+                                <label style="color: #b0bcc8; display: block; margin-bottom: 5px;">Course</label>
                                 <select id="newDeadlineCourse" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
                                     <option value="Oral Med">Oral Med</option>
                                     <option value="Pain Control 2">Pain Control 2</option>
@@ -6863,13 +6932,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="color: #94a3b8; display: block; margin-bottom: 5px;">Weight</label>
+                                <label style="color: #b0bcc8; display: block; margin-bottom: 5px;">Weight</label>
                                 <input type="text" id="newDeadlineWeight" placeholder="e.g., 10%" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; box-sizing: border-box;">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 20px;">
-                            <label style="color: #94a3b8; display: block; margin-bottom: 5px;">Type</label>
+                            <label style="color: #b0bcc8; display: block; margin-bottom: 5px;">Type</label>
                             <select id="newDeadlineType" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
                                 <option value="Quiz">Quiz</option>
                                 <option value="EXAM">EXAM</option>
@@ -6989,14 +7058,14 @@
                     <div style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
                         <h3 style="color: #10b981; margin-bottom: 15px;">✓ Mark Complete</h3>
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>${escapeHtml(deadline.what)}</strong></p>
-                        <p style="color: #94a3b8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>
+                        <p style="color: #b0bcc8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>
                         
                         <div style="margin-bottom: 20px;">
-                            <label style="color: #94a3b8; display: block; margin-bottom: 8px;">What grade did you get? (Leave blank if N/A)</label>
+                            <label style="color: #b0bcc8; display: block; margin-bottom: 8px;">What grade did you get? (Leave blank if N/A)</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <input type="number" id="gradeInput" min="0" max="100" placeholder="e.g., 85" 
                                     style="flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 1.1em;">
-                                <span style="color: #94a3b8; font-size: 1.2em;">%</span>
+                                <span style="color: #b0bcc8; font-size: 1.2em;">%</span>
                             </div>
                         </div>
                         
@@ -7269,7 +7338,7 @@
             if (!courseKey || !examContentData[courseKey]) {
                 container.innerHTML = `
                     <div class="card" style="text-align: center; padding: 40px;">
-                        <p style="color: #94a3b8; font-size: 1.1em;">
+                        <p style="color: #b0bcc8; font-size: 1.1em;">
                             ${courseKey && !examContentData[courseKey] ? '🚧 This course data is coming soon! Select another course.' : '👆 Select a course above to view exam content and track your study progress.'}
                         </p>
                     </div>
@@ -7290,15 +7359,15 @@
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <div style="background: #0f172a; padding: 15px 20px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center;">
                             <div style="font-size: 2em; font-weight: 700; color: #f87171;">${course.exams.length}</div>
-                            <div style="color: #94a3b8; font-size: 0.9em;">Exams</div>
+                            <div style="color: #b0bcc8; font-size: 0.9em;">Exams</div>
                         </div>
                         <div style="background: #0f172a; padding: 15px 20px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center;">
                             <div style="font-size: 2em; font-weight: 700; color: #60a5fa;">${getTotalTopicsForCourse(courseKey)}</div>
-                            <div style="color: #94a3b8; font-size: 0.9em;">Total Topics</div>
+                            <div style="color: #b0bcc8; font-size: 0.9em;">Total Topics</div>
                         </div>
                         <div style="background: #0f172a; padding: 15px 20px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center;">
                             <div style="font-size: 2em; font-weight: 700; color: #10b981;">${getCourseStudyProgress(courseKey)}%</div>
-                            <div style="color: #94a3b8; font-size: 0.9em;">Studied</div>
+                            <div style="color: #b0bcc8; font-size: 0.9em;">Studied</div>
                         </div>
                     </div>
                     ${course.studyTip ? `<div style="margin-top: 15px; padding: 12px 15px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-size: 0.9em; color: #6ee7b7;">${course.studyTip}</div>` : ''}
@@ -7322,7 +7391,7 @@
                                             ${mod.status === 'do_now' ? '<span class="mandatory-badge">❌ DO NOW</span>' : ''}
                                             ${mod.status === 'confirm' ? '<span class="mandatory-badge" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fcd34d;">❓ CONFIRM DONE</span>' : ''}
                                         </div>
-                                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 6px; font-size: 0.85em; color: #94a3b8;">
+                                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 6px; font-size: 0.85em; color: #b0bcc8;">
                                             <span>📍 ${mod.platform}</span>
                                             <span>📅 Due: ${mod.due}</span>
                                         </div>
@@ -7354,7 +7423,7 @@
                                             <td style="font-weight: 600;">${comp.name}</td>
                                             <td><span class="exam-badge weight">${comp.weight}${typeof comp.weight === 'number' ? '%' : ''}</span></td>
                                             <td>${comp.due || '—'}</td>
-                                            <td style="font-size: 0.85em; color: #94a3b8;">${comp.note || '—'}</td>
+                                            <td style="font-size: 0.85em; color: #b0bcc8;">${comp.note || '—'}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -7392,14 +7461,14 @@
                             <div style="flex: 1; min-width: 200px; background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
                                 <div style="font-size: 2em; font-weight: 700; color: #10b981;">${course.currentProgress.completed}%</div>
                                 <div style="color: #6ee7b7; font-weight: 600; margin-bottom: 10px;">✅ Completed</div>
-                                <ul style="margin: 0; padding-left: 20px; color: #94a3b8; font-size: 0.85em;">
+                                <ul style="margin: 0; padding-left: 20px; color: #b0bcc8; font-size: 0.85em;">
                                     ${course.currentProgress.items.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
                             </div>
                             <div style="flex: 1; min-width: 200px; background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
                                 <div style="font-size: 2em; font-weight: 700; color: #ef4444;">${course.remainingProgress.remaining}%</div>
                                 <div style="color: #fca5a5; font-weight: 600; margin-bottom: 10px;">❌ Remaining</div>
-                                <ul style="margin: 0; padding-left: 20px; color: #94a3b8; font-size: 0.85em;">
+                                <ul style="margin: 0; padding-left: 20px; color: #b0bcc8; font-size: 0.85em;">
                                     ${course.remainingProgress.items.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
                             </div>
@@ -7432,21 +7501,21 @@
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
                             <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
-                                <div style="color: #94a3b8; font-size: 0.8em;">📅 Date</div>
+                                <div style="color: #b0bcc8; font-size: 0.8em;">📅 Date</div>
                                 <div style="color: #e2e8f0; font-weight: 600;">${q2.date}</div>
                             </div>
                             <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
-                                <div style="color: #94a3b8; font-size: 0.8em;">🕐 Time</div>
+                                <div style="color: #b0bcc8; font-size: 0.8em;">🕐 Time</div>
                                 <div style="color: #e2e8f0; font-weight: 600;">${q2.time}</div>
                             </div>
                             <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
-                                <div style="color: #94a3b8; font-size: 0.8em;">📋 Format</div>
+                                <div style="color: #b0bcc8; font-size: 0.8em;">📋 Format</div>
                                 <div style="color: #e2e8f0; font-weight: 600;">${q2.format}</div>
                             </div>
                         </div>
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #e2e8f0;">📖 Study Focus:</strong>
-                            <ul style="margin: 10px 0 0 20px; color: #94a3b8;">
+                            <ul style="margin: 10px 0 0 20px; color: #b0bcc8;">
                                 ${q2.studyFocus.map(focus => `<li style="margin-bottom: 6px;">${focus}</li>`).join('')}
                             </ul>
                         </div>
@@ -7501,7 +7570,7 @@
                                     ${course.quizSchedule.map(quiz => `
                                         <tr style="${quiz.status === 'done' ? 'opacity: 0.6;' : ''}">
                                             <td style="font-weight: 600;">Quiz ${quiz.num}</td>
-                                            <td style="color: #94a3b8;">${quiz.covers}</td>
+                                            <td style="color: #b0bcc8;">${quiz.covers}</td>
                                             <td>${quiz.topic}</td>
                                             <td style="color: #fbbf24;">${quiz.due}</td>
                                             <td>${quiz.status === 'done' ? '<span style="color: #10b981;">✅ Done</span>' : '<span style="color: #f87171;">❌ Pending</span>'}</td>
@@ -7530,7 +7599,7 @@
                         </div>
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #e2e8f0;">Requirements:</strong>
-                            <ul style="margin: 10px 0 0 20px; color: #94a3b8;">
+                            <ul style="margin: 10px 0 0 20px; color: #b0bcc8;">
                                 ${pp.requirements.map(req => `<li style="margin-bottom: 6px;">${req}</li>`).join('')}
                             </ul>
                         </div>
@@ -7550,13 +7619,13 @@
                             <div class="lecture-row" style="border-left: 3px solid #60a5fa;">
                                 <div class="lecture-info">
                                     <div class="lecture-topic" style="font-weight: 600; color: #93c5fd;">📝 Notecard Policy</div>
-                                    <div style="margin-top: 6px; color: #94a3b8;">${course.examRules.notecard}</div>
+                                    <div style="margin-top: 6px; color: #b0bcc8;">${course.examRules.notecard}</div>
                                 </div>
                             </div>
                             <div class="lecture-row" style="border-left: 3px solid #f59e0b;">
                                 <div class="lecture-info">
                                     <div class="lecture-topic" style="font-weight: 600; color: #fcd34d;">🔄 Makeup Exams</div>
-                                    <div style="margin-top: 6px; color: #94a3b8;">${course.examRules.makeup}</div>
+                                    <div style="margin-top: 6px; color: #b0bcc8;">${course.examRules.makeup}</div>
                                 </div>
                             </div>
                         </div>
@@ -7726,7 +7795,7 @@
                         <div class="exam-card-title">
                             <div>
                                 <h3>${exam.courseName}</h3>
-                                <div style="color: #94a3b8; font-size: 0.9em; margin-top: 4px;">
+                                <div style="color: #b0bcc8; font-size: 0.9em; margin-top: 4px;">
                                     ${exam.name} • ${formatExamDate(exam.date)}${exam.time ? ` • ${exam.time}` : ''}${exam.room ? ` • ${exam.room}` : ''}
                                 </div>
                             </div>
@@ -9220,7 +9289,7 @@
                         <td><strong>${dateStr}</strong></td>
                         <td class="${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</td>
                         <td><span class="mp-type ${typeClass}">${typeClass.toUpperCase()}</span></td>
-                        <td style="color: #94a3b8; font-size: 0.85em;">${escapeHtml(task.notes || '')}</td>
+                        <td style="color: #b0bcc8; font-size: 0.85em;">${escapeHtml(task.notes || '')}</td>
                         <td><button class="mp-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${week.num}, ${task.isStatic || false})" title="Edit Task">✏️</button></td>
                     </tr>
                 `;

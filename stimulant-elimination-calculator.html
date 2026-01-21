@@ -62,7 +62,7 @@
             padding: 10px 16px;
             border: none;
             background: transparent;
-            color: #8b949e;
+            color: #b0b8c4;
             font-size: 0.9em;
             font-weight: 600;
             cursor: pointer;
@@ -86,7 +86,7 @@
         
         .focus-hero-label {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -147,7 +147,7 @@
         
         .focus-card-title {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -168,7 +168,7 @@
         
         .focus-input-group label {
             font-size: 0.8em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
         
         .focus-input-group input,
@@ -265,7 +265,7 @@
         
         .focus-caffeine-entry .caff-amount {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
             margin-left: 4px;
         }
         
@@ -365,7 +365,7 @@
         
         .focus-sleep-day-label {
             font-size: 0.7em;
-            color: #8b949e;
+            color: #b0b8c4;
             margin-bottom: 4px;
         }
         
@@ -402,7 +402,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
         
         .focus-workout-type.active {
@@ -464,7 +464,7 @@
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 12px;
-            color: #8b949e;
+            color: #b0b8c4;
             font-size: 1em;
             cursor: pointer;
             margin-top: 10px;
@@ -508,6 +508,52 @@
             }
         }
 
+        /* Motion reduction for users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Minimum touch targets for accessibility (44x44px) */
+        button, input[type="checkbox"], .focus-caffeine-btn, .focus-quick-btn {
+            min-height: 44px;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            color: #b0b8c4;
+            padding: 30px;
+            font-size: 1em;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        /* Button click feedback */
+        button:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #00d9ff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -527,7 +573,7 @@
         }
 
         .header p {
-            color: #8b949e;
+            color: #b0b8c4;
             font-size: 1em;
         }
 
@@ -572,7 +618,7 @@
 
         .countdown-label {
             font-size: 0.9em;
-            color: #8b949e;
+            color: #b0b8c4;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 10px;
@@ -592,7 +638,7 @@
 
         .countdown-remaining {
             font-size: 1.3em;
-            color: #8b949e;
+            color: #b0b8c4;
             margin-bottom: 20px;
         }
 
@@ -669,7 +715,7 @@
 
         .input-section h3 {
             font-size: 0.9em;
-            color: #8b949e;
+            color: #b0b8c4;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 12px;
@@ -690,7 +736,7 @@
 
         .input-group label {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         input[type="time"],
@@ -809,7 +855,7 @@
         }
 
         .caffeine-entry .caffeine-time {
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         /* Modifiers */
@@ -890,7 +936,7 @@
 
         .modifier-text .effect {
             font-size: 0.8em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .modifier-time {
@@ -960,7 +1006,7 @@
         }
 
         .workout-impact-neutral {
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         /* Graph */
@@ -1031,7 +1077,7 @@
         }
 
         .graph-tooltip .tooltip-label {
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .graph-tooltip .tooltip-value {
@@ -1080,7 +1126,7 @@
 
         .recommendation-text {
             font-size: 0.9em;
-            color: #8b949e;
+            color: #b0b8c4;
             line-height: 1.5;
         }
 
@@ -1126,7 +1172,7 @@
 
         .setting-item label {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .setting-item input {
@@ -1155,7 +1201,7 @@
 
         .history-details {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .history-accuracy {
@@ -1164,7 +1210,7 @@
 
         .history-predicted {
             font-size: 0.85em;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .history-actual {
@@ -1448,7 +1494,7 @@
         }
 
         .tooltip-text {
-            color: #8b949e;
+            color: #b0b8c4;
             font-size: 12px;
         }
 
@@ -1492,7 +1538,7 @@
 
         .dose-bar-label {
             width: 50px;
-            color: #8b949e;
+            color: #b0b8c4;
         }
 
         .dose-bar-fill {
@@ -1548,7 +1594,7 @@
     <div class="modal-overlay" id="feedbackModal">
         <div class="modal-content">
             <h3>🌙 How did you sleep?</h3>
-            <p style="color: #8b949e; margin-bottom: 20px;">Yesterday's prediction was <strong id="feedbackPredicted">10:30 PM</strong>. When did you actually fall asleep?</p>
+            <p style="color: #b0b8c4; margin-bottom: 20px;">Yesterday's prediction was <strong id="feedbackPredicted">10:30 PM</strong>. When did you actually fall asleep?</p>
             <div class="input-group">
                 <label>Actual sleep time:</label>
                 <input type="time" id="actualSleepTime" style="width: 100%;">
@@ -1575,6 +1621,9 @@
             <div class="focus-hero-label">Projected Sleep Window</div>
             <div class="focus-hero-time" id="focusSleepTime">--:-- PM</div>
             <div class="focus-hero-countdown" id="focusCountdown">-- remaining</div>
+            <div id="focusSleepExplanation" style="font-size: 0.85em; color: #b0b8c4; margin-top: 8px; text-align: center;">
+                When stimulants clear enough for natural sleep
+            </div>
             <div class="focus-hero-bar">
                 <div class="focus-hero-bar-fill" id="focusProgressBar" style="width: 0%"></div>
             </div>
@@ -1601,7 +1650,7 @@
             </div>
             <!-- Recent nights quick edit -->
             <div style="margin-top: 12px;">
-                <label style="font-size: 0.8em; color: #8b949e; display: block; margin-bottom: 6px;">Recent nights (tap to edit)</label>
+                <label style="font-size: 0.8em; color: #b0b8c4; display: block; margin-bottom: 6px;">Recent nights (tap to edit)</label>
                 <div class="focus-sleep-history" id="focusSleepHistory"></div>
             </div>
         </div>
@@ -1610,7 +1659,7 @@
         <div class="focus-card">
             <div class="focus-card-title">💊 Medication</div>
             <div id="focusMedsNotConfirmed">
-                <div style="margin-bottom: 12px; color: #8b949e; font-size: 0.9em;">
+                <div style="margin-bottom: 12px; color: #b0b8c4; font-size: 0.9em;">
                     Standard dose: <strong style="color: #e6edf3;">30mg + 20mg XR</strong>
                 </div>
                 <div class="focus-row" style="margin-bottom: 12px;">
@@ -1633,7 +1682,7 @@
                 <div class="focus-meds-confirmed">
                     <div>
                         <div style="font-weight: 600; color: #10b981;">✓ Meds Logged</div>
-                        <div style="font-size: 0.9em; color: #8b949e;" id="focusMedsSummary">50mg XR at 7:00 AM</div>
+                        <div style="font-size: 0.9em; color: #b0b8c4;" id="focusMedsSummary">50mg XR at 7:00 AM</div>
                     </div>
                     <button class="focus-quick-btn secondary" onclick="focusEditMeds()" style="padding: 8px 12px; font-size: 0.85em;">Edit</button>
                 </div>
@@ -1690,17 +1739,17 @@
                 <button class="focus-caffeine-btn" onclick="focusShowSipMode()" style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: #a78bfa;">⏱️ Sip Mode</button>
             </div>
             
-            <div id="focusCoffeeStatus" style="font-size: 0.85em; color: #8b949e;"></div>
+            <div id="focusCoffeeStatus" style="font-size: 0.85em; color: #b0b8c4;"></div>
         </div>
         
         <!-- Sip Mode Modal -->
         <div id="focusSipModeModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: #1c2432; padding: 24px; border-radius: 16px; max-width: 340px; width: 90%; border: 1px solid #30363d;">
                 <div style="font-weight: 600; color: #e6edf3; margin-bottom: 16px; font-size: 1.1em;">⏱️ Sip Mode</div>
-                <p style="font-size: 0.85em; color: #8b949e; margin-bottom: 16px;">For drinks consumed over time (e.g., sipping a large coffee from 10am-1:30pm). Will split into micro-doses for accurate modeling.</p>
+                <p style="font-size: 0.85em; color: #b0b8c4; margin-bottom: 16px;">For drinks consumed over time (e.g., sipping a large coffee from 10am-1:30pm). Will split into micro-doses for accurate modeling.</p>
                 
                 <div style="margin-bottom: 12px;">
-                    <label style="font-size: 0.8em; color: #8b949e;">Drink Type</label>
+                    <label style="font-size: 0.8em; color: #b0b8c4;">Drink Type</label>
                     <select id="sipDrinkType" style="width: 100%; padding: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin-top: 4px;">
                         <option value="371|Dunkin Lg Americano">🥤 Dunkin Large Iced Americano (371mg)</option>
                         <option value="225|Starbucks Med Americano">🧜‍♀️ Starbucks Medium (Grande) Americano (225mg)</option>
@@ -1713,17 +1762,17 @@
                 </div>
                 
                 <div id="sipCustomAmount" style="display: none; margin-bottom: 12px;">
-                    <label style="font-size: 0.8em; color: #8b949e;">Custom Amount (mg)</label>
+                    <label style="font-size: 0.8em; color: #b0b8c4;">Custom Amount (mg)</label>
                     <input type="number" id="sipCustomMg" placeholder="Enter mg" style="width: 100%; padding: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin-top: 4px;">
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="font-size: 0.8em; color: #8b949e;">Start Time</label>
+                        <label style="font-size: 0.8em; color: #b0b8c4;">Start Time</label>
                         <input type="time" id="sipStartTime" style="width: 100%; padding: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin-top: 4px;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8em; color: #8b949e;">End Time</label>
+                        <label style="font-size: 0.8em; color: #b0b8c4;">End Time</label>
                         <input type="time" id="sipEndTime" style="width: 100%; padding: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin-top: 4px;">
                     </div>
                 </div>
@@ -1754,7 +1803,7 @@
                     </div>
                 </div>
                 <div style="margin-bottom: 12px;">
-                    <label style="font-size: 0.8em; color: #8b949e; display: block; margin-bottom: 8px;">Type</label>
+                    <label style="font-size: 0.8em; color: #b0b8c4; display: block; margin-bottom: 8px;">Type</label>
                     <div class="focus-workout-row">
                         <div class="focus-workout-type active" data-type="lifting" onclick="focusSelectWorkoutType(this)">🏋️ Lift</div>
                         <div class="focus-workout-type" data-type="zone2" onclick="focusSelectWorkoutType(this)">🚴 Zone 2</div>
@@ -1764,7 +1813,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
                     <span style="font-size: 0.9em; color: #10b981;">🧖 Sauna right after</span>
-                    <span style="font-size: 0.8em; color: #8b949e;">(auto-enabled)</span>
+                    <span style="font-size: 0.8em; color: #b0b8c4;">(auto-enabled)</span>
                 </div>
                 <button class="focus-quick-btn primary" onclick="focusConfirmWorkout()" style="width: 100%;">
                     ✓ Plan Workout
@@ -1774,7 +1823,7 @@
                 <div class="focus-meds-confirmed" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3);">
                     <div>
                         <div style="font-weight: 600; color: #10b981;">✓ Workout Planned</div>
-                        <div style="font-size: 0.9em; color: #8b949e;" id="focusWorkoutSummary">5:00 PM - Lifting + Sauna</div>
+                        <div style="font-size: 0.9em; color: #b0b8c4;" id="focusWorkoutSummary">5:00 PM - Lifting + Sauna</div>
                     </div>
                     <button class="focus-quick-btn secondary" onclick="focusEditWorkout()" style="padding: 8px 12px; font-size: 0.85em;">Edit</button>
                 </div>
@@ -1833,7 +1882,7 @@
                 <a href="index.html" style="color: #58a6ff; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
                     ← Back to Quest
                 </a>
-                <div id="syncStatus" style="font-size: 0.8em; color: #8b949e; display: flex; align-items: center; gap: 8px;">
+                <div id="syncStatus" style="font-size: 0.8em; color: #b0b8c4; display: flex; align-items: center; gap: 8px;">
                     <span id="syncIcon">⏳</span>
                     <span id="syncText">Connecting...</span>
                     <button onclick="forceCloudSync()" style="padding: 3px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄</button>
@@ -1853,7 +1902,7 @@
                     <span id="allNighterIcon">🌙</span>
                     <span id="allNighterText">All-Nighter Mode: OFF</span>
                 </button>
-                <p id="allNighterHint" style="font-size: 0.8em; color: #8b949e; margin-top: 8px; display: none;">
+                <p id="allNighterHint" style="font-size: 0.8em; color: #b0b8c4; margin-top: 8px; display: none;">
                     48-hour view active. Yesterday's doses are included in calculations.
                 </p>
             </div>
@@ -2171,15 +2220,15 @@
                         
                         <div id="nicotineStatus" style="display: none; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <span style="color: #8b949e; font-size: 0.9em;">Last nicotine:</span>
+                                <span style="color: #b0b8c4; font-size: 0.9em;">Last nicotine:</span>
                                 <span id="lastNicotineDisplay" style="font-weight: 600; color: #e6edf3;">--</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <span style="color: #8b949e; font-size: 0.9em;">Type:</span>
+                                <span style="color: #b0b8c4; font-size: 0.9em;">Type:</span>
                                 <span id="nicotineTypeDisplay" style="font-weight: 600; color: #e6edf3;">--</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <span style="color: #8b949e; font-size: 0.9em;">CV clear time:</span>
+                                <span style="color: #b0b8c4; font-size: 0.9em;">CV clear time:</span>
                                 <span id="nicotineClearDisplay" style="font-weight: 600; color: #10b981;">--</span>
                             </div>
                             <div style="display: flex; gap: 8px; margin-top: 12px;">
@@ -2241,11 +2290,11 @@
                             </div>
                         </span>
                     </h2>
-                    <p style="color: #8b949e; font-size: 0.85em; margin-bottom: 15px;">Plan your workout to maximize sleep pressure without triggering hyperarousal.</p>
+                    <p style="color: #b0b8c4; font-size: 0.85em; margin-bottom: 15px;">Plan your workout to maximize sleep pressure without triggering hyperarousal.</p>
                     
                     <!-- Workout Timeline Visualization -->
                     <div id="workoutTimeline" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
-                        <div style="font-size: 0.8em; color: #8b949e; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <div style="font-size: 0.8em; color: #b0b8c4; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
                             TODAY'S EXERCISE WINDOWS
                             <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px;">?
                                 <div class="tooltip-content" style="width: 350px;">
@@ -2268,7 +2317,7 @@
                         <div id="workoutTimelineBar" style="position: relative; height: 40px; background: linear-gradient(90deg, #10b981 0%, #10b981 45%, #f59e0b 45%, #f59e0b 60%, #ef4444 60%, #ef4444 75%, #6b7280 75%); border-radius: 8px; overflow: hidden;">
                             <!-- Current time marker will be added by JS -->
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75em; color: #8b949e;">
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75em; color: #b0b8c4;">
                             <span id="workoutWindowStart">Wake</span>
                             <span style="color: #10b981;">Golden Zone</span>
                             <span style="color: #f59e0b;">Caution</span>
@@ -2382,7 +2431,7 @@
                         <div id="workoutResultText" style="color: #c9d1d9; line-height: 1.5;">
                             Set your planned workout time to see the impact on your sleep.
                         </div>
-                        <div id="workoutResultDetails" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; color: #8b949e;">
+                        <div id="workoutResultDetails" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; color: #b0b8c4;">
                             <!-- Details will be filled by JS -->
                         </div>
                     </div>
@@ -2394,7 +2443,7 @@
                             <div style="display: flex; align-items: flex-start; gap: 6px; flex: 1;">
                                 <div>
                                     <div style="font-weight: 600; color: #60a5fa;">❄️ Cold Shower After Workout?</div>
-                                    <div style="font-size: 0.85em; color: #8b949e;">Cuts cooldown time from 4h → 2h by rapidly dumping core heat</div>
+                                    <div style="font-size: 0.85em; color: #b0b8c4;">Cuts cooldown time from 4h → 2h by rapidly dumping core heat</div>
                                 </div>
                                 <span class="help-icon" style="width: 14px; height: 14px; font-size: 9px; flex-shrink: 0;" onclick="event.stopPropagation();">?
                                     <div class="tooltip-content" style="width: 300px;">
@@ -2601,7 +2650,7 @@
 
                     <!-- Circadian Timeline -->
                     <div id="circadianTimeline" style="margin-top: 15px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-                        <div style="font-size: 0.85em; color: #8b949e; margin-bottom: 10px;">CIRCADIAN RHYTHM (Based on <span id="wakeTimeDisplay">6:45 AM</span> wake)</div>
+                        <div style="font-size: 0.85em; color: #b0b8c4; margin-bottom: 10px;">CIRCADIAN RHYTHM (Based on <span id="wakeTimeDisplay">6:45 AM</span> wake)</div>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 140px; padding: 10px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; border-left: 3px solid #ef4444; position: relative;">
                                 <div style="font-size: 0.75em; color: #ef4444; margin-bottom: 4px; display: flex; align-items: center;">
@@ -2628,7 +2677,7 @@
                                     </span>
                                 </div>
                                 <div style="font-weight: 600;" id="forbiddenZoneTime">7:45 PM - 9:45 PM</div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Second wind period</div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Second wind period</div>
                             </div>
                             <div style="flex: 1; min-width: 140px; padding: 10px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; border-left: 3px solid #10b981; position: relative;">
                                 <div style="font-size: 0.75em; color: #10b981; margin-bottom: 4px; display: flex; align-items: center;">
@@ -2655,7 +2704,7 @@
                                     </span>
                                 </div>
                                 <div style="font-weight: 600;" id="sleepGateTime">9:45 PM - 11:45 PM</div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Optimal sleep window</div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Optimal sleep window</div>
                             </div>
                         </div>
                     </div>
@@ -2718,33 +2767,33 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                             <div class="scenario-card" id="scenarioAddCoffee" style="padding: 14px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer;" onclick="simulateScenario('coffee')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #f59e0b; margin-bottom: 6px;">☕ Add Coffee Now?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioCoffeeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioCoffeeDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioCoffeeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioCoffeeDelta">--</span></div>
                             </div>
                             <div class="scenario-card" id="scenarioAddEspresso" style="padding: 14px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer;" onclick="simulateScenario('espresso')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #ef4444; margin-bottom: 6px;">🔥 Double Espresso?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioEspressoSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioEspressoDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioEspressoSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioEspressoDelta">--</span></div>
                             </div>
                             <div class="scenario-card" id="scenarioVitC" style="padding: 14px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" onclick="simulateScenario('vitc')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #10b981; margin-bottom: 6px;">🍊 Take Vitamin C?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioVitCSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioVitCDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioVitCSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioVitCDelta">--</span></div>
                             </div>
                             <div class="scenario-card" id="scenarioSauna" style="padding: 14px; background: rgba(168, 85, 247, 0.1); border-radius: 10px; border: 1px solid rgba(168, 85, 247, 0.3); cursor: pointer;" onclick="simulateScenario('sauna')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #a855f7; margin-bottom: 6px;">🧖 Sauna Session?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioSaunaSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioSaunaDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioSaunaSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioSaunaDelta">--</span></div>
                             </div>
                             <div class="scenario-card" id="scenarioVapeHit" style="padding: 14px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer;" onclick="simulateScenario('vape')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #ef4444; margin-bottom: 6px;">💨 One More Vape?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioVapeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioVapeDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioVapeSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioVapeDelta">--</span></div>
                             </div>
                             <div class="scenario-card" id="scenarioZyn" style="padding: 14px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" onclick="simulateScenario('zyn')">
                                 <div style="font-size: 0.9em; font-weight: 600; color: #10b981; margin-bottom: 6px;">🫧 Switch to Zyn?</div>
-                                <div style="font-size: 0.85em; color: #8b949e;">Sleep time: <span id="scenarioZynSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
-                                <div style="font-size: 0.75em; color: #8b949e;">Δ <span id="scenarioZynDelta">--</span></div>
+                                <div style="font-size: 0.85em; color: #b0b8c4;">Sleep time: <span id="scenarioZynSleep" style="color: #e6edf3; font-weight: 600;">--</span></div>
+                                <div style="font-size: 0.75em; color: #b0b8c4;">Δ <span id="scenarioZynDelta">--</span></div>
                             </div>
                         </div>
                     </div>
@@ -2812,7 +2861,7 @@
                         <span class="icon">🔬</span> Today's Forecast Logic
                         <span id="forecastToggleIcon" style="float: right; transition: transform 0.3s;">▼</span>
                     </div>
-                    <p style="color: #8b949e; font-size: 0.85em; margin: 10px 0;">
+                    <p style="color: #b0b8c4; font-size: 0.85em; margin: 10px 0;">
                         Complete breakdown of how your sleep window is calculated. Copy this to verify the algorithm.
                     </p>
                     <div id="forecastLogicContent" style="display: block;">
@@ -2854,7 +2903,7 @@
         <!-- 7-Day Sleep History Calendar -->
         <div class="card" style="margin-top: 20px;">
             <h2><span class="icon">📅</span> 7-Day Sleep Pattern & Circadian Phase</h2>
-            <p style="color: #8b949e; font-size: 0.85em; margin-bottom: 15px;">Click any day to log hours slept when waking up that day + your wake time. This detects your circadian phase.</p>
+            <p style="color: #b0b8c4; font-size: 0.85em; margin-bottom: 15px;">Click any day to log hours slept when waking up that day + your wake time. This detects your circadian phase.</p>
             
             <!-- Circadian Phase Display -->
             <div id="circadianPhaseDisplay" style="margin-bottom: 20px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px;">
@@ -2864,7 +2913,7 @@
             <div id="sleepCalendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
                 <!-- Will be populated dynamically -->
             </div>
-            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; font-size: 0.8em; color: #8b949e; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; font-size: 0.8em; color: #b0b8c4; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
                     <span>> 6.5 hrs (Restored)</span>
@@ -3110,7 +3159,7 @@
         <div class="modal-overlay" id="sleepEditModal">
             <div class="modal-content" style="max-width: 350px;">
                 <h3 id="sleepEditTitle">📅 Edit Sleep Data</h3>
-                <p style="color: #8b949e; margin-bottom: 15px; font-size: 0.9em;">Enter the sleep you got <strong>before waking up</strong> on this day.</p>
+                <p style="color: #b0b8c4; margin-bottom: 15px; font-size: 0.9em;">Enter the sleep you got <strong>before waking up</strong> on this day.</p>
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label>Hours Slept</label>
                     <input type="number" id="sleepEditHours" value="7" min="0" max="14" step="0.5" style="width: 100%;">
@@ -3168,7 +3217,7 @@
         <div class="card" style="margin-top: 20px;">
             <h2><span class="icon">📊</span> History & Calibration</h2>
             <div id="historyList">
-                <p style="color: #8b949e; text-align: center; padding: 20px;">No history yet. Save today's data to start tracking accuracy.</p>
+                <p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today's data to start tracking accuracy.</p>
             </div>
         </div>
     </div>
@@ -4257,7 +4306,7 @@
                             <strong>🚨 HIGH RISK:</strong> You're well-rested (${sleepDebt.toFixed(1)}hr debt). Your brain has NO adenosine pressure to fight this extra drug. You're fighting it "naked."
                         </div>
                     ` : ''}
-                    <div style="margin-top: 10px; font-size: 0.85em; color: #8b949e;">
+                    <div style="margin-top: 10px; font-size: 0.85em; color: #b0b8c4;">
                         <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
                     </div>
                 `;
@@ -4271,7 +4320,7 @@
                     <div style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
                         💊 High Dose Warning: ${totalDose}mg
                     </div>
-                    <div style="color: #8b949e; font-size: 0.9em;">
+                    <div style="color: #b0b8c4; font-size: 0.9em;">
                         Doses above 50mg extend clearance time disproportionately. Consider if you really need this much today.
                     </div>
                 `;
@@ -4473,7 +4522,7 @@
 
             if (yesterdayMeds.length === 0 && yesterdayCaff.length === 0) {
                 section.style.display = 'block';
-                content.innerHTML = '<div style="color: #8b949e; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
+                content.innerHTML = '<div style="color: #b0b8c4; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
                 return;
             }
 
@@ -5090,10 +5139,10 @@
                         <span style="color: #f59e0b;">😴 Sleep Debt Detected (3-Day Rolling)</span>
                         <span style="color: #f59e0b; font-weight: 600;">+${sleepDebtBonus.toFixed(1)}mg to threshold</span>
                     </div>
-                    <div style="font-size: 0.8em; color: #8b949e; margin-top: 6px;">
+                    <div style="font-size: 0.8em; color: #b0b8c4; margin-top: 6px;">
                         ${breakdownHtml}
                     </div>
-                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 4px;">
+                    <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 4px;">
                         Base threshold: ${state.settings.sleepThreshold}mg → Effective: <strong style="color: #10b981;">${effectiveThreshold.toFixed(1)}mg</strong>
                     </div>
                 `;
@@ -5103,9 +5152,9 @@
                 sleepDebtDisplay.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #10b981;">✓ Well Rested</span>
-                        <span style="color: #8b949e;">Threshold: ${effectiveThreshold.toFixed(1)}mg</span>
+                        <span style="color: #b0b8c4;">Threshold: ${effectiveThreshold.toFixed(1)}mg</span>
                     </div>
-                    <div style="font-size: 0.85em; color: #8b949e; margin-top: 6px;">
+                    <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 6px;">
                         No sleep debt modifier applied.
                     </div>
                 `;
@@ -5283,7 +5332,7 @@
                     
                     let html = realBlockers.map(f => `
                     <div class="blocking-factor">
-                        <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #8b949e;">(${f.note})</span>` : ''}</span>
+                        <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #b0b8c4;">(${f.note})</span>` : ''}</span>
                         <span class="clears-at">Clears at ${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
                     </div>
                     `).join('');
@@ -5609,7 +5658,7 @@
             const totalAmpDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
             
             if (totalAmpDose === 0) {
-                container.innerHTML = '<div style="color: #8b949e; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
+                container.innerHTML = '<div style="color: #b0b8c4; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
                 return;
             }
             
@@ -5707,7 +5756,7 @@
             
             // Render
             if (feelings.length === 0) {
-                container.innerHTML = '<div style="color: #8b949e; font-style: italic; padding: 8px;">All events have passed or no data available.</div>';
+                container.innerHTML = '<div style="color: #b0b8c4; font-style: italic; padding: 8px;">All events have passed or no data available.</div>';
                 return;
             }
             
@@ -5719,7 +5768,7 @@
                             <span style="font-weight: 600; color: ${f.color};">${f.label}</span>
                             <span style="font-size: 0.9em; color: #e6edf3; font-variant-numeric: tabular-nums;">${minutesToTime(f.time)}</span>
                         </div>
-                        <div style="font-size: 0.8em; color: #8b949e; margin-top: 2px;">${f.detail}</div>
+                        <div style="font-size: 0.8em; color: #b0b8c4; margin-top: 2px;">${f.detail}</div>
                     </div>
                 </div>
             `).join('');
@@ -6752,7 +6801,7 @@
             cleanupHistory();
             
             if (state.history.length === 0) {
-                container.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
+                container.innerHTML = '<p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
                 return;
             }
             
@@ -6804,7 +6853,7 @@
             
             // Add count indicator if there are more entries
             if (state.history.length > displayCount) {
-                html += `<p style="color: #8b949e; text-align: center; padding: 10px; font-size: 0.85em;">
+                html += `<p style="color: #b0b8c4; text-align: center; padding: 10px; font-size: 0.85em;">
                     Showing ${displayCount} of ${state.history.length} entries
                 </p>`;
             }
@@ -6915,10 +6964,10 @@
                         transition: transform 0.2s;
                         ${day.isToday ? 'box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);' : ''}
                     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <div style="font-size: 0.75em; color: #8b949e; margin-bottom: 4px;">${day.dayName}</div>
+                        <div style="font-size: 0.75em; color: #b0b8c4; margin-bottom: 4px;">${day.dayName}</div>
                         <div style="font-size: 1.1em; font-weight: 600; color: #e6edf3; margin-bottom: 2px;">${day.dayNum}</div>
                         <div style="font-size: 0.85em; font-weight: 600; color: ${textColor};">${statusText}</div>
-                        ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #8b949e; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
+                        ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #b0b8c4; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
                         ${day.isToday ? '<div style="font-size: 0.65em; color: #58a6ff; margin-top: 2px;">TODAY</div>' : ''}
                     </div>
                 `;
@@ -6940,12 +6989,12 @@
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                             <span style="font-size: 1.8em;">${analysis.icon}</span>
                             <div>
-                                <div style="font-size: 0.75em; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
+                                <div style="font-size: 0.75em; color: #b0b8c4; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
                                 <div style="font-size: 1.2em; font-weight: 700; color: ${analysis.color};">${analysis.label}</div>
                             </div>
                         </div>
                         ${analysis.avgWakeTime ? `
-                            <div style="display: flex; gap: 20px; font-size: 0.85em; color: #8b949e;">
+                            <div style="display: flex; gap: 20px; font-size: 0.85em; color: #b0b8c4;">
                                 <div>
                                     <span style="color: #e6edf3; font-weight: 600;">${minutesToTime(analysis.avgWakeTime)}</span> avg wake
                                 </div>
@@ -6964,7 +7013,7 @@
                     </div>
                     ${analysis.consistency !== undefined && analysis.dataPoints >= 3 ? `
                         <div style="text-align: right;">
-                            <div style="font-size: 0.75em; color: #8b949e;">Consistency</div>
+                            <div style="font-size: 0.75em; color: #b0b8c4;">Consistency</div>
                             <div style="font-size: 1.4em; font-weight: 700; color: ${analysis.consistency > 70 ? '#10b981' : analysis.consistency > 40 ? '#f59e0b' : '#ef4444'};">${Math.round(analysis.consistency)}%</div>
                             ${analysis.stdDev ? `<div style="font-size: 0.7em; color: #6e7681;">±${Math.round(analysis.stdDev)}min variation</div>` : ''}
                         </div>
@@ -7901,7 +7950,7 @@
                                     ${d.isToday ? '<span style="color: #58a6ff; font-size: 0.75em; margin-left: 8px;">TODAY</span>' : ''}
                                 </div>
                                 ${hasData ? `
-                                    <div style="font-size: 0.8em; color: #8b949e;">
+                                    <div style="font-size: 0.8em; color: #b0b8c4;">
                                         ${d.hoursSlept.toFixed(1)} hours of sleep
                                     </div>
                                 ` : `
@@ -9614,7 +9663,7 @@ Current status at ${currentTime}:
             if (!container) return;
             
             if (state.caffeine.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 12px; font-size: 0.9em;">No caffeine logged. Tap a button below to add.</div>';
+                container.innerHTML = '<div style="text-align: center; color: #b0b8c4; padding: 12px; font-size: 0.9em;">No caffeine logged. Tap a button below to add.</div>';
                 if (statusEl) statusEl.innerHTML = '';
                 return;
             }
@@ -9669,7 +9718,7 @@ Current status at ${currentTime}:
                                 <span class="sip-badge">${numDoses} sips</span>
                                 <span class="caff-amount">${totalMg}mg</span>
                             </div>
-                            <span style="color: #8b949e; font-size: 0.85em;">${formatTime12(startTime)} → ${formatTime12(endTime)}</span>
+                            <span style="color: #b0b8c4; font-size: 0.85em;">${formatTime12(startTime)} → ${formatTime12(endTime)}</span>
                             <button class="caff-remove" onclick="focusRemoveSipGroup(${groupId})" title="Remove all">×</button>
                         </div>
                         <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(139, 92, 246, 0.2);">
@@ -9678,7 +9727,7 @@ Current status at ${currentTime}:
                             </button>
                             <div id="sipDetails${groupId}" style="display: none; margin-top: 8px; max-height: 150px; overflow-y: auto;">
                                 ${entries.map((c, i) => `
-                                    <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8em; color: #8b949e;">
+                                    <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8em; color: #b0b8c4;">
                                         <span>${i + 1}/${numDoses}: ${c.amount}mg</span>
                                         <span>${formatTime12(c.time)}</span>
                                     </div>
@@ -9872,7 +9921,7 @@ Current status at ${currentTime}:
                 <div style="font-weight: 600; margin-bottom: 6px;">📊 Pharmacokinetic Model:</div>
                 <div>${drinkName}: ${totalMg}mg over ${hours} hours</div>
                 <div style="margin-top: 4px; color: #a78bfa;">→ ${numDoses} micro-doses (~${mgPerDose}mg each)</div>
-                <div style="margin-top: 4px; font-size: 0.85em; color: #8b949e;">✓ Modeled as rolling absorption (10-min intervals)</div>
+                <div style="margin-top: 4px; font-size: 0.85em; color: #b0b8c4;">✓ Modeled as rolling absorption (10-min intervals)</div>
             `;
         }
         
