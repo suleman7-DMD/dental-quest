@@ -2690,6 +2690,14 @@
         <div class="header">
             <h1>🦷 Dental Student Quest</h1>
             <p>Level up your life, one task at a time</p>
+            
+            <!-- Sync Status Indicator -->
+            <div id="syncStatusBar" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; padding: 8px 16px; background: rgba(0,0,0,0.2); border-radius: 20px; font-size: 0.85em;">
+                <span id="syncStatusIcon">⏳</span>
+                <span id="syncStatusText">Connecting...</span>
+                <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄 Sync Now</button>
+            </div>
+            
             <div class="data-controls">
                 <button class="data-btn export-btn" onclick="createCheckpoint()" title="Save all your data to a file you can restore later">💾 Create Checkpoint</button>
                 <button class="data-btn import-btn" onclick="document.getElementById('checkpointFile').click()" title="Restore your data from a checkpoint file">📂 Restore Checkpoint</button>
@@ -4318,6 +4326,7 @@
                             console.log('✅ Data saved to Firebase successfully, timestamp:', dataToSave.lastSaved);
                             savingToast.style.background = '#10b981';
                             savingToast.textContent = '✓ Synced';
+                            updateSyncStatus('connected', `Saved (${new Date().toLocaleTimeString()})`);
                             setTimeout(() => {
                                 if (savingToast && savingToast.parentNode) {
                                     savingToast.remove();
@@ -4328,6 +4337,7 @@
                             console.error('❌ Firebase save error:', error);
                             savingToast.style.background = '#dc2626';
                             savingToast.textContent = '✗ Sync failed - Retrying...';
+                            updateSyncStatus('error', 'Save failed - retrying...');
                             
                             // Retry after 2 seconds
                             setTimeout(() => {
@@ -4337,6 +4347,7 @@
                                         console.log('✅ Retry successful');
                                         savingToast.style.background = '#10b981';
                                         savingToast.textContent = '✓ Synced (retry)';
+                                        updateSyncStatus('connected', 'Saved (retry)');
                                         setTimeout(() => {
                                             if (savingToast && savingToast.parentNode) {
                                                 savingToast.remove();
@@ -4346,6 +4357,7 @@
                                     .catch(err => {
                                         console.error('❌ Retry failed:', err);
                                         savingToast.textContent = '✗ Sync failed';
+                                        updateSyncStatus('error', 'Save failed');
                                         setTimeout(() => {
                                             if (savingToast && savingToast.parentNode) {
                                                 savingToast.remove();
@@ -4361,6 +4373,10 @@
                     hasUser: !!currentUser,
                     hasDatabase: !!database
                 });
+                // Only show offline status if we're not still initializing
+                if (initialLoadComplete) {
+                    updateSyncStatus('offline', 'Local only');
+                }
             }
         }
         
@@ -4719,6 +4735,7 @@
                 // Check if Firebase SDK loaded
                 if (typeof firebase === 'undefined') {
                     console.warn('⚠️ Firebase SDK not loaded - running in offline mode');
+                    updateSyncStatus('offline', 'SDK not loaded');
                     loadData();
                     markInitialLoadComplete();
                     updateCategoryDisplay();
@@ -4732,12 +4749,25 @@
                 database = firebase.database();
                 console.log('Firebase initialized');
                 
-                // Check if user has a saved PIN
-                let userPin = localStorage.getItem('dentalAppPin');
+                // CRITICAL FIX: Check BOTH PIN keys for backwards compatibility
+                // Satellite apps (d3-roadmap, stimulant-calculator) use 'dentalQuestPin'
+                // Main app used to use 'dentalAppPin' - we're standardizing on 'dentalQuestPin'
+                let userPin = localStorage.getItem('dentalQuestPin');
+                
+                // Migration: Check old key if new key not found
+                if (!userPin) {
+                    const oldPin = localStorage.getItem('dentalAppPin');
+                    if (oldPin) {
+                        console.log('🔄 Migrating PIN from dentalAppPin to dentalQuestPin');
+                        userPin = oldPin;
+                        localStorage.setItem('dentalQuestPin', userPin);
+                        // Keep old key for backwards compatibility but new key is source of truth
+                    }
+                }
                 
                 if (!userPin) {
                     // First time - ask for PIN
-                    userPin = prompt('Create a 4-digit PIN to sync across devices:\n\n(Use the same PIN on all your devices!)');
+                    userPin = prompt('Create a 4-digit PIN to sync across devices:\n\n(Use the same PIN on all your devices - main app, D3 Roadmap, Sleep Tracker!)');
                     
                     if (!userPin || userPin.length < 4) {
                         alert('PIN must be at least 4 characters. Using localStorage only.');
@@ -4747,6 +4777,8 @@
                         return;
                     }
                     
+                    // Save to BOTH keys for full compatibility
+                    localStorage.setItem('dentalQuestPin', userPin);
                     localStorage.setItem('dentalAppPin', userPin);
                 }
                 
@@ -4760,6 +4792,7 @@
                 firebaseInitialized = true;
                 
                 console.log('✅ Connected with PIN, user ID:', hashedPin);
+                console.log('📍 Firebase path: users/' + hashedPin + '/appData');
                 
                 // Load data from Firebase
                 loadDataFromFirebase();
@@ -4767,6 +4800,7 @@
             } catch (error) {
                 console.error('Firebase init error:', error);
                 firebaseInitialized = false;
+                updateSyncStatus('offline', 'Init failed');
                 loadData(); // Fallback to localStorage
                 markInitialLoadComplete();
                 updateCategoryDisplay();
@@ -4778,10 +4812,12 @@
             if (!currentUser || !database) {
                 loadData(); // Fallback
                 markInitialLoadComplete();
+                updateSyncStatus('offline', 'Local only');
                 return;
             }
             
             console.log('📥 Loading data from Firebase for user:', currentUser.uid);
+            updateSyncStatus('syncing', 'Loading from cloud...');
             
             database.ref('users/' + currentUser.uid + '/appData').once('value')
                 .then((snapshot) => {
@@ -4922,16 +4958,19 @@
                         markInitialLoadComplete();
                         
                         showToast('Data loaded from cloud ☁️', '✅');
+                        updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
                     } else {
                         // No cloud data, check localStorage
                         console.log('No cloud data, checking localStorage');
                         loadData();
+                        updateSyncStatus('connected', 'No cloud data yet');
                         // Mark load complete after localStorage load
                         markInitialLoadComplete();
                     }
                 })
                 .catch((error) => {
                     console.error('Firebase load error:', error);
+                    updateSyncStatus('error', 'Load failed: ' + error.message);
                     loadData(); // Fallback
                     // Mark load complete even on error
                     markInitialLoadComplete();
@@ -5006,7 +5045,8 @@
                                 lastKnownSaveTime = incomingTime;
                                 
                                 // Update ALL local data - COMPLETE LIST
-                                if (data.tasks) tasks = data.tasks;
+                                // CRITICAL: Use !== undefined to handle empty arrays/objects properly
+                                if (data.tasks !== undefined) tasks = data.tasks || [];
                                 
                                 if (data.stats) {
                                     stats = {
@@ -5021,8 +5061,8 @@
                                     medications = { ...medications, ...data.medications };
                                 }
                                 
-                                if (data.calendarNotes) {
-                                    calendarNotes = data.calendarNotes;
+                                if (data.calendarNotes !== undefined) {
+                                    calendarNotes = data.calendarNotes || {};
                                 }
                                 
                                 if (data.notebook) {
@@ -5043,8 +5083,8 @@
                                     };
                                 }
                                 
-                                if (data.calendarEvents) {
-                                    calendarEvents = data.calendarEvents;
+                                if (data.calendarEvents !== undefined) {
+                                    calendarEvents = data.calendarEvents || [];
                                 }
                                 
                                 if (data.dailyPlanner) {
@@ -7527,6 +7567,205 @@
         let lastKnownSaveTime = 0; // Initialize to 0 instead of null for safe comparisons
         let realtimeSyncListener = null; // Store the listener reference for cleanup
         
+        // Update sync status indicator in header
+        function updateSyncStatus(status, message) {
+            const icon = document.getElementById('syncStatusIcon');
+            const text = document.getElementById('syncStatusText');
+            if (!icon || !text) return;
+            
+            switch(status) {
+                case 'connected':
+                    icon.textContent = '🟢';
+                    text.textContent = message || 'Connected to cloud';
+                    text.style.color = '#86efac';
+                    break;
+                case 'syncing':
+                    icon.textContent = '🔄';
+                    text.textContent = message || 'Syncing...';
+                    text.style.color = '#93c5fd';
+                    break;
+                case 'offline':
+                    icon.textContent = '🔴';
+                    text.textContent = message || 'Offline (local only)';
+                    text.style.color = '#fca5a5';
+                    break;
+                case 'error':
+                    icon.textContent = '⚠️';
+                    text.textContent = message || 'Sync error';
+                    text.style.color = '#fcd34d';
+                    break;
+                default:
+                    icon.textContent = '⏳';
+                    text.textContent = message || 'Connecting...';
+                    text.style.color = 'white';
+            }
+        }
+        
+        // Force sync from cloud - manual refresh button
+        function forceCloudSync() {
+            if (!firebaseInitialized || !currentUser || !database) {
+                showToast('❌ Not connected to cloud', '⚠️');
+                updateSyncStatus('offline', 'Not connected');
+                return;
+            }
+            
+            updateSyncStatus('syncing', 'Fetching from cloud...');
+            console.log('🔄 Force sync requested by user');
+            
+            database.ref('users/' + currentUser.uid + '/appData').once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (!data) {
+                        showToast('No cloud data found', '☁️');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+                    
+                    console.log('📥 Force sync: Loading ALL data from cloud, timestamp:', data.lastSaved);
+                    
+                    // Force update ALL local data regardless of timestamp
+                    lastKnownSaveTime = data.lastSaved || Date.now();
+                    
+                    // Update ALL data fields
+                    tasks = data.tasks || [];
+                    
+                    if (data.stats) {
+                        stats = {
+                            ...stats,
+                            totalXPGained: data.stats.totalXPGained || 0,
+                            totalTasks: data.stats.totalTasks || 0,
+                            categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
+                        };
+                    }
+                    
+                    if (data.medications) {
+                        medications = { ...medications, ...data.medications };
+                    }
+                    
+                    if (data.calendarNotes !== undefined) {
+                        calendarNotes = data.calendarNotes || {};
+                    }
+                    
+                    if (data.notebook) {
+                        notebook = {
+                            pages: data.notebook.pages || [],
+                            currentPageId: data.notebook.currentPageId || null
+                        };
+                    }
+                    
+                    if (data.financials) {
+                        financials = { ...financials, ...data.financials };
+                    }
+                    
+                    if (data.pillAssignments) {
+                        pillAssignments = {
+                            '30mg': data.pillAssignments['30mg'] || {},
+                            '20mg': data.pillAssignments['20mg'] || {}
+                        };
+                    }
+                    
+                    if (data.calendarEvents !== undefined) {
+                        calendarEvents = data.calendarEvents || [];
+                    }
+                    
+                    if (data.dailyPlanner) {
+                        dailyPlanner = {
+                            date: data.dailyPlanner.date || null,
+                            goal: data.dailyPlanner.goal || '',
+                            bedtime: data.dailyPlanner.bedtime || '23:00',
+                            blocks: data.dailyPlanner.blocks || [],
+                            lastReset: data.dailyPlanner.lastReset || null
+                        };
+                    }
+                    
+                    if (data.focusModeData) {
+                        focusModeData = {
+                            ...focusModeData,
+                            oneThingId: data.focusModeData.oneThingId || null,
+                            microSteps: data.focusModeData.microSteps || [],
+                            todaysTasks: data.focusModeData.todaysTasks || { big: [], medium: [], small: [] },
+                            lastPlanningDate: data.focusModeData.lastPlanningDate || null
+                        };
+                    }
+                    
+                    if (data.lastCriticalEODReset) {
+                        lastCriticalEODReset = data.lastCriticalEODReset;
+                    }
+                    
+                    // Save to localStorage as backup
+                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                    
+                    // Re-render ALL UI
+                    updateStats();
+                    renderTasks();
+                    updateMedicationDisplay();
+                    if (currentView === 'focus') {
+                        renderFocusMode();
+                    }
+                    
+                    updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
+                    showToast(`✅ Synced ${tasks.length} tasks from cloud`, '☁️');
+                })
+                .catch(err => {
+                    console.error('Force sync failed:', err);
+                    updateSyncStatus('error', 'Sync failed: ' + err.message);
+                    showToast('❌ Sync failed: ' + err.message, '⚠️');
+                });
+        }
+        
+        // Debug function - call from browser console: debugSyncStatus()
+        window.debugSyncStatus = function() {
+            const pin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
+            const hashedPin = pin ? 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '') : 'NO PIN';
+            
+            console.log('=== DENTAL QUEST SYNC DEBUG ===');
+            console.log('Firebase Initialized:', firebaseInitialized);
+            console.log('Current User:', currentUser ? currentUser.uid : 'NONE');
+            console.log('Database Object:', database ? 'EXISTS' : 'NULL');
+            console.log('Initial Load Complete:', initialLoadComplete);
+            console.log('PIN (dentalQuestPin):', localStorage.getItem('dentalQuestPin') ? 'SET' : 'NOT SET');
+            console.log('PIN (dentalAppPin):', localStorage.getItem('dentalAppPin') ? 'SET' : 'NOT SET');
+            console.log('Computed User Path:', hashedPin !== 'NO PIN' ? 'users/' + hashedPin + '/appData' : 'N/A');
+            console.log('Last Known Save Time:', lastKnownSaveTime, '(' + new Date(lastKnownSaveTime).toLocaleString() + ')');
+            console.log('Main Data Sync Enabled:', mainDataSyncEnabled);
+            console.log('Realtime Listener:', realtimeSyncListener ? 'ACTIVE' : 'NONE');
+            console.log('Tasks Count:', tasks.length);
+            console.log('================================');
+            
+            return {
+                firebaseInitialized,
+                currentUser: currentUser?.uid,
+                hasDatabase: !!database,
+                initialLoadComplete,
+                pinSet: !!pin,
+                userPath: hashedPin !== 'NO PIN' ? 'users/' + hashedPin + '/appData' : null,
+                lastKnownSaveTime,
+                mainDataSyncEnabled,
+                hasRealtimeListener: !!realtimeSyncListener,
+                tasksCount: tasks.length
+            };
+        };
+        
+        // Reset PIN function - call from browser console: resetSyncPin()
+        // Use this if your PIN is mismatched across devices
+        window.resetSyncPin = function() {
+            const currentPin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
+            console.log('Current PIN:', currentPin ? '****' + currentPin.slice(-2) : 'NONE');
+            
+            const newPin = prompt('Enter your sync PIN:\n\n⚠️ Use the SAME PIN on ALL devices!\n\nCurrent PIN ends with: ' + (currentPin ? currentPin.slice(-2) : 'N/A'));
+            
+            if (newPin && newPin.length >= 4) {
+                localStorage.setItem('dentalQuestPin', newPin);
+                localStorage.setItem('dentalAppPin', newPin);
+                console.log('✅ PIN updated. Reloading page...');
+                alert('PIN updated! The page will now reload to connect with your new PIN.');
+                window.location.reload();
+            } else {
+                console.log('PIN reset cancelled or invalid');
+                alert('PIN must be at least 4 characters. No changes made.');
+            }
+        };
+        
         function setupMainDataRealtimeSync() {
             if (!firebaseInitialized || !database || !currentUser) {
                 console.warn('⚠️ Cannot setup realtime sync - Firebase not ready');
@@ -7542,29 +7781,29 @@
             mainDataSyncEnabled = true;
             console.log('🔄 Setting up real-time sync for main data');
             
-            let isFirstCallback = true;
+            // Track if this is the very first callback (during initial setup)
+            let isInitialSetup = true;
             
             realtimeSyncListener = database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
-                // Skip the first callback (that's our initial load)
-                if (isFirstCallback) {
-                    isFirstCallback = false;
-                    const data = snapshot.val();
-                    if (data && data.lastSaved) {
-                        lastKnownSaveTime = data.lastSaved;
-                        console.log('📍 Initial lastKnownSaveTime set to:', lastKnownSaveTime);
-                    }
-                    return;
-                }
-                
                 const data = snapshot.val();
                 if (!data) {
                     console.log('🔄 Empty data received, skipping');
                     return;
                 }
                 
-                // Only process if this is a NEW update (different timestamp AND newer)
                 const incomingTime = data.lastSaved || 0;
-                if (incomingTime <= lastKnownSaveTime) {
+                
+                // On first callback, just establish the baseline timestamp
+                if (isInitialSetup) {
+                    isInitialSetup = false;
+                    lastKnownSaveTime = Math.max(lastKnownSaveTime, incomingTime);
+                    console.log('📍 Real-time sync initialized, baseline timestamp:', lastKnownSaveTime);
+                    return;
+                }
+                
+                // Only process if this is a NEW update (strictly newer timestamp)
+                // Use a small buffer (100ms) to handle near-simultaneous saves
+                if (incomingTime <= lastKnownSaveTime + 100) {
                     console.log('🔄 Skipping old or own update:', incomingTime, '<=', lastKnownSaveTime);
                     return;
                 }
@@ -7572,7 +7811,7 @@
                 lastKnownSaveTime = incomingTime;
                 console.log('📥 Received real-time update from another device, timestamp:', incomingTime);
                 
-                // Update ALL local data - COMPLETE LIST
+                // Update ALL local data - COMPLETE LIST (use !== undefined to handle empty arrays/objects)
                 if (data.tasks !== undefined) tasks = data.tasks || [];
                 
                 if (data.stats) {
