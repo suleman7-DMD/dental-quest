@@ -1391,6 +1391,32 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close-x {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.3em;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .modal-close-x:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.1);
         }
 
         .modal-content.help-modal {
@@ -2304,6 +2330,12 @@
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .planner-close-btn:hover {
+            background: #5568d3;
+            transform: scale(1.02);
         }
 
         @media (max-width: 700px) {
@@ -2350,16 +2382,6 @@
         .planner-footer-stats {
             font-size: 0.8em;
             color: #6b7280;
-        }
-
-        .planner-close-btn {
-            padding: 8px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
         }
 
         @media (max-width: 500px) {
@@ -2691,16 +2713,21 @@
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 8px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 10px;
         }
 
         .calendar-day-header {
             text-align: center;
-            font-size: 0.75em;
-            font-weight: 600;
-            color: #666;
-            padding: 5px;
+            font-size: 0.8em;
+            font-weight: 700;
+            color: #667eea;
+            padding: 8px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .calendar-day {
@@ -2783,12 +2810,47 @@
         }
 
         .calendar-day-num {
-            font-size: 1.1em;
+            font-size: 1.2em;
+            font-weight: 700;
             margin-bottom: 2px;
+            z-index: 1;
         }
 
         .calendar-day-icon {
             font-size: 0.9em;
+        }
+
+        .day-note-btn {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: rgba(102, 126, 234, 0.75);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 5;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover .day-note-btn {
+            opacity: 1;
+            transform: scale(1.1);
+            background: rgba(102, 126, 234, 0.95);
+        }
+
+        .day-note-btn:hover {
+            background: #667eea !important;
+            transform: scale(1.2) !important;
         }
 
         .calendar-legend {
@@ -3227,6 +3289,7 @@
                 <!-- Medication Settings Modal -->
                 <div class="modal-overlay" id="medModal" onclick="closeMedModal()">
                     <div class="modal-content" onclick="event.stopPropagation()">
+                        <button class="modal-close-x" onclick="closeMedModal()" title="Close">×</button>
                         <h3 id="modalTitle">Medication Settings</h3>
                         <div class="modal-body">
                             <div class="form-group">
@@ -3248,6 +3311,7 @@
                 <!-- Calendar Note Modal -->
                 <div class="modal-overlay" id="noteModal" onclick="closeNoteModal()">
                     <div class="modal-content" onclick="event.stopPropagation()">
+                        <button class="modal-close-x" onclick="closeNoteModal()" title="Close">×</button>
                         <h3 id="noteModalTitle">Add Note</h3>
                         <div class="modal-body">
                             <div class="form-group">
@@ -3269,6 +3333,7 @@
                 <!-- Add Countdown Modal -->
                 <div class="modal-overlay" id="addCountdownModal" onclick="closeAddCountdown()">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+                        <button class="modal-close-x" onclick="closeAddCountdown()" title="Close">×</button>
                         <h2 style="color: #58a6ff; margin-bottom: 20px;">➕ Add New Countdown</h2>
                         
                         <div style="margin-bottom: 20px;">
@@ -3325,6 +3390,7 @@
                 <!-- Help Modal -->
                 <div class="modal-overlay" id="helpModal" onclick="closeHelp()">
                     <div class="modal-content help-modal" onclick="event.stopPropagation()">
+                        <button class="modal-close-x" onclick="closeHelp()" title="Close">×</button>
                         <h3>📖 Quick Reference Guide</h3>
                         <div class="modal-body">
                             <div class="help-section">
@@ -3546,6 +3612,7 @@
                 <!-- Notebook Modal -->
                 <div class="modal-overlay" id="notebookModal" onclick="closeNotebook()">
                     <div class="modal-content notebook-modal" onclick="event.stopPropagation()">
+                        <button class="modal-close-x" onclick="closeNotebook()" title="Close">×</button>
                         <h3>📓 My Notebook</h3>
                         
                         <div class="notebook-tabs" id="notebookTabs">
@@ -8736,14 +8803,12 @@
                     .replace(/\n/g, '<br>') : '';
                 
                 html += `
-                    <div class="calendar-day ${dayClass}" title="${title}" 
+                    <div class="calendar-day ${dayClass}" title="${title}"
                          onclick="handleCalendarDayClick(event, '${medType}', '${day.dateStr}', '${day.date.toDateString()}', ${day.isRefillDay}, ${pillsAvailable})">
-                        <div style="position: relative;">
-                            <div class="calendar-day-num">${day.dayNum}</div>
-                            <button onclick="event.stopPropagation(); openNoteModal('${day.dateStr}', '${day.date.toDateString()}')" 
-                                    style="position: absolute; bottom: 2px; right: 2px; background: rgba(59, 130, 246, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.75em; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;"
-                                    title="Add/edit note">+</button>
-                        </div>
+                        <button class="day-note-btn"
+                                onclick="event.stopPropagation(); openNoteModal('${day.dateStr}', '${day.date.toDateString()}')"
+                                title="Add/edit note">+</button>
+                        <div class="calendar-day-num">${day.dayNum}</div>
                         <div class="calendar-day-icon">${icon}</div>
                         ${noteDisplay ? `<div class="calendar-day-note">${noteDisplay}</div>` : ''}
                     </div>
