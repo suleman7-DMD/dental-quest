@@ -3364,21 +3364,21 @@
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
             <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
             <span id="syncText" style="color: #8b949e;">Connecting...</span>
-            <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄 Sync</button>
+            <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync</button>
         </div>
     </div>
 
     <!-- Tab Navigation -->
     <nav class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('dashboard', event)">🎯 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('deadlines', event)">📅 Deadlines</button>
-        <button class="tab-btn" onclick="switchTab('courses', event)">📚 Courses</button>
-        <button class="tab-btn" onclick="switchTab('grades', event)">📊 Grades</button>
-        <button class="tab-btn" onclick="switchTab('examcontent', event)">📖 Exam Content</button>
-        <button class="tab-btn" onclick="switchTab('classmates', event)">👥 Classmate Share</button>
-        <button class="tab-btn" onclick="switchTab('mandatory', event)">⚠️ Mandatory</button>
-        <button class="tab-btn" onclick="switchTab('dailyplanner', event)">📋 Daily Planner</button>
-        <button class="tab-btn" onclick="switchTab('monthlyplanner', event)">🗓️ Monthly</button>
+        <button class="tab-btn" onclick="switchTab('deadlines', event)" aria-label="View Deadlines tab">📅 Deadlines</button>
+        <button class="tab-btn" onclick="switchTab('courses', event)" aria-label="View Courses tab">📚 Courses</button>
+        <button class="tab-btn" onclick="switchTab('grades', event)" aria-label="View Grades tab">📊 Grades</button>
+        <button class="tab-btn" onclick="switchTab('examcontent', event)" aria-label="View Exam Content tab">📖 Exam Content</button>
+        <button class="tab-btn" onclick="switchTab('classmates', event)" aria-label="View Classmate Share tab">👥 Classmate Share</button>
+        <button class="tab-btn" onclick="switchTab('mandatory', event)" aria-label="View Mandatory Items tab">⚠️ Mandatory</button>
+        <button class="tab-btn" onclick="switchTab('dailyplanner', event)" aria-label="View Daily Planner tab">📋 Daily Planner</button>
+        <button class="tab-btn" onclick="switchTab('monthlyplanner', event)" aria-label="View Monthly Planner tab">🗓️ Monthly</button>
     </nav>
 
     <!-- ==================== DASHBOARD TAB ==================== -->
@@ -5561,7 +5561,71 @@
                 }
             }
         }
-        
+
+        // Deep merge helper for nested objects
+        function deepMerge(target, source) {
+            if (!source) return target;
+            if (!target) return source;
+            const result = { ...target };
+            for (const key in source) {
+                if (source[key] === null || source[key] === undefined) continue;
+                if (Array.isArray(source[key])) {
+                    result[key] = source[key];
+                } else if (typeof source[key] === 'object' && typeof target[key] === 'object') {
+                    result[key] = deepMerge(target[key], source[key]);
+                } else {
+                    result[key] = source[key];
+                }
+            }
+            return result;
+        }
+
+        // Track local changes for conflict detection
+        let localChangesSinceLastSync = false;
+        let lastSyncTimestamp = null;
+
+        function markLocalChange() {
+            localChangesSinceLastSync = true;
+        }
+
+        // Show conflict resolution modal
+        function showSyncConflictModal(localData, remoteData, onResolve) {
+            const modal = document.createElement('div');
+            modal.id = 'syncConflictModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+            const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
+            const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
+
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
+                    <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">⚠️ Sync Conflict Detected</h3>
+                    <p style="color:#8b949e;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                        <div style="background:#21262d;padding:16px;border-radius:8px;">
+                            <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">📱 This Device</div>
+                            <div style="color:#8b949e;font-size:0.85em;">Last saved: ${localTime}</div>
+                        </div>
+                        <div style="background:#21262d;padding:16px;border-radius:8px;">
+                            <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">☁️ Cloud</div>
+                            <div style="color:#8b949e;font-size:0.85em;">Last saved: ${remoteTime}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
+                        <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#8957e5;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
+                    </div>
+                    <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Try to Merge Both</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window.resolveSyncConflict = function(choice) {
+                document.body.removeChild(modal);
+                delete window.resolveSyncConflict;
+                onResolve(choice);
+            };
+        }
+
         function initFirebase() {
             // FALLBACK: Ensure UI loads within 3 seconds no matter what
             const fallbackTimer = setTimeout(() => {
@@ -5750,44 +5814,43 @@
                 updateSyncStatus('offline', 'Not connected');
                 return;
             }
-            
+
             updateSyncStatus('syncing', 'Fetching from cloud...');
-            
+
             database.ref(userPath).once('value')
                 .then(snapshot => {
-                    const data = snapshot.val();
-                    if (!data) {
+                    const remoteData = snapshot.val();
+                    if (!remoteData) {
                         showToast('No cloud data found');
                         updateSyncStatus('connected', 'No cloud data');
                         return;
                     }
-                    
-                    
-                    // Force update ALL local data
-                    roadmapData = {
-                        ...roadmapData,
-                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
-                        mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
-                        grades: { ...roadmapData.grades, ...(data.grades || {}) },
-                        editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
-                        customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
-                        examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
-                        monthlyPlanner: {
-                            notes: data.monthlyPlanner?.notes || [],
-                            customTasks: data.monthlyPlanner?.customTasks || [],
-                            overriddenStatic: data.monthlyPlanner?.overriddenStatic || [],
-                            completedTasks: data.monthlyPlanner?.completedTasks || []
-                        },
-                        dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
-                        lastSaved: data.lastSaved
-                    };
-                    
-                    // Save to localStorage as backup
-                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                    
-                    // Re-render current UI
-                    initUI();
-                    
+
+                    // Check for conflicts
+                    if (localChangesSinceLastSync && lastSyncTimestamp && remoteData.lastSaved > lastSyncTimestamp) {
+                        showSyncConflictModal(roadmapData, remoteData, (choice) => {
+                            if (choice === 'local') {
+                                saveData();
+                                showToast('✅ Kept local data, pushed to cloud', '📱');
+                            } else if (choice === 'remote') {
+                                applyRemoteData(remoteData);
+                                showToast('✅ Synced from cloud');
+                            } else if (choice === 'merge') {
+                                const merged = deepMerge(remoteData, roadmapData);
+                                merged.lastSaved = Date.now();
+                                applyRemoteData(merged);
+                                saveData();
+                                showToast('✅ Merged data from both devices');
+                            }
+                            localChangesSinceLastSync = false;
+                            lastSyncTimestamp = Date.now();
+                        });
+                        return;
+                    }
+
+                    applyRemoteData(remoteData);
+                    localChangesSinceLastSync = false;
+                    lastSyncTimestamp = Date.now();
                     updateSyncStatus('connected', 'Synced');
                     showToast('✅ Synced from cloud');
                 })
@@ -5798,13 +5861,39 @@
                 });
         }
 
+        // Helper to apply remote data to local state
+        function applyRemoteData(data) {
+            roadmapData = deepMerge(roadmapData, {
+                pedsLockedIn: data.pedsLockedIn,
+                mandatoryItems: data.mandatoryItems || {},
+                grades: data.grades || {},
+                editedDeadlines: data.editedDeadlines || {},
+                customDeadlines: data.customDeadlines || [],
+                examStudyProgress: data.examStudyProgress || {},
+                monthlyPlanner: {
+                    notes: data.monthlyPlanner?.notes || [],
+                    customTasks: data.monthlyPlanner?.customTasks || [],
+                    overriddenStatic: data.monthlyPlanner?.overriddenStatic || [],
+                    completedTasks: data.monthlyPlanner?.completedTasks || []
+                },
+                dailyPlanner: data.dailyPlanner,
+                lastSaved: data.lastSaved
+            });
+
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            initUI();
+        }
+
         // Save data with debounce - BULLETPROOF VERSION
         let lastSaveTime = 0;
-        
+
         function saveData() {
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
+
             const now = Date.now();
             roadmapData.lastSaved = now;
-            
+
             // Always save to localStorage IMMEDIATELY
             try {
                 localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
@@ -6695,6 +6784,45 @@
             toast.textContent = message;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Custom Alert Modal (replaces blocking alert())
+        function showCustomAlert(message, title = 'Notice', callback = null) {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;">
+                    <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
+                        style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window._customAlertCallback = callback;
+            modal.querySelector('button').focus();
+        }
+
+        // Custom Confirm Modal (replaces blocking confirm())
+        function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;">
+                    <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirmBtn" style="flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
+                        <button id="cancelBtn" style="flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('#confirmBtn').onclick = () => { modal.remove(); if (onConfirm) onConfirm(); };
+            modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
+            modal.querySelector('#confirmBtn').focus();
         }
 
         // ==================== ADD NEW DEADLINE ====================

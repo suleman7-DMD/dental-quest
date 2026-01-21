@@ -1836,7 +1836,7 @@
                 <div id="syncStatus" style="font-size: 0.8em; color: #8b949e; display: flex; align-items: center; gap: 8px;">
                     <span id="syncIcon">⏳</span>
                     <span id="syncText">Connecting...</span>
-                    <button onclick="forceCloudSync()" style="padding: 3px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄</button>
+                    <button onclick="forceCloudSync()" style="padding: 3px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄</button>
                 </div>
             </div>
             <!-- View Toggle for Full View -->
@@ -1891,7 +1891,7 @@
                     <div class="input-row">
                         <div class="input-group" style="flex: 1;">
                             <label>What time did you wake up?</label>
-                            <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime(); saveState()">
+                            <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime(); saveState()" aria-label="Wake up time">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label style="display: flex; align-items: center;">
@@ -1917,7 +1917,7 @@
                                     </div>
                                 </span>
                             </label>
-                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate(); updateTodaySleepHistory(); saveState()">
+                            <input type="number" id="hoursSlept" value="8" min="0" max="12" step="0.5" onchange="recalculate(); updateTodaySleepHistory(); saveState()" aria-label="Hours slept last night">
                         </div>
                     </div>
                     <div id="sleepDebtDisplay" style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9em;">
@@ -6084,18 +6084,57 @@
         function showToast(message) {
             const existing = document.querySelector('.toast-notification');
             if (existing) existing.remove();
-            
+
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
             toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 8px; z-index: 10000; font-size: 0.9em; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
             toast.textContent = message;
             document.body.appendChild(toast);
-            
+
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.3s';
                 setTimeout(() => toast.remove(), 300);
             }, 2500);
+        }
+
+        // Custom Alert Modal (replaces blocking alert())
+        function showCustomAlert(message, title = 'Notice', callback = null) {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
+                    <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
+                        style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window._customAlertCallback = callback;
+            modal.querySelector('button').focus();
+        }
+
+        // Custom Confirm Modal (replaces blocking confirm())
+        function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
+                    <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirmBtn" style="flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
+                        <button id="cancelBtn" style="flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('#confirmBtn').onclick = () => { modal.remove(); if (onConfirm) onConfirm(); };
+            modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
+            modal.querySelector('#confirmBtn').focus();
         }
 
         // ============================================
@@ -7978,7 +8017,73 @@
                 }
             }
         }
-        
+
+        // Deep merge helper for nested objects
+        function deepMerge(target, source) {
+            if (!source) return target;
+            if (!target) return source;
+            const result = { ...target };
+            for (const key in source) {
+                if (source[key] === null || source[key] === undefined) continue;
+                if (Array.isArray(source[key])) {
+                    result[key] = source[key];
+                } else if (typeof source[key] === 'object' && typeof target[key] === 'object') {
+                    result[key] = deepMerge(target[key], source[key]);
+                } else {
+                    result[key] = source[key];
+                }
+            }
+            return result;
+        }
+
+        // Track local changes for conflict detection
+        let localChangesSinceLastSync = false;
+        let lastSyncTimestamp = null;
+
+        function markLocalChange() {
+            localChangesSinceLastSync = true;
+        }
+
+        // Show conflict resolution modal
+        function showSyncConflictModal(localData, remoteData, onResolve) {
+            const modal = document.createElement('div');
+            modal.id = 'syncConflictModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+            const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
+            const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
+            const localDoses = (localData.doses || []).length;
+            const remoteDoses = (remoteData.doses || []).length;
+
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
+                    <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">⚠️ Sync Conflict Detected</h3>
+                    <p style="color:#8b949e;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                        <div style="background:#21262d;padding:16px;border-radius:8px;">
+                            <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">📱 This Device</div>
+                            <div style="color:#8b949e;font-size:0.85em;">${localDoses} doses<br>Last saved: ${localTime}</div>
+                        </div>
+                        <div style="background:#21262d;padding:16px;border-radius:8px;">
+                            <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">☁️ Cloud</div>
+                            <div style="color:#8b949e;font-size:0.85em;">${remoteDoses} doses<br>Last saved: ${remoteTime}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
+                        <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#8957e5;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
+                    </div>
+                    <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Try to Merge Both</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window.resolveSyncConflict = function(choice) {
+                document.body.removeChild(modal);
+                delete window.resolveSyncConflict;
+                onResolve(choice);
+            };
+        }
+
         function initFirebase() {
             // FALLBACK: Ensure app works within 3 seconds even if Firebase is slow
             const fallbackTimer = setTimeout(() => {
@@ -8330,9 +8435,9 @@
                 updateSyncStatus('offline', 'Not connected');
                 return;
             }
-            
+
             updateSyncStatus('syncing', 'Fetching...');
-            
+
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
@@ -8341,56 +8446,37 @@
                         updateSyncStatus('connected', 'No cloud data');
                         return;
                     }
-                    
-                    const firebaseState = data.state;
-                    
-                    // Force update ALL local data
-                    state = {
-                        wakeTime: firebaseState.wakeTime || state.wakeTime,
-                        hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                        medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
-                        caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
-                        history: firebaseState.history !== undefined ? firebaseState.history : state.history,
-                        modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
-                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                        sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
-                        workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
-                        nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
-                    };
-                    
-                    // Ensure arrays are actually arrays
-                    if (!Array.isArray(state.medications)) state.medications = [];
-                    if (!Array.isArray(state.caffeine)) state.caffeine = [];
-                    if (!Array.isArray(state.history)) state.history = [];
-                    
-                    // Update localStorage
-                    localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
-                    
-                    // Re-render everything
-                    document.getElementById('wakeTime').value = state.wakeTime;
-                    document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-                    document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
-                    document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
-                    document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
-                    document.getElementById('caffThreshold').value = state.settings.caffThreshold;
-                    document.getElementById('weight').value = state.settings.weight;
-                    
-                    renderMedEntries();
-                    renderCaffeineEntries();
-                    renderSleepCalendar();
-                    renderSleepPerformance();
-                    renderHistory();
-                    
-                    if (state.workoutPlan && state.workoutPlan.applied) {
-                        restoreWorkoutPlanUI();
+
+                    const remoteState = data.state;
+                    const remoteTimestamp = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
+
+                    // Check for conflicts
+                    if (localChangesSinceLastSync && lastSyncTimestamp && remoteTimestamp > lastSyncTimestamp) {
+                        const localData = { doses: state.medications || [], lastSaved: lastSyncTimestamp };
+                        const remoteData = { doses: remoteState.medications || [], lastSaved: remoteTimestamp };
+
+                        showSyncConflictModal(localData, remoteData, (choice) => {
+                            if (choice === 'local') {
+                                saveStateImmediate();
+                                showToast('✅ Kept local data, pushed to cloud');
+                            } else if (choice === 'remote') {
+                                applyRemoteState(remoteState);
+                                showToast('✅ Synced from cloud');
+                            } else if (choice === 'merge') {
+                                const merged = deepMerge(remoteState, state);
+                                applyRemoteState(merged);
+                                saveStateImmediate();
+                                showToast('✅ Merged data from both devices');
+                            }
+                            localChangesSinceLastSync = false;
+                            lastSyncTimestamp = Date.now();
+                        });
+                        return;
                     }
-                    
-                    recalculate();
-                    
-                    if (focusMode) {
-                        renderFocusMode();
-                    }
-                    
+
+                    applyRemoteState(remoteState);
+                    localChangesSinceLastSync = false;
+                    lastSyncTimestamp = Date.now();
                     updateSyncStatus('connected', 'Synced ✓');
                     showToast('✅ Synced from cloud');
                 })
@@ -8399,6 +8485,54 @@
                     updateSyncStatus('error', 'Sync failed');
                     showToast('❌ Sync failed: ' + err.message);
                 });
+        }
+
+        // Helper to apply remote state
+        function applyRemoteState(firebaseState) {
+            state = deepMerge(state, {
+                wakeTime: firebaseState.wakeTime,
+                hoursSleptLastNight: firebaseState.hoursSleptLastNight,
+                medications: firebaseState.medications,
+                caffeine: firebaseState.caffeine,
+                history: firebaseState.history,
+                modifiers: firebaseState.modifiers || {},
+                settings: firebaseState.settings || {},
+                sleepHistory: firebaseState.sleepHistory || {},
+                workoutPlan: firebaseState.workoutPlan || {},
+                nicotine: firebaseState.nicotine || {}
+            });
+
+            // Ensure arrays are actually arrays
+            if (!Array.isArray(state.medications)) state.medications = [];
+            if (!Array.isArray(state.caffeine)) state.caffeine = [];
+            if (!Array.isArray(state.history)) state.history = [];
+
+            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+
+            // Re-render everything
+            document.getElementById('wakeTime').value = state.wakeTime;
+            document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+            document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
+            document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
+            document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
+            document.getElementById('caffThreshold').value = state.settings.caffThreshold;
+            document.getElementById('weight').value = state.settings.weight;
+
+            renderMedEntries();
+            renderCaffeineEntries();
+            renderSleepCalendar();
+            renderSleepPerformance();
+            renderHistory();
+
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                restoreWorkoutPlanUI();
+            }
+
+            recalculate();
+
+            if (focusMode) {
+                renderFocusMode();
+            }
         }
         
         // Handle tab visibility changes - save on hide, refresh on show
@@ -8459,33 +8593,39 @@
         let lastLocalSave = 0;
         
         function saveState() {
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
+
             // Always save to localStorage immediately (but not too often)
             const now = Date.now();
             if (now - lastLocalSave > 500) { // Max twice per second for localStorage
                 localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                 lastLocalSave = now;
             }
-            
+
             // Debounce Firebase saves - wait 2 seconds of inactivity before saving
             if (firebaseSaveTimeout) {
                 clearTimeout(firebaseSaveTimeout);
             }
-            
+
             firebaseSaveTimeout = setTimeout(() => {
                 saveToFirebase();
             }, 2000); // Wait 2 seconds before saving to Firebase
         }
-        
+
         // Force immediate save (for important actions like Save & Log)
         function saveStateImmediate() {
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
+
             localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
-            
+
             // Clear any pending debounced save
             if (firebaseSaveTimeout) {
                 clearTimeout(firebaseSaveTimeout);
                 firebaseSaveTimeout = null;
             }
-            
+
             // Save to Firebase immediately
             saveToFirebase();
         }

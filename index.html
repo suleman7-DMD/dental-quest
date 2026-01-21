@@ -23,7 +23,27 @@
             min-height: 100vh;
             padding: 20px;
             color: #333;
+            /* Scale down on desktop to fit more content - mobile uses full size */
             zoom: 0.70;
+        }
+
+        /* Mobile: reset zoom to 100% for touch-friendly UI */
+        @media (max-width: 768px) {
+            body {
+                zoom: 1;
+            }
+        }
+
+        /* Firefox fallback (doesn't support zoom) - use font scaling */
+        @supports not (zoom: 0.7) {
+            body {
+                font-size: 0.85em;
+            }
+            @media (max-width: 768px) {
+                body {
+                    font-size: 1em;
+                }
+            }
         }
 
         .container {
@@ -2695,7 +2715,7 @@
             <div id="syncStatusBar" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; padding: 8px 16px; background: rgba(0,0,0,0.2); border-radius: 20px; font-size: 0.85em;">
                 <span id="syncStatusIcon">⏳</span>
                 <span id="syncStatusText">Connecting...</span>
-                <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud">🔄 Sync Now</button>
+                <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync Now</button>
             </div>
             
             <div class="data-controls">
@@ -2712,8 +2732,8 @@
                 <input type="file" id="checkpointFile" accept=".dent,.json" style="display: none;" onchange="restoreCheckpoint(event)">
             </div>
             <div class="view-toggle-container" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">🎯 Focus Mode</button>
-                <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 1em; cursor: pointer;">📋 Full Task View</button>
+                <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" aria-label="Switch to Focus Mode view">🎯 Focus Mode</button>
+                <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 1em; cursor: pointer;" aria-label="Switch to Full Task View">📋 Full Task View</button>
             </div>
         </div>
 
@@ -3255,11 +3275,11 @@
                         <div style="padding: 30px;">
                             <!-- Month Navigation -->
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                                <button onclick="changeMonth(-1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;">
+                                <button onclick="changeMonth(-1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Previous month">
                                     ← Previous
                                 </button>
                                 <h3 style="color: #e6edf3; font-size: 2em; margin: 0;" id="currentMonthDisplay">Loading...</h3>
-                                <button onclick="changeMonth(1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;">
+                                <button onclick="changeMonth(1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Next month">
                                     Next →
                                 </button>
                             </div>
@@ -4250,7 +4270,10 @@
             if (firebaseInitialized && !initialLoadComplete) {
                 return; // Don't save anything yet!
             }
-            
+
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
+
             // Generate timestamp FIRST so we can track it
             const saveTimestamp = Date.now();
             
@@ -4380,7 +4403,10 @@
                 saveDebounceTimer = null;
             }
             pendingSaveData = null;
-            
+
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
+
             // Call saveData but with no debounce by directly saving
             if (!firebaseInitialized || !initialLoadComplete) {
                 saveData();
@@ -4438,16 +4464,55 @@
             const toast = document.getElementById('toast');
             const toastIcon = document.getElementById('toastIcon');
             const toastMessage = document.getElementById('toastMessage');
-            
+
             if (toastIcon) toastIcon.textContent = icon;
             if (toastMessage) toastMessage.textContent = message;
-            
+
             if (toast) {
                 toast.classList.add('show');
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3000);
             }
+        }
+
+        // Custom Alert Modal (replaces blocking alert())
+        function showCustomAlert(message, title = 'Notice', callback = null) {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
+                    <h3 style="color:#58a6ff;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
+                        style="padding:12px 32px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window._customAlertCallback = callback;
+            modal.querySelector('button').focus();
+        }
+
+        // Custom Confirm Modal (replaces blocking confirm())
+        function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
+                    <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
+                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="confirmBtn" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
+                        <button id="cancelBtn" style="flex:1;padding:12px;background:#6e7681;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('#confirmBtn').onclick = () => { modal.remove(); if (onConfirm) onConfirm(); };
+            modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
+            modal.querySelector('#confirmBtn').focus();
         }
 
         // VERSION COMPATIBILITY SYSTEM
@@ -6896,6 +6961,91 @@
             return new Date(y, m - 1, d);
         }
 
+        // Deep merge helper for nested objects (preserves arrays, merges objects recursively)
+        function deepMerge(target, source) {
+            if (!source) return target;
+            if (!target) return source;
+
+            const result = { ...target };
+
+            for (const key in source) {
+                if (source[key] === null || source[key] === undefined) {
+                    continue; // Don't overwrite with null/undefined
+                }
+
+                if (Array.isArray(source[key])) {
+                    // Arrays: use source array (don't merge array elements)
+                    result[key] = source[key];
+                } else if (typeof source[key] === 'object' && typeof target[key] === 'object') {
+                    // Objects: recursive merge
+                    result[key] = deepMerge(target[key], source[key]);
+                } else {
+                    // Primitives: use source value
+                    result[key] = source[key];
+                }
+            }
+
+            return result;
+        }
+
+        // Track local changes for conflict detection
+        let localChangesSinceLastSync = false;
+        let lastSyncTimestamp = null;
+
+        function markLocalChange() {
+            localChangesSinceLastSync = true;
+        }
+
+        // Show conflict resolution modal
+        function showSyncConflictModal(localData, remoteData, onResolve) {
+            const modal = document.createElement('div');
+            modal.id = 'syncConflictModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+            const localTasks = (localData.tasks || []).filter(t => !t.completed).length;
+            const remoteTasks = (remoteData.tasks || []).filter(t => !t.completed).length;
+            const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
+            const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
+
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
+                    <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">⚠️ Sync Conflict Detected</h3>
+                    <p style="color:#8b949e;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                        <div style="background:#21262d;padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepLocal">
+                            <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">📱 This Device</div>
+                            <div style="color:#8b949e;font-size:0.85em;">
+                                ${localTasks} active tasks<br>
+                                Last saved: ${localTime}
+                            </div>
+                        </div>
+                        <div style="background:#21262d;padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepRemote">
+                            <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">☁️ Cloud</div>
+                            <div style="color:#8b949e;font-size:0.85em;">
+                                ${remoteTasks} active tasks<br>
+                                Last saved: ${remoteTime}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
+                        <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#8957e5;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
+                    </div>
+                    <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Try to Merge Both</button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            window.resolveSyncConflict = function(choice) {
+                document.body.removeChild(modal);
+                delete window.resolveSyncConflict;
+                onResolve(choice);
+            };
+        }
+
         function checkPlannerReset() {
             const now = new Date();
             const hours = now.getHours();
@@ -7579,99 +7729,55 @@
                 updateSyncStatus('offline', 'Not connected');
                 return;
             }
-            
+
             updateSyncStatus('syncing', 'Fetching from cloud...');
-            
+
             database.ref('users/' + currentUser.uid + '/appData').once('value')
                 .then(snapshot => {
-                    const data = snapshot.val();
-                    if (!data) {
+                    const remoteData = snapshot.val();
+                    if (!remoteData) {
                         showToast('No cloud data found', '☁️');
                         updateSyncStatus('connected', 'No cloud data');
                         return;
                     }
-                    
-                    
-                    // Force update ALL local data regardless of timestamp
-                    lastKnownSaveTime = data.lastSaved || Date.now();
-                    
-                    // Update ALL data fields
-                    tasks = data.tasks || [];
-                    
-                    if (data.stats) {
-                        stats = {
-                            ...stats,
-                            totalXPGained: data.stats.totalXPGained || 0,
-                            totalTasks: data.stats.totalTasks || 0,
-                            categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
+
+                    // Check for conflicts - if local changes exist and remote is different
+                    if (localChangesSinceLastSync && lastSyncTimestamp && remoteData.lastSaved > lastSyncTimestamp) {
+                        // Build local data snapshot for comparison
+                        const localData = {
+                            tasks, stats, medications, calendarNotes, notebook,
+                            financials, pillAssignments, calendarEvents, dailyPlanner,
+                            focusModeData, lastCriticalEODReset,
+                            lastSaved: lastKnownSaveTime
                         };
+
+                        showSyncConflictModal(localData, remoteData, (choice) => {
+                            if (choice === 'local') {
+                                // Keep local - push to cloud
+                                saveDataImmediate();
+                                showToast('✅ Kept local data, pushed to cloud', '📱');
+                            } else if (choice === 'remote') {
+                                // Keep remote - apply cloud data
+                                applyRemoteData(remoteData);
+                                showToast(`✅ Synced ${tasks.length} tasks from cloud`, '☁️');
+                            } else if (choice === 'merge') {
+                                // Deep merge - local takes precedence for conflicts
+                                const merged = deepMerge(remoteData, localData);
+                                merged.lastSaved = Date.now();
+                                applyRemoteData(merged);
+                                saveDataImmediate(); // Push merged result to cloud
+                                showToast('✅ Merged data from both devices', '🔀');
+                            }
+                            localChangesSinceLastSync = false;
+                            lastSyncTimestamp = Date.now();
+                        });
+                        return;
                     }
-                    
-                    if (data.medications) {
-                        medications = { ...medications, ...data.medications };
-                    }
-                    
-                    if (data.calendarNotes !== undefined) {
-                        calendarNotes = data.calendarNotes || {};
-                    }
-                    
-                    if (data.notebook) {
-                        notebook = {
-                            pages: data.notebook.pages || [],
-                            currentPageId: data.notebook.currentPageId || null
-                        };
-                    }
-                    
-                    if (data.financials) {
-                        financials = { ...financials, ...data.financials };
-                    }
-                    
-                    if (data.pillAssignments) {
-                        pillAssignments = {
-                            '30mg': data.pillAssignments['30mg'] || {},
-                            '20mg': data.pillAssignments['20mg'] || {}
-                        };
-                    }
-                    
-                    if (data.calendarEvents !== undefined) {
-                        calendarEvents = data.calendarEvents || [];
-                    }
-                    
-                    if (data.dailyPlanner) {
-                        dailyPlanner = {
-                            date: data.dailyPlanner.date || null,
-                            goal: data.dailyPlanner.goal || '',
-                            bedtime: data.dailyPlanner.bedtime || '23:00',
-                            blocks: data.dailyPlanner.blocks || [],
-                            lastReset: data.dailyPlanner.lastReset || null
-                        };
-                    }
-                    
-                    if (data.focusModeData) {
-                        focusModeData = {
-                            ...focusModeData,
-                            oneThingId: data.focusModeData.oneThingId || null,
-                            microSteps: data.focusModeData.microSteps || [],
-                            todaysTasks: data.focusModeData.todaysTasks || { big: [], medium: [], small: [] },
-                            lastPlanningDate: data.focusModeData.lastPlanningDate || null
-                        };
-                    }
-                    
-                    if (data.lastCriticalEODReset) {
-                        lastCriticalEODReset = data.lastCriticalEODReset;
-                    }
-                    
-                    // Save to localStorage as backup
-                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
-                    
-                    // Re-render ALL UI
-                    updateStats();
-                    renderTasks();
-                    updateMedicationDisplay();
-                    if (currentView === 'focus') {
-                        renderFocusMode();
-                    }
-                    
+
+                    // No conflict - just apply remote data
+                    applyRemoteData(remoteData);
+                    localChangesSinceLastSync = false;
+                    lastSyncTimestamp = Date.now();
                     updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
                     showToast(`✅ Synced ${tasks.length} tasks from cloud`, '☁️');
                 })
@@ -7680,6 +7786,74 @@
                     updateSyncStatus('error', 'Sync failed: ' + err.message);
                     showToast('❌ Sync failed: ' + err.message, '⚠️');
                 });
+        }
+
+        // Helper to apply remote data to local state
+        function applyRemoteData(data) {
+            lastKnownSaveTime = data.lastSaved || Date.now();
+
+            tasks = data.tasks || [];
+
+            if (data.stats) {
+                stats = deepMerge(stats, {
+                    totalXPGained: data.stats.totalXPGained || 0,
+                    totalTasks: data.stats.totalTasks || 0,
+                    categoryXPGained: data.stats.categoryXPGained || {}
+                });
+            }
+
+            if (data.medications) {
+                medications = deepMerge(medications, data.medications);
+            }
+
+            if (data.calendarNotes !== undefined) {
+                calendarNotes = data.calendarNotes || {};
+            }
+
+            if (data.notebook) {
+                notebook = {
+                    pages: data.notebook.pages || [],
+                    currentPageId: data.notebook.currentPageId || null
+                };
+            }
+
+            if (data.financials) {
+                financials = deepMerge(financials, data.financials);
+            }
+
+            if (data.pillAssignments) {
+                pillAssignments = {
+                    '30mg': data.pillAssignments['30mg'] || {},
+                    '20mg': data.pillAssignments['20mg'] || {}
+                };
+            }
+
+            if (data.calendarEvents !== undefined) {
+                calendarEvents = data.calendarEvents || [];
+            }
+
+            if (data.dailyPlanner) {
+                dailyPlanner = deepMerge(dailyPlanner, data.dailyPlanner);
+            }
+
+            if (data.focusModeData) {
+                focusModeData = deepMerge(focusModeData, data.focusModeData);
+            }
+
+            if (data.lastCriticalEODReset) {
+                lastCriticalEODReset = data.lastCriticalEODReset;
+            }
+
+            // Save to localStorage as backup
+            localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+
+            // Re-render ALL UI
+            updateStats();
+            renderTasks();
+            updateMedicationDisplay();
+            if (currentView === 'focus') {
+                renderFocusMode();
+            }
         }
         
         // Debug function - call from browser console: debugSyncStatus()
