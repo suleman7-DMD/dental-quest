@@ -3586,8 +3586,8 @@
                                     <div id="actionsRemainingStat" style="font-size: 1.6em; font-weight: bold; color: #fbbf24;">12</div>
                                 </div>
                                 <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Graduation</div>
-                                    <div style="font-size: 1.6em; font-weight: bold; color: #86efac;">May 15, '27</div>
+                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Next Disbursement</div>
+                                    <div style="font-size: 1.6em; font-weight: bold; color: #86efac;">May 14, '26</div>
                                 </div>
                             </div>
                         </div>
@@ -3984,8 +3984,8 @@
                 lastUpdated: null,
                 loanDisbursementDate: '2026-01-10',
                 loanAmount: 18447,
-                targetCushion: 2285, // May 15 goal
-                semesterEndDate: '2026-05-15'
+                targetCushion: 2285, // Target cushion for May 14
+                semesterEndDate: '2026-05-14' // Next disbursement date
             },
             
             // COMMITTED BILLS (Check these off as you pay them)
@@ -4181,7 +4181,7 @@
                 }
             ],
             
-            // RECURRING MONTHLY EXPENSES (Feb-Apr)
+            // RECURRING MONTHLY EXPENSES (Feb-May)
             recurringExpenses: {
                 rent: { amount: 1280, category: 'housing' },
                 parking: { amount: 300, category: 'housing' },
@@ -4192,7 +4192,15 @@
                 nicotine: { amount: 50, category: 'living' },
                 creditCards: { amount: 235, category: 'debt', notes: 'After negotiation' }
             },
-            
+
+            // Track which months' recurring expenses have been paid
+            monthlyPayments: {
+                '2026-02': { paid: false, paidDate: null, label: 'February 2026' },
+                '2026-03': { paid: false, paidDate: null, label: 'March 2026' },
+                '2026-04': { paid: false, paidDate: null, label: 'April 2026' },
+                '2026-05': { paid: false, paidDate: null, label: 'May 1-14', partial: true, fraction: 0.45 }
+            },
+
             creditCards: [
                 {
                     id: 'chase',
@@ -4461,6 +4469,7 @@
                         masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
                         committedBills: data.financials.committedBills || financials.committedBills,
                         recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
+                        monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
                         creditCards: data.financials.creditCards || financials.creditCards,
                         actionItems: data.financials.actionItems || financials.actionItems,
                         customTransactions: data.financials.customTransactions || financials.customTransactions
@@ -4920,6 +4929,7 @@
                             masterLiquidity: checkpoint.financials.masterLiquidity || financials.masterLiquidity,
                             committedBills: checkpoint.financials.committedBills || financials.committedBills,
                             recurringExpenses: checkpoint.financials.recurringExpenses || financials.recurringExpenses,
+                            monthlyPayments: checkpoint.financials.monthlyPayments || financials.monthlyPayments,
                             creditCards: checkpoint.financials.creditCards || financials.creditCards,
                             actionItems: checkpoint.financials.actionItems || financials.actionItems,
                             customTransactions: checkpoint.financials.customTransactions || financials.customTransactions
@@ -5178,12 +5188,13 @@
                                 masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
                                 committedBills: data.financials.committedBills || financials.committedBills,
                                 recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
+                                monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
                                 creditCards: data.financials.creditCards || financials.creditCards,
                                 actionItems: data.financials.actionItems || financials.actionItems,
                                 customTransactions: data.financials.customTransactions || financials.customTransactions
                             };
                         }
-                        
+
                         // Load pill assignments from Firebase
                         if (data.pillAssignments) {
                             pillAssignments = {
@@ -5718,7 +5729,7 @@
             if (modal) modal.classList.remove('show');
         }
 
-        // Calculate real-time financial status
+        // Calculate real-time financial status with month-by-month tracking
         function calculateFinancialStatus() {
             // Safety checks
             if (!financials || !financials.masterLiquidity || !financials.committedBills || !financials.recurringExpenses) {
@@ -5729,9 +5740,9 @@
                     committedIncome: 0,
                     availableCash: 0,
                     monthlyBurn: 0,
-                    monthsRemaining: 0,
+                    unpaidMonths: [],
+                    unpaidMonthsTotal: 0,
                     daysRemaining: 0,
-                    projectedMonthlySpend: 0,
                     projectedBalance: 0,
                     targetCushion: 2285,
                     healthStatus: 'unknown',
@@ -5739,43 +5750,59 @@
                     healthMessage: 'DATA NOT LOADED'
                 };
             }
-            
+
             const liquid = financials.masterLiquidity.currentCash || 0;
-            
-            // Calculate committed payments (unpaid bills)
+
+            // Calculate committed payments (unpaid one-time bills from committedBills)
             const unpaidBills = financials.committedBills.filter(bill => !bill.paid);
             const committedExpenses = unpaidBills
                 .filter(bill => bill.type === 'expense')
                 .reduce((sum, bill) => sum + bill.amount, 0);
-            
+
             const committedIncome = unpaidBills
                 .filter(bill => bill.type === 'income')
                 .reduce((sum, bill) => sum + bill.amount, 0);
-            
-            // Available cash after committed bills
+
+            // Available cash after committed one-time bills
             const availableCash = liquid + committedIncome - committedExpenses;
-            
+
             // Calculate monthly burn rate from recurring expenses
             const monthlyBurn = Object.values(financials.recurringExpenses)
                 .reduce((sum, expense) => sum + expense.amount, 0);
-            
-            // Days until May 15
+
+            // Calculate unpaid months' recurring expenses
+            const monthlyPayments = financials.monthlyPayments || {};
+            const unpaidMonths = [];
+            let unpaidMonthsTotal = 0;
+
+            Object.entries(monthlyPayments).forEach(([monthKey, monthData]) => {
+                if (!monthData.paid) {
+                    const fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
+                    const amount = Math.round(monthlyBurn * fraction);
+                    unpaidMonths.push({
+                        key: monthKey,
+                        label: monthData.label,
+                        amount: amount,
+                        fraction: fraction,
+                        partial: monthData.partial || false
+                    });
+                    unpaidMonthsTotal += amount;
+                }
+            });
+
+            // Days until May 14
             const today = new Date();
             const semesterEnd = new Date(financials.masterLiquidity.semesterEndDate);
             const daysRemaining = Math.ceil((semesterEnd - today) / (1000 * 60 * 60 * 24));
-            const monthsRemaining = daysRemaining / 30;
-            
-            // Projected spending
-            const projectedMonthlySpend = monthlyBurn * Math.floor(monthsRemaining);
-            
-            // Projected May 15 balance
-            const projectedBalance = availableCash - projectedMonthlySpend;
-            
+
+            // Projected May 14 balance = Available after bills - Unpaid months' recurring
+            const projectedBalance = availableCash - unpaidMonthsTotal;
+
             // Health status
             let healthStatus = 'good';
             let healthColor = '#4ade80';
             let healthMessage = 'ON TRACK';
-            
+
             if (projectedBalance < 0) {
                 healthStatus = 'critical';
                 healthColor = '#dc2626';
@@ -5785,16 +5812,16 @@
                 healthColor = '#f59e0b';
                 healthMessage = 'BELOW TARGET';
             }
-            
+
             return {
                 currentLiquid: liquid,
                 committedExpenses,
                 committedIncome,
                 availableCash,
                 monthlyBurn,
-                monthsRemaining: monthsRemaining.toFixed(1),
+                unpaidMonths,
+                unpaidMonthsTotal,
                 daysRemaining,
-                projectedMonthlySpend,
                 projectedBalance,
                 targetCushion: financials.masterLiquidity.targetCushion,
                 healthStatus,
@@ -5884,9 +5911,9 @@
                             </div>
                         </div>
                         
-                        <!-- Projected May 15 -->
+                        <!-- Projected May 14 -->
                         <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px;">
-                            <div style="font-size: 0.9em; color: rgba(255,255,255,0.8); margin-bottom: 8px;">📊 PROJECTED MAY 15 BALANCE</div>
+                            <div style="font-size: 0.9em; color: rgba(255,255,255,0.8); margin-bottom: 8px;">📊 PROJECTED MAY 14 BALANCE</div>
                             <div style="font-size: 3em; font-weight: 900; font-family: 'Monaco', monospace; margin: 15px 0; color: ${status.healthColor};">
                                 $${status.projectedBalance.toLocaleString()}
                             </div>
@@ -6118,12 +6145,18 @@
         function renderRecurringExpenses() {
             const expenses = financials.recurringExpenses;
             const total = Object.values(expenses).reduce((sum, exp) => sum + exp.amount, 0);
-            
+            const monthlyPayments = financials.monthlyPayments || {};
+            const status = calculateFinancialStatus();
+
+            // Count paid vs unpaid months
+            const paidMonths = Object.values(monthlyPayments).filter(m => m.paid).length;
+            const totalMonths = Object.keys(monthlyPayments).length;
+
             return `
                 <div class="fin-section">
                     <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <h3 style="margin: 0;">🔄 Recurring Monthly Expenses (Feb-Apr)</h3>
+                            <h3 style="margin: 0;">🔄 Recurring Monthly Expenses</h3>
                             <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('recurringExpenses')">❓ How To Use</button>
                         </div>
                         <div style="text-align: right;">
@@ -6131,31 +6164,228 @@
                             <div style="font-size: 1.4em; font-weight: 700; color: #fbbf24;">$${total.toLocaleString()}/mo</div>
                         </div>
                     </div>
-                    
-                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; border-radius: 6px;">
-                        💡 These repeat every month from Feb-Apr. Click to edit amounts after negotiations.
+
+                    <!-- EXPENSE CATEGORIES -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-size: 1em; font-weight: 600; color: #b0b8c4;">📋 Your Monthly Expenses</div>
+                            <button onclick="addRecurringExpense()"
+                                    style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">
+                                + Add Expense
+                            </button>
+                        </div>
+                        <div style="display: grid; gap: 8px;">
+                            ${Object.entries(expenses).map(([key, expense]) => `
+                                <div style="background: #21262d; padding: 14px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #30363d;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div>
+                                            <div style="font-size: 1em; font-weight: 600; color: #e6edf3;">
+                                                ${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                                            </div>
+                                            <div style="font-size: 0.8em; color: #8b949e;">
+                                                ${expense.category}${expense.notes ? ' • ' + expense.notes : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="font-size: 1.2em; font-weight: 700; color: #f87171;">
+                                            $${expense.amount.toLocaleString()}
+                                        </div>
+                                        <button onclick="editRecurringExpense('${key}')"
+                                                style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                            Edit
+                                        </button>
+                                        <button onclick="deleteRecurringExpense('${key}')"
+                                                style="background: transparent; color: #f87171; border: 1px solid #f87171; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    
-                    <div style="display: grid; gap: 12px;">
-                        ${Object.entries(expenses).map(([key, expense]) => `
-                            <div style="background: #21262d; padding: 18px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #30363d;"
-                                 onclick="editRecurringExpense('${key}')">
-                                <div>
-                                    <div style="font-size: 1.1em; font-weight: 600; color: #e6edf3; margin-bottom: 4px;">
-                                        ${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+
+                    <!-- MONTH-BY-MONTH PAYMENT TRACKING -->
+                    <div style="background: #161b22; border-radius: 12px; padding: 20px; border: 2px solid #30363d;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div style="font-size: 1.1em; font-weight: 700; color: #58a6ff;">📅 Month-by-Month Payment Tracker</div>
+                            <div style="font-size: 0.9em; color: #b0b8c4;">${paidMonths}/${totalMonths} months paid</div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 10px 14px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 0.9em; color: #93c5fd;">
+                            💡 Check off each month's expenses as you pay them. Only unchecked months count toward your May 14 projection.
+                        </div>
+
+                        <div style="display: grid; gap: 10px;">
+                            ${Object.entries(monthlyPayments).map(([monthKey, monthData]) => {
+                                const fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
+                                const amount = Math.round(total * fraction);
+                                const isPaid = monthData.paid;
+                                const paidDate = monthData.paidDate ? new Date(monthData.paidDate).toLocaleDateString() : null;
+
+                                return `
+                                    <div style="background: ${isPaid ? 'rgba(34, 197, 94, 0.1)' : '#21262d'};
+                                                padding: 16px; border-radius: 8px;
+                                                display: flex; justify-content: space-between; align-items: center;
+                                                border: 2px solid ${isPaid ? '#22c55e' : '#30363d'};
+                                                cursor: pointer; transition: all 0.2s ease;"
+                                         onclick="toggleMonthPaid('${monthKey}')">
+                                        <div style="display: flex; align-items: center; gap: 14px;">
+                                            <div style="width: 28px; height: 28px; border-radius: 6px;
+                                                        background: ${isPaid ? '#22c55e' : '#0d1117'};
+                                                        border: 2px solid ${isPaid ? '#22c55e' : '#30363d'};
+                                                        display: flex; align-items: center; justify-content: center;
+                                                        color: white; font-weight: 700; font-size: 1.1em;">
+                                                ${isPaid ? '✓' : ''}
+                                            </div>
+                                            <div>
+                                                <div style="font-size: 1.1em; font-weight: 600; color: ${isPaid ? '#4ade80' : '#e6edf3'};">
+                                                    ${monthData.label}${monthData.partial ? ' (partial)' : ''}
+                                                </div>
+                                                <div style="font-size: 0.85em; color: ${isPaid ? '#86efac' : '#8b949e'};">
+                                                    ${isPaid ? (paidDate ? 'Paid on ' + paidDate : '✓ Marked as paid') : (monthData.partial ? `${Math.round(fraction * 100)}% of monthly expenses` : 'Full month expenses')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1.3em; font-weight: 700; color: ${isPaid ? '#4ade80' : '#f87171'};">
+                                                ${isPaid ? '✓ PAID' : '-$' + amount.toLocaleString()}
+                                            </div>
+                                            ${!isPaid ? `<div style="font-size: 0.8em; color: #8b949e;">Click to mark paid</div>` : ''}
+                                        </div>
                                     </div>
-                                    <div style="font-size: 0.85em; color: #b0b8c4;">
-                                        ${expense.category} ${expense.notes ? ' • ' + expense.notes : ''}
-                                    </div>
-                                </div>
-                                <div class="cash-amount negative" style="font-size: 1.4em;">
-                                    $${expense.amount.toLocaleString()}
-                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 1em; color: #b0b8c4;">
+                                <strong>Unpaid Total:</strong> ${status.unpaidMonths.length} month${status.unpaidMonths.length !== 1 ? 's' : ''} remaining
                             </div>
-                        `).join('')}
+                            <div style="font-size: 1.3em; font-weight: 700; color: #f87171;">
+                                -$${status.unpaidMonthsTotal.toLocaleString()}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        function toggleMonthPaid(monthKey) {
+            if (!financials.monthlyPayments || !financials.monthlyPayments[monthKey]) return;
+
+            const month = financials.monthlyPayments[monthKey];
+            month.paid = !month.paid;
+            month.paidDate = month.paid ? new Date().toISOString() : null;
+
+            saveData();
+            renderFinancialCockpit();
+            updateCockpitStats();
+
+            if (month.paid) {
+                showToast(`✓ ${month.label} marked as paid`, '✓');
+            } else {
+                showToast(`${month.label} marked as unpaid`, '↩');
+            }
+        }
+
+        function addRecurringExpense() {
+            const overlay = document.createElement('div');
+            overlay.className = 'edit-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) overlay.remove();
+            };
+
+            overlay.innerHTML = `
+                <div class="edit-panel" onclick="event.stopPropagation()">
+                    <h3>Add New Recurring Expense</h3>
+
+                    <div class="edit-field">
+                        <label>Expense Name</label>
+                        <input type="text" id="new_expenseName" placeholder="e.g., Insurance, Subscriptions">
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Monthly Amount ($)</label>
+                        <input type="number" id="new_expenseAmount" value="0" step="0.01">
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Category</label>
+                        <select id="new_expenseCategory" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">
+                            <option value="housing">Housing</option>
+                            <option value="living">Living</option>
+                            <option value="wellness">Wellness</option>
+                            <option value="debt">Debt</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Notes (optional)</label>
+                        <input type="text" id="new_expenseNotes" placeholder="Any notes...">
+                    </div>
+
+                    <div class="edit-actions">
+                        <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
+                        <button class="btn-save" onclick="saveNewRecurringExpense()">Add Expense</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+        }
+
+        function saveNewRecurringExpense() {
+            const name = document.getElementById('new_expenseName').value.trim();
+            const amount = parseFloat(document.getElementById('new_expenseAmount').value) || 0;
+            const category = document.getElementById('new_expenseCategory').value;
+            const notes = document.getElementById('new_expenseNotes').value.trim();
+
+            if (!name) {
+                alert('Please enter an expense name');
+                return;
+            }
+
+            // Create a key from the name (lowercase, no spaces)
+            const key = name.toLowerCase().replace(/\s+/g, '');
+
+            if (financials.recurringExpenses[key]) {
+                alert('An expense with this name already exists');
+                return;
+            }
+
+            financials.recurringExpenses[key] = {
+                amount: amount,
+                category: category,
+                notes: notes || undefined
+            };
+
+            saveData();
+            renderFinancialCockpit();
+            updateCockpitStats();
+            document.querySelector('.edit-overlay').remove();
+
+            showToast(`Added: ${name}`, '+');
+        }
+
+        function deleteRecurringExpense(expenseKey) {
+            const expense = financials.recurringExpenses[expenseKey];
+            if (!expense) return;
+
+            const displayName = expenseKey.charAt(0).toUpperCase() + expenseKey.slice(1).replace(/([A-Z])/g, ' $1');
+
+            if (!confirm(`Delete "${displayName}" ($${expense.amount}/mo) from recurring expenses?`)) {
+                return;
+            }
+
+            delete financials.recurringExpenses[expenseKey];
+
+            saveData();
+            renderFinancialCockpit();
+            updateCockpitStats();
+
+            showToast(`Deleted: ${displayName}`, '×');
         }
 
         function editRecurringExpense(expenseKey) {
@@ -6204,51 +6434,106 @@
         function renderProjectionPanel() {
             const status = calculateFinancialStatus();
             const progressPercent = Math.max(0, Math.min(100, (status.projectedBalance / status.targetCushion) * 100));
-            
+
             return `
                 <div class="fin-section" style="background: rgba(59, 130, 246, 0.05); border: 2px solid #3b82f6;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="color: #58a6ff; font-size: 1.8em; margin: 0;">📊 May 15 Projection Engine</h3>
+                        <h3 style="color: #58a6ff; font-size: 1.8em; margin: 0;">📊 May 14 Projection Engine</h3>
                         <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('projections')">❓ How This Works</button>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                        <div>
-                            <div style="font-size: 0.9em; color: #b0b8c4; margin-bottom: 8px;">Available After Committed Bills</div>
-                            <div style="font-size: 2.2em; font-weight: 900; color: #60a5fa; font-family: 'Monaco', monospace;">
+
+                    <!-- CALCULATION BREAKDOWN -->
+                    <div style="background: #161b22; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <div style="font-size: 1em; font-weight: 600; color: #b0b8c4; margin-bottom: 15px;">📐 Calculation Breakdown</div>
+
+                        <!-- Starting Point -->
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
+                            <div style="color: #e6edf3;">Current Cash in Checking</div>
+                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #4ade80;">
+                                $${status.currentLiquid.toLocaleString()}
+                            </div>
+                        </div>
+
+                        <!-- Expected Income -->
+                        ${status.committedIncome > 0 ? `
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
+                            <div style="color: #e6edf3;">+ Expected Income (unpaid)</div>
+                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #4ade80;">
+                                +$${status.committedIncome.toLocaleString()}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Committed Bills -->
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
+                            <div style="color: #e6edf3;">− Unpaid One-Time Bills</div>
+                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #f87171;">
+                                -$${status.committedExpenses.toLocaleString()}
+                            </div>
+                        </div>
+
+                        <!-- Available After Bills -->
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d; background: rgba(59, 130, 246, 0.1); margin: 0 -20px; padding-left: 20px; padding-right: 20px;">
+                            <div style="color: #60a5fa; font-weight: 600;">= Available After Bills</div>
+                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #60a5fa;">
                                 $${status.availableCash.toLocaleString()}
                             </div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.9em; color: #b0b8c4; margin-bottom: 8px;">Months Remaining × Burn Rate</div>
-                            <div style="font-size: 2.2em; font-weight: 900; color: #f87171; font-family: 'Monaco', monospace;">
-                                -$${status.projectedMonthlySpend.toLocaleString()}
+
+                        <!-- Unpaid Months Breakdown -->
+                        ${status.unpaidMonths.map(month => `
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #21262d;">
+                            <div style="color: #b0b8c4; padding-left: 15px;">
+                                − ${month.label}${month.partial ? ` (${Math.round(month.fraction * 100)}%)` : ''}
                             </div>
-                            <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 4px;">
-                                ${status.monthsRemaining} months × $${status.monthlyBurn.toLocaleString()}/mo
+                            <div style="font-family: 'Monaco', monospace; color: #f87171;">
+                                -$${month.amount.toLocaleString()}
+                            </div>
+                        </div>
+                        `).join('')}
+
+                        ${status.unpaidMonths.length === 0 ? `
+                        <div style="padding: 15px; text-align: center; color: #4ade80;">
+                            ✓ All monthly expenses marked as paid!
+                        </div>
+                        ` : ''}
+
+                        <!-- Total Recurring -->
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
+                            <div style="color: #e6edf3; font-weight: 600;">− Total Unpaid Monthly Expenses</div>
+                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #f87171;">
+                                -$${status.unpaidMonthsTotal.toLocaleString()}
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- PROJECTED BALANCE -->
                     <div style="padding: 25px; background: ${status.healthColor}15; border: 2px solid ${status.healthColor}; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 1em; color: #b0b8c4; margin-bottom: 8px;">PROJECTED MAY 15 BALANCE</div>
+                        <div style="font-size: 1em; color: #b0b8c4; margin-bottom: 8px;">PROJECTED MAY 14 BALANCE</div>
                         <div style="font-size: 3.5em; font-weight: 900; color: ${status.healthColor}; font-family: 'Monaco', monospace; margin: 10px 0;">
                             $${status.projectedBalance.toLocaleString()}
                         </div>
                         <div style="font-size: 1.2em; font-weight: 700; color: ${status.healthColor}; padding: 12px; background: white; border-radius: 8px; margin-top: 15px;">
                             ${status.healthMessage}
                         </div>
+                        <div style="margin-top: 12px; font-size: 0.9em; color: #b0b8c4;">
+                            ${status.daysRemaining} days until next disbursement
+                        </div>
                     </div>
-                    
+
+                    <!-- PROGRESS BAR -->
                     <div style="margin-top: 25px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span style="font-weight: 600;">Progress to $${status.targetCushion.toLocaleString()} Target</span>
+                            <span style="font-weight: 600;">Progress to $${status.targetCushion.toLocaleString()} Target Cushion</span>
                             <span style="font-weight: 700; color: ${status.healthColor};">${progressPercent.toFixed(0)}%</span>
                         </div>
                         <div class="progress-container" style="height: 30px;">
                             <div class="progress-bar-fill" style="width: ${progressPercent}%; font-size: 1em;">
                                 ${progressPercent > 10 ? `$${status.projectedBalance.toLocaleString()}` : ''}
                             </div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.85em; color: #8b949e; text-align: center;">
+                            Target: Have $${status.targetCushion.toLocaleString()} cushion when May 14 disbursement arrives
                         </div>
                     </div>
                 </div>
@@ -6506,7 +6791,7 @@
                     
                     <div class="help-section">
                         <p><strong>4. Watch everything recalculate!</strong></p>
-                        <p>✅ Projected May 15 balance updates<br>
+                        <p>✅ Projected May 14 balance updates<br>
                         ✅ Available cash after bills recalculates<br>
                         ✅ Health status changes (Green/Yellow/Red)<br>
                         ✅ Progress bar adjusts</p>
@@ -6642,113 +6927,113 @@
                 
                 projections: `
                     <h2>📊 Understanding Your Projections</h2>
-                    
+
                     <div class="help-tip">
-                        <strong>💡 KEY CONCEPT:</strong> These projections show where you'll be on May 15, 2026 (end of semester) based on your CURRENT spending plan.
+                        <strong>💡 KEY CONCEPT:</strong> This shows your projected balance on May 14, 2026 (next loan disbursement) based on actual expenses you still need to pay.
                     </div>
-                    
+
                     <h3>How The Math Works:</h3>
                     <div class="help-section">
-                        <p><strong>Step 1: Start With Actual Cash</strong></p>
-                        <p>Whatever you entered in "Master Liquidity Control"</p>
-                        <p>Example: $18,447</p>
+                        <p><strong>Step 1: Current Cash in Checking</strong></p>
+                        <p>Your actual balance from "Master Liquidity Control"</p>
                     </div>
-                    
+
                     <div class="help-section">
-                        <p><strong>Step 2: Add Expected Income</strong></p>
-                        <p>Any bills marked as "income" that aren't paid yet</p>
-                        <p>Example: $0 (loan already counted)</p>
+                        <p><strong>Step 2: + Expected Income (if any)</strong></p>
+                        <p>Any unchecked income items in Committed Bills</p>
                     </div>
-                    
+
                     <div class="help-section">
-                        <p><strong>Step 3: Subtract Unpaid Bills</strong></p>
+                        <p><strong>Step 3: − Unpaid One-Time Bills</strong></p>
                         <p>All the committed bills you haven't checked off yet</p>
-                        <p>Example: -$4,352</p>
-                        <p>= Available Cash: $14,095</p>
+                        <p>= Available After Bills</p>
                     </div>
-                    
+
                     <div class="help-section">
-                        <p><strong>Step 4: Subtract Monthly Expenses</strong></p>
-                        <p>Your recurring expenses × remaining months</p>
-                        <p>Example: $2,720/mo × 3.5 months = -$9,520</p>
+                        <p><strong>Step 4: − Unpaid Monthly Expenses</strong></p>
+                        <p>Only months you HAVEN'T checked off in the tracker:</p>
+                        <p>• February (if unchecked) = full monthly total</p>
+                        <p>• March (if unchecked) = full monthly total</p>
+                        <p>• April (if unchecked) = full monthly total</p>
+                        <p>• May 1-14 (if unchecked) = 45% of monthly total</p>
                     </div>
-                    
+
                     <div class="help-section">
-                        <p><strong>Step 5: Final Projection</strong></p>
-                        <p>$14,095 - $9,520 = <strong>$4,575 on May 15</strong></p>
+                        <p><strong>Step 5: = Final Projection</strong></p>
+                        <p>This is what you'll have on May 14 when the next disbursement arrives!</p>
                     </div>
-                    
+
                     <h3>🚦 What The Colors Mean:</h3>
                     <div class="help-section">
                         <p><strong style="color: #4ade80;">🟢 GREEN - "ON TRACK":</strong></p>
-                        <p>You'll have MORE than your $2,285 target cushion. You're in great shape!</p>
+                        <p>You'll have MORE than your $2,285 target cushion. Great shape!</p>
                     </div>
-                    
+
                     <div class="help-section">
                         <p><strong style="color: #fbbf24;">🟡 YELLOW - "BELOW TARGET":</strong></p>
-                        <p>You'll have SOME cushion but less than $2,285. Still okay, but tight.</p>
+                        <p>You'll have SOME cushion but less than $2,285. Tight but okay.</p>
                     </div>
-                    
+
                     <div class="help-section">
                         <p><strong style="color: #f87171;">🔴 RED - "DEFICIT PROJECTED":</strong></p>
-                        <p>You're projected to RUN OUT of money before May 15. Need to adjust spending!</p>
+                        <p>You're projected to RUN OUT before May 14. Adjust spending!</p>
                     </div>
-                    
-                    <h3>How To Fix Red/Yellow Projections:</h3>
+
+                    <h3>How To Improve Your Projection:</h3>
                     <div class="help-tip">
+                        ✅ Check off months as you pay them (removes from calculation)<br>
                         ✅ Negotiate credit card minimums down<br>
-                        ✅ Apply for SNAP benefits (-$200/mo on food)<br>
-                        ✅ Reduce social budget temporarily<br>
-                        ✅ Check if bills can be delayed<br>
-                        ✅ Update your actual cash (might be higher than you thought!)
+                        ✅ Apply for SNAP benefits (reduce Food expense)<br>
+                        ✅ Reduce Social budget temporarily<br>
+                        ✅ Update actual cash (might be higher than you thought!)
                     </div>
                 `,
                 
                 recurringExpenses: `
                     <h2>🔄 Recurring Monthly Expenses - How To Use</h2>
-                    
+
                     <div class="help-tip">
-                        <strong>💡 THESE AUTO-REPEAT:</strong> These expenses happen EVERY month from Feb-Apr. Update them when costs change!
+                        <strong>💡 NEW: MONTH-BY-MONTH TRACKING!</strong> Now you can check off each month's expenses as you pay them, so projections are always accurate!
                     </div>
-                    
-                    <h3>What's Included:</h3>
+
+                    <h3>📋 Two Sections:</h3>
                     <div class="help-section">
-                        • <strong>Rent:</strong> $1,280/mo (fixed - lease agreement)<br>
-                        • <strong>Parking:</strong> $300/mo (keeping car)<br>
-                        • <strong>Utilities:</strong> $60/mo (average)<br>
-                        • <strong>Gym:</strong> $195/mo (SOWA - mental health priority)<br>
-                        • <strong>Food:</strong> $350/mo (can reduce with SNAP)<br>
-                        • <strong>Social:</strong> $250/mo (dating, friends, life)<br>
-                        • <strong>Nicotine:</strong> $50/mo (working on quitting)<br>
-                        • <strong>Credit Cards:</strong> $235/mo (after negotiations)
+                        <p><strong>1. Your Monthly Expenses (Top)</strong></p>
+                        <p>These are your expense CATEGORIES and their monthly amounts. Edit these when costs change (e.g., after negotiating a bill).</p>
                     </div>
-                    
-                    <h3>How To Edit Recurring Expenses:</h3>
+
                     <div class="help-section">
-                        <p><strong>1. Click the expense you want to change</strong></p>
-                        <p>Example: Click "Credit Cards $235"</p>
+                        <p><strong>2. Month-by-Month Payment Tracker (Bottom)</strong></p>
+                        <p>This shows Feb, Mar, Apr, and May 1-14. Check off each month after you've paid ALL that month's expenses.</p>
                     </div>
-                    
+
+                    <h3>How The New System Works:</h3>
                     <div class="help-section">
-                        <p><strong>2. Enter the new amount</strong></p>
-                        <p>Example: After negotiating all cards down, total is now $205</p>
+                        <p><strong>✅ Checked month = PAID</strong></p>
+                        <p>If February is checked, the projection doesn't subtract February expenses anymore.</p>
                     </div>
-                    
+
                     <div class="help-section">
-                        <p><strong>3. Save → Watch projections update!</strong></p>
-                        <p>Monthly burn rate drops → May 15 cushion increases!</p>
+                        <p><strong>❌ Unchecked month = NOT PAID</strong></p>
+                        <p>Only unchecked months get subtracted from your projection.</p>
                     </div>
-                    
-                    <h3>📅 When To Update:</h3>
-                    <div class="help-tip">
-                        • <strong>After negotiating credit cards:</strong> Update "Credit Cards" amount<br>
-                        • <strong>Got SNAP benefits:</strong> Reduce "Food" to $150/mo<br>
-                        • <strong>Quit nicotine:</strong> Drop to $0!<br>
-                        • <strong>Temporarily cutting social:</strong> Reduce for that month
+
+                    <h3>Example Workflow:</h3>
+                    <div class="help-section">
+                        <p><strong>End of January:</strong> You've paid all January bills (tracked in Committed Bills). February is still unchecked.</p>
+                        <p><strong>End of February:</strong> You paid rent, gym, food, etc. for Feb. Click February checkbox → it turns green.</p>
+                        <p><strong>Projection updates:</strong> Now only Mar, Apr, and May 1-14 are subtracted!</p>
                     </div>
-                    
+
+                    <h3>Managing Expense Categories:</h3>
+                    <div class="help-section">
+                        <p><strong>Edit:</strong> Click the blue "Edit" button next to any expense to change its amount.</p>
+                        <p><strong>Delete:</strong> Click the red "×" button to remove an expense category.</p>
+                        <p><strong>Add New:</strong> Click "+ Add Expense" to add a new category (e.g., "Insurance").</p>
+                    </div>
+
                     <div class="help-warning">
-                        <strong>⚠️ BE REALISTIC:</strong> Don't set food to $50/mo unless you're actually going to eat that little. Projections only work if they're honest!
+                        <strong>⚠️ IMPORTANT:</strong> Only check off a month when you've ACTUALLY paid all the expenses for that month. The projection assumes unchecked months still need to be paid!
                     </div>
                 `
             };
