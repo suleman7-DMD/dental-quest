@@ -133,6 +133,12 @@ users/user_[hashedPin]/
 │   ├── calendarNotes{}
 │   ├── notebook{}
 │   ├── financials{}
+│   │   ├── masterLiquidity{}
+│   │   ├── committedBills[]
+│   │   ├── recurringExpenses{}
+│   │   ├── monthlyPayments{}    ← NEW: tracks Feb/Mar/Apr/May paid status
+│   │   ├── creditCards[]
+│   │   └── actionItems[]
 │   ├── pillAssignments{}
 │   ├── calendarEvents[]
 │   ├── dailyPlanner{}
@@ -257,6 +263,85 @@ const avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 :
 
 ---
 
+## FINANCIALS SYSTEM (index.html)
+
+### Purpose
+Track loan disbursement money from Jan 5 until May 14 (next disbursement). Shows if Sully is on track to have a cushion when next disbursement arrives.
+
+### Data Structure
+```javascript
+financials = {
+    masterLiquidity: {
+        currentCash: 0,              // Actual checking account balance
+        lastUpdated: null,
+        semesterEndDate: '2026-05-14', // Next disbursement date
+        targetCushion: 2285          // Goal: have this much on May 14
+    },
+    committedBills: [...],           // One-time bills (January specific)
+    recurringExpenses: {             // Monthly expense categories
+        rent: { amount: 1280, category: 'housing' },
+        // ... other expenses
+    },
+    monthlyPayments: {               // Track which months are paid
+        '2026-02': { paid: false, paidDate: null, label: 'February 2026' },
+        '2026-03': { paid: false, paidDate: null, label: 'March 2026' },
+        '2026-04': { paid: false, paidDate: null, label: 'April 2026' },
+        '2026-05': { paid: false, paidDate: null, label: 'May 1-14', partial: true, fraction: 0.45 }
+    },
+    creditCards: [...],              // Credit card tracking
+    actionItems: [...]               // To-do items for financial tasks
+};
+```
+
+### Projection Calculation (CRITICAL - DON'T BREAK)
+```javascript
+function calculateFinancialStatus() {
+    // 1. Start with actual cash
+    const liquid = financials.masterLiquidity.currentCash;
+
+    // 2. Calculate unpaid one-time bills
+    const unpaidBills = financials.committedBills.filter(bill => !bill.paid);
+    const committedExpenses = unpaidBills.filter(b => b.type === 'expense').reduce(...);
+    const committedIncome = unpaidBills.filter(b => b.type === 'income').reduce(...);
+
+    // 3. Available after one-time bills
+    const availableCash = liquid + committedIncome - committedExpenses;
+
+    // 4. Calculate unpaid monthly expenses (ONLY unchecked months!)
+    const monthlyBurn = Object.values(financials.recurringExpenses).reduce(...);
+    let unpaidMonthsTotal = 0;
+    Object.entries(financials.monthlyPayments).forEach(([key, month]) => {
+        if (!month.paid) {
+            const fraction = month.partial ? month.fraction : 1;
+            unpaidMonthsTotal += monthlyBurn * fraction;
+        }
+    });
+
+    // 5. Final projection
+    const projectedBalance = availableCash - unpaidMonthsTotal;
+
+    return { projectedBalance, healthStatus, ... };
+}
+```
+
+### Key Functions
+- `renderFinancialCockpit()` - Main render function
+- `renderMasterCockpit()` - Current cash display
+- `renderCommittedBills()` - One-time bills checklist
+- `renderRecurringExpenses()` - Monthly expenses + month tracker
+- `renderProjectionPanel()` - Calculation breakdown
+- `toggleMonthPaid(monthKey)` - Mark month as paid/unpaid
+- `toggleBillPaid(billId)` - Mark one-time bill as paid
+- `addRecurringExpense()` - Add new expense category
+- `deleteRecurringExpense(key)` - Remove expense category
+
+### Health Status Colors
+- 🟢 GREEN "ON TRACK": projectedBalance >= targetCushion
+- 🟡 YELLOW "BELOW TARGET": projectedBalance > 0 but < targetCushion
+- 🔴 RED "DEFICIT PROJECTED": projectedBalance < 0
+
+---
+
 ## STIMULANT CALCULATOR - Pharmacokinetic Model
 
 ### XR Release Pattern
@@ -290,6 +375,65 @@ const avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 :
 ---
 
 ## RECENT UPDATES (January 2026)
+
+### v30 Financials Page Overhaul (index.html)
+
+#### Month-by-Month Payment Tracking (NEW SYSTEM)
+The financials page now tracks recurring expenses by individual month instead of estimating:
+```javascript
+financials.monthlyPayments = {
+    '2026-02': { paid: false, paidDate: null, label: 'February 2026' },
+    '2026-03': { paid: false, paidDate: null, label: 'March 2026' },
+    '2026-04': { paid: false, paidDate: null, label: 'April 2026' },
+    '2026-05': { paid: false, paidDate: null, label: 'May 1-14', partial: true, fraction: 0.45 }
+};
+```
+
+#### New Projection Calculation Logic
+**Old (broken):** `monthlyBurn × Math.floor(monthsRemaining)` - inaccurate estimate
+**New (accurate):** Only subtracts months that are NOT checked off:
+```javascript
+// For each month in monthlyPayments:
+if (!monthData.paid) {
+    const fraction = monthData.partial ? monthData.fraction : 1;
+    const amount = monthlyBurn * fraction;
+    unpaidMonthsTotal += amount;
+}
+projectedBalance = availableCash - unpaidMonthsTotal;
+```
+
+#### Recurring Expenses Management
+- **+ Add Expense** button - create new expense categories
+- **Edit** button - change amount for any expense
+- **Delete ×** button - remove expense categories
+- Functions: `addRecurringExpense()`, `deleteRecurringExpense()`, `editRecurringExpense()`
+
+#### Month Payment Tracker UI
+- Visual checklist for Feb/Mar/Apr/May
+- Click month to toggle paid/unpaid
+- Shows paid date when checked
+- Running total of unpaid months
+- Function: `toggleMonthPaid(monthKey)`
+
+#### Key Date Change
+- Changed from May 15 to **May 14** (next loan disbursement date)
+- `semesterEndDate: '2026-05-14'` in masterLiquidity
+
+### v29.1 Medication Calendar & Modal Fixes (index.html)
+
+#### Medication Calendar UI Fix
+- **Problem:** + note button was overlapping/blocking date numbers
+- **Fix:** Moved button to top-right corner with new `.day-note-btn` class
+- Button is subtle (60% opacity) until hovering over day cell
+- Date numbers now larger and bolder (1.2em, font-weight 700)
+- Calendar grid has subtle background with improved spacing
+- Weekday headers styled in purple with uppercase
+
+#### Modal Close Button Consistency
+- Added `.modal-close-x` class for universal × close buttons
+- Added × buttons to: medModal, noteModal, addCountdownModal, helpModal, notebookModal
+- Style: 32px circular button, gray background, red on hover
+- Cleaned up duplicate `.planner-close-btn` CSS definition
 
 ### v29 UI/UX Accessibility & Feedback Overhaul (All 3 Apps)
 
