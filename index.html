@@ -3600,7 +3600,6 @@
         // Hide loading overlay and mark initial load complete
         function markInitialLoadComplete() {
             initialLoadComplete = true;
-            console.log('✅ Initial load complete - saves now enabled');
             
             // Hide loading overlay with fade
             const overlay = document.getElementById('loadingOverlay');
@@ -4249,7 +4248,6 @@
             // CRITICAL: Don't save to Firebase until initial load completes
             // This prevents empty data from overwriting Firebase when a new session starts
             if (firebaseInitialized && !initialLoadComplete) {
-                console.log('⏳ Skipping Firebase save - initial load not complete yet');
                 return; // Don't save anything yet!
             }
             
@@ -4279,12 +4277,10 @@
             
             // Update our known save time BEFORE saving to ignore our own updates
             lastKnownSaveTime = saveTimestamp;
-            console.log('💾 Saving with timestamp:', saveTimestamp);
             
             // Always save to localStorage IMMEDIATELY as backup
             try {
                 localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
-                console.log('✅ Saved to localStorage');
             } catch (e) {
                 console.error('❌ localStorage save failed:', e);
             }
@@ -4323,7 +4319,6 @@
                     
                     database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
                         .then(() => {
-                            console.log('✅ Data saved to Firebase successfully, timestamp:', dataToSave.lastSaved);
                             savingToast.style.background = '#10b981';
                             savingToast.textContent = '✓ Synced';
                             updateSyncStatus('connected', `Saved (${new Date().toLocaleTimeString()})`);
@@ -4341,10 +4336,8 @@
                             
                             // Retry after 2 seconds
                             setTimeout(() => {
-                                console.log('🔄 Retrying Firebase save...');
                                 database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
                                     .then(() => {
-                                        console.log('✅ Retry successful');
                                         savingToast.style.background = '#10b981';
                                         savingToast.textContent = '✓ Synced (retry)';
                                         updateSyncStatus('connected', 'Saved (retry)');
@@ -4492,7 +4485,7 @@
             
             const link = document.createElement('a');
             link.href = url;
-            const dateStr = new Date().toISOString().split('T')[0];
+            const dateStr = getLocalDateString();
             link.download = `dental-student-checkpoint-${dateStr}.dent`;
             document.body.appendChild(link);
             link.click();
@@ -4747,7 +4740,6 @@
                     firebase.initializeApp(firebaseConfig);
                 }
                 database = firebase.database();
-                console.log('Firebase initialized');
                 
                 // CRITICAL FIX: Check BOTH PIN keys for backwards compatibility
                 // Satellite apps (d3-roadmap, stimulant-calculator) use 'dentalQuestPin'
@@ -4758,7 +4750,6 @@
                 if (!userPin) {
                     const oldPin = localStorage.getItem('dentalAppPin');
                     if (oldPin) {
-                        console.log('🔄 Migrating PIN from dentalAppPin to dentalQuestPin');
                         userPin = oldPin;
                         localStorage.setItem('dentalQuestPin', userPin);
                         // Keep old key for backwards compatibility but new key is source of truth
@@ -4791,8 +4782,6 @@
                 };
                 firebaseInitialized = true;
                 
-                console.log('✅ Connected with PIN, user ID:', hashedPin);
-                console.log('📍 Firebase path: users/' + hashedPin + '/appData');
                 
                 // Load data from Firebase
                 loadDataFromFirebase();
@@ -4816,14 +4805,12 @@
                 return;
             }
             
-            console.log('📥 Loading data from Firebase for user:', currentUser.uid);
             updateSyncStatus('syncing', 'Loading from cloud...');
             
             database.ref('users/' + currentUser.uid + '/appData').once('value')
                 .then((snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        console.log('✅ Loading data from Firebase, timestamp:', data.lastSaved);
                         
                         // CRITICAL: Set lastKnownSaveTime FIRST to prevent realtime sync from re-processing
                         lastKnownSaveTime = data.lastSaved || Date.now();
@@ -4879,7 +4866,6 @@
                                 '30mg': data.pillAssignments['30mg'] || {},
                                 '20mg': data.pillAssignments['20mg'] || {}
                             };
-                            console.log('✅ Loaded pill assignments from Firebase');
                         }
                         
                         // Load calendar events from Firebase
@@ -4896,7 +4882,6 @@
                                 eventDate.setHours(0, 0, 0, 0);
                                 return eventDate >= today;
                             });
-                            console.log('✅ Loaded', calendarEvents.length, 'calendar events from Firebase');
                         }
                         
                         // Load daily planner from Firebase
@@ -4909,7 +4894,6 @@
                                 lastReset: data.dailyPlanner.lastReset || null
                             };
                             checkPlannerReset();
-                            console.log('✅ Loaded daily planner from Firebase');
                         }
                         
                         // Load Focus Mode data from Firebase
@@ -4927,7 +4911,6 @@
                                 focusTimerInterval: null,
                                 lastPlanningDate: data.focusModeData.lastPlanningDate || null
                             };
-                            console.log('✅ Loaded Focus Mode data from Firebase');
                         }
                         
                         // Load last reset date from Firebase (prevents duplicate resets across devices)
@@ -4935,7 +4918,6 @@
                             lastCriticalEODReset = data.lastCriticalEODReset;
                             // Also sync to localStorage for consistency
                             localStorage.setItem('lastCriticalEODReset', lastCriticalEODReset);
-                            console.log('✅ Loaded lastCriticalEODReset from Firebase:', lastCriticalEODReset);
                         }
                         
                         // Check for daily reset of Critical/EOD flags
@@ -4958,7 +4940,6 @@
                         updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
                     } else {
                         // No cloud data, check localStorage
-                        console.log('No cloud data, checking localStorage');
                         loadData();
                         updateSyncStatus('connected', 'No cloud data yet');
                         // Mark load complete after localStorage load
@@ -4983,7 +4964,6 @@
         if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
             initializeFirebase();
         } else {
-            console.log('Firebase not configured - using localStorage only');
             loadData();
             markInitialLoadComplete();
             updateCategoryDisplay();
@@ -4998,9 +4978,7 @@
         // Save data before user leaves the page
         window.addEventListener('beforeunload', function(e) {
             if (pendingSaveData && firebaseInitialized && currentUser && database) {
-                // Force a synchronous save on exit
-                navigator.sendBeacon && console.log('Attempting to save on exit...');
-                // Do a final localStorage save at minimum
+                // Force a synchronous save on exit - do a final localStorage save at minimum
                 try {
                     const finalData = { 
                         tasks, stats, medications, calendarNotes, notebook, financials,
@@ -5021,16 +4999,13 @@
                     saveDebounceTimer = null;
                 }
                 if (pendingSaveData && firebaseInitialized && currentUser && database) {
-                    console.log('👁️ Tab hidden - forcing save');
                     database.ref('users/' + currentUser.uid + '/appData').set(pendingSaveData)
-                        .then(() => console.log('✅ Hidden save completed'))
                         .catch(err => console.error('Hidden save failed:', err));
                     pendingSaveData = null;
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase to get any updates
                 if (firebaseInitialized && currentUser && database && initialLoadComplete) {
-                    console.log('👁️ Tab visible - checking for updates');
                     database.ref('users/' + currentUser.uid + '/appData').once('value')
                         .then(snapshot => {
                             const data = snapshot.val();
@@ -5038,7 +5013,6 @@
                             
                             // Only update if incoming data is NEWER
                             if (data && incomingTime > lastKnownSaveTime) {
-                                console.log('📥 Found newer data, refreshing ALL data...', incomingTime, '>', lastKnownSaveTime);
                                 lastKnownSaveTime = incomingTime;
                                 
                                 // Update ALL local data - COMPLETE LIST
@@ -5130,7 +5104,6 @@
         // Periodic heartbeat save every 2 minutes to ensure data is synced
         setInterval(() => {
             if (initialLoadComplete && firebaseInitialized) {
-                console.log('💓 Heartbeat save');
                 saveData();
             }
         }, 120000); // 2 minutes
@@ -5289,7 +5262,7 @@
                 med.pills--;
                 
                 // Log the dose for today
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalDateString();
                 if (!med.dosesLogged) med.dosesLogged = [];
                 
                 const existingDose = med.dosesLogged.find(d => d.date === today);
@@ -5314,8 +5287,8 @@
                 medications['20mg'].pills--;
                 
                 // Log doses for today
-                const today = new Date().toISOString().split('T')[0];
-                
+                const today = getLocalDateString();
+
                 ['30mg', '20mg'].forEach(medType => {
                     const med = medications[medType];
                     if (!med.dosesLogged) med.dosesLogged = [];
@@ -5521,10 +5494,6 @@
         }
 
         function renderFinancialCockpit() {
-            console.log('=== RENDERING FINANCIAL COCKPIT ===');
-            console.log('Financials object:', financials);
-            console.log('Master Liquidity:', financials.masterLiquidity);
-            console.log('Committed Bills:', financials.committedBills);
             
             const dashboard = document.getElementById('financialDashboard');
             if (!dashboard) {
@@ -5541,7 +5510,6 @@
                     ${renderActionItems()}
                     ${renderCreditCards()}
                 `;
-                console.log('✅ Financial cockpit rendered successfully');
             } catch (error) {
                 console.error('Error in renderFinancialCockpit:', error);
                 dashboard.innerHTML = `
@@ -6560,24 +6528,24 @@
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const currentDate = new Date(year, month, day);
-                const dateStr = currentDate.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(currentDate);
                 const isToday = currentDate.getTime() === todayDate.getTime();
-                
+
                 // Check if this is a refill day for either medication
-                const is30mgRefill = medications['30mg'].refillDate && 
-                                    new Date(medications['30mg'].refillDate).toISOString().split('T')[0] === dateStr;
-                const is20mgRefill = medications['20mg'].refillDate && 
-                                    new Date(medications['20mg'].refillDate).toISOString().split('T')[0] === dateStr;
-                
+                const is30mgRefill = medications['30mg'].refillDate &&
+                                    medications['30mg'].refillDate === dateStr;
+                const is20mgRefill = medications['20mg'].refillDate &&
+                                    medications['20mg'].refillDate === dateStr;
+
                 // Check pill assignments for color coding
                 const has30mgPill = pillAssignments['30mg'][dateStr] === true;
                 const has20mgPill = pillAssignments['20mg'][dateStr] === true;
-                
+
                 // Determine if this day needs pills (only if before refill date and refill is set)
-                const needs30mg = medications['30mg'].refillDate && 
-                                 currentDate < new Date(medications['30mg'].refillDate) && !is30mgRefill;
-                const needs20mg = medications['20mg'].refillDate && 
-                                 currentDate < new Date(medications['20mg'].refillDate) && !is20mgRefill;
+                const needs30mg = medications['30mg'].refillDate &&
+                                 currentDate < parseLocalDate(medications['30mg'].refillDate) && !is30mgRefill;
+                const needs20mg = medications['20mg'].refillDate &&
+                                 currentDate < parseLocalDate(medications['20mg'].refillDate) && !is20mgRefill;
                 
                 // Get events for this day
                 const dayEvents = calendarEvents.filter(e => e.dateStr === dateStr);
@@ -6703,7 +6671,7 @@
             
             // Sort by date (soonest first)
             const sortedEvents = [...calendarEvents].sort((a, b) => {
-                return new Date(a.dateStr) - new Date(b.dateStr);
+                return parseLocalDate(a.dateStr) - parseLocalDate(b.dateStr);
             });
             
             const categoryIcons = {
@@ -6912,8 +6880,20 @@
             lastReset: null
         };
 
+        // Helper to get local date string (avoids UTC timezone issues)
+        function getLocalDateString(date = new Date()) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
         function getTodayDateString() {
-            return new Date().toISOString().split('T')[0];
+            return getLocalDateString();
+        }
+
+        // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return null;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
         }
 
         function checkPlannerReset() {
@@ -6939,7 +6919,7 @@
             if (hours < 5 && dailyPlanner.date) {
                 const yesterday = new Date(now);
                 yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const yesterdayStr = getLocalDateString(yesterday);
                 if (dailyPlanner.date === yesterdayStr) {
                     // Still working on yesterday's plan
                     return false;
@@ -6968,11 +6948,9 @@
             const localStorageReset = localStorage.getItem('lastCriticalEODReset');
             const effectiveLastReset = lastCriticalEODReset || localStorageReset;
             
-            console.log('🔍 Checking EOD reset - today:', todayStr, 'lastReset:', effectiveLastReset);
             
             // Reset at 5 AM if it's a new day
             if (effectiveLastReset !== todayStr && hours >= 5) {
-                console.log('🔄 Resetting EOD flags and Focus Mode for new day...');
                 
                 let resetCount = 0;
                 (tasks || []).forEach(task => {
@@ -6998,16 +6976,13 @@
                 
                 if (resetCount > 0) {
                     saveData();
-                    console.log(`✅ Reset ${resetCount} EOD flags (doToday flags preserved)`);
                 } else {
                     // Still save to sync the lastCriticalEODReset
                     saveData();
-                    console.log('✅ Focus Mode reset (no EOD flags to clear)');
                 }
                 
                 return true;
             } else {
-                console.log('✅ No EOD reset needed - already done for today');
             }
             
             return false;
@@ -7054,7 +7029,6 @@
             // Save to main Firebase data (under user's path)
             if (firebaseInitialized && database && currentUser) {
                 database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').set(dailyPlanner)
-                    .then(() => console.log('Daily planner saved to Firebase'))
                     .catch(err => console.error('Firebase save error:', err));
             }
         }
@@ -7607,7 +7581,6 @@
             }
             
             updateSyncStatus('syncing', 'Fetching from cloud...');
-            console.log('🔄 Force sync requested by user');
             
             database.ref('users/' + currentUser.uid + '/appData').once('value')
                 .then(snapshot => {
@@ -7618,7 +7591,6 @@
                         return;
                     }
                     
-                    console.log('📥 Force sync: Loading ALL data from cloud, timestamp:', data.lastSaved);
                     
                     // Force update ALL local data regardless of timestamp
                     lastKnownSaveTime = data.lastSaved || Date.now();
@@ -7715,19 +7687,6 @@
             const pin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
             const hashedPin = pin ? 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '') : 'NO PIN';
             
-            console.log('=== DENTAL QUEST SYNC DEBUG ===');
-            console.log('Firebase Initialized:', firebaseInitialized);
-            console.log('Current User:', currentUser ? currentUser.uid : 'NONE');
-            console.log('Database Object:', database ? 'EXISTS' : 'NULL');
-            console.log('Initial Load Complete:', initialLoadComplete);
-            console.log('PIN (dentalQuestPin):', localStorage.getItem('dentalQuestPin') ? 'SET' : 'NOT SET');
-            console.log('PIN (dentalAppPin):', localStorage.getItem('dentalAppPin') ? 'SET' : 'NOT SET');
-            console.log('Computed User Path:', hashedPin !== 'NO PIN' ? 'users/' + hashedPin + '/appData' : 'N/A');
-            console.log('Last Known Save Time:', lastKnownSaveTime, '(' + new Date(lastKnownSaveTime).toLocaleString() + ')');
-            console.log('Main Data Sync Enabled:', mainDataSyncEnabled);
-            console.log('Realtime Listener:', realtimeSyncListener ? 'ACTIVE' : 'NONE');
-            console.log('Tasks Count:', tasks.length);
-            console.log('================================');
             
             return {
                 firebaseInitialized,
@@ -7747,18 +7706,15 @@
         // Use this if your PIN is mismatched across devices
         window.resetSyncPin = function() {
             const currentPin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
-            console.log('Current PIN:', currentPin ? '****' + currentPin.slice(-2) : 'NONE');
             
             const newPin = prompt('Enter your sync PIN:\n\n⚠️ Use the SAME PIN on ALL devices!\n\nCurrent PIN ends with: ' + (currentPin ? currentPin.slice(-2) : 'N/A'));
             
             if (newPin && newPin.length >= 4) {
                 localStorage.setItem('dentalQuestPin', newPin);
                 localStorage.setItem('dentalAppPin', newPin);
-                console.log('✅ PIN updated. Reloading page...');
                 alert('PIN updated! The page will now reload to connect with your new PIN.');
                 window.location.reload();
             } else {
-                console.log('PIN reset cancelled or invalid');
                 alert('PIN must be at least 4 characters. No changes made.');
             }
         };
@@ -7771,12 +7727,10 @@
             
             // If already enabled, detach old listener first to prevent duplicates
             if (mainDataSyncEnabled && realtimeSyncListener) {
-                console.log('🔄 Detaching old realtime listener before creating new one');
                 database.ref('users/' + currentUser.uid + '/appData').off('value', realtimeSyncListener);
             }
             
             mainDataSyncEnabled = true;
-            console.log('🔄 Setting up real-time sync for main data');
             
             // Track if this is the very first callback (during initial setup)
             let isInitialSetup = true;
@@ -7784,7 +7738,6 @@
             realtimeSyncListener = database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
-                    console.log('🔄 Empty data received, skipping');
                     return;
                 }
                 
@@ -7794,19 +7747,16 @@
                 if (isInitialSetup) {
                     isInitialSetup = false;
                     lastKnownSaveTime = Math.max(lastKnownSaveTime, incomingTime);
-                    console.log('📍 Real-time sync initialized, baseline timestamp:', lastKnownSaveTime);
                     return;
                 }
                 
                 // Only process if this is a NEW update (strictly newer timestamp)
                 // Use a small buffer (100ms) to handle near-simultaneous saves
                 if (incomingTime <= lastKnownSaveTime + 100) {
-                    console.log('🔄 Skipping old or own update:', incomingTime, '<=', lastKnownSaveTime);
                     return;
                 }
                 
                 lastKnownSaveTime = incomingTime;
-                console.log('📥 Received real-time update from another device, timestamp:', incomingTime);
                 
                 // Update ALL local data - COMPLETE LIST (use !== undefined to handle empty arrays/objects)
                 if (data.tasks !== undefined) tasks = data.tasks || [];
@@ -8170,13 +8120,13 @@
             // Find nearest available day to assign pill (prioritize weekdays, then nearest)
             const allDates = Object.keys(pillAssignments[medType]).sort();
             const weekdays = allDates.filter(date => {
-                const d = new Date(date);
+                const d = parseLocalDate(date);
                 const dow = d.getDay();
                 return dow >= 1 && dow <= 5 && !pillAssignments[medType][date];
             });
-            
+
             const weekends = allDates.filter(date => {
-                const d = new Date(date);
+                const d = parseLocalDate(date);
                 const dow = d.getDay();
                 return (dow === 0 || dow === 6) && !pillAssignments[medType][date];
             });
@@ -8338,7 +8288,7 @@
             const lastDay = new Date(refillDate);
             
             while (current <= lastDay) {
-                const dateStr = current.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(current);
                 const dayOfWeek = current.getDay();
                 const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
                 const isRefillDay = current.getTime() === lastDay.getTime();
@@ -8983,33 +8933,7 @@
             oscillator.stop(audioContext.currentTime + 0.5);
         }
 
-        // XP and leveling system
-        function addXP(amount, category = null) {
-            // Add to total XP
-            stats.xp += amount;
-            
-            // Add to category XP if category is provided
-            if (category && stats.categoryXP[category] !== undefined) {
-                stats.categoryXP[category] += amount;
-                
-                // Check for category level up
-                while (stats.categoryXP[category] >= stats.categoryXPToNextLevel[category]) {
-                    stats.categoryXP[category] -= stats.categoryXPToNextLevel[category];
-                    stats.categoryXPToNextLevel[category] = Math.floor(stats.categoryXPToNextLevel[category] * 1.5);
-                }
-            }
-            
-            // Check for overall level up
-            while (stats.xp >= stats.xpToNextLevel) {
-                stats.xp -= stats.xpToNextLevel;
-                stats.level++;
-                stats.xpToNextLevel = Math.floor(stats.xpToNextLevel * 1.5);
-                showLevelUp();
-            }
-            
-            updateStats();
-            saveData();
-        }
+        // XP system removed - was referencing non-existent stats properties
 
         // Dashboard expansion functions - Modal Style
         function toggleDashboardExpansion(type) {
@@ -9862,7 +9786,6 @@
         }
         
         function initFocusMode() {
-            console.log('🎯 Initializing Focus Mode, currentView:', currentView);
             
             // Make sure containers exist and are properly set
             const focusContainer = document.getElementById('focusModeContainer');
@@ -9878,7 +9801,6 @@
                 }
                 
                 renderFocusMode();
-                console.log('✅ Focus Mode rendered');
             } else {
                 if (focusContainer) focusContainer.style.display = 'none';
                 if (fullContainer) fullContainer.style.display = 'block';

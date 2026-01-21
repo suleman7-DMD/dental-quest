@@ -5587,7 +5587,6 @@
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                console.log('✅ Firebase app initialized');
                 
                 // Check for saved PIN (same as Dental Quest uses)
                 const savedPin = localStorage.getItem('dentalQuestPin');
@@ -5596,7 +5595,6 @@
                     clearTimeout(fallbackTimer);
                     setupUserAuth(savedPin);
                 } else {
-                    console.log('No PIN found, prompting...');
                     clearTimeout(fallbackTimer);
                     setTimeout(() => promptForPin(), 500);
                 }
@@ -5615,7 +5613,6 @@
             userPath = 'users/' + hashedPin + '/d3Roadmap';
             firebaseSyncEnabled = true;
             
-            console.log('✅ User authenticated, path:', userPath);
             updateSyncStatus('syncing', 'Syncing...');
             
             // Load from Firebase
@@ -5629,7 +5626,6 @@
                 localStorage.setItem('dentalQuestPin', pin);
                 setupUserAuth(pin);
             } else {
-                console.log('No valid PIN entered, using local storage only');
                 firebaseSyncEnabled = false;
                 updateSyncStatus('offline', 'Local only');
                 loadFromLocalStorage();
@@ -5654,7 +5650,6 @@
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
-                    console.log('Firebase data loaded:', data);
                     if (data) {
                         // Merge Firebase data with defaults
                         roadmapData = {
@@ -5677,7 +5672,6 @@
                         
                         // Also save to localStorage as backup
                         localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                        console.log('✅ Loaded from Firebase, roadmapData:', roadmapData);
                         updateSyncStatus('connected', 'Synced');
                     } else {
                         // No Firebase data, load from localStorage
@@ -5720,7 +5714,6 @@
                 
                 // If remote is newer by at least 1 second, update
                 if (remoteLastSaved > localLastSaved + 1000 && remoteLastSaved > lastRemoteUpdate) {
-                    console.log('🔄 Remote update detected, syncing...');
                     lastRemoteUpdate = remoteLastSaved;
                     
                     // Deep merge the data
@@ -5748,7 +5741,6 @@
                 }
             });
             
-            console.log('✅ Real-time sync listener active');
         }
         
         // Force sync from cloud - manual refresh button
@@ -5760,7 +5752,6 @@
             }
             
             updateSyncStatus('syncing', 'Fetching from cloud...');
-            console.log('🔄 Force sync requested by user');
             
             database.ref(userPath).once('value')
                 .then(snapshot => {
@@ -5771,7 +5762,6 @@
                         return;
                     }
                     
-                    console.log('📥 Force sync: Loading ALL data from cloud');
                     
                     // Force update ALL local data
                     roadmapData = {
@@ -5818,7 +5808,6 @@
             // Always save to localStorage IMMEDIATELY
             try {
                 localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                console.log('💾 Saved to localStorage');
             } catch (e) {
                 console.error('localStorage save failed:', e);
             }
@@ -5838,7 +5827,6 @@
                     lastSaveTime = Date.now();
                     database.ref(userPath).set(roadmapData)
                         .then(() => {
-                            console.log('✅ Saved to Firebase');
                             updateSyncStatus('connected', 'Synced');
                         })
                         .catch(error => {
@@ -5849,7 +5837,6 @@
                                 if (firebaseSyncEnabled && database && userPath) {
                                     database.ref(userPath).set(roadmapData)
                                         .then(() => {
-                                            console.log('✅ Retry save successful');
                                             updateSyncStatus('connected', 'Synced');
                                         })
                                         .catch(e => console.error('Retry failed:', e));
@@ -5925,10 +5912,23 @@
         ];
 
         // ==================== UTILITY FUNCTIONS ====================
+
+        // Helper to get local date string (avoids UTC timezone issues)
+        function getLocalDateString(date = new Date()) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return null;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
         function getCountdown(dateStr) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const target = new Date(dateStr);
+            const target = parseLocalDate(dateStr);
             const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
             return diff;
         }
@@ -5953,7 +5953,7 @@
         }
 
         function formatDate(dateStr) {
-            const date = new Date(dateStr);
+            const date = parseLocalDate(dateStr);
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
@@ -6193,7 +6193,6 @@
             const index = parseInt(inputEl.dataset.index, 10);
             const newDate = inputEl.value; // Already in YYYY-MM-DD format
             
-            console.log('handleDateChange:', { index, newDate });
             
             if (isNaN(index) || index < 0 || index >= deadlines.length) {
                 console.error('Invalid deadline index:', index);
@@ -6201,7 +6200,6 @@
             }
             
             if (!newDate) {
-                console.log('No date selected');
                 return;
             }
             
@@ -6209,7 +6207,6 @@
             const oldDate = deadline.date;
             
             if (oldDate === newDate) {
-                console.log('Date unchanged');
                 return;
             }
             
@@ -6221,7 +6218,6 @@
             deadline.day = dateObj.toLocaleString('en-US', { weekday: 'short' });
             deadline.month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
             
-            console.log('Date updated:', oldDate, '->', newDate, 'month:', deadline.month);
             
             // Store the edit
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
@@ -6254,10 +6250,8 @@
             const value = inputEl.value.trim();
             const original = inputEl.dataset.original || '';
             
-            console.log('handleTextEdit:', { index, field, value, original });
             
             if (value === original) {
-                console.log('Value unchanged');
                 return;
             }
             
@@ -7505,7 +7499,7 @@
         function getDaysUntil(dateStr) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const examDate = new Date(dateStr);
+            const examDate = parseLocalDate(dateStr);
             examDate.setHours(0, 0, 0, 0);
             const diffTime = examDate - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -7871,7 +7865,6 @@
 
         // ==================== INITIALIZE ====================
         function initUI() {
-            console.log('initUI called, roadmapData:', roadmapData);
             
             try {
                 // Restore mandatory checkboxes
@@ -7901,7 +7894,6 @@
             try {
                 // Restore edited deadlines - DEEP MERGE each property
                 if (roadmapData.editedDeadlines) {
-                    console.log('Restoring edited deadlines:', roadmapData.editedDeadlines);
                     Object.keys(roadmapData.editedDeadlines).forEach(indexStr => {
                         const index = parseInt(indexStr, 10);
                         const edited = roadmapData.editedDeadlines[indexStr];
@@ -7914,7 +7906,6 @@
                             deadlines[index].weight = edited.weight || deadlines[index].weight;
                             deadlines[index].type = edited.type || deadlines[index].type;
                             deadlines[index].month = edited.month || deadlines[index].month;
-                            console.log('Restored deadline', index, ':', deadlines[index]);
                         }
                     });
                 }
@@ -7946,7 +7937,6 @@
             try { initMonthlyPlanner(); } catch(e) { console.error('initMonthlyPlanner error:', e); }
             // Exam Content tab uses dropdown - no auto-load needed
             
-            console.log('initUI complete');
         }
         
         function init() {
@@ -7958,16 +7948,13 @@
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 // Tab is being hidden - ensure data is saved immediately
-                console.log('Tab hidden - saving data...');
                 localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).set(roadmapData)
-                        .then(() => console.log('✅ Saved on hide'))
                         .catch(err => console.error('Save on hide failed:', err));
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
-                console.log('Tab visible - refresh from Firebase');
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
@@ -7990,6 +7977,11 @@
                         .catch(err => console.error('Refresh on visible failed:', err));
                 }
             }
+        });
+
+        // Save on page unload to prevent data loss during debounce window
+        window.addEventListener('beforeunload', function() {
+            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
         });
 
         // Initialize on page load
@@ -8025,7 +8017,7 @@
         
         function initDailyPlanner() {
             // Check if we need to reset for a new day
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             if (!roadmapData.dailyPlanner) {
                 roadmapData.dailyPlanner = {
                     date: today,
@@ -8240,7 +8232,6 @@
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.5);
             } catch(e) {
-                console.log('Could not play notification sound');
             }
         }
         
@@ -8548,7 +8539,7 @@
             }
             
             roadmapData.dailyPlanner = {
-                date: new Date().toISOString().split('T')[0],
+                date: getLocalDateString(),
                 focus: '',
                 notes: '',
                 blocks: [],
@@ -8637,7 +8628,6 @@
         let mpIsEditing = false;
         
         function initMonthlyPlanner() {
-            console.log('initMonthlyPlanner called');
             
             // Initialize data structure
             if (!roadmapData.monthlyPlanner) {
@@ -8660,14 +8650,12 @@
             let needsSave = false;
             roadmapData.monthlyPlanner.customTasks.forEach(task => {
                 if (task.convertedFrom && !roadmapData.monthlyPlanner.overriddenStatic.includes(task.convertedFrom)) {
-                    console.log('Fixing missing overriddenStatic entry:', task.convertedFrom);
                     roadmapData.monthlyPlanner.overriddenStatic.push(task.convertedFrom);
                     needsSave = true;
                 }
             });
             
             if (needsSave) {
-                console.log('Saving fixed data integrity issues');
                 saveData();
             }
             
@@ -8713,9 +8701,9 @@
             const div = document.createElement('div');
             div.className = 'card mp-week-card';
             div.id = `mpWeek${week.num}`;
-            
+
             const criticalStyle = week.critical ? 'border: 2px solid #fef08a;' : '';
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const daysOut = mpGetDaysOut(week.start);
             
             // Check if this is the current week
@@ -8791,7 +8779,7 @@
         }
         
         function mpJumpToCurrentWeek() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const currentWeek = MP_WEEKS.find(w => today >= w.start && today <= w.end);
             
             if (currentWeek) {
@@ -8812,7 +8800,7 @@
         function mpGetDaysOut(startDate) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const start = new Date(startDate + 'T00:00:00');
+            const start = parseLocalDate(startDate);
             const diff = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
             if (diff < 0) return 'This week';
             if (diff === 0) return 'Starts today';
@@ -8821,7 +8809,7 @@
         
         function mpCreateCalendarGrid(week) {
             const days = mpGetWeekDays(week.start, week.end);
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const timedTasks = mpGetWeekTasks(week).filter(t => t.time);
             
             // Calculate hours that have tasks for row expansion
@@ -8918,7 +8906,7 @@
             
             while (current <= endDate) {
                 days.push({
-                    date: current.toISOString().split('T')[0],
+                    date: getLocalDateString(current),
                     dayName: dayNames[current.getDay()],
                     dayNum: current.getDate()
                 });
@@ -9163,7 +9151,6 @@
         
         // Universal edit function - handles both static and custom tasks
         function mpEditTaskFromBlock(taskId, weekNum, isStatic) {
-            console.log('mpEditTaskFromBlock called:', taskId, weekNum, isStatic);
             
             let task = null;
             
@@ -9277,7 +9264,6 @@
                         convertedFrom: mpCurrentTask.staticId
                     };
                     roadmapData.monthlyPlanner.customTasks.push(newTask);
-                    console.log('Converted static task, new task:', newTask);
                     showToast('Task updated!');
                 } else {
                     // Update existing custom task
@@ -9287,7 +9273,6 @@
                     mpCurrentTask.endTime = endTime;
                     mpCurrentTask.type = type;
                     mpCurrentTask.notes = notes;
-                    console.log('Updated custom task:', mpCurrentTask);
                     showToast('Task updated!');
                 }
             } else {
@@ -9303,7 +9288,6 @@
                     createdAt: new Date().toISOString()
                 };
                 roadmapData.monthlyPlanner.customTasks.push(newTask);
-                console.log('Added new task:', newTask);
                 showToast('Task added!');
             }
             
@@ -9345,7 +9329,7 @@
         
         function mpUpdateStats() {
             // Get all tasks from all weeks - only count FUTURE tasks
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             let allTasks = [];
             const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
             const customTasks = roadmapData.monthlyPlanner?.customTasks || [];

@@ -3231,7 +3231,7 @@
         function analyzeCircadianPhase() {
             // Collect wake times from last 7 days
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
+            const todayStr = getLocalDateString(today);
             const wakeTimes = [];
             
             // ALWAYS include today first with current inputs
@@ -3245,7 +3245,7 @@
             for (let i = 1; i <= 6; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 
                 const entry = state.sleepHistory[dateStr];
                 if (entry) {
@@ -3403,7 +3403,19 @@
         // ============================================
         // PHARMACOKINETIC CALCULATIONS
         // ============================================
-        
+
+        // Helper to get local date string (avoids UTC timezone issues)
+        function getLocalDateString(date = new Date()) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return null;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
         function timeToMinutes(timeStr) {
             if (!timeStr || typeof timeStr !== 'string') return 0;
             const parts = timeStr.split(':');
@@ -3470,7 +3482,7 @@
             for (let i = 1; i <= 2; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 
                 const entry = state.sleepHistory[dateStr];
                 if (entry) {
@@ -3496,7 +3508,6 @@
             
             // Log for debugging
             if (totalDeficit > 0) {
-                console.log(`💤 Sleep Debt: ${totalDeficit.toFixed(1)}h deficit over ${daysWithData} days → +${bonus.toFixed(1)}mg threshold`);
             }
             
             return bonus;
@@ -3524,7 +3535,7 @@
             for (let i = 1; i <= 2; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 
                 const entry = state.sleepHistory[dateStr];
                 if (entry) {
@@ -3682,7 +3693,7 @@
             const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
             const vitCTime = getVitaminCTimeMinutes(); // Handles today/tomorrow
             const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
 
             state.medications.forEach(med => {
                 const doseTime = timeToMinutes(med.time);
@@ -3696,7 +3707,7 @@
                     // Unless it's from yesterday and could still be active
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    const yesterdayStr = getLocalDateString(yesterday);
                     
                     if (med.date === yesterdayStr) {
                         // Yesterday's dose - adjust timing for decay calculation
@@ -3790,10 +3801,10 @@
         function calculateCaffLoad(atMinutes) {
             let totalLoad = 0;
             const halfLife = state.settings.caffHalfLife * 60;
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const yesterdayStr = getLocalDateString(yesterday);
 
             state.caffeine.forEach(caff => {
                 const doseTime = timeToMinutes(caff.time);
@@ -3961,7 +3972,6 @@
                     note: 'Pre-forbidden zone - circadian alerting prevents sleep onset'
                 });
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
-                console.log(`🚫 WAKE MAINTENANCE ZONE: Sleep at ${minutesToTime(sleepTimeNormalized > 24*60 ? sleepTimeNormalized - 24*60 : sleepTimeNormalized)} blocked → pushed to ${minutesToTime(sleepTime)}`);
             }
             // Check if in Forbidden Zone - push to after it ends
             else if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
@@ -3973,7 +3983,6 @@
                     note: 'Peak alertness period - your body strongly resists sleep'
                 });
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
-                console.log(`🚫 FORBIDDEN ZONE: Sleep blocked → pushed to ${minutesToTime(sleepTime)}`);
             }
             
             // =============================================
@@ -4094,7 +4103,6 @@
             
             // Check both Wake Maintenance Zone AND Forbidden Zone
             if (normalizedFinalSleep >= wakeMaintenanceStart && normalizedFinalSleep < forbiddenZone.end) {
-                console.log(`🌙 FINAL CIRCADIAN CLAMP: Sleep at ${minutesToTime(sleepTime)} blocked → pushed to ${minutesToTime(forbiddenZone.end > 24*60 ? forbiddenZone.end - 24*60 : forbiddenZone.end)}`);
                 sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
                 
                 // Add blocking factor if not already present
@@ -4134,7 +4142,7 @@
         function addMedEntry(dose = 50, time = null) {
             const now = new Date();
             const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const today = getLocalDateString(now); // YYYY-MM-DD format
             
             // PHASE 3: Add date stamp to prevent phantom loads
             const entry = { id: Date.now(), dose, time: defaultTime, date: today };
@@ -4147,10 +4155,10 @@
         // Clean up old medications from previous days
         // Called on init and day change
         function cleanupOldMedications() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const yesterdayStr = getLocalDateString(yesterday);
             
             // Keep today's meds and yesterday's meds (for overnight decay)
             // Remove anything older
@@ -4161,7 +4169,6 @@
             });
             
             if (state.medications.length !== originalCount) {
-                console.log(`🧹 Cleaned up ${originalCount - state.medications.length} old medication entries`);
                 saveState();
             }
         }
@@ -4276,7 +4283,7 @@
         function addCaffeine(amount, name) {
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            const today = now.toISOString().split('T')[0];
+            const today = getLocalDateString(now);
             state.caffeine.push({ id: Date.now(), amount, name, time, date: today });
             renderCaffeineEntries();
             recalculate();
@@ -4426,7 +4433,7 @@
         function getYesterdayMedications() {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const yesterdayStr = getLocalDateString(yesterday);
 
             return state.medications.filter(med => med.date === yesterdayStr);
         }
@@ -4435,7 +4442,7 @@
         function getYesterdayCaffeine() {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const yesterdayStr = getLocalDateString(yesterday);
 
             return state.caffeine.filter(caff => caff.date === yesterdayStr);
         }
@@ -6682,7 +6689,7 @@
             
             const entry = {
                 id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
+                date: getLocalDateString(),
                 medications: [...state.medications],
                 caffeine: [...state.caffeine],
                 modifiers: JSON.parse(JSON.stringify(state.modifiers)),
@@ -6795,7 +6802,6 @@
             
             // Only save if we actually cleaned something
             if (cleaned.length < state.history.length) {
-                console.log(`Cleaned history: ${state.history.length} → ${cleaned.length} entries`);
                 state.history = cleaned;
                 saveState();
             }
@@ -6816,7 +6822,7 @@
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                 const dayNum = date.getDate();
                 const isToday = i === 0;
@@ -6972,7 +6978,7 @@
             saveState();
             
             // If clearing today, reset main inputs to defaults
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             if (currentEditingDate === today) {
                 state.hoursSleptLastNight = 7; // Reset to default
                 document.getElementById('hoursSlept').value = 7;
@@ -7005,7 +7011,7 @@
             saveState();
             
             // If editing today, also update the main inputs
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             if (currentEditingDate === today) {
                 state.hoursSleptLastNight = hours;
                 state.wakeTime = wakeTime;
@@ -7022,7 +7028,7 @@
         
         // Auto-update today's sleep in the calendar when main input changes
         function updateTodaySleepHistory() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const existing = state.sleepHistory[today];
             
             // Preserve wake time if it exists, update hours
@@ -7037,7 +7043,7 @@
         
         // Also update when wake time changes
         function updateTodayWakeTime() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const existing = state.sleepHistory[today];
             
             state.sleepHistory[today] = {
@@ -7075,7 +7081,7 @@
             for (let i = numDays - 1; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 
                 const entry = state.sleepHistory[dateStr];
                 let hoursSlept = null;
@@ -7998,7 +8004,6 @@
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                console.log('✅ Firebase app initialized');
                 clearTimeout(fallbackTimer);
                 
                 // Check for saved PIN (same as Dental Quest uses)
@@ -8008,7 +8013,6 @@
                     setupUserAuth(savedPin);
                 } else {
                     // No PIN - prompt user
-                    console.log('No PIN found, prompting...');
                     setTimeout(() => promptForPin(), 500);
                 }
             } catch (error) {
@@ -8026,7 +8030,6 @@
             userPath = 'users/' + hashedPin + '/stimulantCalculator';
             firebaseSyncEnabled = true;
             
-            console.log('✅ User authenticated, path:', userPath);
             updateSyncStatus('syncing', 'Syncing...');
             
             // Load from Firebase
@@ -8098,7 +8101,6 @@
         
         function saveToFirebase() {
             if (!firebaseSyncEnabled || !database || !userPath) {
-                console.log('Firebase save skipped - not connected');
                 return;
             }
             
@@ -8111,7 +8113,6 @@
                 lastUpdated: saveTime
             })
             .then(() => {
-                console.log('✅ Saved to Firebase at', saveTime);
                 updateSyncStatus('connected', 'Saved ✓');
             })
             .catch(error => {
@@ -8126,12 +8127,10 @@
                 return;
             }
             
-            console.log('Loading from Firebase path:', userPath);
             
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const data = snapshot.val();
-                    console.log('Firebase data received:', data ? 'yes' : 'no data yet');
                     
                     if (data && data.state) {
                         const firebaseState = data.state;
@@ -8189,10 +8188,8 @@
                         
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
-                        console.log('✅ Loaded from Firebase:', data.lastUpdated);
                     } else {
                         // No Firebase data yet - save current local state to Firebase
-                        console.log('No existing data, pushing local state to Firebase');
                         updateSyncStatus('connected', 'Connected');
                         saveToFirebase();
                     }
@@ -8253,7 +8250,6 @@
             if (realtimeSyncEnabled || !database || !userPath) return;
             realtimeSyncEnabled = true;
             
-            console.log('Setting up real-time sync on:', userPath);
             
             let isFirstLoad = true;
             
@@ -8272,12 +8268,10 @@
                 if (data && data.state && data.lastUpdated) {
                     // Only process if this is a NEW update (different timestamp)
                     if (data.lastUpdated === lastKnownTimestamp) {
-                        console.log('Skipping own update');
                         return;
                     }
                     
                     lastKnownTimestamp = data.lastUpdated;
-                    console.log('📥 Received real-time update from another device');
                     
                     // Merge in the new data
                     const firebaseState = data.state;
@@ -8338,7 +8332,6 @@
             }
             
             updateSyncStatus('syncing', 'Fetching...');
-            console.log('🔄 Force sync requested by user');
             
             database.ref(userPath).once('value')
                 .then(snapshot => {
@@ -8349,7 +8342,6 @@
                         return;
                     }
                     
-                    console.log('📥 Force sync: Loading ALL data from cloud');
                     const firebaseState = data.state;
                     
                     // Force update ALL local data
@@ -8413,7 +8405,6 @@
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 // Tab is being hidden - ensure data is saved immediately
-                console.log('Tab hidden - saving data...');
                 localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).set({
@@ -8423,13 +8414,11 @@
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
-                console.log('Tab visible - checking for updates...');
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
                             const data = snapshot.val();
                             if (data && data.state && data.lastUpdated > lastKnownTimestamp) {
-                                console.log('📥 Found newer data, updating...');
                                 lastKnownTimestamp = data.lastUpdated;
                                 const fs = data.state;
                                 state = {
@@ -8455,7 +8444,12 @@
                 }
             }
         });
-        
+
+        // Save on page unload to prevent data loss during debounce window
+        window.addEventListener('beforeunload', function() {
+            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+        });
+
         // ============================================
         // STORAGE (Local + Firebase)
         // ============================================
@@ -8522,7 +8516,7 @@
                 };
                 
                 // Clear today's entries (fresh start each day)
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalDateString();
                 const lastDate = state.history[0]?.date;
                 
                 if (lastDate !== today) {
@@ -8561,7 +8555,7 @@
                 // This allows chronic sleep debt calculation while preventing unbounded growth
                 const oneYearAgo = new Date();
                 oneYearAgo.setDate(oneYearAgo.getDate() - 365);
-                const cutoffDate = oneYearAgo.toISOString().split('T')[0];
+                const cutoffDate = getLocalDateString(oneYearAgo);
                 
                 Object.keys(state.sleepHistory).forEach(dateStr => {
                     if (dateStr < cutoffDate) {
@@ -8710,7 +8704,7 @@
             for (let i = 1; i <= 2; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 const entry = state.sleepHistory[dateStr];
                 
                 if (entry) {
@@ -9139,7 +9133,7 @@ Current status at ${currentTime}:
             // Check for pending feedback
             setTimeout(() => {
                 const recent = state.history.find(h => h.actualSleep === null);
-                if (recent && recent.date !== new Date().toISOString().split('T')[0]) {
+                if (recent && recent.date !== getLocalDateString()) {
                     showFeedbackModal();
                 }
             }, 2000);
@@ -9305,7 +9299,7 @@ Current status at ${currentTime}:
             // Today
             days.push({
                 label: 'Today',
-                date: today.toISOString().split('T')[0],
+                date: getLocalDateString(today),
                 hours: state.hoursSleptLastNight,
                 isToday: true
             });
@@ -9314,7 +9308,7 @@ Current status at ${currentTime}:
             for (let i = 1; i <= 3; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(date);
                 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 
                 const entry = state.sleepHistory[dateStr];
@@ -9598,7 +9592,7 @@ Current status at ${currentTime}:
         function focusAddCaffeine(amount, name) {
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            const today = now.toISOString().split('T')[0];
+            const today = getLocalDateString(now);
 
             state.caffeine.push({
                 id: Date.now(),
@@ -9796,7 +9790,7 @@ Current status at ${currentTime}:
             
             // Create micro-dose entries
             let runningTotal = 0;
-            const sipDate = new Date().toISOString().split('T')[0];
+            const sipDate = getLocalDateString();
             for (let i = 0; i < numDoses; i++) {
                 const doseMins = startMins + (i * intervalMins);
                 const doseTime = minutesToTimeValue(doseMins % (24 * 60));
