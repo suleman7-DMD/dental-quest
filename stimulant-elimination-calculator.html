@@ -227,18 +227,37 @@
         
         /* Focus Caffeine Entry Styles */
         .focus-caffeine-btn {
-            padding: 8px 12px;
+            padding: 10px 14px;
             background: rgba(245, 158, 11, 0.15);
             border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 8px;
+            border-radius: 10px;
             color: #f59e0b;
-            font-size: 0.8em;
+            font-size: 0.85em;
             cursor: pointer;
             transition: all 0.2s;
         }
-        
+
         .focus-caffeine-btn:hover {
             background: rgba(245, 158, 11, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+
+        .focus-caffeine-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        .focus-caffeine-btn.added {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #10b981;
+            animation: caffeine-added 0.4s ease;
+        }
+
+        @keyframes caffeine-added {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         
         .focus-caffeine-entry {
@@ -9782,6 +9801,13 @@ Current status at ${currentTime}:
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             const today = getLocalDateString(now);
+
+            // Visual feedback - flash the button
+            const btn = event?.target;
+            if (btn && btn.classList) {
+                btn.classList.add('added');
+                setTimeout(() => btn.classList.remove('added'), 500);
+            }
 
             state.caffeine.push({
                 id: Date.now(),
