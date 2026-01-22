@@ -131,6 +131,10 @@
             background-color: var(--accent-green);
         }
 
+        .mode-tab.active.template {
+            background-color: var(--accent-purple);
+        }
+
         /* Mode Panels */
         .mode-panel {
             display: none;
@@ -531,6 +535,7 @@
         <div class="mode-tabs">
             <button class="mode-tab active" data-mode="transform">Transform Existing</button>
             <button class="mode-tab build" data-mode="build">Build New</button>
+            <button class="mode-tab template" data-mode="template">⚙️ Template</button>
         </div>
 
         <!-- ==================== TRANSFORM MODE ==================== -->
@@ -802,11 +807,61 @@
                 </div>
             </div>
         </div>
+
+        <!-- ==================== TEMPLATE EDITOR MODE ==================== -->
+        <div id="template-panel" class="mode-panel">
+            <div class="template-info">
+                <h2 style="margin-bottom: 12px; color: var(--accent-purple);">⚙️ Output Template Editor</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Customize the prompt template that gets generated. Edit freely and save your changes.
+                </p>
+                <div class="placeholder-info" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <h4 style="color: var(--accent-yellow); margin-bottom: 8px;">⚠️ Required Placeholders (must keep these):</h4>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-family: monospace; font-size: 13px;">
+                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[COURSE_NAME]</code>
+                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[LECTURE_TOPIC]</code>
+                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[SLIDE_TEXT]</code>
+                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[AUDIO_TEXT]</code>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">
+                        These placeholders get replaced with your actual content when generating prompts.
+                    </p>
+                </div>
+            </div>
+
+            <div class="textarea-container">
+                <div class="textarea-header">
+                    <span class="section-label purple">Template Content</span>
+                    <div style="display: flex; gap: 8px;">
+                        <span id="template-status" style="font-size: 12px; color: var(--text-muted); align-self: center;"></span>
+                    </div>
+                </div>
+                <textarea id="template-editor" style="height: 500px; font-size: 12px;"></textarea>
+                <div class="textarea-stats">
+                    <span class="stat" id="template-chars">0 characters</span>
+                    <span class="stat" id="template-lines">0 lines</span>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-success" onclick="saveTemplate()">
+                    💾 Save Template
+                </button>
+                <button class="btn btn-secondary" onclick="resetTemplate()">
+                    ↺ Reset to Default
+                </button>
+                <button class="btn btn-secondary" onclick="validateTemplate()">
+                    ✓ Validate Placeholders
+                </button>
+            </div>
+
+            <div id="template-validation" style="margin-top: 16px; display: none;"></div>
+        </div>
     </div>
 
     <script>
-        // ==================== NEW PROMPT TEMPLATE ====================
-        const NEW_PROMPT_TEMPLATE = `I am a THIRD year dental student in a didactic clinical [COURSE_NAME] course. You are transforming my professor's lecture (audio transcript + slides) on [LECTURE_TOPIC] into exam-ready study notes.
+        // ==================== DEFAULT PROMPT TEMPLATE ====================
+        const DEFAULT_TEMPLATE = `I am a THIRD year dental student in a didactic clinical [COURSE_NAME] course. You are transforming my professor's lecture (audio transcript + slides) on [LECTURE_TOPIC] into exam-ready study notes.
 
 ---
 
@@ -883,6 +938,94 @@
 ---
 
 Now produce exam-ready notes at the calibrated density. Begin.`;
+
+        // ==================== TEMPLATE MANAGEMENT ====================
+        const TEMPLATE_STORAGE_KEY = 'lecturePromptTemplate';
+        const REQUIRED_PLACEHOLDERS = ['[COURSE_NAME]', '[LECTURE_TOPIC]', '[SLIDE_TEXT]', '[AUDIO_TEXT]'];
+
+        function getCurrentTemplate() {
+            const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+            return saved || DEFAULT_TEMPLATE;
+        }
+
+        function saveTemplate() {
+            const templateText = document.getElementById('template-editor').value;
+
+            // Validate placeholders first
+            const missing = REQUIRED_PLACEHOLDERS.filter(p => !templateText.includes(p));
+            if (missing.length > 0) {
+                showToast(`Missing required placeholders: ${missing.join(', ')}`, 'error');
+                return;
+            }
+
+            localStorage.setItem(TEMPLATE_STORAGE_KEY, templateText);
+            showToast('Template saved successfully!');
+            updateTemplateStatus();
+        }
+
+        function resetTemplate() {
+            if (confirm('Reset template to default? Your custom changes will be lost.')) {
+                localStorage.removeItem(TEMPLATE_STORAGE_KEY);
+                document.getElementById('template-editor').value = DEFAULT_TEMPLATE;
+                updateTemplateStats();
+                updateTemplateStatus();
+                showToast('Template reset to default');
+            }
+        }
+
+        function validateTemplate() {
+            const templateText = document.getElementById('template-editor').value;
+            const validationDiv = document.getElementById('template-validation');
+
+            const results = REQUIRED_PLACEHOLDERS.map(p => ({
+                placeholder: p,
+                found: templateText.includes(p)
+            }));
+
+            const allValid = results.every(r => r.found);
+
+            let html = `<div style="background: var(--bg-secondary); border: 1px solid ${allValid ? 'var(--accent-green)' : 'var(--accent-red)'}; border-radius: 8px; padding: 16px;">`;
+            html += `<h4 style="color: ${allValid ? 'var(--accent-green)' : 'var(--accent-red)'}; margin-bottom: 12px;">${allValid ? '✓ All Placeholders Valid' : '✗ Missing Placeholders'}</h4>`;
+            html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">';
+
+            results.forEach(r => {
+                html += `<div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: ${r.found ? 'var(--accent-green)' : 'var(--accent-red)'};">${r.found ? '✓' : '✗'}</span>
+                    <code style="font-size: 12px;">${r.placeholder}</code>
+                </div>`;
+            });
+
+            html += '</div></div>';
+
+            validationDiv.innerHTML = html;
+            validationDiv.style.display = 'block';
+        }
+
+        function updateTemplateStats() {
+            const text = document.getElementById('template-editor').value;
+            document.getElementById('template-chars').textContent = `${formatNumber(text.length)} characters`;
+            document.getElementById('template-lines').textContent = `${text.split('\n').length} lines`;
+        }
+
+        function updateTemplateStatus() {
+            const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+            const statusEl = document.getElementById('template-status');
+            if (saved) {
+                statusEl.textContent = '(Custom template active)';
+                statusEl.style.color = 'var(--accent-green)';
+            } else {
+                statusEl.textContent = '(Using default template)';
+                statusEl.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function initTemplateEditor() {
+            const editor = document.getElementById('template-editor');
+            editor.value = getCurrentTemplate();
+            editor.addEventListener('input', updateTemplateStats);
+            updateTemplateStats();
+            updateTemplateStatus();
+        }
 
         // ==================== UTILITY FUNCTIONS ====================
 
@@ -1136,7 +1279,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const courseName = document.getElementById('t-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('t-lecture-topic').value || '[LECTURE_TOPIC]';
 
-            const newPrompt = NEW_PROMPT_TEMPLATE
+            const newPrompt = getCurrentTemplate()
                 .replace('[COURSE_NAME]', courseName)
                 .replace('[LECTURE_TOPIC]', lectureTopic)
                 .replace('[SLIDE_TEXT]', slideText)
@@ -1228,7 +1371,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const finalSlideText = slideText.trim() || '[SLIDE TEXT NOT PROVIDED]';
             const finalAudioText = audioText.trim() || '[AUDIO TEXT NOT PROVIDED]';
 
-            const newPrompt = NEW_PROMPT_TEMPLATE
+            const newPrompt = getCurrentTemplate()
                 .replace('[COURSE_NAME]', courseName)
                 .replace('[LECTURE_TOPIC]', lectureTopic)
                 .replace('[SLIDE_TEXT]', finalSlideText)
@@ -1270,6 +1413,9 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
         document.addEventListener('DOMContentLoaded', function() {
             ['t-original-prompt', 't-extracted-slides', 't-extracted-audio', 't-new-prompt',
              'b-slide-text', 'b-audio-text', 'b-new-prompt'].forEach(updateStats);
+
+            // Initialize template editor
+            initTemplateEditor();
         });
     </script>
 </body>
