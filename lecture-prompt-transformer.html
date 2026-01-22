@@ -1044,14 +1044,29 @@
                 </div>
             </div>
 
+            <!-- File Naming -->
+            <div class="input-row" style="margin-top: 20px;">
+                <div class="input-group">
+                    <label>Course Name (for filename)</label>
+                    <input type="text" id="export-course-name" placeholder="e.g., pediatric-dentistry">
+                </div>
+                <div class="input-group">
+                    <label>Lecture Topic (for filename)</label>
+                    <input type="text" id="export-lecture-topic" placeholder="e.g., child-abuse">
+                </div>
+            </div>
+
             <!-- Export Buttons -->
-            <div class="btn-group" style="margin-top: 20px;">
+            <div class="btn-group" style="margin-top: 16px;">
                 <button class="btn btn-success" onclick="downloadAsWord()">
                     📄 Download as Word (.docx)
                 </button>
                 <button class="btn btn-secondary" onclick="copyAllMarkdown()">
                     📋 Copy All Markdown
                 </button>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                Filename: <span id="export-filename-preview">lecture-notes.docx</span>
             </div>
 
             <!-- Format Info -->
@@ -1685,6 +1700,12 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                     document.getElementById('export-input-words').textContent = `${formatNumber(countWords(text))} words`;
                 });
             }
+
+            // Initialize filename preview updates
+            const courseInput = document.getElementById('export-course-name');
+            const topicInput = document.getElementById('export-lecture-topic');
+            if (courseInput) courseInput.addEventListener('input', updateFilenamePreview);
+            if (topicInput) topicInput.addEventListener('input', updateFilenamePreview);
         });
 
         // ==================== EXPORT NOTES FUNCTIONS ====================
@@ -1784,6 +1805,28 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             });
         }
 
+        function getExportFilename() {
+            const course = document.getElementById('export-course-name').value.trim();
+            const topic = document.getElementById('export-lecture-topic').value.trim();
+
+            // Sanitize for filename (replace spaces with hyphens, remove special chars)
+            const sanitize = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+            if (course && topic) {
+                return `${sanitize(course)}_${sanitize(topic)}_notes.docx`;
+            } else if (course) {
+                return `${sanitize(course)}_notes.docx`;
+            } else if (topic) {
+                return `${sanitize(topic)}_notes.docx`;
+            } else {
+                return `lecture-notes-${new Date().toISOString().slice(0,10)}.docx`;
+            }
+        }
+
+        function updateFilenamePreview() {
+            document.getElementById('export-filename-preview').textContent = getExportFilename();
+        }
+
         function downloadAsWord() {
             if (collectedNotes.length === 0) {
                 showToast('No portions to export', 'error');
@@ -1791,11 +1834,12 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             }
 
             const allMarkdown = collectedNotes.map(n => n.content).join('\n\n');
+            const filename = getExportFilename();
 
             try {
                 const doc = createWordDocument(allMarkdown);
                 docx.Packer.toBlob(doc).then(blob => {
-                    saveAs(blob, `lecture-notes-${new Date().toISOString().slice(0,10)}.docx`);
+                    saveAs(blob, filename);
                     showToast('Word document downloaded!');
                 });
             } catch (err) {
