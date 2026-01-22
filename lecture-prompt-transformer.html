@@ -1461,14 +1461,38 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
         // ==================== QUICK EDITOR FUNCTIONS ====================
         const QUICK_EDIT_STORAGE_KEY = 'lectureQuickEditTemplates';
+        const MAX_INPUT_SIZE = 500000; // 500KB max input
+        const MAX_COLLECTED_NOTES = 100; // Max portions to prevent memory issues
+
+        // HTML escaping to prevent XSS
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Sanitize markdown - strip zero-width characters that break parsing
+        function sanitizeMarkdown(md) {
+            return md.replace(/[\uFEFF\u200B\u200C\u200D]/g, '').replace(/\r\n/g, '\n');
+        }
 
         function getQuickEditTemplates() {
-            const saved = localStorage.getItem(QUICK_EDIT_STORAGE_KEY);
-            return saved ? JSON.parse(saved) : {};
+            try {
+                const saved = localStorage.getItem(QUICK_EDIT_STORAGE_KEY);
+                return saved ? JSON.parse(saved) : {};
+            } catch (e) {
+                console.error('Failed to parse templates, resetting:', e);
+                localStorage.removeItem(QUICK_EDIT_STORAGE_KEY);
+                return {};
+            }
         }
 
         function saveQuickEditTemplates(templates) {
-            localStorage.setItem(QUICK_EDIT_STORAGE_KEY, JSON.stringify(templates));
+            try {
+                localStorage.setItem(QUICK_EDIT_STORAGE_KEY, JSON.stringify(templates));
+            } catch (e) {
+                console.error('Failed to save templates:', e);
+                showToast('Failed to save template - storage full?', 'error');
+            }
         }
 
         function loadQuickEditTemplate() {
@@ -1530,12 +1554,18 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             if (additionalSection) {
                 // Find where to insert (before ## INPUT or before "Here is the text")
                 const inputMarkers = ['## INPUT', 'Here is the text from lecture slides'];
+                let inserted = false;
                 for (const marker of inputMarkers) {
                     const idx = templateText.indexOf(marker);
                     if (idx !== -1) {
                         templateText = templateText.slice(0, idx) + additionalSection + '\n' + templateText.slice(idx);
+                        inserted = true;
                         break;
                     }
+                }
+                // Fallback: append at end if no marker found
+                if (!inserted) {
+                    templateText = templateText + '\n' + additionalSection;
                 }
             }
 
@@ -1544,10 +1574,13 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
         function updateQuickEditPreview() {
             const previewEl = document.getElementById('qe-preview');
-            const courseName = document.getElementById('qe-course-name').value || '[COURSE_NAME]';
-            const lectureTopic = document.getElementById('qe-lecture-topic').value || '[LECTURE_TOPIC]';
+            const courseName = escapeHtml(document.getElementById('qe-course-name').value || '[COURSE_NAME]');
+            const lectureTopic = escapeHtml(document.getElementById('qe-lecture-topic').value || '[LECTURE_TOPIC]');
 
             let template = buildQuickEditTemplate();
+
+            // Escape the template content first to prevent XSS
+            template = escapeHtml(template);
 
             // Replace placeholders with actual values for preview
             template = template
@@ -1556,8 +1589,8 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 .replace(/\[SLIDE_TEXT\]/g, '[Your slide text will appear here...]')
                 .replace(/\[AUDIO_TEXT\]/g, '[Your audio transcript will appear here...]');
 
-            // Highlight the custom sections
-            template = template.replace(/(## CUSTOM FOCUS INSTRUCTIONS[\s\S]*?)(?=\n---|\n## INPUT|Here is the text)/g,
+            // Highlight the custom sections (safe because we escaped above)
+            template = template.replace(/(## CUSTOM FOCUS INSTRUCTIONS[\s\S]*?)(?=\n---|## INPUT|Here is the text|$)/g,
                 '<span style="background: rgba(249, 115, 22, 0.2); border-left: 3px solid #f97316; padding-left: 8px; display: block;">$1</span>');
 
             previewEl.innerHTML = template.replace(/\n/g, '<br>');
@@ -1571,7 +1604,25 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 return;
             }
 
+            // Validate template name
+            if (templateName.length > 50) {
+                showToast('Template name must be 50 characters or less', 'error');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9\s\-_]+$/.test(templateName)) {
+                showToast('Template name can only contain letters, numbers, spaces, hyphens, underscores', 'error');
+                return;
+            }
+
             const templates = getQuickEditTemplates();
+
+            // Check for overwrite
+            if (templates[templateName]) {
+                if (!confirm(`Template "${templateName}" already exists. Overwrite?`)) {
+                    return;
+                }
+            }
 
             templates[templateName] = {
                 base: document.getElementById('qe-base-template').value,
@@ -1787,14 +1838,21 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 return;
             }
 
+            // Input size validation to prevent browser freeze
+            if (originalPrompt.length > MAX_INPUT_SIZE) {
+                showToast(`Input too large (${Math.round(originalPrompt.length/1000)}KB). Max ${MAX_INPUT_SIZE/1000}KB`, 'error');
+                return;
+            }
+
             let slideText = '';
             let audioText = '';
 
             // ==================== SLIDE EXTRACTION ====================
+            // Fixed: [:\s]* instead of [:\s*] (was treating * as literal character)
             const slidePatterns = [
-                /Here is the text from lecture slides[:\s*]+(.+?)(?=(?:Here is the audio transcript|Audio transcript|---\s*\*\*Audio|\n---\s*$))/is,
+                /Here is the text from lecture slides[:\s]*(.+?)(?=(?:Here is the audio transcript|Audio transcript|---\s*\*\*Audio|\n---\s*$))/is,
                 /\*\*Lecture slides text:\*\*\s*(.+?)(?=(?:\*\*Audio transcript|---\s*\*\*Audio|Here is the audio))/is,
-                /lecture slides[:\s*]+(.+?)(?=(?:audio transcript|---\s*$))/is,
+                /lecture slides[:\s]*(.+?)(?=(?:audio transcript|---\s*$))/is,
             ];
 
             for (const pattern of slidePatterns) {
@@ -1849,9 +1907,10 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             }
 
             // ==================== CLEANUP ====================
+            // Fixed: replaced [^]*? with [\s\S]*? to prevent catastrophic backtracking
             slideText = slideText
                 .replace(/^NOTE:.*$/gm, '')
-                .replace(/NOTE:\s*this lecture[^]*?(?=\n\n|\n[A-Z]|$)/gi, '')
+                .replace(/NOTE:\s*this lecture[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
                 .replace(/---+/g, '')
                 .replace(/^\s*\n/gm, '\n')
                 .replace(/\n{3,}/g, '\n\n')
@@ -1922,11 +1981,12 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const courseName = document.getElementById('t-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('t-lecture-topic').value || '[LECTURE_TOPIC]';
 
+            // Fixed: use global regex for replacement (consistent with other functions)
             const newPrompt = getCurrentTemplate()
-                .replace('[COURSE_NAME]', courseName)
-                .replace('[LECTURE_TOPIC]', lectureTopic)
-                .replace('[SLIDE_TEXT]', slideText)
-                .replace('[AUDIO_TEXT]', audioText);
+                .replace(/\[COURSE_NAME\]/g, courseName)
+                .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
+                .replace(/\[SLIDE_TEXT\]/g, slideText)
+                .replace(/\[AUDIO_TEXT\]/g, audioText);
 
             document.getElementById('t-new-prompt').value = newPrompt;
             updateStats('t-new-prompt');
@@ -2119,11 +2179,22 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
         function addNotePortion() {
             const input = document.getElementById('export-markdown-input');
-            const markdown = input.value.trim();
+            const markdown = sanitizeMarkdown(input.value.trim());
 
             if (!markdown) {
                 showToast('Please paste markdown content first', 'error');
                 return;
+            }
+
+            // Prevent memory issues with too many portions
+            if (collectedNotes.length >= MAX_COLLECTED_NOTES) {
+                showToast(`Max ${MAX_COLLECTED_NOTES} portions allowed. Export current notes first.`, 'error');
+                return;
+            }
+
+            // Warn about large inputs
+            if (markdown.length > MAX_INPUT_SIZE) {
+                showToast(`Large input (${Math.round(markdown.length/1000)}KB) may slow export`, 'warning');
             }
 
             collectedNotes.push({
@@ -2213,15 +2284,25 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const course = document.getElementById('export-course-name').value.trim();
             const topic = document.getElementById('export-lecture-topic').value.trim();
 
-            // Sanitize for filename (replace spaces with hyphens, remove special chars)
-            const sanitize = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            // Improved sanitize: handles edge cases, removes leading/trailing hyphens
+            const sanitize = (str) => {
+                const sanitized = str.toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '')
+                    .replace(/-+/g, '-')  // Collapse multiple hyphens
+                    .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
+                return sanitized || null;  // Return null if empty after sanitization
+            };
 
-            if (course && topic) {
-                return `${sanitize(course)}_${sanitize(topic)}_notes.docx`;
-            } else if (course) {
-                return `${sanitize(course)}_notes.docx`;
-            } else if (topic) {
-                return `${sanitize(topic)}_notes.docx`;
+            const safeCourse = sanitize(course);
+            const safeTopic = sanitize(topic);
+
+            if (safeCourse && safeTopic) {
+                return `${safeCourse}_${safeTopic}_notes.docx`;
+            } else if (safeCourse) {
+                return `${safeCourse}_notes.docx`;
+            } else if (safeTopic) {
+                return `${safeTopic}_notes.docx`;
             } else {
                 return `lecture-notes-${new Date().toISOString().slice(0,10)}.docx`;
             }
@@ -2237,15 +2318,28 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 return;
             }
 
-            const allMarkdown = collectedNotes.map(n => n.content).join('\n\n');
+            // Fixed: Use '---' separator consistent with preview and copy functions
+            const allMarkdown = collectedNotes.map(n => n.content).join('\n\n---\n\n');
             const filename = getExportFilename();
+
+            // Warn about large documents
+            const totalWords = collectedNotes.reduce((sum, n) => sum + n.words, 0);
+            if (totalWords > 25000) { // ~50 pages
+                console.warn(`Large document: ${totalWords} words, may take time to generate`);
+            }
 
             try {
                 const doc = createWordDocument(allMarkdown);
-                docx.Packer.toBlob(doc).then(blob => {
-                    saveAs(blob, filename);
-                    showToast('Word document downloaded!');
-                });
+                // Fixed: Add proper promise error handling
+                docx.Packer.toBlob(doc)
+                    .then(blob => {
+                        saveAs(blob, filename);
+                        showToast('Word document downloaded!');
+                    })
+                    .catch(err => {
+                        console.error('Blob generation error:', err);
+                        showToast('Export failed during generation: ' + err.message, 'error');
+                    });
             } catch (err) {
                 console.error('Export error:', err);
                 showToast('Export failed: ' + err.message, 'error');
@@ -2271,9 +2365,6 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             // Parse markdown into tokens
             const tokens = marked.lexer(markdownText);
             const children = [];
-
-            // Track numbering for ordered lists
-            let orderedListCounter = 0;
 
             // Recursive function to process list items with nesting
             function processListItems(items, ordered, level) {
@@ -2365,6 +2456,21 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                             border: { bottom: { style: docx.BorderStyle.SINGLE, size: 6 } },
                             spacing: { before: 60, after: 60 },
                         }));
+                        break;
+
+                    case 'blockquote':
+                        // Handle blockquote - indented with border
+                        const blockquoteText = token.text || (token.tokens ? token.tokens.map(t => t.text || t.raw || '').join(' ') : '');
+                        children.push(new docx.Paragraph({
+                            children: parseInlineText(blockquoteText, FONT_SIZE_HALF_PTS, false, COLORS),
+                            indent: { left: 360 },
+                            border: { left: { style: docx.BorderStyle.SINGLE, size: 12, color: '999999' } },
+                            spacing: { before: 60, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                        break;
+
+                    case 'html':
+                        // Skip raw HTML blocks (can't render in Word)
                         break;
 
                     case 'space':
