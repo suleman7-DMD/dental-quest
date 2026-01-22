@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecture Prompt Transformer | Dental Quest</title>
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Word Document Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@9.0.0/build/index.umd.min.js"></script>
+    <!-- File Saver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -133,6 +141,164 @@
 
         .mode-tab.active.template {
             background-color: var(--accent-purple);
+        }
+
+        .mode-tab.active.export {
+            background-color: var(--accent-yellow);
+            color: #000;
+        }
+
+        /* Markdown Preview Styles */
+        .markdown-preview {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .markdown-preview h1, .markdown-preview h2, .markdown-preview h3,
+        .markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
+            color: var(--accent-blue);
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .markdown-preview h1 { font-size: 1.5em; }
+        .markdown-preview h2 { font-size: 1.3em; }
+        .markdown-preview h3 { font-size: 1.1em; }
+
+        .markdown-preview p {
+            margin-bottom: 12px;
+        }
+
+        .markdown-preview ul, .markdown-preview ol {
+            padding-left: 24px;
+            margin-bottom: 12px;
+        }
+
+        .markdown-preview li {
+            margin-bottom: 4px;
+        }
+
+        .markdown-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 12px;
+        }
+
+        .markdown-preview th, .markdown-preview td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .markdown-preview th {
+            background-color: var(--bg-tertiary);
+            font-weight: 600;
+        }
+
+        .markdown-preview code {
+            background-color: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-preview pre {
+            background-color: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .markdown-preview pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-preview strong {
+            color: var(--accent-green);
+        }
+
+        .markdown-preview em {
+            color: var(--accent-purple);
+        }
+
+        .export-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-stat {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .export-stat .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .export-stat .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .collected-notes {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .note-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .note-item .note-info {
+            color: var(--text-secondary);
+        }
+
+        .note-item .note-chars {
+            color: var(--accent-green);
+            font-family: monospace;
+        }
+
+        .note-item .remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-red);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
         }
 
         /* Mode Panels */
@@ -535,6 +701,7 @@
         <div class="mode-tabs">
             <button class="mode-tab active" data-mode="transform">Transform Existing</button>
             <button class="mode-tab build" data-mode="build">Build New</button>
+            <button class="mode-tab export" data-mode="export">📥 Export Notes</button>
             <button class="mode-tab template" data-mode="template">⚙️ Template</button>
         </div>
 
@@ -805,6 +972,98 @@
                     <button class="btn btn-secondary" onclick="goToBuildStep(1)">← Back</button>
                     <button class="btn btn-secondary" onclick="resetBuild()">Start Over</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- ==================== EXPORT NOTES MODE ==================== -->
+        <div id="export-panel" class="mode-panel">
+            <div class="export-info">
+                <h2 style="margin-bottom: 12px; color: var(--accent-yellow);">📥 Export Notes to Word</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Paste markdown responses from Model 2 here. Collect multiple portions, then download as a Word doc with your exact formatting.
+                </p>
+            </div>
+
+            <!-- Stats -->
+            <div class="export-stats">
+                <div class="export-stat">
+                    <div class="value" id="export-portions">0</div>
+                    <div class="label">Portions</div>
+                </div>
+                <div class="export-stat">
+                    <div class="value" id="export-total-chars">0</div>
+                    <div class="label">Characters</div>
+                </div>
+                <div class="export-stat">
+                    <div class="value" id="export-total-words">0</div>
+                    <div class="label">Words</div>
+                </div>
+                <div class="export-stat">
+                    <div class="value" id="export-est-pages">0</div>
+                    <div class="label">Est. Pages</div>
+                </div>
+            </div>
+
+            <!-- Collected Notes List -->
+            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span class="section-label">Collected Portions</span>
+                <button class="btn btn-secondary btn-small" onclick="clearAllNotes()" style="font-size: 11px;">Clear All</button>
+            </div>
+            <div class="collected-notes" id="collected-notes-list">
+                <div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                    No portions collected yet. Paste markdown below and click "Add Portion".
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="textarea-container">
+                <div class="textarea-header">
+                    <span class="section-label blue">Paste Markdown Response</span>
+                    <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard('export-markdown-input')">
+                        Paste
+                    </button>
+                </div>
+                <textarea id="export-markdown-input" class="medium" placeholder="Paste the markdown response from Model 2 here..."></textarea>
+                <div class="textarea-stats">
+                    <span class="stat" id="export-input-chars">0 characters</span>
+                    <span class="stat" id="export-input-words">0 words</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="addNotePortion()" style="margin-bottom: 24px;">
+                + Add Portion
+            </button>
+
+            <!-- Preview -->
+            <div style="margin-bottom: 8px;">
+                <span class="section-label purple">Preview (All Collected Notes)</span>
+            </div>
+            <div class="markdown-preview" id="export-preview">
+                <div style="color: var(--text-muted); text-align: center;">
+                    Preview will appear here once you add portions.
+                </div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-success" onclick="downloadAsWord()">
+                    📄 Download as Word (.docx)
+                </button>
+                <button class="btn btn-secondary" onclick="copyAllMarkdown()">
+                    📋 Copy All Markdown
+                </button>
+            </div>
+
+            <!-- Format Info -->
+            <div class="next-steps" style="margin-top: 20px;">
+                <h3>Word Document Formatting:</h3>
+                <ul style="padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.8; list-style: none;">
+                    <li>✓ 0.1" margins (all sides)</li>
+                    <li>✓ 11pt font (Arial)</li>
+                    <li>✓ 1pt line spacing</li>
+                    <li>✓ No spacing before/after paragraphs</li>
+                    <li>✓ Tables, headers, bold, lists preserved</li>
+                </ul>
             </div>
         </div>
 
@@ -1416,7 +1675,332 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
             // Initialize template editor
             initTemplateEditor();
+
+            // Initialize export input stats
+            const exportInput = document.getElementById('export-markdown-input');
+            if (exportInput) {
+                exportInput.addEventListener('input', function() {
+                    const text = this.value;
+                    document.getElementById('export-input-chars').textContent = `${formatNumber(text.length)} characters`;
+                    document.getElementById('export-input-words').textContent = `${formatNumber(countWords(text))} words`;
+                });
+            }
         });
+
+        // ==================== EXPORT NOTES FUNCTIONS ====================
+
+        // Store collected note portions
+        let collectedNotes = [];
+
+        function addNotePortion() {
+            const input = document.getElementById('export-markdown-input');
+            const markdown = input.value.trim();
+
+            if (!markdown) {
+                showToast('Please paste markdown content first', 'error');
+                return;
+            }
+
+            collectedNotes.push({
+                id: Date.now(),
+                content: markdown,
+                chars: markdown.length,
+                words: countWords(markdown),
+                timestamp: new Date().toLocaleTimeString()
+            });
+
+            input.value = '';
+            document.getElementById('export-input-chars').textContent = '0 characters';
+            document.getElementById('export-input-words').textContent = '0 words';
+
+            updateExportUI();
+            showToast(`Portion ${collectedNotes.length} added!`);
+        }
+
+        function removeNotePortion(id) {
+            collectedNotes = collectedNotes.filter(n => n.id !== id);
+            updateExportUI();
+            showToast('Portion removed');
+        }
+
+        function clearAllNotes() {
+            if (collectedNotes.length === 0) return;
+            if (confirm('Clear all collected portions?')) {
+                collectedNotes = [];
+                updateExportUI();
+                showToast('All portions cleared');
+            }
+        }
+
+        function updateExportUI() {
+            // Update stats
+            const totalChars = collectedNotes.reduce((sum, n) => sum + n.chars, 0);
+            const totalWords = collectedNotes.reduce((sum, n) => sum + n.words, 0);
+            const estPages = Math.ceil(totalWords / 500); // ~500 words per page with tight spacing
+
+            document.getElementById('export-portions').textContent = collectedNotes.length;
+            document.getElementById('export-total-chars').textContent = formatNumber(totalChars);
+            document.getElementById('export-total-words').textContent = formatNumber(totalWords);
+            document.getElementById('export-est-pages').textContent = estPages;
+
+            // Update collected notes list
+            const listEl = document.getElementById('collected-notes-list');
+            if (collectedNotes.length === 0) {
+                listEl.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                    No portions collected yet. Paste markdown below and click "Add Portion".
+                </div>`;
+            } else {
+                listEl.innerHTML = collectedNotes.map((note, i) => `
+                    <div class="note-item">
+                        <span class="note-info">Portion ${i + 1} (${note.timestamp})</span>
+                        <span class="note-chars">${formatNumber(note.chars)} chars</span>
+                        <button class="remove-btn" onclick="removeNotePortion(${note.id})" title="Remove">×</button>
+                    </div>
+                `).join('');
+            }
+
+            // Update preview
+            const previewEl = document.getElementById('export-preview');
+            if (collectedNotes.length === 0) {
+                previewEl.innerHTML = `<div style="color: var(--text-muted); text-align: center;">
+                    Preview will appear here once you add portions.
+                </div>`;
+            } else {
+                const allMarkdown = collectedNotes.map(n => n.content).join('\n\n---\n\n');
+                previewEl.innerHTML = marked.parse(allMarkdown);
+            }
+        }
+
+        function copyAllMarkdown() {
+            if (collectedNotes.length === 0) {
+                showToast('No portions to copy', 'error');
+                return;
+            }
+            const allMarkdown = collectedNotes.map(n => n.content).join('\n\n---\n\n');
+            navigator.clipboard.writeText(allMarkdown).then(() => {
+                showToast('All markdown copied!');
+            }).catch(() => {
+                showToast('Copy failed', 'error');
+            });
+        }
+
+        function downloadAsWord() {
+            if (collectedNotes.length === 0) {
+                showToast('No portions to export', 'error');
+                return;
+            }
+
+            const allMarkdown = collectedNotes.map(n => n.content).join('\n\n');
+
+            try {
+                const doc = createWordDocument(allMarkdown);
+                docx.Packer.toBlob(doc).then(blob => {
+                    saveAs(blob, `lecture-notes-${new Date().toISOString().slice(0,10)}.docx`);
+                    showToast('Word document downloaded!');
+                });
+            } catch (err) {
+                console.error('Export error:', err);
+                showToast('Export failed: ' + err.message, 'error');
+            }
+        }
+
+        function createWordDocument(markdownText) {
+            // Unit conversions
+            const TWIPS_PER_INCH = 1440;
+            const MARGIN_TWIPS = Math.round(0.1 * TWIPS_PER_INCH); // 0.1 inch = 144 TWIPs
+            const FONT_SIZE_HALF_PTS = 22; // 11pt = 22 half-points
+            const LINE_SPACING = 240; // Minimum line spacing (240 = single line)
+            const HEADER_SIZES = { 1: 28, 2: 26, 3: 24, 4: 22, 5: 22, 6: 22 }; // half-points
+
+            // Parse markdown into tokens
+            const tokens = marked.lexer(markdownText);
+            const children = [];
+
+            // Process each token
+            tokens.forEach(token => {
+                switch (token.type) {
+                    case 'heading':
+                        children.push(new docx.Paragraph({
+                            children: parseInlineText(token.text, HEADER_SIZES[token.depth] || 22, true),
+                            spacing: { before: 120, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                        break;
+
+                    case 'paragraph':
+                        children.push(new docx.Paragraph({
+                            children: parseInlineText(token.text, FONT_SIZE_HALF_PTS, false),
+                            spacing: { before: 0, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                        break;
+
+                    case 'list':
+                        token.items.forEach((item, idx) => {
+                            children.push(new docx.Paragraph({
+                                children: parseInlineText(item.text, FONT_SIZE_HALF_PTS, false),
+                                bullet: token.ordered ? undefined : { level: 0 },
+                                numbering: token.ordered ? { reference: 'default-numbering', level: 0 } : undefined,
+                                spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                            }));
+                        });
+                        break;
+
+                    case 'table':
+                        children.push(createDocxTable(token, FONT_SIZE_HALF_PTS, LINE_SPACING));
+                        break;
+
+                    case 'code':
+                        children.push(new docx.Paragraph({
+                            children: [new docx.TextRun({
+                                text: token.text,
+                                font: 'Courier New',
+                                size: 20, // 10pt for code
+                            })],
+                            spacing: { before: 60, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                            shading: { fill: 'F0F0F0' },
+                        }));
+                        break;
+
+                    case 'hr':
+                        children.push(new docx.Paragraph({
+                            children: [new docx.TextRun({ text: '' })],
+                            border: { bottom: { style: docx.BorderStyle.SINGLE, size: 6 } },
+                            spacing: { before: 60, after: 60 },
+                        }));
+                        break;
+
+                    case 'space':
+                        // Skip empty space tokens
+                        break;
+
+                    default:
+                        // Handle any raw text
+                        if (token.raw && token.raw.trim()) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({
+                                    text: token.raw.trim(),
+                                    size: FONT_SIZE_HALF_PTS,
+                                    font: 'Arial',
+                                })],
+                                spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                            }));
+                        }
+                }
+            });
+
+            return new docx.Document({
+                numbering: {
+                    config: [{
+                        reference: 'default-numbering',
+                        levels: [{
+                            level: 0,
+                            format: docx.LevelFormat.DECIMAL,
+                            text: '%1.',
+                            alignment: docx.AlignmentType.START,
+                        }],
+                    }],
+                },
+                sections: [{
+                    properties: {
+                        page: {
+                            margin: {
+                                top: MARGIN_TWIPS,
+                                right: MARGIN_TWIPS,
+                                bottom: MARGIN_TWIPS,
+                                left: MARGIN_TWIPS,
+                            },
+                        },
+                    },
+                    children: children,
+                }],
+            });
+        }
+
+        function parseInlineText(text, fontSize, isBold) {
+            const runs = [];
+            if (!text) return runs;
+
+            // Remove HTML tags that marked might have added
+            text = text.replace(/<[^>]+>/g, '');
+
+            // Parse **bold**, *italic*, and regular text
+            const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+            const parts = text.split(pattern);
+
+            parts.forEach(part => {
+                if (!part) return;
+
+                if (part.startsWith('**') && part.endsWith('**')) {
+                    runs.push(new docx.TextRun({
+                        text: part.slice(2, -2),
+                        bold: true,
+                        size: fontSize,
+                        font: 'Arial',
+                    }));
+                } else if (part.startsWith('*') && part.endsWith('*')) {
+                    runs.push(new docx.TextRun({
+                        text: part.slice(1, -1),
+                        italics: true,
+                        size: fontSize,
+                        font: 'Arial',
+                    }));
+                } else if (part.startsWith('`') && part.endsWith('`')) {
+                    runs.push(new docx.TextRun({
+                        text: part.slice(1, -1),
+                        font: 'Courier New',
+                        size: fontSize - 2,
+                    }));
+                } else {
+                    runs.push(new docx.TextRun({
+                        text: part,
+                        bold: isBold,
+                        size: fontSize,
+                        font: 'Arial',
+                    }));
+                }
+            });
+
+            return runs.length > 0 ? runs : [new docx.TextRun({ text: text, size: fontSize, font: 'Arial', bold: isBold })];
+        }
+
+        function createDocxTable(token, fontSize, lineSpacing) {
+            const rows = [];
+
+            // Header row
+            if (token.header && token.header.length > 0) {
+                rows.push(new docx.TableRow({
+                    children: token.header.map(cell => {
+                        return new docx.TableCell({
+                            children: [new docx.Paragraph({
+                                children: parseInlineText(cell.text || cell, fontSize, true),
+                                spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
+                            })],
+                            shading: { fill: 'E8E8E8' },
+                        });
+                    }),
+                }));
+            }
+
+            // Data rows
+            if (token.rows) {
+                token.rows.forEach(row => {
+                    rows.push(new docx.TableRow({
+                        children: row.map(cell => {
+                            return new docx.TableCell({
+                                children: [new docx.Paragraph({
+                                    children: parseInlineText(cell.text || cell, fontSize, false),
+                                    spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
+                                })],
+                            });
+                        }),
+                    }));
+                });
+            }
+
+            return new docx.Table({
+                rows: rows,
+                width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            });
+        }
     </script>
 </body>
 </html>
