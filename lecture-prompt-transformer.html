@@ -148,9 +148,9 @@
             color: #000;
         }
 
-        /* Markdown Preview Styles */
+        /* Markdown Preview Styles - White background for Word copy-paste */
         .markdown-preview {
-            background-color: var(--bg-secondary);
+            background-color: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 20px;
@@ -158,11 +158,12 @@
             line-height: 1.6;
             max-height: 400px;
             overflow-y: auto;
+            color: #1a1a1a; /* Black text for Word compatibility */
         }
 
         .markdown-preview h1, .markdown-preview h2, .markdown-preview h3,
         .markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
-            color: var(--accent-blue);
+            color: #3b82f6; /* Blue headers */
             margin-top: 16px;
             margin-bottom: 8px;
         }
@@ -173,15 +174,18 @@
 
         .markdown-preview p {
             margin-bottom: 12px;
+            color: #1a1a1a;
         }
 
         .markdown-preview ul, .markdown-preview ol {
             padding-left: 24px;
             margin-bottom: 12px;
+            color: #1a1a1a;
         }
 
         .markdown-preview li {
             margin-bottom: 4px;
+            color: #1a1a1a;
         }
 
         .markdown-preview table {
@@ -192,26 +196,28 @@
         }
 
         .markdown-preview th, .markdown-preview td {
-            border: 1px solid var(--border-color);
+            border: 1px solid #d1d5db;
             padding: 8px;
             text-align: left;
+            color: #1a1a1a;
         }
 
         .markdown-preview th {
-            background-color: var(--bg-tertiary);
+            background-color: #f3f4f6;
             font-weight: 600;
         }
 
         .markdown-preview code {
-            background-color: var(--bg-tertiary);
+            background-color: #f3f4f6;
             padding: 2px 6px;
             border-radius: 4px;
             font-family: 'Consolas', monospace;
             font-size: 0.9em;
+            color: #1a1a1a;
         }
 
         .markdown-preview pre {
-            background-color: var(--bg-tertiary);
+            background-color: #f3f4f6;
             padding: 12px;
             border-radius: 6px;
             overflow-x: auto;
@@ -224,11 +230,11 @@
         }
 
         .markdown-preview strong {
-            color: var(--accent-green);
+            color: #10b981; /* Green for bold */
         }
 
         .markdown-preview em {
-            color: var(--accent-purple);
+            color: #8b5cf6; /* Purple for italics */
         }
 
         .export-stats {
