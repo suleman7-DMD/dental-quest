@@ -148,6 +148,10 @@
             color: #000;
         }
 
+        .mode-tab.active.quick-edit {
+            background-color: #f97316; /* Orange */
+        }
+
         /* Markdown Preview Styles - White background for Word copy-paste */
         .markdown-preview {
             background-color: #ffffff;
@@ -728,6 +732,7 @@
             <button class="mode-tab build" data-mode="build">Build New</button>
             <button class="mode-tab export" data-mode="export">📥 Export Notes</button>
             <button class="mode-tab template" data-mode="template">⚙️ Template</button>
+            <button class="mode-tab quick-edit" data-mode="quick-edit">✏️ Quick Editor</button>
         </div>
 
         <!-- ==================== TRANSFORM MODE ==================== -->
@@ -1163,6 +1168,107 @@
 
             <div id="template-validation" style="margin-top: 16px; display: none;"></div>
         </div>
+
+        <!-- ==================== QUICK EDITOR MODE ==================== -->
+        <div id="quick-edit-panel" class="mode-panel">
+            <div class="quick-edit-info">
+                <h2 style="margin-bottom: 12px; color: #f97316;">✏️ Quick Template Editor</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Form-based template editing. Fill in the fields, preview your template, and save as a custom version.
+                </p>
+            </div>
+
+            <!-- Base Template Selection -->
+            <div class="quick-edit-section" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Base Template</label>
+                        <select id="qe-base-template" onchange="loadQuickEditTemplate()" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="legacy">Original (Legacy)</option>
+                            <option value="optimized">New (Optimized)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Load Saved Template</label>
+                        <select id="qe-saved-templates" onchange="loadSavedQuickTemplate()" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="">-- Select Saved Template --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Edit Fields -->
+            <div class="quick-edit-fields" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="color: var(--accent-blue); margin-bottom: 16px; font-size: 16px;">📝 Standard Fields</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div class="input-group">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Course Name</label>
+                        <input type="text" id="qe-course-name" placeholder="e.g., periodontics, endodontics" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    </div>
+                    <div class="input-group">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Lecture Topic</label>
+                        <input type="text" id="qe-lecture-topic" placeholder="e.g., regenerative procedures" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    </div>
+                </div>
+
+                <h3 style="color: var(--accent-green); margin-top: 24px; margin-bottom: 16px; font-size: 16px;">🎯 Focus & Priority Fields</h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                    <div class="input-group">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
+                            Focus Area <span style="color: var(--text-muted);">(high-level subject focus)</span>
+                        </label>
+                        <input type="text" id="qe-focus-area" placeholder="e.g., periodontal tissue architecture, pulp pathology, bone grafting" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    </div>
+                    <div class="input-group">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
+                            Clinical Priority <span style="color: var(--text-muted);">(specific concepts to emphasize)</span>
+                        </label>
+                        <input type="text" id="qe-clinical-priority" placeholder="e.g., GTR vs open flap debridement, vital vs non-vital pulp" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    </div>
+                </div>
+
+                <h3 style="color: var(--accent-purple); margin-top: 24px; margin-bottom: 16px; font-size: 16px;">💬 Custom Instructions</h3>
+                <div class="input-group">
+                    <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
+                        Additional Instructions <span style="color: var(--text-muted);">(e.g., "make more tables", "focus on procedures")</span>
+                    </label>
+                    <textarea id="qe-custom-instructions" rows="3" placeholder="Add any custom instructions here...&#10;e.g., 'Use more comparison tables for treatment options'&#10;e.g., 'Focus heavily on step-by-step clinical procedures'" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="quick-edit-preview" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="color: var(--accent-yellow); font-size: 16px;">👁️ Live Template Preview</h3>
+                    <button class="btn btn-secondary btn-small" onclick="updateQuickEditPreview()">
+                        🔄 Refresh Preview
+                    </button>
+                </div>
+                <div id="qe-preview" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.6; max-height: 300px; overflow-y: auto; white-space: pre-wrap; color: var(--text-primary);">
+                    Select a base template to see preview...
+                </div>
+            </div>
+
+            <!-- Save Section -->
+            <div class="quick-edit-save" style="background: var(--bg-secondary); border: 1px solid #f97316; border-radius: 10px; padding: 20px;">
+                <h3 style="color: #f97316; margin-bottom: 16px; font-size: 16px;">💾 Save Custom Template</h3>
+                <div style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
+                    <div class="input-group" style="flex: 1; min-width: 250px;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Template Name</label>
+                        <input type="text" id="qe-template-name" placeholder="e.g., Perio-Focused, Peds-Specific" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    </div>
+                    <button class="btn btn-success" onclick="saveQuickEditTemplate()" style="background-color: #f97316;">
+                        💾 Save Template
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteSelectedTemplate()">
+                        🗑️ Delete Selected
+                    </button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
+                    Saved templates will appear in the "Build New" tab's template dropdown.
+                </p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1351,6 +1457,217 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             editor.addEventListener('input', updateTemplateStats);
             updateTemplateStats();
             updateTemplateStatus();
+        }
+
+        // ==================== QUICK EDITOR FUNCTIONS ====================
+        const QUICK_EDIT_STORAGE_KEY = 'lectureQuickEditTemplates';
+
+        function getQuickEditTemplates() {
+            const saved = localStorage.getItem(QUICK_EDIT_STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveQuickEditTemplates(templates) {
+            localStorage.setItem(QUICK_EDIT_STORAGE_KEY, JSON.stringify(templates));
+        }
+
+        function loadQuickEditTemplate() {
+            const baseTemplate = document.getElementById('qe-base-template').value;
+            // Clear saved template selection when switching base
+            document.getElementById('qe-saved-templates').value = '';
+            updateQuickEditPreview();
+        }
+
+        function loadSavedQuickTemplate() {
+            const templateName = document.getElementById('qe-saved-templates').value;
+            if (!templateName) return;
+
+            const templates = getQuickEditTemplates();
+            const template = templates[templateName];
+
+            if (template) {
+                document.getElementById('qe-base-template').value = template.base || 'legacy';
+                document.getElementById('qe-course-name').value = template.courseName || '';
+                document.getElementById('qe-lecture-topic').value = template.lectureTopic || '';
+                document.getElementById('qe-focus-area').value = template.focusArea || '';
+                document.getElementById('qe-clinical-priority').value = template.clinicalPriority || '';
+                document.getElementById('qe-custom-instructions').value = template.customInstructions || '';
+                document.getElementById('qe-template-name').value = templateName;
+                updateQuickEditPreview();
+                showToast(`Loaded "${templateName}"`);
+            }
+        }
+
+        function buildQuickEditTemplate() {
+            const baseTemplate = document.getElementById('qe-base-template').value;
+            const focusArea = document.getElementById('qe-focus-area').value.trim();
+            const clinicalPriority = document.getElementById('qe-clinical-priority').value.trim();
+            const customInstructions = document.getElementById('qe-custom-instructions').value.trim();
+
+            // Get the base template text
+            let templateText = baseTemplate === 'legacy' ? LEGACY_TEMPLATE : DEFAULT_TEMPLATE;
+
+            // Build additional instructions section if any custom fields are filled
+            let additionalSection = '';
+
+            if (focusArea || clinicalPriority || customInstructions) {
+                additionalSection = '\n\n---\n\n## CUSTOM FOCUS INSTRUCTIONS\n\n';
+
+                if (focusArea) {
+                    additionalSection += `**Focus Area:** Pay special attention to concepts related to ${focusArea}.\n\n`;
+                }
+
+                if (clinicalPriority) {
+                    additionalSection += `**Clinical Priority:** Emphasize ${clinicalPriority} in your explanations.\n\n`;
+                }
+
+                if (customInstructions) {
+                    additionalSection += `**Additional Instructions:**\n${customInstructions}\n`;
+                }
+            }
+
+            // Insert additional section before the INPUT section
+            if (additionalSection) {
+                // Find where to insert (before ## INPUT or before "Here is the text")
+                const inputMarkers = ['## INPUT', 'Here is the text from lecture slides'];
+                for (const marker of inputMarkers) {
+                    const idx = templateText.indexOf(marker);
+                    if (idx !== -1) {
+                        templateText = templateText.slice(0, idx) + additionalSection + '\n' + templateText.slice(idx);
+                        break;
+                    }
+                }
+            }
+
+            return templateText;
+        }
+
+        function updateQuickEditPreview() {
+            const previewEl = document.getElementById('qe-preview');
+            const courseName = document.getElementById('qe-course-name').value || '[COURSE_NAME]';
+            const lectureTopic = document.getElementById('qe-lecture-topic').value || '[LECTURE_TOPIC]';
+
+            let template = buildQuickEditTemplate();
+
+            // Replace placeholders with actual values for preview
+            template = template
+                .replace(/\[COURSE_NAME\]/g, courseName)
+                .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
+                .replace(/\[SLIDE_TEXT\]/g, '[Your slide text will appear here...]')
+                .replace(/\[AUDIO_TEXT\]/g, '[Your audio transcript will appear here...]');
+
+            // Highlight the custom sections
+            template = template.replace(/(## CUSTOM FOCUS INSTRUCTIONS[\s\S]*?)(?=\n---|\n## INPUT|Here is the text)/g,
+                '<span style="background: rgba(249, 115, 22, 0.2); border-left: 3px solid #f97316; padding-left: 8px; display: block;">$1</span>');
+
+            previewEl.innerHTML = template.replace(/\n/g, '<br>');
+        }
+
+        function saveQuickEditTemplate() {
+            const templateName = document.getElementById('qe-template-name').value.trim();
+
+            if (!templateName) {
+                showToast('Please enter a template name', 'error');
+                return;
+            }
+
+            const templates = getQuickEditTemplates();
+
+            templates[templateName] = {
+                base: document.getElementById('qe-base-template').value,
+                courseName: document.getElementById('qe-course-name').value.trim(),
+                lectureTopic: document.getElementById('qe-lecture-topic').value.trim(),
+                focusArea: document.getElementById('qe-focus-area').value.trim(),
+                clinicalPriority: document.getElementById('qe-clinical-priority').value.trim(),
+                customInstructions: document.getElementById('qe-custom-instructions').value.trim(),
+                fullTemplate: buildQuickEditTemplate(),
+                createdAt: new Date().toISOString()
+            };
+
+            saveQuickEditTemplates(templates);
+            refreshSavedTemplatesList();
+            refreshBuildNewTemplateDropdown();
+            showToast(`Template "${templateName}" saved!`);
+        }
+
+        function deleteSelectedTemplate() {
+            const templateName = document.getElementById('qe-saved-templates').value;
+            if (!templateName) {
+                showToast('Select a template to delete', 'error');
+                return;
+            }
+
+            if (!confirm(`Delete template "${templateName}"?`)) {
+                return;
+            }
+
+            const templates = getQuickEditTemplates();
+            delete templates[templateName];
+            saveQuickEditTemplates(templates);
+            refreshSavedTemplatesList();
+            refreshBuildNewTemplateDropdown();
+
+            // Clear form
+            document.getElementById('qe-saved-templates').value = '';
+            document.getElementById('qe-template-name').value = '';
+            showToast(`Template "${templateName}" deleted`);
+        }
+
+        function refreshSavedTemplatesList() {
+            const select = document.getElementById('qe-saved-templates');
+            const templates = getQuickEditTemplates();
+
+            // Clear existing options except first
+            select.innerHTML = '<option value="">-- Select Saved Template --</option>';
+
+            // Add saved templates
+            Object.keys(templates).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        function refreshBuildNewTemplateDropdown() {
+            const select = document.getElementById('b-template-choice');
+            if (!select) return;
+
+            const templates = getQuickEditTemplates();
+
+            // Remove old custom options (keep first two: new and legacy)
+            while (select.options.length > 2) {
+                select.remove(2);
+            }
+
+            // Add saved custom templates
+            if (Object.keys(templates).length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = '── Saved Templates ──';
+
+                Object.keys(templates).sort().forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = 'custom:' + name;
+                    option.textContent = '★ ' + name;
+                    optgroup.appendChild(option);
+                });
+
+                select.appendChild(optgroup);
+            }
+        }
+
+        function initQuickEditor() {
+            refreshSavedTemplatesList();
+            refreshBuildNewTemplateDropdown();
+            updateQuickEditPreview();
+
+            // Add input listeners for live preview
+            ['qe-course-name', 'qe-lecture-topic', 'qe-focus-area', 'qe-clinical-priority', 'qe-custom-instructions'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateQuickEditPreview);
+                }
+            });
         }
 
         // ==================== UTILITY FUNCTIONS ====================
@@ -1700,17 +2017,34 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
             // Choose template based on selection
             let template;
+            let templateLabel = 'Optimized';
+
             if (templateChoice === 'legacy') {
                 template = LEGACY_TEMPLATE;
-            } else {
+                templateLabel = 'Legacy';
+            } else if (templateChoice === 'new') {
                 template = getCurrentTemplate(); // Uses custom or default new template
+                templateLabel = 'Optimized';
+            } else if (templateChoice.startsWith('custom:')) {
+                // Custom saved template
+                const customName = templateChoice.replace('custom:', '');
+                const savedTemplates = getQuickEditTemplates();
+                if (savedTemplates[customName] && savedTemplates[customName].fullTemplate) {
+                    template = savedTemplates[customName].fullTemplate;
+                    templateLabel = customName;
+                } else {
+                    showToast('Custom template not found, using default', 'error');
+                    template = getCurrentTemplate();
+                }
+            } else {
+                template = getCurrentTemplate();
             }
 
             const newPrompt = template
-                .replace('[COURSE_NAME]', courseName)
-                .replace('[LECTURE_TOPIC]', lectureTopic)
-                .replace('[SLIDE_TEXT]', finalSlideText)
-                .replace('[AUDIO_TEXT]', finalAudioText);
+                .replace(/\[COURSE_NAME\]/g, courseName)
+                .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
+                .replace(/\[SLIDE_TEXT\]/g, finalSlideText)
+                .replace(/\[AUDIO_TEXT\]/g, finalAudioText);
 
             document.getElementById('b-new-prompt').value = newPrompt;
             updateStats('b-new-prompt');
@@ -1721,13 +2055,11 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             // Update label to show which template was used
             const labelEl = document.querySelector('#build-step-2 .section-label.green');
             if (labelEl) {
-                labelEl.textContent = templateChoice === 'legacy'
-                    ? 'New Prompt (Original/Legacy Format)'
-                    : 'New Prompt (Optimized Format)';
+                labelEl.textContent = `New Prompt (${templateLabel} Format)`;
             }
 
             goToBuildStep(2);
-            showToast('Prompt created with ' + (templateChoice === 'legacy' ? 'Legacy' : 'Optimized') + ' template!');
+            showToast(`Prompt created with ${templateLabel} template!`);
         }
 
         function resetBuild() {
@@ -1759,6 +2091,9 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
             // Initialize template editor
             initTemplateEditor();
+
+            // Initialize quick editor
+            initQuickEditor();
 
             // Initialize export input stats
             const exportInput = document.getElementById('export-markdown-input');
