@@ -1879,8 +1879,10 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
                     case 'list':
                         token.items.forEach((item, idx) => {
+                            // Use raw text, fallback to text property
+                            const itemText = item.raw || item.text || '';
                             children.push(new docx.Paragraph({
-                                children: parseInlineText(item.text, FONT_SIZE_HALF_PTS, false),
+                                children: parseInlineText(itemText, FONT_SIZE_HALF_PTS, false),
                                 bullet: token.ordered ? undefined : { level: 0 },
                                 numbering: token.ordered ? { reference: 'default-numbering', level: 0 } : undefined,
                                 spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
@@ -1961,7 +1963,12 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
         function parseInlineText(text, fontSize, isBold) {
             const runs = [];
-            if (!text) return runs;
+            if (!text) return [new docx.TextRun({ text: '', size: fontSize, font: 'Arial' })];
+
+            // Ensure text is a string (marked.js can return objects)
+            if (typeof text !== 'string') {
+                text = String(text.raw || text.text || text);
+            }
 
             // Remove HTML tags that marked might have added
             text = text.replace(/<[^>]+>/g, '');
@@ -2009,13 +2016,21 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
         function createDocxTable(token, fontSize, lineSpacing) {
             const rows = [];
 
+            // Helper to get cell text safely
+            const getCellText = (cell) => {
+                if (typeof cell === 'string') return cell;
+                if (cell && cell.text) return cell.text;
+                if (cell && cell.raw) return cell.raw;
+                return String(cell || '');
+            };
+
             // Header row
             if (token.header && token.header.length > 0) {
                 rows.push(new docx.TableRow({
                     children: token.header.map(cell => {
                         return new docx.TableCell({
                             children: [new docx.Paragraph({
-                                children: parseInlineText(cell.text || cell, fontSize, true),
+                                children: parseInlineText(getCellText(cell), fontSize, true),
                                 spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
                             })],
                             shading: { fill: 'E8E8E8' },
@@ -2031,7 +2046,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         children: row.map(cell => {
                             return new docx.TableCell({
                                 children: [new docx.Paragraph({
-                                    children: parseInlineText(cell.text || cell, fontSize, false),
+                                    children: parseInlineText(getCellText(cell), fontSize, false),
                                     spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
                                 })],
                             });
