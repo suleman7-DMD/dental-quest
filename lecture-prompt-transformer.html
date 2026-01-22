@@ -179,6 +179,7 @@
 
         .markdown-preview ul, .markdown-preview ol {
             padding-left: 24px;
+            margin-left: 16px;
             margin-bottom: 12px;
             color: #1a1a1a;
         }
@@ -186,6 +187,24 @@
         .markdown-preview li {
             margin-bottom: 4px;
             color: #1a1a1a;
+        }
+
+        /* Nested list indentation - deeper levels */
+        .markdown-preview ul ul, .markdown-preview ol ol,
+        .markdown-preview ul ol, .markdown-preview ol ul {
+            margin-left: 20px;
+            padding-left: 20px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+
+        .markdown-preview ul ul ul, .markdown-preview ol ol ol {
+            margin-left: 20px;
+        }
+
+        /* Ensure list items in nested lists have proper spacing */
+        .markdown-preview li > ul, .markdown-preview li > ol {
+            margin-top: 4px;
         }
 
         .markdown-preview table {
@@ -882,6 +901,13 @@
                         <label>Lecture Topic</label>
                         <input type="text" id="b-lecture-topic" placeholder="e.g., early treatment, child abuse">
                     </div>
+                    <div class="input-group">
+                        <label>Output Template</label>
+                        <select id="b-template-choice" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="new">New (Optimized) - Detailed structure</option>
+                            <option value="legacy">Original (Legacy) - Simple format</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="dual-pane">
@@ -1141,6 +1167,26 @@
 
     <script>
         // ==================== DEFAULT PROMPT TEMPLATE ====================
+        // Legacy/Original template format (simpler, less structured)
+        const LEGACY_TEMPLATE = `I am a third-year dental student. Here is content from my [COURSE_NAME] lecture on [LECTURE_TOPIC].
+
+---
+
+Here is the text from lecture slides:
+
+[SLIDE_TEXT]
+
+---
+
+Here is the audio transcript for this lecture portion:
+
+[AUDIO_TEXT]
+
+---
+
+Please create comprehensive study notes in markdown format. Include all clinically relevant details, procedures, and anything that could appear on an exam. Use tables for comparisons, numbered lists for procedures, and bold for key terms. Focus on practical clinical applications.`;
+
+        // New/Optimized template (detailed, structured)
         const DEFAULT_TEMPLATE = `I am a THIRD year dental student in a didactic clinical [COURSE_NAME] course. You are transforming my professor's lecture (audio transcript + slides) on [LECTURE_TOPIC] into exam-ready study notes.
 
 ---
@@ -1641,6 +1687,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const audioText = document.getElementById('b-audio-text').value;
             const courseName = document.getElementById('b-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('b-lecture-topic').value || '[LECTURE_TOPIC]';
+            const templateChoice = document.getElementById('b-template-choice').value;
 
             // Validation
             if (!slideText.trim() && !audioText.trim()) {
@@ -1651,7 +1698,15 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const finalSlideText = slideText.trim() || '[SLIDE TEXT NOT PROVIDED]';
             const finalAudioText = audioText.trim() || '[AUDIO TEXT NOT PROVIDED]';
 
-            const newPrompt = getCurrentTemplate()
+            // Choose template based on selection
+            let template;
+            if (templateChoice === 'legacy') {
+                template = LEGACY_TEMPLATE;
+            } else {
+                template = getCurrentTemplate(); // Uses custom or default new template
+            }
+
+            const newPrompt = template
                 .replace('[COURSE_NAME]', courseName)
                 .replace('[LECTURE_TOPIC]', lectureTopic)
                 .replace('[SLIDE_TEXT]', finalSlideText)
@@ -1663,8 +1718,16 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             // Update verification panel
             updateVerification('b', finalSlideText, finalAudioText, courseName, lectureTopic);
 
+            // Update label to show which template was used
+            const labelEl = document.querySelector('#build-step-2 .section-label.green');
+            if (labelEl) {
+                labelEl.textContent = templateChoice === 'legacy'
+                    ? 'New Prompt (Original/Legacy Format)'
+                    : 'New Prompt (Optimized Format)';
+            }
+
             goToBuildStep(2);
-            showToast('Prompt created!');
+            showToast('Prompt created with ' + (templateChoice === 'legacy' ? 'Legacy' : 'Optimized') + ' template!');
         }
 
         function resetBuild() {
@@ -1862,42 +1925,90 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const LINE_SPACING = 240; // Minimum line spacing (240 = single line)
             const HEADER_SIZES = { 1: 28, 2: 26, 3: 24, 4: 22, 5: 22, 6: 22 }; // half-points
 
+            // Colors (hex without #)
+            const COLORS = {
+                header: '3b82f6',    // Blue
+                bold: '10b981',      // Green
+                italic: '8b5cf6',    // Purple
+                text: '1a1a1a'       // Near-black
+            };
+
             // Parse markdown into tokens
             const tokens = marked.lexer(markdownText);
             const children = [];
+
+            // Track numbering for ordered lists
+            let orderedListCounter = 0;
+
+            // Recursive function to process list items with nesting
+            function processListItems(items, ordered, level) {
+                const listChildren = [];
+                items.forEach((item) => {
+                    // Get the text content (first line only, not nested content)
+                    let itemText = '';
+                    if (item.tokens && item.tokens.length > 0) {
+                        // Find text/paragraph token
+                        const textToken = item.tokens.find(t => t.type === 'text' || t.type === 'paragraph');
+                        if (textToken) {
+                            itemText = textToken.text || textToken.raw || '';
+                        } else {
+                            itemText = item.text || '';
+                        }
+                    } else {
+                        itemText = item.text || '';
+                    }
+
+                    // Clean up the text (remove nested list markers)
+                    itemText = itemText.split('\n')[0].trim();
+
+                    // Add the list item
+                    if (itemText) {
+                        listChildren.push(new docx.Paragraph({
+                            children: parseInlineText(itemText, FONT_SIZE_HALF_PTS, false, COLORS),
+                            bullet: ordered ? undefined : { level: level },
+                            numbering: ordered ? { reference: 'ordered-list', level: level } : undefined,
+                            indent: { left: level * 360 },
+                            spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                    }
+
+                    // Check for nested lists in item.tokens
+                    if (item.tokens) {
+                        item.tokens.forEach(subToken => {
+                            if (subToken.type === 'list') {
+                                const nestedItems = processListItems(subToken.items, subToken.ordered, level + 1);
+                                listChildren.push(...nestedItems);
+                            }
+                        });
+                    }
+                });
+                return listChildren;
+            }
 
             // Process each token
             tokens.forEach(token => {
                 switch (token.type) {
                     case 'heading':
                         children.push(new docx.Paragraph({
-                            children: parseInlineText(token.text, HEADER_SIZES[token.depth] || 22, true),
+                            children: parseInlineText(token.text, HEADER_SIZES[token.depth] || 22, true, COLORS, true),
                             spacing: { before: 120, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
                         }));
                         break;
 
                     case 'paragraph':
                         children.push(new docx.Paragraph({
-                            children: parseInlineText(token.text, FONT_SIZE_HALF_PTS, false),
+                            children: parseInlineText(token.text, FONT_SIZE_HALF_PTS, false, COLORS),
                             spacing: { before: 0, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
                         }));
                         break;
 
                     case 'list':
-                        token.items.forEach((item, idx) => {
-                            // Use raw text, fallback to text property
-                            const itemText = item.raw || item.text || '';
-                            children.push(new docx.Paragraph({
-                                children: parseInlineText(itemText, FONT_SIZE_HALF_PTS, false),
-                                bullet: token.ordered ? undefined : { level: 0 },
-                                numbering: token.ordered ? { reference: 'default-numbering', level: 0 } : undefined,
-                                spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
-                            }));
-                        });
+                        const listItems = processListItems(token.items, token.ordered, 0);
+                        children.push(...listItems);
                         break;
 
                     case 'table':
-                        children.push(createDocxTable(token, FONT_SIZE_HALF_PTS, LINE_SPACING));
+                        children.push(createDocxTable(token, FONT_SIZE_HALF_PTS, LINE_SPACING, COLORS));
                         break;
 
                     case 'code':
@@ -1905,7 +2016,8 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                             children: [new docx.TextRun({
                                 text: token.text,
                                 font: 'Courier New',
-                                size: 20, // 10pt for code
+                                size: 20,
+                                color: COLORS.text,
                             })],
                             spacing: { before: 60, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
                             shading: { fill: 'F0F0F0' },
@@ -1921,17 +2033,16 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         break;
 
                     case 'space':
-                        // Skip empty space tokens
                         break;
 
                     default:
-                        // Handle any raw text
                         if (token.raw && token.raw.trim()) {
                             children.push(new docx.Paragraph({
                                 children: [new docx.TextRun({
                                     text: token.raw.trim(),
                                     size: FONT_SIZE_HALF_PTS,
                                     font: 'Arial',
+                                    color: COLORS.text,
                                 })],
                                 spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
                             }));
@@ -1942,13 +2053,12 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             return new docx.Document({
                 numbering: {
                     config: [{
-                        reference: 'default-numbering',
-                        levels: [{
-                            level: 0,
-                            format: docx.LevelFormat.DECIMAL,
-                            text: '%1.',
-                            alignment: docx.AlignmentType.START,
-                        }],
+                        reference: 'ordered-list',
+                        levels: [
+                            { level: 0, format: docx.LevelFormat.DECIMAL, text: '%1.', alignment: docx.AlignmentType.START, style: { paragraph: { indent: { left: 360, hanging: 360 } } } },
+                            { level: 1, format: docx.LevelFormat.LOWER_LETTER, text: '%2.', alignment: docx.AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 360 } } } },
+                            { level: 2, format: docx.LevelFormat.LOWER_ROMAN, text: '%3.', alignment: docx.AlignmentType.START, style: { paragraph: { indent: { left: 1080, hanging: 360 } } } },
+                        ],
                     }],
                 },
                 sections: [{
@@ -1967,9 +2077,11 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             });
         }
 
-        function parseInlineText(text, fontSize, isBold) {
+        function parseInlineText(text, fontSize, isBold, colors, isHeader) {
             const runs = [];
-            if (!text) return [new docx.TextRun({ text: '', size: fontSize, font: 'Arial' })];
+            colors = colors || { header: '3b82f6', bold: '10b981', italic: '8b5cf6', text: '1a1a1a' };
+
+            if (!text) return [new docx.TextRun({ text: '', size: fontSize, font: 'Arial', color: colors.text })];
 
             // Ensure text is a string (marked.js can return objects)
             if (typeof text !== 'string') {
@@ -1978,6 +2090,44 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
             // Remove HTML tags that marked might have added
             text = text.replace(/<[^>]+>/g, '');
+
+            // If this is a header, apply blue color to entire text
+            if (isHeader) {
+                // Still parse for bold/italic within headers
+                const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+                const parts = text.split(pattern);
+
+                parts.forEach(part => {
+                    if (!part) return;
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        runs.push(new docx.TextRun({
+                            text: part.slice(2, -2),
+                            bold: true,
+                            size: fontSize,
+                            font: 'Arial',
+                            color: colors.header,
+                        }));
+                    } else if (part.startsWith('*') && part.endsWith('*')) {
+                        runs.push(new docx.TextRun({
+                            text: part.slice(1, -1),
+                            italics: true,
+                            bold: true,
+                            size: fontSize,
+                            font: 'Arial',
+                            color: colors.header,
+                        }));
+                    } else {
+                        runs.push(new docx.TextRun({
+                            text: part,
+                            bold: true,
+                            size: fontSize,
+                            font: 'Arial',
+                            color: colors.header,
+                        }));
+                    }
+                });
+                return runs.length > 0 ? runs : [new docx.TextRun({ text: text, size: fontSize, font: 'Arial', bold: true, color: colors.header })];
+            }
 
             // Parse **bold**, *italic*, and regular text
             const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
@@ -1992,6 +2142,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         bold: true,
                         size: fontSize,
                         font: 'Arial',
+                        color: colors.bold, // Green for bold
                     }));
                 } else if (part.startsWith('*') && part.endsWith('*')) {
                     runs.push(new docx.TextRun({
@@ -1999,12 +2150,14 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         italics: true,
                         size: fontSize,
                         font: 'Arial',
+                        color: colors.italic, // Purple for italic
                     }));
                 } else if (part.startsWith('`') && part.endsWith('`')) {
                     runs.push(new docx.TextRun({
                         text: part.slice(1, -1),
                         font: 'Courier New',
                         size: fontSize - 2,
+                        color: colors.text,
                     }));
                 } else {
                     runs.push(new docx.TextRun({
@@ -2012,15 +2165,17 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         bold: isBold,
                         size: fontSize,
                         font: 'Arial',
+                        color: isBold ? colors.bold : colors.text,
                     }));
                 }
             });
 
-            return runs.length > 0 ? runs : [new docx.TextRun({ text: text, size: fontSize, font: 'Arial', bold: isBold })];
+            return runs.length > 0 ? runs : [new docx.TextRun({ text: text, size: fontSize, font: 'Arial', bold: isBold, color: colors.text })];
         }
 
-        function createDocxTable(token, fontSize, lineSpacing) {
+        function createDocxTable(token, fontSize, lineSpacing, colors) {
             const rows = [];
+            colors = colors || { header: '3b82f6', bold: '10b981', italic: '8b5cf6', text: '1a1a1a' };
 
             // Helper to get cell text safely
             const getCellText = (cell) => {
@@ -2036,7 +2191,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                     children: token.header.map(cell => {
                         return new docx.TableCell({
                             children: [new docx.Paragraph({
-                                children: parseInlineText(getCellText(cell), fontSize, true),
+                                children: parseInlineText(getCellText(cell), fontSize, true, colors),
                                 spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
                             })],
                             shading: { fill: 'E8E8E8' },
@@ -2052,7 +2207,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         children: row.map(cell => {
                             return new docx.TableCell({
                                 children: [new docx.Paragraph({
-                                    children: parseInlineText(getCellText(cell), fontSize, false),
+                                    children: parseInlineText(getCellText(cell), fontSize, false, colors),
                                     spacing: { before: 0, after: 0, line: lineSpacing, lineRule: docx.LineRuleType.EXACT },
                                 })],
                             });
