@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Prompt Transformer | Dental Quest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #15151f;
+            --bg-tertiary: #1a1a25;
+            --border-color: #2a2a35;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a78bfa;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .toast.error {
+            background-color: var(--accent-red);
+            color: white;
+        }
+
+        /* Mode Tabs */
+        .mode-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background-color: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+
+        .mode-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background-color: transparent;
+            color: var(--text-muted);
+        }
+
+        .mode-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .mode-tab.active {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .mode-tab.active.build {
+            background-color: var(--accent-green);
+        }
+
+        /* Mode Panels */
+        .mode-panel {
+            display: none;
+        }
+
+        .mode-panel.active {
+            display: block;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-label.blue { color: #60a5fa; }
+        .section-label.purple { color: var(--accent-purple); }
+        .section-label.green { color: var(--accent-green); }
+
+        /* Input Fields */
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            padding: 12px 16px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        /* Textareas */
+        .textarea-container {
+            margin-bottom: 20px;
+        }
+
+        .textarea-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .textarea-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .textarea-stats .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .textarea-stats .stat.valid {
+            color: var(--accent-green);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        textarea.large {
+            height: 400px;
+        }
+
+        textarea.medium {
+            height: 300px;
+        }
+
+        textarea.output {
+            height: 500px;
+        }
+
+        /* Dual Pane Layout */
+        .dual-pane {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-success {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge.found {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-badge.not-found {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        /* Verification Panel */
+        .verification-panel {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .verification-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .verification-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .verification-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .verification-item .icon {
+            font-size: 16px;
+        }
+
+        .verification-item .label {
+            color: var(--text-secondary);
+        }
+
+        .verification-item .value {
+            margin-left: auto;
+            font-weight: 600;
+            font-family: 'Consolas', monospace;
+        }
+
+        .verification-item.success .value {
+            color: var(--accent-green);
+        }
+
+        .verification-item.warning .value {
+            color: var(--accent-yellow);
+        }
+
+        .verification-item.error .value {
+            color: var(--accent-red);
+        }
+
+        /* Next Steps Panel */
+        .next-steps {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .next-steps h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .next-steps ol {
+            padding-left: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        /* Workflow Steps */
+        .workflow-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .workflow-step.active {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .workflow-step.completed {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .workflow-step .step-num {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .workflow-step.active .step-num {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .workflow-step.completed .step-num {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-row, .dual-pane {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-tabs {
+                width: 100%;
+            }
+
+            .mode-tab {
+                flex: 1;
+                text-align: center;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 16px;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Back Link -->
+        <a href="d3-roadmap.html" class="back-link">← Back to D3 Roadmap</a>
+
+        <!-- Header -->
+        <header class="header">
+            <h1>Lecture Prompt Transformer</h1>
+            <p>Transform old prompts or build new ones for Model 2 (Gemini)</p>
+        </header>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="transform">Transform Existing</button>
+            <button class="mode-tab build" data-mode="build">Build New</button>
+        </div>
+
+        <!-- ==================== TRANSFORM MODE ==================== -->
+        <div id="transform-panel" class="mode-panel active">
+            <!-- Workflow Steps -->
+            <div class="workflow-steps">
+                <div class="workflow-step active" data-step="1">
+                    <span class="step-num">1</span>
+                    <span>Paste Original</span>
+                </div>
+                <div class="workflow-step" data-step="2">
+                    <span class="step-num">2</span>
+                    <span>Review Extraction</span>
+                </div>
+                <div class="workflow-step" data-step="3">
+                    <span class="step-num">3</span>
+                    <span>Copy New Prompt</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Input -->
+            <div id="transform-step-1" class="transform-step">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Course Name</label>
+                        <input type="text" id="t-course-name" placeholder="e.g., orthodontics, pediatric dentistry">
+                    </div>
+                    <div class="input-group">
+                        <label>Lecture Topic</label>
+                        <input type="text" id="t-lecture-topic" placeholder="e.g., early treatment, child abuse">
+                    </div>
+                </div>
+
+                <div class="textarea-container">
+                    <div class="textarea-header">
+                        <span class="section-label">Original Prompt (paste your full old-format prompt)</span>
+                        <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard('t-original-prompt')">
+                            Paste from Clipboard
+                        </button>
+                    </div>
+                    <textarea id="t-original-prompt" class="large" placeholder="Paste your entire original prompt here, including the slide text and audio transcript..."></textarea>
+                    <div class="textarea-stats">
+                        <span class="stat" id="t-original-chars">0 characters</span>
+                        <span class="stat" id="t-original-words">0 words</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="extractContent()">
+                    Extract Content →
+                </button>
+            </div>
+
+            <!-- Step 2: Review -->
+            <div id="transform-step-2" class="transform-step" style="display: none;">
+                <div class="dual-pane">
+                    <div class="textarea-container">
+                        <div class="textarea-header">
+                            <span class="section-label blue">Extracted Slide Text</span>
+                            <span class="status-badge" id="t-slide-status">Not Found</span>
+                        </div>
+                        <textarea id="t-extracted-slides" class="medium" placeholder="Slide text will appear here..."></textarea>
+                        <div class="textarea-stats">
+                            <span class="stat" id="t-slide-chars">0 characters</span>
+                            <span class="stat" id="t-slide-words">0 words</span>
+                        </div>
+                    </div>
+
+                    <div class="textarea-container">
+                        <div class="textarea-header">
+                            <span class="section-label purple">Extracted Audio Transcript</span>
+                            <span class="status-badge" id="t-audio-status">Not Found</span>
+                        </div>
+                        <textarea id="t-extracted-audio" class="medium" placeholder="Audio transcript will appear here..."></textarea>
+                        <div class="textarea-stats">
+                            <span class="stat" id="t-audio-chars">0 characters</span>
+                            <span class="stat" id="t-audio-words">0 words</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="goToTransformStep(1)">← Back</button>
+                    <button class="btn btn-success" onclick="generateTransformPrompt()">Generate New Prompt →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Output -->
+            <div id="transform-step-3" class="transform-step" style="display: none;">
+                <!-- Verification Panel -->
+                <div class="verification-panel">
+                    <h3>Verification Check</h3>
+                    <div class="verification-grid">
+                        <div class="verification-item" id="t-verify-slides">
+                            <span class="icon">📄</span>
+                            <span class="label">Slide Text</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="t-verify-audio">
+                            <span class="icon">🎤</span>
+                            <span class="label">Audio Transcript</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="t-verify-course">
+                            <span class="icon">📚</span>
+                            <span class="label">Course Name</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="t-verify-topic">
+                            <span class="icon">📝</span>
+                            <span class="label">Lecture Topic</span>
+                            <span class="value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="textarea-container">
+                    <div class="textarea-header">
+                        <span class="section-label green">New Optimized Prompt (Ready for Model 2)</span>
+                        <button class="btn btn-success btn-small" onclick="copyToClipboard('t-new-prompt', 'Prompt')">
+                            Copy Full Prompt
+                        </button>
+                    </div>
+                    <textarea id="t-new-prompt" class="output" readonly></textarea>
+                    <div class="textarea-stats">
+                        <span class="stat" id="t-output-chars">0 characters</span>
+                        <span class="stat" id="t-output-words">0 words</span>
+                        <span class="stat">~<span id="t-output-tokens">0</span> tokens</span>
+                    </div>
+                </div>
+
+                <div class="next-steps">
+                    <h3>Next Steps:</h3>
+                    <ol>
+                        <li>Click "Copy Full Prompt" above</li>
+                        <li>Open Model 2 (Gemini)</li>
+                        <li>Paste the prompt</li>
+                        <li>Copy the markdown response</li>
+                        <li>Convert to Word doc for studying</li>
+                    </ol>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="goToTransformStep(2)">← Back to Review</button>
+                    <button class="btn btn-secondary" onclick="resetTransform()">Start Over</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== BUILD NEW MODE ==================== -->
+        <div id="build-panel" class="mode-panel">
+            <!-- Workflow Steps -->
+            <div class="workflow-steps">
+                <div class="workflow-step active" data-step="1">
+                    <span class="step-num">1</span>
+                    <span>Paste Content</span>
+                </div>
+                <div class="workflow-step" data-step="2">
+                    <span class="step-num">2</span>
+                    <span>Copy New Prompt</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Input -->
+            <div id="build-step-1" class="build-step">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Course Name</label>
+                        <input type="text" id="b-course-name" placeholder="e.g., orthodontics, pediatric dentistry">
+                    </div>
+                    <div class="input-group">
+                        <label>Lecture Topic</label>
+                        <input type="text" id="b-lecture-topic" placeholder="e.g., early treatment, child abuse">
+                    </div>
+                </div>
+
+                <div class="dual-pane">
+                    <div class="textarea-container">
+                        <div class="textarea-header">
+                            <span class="section-label blue">Slide Text (paste from lecture slides)</span>
+                            <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard('b-slide-text')">
+                                Paste
+                            </button>
+                        </div>
+                        <textarea id="b-slide-text" class="medium" placeholder="Paste the lecture slide text here..."></textarea>
+                        <div class="textarea-stats">
+                            <span class="stat" id="b-slide-chars">0 characters</span>
+                            <span class="stat" id="b-slide-words">0 words</span>
+                        </div>
+                    </div>
+
+                    <div class="textarea-container">
+                        <div class="textarea-header">
+                            <span class="section-label purple">Audio Transcript (paste from Echo360)</span>
+                            <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard('b-audio-text')">
+                                Paste
+                            </button>
+                        </div>
+                        <textarea id="b-audio-text" class="medium" placeholder="Paste the audio transcript here..."></textarea>
+                        <div class="textarea-stats">
+                            <span class="stat" id="b-audio-chars">0 characters</span>
+                            <span class="stat" id="b-audio-words">0 words</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="generateBuildPrompt()">
+                    Create Prompt →
+                </button>
+            </div>
+
+            <!-- Step 2: Output -->
+            <div id="build-step-2" class="build-step" style="display: none;">
+                <!-- Verification Panel -->
+                <div class="verification-panel">
+                    <h3>Verification Check</h3>
+                    <div class="verification-grid">
+                        <div class="verification-item" id="b-verify-slides">
+                            <span class="icon">📄</span>
+                            <span class="label">Slide Text</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="b-verify-audio">
+                            <span class="icon">🎤</span>
+                            <span class="label">Audio Transcript</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="b-verify-course">
+                            <span class="icon">📚</span>
+                            <span class="label">Course Name</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="verification-item" id="b-verify-topic">
+                            <span class="icon">📝</span>
+                            <span class="label">Lecture Topic</span>
+                            <span class="value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="textarea-container">
+                    <div class="textarea-header">
+                        <span class="section-label green">New Prompt (Ready for Model 2)</span>
+                        <button class="btn btn-success btn-small" onclick="copyToClipboard('b-new-prompt', 'Prompt')">
+                            Copy Full Prompt
+                        </button>
+                    </div>
+                    <textarea id="b-new-prompt" class="output" readonly></textarea>
+                    <div class="textarea-stats">
+                        <span class="stat" id="b-output-chars">0 characters</span>
+                        <span class="stat" id="b-output-words">0 words</span>
+                        <span class="stat">~<span id="b-output-tokens">0</span> tokens</span>
+                    </div>
+                </div>
+
+                <div class="next-steps">
+                    <h3>Next Steps:</h3>
+                    <ol>
+                        <li>Click "Copy Full Prompt" above</li>
+                        <li>Open Model 2 (Gemini)</li>
+                        <li>Paste the prompt</li>
+                        <li>Copy the markdown response</li>
+                        <li>Convert to Word doc for studying</li>
+                    </ol>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="goToBuildStep(1)">← Back</button>
+                    <button class="btn btn-secondary" onclick="resetBuild()">Start Over</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== NEW PROMPT TEMPLATE ====================
+        const NEW_PROMPT_TEMPLATE = `I am a THIRD year dental student in a didactic clinical [COURSE_NAME] course. You are transforming my professor's lecture (audio transcript + slides) on [LECTURE_TOPIC] into exam-ready study notes.
+
+---
+
+## OUTPUT CALIBRATION (CRITICAL)
+
+**Target density:** ~1.5 pages of notes per 15 minutes of lecture content
+**Assumed baseline:** I already understand D1/D2 foundational concepts - don't re-explain basics like "what is caries" or "what is the periodontium"
+**Depth rule:**
+- HIGH YIELD (procedures, mechanisms, clinical decisions, anything flagged for exam): Full explanation with steps/pathways
+- MEDIUM YIELD (supporting science, rationale): 2-3 sentence explanation
+- LOW YIELD (historical context, tangential examples): Single line or omit
+
+**What "crammable but complete" means:**
+- Every testable concept is present
+- Explanations are tight - no redundant sentences
+- I can read the full notes for one lecture portion in 10-15 minutes
+- Nothing requires me to re-watch the lecture to understand
+
+---
+
+## STRUCTURAL REQUIREMENTS
+
+1. **Procedures/Protocols:** Use numbered step-by-step pathways with all clinically relevant details
+
+2. **Comparisons/Categories:** Use tables with clear columns:
+   | Feature | Option A | Option B |
+   |---------|----------|----------|
+   | Data    | Data     | Data     |
+
+3. **Mechanisms/Pathways:** Use → arrows and numbered sequences
+
+4. **Exam flags:** If professor says "this will be on the exam" or uses a mnemonic, note it explicitly: ⚠️ **EXAM ALERT:** [content]
+
+---
+
+## SYNTHESIS RULES (NON-NEGOTIABLE)
+
+- Do NOT quote the professor directly. Synthesize all content into polished explanatory prose.
+- ❌ Wrong: The professor stated: "If they're on opioids..."
+- ✅ Right: Prescribing additional opioids to a patient under an OMT contract—without provider coordination—can void that contract.
+- Slide content should be invisible - absorbed into your explanations
+- Exception: Direct quotes allowed ONLY for exam logistics, mnemonics, or explicit "this will be tested" statements
+
+---
+
+## MARKDOWN RULES
+
+1. Math/Symbols: Unicode only (≥ ≤ → ° ² ₂) - NO LaTeX
+2. Tables: Pipes + separator row required
+3. Headers: Space after #
+4. Lists: Consistent bullets, 2-space indent for nesting
+5. Bold: **bold** not ** bold **
+
+---
+
+## TRANSCRIPT HANDLING
+
+- Audio transcripts contain mistranscriptions - use context to infer correct terms
+- If a phrase is garbled but meaning is clear from context, present the correct concept
+- We will proceed piecewise through portions. Each response continues from the previous.
+
+---
+
+## INPUT
+
+**Lecture slides text:**
+[SLIDE_TEXT]
+
+---
+
+**Audio transcript for this portion:**
+[AUDIO_TEXT]
+
+---
+
+Now produce exam-ready notes at the calibrated density. Begin.`;
+
+        // ==================== UTILITY FUNCTIONS ====================
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function countWords(text) {
+            if (!text || !text.trim()) return 0;
+            return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+        }
+
+        function countChars(text) {
+            return text ? text.length : 0;
+        }
+
+        function estimateTokens(text) {
+            // Rough estimate: ~4 chars per token
+            return Math.ceil(countChars(text) / 4);
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        async function pasteFromClipboard(elementId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById(elementId).value = text;
+                updateStats(elementId);
+                showToast('Pasted from clipboard');
+            } catch (err) {
+                showToast('Clipboard access denied', 'error');
+            }
+        }
+
+        async function copyToClipboard(elementId, label) {
+            try {
+                const text = document.getElementById(elementId).value;
+                await navigator.clipboard.writeText(text);
+                showToast(`${label} copied to clipboard!`);
+            } catch (err) {
+                showToast('Copy failed - select and copy manually', 'error');
+            }
+        }
+
+        function updateStats(elementId) {
+            const text = document.getElementById(elementId).value;
+            const chars = countChars(text);
+            const words = countWords(text);
+
+            // Find the corresponding stats display
+            const statsMap = {
+                't-original-prompt': ['t-original-chars', 't-original-words'],
+                't-extracted-slides': ['t-slide-chars', 't-slide-words'],
+                't-extracted-audio': ['t-audio-chars', 't-audio-words'],
+                't-new-prompt': ['t-output-chars', 't-output-words', 't-output-tokens'],
+                'b-slide-text': ['b-slide-chars', 'b-slide-words'],
+                'b-audio-text': ['b-audio-chars', 'b-audio-words'],
+                'b-new-prompt': ['b-output-chars', 'b-output-words', 'b-output-tokens']
+            };
+
+            const statsIds = statsMap[elementId];
+            if (statsIds) {
+                document.getElementById(statsIds[0]).textContent = `${formatNumber(chars)} characters`;
+                document.getElementById(statsIds[1]).textContent = `${formatNumber(words)} words`;
+                if (statsIds[2]) {
+                    document.getElementById(statsIds[2]).textContent = formatNumber(estimateTokens(text));
+                }
+            }
+        }
+
+        // ==================== MODE SWITCHING ====================
+
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const mode = this.dataset.mode;
+
+                // Update tabs
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update panels
+                document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById(`${mode}-panel`).classList.add('active');
+            });
+        });
+
+        // ==================== TRANSFORM MODE ====================
+
+        function goToTransformStep(step) {
+            // Hide all steps
+            document.querySelectorAll('#transform-panel .transform-step').forEach(s => s.style.display = 'none');
+
+            // Show target step
+            document.getElementById(`transform-step-${step}`).style.display = 'block';
+
+            // Update workflow indicators
+            document.querySelectorAll('#transform-panel .workflow-step').forEach((ws, i) => {
+                ws.classList.remove('active', 'completed');
+                if (i + 1 < step) ws.classList.add('completed');
+                if (i + 1 === step) ws.classList.add('active');
+            });
+        }
+
+        function extractContent() {
+            const originalPrompt = document.getElementById('t-original-prompt').value;
+
+            if (!originalPrompt.trim()) {
+                showToast('Please paste your original prompt first', 'error');
+                return;
+            }
+
+            let slideText = '';
+            let audioText = '';
+
+            // ==================== SLIDE EXTRACTION ====================
+            const slidePatterns = [
+                /Here is the text from lecture slides[:\s*]+(.+?)(?=(?:Here is the audio transcript|Audio transcript|---\s*\*\*Audio|\n---\s*$))/is,
+                /\*\*Lecture slides text:\*\*\s*(.+?)(?=(?:\*\*Audio transcript|---\s*\*\*Audio|Here is the audio))/is,
+                /lecture slides[:\s*]+(.+?)(?=(?:audio transcript|---\s*$))/is,
+            ];
+
+            for (const pattern of slidePatterns) {
+                const match = originalPrompt.match(pattern);
+                if (match && match[1]) {
+                    slideText = match[1].trim();
+                    break;
+                }
+            }
+
+            // ==================== AUDIO EXTRACTION (WITH FIXES) ====================
+            // Enhanced stopping markers to prevent over-capture
+            const audioStopMarkers = '(?:---\\s*Now produce|Here is the text from lecture slides|output markdown format|1\\.\\s*\\*\\*Math|Do NOT directly quote|NOTE:\\s*this lecture|$)';
+
+            const audioPatterns = [
+                new RegExp(`Here is the audio transcript[^:]*:\\s*(.+?)(?=${audioStopMarkers})`, 'is'),
+                new RegExp(`\\*\\*Audio transcript[^:]*:\\*\\*\\s*(.+?)(?=${audioStopMarkers})`, 'is'),
+                new RegExp(`audio transcript[^:]*:\\s*(.+?)(?=(?:---\\s*$|Now produce|${audioStopMarkers}))`, 'is'),
+                /SPEAKER\s*\d+\s*(.+?)(?=(?:Here is the text from lecture slides|---\s*Now produce|$))/is,
+            ];
+
+            for (const pattern of audioPatterns) {
+                const match = originalPrompt.match(pattern);
+                if (match && match[1]) {
+                    audioText = match[1].trim();
+                    // Include SPEAKER prefix if matched
+                    if (pattern.source && pattern.source.includes('SPEAKER')) {
+                        const speakerMatch = originalPrompt.match(/(SPEAKER\s*\d+.+?)$/is);
+                        if (speakerMatch) {
+                            audioText = speakerMatch[1].trim();
+                        }
+                    }
+                    break;
+                }
+            }
+
+            // ==================== POST-EXTRACTION VALIDATION ====================
+            // Detect and truncate duplicate content markers
+            const duplicateMarkers = [
+                /Here is the text from lecture slides/i,
+                /output markdown format/i,
+                /1\.\s*\*\*Math/i,
+                /Do NOT directly quote/i,
+                /NOTE:\s*this lecture/i,
+            ];
+
+            for (const marker of duplicateMarkers) {
+                const markerMatch = audioText.match(marker);
+                if (markerMatch && markerMatch.index !== undefined && markerMatch.index > 0) {
+                    audioText = audioText.substring(0, markerMatch.index).trim();
+                }
+            }
+
+            // ==================== CLEANUP ====================
+            slideText = slideText
+                .replace(/^NOTE:.*$/gm, '')
+                .replace(/NOTE:\s*this lecture[^]*?(?=\n\n|\n[A-Z]|$)/gi, '')
+                .replace(/---+/g, '')
+                .replace(/^\s*\n/gm, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+
+            audioText = audioText
+                .replace(/---+/g, '')
+                .replace(/^\s*\n/gm, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+
+            // Set extracted values
+            document.getElementById('t-extracted-slides').value = slideText;
+            document.getElementById('t-extracted-audio').value = audioText;
+
+            // Update status badges
+            const slideStatus = document.getElementById('t-slide-status');
+            const audioStatus = document.getElementById('t-audio-status');
+
+            if (slideText) {
+                slideStatus.textContent = '✓ Found';
+                slideStatus.className = 'status-badge found';
+            } else {
+                slideStatus.textContent = '✗ Not Found';
+                slideStatus.className = 'status-badge not-found';
+            }
+
+            if (audioText) {
+                audioStatus.textContent = '✓ Found';
+                audioStatus.className = 'status-badge found';
+            } else {
+                audioStatus.textContent = '✗ Not Found';
+                audioStatus.className = 'status-badge not-found';
+            }
+
+            // Update stats
+            updateStats('t-extracted-slides');
+            updateStats('t-extracted-audio');
+
+            // ==================== AUTO-DETECT COURSE & TOPIC ====================
+            const courseInput = document.getElementById('t-course-name');
+            const topicInput = document.getElementById('t-lecture-topic');
+
+            if (!courseInput.value) {
+                const courseMatch = originalPrompt.match(/(?:didactic\s+CLINICAL\s+|clinical\s+)([\w\s]+?)\s+course/i);
+                if (courseMatch) {
+                    let extractedCourse = courseMatch[1].trim();
+                    extractedCourse = extractedCourse.replace(/\s+(the|a|an)$/i, '').trim();
+                    courseInput.value = extractedCourse;
+                }
+            }
+
+            if (!topicInput.value) {
+                const topicMatch = originalPrompt.match(/specifically titled\s+([^\n]+)/i);
+                if (topicMatch) {
+                    topicInput.value = topicMatch[1].replace(/this lecture.*$/i, '').trim();
+                }
+            }
+
+            // Go to step 2
+            goToTransformStep(2);
+            showToast('Content extracted successfully');
+        }
+
+        function generateTransformPrompt() {
+            const slideText = document.getElementById('t-extracted-slides').value || '[SLIDE TEXT NOT FOUND - PASTE MANUALLY]';
+            const audioText = document.getElementById('t-extracted-audio').value || '[AUDIO TEXT NOT FOUND - PASTE MANUALLY]';
+            const courseName = document.getElementById('t-course-name').value || '[COURSE_NAME]';
+            const lectureTopic = document.getElementById('t-lecture-topic').value || '[LECTURE_TOPIC]';
+
+            const newPrompt = NEW_PROMPT_TEMPLATE
+                .replace('[COURSE_NAME]', courseName)
+                .replace('[LECTURE_TOPIC]', lectureTopic)
+                .replace('[SLIDE_TEXT]', slideText)
+                .replace('[AUDIO_TEXT]', audioText);
+
+            document.getElementById('t-new-prompt').value = newPrompt;
+            updateStats('t-new-prompt');
+
+            // Update verification panel
+            updateVerification('t', slideText, audioText, courseName, lectureTopic);
+
+            goToTransformStep(3);
+            showToast('New prompt generated!');
+        }
+
+        function updateVerification(prefix, slideText, audioText, courseName, lectureTopic) {
+            const slideChars = countChars(slideText);
+            const audioChars = countChars(audioText);
+
+            // Slides verification
+            const slideVerify = document.getElementById(`${prefix}-verify-slides`);
+            slideVerify.querySelector('.value').textContent = `${formatNumber(slideChars)} chars`;
+            slideVerify.className = `verification-item ${slideChars > 0 ? 'success' : 'error'}`;
+
+            // Audio verification
+            const audioVerify = document.getElementById(`${prefix}-verify-audio`);
+            audioVerify.querySelector('.value').textContent = `${formatNumber(audioChars)} chars`;
+            audioVerify.className = `verification-item ${audioChars > 0 ? 'success' : 'error'}`;
+
+            // Course verification
+            const courseVerify = document.getElementById(`${prefix}-verify-course`);
+            const courseValid = courseName && !courseName.includes('[');
+            courseVerify.querySelector('.value').textContent = courseValid ? '✓ Set' : '✗ Missing';
+            courseVerify.className = `verification-item ${courseValid ? 'success' : 'warning'}`;
+
+            // Topic verification
+            const topicVerify = document.getElementById(`${prefix}-verify-topic`);
+            const topicValid = lectureTopic && !lectureTopic.includes('[');
+            topicVerify.querySelector('.value').textContent = topicValid ? '✓ Set' : '✗ Missing';
+            topicVerify.className = `verification-item ${topicValid ? 'success' : 'warning'}`;
+        }
+
+        function resetTransform() {
+            document.getElementById('t-original-prompt').value = '';
+            document.getElementById('t-extracted-slides').value = '';
+            document.getElementById('t-extracted-audio').value = '';
+            document.getElementById('t-new-prompt').value = '';
+            document.getElementById('t-course-name').value = '';
+            document.getElementById('t-lecture-topic').value = '';
+
+            // Reset stats
+            ['t-original-prompt', 't-extracted-slides', 't-extracted-audio', 't-new-prompt'].forEach(updateStats);
+
+            // Reset status badges
+            document.getElementById('t-slide-status').textContent = 'Not Found';
+            document.getElementById('t-slide-status').className = 'status-badge not-found';
+            document.getElementById('t-audio-status').textContent = 'Not Found';
+            document.getElementById('t-audio-status').className = 'status-badge not-found';
+
+            goToTransformStep(1);
+            showToast('Reset complete');
+        }
+
+        // ==================== BUILD NEW MODE ====================
+
+        function goToBuildStep(step) {
+            document.querySelectorAll('#build-panel .build-step').forEach(s => s.style.display = 'none');
+            document.getElementById(`build-step-${step}`).style.display = 'block';
+
+            document.querySelectorAll('#build-panel .workflow-step').forEach((ws, i) => {
+                ws.classList.remove('active', 'completed');
+                if (i + 1 < step) ws.classList.add('completed');
+                if (i + 1 === step) ws.classList.add('active');
+            });
+        }
+
+        function generateBuildPrompt() {
+            const slideText = document.getElementById('b-slide-text').value;
+            const audioText = document.getElementById('b-audio-text').value;
+            const courseName = document.getElementById('b-course-name').value || '[COURSE_NAME]';
+            const lectureTopic = document.getElementById('b-lecture-topic').value || '[LECTURE_TOPIC]';
+
+            // Validation
+            if (!slideText.trim() && !audioText.trim()) {
+                showToast('Please paste at least slide text or audio transcript', 'error');
+                return;
+            }
+
+            const finalSlideText = slideText.trim() || '[SLIDE TEXT NOT PROVIDED]';
+            const finalAudioText = audioText.trim() || '[AUDIO TEXT NOT PROVIDED]';
+
+            const newPrompt = NEW_PROMPT_TEMPLATE
+                .replace('[COURSE_NAME]', courseName)
+                .replace('[LECTURE_TOPIC]', lectureTopic)
+                .replace('[SLIDE_TEXT]', finalSlideText)
+                .replace('[AUDIO_TEXT]', finalAudioText);
+
+            document.getElementById('b-new-prompt').value = newPrompt;
+            updateStats('b-new-prompt');
+
+            // Update verification panel
+            updateVerification('b', finalSlideText, finalAudioText, courseName, lectureTopic);
+
+            goToBuildStep(2);
+            showToast('Prompt created!');
+        }
+
+        function resetBuild() {
+            document.getElementById('b-slide-text').value = '';
+            document.getElementById('b-audio-text').value = '';
+            document.getElementById('b-new-prompt').value = '';
+            document.getElementById('b-course-name').value = '';
+            document.getElementById('b-lecture-topic').value = '';
+
+            ['b-slide-text', 'b-audio-text', 'b-new-prompt'].forEach(updateStats);
+
+            goToBuildStep(1);
+            showToast('Reset complete');
+        }
+
+        // ==================== EVENT LISTENERS ====================
+
+        // Auto-update stats on input
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                updateStats(this.id);
+            });
+        });
+
+        // Initialize stats
+        document.addEventListener('DOMContentLoaded', function() {
+            ['t-original-prompt', 't-extracted-slides', 't-extracted-audio', 't-new-prompt',
+             'b-slide-text', 'b-audio-text', 'b-new-prompt'].forEach(updateStats);
+        });
+    </script>
+</body>
+</html>
