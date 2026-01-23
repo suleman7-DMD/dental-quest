@@ -9983,11 +9983,16 @@ CHAIR: 9F
             const patient = patients[apt.patientId] || { name: 'Unknown Patient' };
             const aptDate = parseLocalDate(apt.date);
             const dayNum = aptDate ? aptDate.getDate() : '?';
-            const monthName = aptDate ? aptDate.toLocaleDateString('en-US', { month: 'short' }) : '';
+            const monthName = aptDate ? aptDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '';
             const dayName = aptDate ? aptDate.toLocaleDateString('en-US', { weekday: 'short' }) : '';
 
             const timeDisplay = apt.time ? formatAptTime(apt.time) : '';
-            const durationHrs = apt.duration ? (apt.duration / 60) : 3;
+            const durationHrs = apt.duration ? Math.round((apt.duration / 60) * 10) / 10 : 1;
+            const status = apt.status || 'scheduled';
+            const statusLabel = status === 'scheduled' ? 'Scheduled' :
+                                status === 'completed' ? 'Completed' :
+                                status === 'cancelled' ? 'Cancelled' :
+                                status === 'no_show' ? 'No Show' : status;
 
             return `
                 <div class="appointment-card" onclick="editAppointment('${apt.id}')">
@@ -10002,7 +10007,7 @@ CHAIR: 9F
                         </div>
                         ${apt.procedures ? `<div style="margin-top: 5px; font-size: 0.9em; color: #f59e0b;">${escapeHtml(apt.procedures)}</div>` : ''}
                     </div>
-                    <span class="appointment-status ${apt.status}">${apt.status}</span>
+                    <span class="appointment-status ${status}">${statusLabel}</span>
                 </div>
             `;
         }
@@ -11517,7 +11522,7 @@ CHAIR: 9F
                         .then(snapshot => {
                             if (snapshot.exists()) {
                                 const data = snapshot.val();
-                                // Proper deep merge for monthlyPlanner
+                                // Proper deep merge for all nested objects
                                 roadmapData = {
                                     ...roadmapData,
                                     ...data,
@@ -11526,6 +11531,12 @@ CHAIR: 9F
                                         customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
                                         overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
                                         completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                                    },
+                                    clinicalData: {
+                                        patients: data.clinicalData?.patients || roadmapData.clinicalData?.patients || {},
+                                        appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
+                                        completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                                        competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                                     }
                                 };
                                 initUI();
@@ -12674,12 +12685,13 @@ CHAIR: 9F
                 otherNotes = parts.slice(1).join('\n').trim();
             }
 
-            // Calculate min height based on content
+            // Use min-height so background extends to cover all content
+            // heightPx is based on duration; content may need more space
             const minHeight = Math.max(60, heightPx);
 
             return `
                 <div class="mp-cal-task ${typeClass} ${completedClass}"
-                     style="top: ${topPx}px; height: ${heightPx}px; min-height: ${minHeight}px;"
+                     style="top: ${topPx}px; min-height: ${minHeight}px;"
                      data-task-id="${taskId}">
                     <div class="mp-cal-task-header">
                         <label onclick="event.stopPropagation();">
