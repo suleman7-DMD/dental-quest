@@ -2696,30 +2696,26 @@
         /* Task blocks - absolutely positioned within day column */
         .mp-cal-task {
             position: absolute;
-            left: 1px;
-            right: 1px;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-size: 0.68em;
+            left: 2px;
+            right: 2px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
             cursor: pointer;
-            border-left: 3px solid;
-            transition: transform 0.1s, box-shadow 0.1s, max-height 0.2s;
+            border-left: 4px solid;
+            transition: transform 0.1s, box-shadow 0.1s;
             overflow: hidden;
             z-index: 1;
-            line-height: 1.2;
-            max-height: 100%;
+            line-height: 1.25;
+            display: flex;
+            flex-direction: column;
         }
 
         .mp-cal-task:hover {
-            transform: translateX(2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
             z-index: 100;
             overflow: visible;
-            max-height: none;
-            min-height: auto;
-            background: inherit;
-            position: absolute;
-            /* Allow hover content to expand and show full text */
         }
 
         .mp-cal-task-name {
@@ -2727,32 +2723,12 @@
             overflow-wrap: break-word;
         }
 
-        /* Tooltip for full task description on hover */
-        .mp-cal-task[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            left: 100%;
-            top: 0;
-            margin-left: 8px;
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            max-width: 250px;
-            white-space: normal;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            border: 1px solid #334155;
-            pointer-events: none;
-        }
-
         .mp-cal-task-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1px;
-            gap: 2px;
+            align-items: flex-start;
+            margin-bottom: 2px;
+            gap: 4px;
         }
         
         .mp-cal-checkbox-wrapper {
@@ -2784,34 +2760,51 @@
         }
 
         .mp-cal-task-name {
-            font-weight: 600;
-            line-height: 1.15;
-            margin-bottom: 1px;
+            font-weight: 700;
+            font-size: 1.05em;
+            line-height: 1.2;
+            margin-bottom: 2px;
+            flex-shrink: 0;
         }
 
         .mp-cal-task-time {
+            font-size: 0.9em;
+            opacity: 0.9;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .mp-cal-task-location {
             font-size: 0.85em;
-            opacity: 0.85;
+            opacity: 0.8;
+            margin-bottom: 2px;
         }
 
         .mp-cal-task-notes {
             font-size: 0.8em;
-            opacity: 0.75;
-            margin-top: 1px;
-            line-height: 1.15;
+            opacity: 0.7;
+            margin-top: 2px;
+            line-height: 1.2;
+            flex-grow: 1;
+            overflow: hidden;
         }
 
         .mp-cal-task-type {
             display: inline-block;
-            padding: 0 3px;
-            font-size: 0.8em;
+            padding: 1px 4px;
+            font-size: 0.75em;
             border-radius: 3px;
-            font-size: 0.8em;
             font-weight: 600;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.25);
+            flex-shrink: 0;
         }
 
         /* Task type colors */
+        .mp-cal-task.lecture {
+            background: rgba(251, 191, 36, 0.25);
+            border-color: #fbbf24;
+            color: #fde68a;
+        }
         .mp-cal-task.clinic {
             background: rgba(14, 165, 233, 0.25);
             border-color: #0ea5e9;
@@ -3495,6 +3488,11 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+        }
+
+        .mp-type.lecture {
+            background: #b45309;
+            color: #fef3c7;
         }
 
         .mp-type.clinic {
@@ -9880,8 +9878,43 @@ CHAIR: 9F
         function confirmLectureImport() {
             if (parsedLectures.length === 0) return;
 
+            // Initialize data structures
+            if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
+            if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
+
+            const existingTasks = roadmapData.monthlyPlanner.customTasks;
             let imported = 0;
+            let skipped = 0;
+
             parsedLectures.forEach(lec => {
+                // Check for duplicates: same date + overlapping time + similar item name
+                const isDuplicate = existingTasks.some(existing => {
+                    // Must be same date
+                    if (existing.date !== lec.date) return false;
+
+                    // Check for time overlap
+                    if (existing.time && lec.startTime) {
+                        const existStart = timeToMinutes(existing.time);
+                        const existEnd = existing.endTime ? timeToMinutes(existing.endTime) : existStart + 60;
+                        const newStart = timeToMinutes(lec.startTime);
+                        const newEnd = lec.endTime ? timeToMinutes(lec.endTime) : newStart + 60;
+
+                        // Times overlap?
+                        const timesOverlap = (newStart < existEnd && newEnd > existStart);
+                        if (!timesOverlap) return false;
+                    }
+
+                    // Check for similar item name (case-insensitive, first 20 chars)
+                    const existItem = (existing.item || '').toLowerCase().substring(0, 20);
+                    const newItem = (lec.course || '').toLowerCase().substring(0, 20);
+                    return existItem === newItem || existing.item === lec.course;
+                });
+
+                if (isDuplicate) {
+                    skipped++;
+                    return;
+                }
+
                 // Create task for Monthly Planner
                 const task = {
                     id: Date.now() + Math.random(),
@@ -9895,9 +9928,6 @@ CHAIR: 9F
                     imported: true
                 };
 
-                // Add to customTasks
-                if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
-                if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
                 roadmapData.monthlyPlanner.customTasks.push(task);
                 imported++;
             });
@@ -9905,7 +9935,15 @@ CHAIR: 9F
             saveData();
             closeLectureImportModal();
             initMonthlyPlanner();
-            showToast(`✅ Imported ${imported} lecture(s)!`);
+
+            // Show appropriate toast message
+            if (skipped > 0 && imported > 0) {
+                showToast(`✅ Imported ${imported} lecture(s), ⚠️ ${skipped} duplicate(s) skipped`);
+            } else if (skipped > 0) {
+                showToast(`⚠️ All ${skipped} lecture(s) already exist - nothing imported`);
+            } else {
+                showToast(`✅ Imported ${imported} lecture(s)!`);
+            }
         }
 
         // ========== CLINICAL IMPORT ==========
@@ -10067,6 +10105,18 @@ CHAIR: 9F
                     patientsAdded++;
                 }
 
+                // Check for duplicate appointment (same patient + same date + same time)
+                const isDuplicateApt = roadmapData.clinicalData.appointments.some(existing => {
+                    return existing.patientId === patientId &&
+                           existing.date === apt.date &&
+                           existing.time === (apt.time || '09:00');
+                });
+
+                if (isDuplicateApt) {
+                    // Skip duplicate appointment
+                    return;
+                }
+
                 // Create appointment
                 const appointmentId = 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 roadmapData.clinicalData.appointments.push({
@@ -10086,7 +10136,14 @@ CHAIR: 9F
             saveData();
             closeClinicalImportModal();
             initClinicalTab();
-            showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+
+            const totalParsed = parsedAppointments.length;
+            const skippedApts = totalParsed - appointmentsAdded;
+            if (skippedApts > 0) {
+                showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s) | ⚠️ ${skippedApts} duplicate(s) skipped`);
+            } else {
+                showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+            }
         }
 
         // Helper function for time conversion (if not already exists)
@@ -11137,9 +11194,9 @@ CHAIR: 9F
             const rangeStart = timedTasks.length > 0 ? Math.max(6, minHour - 1) : 6;
             const rangeEnd = timedTasks.length > 0 ? Math.min(23, maxHour + 1) : 21;
             
-            // Compact pixel heights - no scrolling needed
-            const hourHeightWithTask = 38;  // Hours with tasks
-            const hourHeightEmpty = 18;     // Empty hours (very compact)
+            // Pixel heights for Google Calendar-style layout
+            const hourHeightWithTask = 60;  // Hours with tasks - room for full content
+            const hourHeightEmpty = 24;     // Empty hours
             
             let html = '<div class="mp-calendar-wrapper">';
             
@@ -11271,9 +11328,9 @@ CHAIR: 9F
             const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
             const isCompleted = completedTasks.includes(String(taskId));
             
-            // Compact heights matching mpCreateCalendarGrid
-            const heightWithTask = 38;
-            const heightEmpty = 18;
+            // Heights matching mpCreateCalendarGrid
+            const heightWithTask = 60;
+            const heightEmpty = 24;
             
             // Calculate position and height
             const startHour = parseInt(task.time.split(':')[0]);
@@ -11316,29 +11373,37 @@ CHAIR: 9F
             
             const timeDisplay = mpFormatTime(task.time) + (task.endTime ? ' - ' + mpFormatTime(task.endTime) : '');
             const completedClass = isCompleted ? 'mp-task-completed' : '';
-            
-            // Build full tooltip text with all task details
-            const tooltipParts = [task.item];
-            if (timeDisplay) tooltipParts.push(`Time: ${timeDisplay}`);
-            if (task.notes) tooltipParts.push(`Notes: ${task.notes}`);
-            const tooltipText = tooltipParts.join('\n');
+
+            // Parse location from notes (📍 prefix)
+            let location = '';
+            let otherNotes = task.notes || '';
+            if (otherNotes.startsWith('📍 ')) {
+                const parts = otherNotes.split('\n');
+                location = parts[0].replace('📍 ', '');
+                otherNotes = parts.slice(1).join('\n').trim();
+            }
+
+            // Calculate min height based on content
+            const minHeight = Math.max(50, heightPx);
 
             return `
                 <div class="mp-cal-task ${typeClass} ${completedClass}"
-                     style="top: ${topPx}px; height: ${heightPx}px; min-height: 32px;"
-                     data-task-id="${taskId}"
-                     title="${escapeHtml(tooltipText)}">
+                     style="top: ${topPx}px; height: ${heightPx}px; min-height: ${minHeight}px;"
+                     data-task-id="${taskId}">
                     <div class="mp-cal-task-header">
-                        <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
-                            <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
-                                   onchange="mpToggleTaskComplete('${taskId}')" />
-                        </label>
                         <span class="mp-cal-task-type">${typeClass.toUpperCase()}</span>
-                        <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
+                                <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
+                                       onchange="mpToggleTaskComplete('${taskId}')" />
+                            </label>
+                            <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
+                        </div>
                     </div>
                     <div class="mp-cal-task-name ${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</div>
-                    <div class="mp-cal-task-time">${timeDisplay}</div>
-                    ${task.notes ? `<div class="mp-cal-task-notes">${escapeHtml(task.notes)}</div>` : ''}
+                    <div class="mp-cal-task-time">🕐 ${timeDisplay}</div>
+                    ${location ? `<div class="mp-cal-task-location">📍 ${escapeHtml(location)}</div>` : ''}
+                    ${otherNotes ? `<div class="mp-cal-task-notes">${escapeHtml(otherNotes)}</div>` : ''}
                 </div>
             `;
         }
