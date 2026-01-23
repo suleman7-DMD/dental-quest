@@ -3236,13 +3236,119 @@
             color: #ef4444;
         }
 
-        /* Competencies / Graduation Requirements */
+        /* Competencies / Graduation Requirements - ENHANCED */
+        .comp-overall-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .comp-overall-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .comp-stat-card {
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .comp-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .comp-stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .comp-stat-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        .comp-progress-ring-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comp-progress-ring {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .comp-progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .comp-progress-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 12;
+        }
+
+        .comp-progress-ring-fill {
+            fill: none;
+            stroke: url(#progressGradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .comp-progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .comp-progress-ring-pct {
+            font-size: 2em;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .comp-progress-ring-label {
+            font-size: 0.7em;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
         .comp-category {
             background: #1e293b;
             border: 1px solid #334155;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
             overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .comp-category:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .comp-category.category-complete {
+            border-color: #10b981;
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
         }
 
         .comp-category-header {
@@ -3269,6 +3375,15 @@
             font-size: 1em;
         }
 
+        .comp-category-badge {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            font-weight: 600;
+        }
+
         .comp-category-progress {
             display: flex;
             align-items: center;
@@ -3276,7 +3391,7 @@
         }
 
         .comp-progress-bar {
-            width: 120px;
+            width: 100px;
             height: 8px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
@@ -3287,66 +3402,95 @@
             height: 100%;
             background: linear-gradient(90deg, #10b981, #34d399);
             transition: width 0.3s;
+            border-radius: 4px;
         }
 
         .comp-progress-text {
             font-size: 0.85em;
             color: #94a3b8;
-            min-width: 60px;
+            min-width: 70px;
             text-align: right;
+        }
+
+        .comp-progress-pct {
+            font-weight: 700;
+            color: #e2e8f0;
         }
 
         .comp-category-body {
             padding: 0 15px 15px 15px;
             border-top: 1px solid #334155;
+            display: none;
+        }
+
+        .comp-category-body.expanded {
+            display: block;
         }
 
         .comp-status-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-bottom: 15px;
+            margin: 15px 0;
             padding: 12px;
-            background: rgba(30, 41, 59, 0.5);
+            background: rgba(15, 23, 42, 0.6);
             border-radius: 8px;
         }
 
         .comp-status-item {
             text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .comp-status-item:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .comp-status-value {
-            font-size: 1.3em;
+            font-size: 1.4em;
             font-weight: 700;
         }
 
         .comp-status-label {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #94a3b8;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .comp-requirements-section {
-            margin-top: 12px;
+            margin-top: 15px;
         }
 
         .comp-requirements-title {
             font-size: 0.85em;
             color: #94a3b8;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comp-requirements-title::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: #7c3aed;
+            border-radius: 2px;
         }
 
         .comp-req-item {
             display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 8px 10px;
-            margin-bottom: 4px;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
             background: rgba(15, 23, 42, 0.5);
-            border-radius: 6px;
-            border-left: 3px solid transparent;
-            cursor: pointer;
+            border-radius: 8px;
+            border-left: 4px solid transparent;
             transition: all 0.2s;
         }
 
@@ -3354,30 +3498,28 @@
             background: rgba(15, 23, 42, 0.8);
         }
 
-        .comp-req-item.completed {
+        .comp-req-item.status-completed {
             border-left-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16, 185, 129, 0.08);
         }
 
-        .comp-req-item.in-progress {
+        .comp-req-item.status-in_progress {
             border-left-color: #fbbf24;
-            background: rgba(251, 191, 36, 0.1);
+            background: rgba(251, 191, 36, 0.08);
         }
 
-        .comp-req-item.pending {
-            border-left-color: #64748b;
+        .comp-req-item.status-planned {
+            border-left-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.08);
         }
 
-        .comp-req-checkbox {
-            width: 18px;
-            height: 18px;
-            margin-top: 2px;
-            accent-color: #10b981;
-            cursor: pointer;
+        .comp-req-item.status-pending {
+            border-left-color: #475569;
         }
 
         .comp-req-content {
             flex: 1;
+            min-width: 0;
         }
 
         .comp-req-text {
@@ -3386,12 +3528,16 @@
             line-height: 1.4;
         }
 
-        .comp-req-item.completed .comp-req-text {
+        .comp-req-item.status-completed .comp-req-text {
             color: #86efac;
         }
 
-        .comp-req-item.in-progress .comp-req-text {
+        .comp-req-item.status-in_progress .comp-req-text {
             color: #fde68a;
+        }
+
+        .comp-req-item.status-planned .comp-req-text {
+            color: #93c5fd;
         }
 
         .comp-req-note {
@@ -3401,47 +3547,108 @@
             font-style: italic;
         }
 
+        /* Status Toggle Buttons */
+        .comp-status-toggle {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .comp-status-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .comp-status-btn.btn-planned {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .comp-status-btn.btn-planned:hover, .comp-status-btn.btn-planned.active {
+            background: #60a5fa;
+            color: #0f172a;
+        }
+
+        .comp-status-btn.btn-progress {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .comp-status-btn.btn-progress:hover, .comp-status-btn.btn-progress.active {
+            background: #fbbf24;
+            color: #0f172a;
+        }
+
+        .comp-status-btn.btn-done {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .comp-status-btn.btn-done:hover, .comp-status-btn.btn-done.active {
+            background: #10b981;
+            color: #0f172a;
+        }
+
+        /* Counter for multi-count items */
         .comp-req-counter {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85em;
+            flex-shrink: 0;
         }
 
         .comp-counter-btn {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border: 1px solid #475569;
-            border-radius: 4px;
+            border-radius: 6px;
             background: #1e293b;
             color: #e2e8f0;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.1em;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
 
         .comp-counter-btn:hover {
             background: #334155;
+            border-color: #7c3aed;
+        }
+
+        .comp-counter-btn:active {
+            transform: scale(0.95);
         }
 
         .comp-counter-value {
-            min-width: 40px;
+            min-width: 50px;
             text-align: center;
             font-weight: 600;
+            font-size: 0.9em;
+            padding: 4px 8px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 4px;
         }
 
         .comp-notes-input {
             width: 100%;
             margin-top: 8px;
-            padding: 8px;
+            padding: 10px;
             background: #0f172a;
             border: 1px solid #334155;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #e2e8f0;
             font-size: 0.85em;
             resize: none;
+            transition: border-color 0.2s;
         }
 
         .comp-notes-input:focus {
@@ -3449,22 +3656,108 @@
             border-color: #7c3aed;
         }
 
-        .comp-summary-card {
-            text-align: center;
-            padding: 12px;
+        /* What's Next Panel */
+        .comp-whats-next {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .comp-whats-next h4 {
+            color: #a78bfa;
+            margin: 0 0 12px 0;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comp-next-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
             background: rgba(15, 23, 42, 0.5);
-            border-radius: 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.85em;
         }
 
-        .comp-summary-value {
-            font-size: 1.5em;
-            font-weight: 700;
+        .comp-next-item:last-child {
+            margin-bottom: 0;
         }
 
-        .comp-summary-label {
+        .comp-next-category {
             font-size: 0.75em;
-            color: #94a3b8;
-            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Achievement/Milestone Toast */
+        .comp-milestone-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            z-index: 10000;
+            animation: milestoneSlideIn 0.5s ease, milestoneSlideOut 0.5s ease 2.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comp-milestone-toast .milestone-icon {
+            font-size: 1.5em;
+        }
+
+        .comp-milestone-toast .milestone-text {
+            font-weight: 600;
+        }
+
+        @keyframes milestoneSlideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes milestoneSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100px); opacity: 0; }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .comp-overall-dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .comp-overall-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comp-progress-ring-container {
+                order: -1;
+            }
+
+            .comp-status-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comp-req-item {
+                flex-wrap: wrap;
+            }
+
+            .comp-status-toggle {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 8px;
+            }
         }
 
         /* Patient task in modal */
@@ -5555,16 +5848,16 @@
 
         <!-- Competencies Sub-tab - GRADUATION REQUIREMENTS -->
         <div id="clinical-competencies" class="clinical-panel" style="display: none;">
-            <div class="card" style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="color: #f59e0b; margin: 0;">🎓 Graduation Requirements</h3>
-                    <button onclick="resetCompetencies()" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; color: #f87171; cursor: pointer; font-size: 0.85em;">🔄 Reset All</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h3 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.3em;">🎓 Graduation Requirements</h3>
+                    <p style="color: #94a3b8; margin: 0; font-size: 0.85em;">Track all clinical competencies required for graduation</p>
                 </div>
-                <p style="color: #94a3b8; margin-bottom: 15px;">Track all clinical competencies required for graduation. Click items to toggle status.</p>
-
-                <!-- Overall Progress Summary -->
-                <div id="overallProgressSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; margin-bottom: 20px;"></div>
+                <button onclick="resetCompetencies()" style="padding: 8px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; cursor: pointer; font-size: 0.85em; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'">🔄 Reset All</button>
             </div>
+
+            <!-- Overall Progress Dashboard - Rendered by JS -->
+            <div id="overallProgressSummary"></div>
 
             <!-- Requirements List - Rendered by JS -->
             <div id="competenciesContainer"></div>
@@ -9999,7 +10292,7 @@ CHAIR: 9F
                 notes: '1 planned (unreliable) UL 1-3 teeth.',
                 sections: [
                     { title: 'Periodontology Summatives', items: [
-                        { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0 },
+                        { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'planned' },
                         { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0 },
                         { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0 },
                         { id: 'srp-reeval', text: 'Re-evaluate (SRP) Summative', required: 1, completed: 0 }
@@ -10139,100 +10432,221 @@ CHAIR: 9F
             return roadmapData.clinicalData.competencies;
         }
 
-        function renderCompetencies() {
-            const container = document.getElementById('competenciesContainer');
-            const summaryContainer = document.getElementById('overallProgressSummary');
-            if (!container) return;
+        // Get item status based on completed count and manual status override
+        function getItemStatus(item) {
+            if (item.completed >= item.required) return 'completed';
+            if (item.completed > 0) return 'in_progress';
+            // Check for manual status override
+            if (item.status && item.status !== 'pending') return item.status;
+            return 'pending';
+        }
 
-            const competencies = getCompetenciesData();
+        // Calculate stats for a single category - DYNAMIC
+        function calculateCategoryStats(cat) {
+            let completed = 0, inProgress = 0, planned = 0, pending = 0;
+            let totalUnits = 0, completedUnits = 0;
 
-            // Calculate overall stats
-            let totalCompleted = 0, totalRequired = 0, totalInProgress = 0;
+            cat.sections.forEach(sec => {
+                sec.items.forEach(item => {
+                    const status = getItemStatus(item);
+                    totalUnits += item.required;
+                    completedUnits += Math.min(item.completed, item.required);
+
+                    if (status === 'completed') completed++;
+                    else if (status === 'in_progress') inProgress++;
+                    else if (status === 'planned') planned++;
+                    else pending++;
+                });
+            });
+
+            const percent = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+            const totalItems = completed + inProgress + planned + pending;
+
+            return { completed, inProgress, planned, pending, totalItems, totalUnits, completedUnits, percent };
+        }
+
+        // Calculate overall stats - DYNAMIC
+        function calculateOverallStats(competencies) {
+            let totalItems = 0, completedItems = 0, inProgressItems = 0, plannedItems = 0, pendingItems = 0;
+            let totalUnits = 0, completedUnits = 0;
+            let completedCategories = 0;
+            const categoriesCount = Object.keys(competencies).length;
+
             Object.values(competencies).forEach(cat => {
+                const stats = calculateCategoryStats(cat);
+                totalItems += stats.totalItems;
+                completedItems += stats.completed;
+                inProgressItems += stats.inProgress;
+                plannedItems += stats.planned;
+                pendingItems += stats.pending;
+                totalUnits += stats.totalUnits;
+                completedUnits += stats.completedUnits;
+                if (stats.percent === 100) completedCategories++;
+            });
+
+            const overallPercent = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+
+            return {
+                totalItems, completedItems, inProgressItems, plannedItems, pendingItems,
+                totalUnits, completedUnits, overallPercent, completedCategories, categoriesCount
+            };
+        }
+
+        // Get "What's Next" recommendations
+        function getWhatsNextItems(competencies) {
+            const nextItems = [];
+
+            Object.entries(competencies).forEach(([catKey, cat]) => {
                 cat.sections.forEach(sec => {
                     sec.items.forEach(item => {
-                        totalRequired += item.required;
-                        totalCompleted += Math.min(item.completed, item.required);
-                        if (item.completed > 0 && item.completed < item.required) totalInProgress++;
+                        const status = getItemStatus(item);
+                        // Prioritize: in_progress first, then planned
+                        if (status === 'in_progress') {
+                            nextItems.push({ ...item, catKey, catName: cat.name, catColor: cat.color, priority: 1 });
+                        } else if (status === 'planned') {
+                            nextItems.push({ ...item, catKey, catName: cat.name, catColor: cat.color, priority: 2 });
+                        }
                     });
                 });
             });
 
-            // Render overall summary
-            const overallPct = totalRequired > 0 ? Math.round((totalCompleted / totalRequired) * 100) : 0;
-            summaryContainer.innerHTML = `
-                <div class="comp-summary-card">
-                    <div class="comp-summary-value" style="color: #10b981;">${totalCompleted}</div>
-                    <div class="comp-summary-label">Completed</div>
-                </div>
-                <div class="comp-summary-card">
-                    <div class="comp-summary-value" style="color: #fbbf24;">${totalInProgress}</div>
-                    <div class="comp-summary-label">In Progress</div>
-                </div>
-                <div class="comp-summary-card">
-                    <div class="comp-summary-value" style="color: #94a3b8;">${totalRequired - totalCompleted}</div>
-                    <div class="comp-summary-label">Remaining</div>
-                </div>
-                <div class="comp-summary-card">
-                    <div class="comp-summary-value" style="color: #7c3aed;">${overallPct}%</div>
-                    <div class="comp-summary-label">Overall Progress</div>
+            // Sort by priority (in_progress first), then limit to 5
+            return nextItems.sort((a, b) => a.priority - b.priority).slice(0, 5);
+        }
+
+        // Track expanded categories
+        let expandedCompCategories = new Set();
+
+        function renderCompetencies() {
+            const container = document.getElementById('competenciesContainer');
+            const dashboardContainer = document.getElementById('overallProgressSummary');
+            if (!container) return;
+
+            const competencies = getCompetenciesData();
+            const stats = calculateOverallStats(competencies);
+            const whatsNext = getWhatsNextItems(competencies);
+
+            // Calculate progress ring values
+            const circumference = 2 * Math.PI * 54; // radius = 54
+            const dashOffset = circumference - (stats.overallPercent / 100) * circumference;
+
+            // Render overall dashboard with progress ring
+            dashboardContainer.innerHTML = `
+                <div class="comp-overall-dashboard">
+                    <div class="comp-overall-stats">
+                        <div class="comp-stat-card">
+                            <div class="comp-stat-value" style="color: #10b981;">${stats.completedItems}</div>
+                            <div class="comp-stat-label">Completed</div>
+                        </div>
+                        <div class="comp-stat-card">
+                            <div class="comp-stat-value" style="color: #fbbf24;">${stats.inProgressItems}</div>
+                            <div class="comp-stat-label">In Progress</div>
+                        </div>
+                        <div class="comp-stat-card">
+                            <div class="comp-stat-value" style="color: #60a5fa;">${stats.plannedItems}</div>
+                            <div class="comp-stat-label">Planned</div>
+                        </div>
+                        <div class="comp-stat-card">
+                            <div class="comp-stat-value" style="color: #94a3b8;">${stats.pendingItems}</div>
+                            <div class="comp-stat-label">Not Started</div>
+                        </div>
+                    </div>
+                    <div class="comp-progress-ring-container">
+                        <div class="comp-progress-ring">
+                            <svg width="140" height="140">
+                                <defs>
+                                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#10b981"/>
+                                        <stop offset="100%" style="stop-color:#34d399"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="comp-progress-ring-bg" cx="70" cy="70" r="54"/>
+                                <circle class="comp-progress-ring-fill" cx="70" cy="70" r="54"
+                                    stroke-dasharray="${circumference}"
+                                    stroke-dashoffset="${dashOffset}"/>
+                            </svg>
+                            <div class="comp-progress-ring-text">
+                                <div class="comp-progress-ring-pct">${stats.overallPercent}%</div>
+                                <div class="comp-progress-ring-label">Complete</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8em; color: #94a3b8; margin-top: 8px;">
+                            ${stats.completedUnits}/${stats.totalUnits} units
+                        </div>
+                    </div>
                 </div>
             `;
 
-            // Render each category
-            let html = '';
-            Object.entries(competencies).forEach(([key, cat]) => {
-                // Calculate category progress
-                let catCompleted = 0, catRequired = 0;
-                cat.sections.forEach(sec => {
-                    sec.items.forEach(item => {
-                        catRequired += item.required;
-                        catCompleted += Math.min(item.completed, item.required);
-                    });
-                });
-                const catPct = catRequired > 0 ? Math.round((catCompleted / catRequired) * 100) : 0;
+            // Build What's Next panel if there are items
+            let whatsNextHtml = '';
+            if (whatsNext.length > 0) {
+                whatsNextHtml = `
+                    <div class="comp-whats-next">
+                        <h4>🎯 What's Next</h4>
+                        ${whatsNext.map(item => `
+                            <div class="comp-next-item">
+                                <span class="comp-next-category" style="background: ${item.catColor}20; color: ${item.catColor};">${item.catName}</span>
+                                <span>${escapeHtml(item.text)}</span>
+                                ${item.required > 1 ? `<span style="color: #94a3b8; font-size: 0.8em;">(${item.completed}/${item.required})</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
 
-                html += `
-                    <div class="comp-category" data-category="${key}">
+            // Render each category
+            let categoriesHtml = '';
+            Object.entries(competencies).forEach(([key, cat]) => {
+                const catStats = calculateCategoryStats(cat);
+                const isExpanded = expandedCompCategories.has(key);
+                const isComplete = catStats.percent === 100;
+
+                categoriesHtml += `
+                    <div class="comp-category ${isComplete ? 'category-complete' : ''}" data-category="${key}">
                         <div class="comp-category-header" onclick="toggleCompCategory('${key}')">
                             <div class="comp-category-title">
                                 <span style="font-size: 1.2em;">${cat.icon}</span>
                                 <h4 style="color: ${cat.color};">${cat.name}</h4>
+                                ${isComplete ? '<span class="comp-category-badge">✓ Complete</span>' : ''}
                             </div>
                             <div class="comp-category-progress">
                                 <div class="comp-progress-bar">
-                                    <div class="comp-progress-fill" style="width: ${catPct}%; background: ${cat.color};"></div>
+                                    <div class="comp-progress-fill" style="width: ${catStats.percent}%; background: ${cat.color};"></div>
                                 </div>
-                                <span class="comp-progress-text">${catCompleted}/${catRequired}</span>
-                                <span style="color: #64748b; font-size: 1.2em;" id="compArrow-${key}">▼</span>
+                                <span class="comp-progress-text">
+                                    <span class="comp-progress-pct">${catStats.percent}%</span>
+                                    <span style="color: #64748b; margin-left: 4px;">(${catStats.completedUnits}/${catStats.totalUnits})</span>
+                                </span>
+                                <span style="color: #64748b; font-size: 1.2em; transition: transform 0.2s;" id="compArrow-${key}">${isExpanded ? '▼' : '▶'}</span>
                             </div>
                         </div>
-                        <div class="comp-category-body" id="compBody-${key}">
+                        <div class="comp-category-body ${isExpanded ? 'expanded' : ''}" id="compBody-${key}">
                             <div class="comp-status-row">
                                 <div class="comp-status-item">
-                                    <div class="comp-status-value" style="color: #10b981;">${cat.summary.completed}</div>
+                                    <div class="comp-status-value" style="color: #10b981;">${catStats.completed}</div>
                                     <div class="comp-status-label">Completed</div>
                                 </div>
                                 <div class="comp-status-item">
-                                    <div class="comp-status-value" style="color: #fbbf24;">${cat.summary.inProgress}</div>
+                                    <div class="comp-status-value" style="color: #fbbf24;">${catStats.inProgress}</div>
                                     <div class="comp-status-label">In Progress</div>
                                 </div>
                                 <div class="comp-status-item">
-                                    <div class="comp-status-value" style="color: #60a5fa;">${cat.summary.planned}</div>
+                                    <div class="comp-status-value" style="color: #60a5fa;">${catStats.planned}</div>
                                     <div class="comp-status-label">Planned</div>
                                 </div>
+                                <div class="comp-status-item">
+                                    <div class="comp-status-value" style="color: #94a3b8;">${catStats.pending}</div>
+                                    <div class="comp-status-label">Not Started</div>
+                                </div>
                             </div>
-                            ${cat.notes ? `<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 4px; font-size: 0.85em; color: #fde68a;">${escapeHtml(cat.notes)}</div>` : ''}
+                            ${cat.notes ? `<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 6px; font-size: 0.85em; color: #fde68a;">${escapeHtml(cat.notes)}</div>` : ''}
                             ${cat.sections.map(sec => `
                                 <div class="comp-requirements-section">
                                     <div class="comp-requirements-title">${sec.title}</div>
                                     ${sec.items.map(item => {
-                                        const status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in-progress' : 'pending';
+                                        const status = getItemStatus(item);
                                         return `
-                                            <div class="comp-req-item ${status}" data-item-id="${item.id}">
-                                                <input type="checkbox" class="comp-req-checkbox"
-                                                    ${item.completed >= item.required ? 'checked' : ''}
-                                                    onchange="toggleCompItem('${key}', '${item.id}')" />
+                                            <div class="comp-req-item status-${status}" data-item-id="${item.id}">
                                                 <div class="comp-req-content">
                                                     <div class="comp-req-text">${escapeHtml(item.text)}</div>
                                                     ${item.note ? `<div class="comp-req-note">${escapeHtml(item.note)}</div>` : ''}
@@ -10243,7 +10657,16 @@ CHAIR: 9F
                                                         <span class="comp-counter-value">${item.completed}/${item.required}</span>
                                                         <button class="comp-counter-btn" onclick="adjustCompItem('${key}', '${item.id}', 1); event.stopPropagation();">+</button>
                                                     </div>
-                                                ` : ''}
+                                                ` : `
+                                                    <div class="comp-status-toggle">
+                                                        <button class="comp-status-btn btn-planned ${status === 'planned' ? 'active' : ''}"
+                                                            onclick="setCompItemStatus('${key}', '${item.id}', 'planned'); event.stopPropagation();">Plan</button>
+                                                        <button class="comp-status-btn btn-progress ${status === 'in_progress' ? 'active' : ''}"
+                                                            onclick="setCompItemStatus('${key}', '${item.id}', 'in_progress'); event.stopPropagation();">WIP</button>
+                                                        <button class="comp-status-btn btn-done ${status === 'completed' ? 'active' : ''}"
+                                                            onclick="setCompItemStatus('${key}', '${item.id}', 'completed'); event.stopPropagation();">Done</button>
+                                                    </div>
+                                                `}
                                             </div>
                                         `;
                                     }).join('')}
@@ -10259,58 +10682,117 @@ CHAIR: 9F
                 `;
             });
 
-            container.innerHTML = html;
+            container.innerHTML = whatsNextHtml + categoriesHtml;
         }
 
         function toggleCompCategory(key) {
             const body = document.getElementById(`compBody-${key}`);
             const arrow = document.getElementById(`compArrow-${key}`);
-            if (body.style.display === 'none') {
-                body.style.display = 'block';
-                arrow.textContent = '▼';
-            } else {
-                body.style.display = 'none';
+            if (!body) return;
+
+            const isExpanded = body.classList.contains('expanded');
+
+            if (isExpanded) {
+                body.classList.remove('expanded');
                 arrow.textContent = '▶';
+                expandedCompCategories.delete(key);
+            } else {
+                body.classList.add('expanded');
+                arrow.textContent = '▼';
+                expandedCompCategories.add(key);
             }
         }
 
-        function toggleCompItem(catKey, itemId) {
+        // Set item status for single-count items
+        function setCompItemStatus(catKey, itemId, newStatus) {
             const competencies = getCompetenciesData();
             const cat = competencies[catKey];
             if (!cat) return;
 
+            let wasCompleted = false;
+            let isNowCompleted = false;
+            let itemText = '';
+
             for (const sec of cat.sections) {
                 const item = sec.items.find(i => i.id === itemId);
                 if (item) {
-                    // Toggle: if complete, set to 0; if incomplete, set to required
-                    if (item.completed >= item.required) {
+                    wasCompleted = item.completed >= item.required;
+                    itemText = item.text;
+
+                    // Toggle: if clicking active status, go back to pending
+                    const currentStatus = getItemStatus(item);
+                    if (currentStatus === newStatus) {
+                        item.status = 'pending';
                         item.completed = 0;
                     } else {
-                        item.completed = item.required;
+                        item.status = newStatus;
+                        // Set completed count based on status
+                        if (newStatus === 'completed') {
+                            item.completed = item.required;
+                        } else if (newStatus === 'in_progress' && item.completed === 0) {
+                            // Keep completed at 0 for in_progress but set status
+                        } else if (newStatus === 'pending') {
+                            item.completed = 0;
+                        }
                     }
+
+                    isNowCompleted = item.completed >= item.required;
                     break;
                 }
             }
 
             saveData();
             renderCompetencies();
+
+            // Show milestone toast if just completed
+            if (!wasCompleted && isNowCompleted) {
+                showCompMilestone(itemText);
+            }
         }
 
+        // Adjust completed count for multi-count items
         function adjustCompItem(catKey, itemId, delta) {
             const competencies = getCompetenciesData();
             const cat = competencies[catKey];
             if (!cat) return;
 
+            let wasCompleted = false;
+            let isNowCompleted = false;
+            let itemText = '';
+
             for (const sec of cat.sections) {
                 const item = sec.items.find(i => i.id === itemId);
                 if (item) {
-                    item.completed = Math.max(0, Math.min(item.required, item.completed + delta));
+                    wasCompleted = item.completed >= item.required;
+                    itemText = item.text;
+
+                    const newCompleted = Math.max(0, Math.min(item.required, item.completed + delta));
+                    item.completed = newCompleted;
+
+                    // Auto-update status based on completed count
+                    if (newCompleted >= item.required) {
+                        item.status = 'completed';
+                    } else if (newCompleted > 0) {
+                        item.status = 'in_progress';
+                    } else {
+                        // Keep planned status if it was planned, otherwise pending
+                        if (item.status !== 'planned') {
+                            item.status = 'pending';
+                        }
+                    }
+
+                    isNowCompleted = item.completed >= item.required;
                     break;
                 }
             }
 
             saveData();
             renderCompetencies();
+
+            // Show milestone toast if just completed
+            if (!wasCompleted && isNowCompleted) {
+                showCompMilestone(itemText);
+            }
         }
 
         function updateCompNotes(catKey, notes) {
@@ -10321,9 +10803,28 @@ CHAIR: 9F
             }
         }
 
+        // Show milestone celebration toast
+        function showCompMilestone(itemText) {
+            // Remove any existing toast
+            const existing = document.querySelector('.comp-milestone-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'comp-milestone-toast';
+            toast.innerHTML = `
+                <span class="milestone-icon">🎉</span>
+                <span class="milestone-text">Completed: ${escapeHtml(itemText.substring(0, 40))}${itemText.length > 40 ? '...' : ''}</span>
+            `;
+            document.body.appendChild(toast);
+
+            // Remove after animation
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         function resetCompetencies() {
             if (!confirm('Reset ALL competencies to default values? This cannot be undone.')) return;
             roadmapData.clinicalData.competencies = JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES));
+            expandedCompCategories.clear();
             saveData();
             renderCompetencies();
             showToast('Competencies reset to defaults');
