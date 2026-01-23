@@ -3656,7 +3656,208 @@
             border-color: #7c3aed;
         }
 
-        /* What's Next Panel */
+        /* Add/Edit Requirement Buttons */
+        .comp-add-req-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px dashed rgba(124, 58, 237, 0.4);
+            border-radius: 8px;
+            color: #a78bfa;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .comp-add-req-btn:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: #a78bfa;
+        }
+
+        .comp-edit-btn {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: #94a3b8;
+            font-size: 0.75em;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .comp-req-item:hover .comp-edit-btn {
+            opacity: 1;
+        }
+
+        .comp-edit-btn:hover {
+            background: rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+        }
+
+        .comp-delete-btn {
+            padding: 4px 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: #f87171;
+            font-size: 0.75em;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .comp-req-item:hover .comp-delete-btn {
+            opacity: 1;
+        }
+
+        .comp-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .comp-item-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* Requirement Edit Modal */
+        .comp-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .comp-modal {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .comp-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .comp-modal-header h3 {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 1.1em;
+        }
+
+        .comp-modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .comp-modal-close:hover {
+            color: #f87171;
+        }
+
+        .comp-modal-body {
+            padding: 20px;
+        }
+
+        .comp-modal-field {
+            margin-bottom: 15px;
+        }
+
+        .comp-modal-field label {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .comp-modal-field input,
+        .comp-modal-field select,
+        .comp-modal-field textarea {
+            width: 100%;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 0.95em;
+        }
+
+        .comp-modal-field input:focus,
+        .comp-modal-field select:focus,
+        .comp-modal-field textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .comp-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .comp-modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .comp-modal-btn.cancel {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .comp-modal-btn.cancel:hover {
+            background: #475569;
+        }
+
+        .comp-modal-btn.submit {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .comp-modal-btn.submit:hover {
+            background: #6d28d9;
+        }
+
+        .comp-modal-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .comp-modal-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        /* Hide What's Next (removed per user request) */
         .comp-whats-next {
             background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
             border: 1px solid rgba(124, 58, 237, 0.3);
@@ -6142,6 +6343,38 @@ CHAIR: 9F
                 <button class="mp-modal-btn cancel" onclick="closeClinicalImportModal()">Cancel</button>
                 <button class="mp-modal-btn" onclick="previewClinicalImport()" style="background: #3b82f6;">👁️ Preview</button>
                 <button class="mp-modal-btn submit" onclick="confirmClinicalImport()" id="clinicalImportBtn" disabled>📥 Import Appointments</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competency Item Add/Edit Modal -->
+    <div id="compItemModal" class="comp-modal-overlay" style="display: none;">
+        <div class="comp-modal">
+            <div class="comp-modal-header">
+                <h3 id="compModalTitle">➕ Add Requirement</h3>
+                <button class="comp-modal-close" onclick="closeCompItemModal()">✕</button>
+            </div>
+            <div class="comp-modal-body">
+                <div class="comp-modal-field">
+                    <label>Requirement Name *</label>
+                    <input type="text" id="compItemName" placeholder="e.g., Class II Composite">
+                </div>
+                <div class="comp-modal-field">
+                    <label>Required Count *</label>
+                    <input type="number" id="compItemRequired" min="1" value="1" placeholder="e.g., 5">
+                </div>
+                <div class="comp-modal-field">
+                    <label>Current Progress</label>
+                    <input type="number" id="compItemCompleted" min="0" value="0" placeholder="e.g., 2">
+                </div>
+                <div class="comp-modal-field">
+                    <label>Notes (optional)</label>
+                    <textarea id="compItemNotes" rows="3" placeholder="Any additional details..."></textarea>
+                </div>
+            </div>
+            <div class="comp-modal-footer">
+                <button class="comp-modal-btn cancel" onclick="closeCompItemModal()">Cancel</button>
+                <button class="comp-modal-btn submit" onclick="saveCompItem()">💾 Save</button>
             </div>
         </div>
     </div>
@@ -10582,23 +10815,6 @@ CHAIR: 9F
                 </div>
             `;
 
-            // Build What's Next panel if there are items
-            let whatsNextHtml = '';
-            if (whatsNext.length > 0) {
-                whatsNextHtml = `
-                    <div class="comp-whats-next">
-                        <h4>🎯 What's Next</h4>
-                        ${whatsNext.map(item => `
-                            <div class="comp-next-item">
-                                <span class="comp-next-category" style="background: ${item.catColor}20; color: ${item.catColor};">${item.catName}</span>
-                                <span>${escapeHtml(item.text)}</span>
-                                ${item.required > 1 ? `<span style="color: #94a3b8; font-size: 0.8em;">(${item.completed}/${item.required})</span>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
             // Render each category
             let categoriesHtml = '';
             Object.entries(competencies).forEach(([key, cat]) => {
@@ -10645,11 +10861,12 @@ CHAIR: 9F
                                 </div>
                             </div>
                             ${cat.notes ? `<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 6px; font-size: 0.85em; color: #fde68a;">${escapeHtml(cat.notes)}</div>` : ''}
-                            ${cat.sections.map(sec => `
-                                <div class="comp-requirements-section">
+                            ${cat.sections.map((sec, secIndex) => `
+                                <div class="comp-requirements-section" data-section-index="${secIndex}">
                                     <div class="comp-requirements-title">${sec.title}</div>
                                     ${sec.items.map(item => {
                                         const status = getItemStatus(item);
+                                        const isCustom = item.custom === true;
                                         return `
                                             <div class="comp-req-item status-${status}" data-item-id="${item.id}">
                                                 <div class="comp-req-content">
@@ -10672,9 +10889,16 @@ CHAIR: 9F
                                                             onclick="setCompItemStatus('${key}', '${item.id}', 'completed'); event.stopPropagation();">Done</button>
                                                     </div>
                                                 `}
+                                                <div class="comp-item-actions">
+                                                    <button class="comp-edit-btn" onclick="openEditCompItemModal('${key}', '${item.id}'); event.stopPropagation();" title="Edit">✏️</button>
+                                                    ${isCustom ? `<button class="comp-delete-btn" onclick="deleteCompItem('${key}', '${item.id}'); event.stopPropagation();" title="Delete">🗑️</button>` : ''}
+                                                </div>
                                             </div>
                                         `;
                                     }).join('')}
+                                    <button class="comp-add-req-btn" onclick="openAddCompItemModal('${key}', ${secIndex}); event.stopPropagation();">
+                                        ➕ Add Requirement
+                                    </button>
                                 </div>
                             `).join('')}
                             <div style="margin-top: 15px;">
@@ -10687,7 +10911,7 @@ CHAIR: 9F
                 `;
             });
 
-            container.innerHTML = whatsNextHtml + categoriesHtml;
+            container.innerHTML = categoriesHtml;
         }
 
         function toggleCompCategory(key) {
@@ -10833,6 +11057,190 @@ CHAIR: 9F
             saveData();
             renderCompetencies();
             showToast('Competencies reset to defaults');
+        }
+
+        // ==================== COMPETENCY ADD/EDIT/DELETE ====================
+
+        // Store modal state
+        let compItemModalState = {
+            mode: 'add', // 'add' or 'edit'
+            catKey: null,
+            sectionIndex: null,
+            itemId: null
+        };
+
+        function openAddCompItemModal(catKey, sectionIndex) {
+            compItemModalState = {
+                mode: 'add',
+                catKey: catKey,
+                sectionIndex: sectionIndex,
+                itemId: null
+            };
+
+            document.getElementById('compModalTitle').textContent = '➕ Add Requirement';
+            document.getElementById('compItemName').value = '';
+            document.getElementById('compItemRequired').value = '1';
+            document.getElementById('compItemCompleted').value = '0';
+            document.getElementById('compItemNotes').value = '';
+
+            document.getElementById('compItemModal').style.display = 'flex';
+        }
+
+        function openEditCompItemModal(catKey, itemId) {
+            const competencies = getCompetenciesData();
+            const cat = competencies[catKey];
+            if (!cat) return;
+
+            // Find the item and its section
+            let foundItem = null;
+            let foundSecIndex = -1;
+            for (let i = 0; i < cat.sections.length; i++) {
+                const item = cat.sections[i].items.find(it => it.id === itemId);
+                if (item) {
+                    foundItem = item;
+                    foundSecIndex = i;
+                    break;
+                }
+            }
+
+            if (!foundItem) {
+                showToast('Item not found', 'error');
+                return;
+            }
+
+            compItemModalState = {
+                mode: 'edit',
+                catKey: catKey,
+                sectionIndex: foundSecIndex,
+                itemId: itemId
+            };
+
+            document.getElementById('compModalTitle').textContent = '✏️ Edit Requirement';
+            document.getElementById('compItemName').value = foundItem.text;
+            document.getElementById('compItemRequired').value = foundItem.required;
+            document.getElementById('compItemCompleted').value = foundItem.completed || 0;
+            document.getElementById('compItemNotes').value = foundItem.note || '';
+
+            document.getElementById('compItemModal').style.display = 'flex';
+        }
+
+        function closeCompItemModal() {
+            document.getElementById('compItemModal').style.display = 'none';
+            compItemModalState = { mode: 'add', catKey: null, sectionIndex: null, itemId: null };
+        }
+
+        function saveCompItem() {
+            const name = document.getElementById('compItemName').value.trim();
+            const required = parseInt(document.getElementById('compItemRequired').value) || 1;
+            const completed = parseInt(document.getElementById('compItemCompleted').value) || 0;
+            const notes = document.getElementById('compItemNotes').value.trim();
+
+            if (!name) {
+                showToast('Please enter a requirement name', 'error');
+                return;
+            }
+
+            if (required < 1) {
+                showToast('Required count must be at least 1', 'error');
+                return;
+            }
+
+            const competencies = getCompetenciesData();
+            const cat = competencies[compItemModalState.catKey];
+            if (!cat) {
+                showToast('Category not found', 'error');
+                return;
+            }
+
+            if (compItemModalState.mode === 'add') {
+                // Add new item to the section
+                const section = cat.sections[compItemModalState.sectionIndex];
+                if (!section) {
+                    showToast('Section not found', 'error');
+                    return;
+                }
+
+                const newItem = {
+                    id: `custom_${Date.now()}`,
+                    text: name,
+                    required: required,
+                    completed: Math.min(completed, required),
+                    note: notes || null,
+                    custom: true // Mark as custom so it can be deleted
+                };
+
+                // Set status based on completed count
+                if (newItem.completed >= newItem.required) {
+                    newItem.status = 'completed';
+                } else if (newItem.completed > 0) {
+                    newItem.status = 'in_progress';
+                }
+
+                section.items.push(newItem);
+                showToast(`Added: ${name}`);
+            } else {
+                // Edit existing item
+                for (const sec of cat.sections) {
+                    const item = sec.items.find(it => it.id === compItemModalState.itemId);
+                    if (item) {
+                        item.text = name;
+                        item.required = required;
+                        item.completed = Math.min(completed, required);
+                        item.note = notes || null;
+
+                        // Update status based on completed count
+                        if (item.completed >= item.required) {
+                            item.status = 'completed';
+                        } else if (item.completed > 0) {
+                            item.status = 'in_progress';
+                        } else if (item.status === 'completed') {
+                            item.status = 'pending';
+                        }
+
+                        break;
+                    }
+                }
+                showToast(`Updated: ${name}`);
+            }
+
+            saveData();
+            renderCompetencies();
+            closeCompItemModal();
+        }
+
+        function deleteCompItem(catKey, itemId) {
+            const competencies = getCompetenciesData();
+            const cat = competencies[catKey];
+            if (!cat) return;
+
+            // Find the item
+            let itemText = '';
+            for (const sec of cat.sections) {
+                const item = sec.items.find(it => it.id === itemId);
+                if (item) {
+                    if (!item.custom) {
+                        showToast('Cannot delete default requirements', 'error');
+                        return;
+                    }
+                    itemText = item.text;
+                    break;
+                }
+            }
+
+            if (!confirm(`Delete "${itemText}"? This cannot be undone.`)) return;
+
+            // Remove the item
+            for (const sec of cat.sections) {
+                const idx = sec.items.findIndex(it => it.id === itemId);
+                if (idx !== -1) {
+                    sec.items.splice(idx, 1);
+                    break;
+                }
+            }
+
+            saveData();
+            renderCompetencies();
+            showToast(`Deleted: ${itemText}`);
         }
 
         // ==================== IMPORT SYSTEM ====================
