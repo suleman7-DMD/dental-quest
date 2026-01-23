@@ -3772,17 +3772,22 @@
                 // If no date stamp (legacy), assume it's today
                 if (med.date && med.date !== today) {
                     // This medication is from a different day - skip it
-                    // Unless it's from yesterday and could still be active
+                    // FIX: Only include yesterday's doses if allNighterMode is ON
+                    // (matches caffeine behavior for consistency)
+                    if (!state.allNighterMode) {
+                        return; // Skip yesterday's doses in normal mode
+                    }
+
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yesterdayStr = getLocalDateString(yesterday);
-                    
+
                     if (med.date === yesterdayStr) {
                         // Yesterday's dose - adjust timing for decay calculation
                         // doseTime was yesterday, so effective elapsed time is longer
                         const yesterdayDoseMinutes = doseTime; // Time of dose yesterday
                         const effectiveDoseTime = -((24 * 60) - yesterdayDoseMinutes); // Negative = hours ago
-                        
+
                         // Calculate decay for yesterday's dose
                         const elapsed = atMinutes - effectiveDoseTime;
                         if (elapsed > 0 && elapsed < 36 * 60) { // Only if within 36 hours
@@ -4265,8 +4270,18 @@
 
         function renderMedEntries() {
             const container = document.getElementById('medEntries');
-            container.innerHTML = state.medications.map((med, index) => `
+            const today = getLocalDateString(new Date());
+
+            container.innerHTML = state.medications.map((med, index) => {
+                // FIX: Show date label for clarity (especially in overnight mode)
+                const medDate = med.date || today;
+                const isToday = medDate === today;
+                const dateLabel = isToday ? 'Today' : formatDateLabel(medDate);
+                const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
+
+                return `
                 <div class="med-entry">
+                    <span style="font-size: 0.75em; ${dateStyle} min-width: 55px;">${dateLabel}</span>
                     <select onchange="updateMedEntry(${med.id}, 'dose', this.value)">
                         <option value="20" ${med.dose === 20 ? 'selected' : ''}>20mg XR</option>
                         <option value="30" ${med.dose === 30 ? 'selected' : ''}>30mg XR</option>
@@ -4279,10 +4294,23 @@
                     ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
                     <button class="remove-btn" onclick="removeMedEntry(${med.id})">×</button>
                 </div>
-            `).join('');
-            
+            `}).join('');
+
             // Update stacking warning panel
             updateStackingWarning();
+        }
+
+        // Helper function to format date labels
+        function formatDateLabel(dateStr) {
+            if (!dateStr) return 'Unknown';
+            const date = parseLocalDate(dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (dateStr === getLocalDateString(yesterday)) return 'Yesterday';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
         
         function updateStackingWarning() {
@@ -4368,15 +4396,23 @@
         function renderCaffeineEntries() {
             const container = document.getElementById('caffeineEntries');
             if (!container) return;
-            
+            const today = getLocalDateString(new Date());
+
             container.innerHTML = state.caffeine.map((caff, index) => {
                 const isSipPart = caff.sipGroup !== undefined;
                 const sipBadge = isSipPart ? `<span style="font-size: 0.7em; color: #a78bfa; margin-left: 6px;">(sip ${caff.sipPart}/${caff.sipTotal})</span>` : '';
-                
+
+                // FIX: Show date label for clarity (especially in overnight mode)
+                const caffDate = caff.date || today;
+                const isToday = caffDate === today;
+                const dateLabel = isToday ? 'Today' : formatDateLabel(caffDate);
+                const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
+
                 return `
                 <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);"' : ''}>
+                    <span style="font-size: 0.7em; ${dateStyle} min-width: 50px;">${dateLabel}</span>
                     <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
-                    <input type="time" value="${caff.time}" onchange="updateCaffeineTime(${index}, this.value)" 
+                    <input type="time" value="${caff.time}" onchange="updateCaffeineTime(${index}, this.value)"
                            style="padding: 4px 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 0.85em; width: 100px;">
                     <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine(${caff.id})">×</button>
                 </div>
@@ -5077,7 +5113,9 @@
             const hoursSleptEl = document.getElementById('hoursSlept');
             
             if (wakeTimeEl) state.wakeTime = wakeTimeEl.value || state.wakeTime;
-            const newHoursSlept = hoursSleptEl ? (parseFloat(hoursSleptEl.value) || 8) : state.hoursSleptLastNight;
+            // FIX: Don't use || 8 as it treats 0 as falsy. Use explicit null check for all-nighter support
+            const parsedHours = hoursSleptEl ? parseFloat(hoursSleptEl.value) : null;
+            const newHoursSlept = (parsedHours !== null && !isNaN(parsedHours)) ? parsedHours : state.hoursSleptLastNight;
             
             // Check if hours slept changed - update calendar and stacking warning
             if (newHoursSlept !== state.hoursSleptLastNight) {
@@ -8313,6 +8351,8 @@
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                            // FIX: Include allNighterMode in Firebase sync
+                            allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
                             // For arrays: use Firebase data if it exists (even if empty), otherwise keep local
                             medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
                             caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
@@ -8344,21 +8384,37 @@
                         renderMedEntries();
                         renderCaffeineEntries();
                         renderSleepCalendar();
-            renderSleepPerformance();
+                        renderSleepPerformance();
                         renderHistory();
-                        
+
+                        // FIX: Restore modifier UI classes after Firebase sync (prevents double-press bug)
+                        Object.keys(state.modifiers).forEach(key => {
+                            const el = document.querySelector(`[data-modifier="${key}"]`);
+                            if (el) {
+                                if (state.modifiers[key]?.active) {
+                                    el.classList.add('active');
+                                } else {
+                                    el.classList.remove('active');
+                                }
+                            }
+                        });
+                        updateModifierTimeInputs();
+
+                        // FIX: Restore allNighterMode UI
+                        updateAllNighterUI();
+
                         // Restore workout plan UI if applied
                         if (state.workoutPlan && state.workoutPlan.applied) {
                             restoreWorkoutPlanUI();
                         }
-                        
+
                         recalculate();
-                        
+
                         // Also update Focus Mode if active
                         if (focusMode) {
                             renderFocusMode();
                         }
-                        
+
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
                     } else {
@@ -8451,6 +8507,8 @@
                     state = {
                         wakeTime: firebaseState.wakeTime || state.wakeTime,
                         hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
+                        // FIX: Include allNighterMode in Firebase sync
+                        allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
                         medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
                         caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
                         history: firebaseState.history !== undefined ? firebaseState.history : state.history,
@@ -8475,21 +8533,37 @@
                     renderMedEntries();
                     renderCaffeineEntries();
                     renderSleepCalendar();
-            renderSleepPerformance();
+                    renderSleepPerformance();
                     renderHistory();
-                    
+
+                    // FIX: Restore modifier UI classes after Firebase sync (prevents double-press bug)
+                    Object.keys(state.modifiers).forEach(key => {
+                        const el = document.querySelector(`[data-modifier="${key}"]`);
+                        if (el) {
+                            if (state.modifiers[key]?.active) {
+                                el.classList.add('active');
+                            } else {
+                                el.classList.remove('active');
+                            }
+                        }
+                    });
+                    updateModifierTimeInputs();
+
+                    // FIX: Restore allNighterMode UI
+                    updateAllNighterUI();
+
                     // Restore workout plan if applied
                     if (state.workoutPlan && state.workoutPlan.applied) {
                         restoreWorkoutPlanUI();
                     }
-                    
+
                     recalculate();
-                    
+
                     // Also update Focus Mode if active
                     if (focusMode) {
                         renderFocusMode();
                     }
-                    
+
                     updateSyncStatus('connected', '🔄 Updated');
                     showToast('📥 Synced from another device');
                 }
@@ -9566,9 +9640,12 @@ Current status at ${currentTime}:
         }
         
         function focusUpdateSleep() {
-            const hours = parseFloat(document.getElementById('focusHoursSlept').value) || 8;
+            // FIX: Don't use || 8 as it treats 0 as falsy (all-nighter = 0 hours)
+            const parsed = parseFloat(document.getElementById('focusHoursSlept').value);
+            const hours = (!isNaN(parsed) && parsed >= 0) ? parsed : state.hoursSleptLastNight;
             state.hoursSleptLastNight = hours;
             document.getElementById('hoursSlept').value = hours;
+            updateTodaySleepHistory();
             saveState();
             recalculate();
             renderFocusMode();
@@ -9586,31 +9663,36 @@ Current status at ${currentTime}:
         // Medication functions
         function focusConfirmMeds() {
             const time = document.getElementById('focusMedTime').value;
+            const today = getLocalDateString(new Date());
+
+            // FIX: ADD medication instead of replacing (prevents data loss)
             // Standard dose: 30mg + 20mg XR = 50mg total
-            state.medications = [{ id: Date.now(), dose: 50, time: time }];
-            
+            const entry = { id: Date.now(), dose: 50, time: time, date: today };
+            state.medications.push(entry);
+
             // Auto-enable Vitamin C
             if (focusVitCEnabled) {
                 state.modifiers.vitaminC.active = true;
                 state.modifiers.vitaminC.time = '17:00'; // Default 5 PM
             }
-            
+
             renderMedEntries();
             saveState();
             recalculate();
             renderFocusMode();
+            showToast('💊 50mg XR logged at ' + time);
         }
-        
+
         function focusShowCustomDose() {
             document.getElementById('focusCustomDose').style.display = 'block';
         }
-        
+
         function focusHideCustomDose() {
             document.getElementById('focusCustomDose').style.display = 'none';
             document.getElementById('focusCustomDoseInput').style.display = 'none';
             document.getElementById('focusDoseSelect').value = '50';
         }
-        
+
         function focusDoseSelectChange() {
             const select = document.getElementById('focusDoseSelect');
             const customInput = document.getElementById('focusCustomDoseInput');
@@ -9620,52 +9702,84 @@ Current status at ${currentTime}:
                 customInput.style.display = 'none';
             }
         }
-        
+
         function focusConfirmCustomDose() {
             const time = document.getElementById('focusMedTime').value;
             const select = document.getElementById('focusDoseSelect');
+            const today = getLocalDateString(new Date());
             let dose;
-            
+
             if (select.value === 'custom') {
                 dose = parseInt(document.getElementById('focusCustomDoseValue').value) || 50;
             } else {
                 dose = parseInt(select.value);
             }
-            
-            state.medications = [{ id: Date.now(), dose: dose, time: time }];
-            
+
+            // FIX: ADD medication instead of replacing (prevents data loss)
+            const entry = { id: Date.now(), dose: dose, time: time, date: today };
+            state.medications.push(entry);
+
             // Auto-enable Vitamin C
             if (focusVitCEnabled) {
                 state.modifiers.vitaminC.active = true;
                 state.modifiers.vitaminC.time = '17:00';
             }
-            
+
             renderMedEntries();
             saveState();
             recalculate();
             focusHideCustomDose();
             renderFocusMode();
+            showToast('💊 ' + dose + 'mg XR logged at ' + time);
         }
-        
+
         function focusEditMeds() {
-            state.medications = [];
+            // FIX: Don't wipe all medications - just clear today's meds and allow re-entry
+            const today = getLocalDateString(new Date());
+            state.medications = state.medications.filter(med => med.date !== today);
             renderMedEntries();
             saveState();
             recalculate();
             renderFocusMode();
+            showToast('🗑️ Today\'s meds cleared - add new dose');
         }
         
         function updateFocusMedsStatus() {
             const notConfirmed = document.getElementById('focusMedsNotConfirmed');
             const confirmed = document.getElementById('focusMedsConfirmed');
             const summary = document.getElementById('focusMedsSummary');
-            
+
             if (state.medications.length > 0) {
                 notConfirmed.style.display = 'none';
                 confirmed.style.display = 'block';
                 const totalDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
-                const time = state.medications[0].time;
-                summary.textContent = `${totalDose}mg XR at ${minutesToTime(timeToMinutes(time))}`;
+                const numDoses = state.medications.length;
+
+                // FIX: Show all medication times, not just first
+                const medTimes = state.medications.map(m => minutesToTime(timeToMinutes(m.time))).join(', ');
+                let summaryText = `${totalDose}mg XR`;
+                if (numDoses === 1) {
+                    summaryText += ` at ${medTimes}`;
+                } else {
+                    summaryText += ` (${numDoses} doses at ${medTimes})`;
+                }
+
+                // FIX: Add stacking warning to Focus View
+                if (numDoses > 1) {
+                    const sleepDebt = Math.max(0, 8 - state.hoursSleptLastNight);
+                    let warningColor = '#f59e0b'; // Moderate warning
+                    let warningIcon = '⚠️';
+
+                    // High risk if stacking + no sleep debt
+                    if (sleepDebt < 2 && totalDose >= 60) {
+                        warningColor = '#ef4444';
+                        warningIcon = '🚨';
+                    }
+
+                    summaryText += `<br><span style="color: ${warningColor}; font-size: 0.85em;">${warningIcon} STACKED - ${totalDose}mg total</span>`;
+                }
+
+                summary.innerHTML = summaryText;
             } else {
                 notConfirmed.style.display = 'block';
                 confirmed.style.display = 'none';
