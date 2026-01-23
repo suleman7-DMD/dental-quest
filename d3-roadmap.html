@@ -3236,40 +3236,235 @@
             color: #ef4444;
         }
 
-        /* Competency Item */
-        .competency-item {
+        /* Competencies / Graduation Requirements */
+        .comp-category {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .comp-category-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 12px;
-            background: #1e293b;
-            border: 1px solid #334155;
+            padding: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .comp-category-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .comp-category-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comp-category-title h4 {
+            margin: 0;
+            font-size: 1em;
+        }
+
+        .comp-category-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comp-progress-bar {
+            width: 120px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .comp-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.3s;
+        }
+
+        .comp-progress-text {
+            font-size: 0.85em;
+            color: #94a3b8;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .comp-category-body {
+            padding: 0 15px 15px 15px;
+            border-top: 1px solid #334155;
+        }
+
+        .comp-status-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+        }
+
+        .comp-status-item {
+            text-align: center;
+        }
+
+        .comp-status-value {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .comp-status-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .comp-requirements-section {
+            margin-top: 12px;
+        }
+
+        .comp-requirements-title {
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .comp-req-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            background: rgba(15, 23, 42, 0.5);
             border-radius: 6px;
+            border-left: 3px solid transparent;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .competency-item:hover {
-            border-color: #f59e0b;
+        .comp-req-item:hover {
+            background: rgba(15, 23, 42, 0.8);
         }
 
-        .competency-item span:first-child {
-            color: #e2e8f0;
-            font-size: 0.9em;
-        }
-
-        .comp-count {
-            font-weight: 600;
-            color: #f59e0b;
-        }
-
-        .competency-item.complete {
-            border-color: #10b981;
+        .comp-req-item.completed {
+            border-left-color: #10b981;
             background: rgba(16, 185, 129, 0.1);
         }
 
-        .competency-item.complete .comp-count {
-            color: #10b981;
+        .comp-req-item.in-progress {
+            border-left-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        .comp-req-item.pending {
+            border-left-color: #64748b;
+        }
+
+        .comp-req-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            accent-color: #10b981;
+            cursor: pointer;
+        }
+
+        .comp-req-content {
+            flex: 1;
+        }
+
+        .comp-req-text {
+            color: #e2e8f0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .comp-req-item.completed .comp-req-text {
+            color: #86efac;
+        }
+
+        .comp-req-item.in-progress .comp-req-text {
+            color: #fde68a;
+        }
+
+        .comp-req-note {
+            font-size: 0.8em;
+            color: #94a3b8;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        .comp-req-counter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+        }
+
+        .comp-counter-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            background: #1e293b;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comp-counter-btn:hover {
+            background: #334155;
+        }
+
+        .comp-counter-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .comp-notes-input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 0.85em;
+            resize: none;
+        }
+
+        .comp-notes-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .comp-summary-card {
+            text-align: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+        }
+
+        .comp-summary-value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .comp-summary-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            margin-top: 4px;
         }
 
         /* Patient task in modal */
@@ -5358,60 +5553,21 @@
             </div>
         </div>
 
-        <!-- Competencies Sub-tab -->
+        <!-- Competencies Sub-tab - GRADUATION REQUIREMENTS -->
         <div id="clinical-competencies" class="clinical-panel" style="display: none;">
-            <div class="card">
-                <h3 style="color: #f59e0b; margin: 0 0 15px 0;">🎯 Clinical Competencies</h3>
-                <p style="color: #94a3b8; margin-bottom: 20px;">Track your required clinical competencies. Mark as complete when done.</p>
-                <div id="competenciesList" style="display: grid; gap: 15px;">
-                    <!-- Operative -->
-                    <div class="competency-category">
-                        <h4 style="color: #60a5fa; margin-bottom: 10px;">🦷 Operative</h4>
-                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
-                            <div class="competency-item" data-comp="class2-composite">
-                                <span>Class II Composite (Virgin)</span>
-                                <span class="comp-count">0/1</span>
-                            </div>
-                            <div class="competency-item" data-comp="class2-amalgam">
-                                <span>Class II Amalgam</span>
-                                <span class="comp-count">0/2</span>
-                            </div>
-                            <div class="competency-item" data-comp="class3-composite">
-                                <span>Class III Composite</span>
-                                <span class="comp-count">0/2</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Perio -->
-                    <div class="competency-category">
-                        <h4 style="color: #f472b6; margin-bottom: 10px;">🩺 Periodontics</h4>
-                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
-                            <div class="competency-item" data-comp="srp-quad">
-                                <span>SRP (per quad)</span>
-                                <span class="comp-count">0/4</span>
-                            </div>
-                            <div class="competency-item" data-comp="prophy">
-                                <span>Adult Prophy</span>
-                                <span class="comp-count">0/5</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Endo -->
-                    <div class="competency-category">
-                        <h4 style="color: #a78bfa; margin-bottom: 10px;">🔬 Endodontics</h4>
-                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
-                            <div class="competency-item" data-comp="anterior-rct">
-                                <span>Anterior RCT</span>
-                                <span class="comp-count">0/1</span>
-                            </div>
-                            <div class="competency-item" data-comp="premolar-rct">
-                                <span>Premolar RCT</span>
-                                <span class="comp-count">0/1</span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="card" style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #f59e0b; margin: 0;">🎓 Graduation Requirements</h3>
+                    <button onclick="resetCompetencies()" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; color: #f87171; cursor: pointer; font-size: 0.85em;">🔄 Reset All</button>
                 </div>
+                <p style="color: #94a3b8; margin-bottom: 15px;">Track all clinical competencies required for graduation. Click items to toggle status.</p>
+
+                <!-- Overall Progress Summary -->
+                <div id="overallProgressSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; margin-bottom: 20px;"></div>
             </div>
+
+            <!-- Requirements List - Rendered by JS -->
+            <div id="competenciesContainer"></div>
         </div>
     </div>
 
@@ -5889,7 +6045,8 @@ CHAIR: 9F
             clinicalData: {
                 patients: {},           // Patient records keyed by ID
                 appointments: [],       // Scheduled appointments
-                completedProcedures: [] // Logged completed procedures for competency
+                completedProcedures: [], // Logged completed procedures for competency
+                competencies: null      // Graduation requirements - initialized from DEFAULT_COMPETENCIES
             },
             lastSaved: null
         };
@@ -6657,12 +6814,13 @@ CHAIR: 9F
                             clinicalData: {
                                 patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                                 appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
-                                completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || []
+                                completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                                competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                             },
                             dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
                             lastSaved: data.lastSaved
                         };
-                        
+
                         // Also save to localStorage as backup
                         localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                         updateSyncStatus('connected', 'Synced');
@@ -6722,7 +6880,8 @@ CHAIR: 9F
                         clinicalData: {
                             patients: data.clinicalData?.patients || roadmapData.clinicalData?.patients || {},
                             appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
-                            completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || []
+                            completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                            competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                         }
                     };
 
@@ -6837,7 +6996,8 @@ CHAIR: 9F
                 clinicalData: {
                     patients: data.clinicalData?.patients || {},
                     appointments: data.clinicalData?.appointments || [],
-                    completedProcedures: data.clinicalData?.completedProcedures || []
+                    completedProcedures: data.clinicalData?.completedProcedures || [],
+                    competencies: data.clinicalData?.competencies || null
                 },
                 dailyPlanner: data.dailyPlanner,
                 lastSaved: data.lastSaved
@@ -9173,6 +9333,7 @@ CHAIR: 9F
             renderPatientsList();
             renderAppointmentsList();
             updateClinicalStats();
+            renderCompetencies();
         }
 
         function updateClinicalStats() {
@@ -9720,6 +9881,452 @@ CHAIR: 9F
             renderDeadlines();
             renderDashboard();
             showToast('Appointment deleted');
+        }
+
+        // ==================== GRADUATION REQUIREMENTS / COMPETENCIES ====================
+
+        // Default competencies data structure
+        const DEFAULT_COMPETENCIES = {
+            fixed: {
+                name: 'Fixed Prosthodontics',
+                icon: '🦷',
+                color: '#3b82f6',
+                summary: { completed: 0, inProgress: 0, planned: 2, required: 10, unit: 'units' },
+                notes: '2 planned (unreliable). Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations.',
+                sections: [
+                    { title: 'Fixed Formatives (to qualify for summatives)', items: [
+                        { id: 'fixed-form-prov', text: '6 Provisional Restoration', required: 6, completed: 0 },
+                        { id: 'fixed-form-prep', text: '6 Tooth Preparation', required: 6, completed: 0 },
+                        { id: 'fixed-form-impr', text: '6 Final Impression', required: 6, completed: 0 },
+                        { id: 'fixed-form-cement', text: '6 Cementation', required: 6, completed: 0 }
+                    ]},
+                    { title: 'Fixed Summatives', items: [
+                        { id: 'fixed-sum-prep', text: '2 Prep (Tooth Preparation)', required: 2, completed: 0 },
+                        { id: 'fixed-sum-temp', text: '2 Temp (Provisional Restoration)', required: 2, completed: 0 },
+                        { id: 'fixed-sum-impr', text: '2 Final Impression', required: 2, completed: 0 },
+                        { id: 'fixed-sum-cement', text: '2 Cementation', required: 2, completed: 0 }
+                    ]},
+                    { title: 'Other Requirements', items: [
+                        { id: 'fixed-occlusal-cr', text: 'Occlusal Analysis (Centric Relation)', required: 1, completed: 0 },
+                        { id: 'fixed-occlusal-mi', text: 'Occlusal Analysis (Maximum Intercuspation)', required: 1, completed: 0 },
+                        { id: 'fixed-mock', text: 'Mock Board', required: 1, completed: 0 },
+                        { id: 'fixed-sim-1', text: 'Fixed Simulation #1 (with Dr. Ferriero)', required: 1, completed: 0 },
+                        { id: 'fixed-sim-2', text: 'Fixed Simulation #2 (with Dr. Ferriero)', required: 1, completed: 0 },
+                        { id: 'fixed-sim-fpd', text: 'Simulation: 3-unit Prep and Temp of FPD', required: 1, completed: 0 },
+                        { id: 'fixed-case-pres', text: 'Case Presentation (on 2 completed units)', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            operative: {
+                name: 'Operative',
+                icon: '🔧',
+                color: '#10b981',
+                summary: { completed: 4, inProgress: 0, planned: 7, required: 8, unit: 'summatives' },
+                notes: '20 formative surfaces completed. 4 summatives done (2x DO composite). NEED CLASS 5 formatives/summatives. Grade: 86% on first DO.',
+                sections: [
+                    { title: 'Summative Requirements (8 total)', items: [
+                        { id: 'op-class5-1', text: 'Class V Composite Summative #1', required: 1, completed: 0 },
+                        { id: 'op-class5-2', text: 'Class V Composite Summative #2', required: 1, completed: 0 },
+                        { id: 'op-multi-1', text: 'Multisurface #1 (DO composite)', required: 1, completed: 1, note: '86% grade' },
+                        { id: 'op-multi-2', text: 'Multisurface #2 (DO composite)', required: 1, completed: 1, note: 'Awaiting grade' },
+                        { id: 'op-multi-3', text: 'Multisurface #3', required: 1, completed: 1 },
+                        { id: 'op-multi-4', text: 'Multisurface #4', required: 1, completed: 1 },
+                        { id: 'op-multi-5', text: 'Multisurface #5', required: 1, completed: 0 },
+                        { id: 'op-multi-6', text: 'Multisurface #6', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Other Requirements', items: [
+                        { id: 'op-formatives', text: 'Complete 20 formative surfaces', required: 20, completed: 20 },
+                        { id: 'op-approval', text: 'Approval from Dr. McManama', required: 1, completed: 0 },
+                        { id: 'op-assignment', text: 'Operative assignment/survey (Blackboard)', required: 1, completed: 0 },
+                        { id: 'op-license', text: 'Licensing Exam Prep (Dr. Robinson)', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            dentures: {
+                name: 'Complete Dentures',
+                icon: '🦴',
+                color: '#8b5cf6',
+                summary: { completed: 0, inProgress: 2, planned: 2, required: 4, unit: 'arches' },
+                notes: 'In-progress: 2 arches interim CU/CL. Planned: 2 arches definitive CU/CL.',
+                sections: [
+                    { title: 'Complete Denture Formatives', items: [
+                        { id: 'cd-form-prelim', text: '2 arches: Preliminary Impressions', required: 2, completed: 0 },
+                        { id: 'cd-form-final', text: '2 arches: Final Impression', required: 2, completed: 0 },
+                        { id: 'cd-form-records', text: '1 case: Inter-maxillary records', required: 1, completed: 0 },
+                        { id: 'cd-form-postdam', text: '1 case: Post Dam Technique', required: 1, completed: 0 },
+                        { id: 'cd-form-trial', text: '2 arches: Trial Denture (Tooth Try-In)', required: 2, completed: 0 },
+                        { id: 'cd-form-insert', text: '2 arches: Insertion / Clinical Remount', required: 2, completed: 0 },
+                        { id: 'cd-form-adjust', text: '2 arches: Adjustment', required: 2, completed: 0 }
+                    ]},
+                    { title: 'Complete Denture Summatives', items: [
+                        { id: 'cd-sum-prelim', text: 'Preliminary Impressions (Edentulous)', required: 1, completed: 0 },
+                        { id: 'cd-sum-final', text: 'Final Impression (Edentulous)', required: 1, completed: 0 },
+                        { id: 'cd-sum-records', text: 'Inter-maxillary records (Edentulous)', required: 1, completed: 0 },
+                        { id: 'cd-sum-postdam', text: 'Post-Dam Technique', required: 1, completed: 0 },
+                        { id: 'cd-sum-trial', text: 'Trial Denture (Edentulous)', required: 1, completed: 0 },
+                        { id: 'cd-sum-insert', text: 'Insertion / Clinical Remount (Edentulous)', required: 1, completed: 0 },
+                        { id: 'cd-sum-adjust', text: 'Adjustment (Edentulous)', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Overdenture Experience (complete one)', items: [
+                        { id: 'cd-over-dup', text: 'Duplicate denture and implant planning through surgery', required: 1, completed: 0 },
+                        { id: 'cd-over-abut', text: 'Abutment selection, placement & activation', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            rpd: {
+                name: 'RPDs',
+                icon: '🔩',
+                color: '#f59e0b',
+                summary: { completed: 0, inProgress: 0, planned: 0, required: 1, unit: 'track' },
+                notes: 'NEED RPDs - Must complete one track.',
+                sections: [
+                    { title: 'Clinical Experience Tracks (choose one)', items: [
+                        { id: 'rpd-track1', text: 'Track 1: 1 cast metal partial denture', required: 1, completed: 0 },
+                        { id: 'rpd-track2', text: 'Track 2: 2 flexible RPDs + OSCE', required: 1, completed: 0 },
+                        { id: 'rpd-track3', text: 'Track 3: 4 interim/resin base RPDs + OSCE', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Formatives & Summatives', items: [
+                        { id: 'rpd-form-abut', text: 'Formative: Abutment preparations (mounted casts)', required: 1, completed: 0 },
+                        { id: 'rpd-sum-abut', text: 'Summative: Abutment Preparations (Intra-Oral)', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            srp: {
+                name: 'SRPs',
+                icon: '🩺',
+                color: '#ef4444',
+                summary: { completed: 0, inProgress: 0, planned: 1, required: 4, unit: 'summatives' },
+                notes: '1 planned (unreliable) UL 1-3 teeth.',
+                sections: [
+                    { title: 'Periodontology Summatives', items: [
+                        { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0 },
+                        { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0 },
+                        { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0 },
+                        { id: 'srp-reeval', text: 'Re-evaluate (SRP) Summative', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            endo: {
+                name: 'Endodontics',
+                icon: '🔬',
+                color: '#06b6d4',
+                summary: { completed: 0, inProgress: 0, planned: 0, required: 2, unit: 'RCTs' },
+                notes: '0 completed, 0 planned.',
+                sections: [
+                    { title: 'Requirements', items: [
+                        { id: 'endo-rct-1', text: 'Root Canal Treatment #1 (on patient)', required: 1, completed: 0 },
+                        { id: 'endo-rct-2', text: 'Root Canal Treatment #2 (on patient)', required: 1, completed: 0 },
+                        { id: 'endo-pulp-1', text: 'Pulpectomy Summative #1', required: 1, completed: 0 },
+                        { id: 'endo-pulp-2', text: 'Pulpectomy Summative #2', required: 1, completed: 0 },
+                        { id: 'endo-postdoc', text: 'Post-doc Endo Assist', required: 1, completed: 0 },
+                        { id: 'endo-predoc', text: 'Pre-doc Endo Assist', required: 1, completed: 0 },
+                        { id: 'endo-mock', text: 'Passed Mock Board on manikin', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            oralsurg: {
+                name: 'Oral Surgery',
+                icon: '🏥',
+                color: '#ec4899',
+                summary: { completed: 4, inProgress: 0, planned: 0, required: 16, unit: 'items' },
+                notes: '',
+                sections: [
+                    { title: '3rd Year Requirements', items: [
+                        { id: 'os-3rd-rotation', text: 'Participate in 3rd Year Oral Surgery Rotation', required: 1, completed: 1 },
+                        { id: 'os-3rd-consult', text: 'Summative: Management of Patient having OS Consult', required: 1, completed: 1 },
+                        { id: 'os-3rd-nerve', text: 'Summative: Administration of IA and Long Buccal Block', required: 1, completed: 1 },
+                        { id: 'os-3rd-suture', text: 'Summative: Participation in Suturing Workshop', required: 1, completed: 1 }
+                    ]},
+                    { title: '4th Year Requirements', items: [
+                        { id: 'os-4th-rotation', text: 'Complete 2-week scheduled rotation', required: 1, completed: 0 },
+                        { id: 'os-4th-present', text: 'Presentation at morning seminar', required: 1, completed: 0 },
+                        { id: 'os-4th-oral', text: 'Oral examination (end of rotation)', required: 1, completed: 0 },
+                        { id: 'os-4th-rx', text: 'Take-home prescription writing exercise', required: 1, completed: 0 },
+                        { id: 'os-4th-mcq', text: 'MCQ quiz (Med Emergency, Nitrous, Instrument ID)', required: 1, completed: 0 },
+                        { id: 'os-4th-sim', text: 'Medical Simulation Lab at BMC', required: 1, completed: 0 },
+                        { id: 'os-4th-nitrous', text: 'Nitrous-Oxide Oxygen Sedation Hands-On training', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Clinical Summatives', items: [
+                        { id: 'os-extract-1', text: 'Extraction on patient #1', required: 1, completed: 0 },
+                        { id: 'os-extract-2', text: 'Extraction on patient #2', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            peds: {
+                name: 'Pediatric Dentistry',
+                icon: '👶',
+                color: '#84cc16',
+                summary: { completed: 0, inProgress: 0, planned: 0, required: 7, unit: 'items' },
+                notes: '',
+                sections: [
+                    { title: 'Course & Rotations', items: [
+                        { id: 'peds-course', text: 'Successful completion of PD 530 course', required: 1, completed: 0 },
+                        { id: 'peds-rotation', text: 'Rotations in Peds (including Franciscan Hospital)', required: 1, completed: 0 },
+                        { id: 'peds-assessment', text: 'Post-rotation assessment', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Clinical Summatives (log sheet)', items: [
+                        { id: 'peds-recall', text: '3 New Patient/Recall', required: 3, completed: 0 },
+                        { id: 'peds-sealants', text: '3 Sealants', required: 3, completed: 0 },
+                        { id: 'peds-restore', text: '3 Restorative procedures', required: 3, completed: 0 }
+                    ]}
+                ]
+            },
+            perio: {
+                name: 'Periodontology',
+                icon: '🦠',
+                color: '#f472b6',
+                summary: { completed: 12, inProgress: 1, planned: 0, required: 37, unit: 'items' },
+                notes: '',
+                sections: [
+                    { title: 'Surgical', items: [
+                        { id: 'perio-surg-assist', text: '7 Surgical Assist (total 3rd/4th yr, max 1 implant uncovering)', required: 7, completed: 0 }
+                    ]},
+                    { title: '3rd Year Specific Summatives', items: [
+                        { id: 'perio-3rd-ohi', text: 'Oral hygiene instructions (by Oct 1)', required: 1, completed: 1 },
+                        { id: 'perio-3rd-prophy', text: 'Scaling and Prophy (by May 2026)', required: 1, completed: 1, note: '100% - Need SRP summative' },
+                        { id: 'perio-3rd-reeval', text: 'Re-eval Gingivitis (by May 2026)', required: 1, completed: 0 }
+                    ]},
+                    { title: 'Total Formatives (3rd & 4th Year)', items: [
+                        { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 zoom, 1 in person)', required: 2, completed: 2 },
+                        { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 4 },
+                        { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 5 },
+                        { id: 'perio-form-quad', text: '3 Quad (SRP)', required: 3, completed: 1, note: 'UL quadrant' },
+                        { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0 },
+                        { id: 'perio-form-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0 },
+                        { id: 'perio-form-impr', text: '3 Re-evaluate Impression', required: 3, completed: 0 },
+                        { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 5 }
+                    ]},
+                    { title: 'Total Summatives (3rd & 4th Year)', items: [
+                        { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 1 },
+                        { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0 },
+                        { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 1, note: '100% score' },
+                        { id: 'perio-sum-calc', text: '3 Calculus removal', required: 3, completed: 0 },
+                        { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate (Gingivitis)', required: 2, completed: 0 },
+                        { id: 'perio-sum-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0 },
+                        { id: 'perio-sum-impr', text: '1 Re-evaluate (Impression)', required: 1, completed: 0 },
+                        { id: 'perio-sum-recall', text: '2 Recall', required: 2, completed: 0 },
+                        { id: 'perio-sum-mock', text: '1 Mock Board', required: 1, completed: 0 }
+                    ]}
+                ]
+            },
+            grouppractice: {
+                name: 'Group Practice (GD 640)',
+                icon: '👥',
+                color: '#0ea5e9',
+                summary: { completed: 6, inProgress: 1, planned: 0, required: 9, unit: 'items' },
+                notes: '',
+                sections: [
+                    { title: '3rd Year (GD 640)', items: [
+                        { id: 'gp-attend', text: 'Clinical Attendance (4 per week)', required: 1, completed: 1 },
+                        { id: 'gp-form-review', text: '1 Formative Periodic Review', required: 1, completed: 1 },
+                        { id: 'gp-sum-review', text: '1 Summative Periodic Review', required: 1, completed: 0 },
+                        { id: 'gp-form-analysis', text: '2 Formative Written Analyses', required: 2, completed: 1, note: '1 completed, 1 in progress' },
+                        { id: 'gp-sum-analysis', text: '1 Summative Written Analysis', required: 1, completed: 0 },
+                        { id: 'gp-comm', text: 'Communication Workshop', required: 1, completed: 1 },
+                        { id: 'gp-leader', text: 'Leadership Workshop', required: 1, completed: 0 },
+                        { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 1 }
+                    ]}
+                ]
+            }
+        };
+
+        function getCompetenciesData() {
+            // Initialize if not exists
+            if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
+            if (!roadmapData.clinicalData.competencies) {
+                roadmapData.clinicalData.competencies = JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES));
+            }
+            return roadmapData.clinicalData.competencies;
+        }
+
+        function renderCompetencies() {
+            const container = document.getElementById('competenciesContainer');
+            const summaryContainer = document.getElementById('overallProgressSummary');
+            if (!container) return;
+
+            const competencies = getCompetenciesData();
+
+            // Calculate overall stats
+            let totalCompleted = 0, totalRequired = 0, totalInProgress = 0;
+            Object.values(competencies).forEach(cat => {
+                cat.sections.forEach(sec => {
+                    sec.items.forEach(item => {
+                        totalRequired += item.required;
+                        totalCompleted += Math.min(item.completed, item.required);
+                        if (item.completed > 0 && item.completed < item.required) totalInProgress++;
+                    });
+                });
+            });
+
+            // Render overall summary
+            const overallPct = totalRequired > 0 ? Math.round((totalCompleted / totalRequired) * 100) : 0;
+            summaryContainer.innerHTML = `
+                <div class="comp-summary-card">
+                    <div class="comp-summary-value" style="color: #10b981;">${totalCompleted}</div>
+                    <div class="comp-summary-label">Completed</div>
+                </div>
+                <div class="comp-summary-card">
+                    <div class="comp-summary-value" style="color: #fbbf24;">${totalInProgress}</div>
+                    <div class="comp-summary-label">In Progress</div>
+                </div>
+                <div class="comp-summary-card">
+                    <div class="comp-summary-value" style="color: #94a3b8;">${totalRequired - totalCompleted}</div>
+                    <div class="comp-summary-label">Remaining</div>
+                </div>
+                <div class="comp-summary-card">
+                    <div class="comp-summary-value" style="color: #7c3aed;">${overallPct}%</div>
+                    <div class="comp-summary-label">Overall Progress</div>
+                </div>
+            `;
+
+            // Render each category
+            let html = '';
+            Object.entries(competencies).forEach(([key, cat]) => {
+                // Calculate category progress
+                let catCompleted = 0, catRequired = 0;
+                cat.sections.forEach(sec => {
+                    sec.items.forEach(item => {
+                        catRequired += item.required;
+                        catCompleted += Math.min(item.completed, item.required);
+                    });
+                });
+                const catPct = catRequired > 0 ? Math.round((catCompleted / catRequired) * 100) : 0;
+
+                html += `
+                    <div class="comp-category" data-category="${key}">
+                        <div class="comp-category-header" onclick="toggleCompCategory('${key}')">
+                            <div class="comp-category-title">
+                                <span style="font-size: 1.2em;">${cat.icon}</span>
+                                <h4 style="color: ${cat.color};">${cat.name}</h4>
+                            </div>
+                            <div class="comp-category-progress">
+                                <div class="comp-progress-bar">
+                                    <div class="comp-progress-fill" style="width: ${catPct}%; background: ${cat.color};"></div>
+                                </div>
+                                <span class="comp-progress-text">${catCompleted}/${catRequired}</span>
+                                <span style="color: #64748b; font-size: 1.2em;" id="compArrow-${key}">▼</span>
+                            </div>
+                        </div>
+                        <div class="comp-category-body" id="compBody-${key}">
+                            <div class="comp-status-row">
+                                <div class="comp-status-item">
+                                    <div class="comp-status-value" style="color: #10b981;">${cat.summary.completed}</div>
+                                    <div class="comp-status-label">Completed</div>
+                                </div>
+                                <div class="comp-status-item">
+                                    <div class="comp-status-value" style="color: #fbbf24;">${cat.summary.inProgress}</div>
+                                    <div class="comp-status-label">In Progress</div>
+                                </div>
+                                <div class="comp-status-item">
+                                    <div class="comp-status-value" style="color: #60a5fa;">${cat.summary.planned}</div>
+                                    <div class="comp-status-label">Planned</div>
+                                </div>
+                            </div>
+                            ${cat.notes ? `<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 4px; font-size: 0.85em; color: #fde68a;">${escapeHtml(cat.notes)}</div>` : ''}
+                            ${cat.sections.map(sec => `
+                                <div class="comp-requirements-section">
+                                    <div class="comp-requirements-title">${sec.title}</div>
+                                    ${sec.items.map(item => {
+                                        const status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in-progress' : 'pending';
+                                        return `
+                                            <div class="comp-req-item ${status}" data-item-id="${item.id}">
+                                                <input type="checkbox" class="comp-req-checkbox"
+                                                    ${item.completed >= item.required ? 'checked' : ''}
+                                                    onchange="toggleCompItem('${key}', '${item.id}')" />
+                                                <div class="comp-req-content">
+                                                    <div class="comp-req-text">${escapeHtml(item.text)}</div>
+                                                    ${item.note ? `<div class="comp-req-note">${escapeHtml(item.note)}</div>` : ''}
+                                                </div>
+                                                ${item.required > 1 ? `
+                                                    <div class="comp-req-counter">
+                                                        <button class="comp-counter-btn" onclick="adjustCompItem('${key}', '${item.id}', -1); event.stopPropagation();">−</button>
+                                                        <span class="comp-counter-value">${item.completed}/${item.required}</span>
+                                                        <button class="comp-counter-btn" onclick="adjustCompItem('${key}', '${item.id}', 1); event.stopPropagation();">+</button>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            `).join('')}
+                            <div style="margin-top: 15px;">
+                                <label style="font-size: 0.85em; color: #94a3b8;">Category Notes:</label>
+                                <textarea class="comp-notes-input" rows="2" placeholder="Add notes for ${cat.name}..."
+                                    onchange="updateCompNotes('${key}', this.value)">${escapeHtml(cat.notes || '')}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleCompCategory(key) {
+            const body = document.getElementById(`compBody-${key}`);
+            const arrow = document.getElementById(`compArrow-${key}`);
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                body.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+
+        function toggleCompItem(catKey, itemId) {
+            const competencies = getCompetenciesData();
+            const cat = competencies[catKey];
+            if (!cat) return;
+
+            for (const sec of cat.sections) {
+                const item = sec.items.find(i => i.id === itemId);
+                if (item) {
+                    // Toggle: if complete, set to 0; if incomplete, set to required
+                    if (item.completed >= item.required) {
+                        item.completed = 0;
+                    } else {
+                        item.completed = item.required;
+                    }
+                    break;
+                }
+            }
+
+            saveData();
+            renderCompetencies();
+        }
+
+        function adjustCompItem(catKey, itemId, delta) {
+            const competencies = getCompetenciesData();
+            const cat = competencies[catKey];
+            if (!cat) return;
+
+            for (const sec of cat.sections) {
+                const item = sec.items.find(i => i.id === itemId);
+                if (item) {
+                    item.completed = Math.max(0, Math.min(item.required, item.completed + delta));
+                    break;
+                }
+            }
+
+            saveData();
+            renderCompetencies();
+        }
+
+        function updateCompNotes(catKey, notes) {
+            const competencies = getCompetenciesData();
+            if (competencies[catKey]) {
+                competencies[catKey].notes = notes;
+                saveData();
+            }
+        }
+
+        function resetCompetencies() {
+            if (!confirm('Reset ALL competencies to default values? This cannot be undone.')) return;
+            roadmapData.clinicalData.competencies = JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES));
+            saveData();
+            renderCompetencies();
+            showToast('Competencies reset to defaults');
         }
 
         // ==================== IMPORT SYSTEM ====================
