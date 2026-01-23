@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecture Prompt Transformer | Dental Quest</title>
 
-    <!-- Markdown Parser -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Markdown Parser - pinned version for stability -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <!-- Word Document Generator -->
     <script src="https://cdn.jsdelivr.net/npm/docx@9.0.0/build/index.umd.min.js"></script>
     <!-- File Saver -->
@@ -99,6 +99,11 @@
 
         .toast.error {
             background-color: var(--accent-red);
+            color: white;
+        }
+
+        .toast.info {
+            background-color: var(--accent-blue);
             color: white;
         }
 
@@ -1712,23 +1717,57 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             refreshBuildNewTemplateDropdown();
             updateQuickEditPreview();
 
-            // Add input listeners for live preview
+            // Debounced preview update for better performance
+            const debouncedPreview = debounce(updateQuickEditPreview, 150);
+
+            // Add input listeners for live preview with debounce
             ['qe-course-name', 'qe-lecture-topic', 'qe-focus-area', 'qe-clinical-priority', 'qe-custom-instructions'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.addEventListener('input', updateQuickEditPreview);
+                    el.addEventListener('input', debouncedPreview);
                 }
             });
         }
 
         // ==================== UTILITY FUNCTIONS ====================
 
+        // Debounce helper - delays function execution until after wait ms have elapsed
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Toast queue system - prevents overlapping notifications
+        const toastQueue = [];
+        let isShowingToast = false;
+
         function showToast(message, type = 'success') {
+            toastQueue.push({ message, type });
+            processToastQueue();
+        }
+
+        function processToastQueue() {
+            if (isShowingToast || toastQueue.length === 0) return;
+
+            isShowingToast = true;
+            const { message, type } = toastQueue.shift();
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = `toast ${type} show`;
+
             setTimeout(() => {
                 toast.classList.remove('show');
+                setTimeout(() => {
+                    isShowingToast = false;
+                    processToastQueue(); // Process next in queue
+                }, 300); // Wait for fade-out animation
             }, 2500);
         }
 
@@ -1753,7 +1792,10 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
         async function pasteFromClipboard(elementId) {
             try {
                 const text = await navigator.clipboard.readText();
-                document.getElementById(elementId).value = text;
+                const element = document.getElementById(elementId);
+                element.value = text;
+                // Dispatch input event so all listeners are notified
+                element.dispatchEvent(new Event('input', { bubbles: true }));
                 updateStats(elementId);
                 showToast('Pasted from clipboard');
             } catch (err) {
@@ -2318,6 +2360,18 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 return;
             }
 
+            // Get the download button for loading state
+            const downloadBtn = document.querySelector('button[onclick="downloadAsWord()"]');
+            const originalBtnText = downloadBtn ? downloadBtn.innerHTML : null;
+
+            // Show loading state
+            if (downloadBtn) {
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '⏳ Generating...';
+                downloadBtn.style.opacity = '0.7';
+                downloadBtn.style.cursor = 'wait';
+            }
+
             // Fixed: Use '---' separator consistent with preview and copy functions
             const allMarkdown = collectedNotes.map(n => n.content).join('\n\n---\n\n');
             const filename = getExportFilename();
@@ -2326,7 +2380,18 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const totalWords = collectedNotes.reduce((sum, n) => sum + n.words, 0);
             if (totalWords > 25000) { // ~50 pages
                 console.warn(`Large document: ${totalWords} words, may take time to generate`);
+                showToast('Generating large document...', 'info');
             }
+
+            // Helper to restore button state
+            const restoreButton = () => {
+                if (downloadBtn && originalBtnText) {
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = originalBtnText;
+                    downloadBtn.style.opacity = '';
+                    downloadBtn.style.cursor = '';
+                }
+            };
 
             try {
                 const doc = createWordDocument(allMarkdown);
@@ -2335,14 +2400,17 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                     .then(blob => {
                         saveAs(blob, filename);
                         showToast('Word document downloaded!');
+                        restoreButton();
                     })
                     .catch(err => {
                         console.error('Blob generation error:', err);
                         showToast('Export failed during generation: ' + err.message, 'error');
+                        restoreButton();
                     });
             } catch (err) {
                 console.error('Export error:', err);
                 showToast('Export failed: ' + err.message, 'error');
+                restoreButton();
             }
         }
 
@@ -2393,7 +2461,7 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                             children: parseInlineText(itemText, FONT_SIZE_HALF_PTS, false, COLORS),
                             bullet: ordered ? undefined : { level: level },
                             numbering: ordered ? { reference: 'ordered-list', level: level } : undefined,
-                            indent: { left: level * 360 },
+                            // Note: removed redundant indent - bullet/numbering handles indentation
                             spacing: { before: 0, after: 0, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
                         }));
                     }
@@ -2476,6 +2544,47 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                     case 'space':
                         break;
 
+                    case 'image':
+                        // Handle image tokens - show alt text or placeholder
+                        const imageAlt = token.alt || token.text || 'Image';
+                        const imageUrl = token.href || '';
+                        children.push(new docx.Paragraph({
+                            children: [
+                                new docx.TextRun({
+                                    text: `[Image: ${imageAlt}]`,
+                                    italics: true,
+                                    size: FONT_SIZE_HALF_PTS,
+                                    font: 'Arial',
+                                    color: '666666',
+                                }),
+                                imageUrl ? new docx.TextRun({
+                                    text: ` (${imageUrl})`,
+                                    size: FONT_SIZE_HALF_PTS - 2,
+                                    font: 'Arial',
+                                    color: '888888',
+                                }) : new docx.TextRun({ text: '' }),
+                            ],
+                            spacing: { before: 60, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                        break;
+
+                    case 'link':
+                        // Handle standalone link tokens
+                        const linkText = token.text || token.href || 'Link';
+                        children.push(new docx.Paragraph({
+                            children: [
+                                new docx.TextRun({
+                                    text: linkText,
+                                    size: FONT_SIZE_HALF_PTS,
+                                    font: 'Arial',
+                                    color: '3b82f6',
+                                    underline: { type: docx.UnderlineType.SINGLE },
+                                }),
+                            ],
+                            spacing: { before: 0, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
+                        }));
+                        break;
+
                     default:
                         if (token.raw && token.raw.trim()) {
                             children.push(new docx.Paragraph({
@@ -2534,8 +2643,8 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
 
             // If this is a header, apply blue color to entire text
             if (isHeader) {
-                // Still parse for bold/italic within headers
-                const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+                // Improved pattern handles nested formatting like **bold with *nested* italic**
+                const pattern = /(\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?:[^*]|\*\*)+\*|`[^`]+`|~~(?:[^~]|~(?!~))+~~)/g;
                 const parts = text.split(pattern);
 
                 parts.forEach(part => {
@@ -2543,6 +2652,15 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                     if (part.startsWith('**') && part.endsWith('**')) {
                         runs.push(new docx.TextRun({
                             text: part.slice(2, -2),
+                            bold: true,
+                            size: fontSize,
+                            font: 'Arial',
+                            color: colors.header,
+                        }));
+                    } else if (part.startsWith('~~') && part.endsWith('~~')) {
+                        runs.push(new docx.TextRun({
+                            text: part.slice(2, -2),
+                            strike: true,
                             bold: true,
                             size: fontSize,
                             font: 'Arial',
@@ -2570,8 +2688,8 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                 return runs.length > 0 ? runs : [new docx.TextRun({ text: text, size: fontSize, font: 'Arial', bold: true, color: colors.header })];
             }
 
-            // Parse **bold**, *italic*, and regular text
-            const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+            // Improved pattern handles nested formatting and strikethrough
+            const pattern = /(\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?:[^*]|\*\*)+\*|`[^`]+`|~~(?:[^~]|~(?!~))+~~)/g;
             const parts = text.split(pattern);
 
             parts.forEach(part => {
@@ -2584,6 +2702,14 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
                         size: fontSize,
                         font: 'Arial',
                         color: colors.bold, // Green for bold
+                    }));
+                } else if (part.startsWith('~~') && part.endsWith('~~')) {
+                    runs.push(new docx.TextRun({
+                        text: part.slice(2, -2),
+                        strike: true,
+                        size: fontSize,
+                        font: 'Arial',
+                        color: colors.text,
                     }));
                 } else if (part.startsWith('*') && part.endsWith('*')) {
                     runs.push(new docx.TextRun({
@@ -2618,9 +2744,13 @@ Now produce exam-ready notes at the calibrated density. Begin.`;
             const rows = [];
             colors = colors || { header: '3b82f6', bold: '10b981', italic: '8b5cf6', text: '1a1a1a' };
 
-            // Helper to get cell text safely
+            // Helper to get cell text safely - handles marked.js v4+ token structure
             const getCellText = (cell) => {
                 if (typeof cell === 'string') return cell;
+                // Handle marked.js v4+ tokens array
+                if (cell && cell.tokens && Array.isArray(cell.tokens)) {
+                    return cell.tokens.map(t => t.text || t.raw || '').join('');
+                }
                 if (cell && cell.text) return cell.text;
                 if (cell && cell.raw) return cell.raw;
                 return String(cell || '');
