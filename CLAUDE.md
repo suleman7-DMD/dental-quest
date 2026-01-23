@@ -85,12 +85,13 @@
 - **Repo**: github.com/suleman7-DMD/dental-quest
 - **Pattern**: Single-file HTML apps with embedded CSS/JS (NO build system, NO npm, NO tests)
 
-### Files (Current Versions)
+### Files (Current Versions - Updated Jan 23, 2026)
 | File | Lines | Size | Purpose |
 |------|-------|------|---------|
-| `index.html` | ~9,900 | ~420KB | Main app: Focus Mode (1-3-5 rule), tasks/XP, dashboard, financials, notebook, calendar, medications, pomodoro |
-| `d3-roadmap.html` | ~9,600 | ~444KB | Academic tracker: 6+ tabs, Peds AT RISK, grade calculator, deadlines, monthly planner with collapsible weeks |
-| `stimulant-elimination-calculator.html` | ~9,900 | ~494KB | Pharmacokinetic sleep prediction: Process S + Process C circadian modeling, caffeine tracking, sleep debt, workout planner |
+| `index.html` | ~10,500 | ~458KB | Main app: Focus Mode (1-3-5 rule), tasks/XP, dashboard, financials, notebook, calendar, medications, pomodoro |
+| `d3-roadmap.html` | ~13,700 | ~628KB | Academic tracker: 7+ tabs, Clinical Tab with Competencies, Peds AT RISK, grade calculator, deadlines, monthly planner |
+| `stimulant-elimination-calculator.html` | ~10,600 | ~523KB | Pharmacokinetic sleep prediction: Process S + Process C circadian modeling, caffeine tracking, sleep debt, workout planner |
+| `lecture-prompt-transformer.html` | ~2,800 | ~119KB | Standalone tool: Transform lecture content for Claude study assistance |
 
 ### Working Directory
 - Files should be copied to `/home/claude/` for editing
@@ -158,6 +159,11 @@ users/user_[hashedPin]/
     │   ├── customTasks[]
     │   ├── overriddenStatic[]
     │   └── completedTasks[]
+    ├── clinicalData{}           ← NEW (v31)
+    │   ├── patients{}
+    │   ├── appointments[]
+    │   ├── completedProcedures[]
+    │   └── competencies{}       ← All graduation requirements
     ├── dailyPlanner{}
     └── lastSaved
 ```
@@ -375,6 +381,97 @@ function calculateFinancialStatus() {
 ---
 
 ## RECENT UPDATES (January 2026)
+
+### v31 Clinical Tab & Competencies System (d3-roadmap.html)
+
+#### NEW: Clinical Tracker Tab
+Full clinical tracking system added to d3-roadmap.html with multiple sub-tabs:
+- **Overview** - Summary dashboard of clinical progress
+- **Patients** - Patient roster with status tracking
+- **Appointments** - Upcoming appointments with axiUm import
+- **Competencies** - Graduation requirements tracker (see below)
+- **Lectures** - Lecture tracking with import from Claude
+
+#### Competencies System (Graduation Requirements)
+Tracks all clinical competencies across 10 disciplines:
+- Fixed Prosthodontics, Operative, Complete Dentures, RPDs
+- SRPs, Endodontics, Oral Surgery, Pediatric Dentistry
+- Periodontology, Group Practice
+
+**Data Structure:**
+```javascript
+clinicalData.competencies = {
+    fixed: {
+        name: 'Fixed Prosthodontics',
+        icon: '🦷',
+        color: '#3b82f6',
+        notes: '',
+        sections: [
+            { title: 'Fixed Formatives', items: [
+                { id: 'fixed-form-prov', text: '6 Provisional Restoration', required: 6, completed: 0 },
+                // ... more items
+            ]},
+            { title: 'Fixed Summatives', items: [...] },
+            // ... more sections
+        ]
+    },
+    // ... other disciplines
+};
+```
+
+**Add/Edit/Delete Requirements (NEW):**
+- **➕ Add Requirement** button at bottom of each section
+- **✏️ Edit** button appears on hover for ALL requirements
+- **🗑️ Delete** button appears only for custom-added items (`custom: true`)
+- Modal interface for adding/editing with fields: name, required count, progress, notes
+
+**Key Functions:**
+```javascript
+openAddCompItemModal(catKey, sectionIndex)  // Open modal to add new requirement
+openEditCompItemModal(catKey, itemId)        // Open modal to edit existing
+deleteCompItem(catKey, itemId)               // Delete custom requirement (with confirm)
+saveCompItem()                               // Save from modal (add or edit mode)
+closeCompItemModal()                         // Close modal
+```
+
+**Dynamic Calculations:**
+- `calculateCategoryStats(cat)` - Returns { completed, inProgress, planned, pending, percent, totalUnits, completedUnits }
+- `calculateOverallStats(competencies)` - Aggregates all categories
+- Stats automatically update when items are added/edited/deleted
+- Progress ring and bars update in real-time
+
+**Status System:**
+- `pending` - Not started (gray)
+- `planned` - Planning to do (blue)
+- `in_progress` - Working on it (yellow)
+- `completed` - Done (green)
+
+For items with `required > 1`, shows counter buttons (−/+) instead of status toggle.
+
+#### Task Block Height Fix (Monthly Planner)
+- **Problem:** Task blocks showed content outside colored background
+- **Fix:** Changed from `height: ${heightPx}px; min-height: ${minHeight}px;` to just `min-height: ${minHeight}px;`
+- Background now expands to fit all content (Google Calendar style)
+
+#### Appointment Card Fix
+- **Problem:** "undefined" showing in appointment status
+- **Fix:** Added fallback: `const status = apt.status || 'scheduled';`
+- Status now shows proper label (Scheduled/Completed/Cancelled/No Show)
+
+#### Firebase Data Structure Update
+```
+d3Roadmap/
+    ├── clinicalData/           ← NEW
+    │   ├── patients{}
+    │   ├── appointments[]
+    │   ├── completedProcedures[]
+    │   └── competencies{}      ← Stores all competency progress
+    ├── ...existing fields...
+```
+
+#### Removed: What's Next Panel
+- Removed from Competencies UI (user feedback: "nice but not useful")
+- CSS and function kept but not rendered
 
 ### v30 Financials Page Overhaul (index.html)
 
