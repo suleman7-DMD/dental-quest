@@ -2703,17 +2703,48 @@
             font-size: 0.68em;
             cursor: pointer;
             border-left: 3px solid;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: transform 0.1s, box-shadow 0.1s, max-height 0.2s;
             overflow: hidden;
             z-index: 1;
             line-height: 1.2;
+            max-height: 100%;
         }
 
         .mp-cal-task:hover {
             transform: translateX(2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            z-index: 10;
+            z-index: 100;
             overflow: visible;
+            max-height: none;
+            min-height: auto;
+            background: inherit;
+            position: absolute;
+            /* Allow hover content to expand and show full text */
+        }
+
+        .mp-cal-task-name {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Tooltip for full task description on hover */
+        .mp-cal-task[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 100%;
+            top: 0;
+            margin-left: 8px;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            max-width: 250px;
+            white-space: normal;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+            pointer-events: none;
         }
 
         .mp-cal-task-header {
@@ -2992,6 +3023,316 @@
 
         .mp-modal-btn.delete:hover {
             background: #991b1b;
+        }
+
+        /* ==================== CLINICAL TAB STYLES ==================== */
+        .clinical-subtabs {
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .clinical-subtab {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .clinical-subtab:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .clinical-subtab.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .patient-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.2s;
+        }
+
+        .patient-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .patient-card.needs-attention {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .patient-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .patient-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .patient-chart {
+            font-size: 0.85em;
+            color: #64748b;
+        }
+
+        .patient-status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .patient-status-badge.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .patient-status-badge.inactive {
+            background: rgba(100, 116, 139, 0.2);
+            color: #64748b;
+        }
+
+        .patient-status-badge.completed {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .patient-flags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .patient-flag {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .patient-flag.xray {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .patient-flag.recall {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .patient-flag.perio {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        .patient-tasks {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #334155;
+        }
+
+        .patient-task-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 0.9em;
+            color: #b0bcc8;
+        }
+
+        .patient-task-item.completed {
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        .patient-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .patient-action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .patient-action-btn.primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .patient-action-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .patient-action-btn.secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .patient-action-btn.secondary:hover {
+            background: #475569;
+        }
+
+        /* Appointment Card */
+        .appointment-card {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .appointment-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .appointment-date {
+            text-align: center;
+            padding: 10px;
+            background: #0f172a;
+            border-radius: 8px;
+            min-width: 70px;
+        }
+
+        .appointment-date-day {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .appointment-date-month {
+            font-size: 0.8em;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .appointment-info h4 {
+            margin: 0 0 5px 0;
+            color: #e2e8f0;
+        }
+
+        .appointment-details {
+            font-size: 0.85em;
+            color: #94a3b8;
+        }
+
+        .appointment-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .appointment-status.scheduled {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .appointment-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .appointment-status.cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Competency Item */
+        .competency-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .competency-item:hover {
+            border-color: #f59e0b;
+        }
+
+        .competency-item span:first-child {
+            color: #e2e8f0;
+            font-size: 0.9em;
+        }
+
+        .comp-count {
+            font-weight: 600;
+            color: #f59e0b;
+        }
+
+        .competency-item.complete {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .competency-item.complete .comp-count {
+            color: #10b981;
+        }
+
+        /* Patient task in modal */
+        .patient-task-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            background: #0f172a;
+            border-radius: 6px;
+        }
+
+        .patient-task-row input {
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #e2e8f0;
+        }
+
+        .patient-task-row select {
+            padding: 6px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #e2e8f0;
+        }
+
+        .patient-task-row button {
+            padding: 4px 8px;
+            background: #ef4444;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
         }
 
         /* Add Task Modal */
@@ -3534,6 +3875,7 @@
         <button class="tab-btn" onclick="switchTab('mandatory', event)" aria-label="View Mandatory Items tab">⚠️ Mandatory</button>
         <button class="tab-btn" onclick="switchTab('dailyplanner', event)" aria-label="View Daily Planner tab">📋 Daily Planner</button>
         <button class="tab-btn" onclick="switchTab('monthlyplanner', event)" aria-label="View Monthly Planner tab">🗓️ Monthly</button>
+        <button class="tab-btn" onclick="switchTab('clinical', event)" aria-label="View Clinical Patients tab">🏥 Clinical</button>
     </nav>
 
     <!-- ==================== DASHBOARD TAB ==================== -->
@@ -3558,6 +3900,17 @@
         <!-- Stats Row -->
         <div class="stats-row" id="dashboardStats">
             <!-- Populated by JS -->
+        </div>
+
+        <!-- Study Progress Widget -->
+        <div class="card" id="studyProgressWidget">
+            <div class="card-header">
+                <span class="card-title">📚 Exam Study Progress</span>
+                <button onclick="switchTab('examcontent', event)" style="padding: 6px 12px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; font-size: 0.85em;">Study Now →</button>
+            </div>
+            <div id="studyProgressContent">
+                <!-- Populated by JS -->
+            </div>
         </div>
 
         <!-- Next 7 Days -->
@@ -3675,6 +4028,18 @@
                         <tr><td><span class="risk-medium">🟡</span></td><td>Final Ortho prep</td><td>Feb 6</td><td>Orthodontics</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Clinical Overview Widget -->
+        <div class="card" id="clinicalDashboardWidget">
+            <div class="card-header">
+                <span class="card-title">🏥 Clinical Overview</span>
+                <button onclick="switchTab('clinical', event)" style="padding: 6px 12px; background: #7c3aed; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; font-size: 0.85em;">Go to Clinical →</button>
+            </div>
+            <div id="clinicalDashboardContent">
+                <!-- Populated by JS -->
+                <p style="color: #b0bcc8; padding: 15px; text-align: center;">Loading clinical data...</p>
             </div>
         </div>
 
@@ -4934,6 +5299,322 @@
         </div>
     </div>
 
+    <!-- ==================== CLINICAL TAB ==================== -->
+    <div id="tab-clinical" class="tab-content">
+        <!-- Header -->
+        <div class="card" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none; margin-bottom: 20px;">
+            <h2 style="color: white; margin: 0 0 5px 0; font-size: 1.8em;">🏥 CLINICAL TRACKER</h2>
+            <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 1em;">Track patients, appointments, and procedures</p>
+        </div>
+
+        <!-- Quick Stats Row -->
+        <div class="stats-grid" style="margin-bottom: 20px;">
+            <div class="stat-box">
+                <div class="stat-label">Active Patients</div>
+                <div class="stat-value" id="clinicalStatPatients">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">This Week Apts</div>
+                <div class="stat-value" id="clinicalStatWeekApts">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Procedures Done</div>
+                <div class="stat-value" id="clinicalStatProcedures">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Recalls Due</div>
+                <div class="stat-value" id="clinicalStatRecalls">0</div>
+            </div>
+        </div>
+
+        <!-- Sub-tabs for Clinical -->
+        <div class="clinical-subtabs" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="clinical-subtab active" onclick="switchClinicalSubtab('patients', this)">👤 My Patients</button>
+            <button class="clinical-subtab" onclick="switchClinicalSubtab('appointments', this)">📅 Appointments</button>
+            <button class="clinical-subtab" onclick="switchClinicalSubtab('competencies', this)">🎯 Competencies</button>
+        </div>
+
+        <!-- Patients Sub-tab -->
+        <div id="clinical-patients" class="clinical-panel">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="color: #10b981; margin: 0;">👤 My Patients</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="patientSearchInput" placeholder="Search patients..."
+                               style="padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; width: 180px;"
+                               oninput="filterPatients()">
+                        <select id="patientFilterStatus" onchange="filterPatients()" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
+                            <option value="all">All Patients</option>
+                            <option value="active">Active</option>
+                            <option value="needsAttention">Needs Attention</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <button class="btn btn-success" onclick="openAddPatientModal()" style="padding: 8px 16px;">+ Add Patient</button>
+                    </div>
+                </div>
+                <div id="patientsList" style="display: grid; gap: 12px;">
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">👤</div>
+                        <p>No patients yet. Click "Add Patient" to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments Sub-tab -->
+        <div id="clinical-appointments" class="clinical-panel" style="display: none;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="color: #3b82f6; margin: 0;">📅 Upcoming Appointments</h3>
+                    <button class="btn btn-primary" onclick="openAddAppointmentModal()" style="padding: 8px 16px;">+ Schedule Apt</button>
+                </div>
+                <div id="appointmentsList">
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">📅</div>
+                        <p>No appointments scheduled. Add a patient first, then schedule appointments.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competencies Sub-tab -->
+        <div id="clinical-competencies" class="clinical-panel" style="display: none;">
+            <div class="card">
+                <h3 style="color: #f59e0b; margin: 0 0 15px 0;">🎯 Clinical Competencies</h3>
+                <p style="color: #94a3b8; margin-bottom: 20px;">Track your required clinical competencies. Mark as complete when done.</p>
+                <div id="competenciesList" style="display: grid; gap: 15px;">
+                    <!-- Operative -->
+                    <div class="competency-category">
+                        <h4 style="color: #60a5fa; margin-bottom: 10px;">🦷 Operative</h4>
+                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                            <div class="competency-item" data-comp="class2-composite">
+                                <span>Class II Composite (Virgin)</span>
+                                <span class="comp-count">0/1</span>
+                            </div>
+                            <div class="competency-item" data-comp="class2-amalgam">
+                                <span>Class II Amalgam</span>
+                                <span class="comp-count">0/2</span>
+                            </div>
+                            <div class="competency-item" data-comp="class3-composite">
+                                <span>Class III Composite</span>
+                                <span class="comp-count">0/2</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Perio -->
+                    <div class="competency-category">
+                        <h4 style="color: #f472b6; margin-bottom: 10px;">🩺 Periodontics</h4>
+                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                            <div class="competency-item" data-comp="srp-quad">
+                                <span>SRP (per quad)</span>
+                                <span class="comp-count">0/4</span>
+                            </div>
+                            <div class="competency-item" data-comp="prophy">
+                                <span>Adult Prophy</span>
+                                <span class="comp-count">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Endo -->
+                    <div class="competency-category">
+                        <h4 style="color: #a78bfa; margin-bottom: 10px;">🔬 Endodontics</h4>
+                        <div class="competency-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                            <div class="competency-item" data-comp="anterior-rct">
+                                <span>Anterior RCT</span>
+                                <span class="comp-count">0/1</span>
+                            </div>
+                            <div class="competency-item" data-comp="premolar-rct">
+                                <span>Premolar RCT</span>
+                                <span class="comp-count">0/1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Patient Modal -->
+    <div id="patientModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal" style="max-width: 600px;">
+            <div class="mp-modal-header">
+                <h3 id="patientModalTitle">➕ Add Patient</h3>
+                <button class="mp-modal-close" onclick="closePatientModal()">✕</button>
+            </div>
+            <div class="mp-modal-body" style="display: grid; gap: 15px;">
+                <input type="hidden" id="patientModalId">
+                <div class="mp-modal-field">
+                    <label>Patient Name/Initials *</label>
+                    <input type="text" id="patientModalName" placeholder="e.g., John D. or JD">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="mp-modal-field">
+                        <label>Chart Number</label>
+                        <input type="text" id="patientModalChart" placeholder="e.g., 12345">
+                    </div>
+                    <div class="mp-modal-field">
+                        <label>ASA Class</label>
+                        <select id="patientModalASA">
+                            <option value="ASA I">ASA I - Healthy</option>
+                            <option value="ASA II">ASA II - Mild systemic</option>
+                            <option value="ASA III">ASA III - Severe systemic</option>
+                            <option value="ASA IV">ASA IV - Life-threatening</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="mp-modal-field">
+                        <label>Perio Status</label>
+                        <select id="patientModalPerio">
+                            <option value="healthy">Healthy</option>
+                            <option value="gingivitis">Gingivitis</option>
+                            <option value="mild-perio">Mild Periodontitis</option>
+                            <option value="moderate-perio">Moderate Periodontitis</option>
+                            <option value="severe-perio">Severe Periodontitis</option>
+                        </select>
+                    </div>
+                    <div class="mp-modal-field">
+                        <label>Patient Status</label>
+                        <select id="patientModalStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="completed">Treatment Complete</option>
+                            <option value="dismissed">Dismissed</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- X-ray and Recall Status -->
+                <div class="card" style="background: #1e293b; padding: 15px; margin: 5px 0;">
+                    <h4 style="color: #94a3b8; margin: 0 0 12px 0; font-size: 0.9em;">📋 Status Flags</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="patientModalNeedsXrays" style="width: 18px; height: 18px;">
+                            <span style="color: #e2e8f0;">Needs X-rays</span>
+                        </label>
+                        <select id="patientModalXrayType" style="padding: 6px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: #e2e8f0;">
+                            <option value="">X-ray Type...</option>
+                            <option value="FMX">FMX</option>
+                            <option value="BWX">BWX (4)</option>
+                            <option value="PA">PA</option>
+                            <option value="Pano">Pano</option>
+                        </select>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="patientModalRecallDue" style="width: 18px; height: 18px;">
+                            <span style="color: #e2e8f0;">Recall/Prophy Due</span>
+                        </label>
+                        <input type="date" id="patientModalRecallDate" style="padding: 6px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: #e2e8f0;">
+                    </div>
+                </div>
+                <div class="mp-modal-field">
+                    <label>Medical Alerts</label>
+                    <input type="text" id="patientModalMedical" placeholder="e.g., Penicillin allergy, Diabetes">
+                </div>
+                <div class="mp-modal-field">
+                    <label>Notes</label>
+                    <textarea id="patientModalNotes" rows="2" placeholder="Any additional notes..." style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; resize: vertical;"></textarea>
+                </div>
+                <!-- Outstanding Tasks Section -->
+                <div class="card" style="background: #1e293b; padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #f59e0b; margin: 0; font-size: 0.95em;">📋 Outstanding Tasks/Procedures</h4>
+                        <button type="button" class="btn btn-small" onclick="addPatientTask()" style="padding: 4px 10px; font-size: 0.85em;">+ Add</button>
+                    </div>
+                    <div id="patientTasksList" style="display: grid; gap: 8px;">
+                        <p style="color: #64748b; font-size: 0.85em; margin: 0;">No tasks yet. Click "+ Add" to add procedures.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mp-modal-footer">
+                <button class="mp-modal-btn cancel" onclick="closePatientModal()">Cancel</button>
+                <button class="mp-modal-btn delete" id="patientDeleteBtn" onclick="deletePatient()" style="display: none;">🗑️ Delete</button>
+                <button class="mp-modal-btn submit" onclick="savePatient()">Save Patient</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Appointment Modal -->
+    <div id="appointmentModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal" style="max-width: 500px;">
+            <div class="mp-modal-header">
+                <h3 id="appointmentModalTitle">📅 Schedule Appointment</h3>
+                <button class="mp-modal-close" onclick="closeAppointmentModal()">✕</button>
+            </div>
+            <div class="mp-modal-body" style="display: grid; gap: 15px;">
+                <input type="hidden" id="appointmentModalId">
+                <div class="mp-modal-field">
+                    <label>Patient *</label>
+                    <select id="appointmentModalPatient" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
+                        <option value="">Select patient...</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="mp-modal-field">
+                        <label>Date *</label>
+                        <input type="date" id="appointmentModalDate">
+                    </div>
+                    <div class="mp-modal-field">
+                        <label>Time *</label>
+                        <select id="appointmentModalTime">
+                            <option value="08:00">8:00 AM</option>
+                            <option value="08:30">8:30 AM</option>
+                            <option value="09:00" selected>9:00 AM</option>
+                            <option value="09:30">9:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="12:30">12:30 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="13:30">1:30 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="14:30">2:30 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="15:30">3:30 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="16:30">4:30 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="mp-modal-field">
+                        <label>Duration</label>
+                        <select id="appointmentModalDuration">
+                            <option value="60">1 hour</option>
+                            <option value="90">1.5 hours</option>
+                            <option value="120">2 hours</option>
+                            <option value="150">2.5 hours</option>
+                            <option value="180" selected>3 hours</option>
+                            <option value="240">4 hours</option>
+                        </select>
+                    </div>
+                    <div class="mp-modal-field">
+                        <label>Chair</label>
+                        <input type="text" id="appointmentModalChair" placeholder="e.g., 3A-12">
+                    </div>
+                </div>
+                <div class="mp-modal-field">
+                    <label>Procedures Planned</label>
+                    <input type="text" id="appointmentModalProcedures" placeholder="e.g., MOD Composite #30, Prophy">
+                </div>
+                <div class="mp-modal-field">
+                    <label>Notes</label>
+                    <input type="text" id="appointmentModalNotes" placeholder="Any special notes...">
+                </div>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 5px;">
+                    <input type="checkbox" id="appointmentModalCreateDeadline" checked style="width: 18px; height: 18px;">
+                    <span style="color: #e2e8f0;">Add to Deadlines tab</span>
+                </label>
+            </div>
+            <div class="mp-modal-footer">
+                <button class="mp-modal-btn cancel" onclick="closeAppointmentModal()">Cancel</button>
+                <button class="mp-modal-btn delete" id="appointmentDeleteBtn" onclick="deleteAppointment()" style="display: none;">🗑️ Delete</button>
+                <button class="mp-modal-btn submit" onclick="saveAppointment()">Save Appointment</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Task Modal -->
     <div id="mpTaskModal" class="mp-modal-overlay" style="display: none;">
         <div class="mp-modal" style="max-width: 520px;">
@@ -5121,6 +5802,12 @@
                 customTasks: [],
                 overriddenStatic: [],
                 completedTasks: []
+            },
+            // Clinical patient tracking
+            clinicalData: {
+                patients: {},           // Patient records keyed by ID
+                appointments: [],       // Scheduled appointments
+                completedProcedures: [] // Logged completed procedures for competency
             },
             lastSaved: null
         };
@@ -5885,6 +6572,11 @@
                                 overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
                                 completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
                             },
+                            clinicalData: {
+                                patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
+                                appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
+                                completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || []
+                            },
                             dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
                             lastSaved: data.lastSaved
                         };
@@ -5926,15 +6618,15 @@
             realtimeSyncRef.on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) return;
-                
+
                 // Only update if this is a newer save from another device
                 const remoteLastSaved = data.lastSaved || 0;
                 const localLastSaved = roadmapData.lastSaved || 0;
-                
+
                 // If remote is newer by at least 1 second, update
                 if (remoteLastSaved > localLastSaved + 1000 && remoteLastSaved > lastRemoteUpdate) {
                     lastRemoteUpdate = remoteLastSaved;
-                    
+
                     // Deep merge the data
                     roadmapData = {
                         ...roadmapData,
@@ -5946,24 +6638,43 @@
                             completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
                         }
                     };
-                    
+
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
-                    
+
                     // Re-render the Monthly Planner if on that tab
                     const activeTab = document.querySelector('.tab-btn.active');
                     if (activeTab && activeTab.textContent.includes('Monthly')) {
                         initMonthlyPlanner();
                     }
-                    
+
                     updateSyncStatus('connected', 'Synced');
                     showToast('Updated from another device');
                 }
+            }, error => {
+                // FIXED: Add error handler for realtime sync failures
+                console.error('Realtime sync error:', error);
+                updateSyncStatus('error', 'Sync connection lost');
+                // Try to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (firebaseSyncEnabled && database && userPath) {
+                        setupRealtimeSync();
+                    }
+                }, 5000);
             });
-            
+
         }
         
         // Force sync from cloud - manual refresh button
+        let lastForceSync = 0;
         function forceCloudSync() {
+            // FIXED: Add debounce to prevent rapid clicking (2 second cooldown)
+            const now = Date.now();
+            if (now - lastForceSync < 2000) {
+                showToast('Please wait before syncing again');
+                return;
+            }
+            lastForceSync = now;
+
             if (!firebaseSyncEnabled || !database || !userPath) {
                 showToast('❌ Not connected to cloud');
                 updateSyncStatus('offline', 'Not connected');
@@ -6218,6 +6929,7 @@
             if (tabId === 'mandatory') renderExamCountdown();
             if (tabId === 'dailyplanner') initDailyPlanner();
             if (tabId === 'monthlyplanner') initMonthlyPlanner();
+            if (tabId === 'clinical') initClinicalTab();
         }
 
         // ==================== COURSE ACCORDION ====================
@@ -6333,18 +7045,195 @@
             // Update current date display
             const dateDisplay = document.getElementById('currentDateDisplay');
             if (dateDisplay) {
-                dateDisplay.textContent = today.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                dateDisplay.textContent = today.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
             }
+
+            // Render clinical dashboard widget
+            renderClinicalDashboardWidget();
+
+            // Render study progress widget
+            renderStudyProgressWidget();
+        }
+
+        function renderClinicalDashboardWidget() {
+            const container = document.getElementById('clinicalDashboardContent');
+            if (!container) return;
+
+            const patients = roadmapData.clinicalData?.patients || {};
+            const appointments = roadmapData.clinicalData?.appointments || [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const patientCount = Object.keys(patients).length;
+            const activePatients = Object.values(patients).filter(p => p.status === 'active').length;
+
+            // Get upcoming appointments (next 7 days)
+            const upcomingApts = appointments.filter(apt => {
+                const aptDate = parseLocalDate(apt.date);
+                const diffDays = Math.ceil((aptDate - today) / (1000 * 60 * 60 * 24));
+                return diffDays >= 0 && diffDays <= 7;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Get patients needing attention
+            const needsAttention = Object.values(patients).filter(p =>
+                p.status === 'active' && (p.xrayNeeded || p.recallDue || p.prophyDue)
+            );
+
+            if (patientCount === 0 && appointments.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 25px; color: #b0bcc8;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">🏥</div>
+                        <p>No clinical data yet.</p>
+                        <button onclick="switchTab('clinical', event)" style="margin-top: 10px; padding: 8px 16px; background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                            Add Your First Patient
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+                    <div style="background: rgba(16, 185, 129, 0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: 700; color: #10b981;">${activePatients}</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Active Pts</div>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: 700; color: #3b82f6;">${upcomingApts.length}</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">This Week</div>
+                    </div>
+                    <div style="background: rgba(245, 158, 11, 0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: 700; color: #f59e0b;">${needsAttention.length}</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Need Attn</div>
+                    </div>
+                    <div style="background: rgba(124, 58, 237, 0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: 700; color: #a78bfa;">${patientCount}</div>
+                        <div style="font-size: 0.8em; color: #b0bcc8;">Total Pts</div>
+                    </div>
+                </div>
+            `;
+
+            // Show upcoming appointments
+            if (upcomingApts.length > 0) {
+                html += `<div style="margin-bottom: 10px; font-weight: 600; color: #93c5fd;">📅 Upcoming This Week</div>`;
+                upcomingApts.slice(0, 3).forEach(apt => {
+                    const patient = patients[apt.patientId];
+                    const aptDate = parseLocalDate(apt.date);
+                    const dayName = aptDate.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dateStr = aptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; margin-bottom: 8px;">
+                            <div style="min-width: 50px; text-align: center; background: rgba(59, 130, 246, 0.2); padding: 5px; border-radius: 6px;">
+                                <div style="font-size: 0.75em; color: #93c5fd;">${dayName}</div>
+                                <div style="font-weight: 700;">${dateStr.split(' ')[1]}</div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">${patient ? patient.name : 'Unknown Patient'}</div>
+                                <div style="font-size: 0.85em; color: #b0bcc8;">${apt.procedures || 'No procedures listed'}</div>
+                            </div>
+                            <div style="font-size: 0.85em; color: #93c5fd;">${apt.time || ''}</div>
+                        </div>
+                    `;
+                });
+                if (upcomingApts.length > 3) {
+                    html += `<div style="text-align: center; color: #7c3aed; font-size: 0.85em; cursor: pointer;" onclick="switchTab('clinical', event)">+ ${upcomingApts.length - 3} more appointments</div>`;
+                }
+            } else {
+                html += `<div style="color: #b0bcc8; padding: 10px; text-align: center; font-style: italic;">No appointments scheduled for this week</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderStudyProgressWidget() {
+            const container = document.getElementById('studyProgressContent');
+            if (!container) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Get upcoming exams (next 30 days) from examContentData
+            const upcomingExams = [];
+            Object.entries(examContentData).forEach(([courseKey, course]) => {
+                course.exams.forEach(exam => {
+                    if (!exam.isPast && exam.date) {
+                        const daysUntil = getDaysUntil(exam.date);
+                        if (daysUntil >= 0 && daysUntil <= 45) {
+                            const progress = getExamProgress(exam.id, exam.lectures, exam.reviewContent);
+                            upcomingExams.push({
+                                ...exam,
+                                courseKey,
+                                courseName: course.courseName,
+                                colorClass: course.colorClass,
+                                daysUntil,
+                                progress
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Sort by date
+            upcomingExams.sort((a, b) => a.daysUntil - b.daysUntil);
+
+            if (upcomingExams.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #b0bcc8;">
+                        <p>No upcoming exams in the next 45 days.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+
+            upcomingExams.slice(0, 4).forEach(exam => {
+                const urgencyColor = exam.daysUntil <= 7 ? '#ef4444' :
+                                     exam.daysUntil <= 14 ? '#f59e0b' :
+                                     exam.daysUntil <= 21 ? '#eab308' : '#10b981';
+
+                const progressColor = exam.progress.percent >= 80 ? '#10b981' :
+                                      exam.progress.percent >= 50 ? '#eab308' :
+                                      exam.progress.percent >= 25 ? '#f59e0b' : '#ef4444';
+
+                html += `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(30, 41, 59, 0.5); border-radius: 10px; border-left: 4px solid ${urgencyColor};">
+                        <div style="min-width: 45px; text-align: center;">
+                            <div style="font-size: 1.4em; font-weight: 700; color: ${urgencyColor};">${exam.daysUntil}</div>
+                            <div style="font-size: 0.7em; color: #b0bcc8;">days</div>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${exam.name}</div>
+                            <div style="font-size: 0.8em; color: #93c5fd; margin-bottom: 6px;">${exam.courseName}</div>
+                            <div style="background: rgba(100, 116, 139, 0.3); border-radius: 4px; height: 6px; overflow: hidden;">
+                                <div style="background: ${progressColor}; height: 100%; width: ${exam.progress.percent}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; min-width: 60px;">
+                            <div style="font-size: 1.1em; font-weight: 700; color: ${progressColor};">${exam.progress.percent}%</div>
+                            <div style="font-size: 0.7em; color: #b0bcc8;">${exam.progress.totalStudied}/${exam.progress.totalCount}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            if (upcomingExams.length > 4) {
+                html += `<div style="text-align: center; margin-top: 10px; color: #7c3aed; font-size: 0.85em; cursor: pointer;" onclick="switchTab('examcontent', event)">+ ${upcomingExams.length - 4} more exams</div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         function renderDeadlines() {
             const months = ['january', 'february', 'march', 'april'];
-            
+
             // First, sort ALL deadlines by date to ensure correct ordering
             deadlines.sort((a, b) => new Date(a.date) - new Date(b.date));
             
@@ -6505,11 +7394,11 @@
             }
             
             const deadline = deadlines[index];
-            
+
             // Update the field
             deadline[field] = value;
-            
-            // Store the edit
+
+            // Store the edit (including completion status)
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
             roadmapData.editedDeadlines[index] = {
                 date: deadline.date,
@@ -6519,17 +7408,19 @@
                 course: deadline.course,
                 weight: deadline.weight,
                 type: deadline.type,
-                tbd: deadline.tbd
+                tbd: deadline.tbd,
+                done: deadline.done || false,    // FIXED: Preserve completion status
+                grade: deadline.grade || null    // FIXED: Preserve grade
             };
-            
+
             // Save immediately
             localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
             saveData();
-            
+
             // Re-render
             renderDeadlines();
             renderDashboard();
-            
+
             showToast(`${field} updated!`);
         }
         
@@ -6814,13 +7705,33 @@
                     if (grade !== null) {
                         d.done = true;
                         d.grade = grade;
+
+                        // CRITICAL FIX: Persist completion to roadmapData for save
+                        if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
+                        roadmapData.completedDeadlines[idx] = {
+                            date: d.date,
+                            what: d.what,
+                            course: d.course,
+                            weight: d.weight,
+                            grade: grade,
+                            completedAt: new Date().toISOString(),
+                            syncedFromGrades: true
+                        };
                     } else {
                         d.done = false;
                         d.grade = null;
+
+                        // Remove from completedDeadlines if unmarking
+                        if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[idx]) {
+                            delete roadmapData.completedDeadlines[idx];
+                        }
                     }
                 }
             });
-            
+
+            // CRITICAL FIX: Save the updated completion status
+            saveData();
+
             // Re-render deadlines to show updated status
             renderDeadlines();
             renderDashboard();
@@ -8146,6 +9057,556 @@
             }).join('');
         }
 
+        // ==================== CLINICAL TAB FUNCTIONS ====================
+
+        let currentPatientTasks = []; // Temporary storage for patient modal tasks
+
+        function switchClinicalSubtab(subtab, btn) {
+            // Update button states
+            document.querySelectorAll('.clinical-subtab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Show/hide panels
+            document.querySelectorAll('.clinical-panel').forEach(p => p.style.display = 'none');
+            const panel = document.getElementById('clinical-' + subtab);
+            if (panel) panel.style.display = 'block';
+        }
+
+        function initClinicalTab() {
+            renderPatientsList();
+            renderAppointmentsList();
+            updateClinicalStats();
+        }
+
+        function updateClinicalStats() {
+            const patients = roadmapData.clinicalData?.patients || {};
+            const appointments = roadmapData.clinicalData?.appointments || [];
+            const procedures = roadmapData.clinicalData?.completedProcedures || [];
+
+            // Count active patients
+            const activePatients = Object.values(patients).filter(p => p.status === 'active').length;
+            document.getElementById('clinicalStatPatients').textContent = activePatients;
+
+            // Count this week's appointments
+            const today = new Date();
+            const weekEnd = new Date(today);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            const weekApts = appointments.filter(apt => {
+                const aptDate = parseLocalDate(apt.date);
+                return aptDate >= today && aptDate <= weekEnd && apt.status !== 'cancelled';
+            }).length;
+            document.getElementById('clinicalStatWeekApts').textContent = weekApts;
+
+            // Count procedures done
+            document.getElementById('clinicalStatProcedures').textContent = procedures.length;
+
+            // Count recalls due
+            const recallsDue = Object.values(patients).filter(p => {
+                if (!p.recallDue || p.status !== 'active') return false;
+                const recallDate = parseLocalDate(p.recallDue);
+                const thirtyDaysFromNow = new Date();
+                thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+                return recallDate <= thirtyDaysFromNow;
+            }).length;
+            document.getElementById('clinicalStatRecalls').textContent = recallsDue;
+        }
+
+        // ===== PATIENT MANAGEMENT =====
+
+        function renderPatientsList() {
+            const container = document.getElementById('patientsList');
+            const patients = roadmapData.clinicalData?.patients || {};
+            const patientArray = Object.values(patients);
+
+            // Get filter values
+            const searchTerm = document.getElementById('patientSearchInput')?.value?.toLowerCase() || '';
+            const statusFilter = document.getElementById('patientFilterStatus')?.value || 'all';
+
+            // Filter patients
+            let filtered = patientArray;
+            if (searchTerm) {
+                filtered = filtered.filter(p =>
+                    p.name?.toLowerCase().includes(searchTerm) ||
+                    p.chartNumber?.toLowerCase().includes(searchTerm)
+                );
+            }
+            if (statusFilter === 'active') {
+                filtered = filtered.filter(p => p.status === 'active');
+            } else if (statusFilter === 'inactive') {
+                filtered = filtered.filter(p => p.status !== 'active');
+            } else if (statusFilter === 'needsAttention') {
+                filtered = filtered.filter(p => p.needsXrays || p.recallDue);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">👤</div>
+                        <p>${patientArray.length === 0 ? 'No patients yet. Click "Add Patient" to get started.' : 'No patients match your filters.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by name
+            filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            container.innerHTML = filtered.map(patient => {
+                const needsAttention = patient.needsXrays || patient.recallDue;
+                const tasks = patient.outstandingTasks || [];
+                const incompleteTasks = tasks.filter(t => t.status !== 'completed');
+
+                // Build flags HTML
+                let flagsHtml = '';
+                if (patient.needsXrays) {
+                    flagsHtml += `<span class="patient-flag xray">📷 ${patient.xrayType || 'X-rays'} needed</span>`;
+                }
+                if (patient.recallDue) {
+                    const recallDate = parseLocalDate(patient.recallDue);
+                    const isOverdue = recallDate && recallDate < new Date();
+                    flagsHtml += `<span class="patient-flag recall">${isOverdue ? '⚠️ Recall OVERDUE' : '🔔 Recall due'}</span>`;
+                }
+                if (patient.perioStatus && patient.perioStatus !== 'healthy') {
+                    flagsHtml += `<span class="patient-flag perio">🦷 ${patient.perioStatus}</span>`;
+                }
+
+                // Build tasks HTML
+                let tasksHtml = '';
+                if (incompleteTasks.length > 0) {
+                    tasksHtml = `
+                        <div class="patient-tasks">
+                            <strong style="font-size: 0.85em; color: #94a3b8;">Outstanding (${incompleteTasks.length}):</strong>
+                            ${incompleteTasks.slice(0, 3).map(t => `
+                                <div class="patient-task-item">
+                                    <span>○</span> ${escapeHtml(t.procedure)}
+                                </div>
+                            `).join('')}
+                            ${incompleteTasks.length > 3 ? `<div style="font-size: 0.8em; color: #64748b;">+${incompleteTasks.length - 3} more...</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="patient-card ${needsAttention ? 'needs-attention' : ''}" data-patient-id="${patient.id}">
+                        <div class="patient-card-header">
+                            <div>
+                                <div class="patient-name">${escapeHtml(patient.name)}</div>
+                                <div class="patient-chart">Chart: ${patient.chartNumber || 'N/A'} | ${patient.asaClass || 'ASA I'}</div>
+                            </div>
+                            <span class="patient-status-badge ${patient.status}">${patient.status}</span>
+                        </div>
+                        ${flagsHtml ? `<div class="patient-flags">${flagsHtml}</div>` : ''}
+                        ${patient.medicalAlerts ? `<div style="font-size: 0.85em; color: #ef4444; margin: 5px 0;">⚠️ ${escapeHtml(patient.medicalAlerts)}</div>` : ''}
+                        ${tasksHtml}
+                        <div class="patient-actions">
+                            <button class="patient-action-btn primary" onclick="openAddAppointmentModal('${patient.id}')">📅 Schedule Apt</button>
+                            <button class="patient-action-btn secondary" onclick="editPatient('${patient.id}')">✏️ Edit</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterPatients() {
+            renderPatientsList();
+        }
+
+        function openAddPatientModal() {
+            document.getElementById('patientModalTitle').textContent = '➕ Add Patient';
+            document.getElementById('patientModalId').value = '';
+            document.getElementById('patientModalName').value = '';
+            document.getElementById('patientModalChart').value = '';
+            document.getElementById('patientModalASA').value = 'ASA I';
+            document.getElementById('patientModalPerio').value = 'healthy';
+            document.getElementById('patientModalStatus').value = 'active';
+            document.getElementById('patientModalNeedsXrays').checked = false;
+            document.getElementById('patientModalXrayType').value = '';
+            document.getElementById('patientModalRecallDue').checked = false;
+            document.getElementById('patientModalRecallDate').value = '';
+            document.getElementById('patientModalMedical').value = '';
+            document.getElementById('patientModalNotes').value = '';
+            document.getElementById('patientDeleteBtn').style.display = 'none';
+
+            currentPatientTasks = [];
+            renderPatientTasksInModal();
+
+            document.getElementById('patientModal').style.display = 'flex';
+        }
+
+        function editPatient(patientId) {
+            const patient = roadmapData.clinicalData?.patients?.[patientId];
+            if (!patient) return;
+
+            document.getElementById('patientModalTitle').textContent = '✏️ Edit Patient';
+            document.getElementById('patientModalId').value = patientId;
+            document.getElementById('patientModalName').value = patient.name || '';
+            document.getElementById('patientModalChart').value = patient.chartNumber || '';
+            document.getElementById('patientModalASA').value = patient.asaClass || 'ASA I';
+            document.getElementById('patientModalPerio').value = patient.perioStatus || 'healthy';
+            document.getElementById('patientModalStatus').value = patient.status || 'active';
+            document.getElementById('patientModalNeedsXrays').checked = patient.needsXrays || false;
+            document.getElementById('patientModalXrayType').value = patient.xrayType || '';
+            document.getElementById('patientModalRecallDue').checked = !!patient.recallDue;
+            document.getElementById('patientModalRecallDate').value = patient.recallDue || '';
+            document.getElementById('patientModalMedical').value = patient.medicalAlerts || '';
+            document.getElementById('patientModalNotes').value = patient.notes || '';
+            document.getElementById('patientDeleteBtn').style.display = 'inline-block';
+
+            currentPatientTasks = JSON.parse(JSON.stringify(patient.outstandingTasks || []));
+            renderPatientTasksInModal();
+
+            document.getElementById('patientModal').style.display = 'flex';
+        }
+
+        function closePatientModal() {
+            document.getElementById('patientModal').style.display = 'none';
+            currentPatientTasks = [];
+        }
+
+        function addPatientTask() {
+            currentPatientTasks.push({
+                id: 'task-' + Date.now(),
+                procedure: '',
+                status: 'planned'
+            });
+            renderPatientTasksInModal();
+        }
+
+        function removePatientTask(index) {
+            currentPatientTasks.splice(index, 1);
+            renderPatientTasksInModal();
+        }
+
+        function updatePatientTask(index, field, value) {
+            if (currentPatientTasks[index]) {
+                currentPatientTasks[index][field] = value;
+            }
+        }
+
+        function renderPatientTasksInModal() {
+            const container = document.getElementById('patientTasksList');
+            if (currentPatientTasks.length === 0) {
+                container.innerHTML = '<p style="color: #64748b; font-size: 0.85em; margin: 0;">No tasks yet. Click "+ Add" to add procedures.</p>';
+                return;
+            }
+
+            container.innerHTML = currentPatientTasks.map((task, index) => `
+                <div class="patient-task-row">
+                    <input type="text" value="${escapeHtml(task.procedure)}"
+                           placeholder="e.g., MOD Composite #30"
+                           onchange="updatePatientTask(${index}, 'procedure', this.value)">
+                    <select onchange="updatePatientTask(${index}, 'status', this.value)">
+                        <option value="planned" ${task.status === 'planned' ? 'selected' : ''}>Planned</option>
+                        <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                    <button onclick="removePatientTask(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function savePatient() {
+            const name = document.getElementById('patientModalName').value.trim();
+            if (!name) {
+                showToast('Patient name is required', 'error');
+                return;
+            }
+
+            const patientId = document.getElementById('patientModalId').value || 'pt-' + Date.now();
+
+            // Sync task inputs before saving
+            document.querySelectorAll('#patientTasksList .patient-task-row').forEach((row, index) => {
+                const input = row.querySelector('input');
+                const select = row.querySelector('select');
+                if (currentPatientTasks[index]) {
+                    currentPatientTasks[index].procedure = input.value;
+                    currentPatientTasks[index].status = select.value;
+                }
+            });
+
+            // Filter out empty tasks
+            const tasks = currentPatientTasks.filter(t => t.procedure.trim());
+
+            const patient = {
+                id: patientId,
+                name: name,
+                chartNumber: document.getElementById('patientModalChart').value.trim(),
+                asaClass: document.getElementById('patientModalASA').value,
+                perioStatus: document.getElementById('patientModalPerio').value,
+                status: document.getElementById('patientModalStatus').value,
+                needsXrays: document.getElementById('patientModalNeedsXrays').checked,
+                xrayType: document.getElementById('patientModalXrayType').value,
+                recallDue: document.getElementById('patientModalRecallDue').checked ? document.getElementById('patientModalRecallDate').value : null,
+                medicalAlerts: document.getElementById('patientModalMedical').value.trim(),
+                notes: document.getElementById('patientModalNotes').value.trim(),
+                outstandingTasks: tasks,
+                lastUpdated: new Date().toISOString()
+            };
+
+            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+            if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+
+            roadmapData.clinicalData.patients[patientId] = patient;
+
+            saveData();
+            closePatientModal();
+            renderPatientsList();
+            updateClinicalStats();
+            renderDashboard(); // Update dashboard clinical widget
+            showToast('Patient saved!');
+        }
+
+        function deletePatient() {
+            const patientId = document.getElementById('patientModalId').value;
+            if (!patientId) return;
+
+            if (!confirm('Are you sure you want to delete this patient? This cannot be undone.')) return;
+
+            delete roadmapData.clinicalData.patients[patientId];
+
+            // Also remove any appointments for this patient
+            if (roadmapData.clinicalData.appointments) {
+                roadmapData.clinicalData.appointments = roadmapData.clinicalData.appointments.filter(
+                    apt => apt.patientId !== patientId
+                );
+            }
+
+            saveData();
+            closePatientModal();
+            renderPatientsList();
+            renderAppointmentsList();
+            updateClinicalStats();
+            renderDashboard();
+            showToast('Patient deleted');
+        }
+
+        // ===== APPOINTMENT MANAGEMENT =====
+
+        function renderAppointmentsList() {
+            const container = document.getElementById('appointmentsList');
+            const appointments = roadmapData.clinicalData?.appointments || [];
+            const patients = roadmapData.clinicalData?.patients || {};
+
+            // Sort by date
+            const sorted = [...appointments].sort((a, b) => {
+                const dateA = parseLocalDate(a.date);
+                const dateB = parseLocalDate(b.date);
+                if (!dateA || !dateB) return 0;
+                return dateA - dateB;
+            });
+
+            // Filter to upcoming (or all for now)
+            const today = getLocalDateString();
+            const upcoming = sorted.filter(apt => apt.date >= today && apt.status !== 'cancelled');
+            const past = sorted.filter(apt => apt.date < today || apt.status === 'cancelled');
+
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">📅</div>
+                        <p>No appointments scheduled. Add a patient first, then schedule appointments.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            if (upcoming.length > 0) {
+                html += '<h4 style="color: #10b981; margin: 0 0 15px 0;">Upcoming</h4>';
+                html += upcoming.map(apt => renderAppointmentCard(apt, patients)).join('');
+            }
+
+            if (past.length > 0) {
+                html += '<h4 style="color: #64748b; margin: 20px 0 15px 0;">Past/Cancelled</h4>';
+                html += past.slice(0, 5).map(apt => renderAppointmentCard(apt, patients)).join('');
+                if (past.length > 5) {
+                    html += `<p style="color: #64748b; font-size: 0.85em;">+${past.length - 5} older appointments...</p>`;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderAppointmentCard(apt, patients) {
+            const patient = patients[apt.patientId] || { name: 'Unknown Patient' };
+            const aptDate = parseLocalDate(apt.date);
+            const dayNum = aptDate ? aptDate.getDate() : '?';
+            const monthName = aptDate ? aptDate.toLocaleDateString('en-US', { month: 'short' }) : '';
+            const dayName = aptDate ? aptDate.toLocaleDateString('en-US', { weekday: 'short' }) : '';
+
+            const timeDisplay = apt.time ? formatAptTime(apt.time) : '';
+            const durationHrs = apt.duration ? (apt.duration / 60) : 3;
+
+            return `
+                <div class="appointment-card" onclick="editAppointment('${apt.id}')">
+                    <div class="appointment-date">
+                        <div class="appointment-date-day">${dayNum}</div>
+                        <div class="appointment-date-month">${monthName}</div>
+                    </div>
+                    <div class="appointment-info">
+                        <h4>${escapeHtml(patient.name)}</h4>
+                        <div class="appointment-details">
+                            ${dayName} ${timeDisplay} · ${durationHrs}h ${apt.chair ? '· Chair ' + apt.chair : ''}
+                        </div>
+                        ${apt.procedures ? `<div style="margin-top: 5px; font-size: 0.9em; color: #f59e0b;">${escapeHtml(apt.procedures)}</div>` : ''}
+                    </div>
+                    <span class="appointment-status ${apt.status}">${apt.status}</span>
+                </div>
+            `;
+        }
+
+        function formatAptTime(time) {
+            if (!time) return '';
+            const [h, m] = time.split(':').map(Number);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
+        }
+
+        function openAddAppointmentModal(preselectedPatientId = null) {
+            // Populate patient dropdown
+            const patients = roadmapData.clinicalData?.patients || {};
+            const patientSelect = document.getElementById('appointmentModalPatient');
+            patientSelect.innerHTML = '<option value="">Select patient...</option>' +
+                Object.values(patients)
+                    .filter(p => p.status === 'active')
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                    .map(p => `<option value="${p.id}" ${p.id === preselectedPatientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
+                    .join('');
+
+            document.getElementById('appointmentModalTitle').textContent = '📅 Schedule Appointment';
+            document.getElementById('appointmentModalId').value = '';
+            document.getElementById('appointmentModalDate').value = getLocalDateString();
+            document.getElementById('appointmentModalTime').value = '09:00';
+            document.getElementById('appointmentModalDuration').value = '180';
+            document.getElementById('appointmentModalChair').value = '';
+            document.getElementById('appointmentModalProcedures').value = '';
+            document.getElementById('appointmentModalNotes').value = '';
+            document.getElementById('appointmentModalCreateDeadline').checked = true;
+            document.getElementById('appointmentDeleteBtn').style.display = 'none';
+
+            document.getElementById('appointmentModal').style.display = 'flex';
+        }
+
+        function editAppointment(aptId) {
+            const apt = roadmapData.clinicalData?.appointments?.find(a => a.id === aptId);
+            if (!apt) return;
+
+            // Populate patient dropdown
+            const patients = roadmapData.clinicalData?.patients || {};
+            const patientSelect = document.getElementById('appointmentModalPatient');
+            patientSelect.innerHTML = '<option value="">Select patient...</option>' +
+                Object.values(patients)
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                    .map(p => `<option value="${p.id}" ${p.id === apt.patientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
+                    .join('');
+
+            document.getElementById('appointmentModalTitle').textContent = '✏️ Edit Appointment';
+            document.getElementById('appointmentModalId').value = apt.id;
+            document.getElementById('appointmentModalDate').value = apt.date || '';
+            document.getElementById('appointmentModalTime').value = apt.time || '09:00';
+            document.getElementById('appointmentModalDuration').value = String(apt.duration || 180);
+            document.getElementById('appointmentModalChair').value = apt.chair || '';
+            document.getElementById('appointmentModalProcedures').value = apt.procedures || '';
+            document.getElementById('appointmentModalNotes').value = apt.notes || '';
+            document.getElementById('appointmentModalCreateDeadline').checked = false;
+            document.getElementById('appointmentDeleteBtn').style.display = 'inline-block';
+
+            document.getElementById('appointmentModal').style.display = 'flex';
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').style.display = 'none';
+        }
+
+        function saveAppointment() {
+            const patientId = document.getElementById('appointmentModalPatient').value;
+            const date = document.getElementById('appointmentModalDate').value;
+
+            if (!patientId || !date) {
+                showToast('Patient and date are required', 'error');
+                return;
+            }
+
+            const aptId = document.getElementById('appointmentModalId').value || 'apt-' + Date.now();
+            const isNew = !document.getElementById('appointmentModalId').value;
+
+            const apt = {
+                id: aptId,
+                patientId: patientId,
+                date: date,
+                time: document.getElementById('appointmentModalTime').value,
+                duration: parseInt(document.getElementById('appointmentModalDuration').value) || 180,
+                chair: document.getElementById('appointmentModalChair').value.trim(),
+                procedures: document.getElementById('appointmentModalProcedures').value.trim(),
+                notes: document.getElementById('appointmentModalNotes').value.trim(),
+                status: 'scheduled',
+                createdAt: new Date().toISOString()
+            };
+
+            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
+
+            // Update or add
+            const existingIndex = roadmapData.clinicalData.appointments.findIndex(a => a.id === aptId);
+            if (existingIndex >= 0) {
+                apt.status = roadmapData.clinicalData.appointments[existingIndex].status; // Preserve status
+                roadmapData.clinicalData.appointments[existingIndex] = apt;
+            } else {
+                roadmapData.clinicalData.appointments.push(apt);
+            }
+
+            // Create deadline if requested
+            if (isNew && document.getElementById('appointmentModalCreateDeadline').checked) {
+                const patient = roadmapData.clinicalData.patients[patientId];
+                const patientName = patient?.name || 'Patient';
+
+                // Add to custom deadlines
+                if (!roadmapData.customDeadlines) roadmapData.customDeadlines = [];
+                roadmapData.customDeadlines.push({
+                    date: date,
+                    what: `🏥 ${patientName} - ${apt.procedures || 'Clinic Apt'}`,
+                    course: 'Clinical',
+                    weight: '—',
+                    type: 'Clinical',
+                    done: false,
+                    grade: null,
+                    clinicalAptId: aptId
+                });
+            }
+
+            saveData();
+            closeAppointmentModal();
+            renderAppointmentsList();
+            updateClinicalStats();
+            renderDeadlines();
+            renderDashboard();
+            showToast('Appointment saved!');
+        }
+
+        function deleteAppointment() {
+            const aptId = document.getElementById('appointmentModalId').value;
+            if (!aptId) return;
+
+            if (!confirm('Delete this appointment?')) return;
+
+            roadmapData.clinicalData.appointments = roadmapData.clinicalData.appointments.filter(a => a.id !== aptId);
+
+            // Also remove linked deadline if exists
+            if (roadmapData.customDeadlines) {
+                roadmapData.customDeadlines = roadmapData.customDeadlines.filter(d => d.clinicalAptId !== aptId);
+            }
+
+            saveData();
+            closeAppointmentModal();
+            renderAppointmentsList();
+            updateClinicalStats();
+            renderDeadlines();
+            renderDashboard();
+            showToast('Appointment deleted');
+        }
+
         // ==================== INITIALIZE ====================
         function initUI() {
             
@@ -8189,6 +9650,9 @@
                             deadlines[index].weight = edited.weight || deadlines[index].weight;
                             deadlines[index].type = edited.type || deadlines[index].type;
                             deadlines[index].month = edited.month || deadlines[index].month;
+                            // FIXED: Restore completion status from edited deadlines
+                            if (edited.done !== undefined) deadlines[index].done = edited.done;
+                            if (edited.grade !== undefined) deadlines[index].grade = edited.grade;
                         }
                     });
                 }
@@ -8206,12 +9670,79 @@
                             course: d.course || 'Other',
                             weight: d.weight || '—',
                             type: d.type || 'Other',
-                            month: month
+                            month: month,
+                            custom: true,
+                            done: d.done || false,    // FIXED: Preserve completion status
+                            grade: d.grade || null    // FIXED: Preserve grade
                         });
                     });
                 }
             } catch(e) { console.error('Error adding custom deadlines:', e); }
-            
+
+            // CRITICAL FIX: Restore completed deadlines from saved data
+            try {
+                if (roadmapData.completedDeadlines) {
+                    Object.keys(roadmapData.completedDeadlines).forEach(indexStr => {
+                        const index = parseInt(indexStr, 10);
+                        const completed = roadmapData.completedDeadlines[indexStr];
+                        if (deadlines[index] && completed) {
+                            deadlines[index].done = true;
+                            deadlines[index].grade = completed.grade !== undefined ? completed.grade : null;
+                        }
+                    });
+                }
+            } catch(e) { console.error('Error restoring completed deadlines:', e); }
+
+            // Also restore completion status from grades data (bidirectional sync)
+            try {
+                if (roadmapData.grades) {
+                    deadlines.forEach((d, idx) => {
+                        if (d.done) return; // Already marked complete
+                        const course = d.course.toLowerCase();
+                        const what = d.what.toLowerCase();
+
+                        // Check if this deadline has a grade entered in the grades tab
+                        let gradeValue = null;
+
+                        // Oral Med
+                        if (course.includes('oral med') && roadmapData.grades.oralmed) {
+                            const quizMatch = what.match(/quiz\s*(\d+)/i);
+                            if (quizMatch) gradeValue = roadmapData.grades.oralmed['quiz' + quizMatch[1]];
+                            if (what.includes('midterm')) gradeValue = roadmapData.grades.oralmed.midterm;
+                            if (what.includes('final')) gradeValue = roadmapData.grades.oralmed.final;
+                        }
+                        // Pain Control
+                        if (course.includes('pain control') && roadmapData.grades.paincontrol) {
+                            const rxMatch = what.match(/rx\s*#?(\d)/i);
+                            if (rxMatch) gradeValue = roadmapData.grades.paincontrol['rx' + rxMatch[1]];
+                            if (what.includes('midterm')) gradeValue = roadmapData.grades.paincontrol.midterm;
+                            if (what.includes('final')) gradeValue = roadmapData.grades.paincontrol.final;
+                        }
+                        // Peds
+                        if (course.includes('peds') && roadmapData.grades.peds) {
+                            const examMatch = what.match(/exam\s*(\d)/i);
+                            if (examMatch) gradeValue = roadmapData.grades.peds['exam' + examMatch[1]];
+                        }
+                        // Perio
+                        if (course.includes('perio') && roadmapData.grades.perio) {
+                            if (what.includes('midterm')) gradeValue = roadmapData.grades.perio.midterm;
+                            if (what.includes('final')) gradeValue = roadmapData.grades.perio.final;
+                        }
+                        // Ortho
+                        if (course.includes('ortho') && roadmapData.grades.ortho) {
+                            if (what.includes('midterm')) gradeValue = roadmapData.grades.ortho.midterm;
+                            if (what.includes('final')) gradeValue = roadmapData.grades.ortho.final;
+                        }
+
+                        // If a grade was found, mark the deadline as complete
+                        if (gradeValue !== null && gradeValue !== undefined && gradeValue !== '') {
+                            d.done = true;
+                            d.grade = gradeValue;
+                        }
+                    });
+                }
+            } catch(e) { console.error('Error syncing grades to deadlines:', e); }
+
             // ALWAYS try to render, even if above steps failed
             try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
             try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }
@@ -8219,7 +9750,9 @@
             try { renderExamCountdown(); } catch(e) { console.error('renderExamCountdown error:', e); }
             try { initMonthlyPlanner(); } catch(e) { console.error('initMonthlyPlanner error:', e); }
             // Exam Content tab uses dropdown - no auto-load needed
-            
+
+            // Initialize Clinical tab if data exists
+            try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }
         }
         
         function init() {
@@ -9184,9 +10717,12 @@
         function mpGetWeekDays(start, end) {
             const days = [];
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const current = new Date(start + 'T12:00:00');
-            const endDate = new Date(end + 'T12:00:00');
-            
+            // FIXED: Use parseLocalDate to avoid UTC timezone issues
+            const current = parseLocalDate(start);
+            const endDate = parseLocalDate(end);
+
+            if (!current || !endDate) return days;
+
             while (current <= endDate) {
                 days.push({
                     date: getLocalDateString(current),
@@ -9195,7 +10731,7 @@
                 });
                 current.setDate(current.getDate() + 1);
             }
-            
+
             return days;
         }
         
@@ -9292,13 +10828,20 @@
             const timeDisplay = mpFormatTime(task.time) + (task.endTime ? ' - ' + mpFormatTime(task.endTime) : '');
             const completedClass = isCompleted ? 'mp-task-completed' : '';
             
+            // Build full tooltip text with all task details
+            const tooltipParts = [task.item];
+            if (timeDisplay) tooltipParts.push(`Time: ${timeDisplay}`);
+            if (task.notes) tooltipParts.push(`Notes: ${task.notes}`);
+            const tooltipText = tooltipParts.join('\n');
+
             return `
-                <div class="mp-cal-task ${typeClass} ${completedClass}" 
+                <div class="mp-cal-task ${typeClass} ${completedClass}"
                      style="top: ${topPx}px; height: ${heightPx}px; min-height: 32px;"
-                     data-task-id="${taskId}">
+                     data-task-id="${taskId}"
+                     title="${escapeHtml(tooltipText)}">
                     <div class="mp-cal-task-header">
                         <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
-                            <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''} 
+                            <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
                                    onchange="mpToggleTaskComplete('${taskId}')" />
                         </label>
                         <span class="mp-cal-task-type">${typeClass.toUpperCase()}</span>
@@ -9375,7 +10918,7 @@
                         <td><strong>${dateStr}</strong></td>
                         <td class="${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</td>
                         <td><span class="mp-type ${typeClass}">${typeClass.toUpperCase()}</span></td>
-                        <td style="color: #b0bcc8; font-size: 0.85em;">${escapeHtml(task.notes || '')}</td>
+                        <td style="color: #b0bcc8; font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(task.notes || '')}">${escapeHtml(task.notes || '')}</td>
                         <td><button class="mp-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${week.num}, ${task.isStatic || false})" title="Edit Task">✏️</button></td>
                     </tr>
                 `;
