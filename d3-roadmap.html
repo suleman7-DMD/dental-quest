@@ -5231,6 +5231,7 @@
                     <button onclick="mpJumpToCurrentWeek()" class="mp-toolbar-btn primary">📍 This Week</button>
                     <button onclick="mpExpandAllWeeks()" class="mp-toolbar-btn">⬇️ Expand All</button>
                     <button onclick="mpCollapseAllWeeks()" class="mp-toolbar-btn">⬆️ Collapse All</button>
+                    <button onclick="openLectureImportModal()" class="mp-toolbar-btn" style="background: #7c3aed;">📥 Import Lectures</button>
                     <div class="mp-toolbar-spacer"></div>
                     <span class="mp-toolbar-hint">Click week headers to expand/collapse</span>
                 </div>
@@ -5332,6 +5333,8 @@
             <button class="clinical-subtab active" onclick="switchClinicalSubtab('patients', this)">👤 My Patients</button>
             <button class="clinical-subtab" onclick="switchClinicalSubtab('appointments', this)">📅 Appointments</button>
             <button class="clinical-subtab" onclick="switchClinicalSubtab('competencies', this)">🎯 Competencies</button>
+            <div style="flex-grow: 1;"></div>
+            <button onclick="openClinicalImportModal()" style="padding: 8px 16px; background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">📥 Import from axiUm</button>
         </div>
 
         <!-- Patients Sub-tab -->
@@ -5611,6 +5614,100 @@
                 <button class="mp-modal-btn cancel" onclick="closeAppointmentModal()">Cancel</button>
                 <button class="mp-modal-btn delete" id="appointmentDeleteBtn" onclick="deleteAppointment()" style="display: none;">🗑️ Delete</button>
                 <button class="mp-modal-btn submit" onclick="saveAppointment()">Save Appointment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lecture Import Modal -->
+    <div id="lectureImportModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal" style="max-width: 700px;">
+            <div class="mp-modal-header">
+                <h3>📥 Import Lectures from Google Calendar</h3>
+                <button class="mp-modal-close" onclick="closeLectureImportModal()">✕</button>
+            </div>
+            <div class="mp-modal-body" style="display: grid; gap: 15px;">
+                <div style="background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 8px; padding: 15px;">
+                    <h4 style="color: #a78bfa; margin: 0 0 10px 0;">📋 How to use:</h4>
+                    <ol style="margin: 0; padding-left: 20px; color: #b0bcc8; font-size: 0.9em; line-height: 1.6;">
+                        <li>Screenshot your Google Calendar week view</li>
+                        <li>Send to Claude with: <em>"Extract lecture schedule from this screenshot in LECTURES format"</em></li>
+                        <li>Copy Claude's response and paste below</li>
+                        <li>Click Preview, then Import</li>
+                    </ol>
+                </div>
+                <div class="mp-modal-field">
+                    <label>Paste Claude's Output:</label>
+                    <textarea id="lectureImportText" rows="12" placeholder="LECTURES
+---
+DATE: 2026-02-09
+TIME: 1:00 PM - 2:50 PM
+COURSE: PD530 Pediatric Dentistry Lecture
+LOCATION: 670 Auditorium
+---
+DATE: 2026-02-11
+TIME: 8:00 AM - 4:50 PM
+COURSE: PH541 Gerontology Exam
+LOCATION: L-1101
+---" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-family: monospace; font-size: 0.85em;"></textarea>
+                </div>
+                <div id="lectureImportPreview" style="display: none;">
+                    <h4 style="color: #10b981; margin: 0 0 10px 0;">✅ Preview (will import):</h4>
+                    <div id="lectureImportPreviewList" style="max-height: 200px; overflow-y: auto; background: rgba(16, 185, 129, 0.1); border-radius: 6px; padding: 10px;"></div>
+                </div>
+            </div>
+            <div class="mp-modal-footer">
+                <button class="mp-modal-btn cancel" onclick="closeLectureImportModal()">Cancel</button>
+                <button class="mp-modal-btn" onclick="previewLectureImport()" style="background: #3b82f6;">👁️ Preview</button>
+                <button class="mp-modal-btn submit" onclick="confirmLectureImport()" id="lectureImportBtn" disabled>📥 Import Lectures</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Import Modal -->
+    <div id="clinicalImportModal" class="mp-modal-overlay" style="display: none;">
+        <div class="mp-modal" style="max-width: 700px;">
+            <div class="mp-modal-header">
+                <h3>📥 Import from axiUm Schedule</h3>
+                <button class="mp-modal-close" onclick="closeClinicalImportModal()">✕</button>
+            </div>
+            <div class="mp-modal-body" style="display: grid; gap: 15px;">
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 15px;">
+                    <h4 style="color: #10b981; margin: 0 0 10px 0;">📋 How to use:</h4>
+                    <ol style="margin: 0; padding-left: 20px; color: #b0bcc8; font-size: 0.9em; line-height: 1.6;">
+                        <li>Screenshot your axiUm appointment schedule</li>
+                        <li>Send to Claude with: <em>"Extract appointments from this axiUm screenshot in APPOINTMENTS format"</em></li>
+                        <li>Copy Claude's response and paste below</li>
+                        <li>Click Preview, then Import</li>
+                    </ol>
+                </div>
+                <div class="mp-modal-field">
+                    <label>Paste Claude's Output:</label>
+                    <textarea id="clinicalImportText" rows="12" placeholder="APPOINTMENTS
+---
+PATIENT: Krima, Mohamed
+CHART: 2577113
+DATE: 2026-01-24
+TIME: 8:30 AM
+PROCEDURE: Composite - two surf. Posterior (D2392)
+CHAIR: 9F
+---
+PATIENT: Rosario, Jose
+CHART: 2467990
+DATE: 2026-01-24
+TIME: 12:30 PM
+PROCEDURE: Complete upper denture (D5110)
+CHAIR: 9F
+---" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-family: monospace; font-size: 0.85em;"></textarea>
+                </div>
+                <div id="clinicalImportPreview" style="display: none;">
+                    <h4 style="color: #10b981; margin: 0 0 10px 0;">✅ Preview (will import):</h4>
+                    <div id="clinicalImportPreviewList" style="max-height: 200px; overflow-y: auto; background: rgba(16, 185, 129, 0.1); border-radius: 6px; padding: 10px;"></div>
+                </div>
+            </div>
+            <div class="mp-modal-footer">
+                <button class="mp-modal-btn cancel" onclick="closeClinicalImportModal()">Cancel</button>
+                <button class="mp-modal-btn" onclick="previewClinicalImport()" style="background: #3b82f6;">👁️ Preview</button>
+                <button class="mp-modal-btn submit" onclick="confirmClinicalImport()" id="clinicalImportBtn" disabled>📥 Import Appointments</button>
             </div>
         </div>
     </div>
@@ -9605,6 +9702,340 @@
             renderDeadlines();
             renderDashboard();
             showToast('Appointment deleted');
+        }
+
+        // ==================== IMPORT SYSTEM ====================
+
+        // Temporary storage for parsed import data
+        let parsedLectures = [];
+        let parsedAppointments = [];
+
+        // ========== LECTURE IMPORT ==========
+
+        function openLectureImportModal() {
+            document.getElementById('lectureImportModal').style.display = 'flex';
+            document.getElementById('lectureImportText').value = '';
+            document.getElementById('lectureImportPreview').style.display = 'none';
+            document.getElementById('lectureImportBtn').disabled = true;
+            parsedLectures = [];
+        }
+
+        function closeLectureImportModal() {
+            document.getElementById('lectureImportModal').style.display = 'none';
+        }
+
+        function parseLectureFormat(text) {
+            const lectures = [];
+            const blocks = text.split('---').filter(b => b.trim());
+
+            blocks.forEach(block => {
+                if (block.includes('LECTURES')) return; // Skip header
+
+                const lines = block.trim().split('\n');
+                const lecture = {};
+
+                lines.forEach(line => {
+                    const [key, ...valueParts] = line.split(':');
+                    if (key && valueParts.length > 0) {
+                        const value = valueParts.join(':').trim();
+                        const keyLower = key.trim().toUpperCase();
+
+                        if (keyLower === 'DATE') {
+                            // Parse date like "2026-02-09" or "Feb 9, 2026"
+                            lecture.date = parseImportDate(value);
+                        } else if (keyLower === 'TIME') {
+                            // Parse time like "1:00 PM - 2:50 PM"
+                            const timeParts = value.split('-').map(t => t.trim());
+                            lecture.startTime = parseImportTime(timeParts[0]);
+                            lecture.endTime = timeParts[1] ? parseImportTime(timeParts[1]) : null;
+                        } else if (keyLower === 'COURSE') {
+                            lecture.course = value;
+                        } else if (keyLower === 'LOCATION') {
+                            lecture.location = value;
+                        }
+                    }
+                });
+
+                if (lecture.date && lecture.course) {
+                    lectures.push(lecture);
+                }
+            });
+
+            return lectures;
+        }
+
+        function parseImportDate(dateStr) {
+            // Handle formats: "2026-02-09", "Feb 9, 2026", "February 9, 2026", "02/09/2026"
+            if (!dateStr) return null;
+
+            // Already in YYYY-MM-DD format
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+
+            // Try to parse other formats
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+
+            return null;
+        }
+
+        function parseImportTime(timeStr) {
+            // Handle formats: "1:00 PM", "13:00", "1 PM", "8am"
+            if (!timeStr) return null;
+
+            const str = timeStr.trim().toUpperCase();
+
+            // Already in 24h format
+            if (/^\d{1,2}:\d{2}$/.test(str)) {
+                return str.padStart(5, '0');
+            }
+
+            // 12h format: "1:00 PM", "8:30 AM"
+            const match = str.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+            if (match) {
+                let hours = parseInt(match[1]);
+                const minutes = match[2] ? parseInt(match[2]) : 0;
+                const period = match[3] ? match[3].toUpperCase() : null;
+
+                if (period === 'PM' && hours < 12) hours += 12;
+                if (period === 'AM' && hours === 12) hours = 0;
+
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+
+            return null;
+        }
+
+        function previewLectureImport() {
+            const text = document.getElementById('lectureImportText').value;
+            parsedLectures = parseLectureFormat(text);
+
+            const previewDiv = document.getElementById('lectureImportPreview');
+            const listDiv = document.getElementById('lectureImportPreviewList');
+            const importBtn = document.getElementById('lectureImportBtn');
+
+            if (parsedLectures.length === 0) {
+                previewDiv.style.display = 'block';
+                listDiv.innerHTML = '<p style="color: #f87171;">No valid lectures found. Check the format.</p>';
+                importBtn.disabled = true;
+                return;
+            }
+
+            previewDiv.style.display = 'block';
+            listDiv.innerHTML = parsedLectures.map(lec => {
+                const timeStr = lec.startTime ? formatTime12h(lec.startTime) + (lec.endTime ? ' - ' + formatTime12h(lec.endTime) : '') : 'No time';
+                return `<div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <strong>${lec.date}</strong> | ${timeStr}<br>
+                    <span style="color: #93c5fd;">${lec.course}</span>
+                    ${lec.location ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">📍 ' + lec.location + '</span>' : ''}
+                </div>`;
+            }).join('');
+
+            importBtn.disabled = false;
+        }
+
+        function formatTime12h(time24) {
+            if (!time24) return '';
+            const [h, m] = time24.split(':').map(Number);
+            const period = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+        }
+
+        function confirmLectureImport() {
+            if (parsedLectures.length === 0) return;
+
+            let imported = 0;
+            parsedLectures.forEach(lec => {
+                // Calculate duration in minutes
+                let duration = 60; // Default 1 hour
+                if (lec.startTime && lec.endTime) {
+                    const startMins = timeToMinutes(lec.startTime);
+                    const endMins = timeToMinutes(lec.endTime);
+                    if (endMins > startMins) {
+                        duration = endMins - startMins;
+                    }
+                }
+
+                // Create task for Monthly Planner
+                const task = {
+                    id: Date.now() + Math.random(),
+                    date: lec.date,
+                    item: lec.course,
+                    time: lec.startTime || '',
+                    duration: duration,
+                    type: 'lecture',
+                    location: lec.location || '',
+                    imported: true
+                };
+
+                // Add to customTasks
+                if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
+                if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
+                roadmapData.monthlyPlanner.customTasks.push(task);
+                imported++;
+            });
+
+            saveData();
+            closeLectureImportModal();
+            initMonthlyPlanner();
+            showToast(`✅ Imported ${imported} lecture(s)!`);
+        }
+
+        // ========== CLINICAL IMPORT ==========
+
+        function openClinicalImportModal() {
+            document.getElementById('clinicalImportModal').style.display = 'flex';
+            document.getElementById('clinicalImportText').value = '';
+            document.getElementById('clinicalImportPreview').style.display = 'none';
+            document.getElementById('clinicalImportBtn').disabled = true;
+            parsedAppointments = [];
+        }
+
+        function closeClinicalImportModal() {
+            document.getElementById('clinicalImportModal').style.display = 'none';
+        }
+
+        function parseClinicalFormat(text) {
+            const appointments = [];
+            const blocks = text.split('---').filter(b => b.trim());
+
+            blocks.forEach(block => {
+                if (block.includes('APPOINTMENTS')) return; // Skip header
+
+                const lines = block.trim().split('\n');
+                const apt = {};
+
+                lines.forEach(line => {
+                    const [key, ...valueParts] = line.split(':');
+                    if (key && valueParts.length > 0) {
+                        const value = valueParts.join(':').trim();
+                        const keyLower = key.trim().toUpperCase();
+
+                        if (keyLower === 'PATIENT') apt.patientName = value;
+                        else if (keyLower === 'CHART') apt.chartNumber = value;
+                        else if (keyLower === 'DATE') apt.date = parseImportDate(value);
+                        else if (keyLower === 'TIME') apt.time = parseImportTime(value);
+                        else if (keyLower === 'PROCEDURE') apt.procedure = value;
+                        else if (keyLower === 'CHAIR') apt.chair = value;
+                    }
+                });
+
+                if (apt.patientName && apt.date) {
+                    appointments.push(apt);
+                }
+            });
+
+            return appointments;
+        }
+
+        function previewClinicalImport() {
+            const text = document.getElementById('clinicalImportText').value;
+            parsedAppointments = parseClinicalFormat(text);
+
+            const previewDiv = document.getElementById('clinicalImportPreview');
+            const listDiv = document.getElementById('clinicalImportPreviewList');
+            const importBtn = document.getElementById('clinicalImportBtn');
+
+            if (parsedAppointments.length === 0) {
+                previewDiv.style.display = 'block';
+                listDiv.innerHTML = '<p style="color: #f87171;">No valid appointments found. Check the format.</p>';
+                importBtn.disabled = true;
+                return;
+            }
+
+            previewDiv.style.display = 'block';
+            listDiv.innerHTML = parsedAppointments.map(apt => {
+                const timeStr = apt.time ? formatTime12h(apt.time) : 'No time';
+                return `<div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <strong>${apt.patientName}</strong> ${apt.chartNumber ? '(#' + apt.chartNumber + ')' : ''}<br>
+                    <span style="color: #93c5fd;">${apt.date} @ ${timeStr}</span>
+                    ${apt.procedure ? '<br><span style="color: #10b981;">' + apt.procedure + '</span>' : ''}
+                    ${apt.chair ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">Chair: ' + apt.chair + '</span>' : ''}
+                </div>`;
+            }).join('');
+
+            importBtn.disabled = false;
+        }
+
+        function confirmClinicalImport() {
+            if (parsedAppointments.length === 0) return;
+
+            let patientsAdded = 0;
+            let appointmentsAdded = 0;
+
+            parsedAppointments.forEach(apt => {
+                // Ensure clinicalData structure exists
+                if (!roadmapData.clinicalData) {
+                    roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+                }
+                if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+                if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
+
+                // Check if patient exists (by chart number or name)
+                let patientId = null;
+                const existingPatients = Object.entries(roadmapData.clinicalData.patients);
+
+                for (const [id, patient] of existingPatients) {
+                    if (apt.chartNumber && patient.chartNumber === apt.chartNumber) {
+                        patientId = id;
+                        break;
+                    }
+                    if (patient.name.toLowerCase() === apt.patientName.toLowerCase()) {
+                        patientId = id;
+                        break;
+                    }
+                }
+
+                // Create new patient if not found
+                if (!patientId) {
+                    patientId = 'patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    roadmapData.clinicalData.patients[patientId] = {
+                        id: patientId,
+                        name: apt.patientName,
+                        chartNumber: apt.chartNumber || '',
+                        status: 'active',
+                        asaClass: '',
+                        perioStatus: '',
+                        xrayNeeded: false,
+                        recallDue: false,
+                        prophyDue: false,
+                        medicalAlerts: '',
+                        outstandingTasks: '',
+                        createdAt: new Date().toISOString()
+                    };
+                    patientsAdded++;
+                }
+
+                // Create appointment
+                const appointmentId = 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                roadmapData.clinicalData.appointments.push({
+                    id: appointmentId,
+                    patientId: patientId,
+                    date: apt.date,
+                    time: apt.time || '09:00',
+                    duration: 60,
+                    procedures: apt.procedure || '',
+                    notes: apt.chair ? 'Chair: ' + apt.chair : '',
+                    imported: true
+                });
+                appointmentsAdded++;
+            });
+
+            saveData();
+            closeClinicalImportModal();
+            initClinicalTab();
+            showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+        }
+
+        // Helper function for time conversion (if not already exists)
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
         }
 
         // ==================== INITIALIZE ====================
