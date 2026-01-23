@@ -9882,25 +9882,16 @@ CHAIR: 9F
 
             let imported = 0;
             parsedLectures.forEach(lec => {
-                // Calculate duration in minutes
-                let duration = 60; // Default 1 hour
-                if (lec.startTime && lec.endTime) {
-                    const startMins = timeToMinutes(lec.startTime);
-                    const endMins = timeToMinutes(lec.endTime);
-                    if (endMins > startMins) {
-                        duration = endMins - startMins;
-                    }
-                }
-
                 // Create task for Monthly Planner
                 const task = {
                     id: Date.now() + Math.random(),
                     date: lec.date,
                     item: lec.course,
                     time: lec.startTime || '',
-                    duration: duration,
+                    endTime: lec.endTime || '',
                     type: 'lecture',
-                    location: lec.location || '',
+                    notes: lec.location ? '📍 ' + lec.location : '',
+                    createdAt: new Date().toISOString(),
                     imported: true
                 };
 
@@ -10066,11 +10057,11 @@ CHAIR: 9F
                         status: 'active',
                         asaClass: '',
                         perioStatus: '',
-                        xrayNeeded: false,
-                        recallDue: false,
+                        needsXrays: false,
+                        recallDue: null,
                         prophyDue: false,
                         medicalAlerts: '',
-                        outstandingTasks: '',
+                        outstandingTasks: [],
                         createdAt: new Date().toISOString()
                     };
                     patientsAdded++;
@@ -10086,6 +10077,7 @@ CHAIR: 9F
                     duration: 60,
                     procedures: apt.procedure || '',
                     notes: apt.chair ? 'Chair: ' + apt.chair : '',
+                    status: 'scheduled',
                     imported: true
                 });
                 appointmentsAdded++;
