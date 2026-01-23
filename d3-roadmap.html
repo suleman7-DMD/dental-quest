@@ -5678,6 +5678,13 @@ LOCATION: L-1101
                         <li>Click Preview, then Import</li>
                     </ol>
                 </div>
+                <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fbbf24;">
+                        <input type="checkbox" id="clinicalRefreshMode" checked style="width: 18px; height: 18px; accent-color: #fbbf24;">
+                        <span><strong>🔄 Refresh Mode</strong> — Replace all existing appointments with imported data</span>
+                    </label>
+                    <p style="margin: 8px 0 0 28px; font-size: 0.85em; color: #b0bcc8;">When checked, existing appointments will be cleared and replaced with the new import. Uncheck to add without replacing.</p>
+                </div>
                 <div class="mp-modal-field">
                     <label>Paste Claude's Output:</label>
                     <textarea id="clinicalImportText" rows="12" placeholder="APPOINTMENTS
@@ -6722,7 +6729,7 @@ CHAIR: 9F
                 if (remoteLastSaved > localLastSaved + 1000 && remoteLastSaved > lastRemoteUpdate) {
                     lastRemoteUpdate = remoteLastSaved;
 
-                    // Deep merge the data
+                    // Deep merge the data including clinical
                     roadmapData = {
                         ...roadmapData,
                         ...data,
@@ -6731,19 +6738,29 @@ CHAIR: 9F
                             customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
                             overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
                             completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                        },
+                        clinicalData: {
+                            patients: data.clinicalData?.patients || roadmapData.clinicalData?.patients || {},
+                            appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
+                            completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || []
                         }
                     };
 
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
 
-                    // Re-render the Monthly Planner if on that tab
+                    // Re-render tabs based on which one is active
                     const activeTab = document.querySelector('.tab-btn.active');
-                    if (activeTab && activeTab.textContent.includes('Monthly')) {
-                        initMonthlyPlanner();
+                    if (activeTab) {
+                        const tabText = activeTab.textContent;
+                        if (tabText.includes('Monthly')) {
+                            initMonthlyPlanner();
+                        } else if (tabText.includes('Clinical')) {
+                            initClinicalTab();
+                        }
                     }
 
                     updateSyncStatus('connected', 'Synced');
-                    showToast('Updated from another device');
+                    showToast('📡 Updated from another device');
                 }
             }, error => {
                 // FIXED: Add error handler for realtime sync failures
@@ -6836,6 +6853,11 @@ CHAIR: 9F
                     customTasks: data.monthlyPlanner?.customTasks || [],
                     overriddenStatic: data.monthlyPlanner?.overriddenStatic || [],
                     completedTasks: data.monthlyPlanner?.completedTasks || []
+                },
+                clinicalData: {
+                    patients: data.clinicalData?.patients || {},
+                    appointments: data.clinicalData?.appointments || [],
+                    completedProcedures: data.clinicalData?.completedProcedures || []
                 },
                 dailyPlanner: data.dailyPlanner,
                 lastSaved: data.lastSaved
@@ -9671,12 +9693,22 @@ CHAIR: 9F
                 });
             }
 
+            // CRITICAL: Sync to Monthly Planner
+            syncClinicalToMonthlyPlanner();
+
             saveData();
             closeAppointmentModal();
             renderAppointmentsList();
             updateClinicalStats();
             renderDeadlines();
             renderDashboard();
+
+            // Refresh Monthly Planner if initialized
+            if (typeof mpRenderAllCalendars === 'function') {
+                extendWeeksIfNeeded();
+                mpRenderAllCalendars();
+            }
+
             showToast('Appointment saved!');
         }
 
@@ -9693,8 +9725,16 @@ CHAIR: 9F
                 roadmapData.customDeadlines = roadmapData.customDeadlines.filter(d => d.clinicalAptId !== aptId);
             }
 
+            // CRITICAL: Sync to Monthly Planner
+            syncClinicalToMonthlyPlanner();
+
             saveData();
             closeAppointmentModal();
+
+            // Refresh Monthly Planner if initialized
+            if (typeof mpRenderAllCalendars === 'function') {
+                mpRenderAllCalendars();
+            }
             renderAppointmentsList();
             updateClinicalStats();
             renderDeadlines();
@@ -10059,17 +10099,24 @@ CHAIR: 9F
         function confirmClinicalImport() {
             if (parsedAppointments.length === 0) return;
 
+            const isRefreshMode = document.getElementById('clinicalRefreshMode').checked;
+
+            // Ensure clinicalData structure exists
+            if (!roadmapData.clinicalData) {
+                roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+            }
+            if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
+
+            // In refresh mode, clear all existing appointments
+            if (isRefreshMode) {
+                roadmapData.clinicalData.appointments = [];
+            }
+
             let patientsAdded = 0;
             let appointmentsAdded = 0;
 
             parsedAppointments.forEach(apt => {
-                // Ensure clinicalData structure exists
-                if (!roadmapData.clinicalData) {
-                    roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
-                }
-                if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
-                if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
-
                 // Check if patient exists (by chart number or name)
                 let patientId = null;
                 const existingPatients = Object.entries(roadmapData.clinicalData.patients);
@@ -10105,16 +10152,14 @@ CHAIR: 9F
                     patientsAdded++;
                 }
 
-                // Check for duplicate appointment (same patient + same date + same time)
-                const isDuplicateApt = roadmapData.clinicalData.appointments.some(existing => {
-                    return existing.patientId === patientId &&
-                           existing.date === apt.date &&
-                           existing.time === (apt.time || '09:00');
-                });
-
-                if (isDuplicateApt) {
-                    // Skip duplicate appointment
-                    return;
+                // Skip duplicates only in non-refresh mode
+                if (!isRefreshMode) {
+                    const isDuplicateApt = roadmapData.clinicalData.appointments.some(existing => {
+                        return existing.patientId === patientId &&
+                               existing.date === apt.date &&
+                               existing.time === (apt.time || '09:00');
+                    });
+                    if (isDuplicateApt) return;
                 }
 
                 // Create appointment
@@ -10133,17 +10178,79 @@ CHAIR: 9F
                 appointmentsAdded++;
             });
 
+            // CRITICAL: Sync to Monthly Planner
+            syncClinicalToMonthlyPlanner();
+
             saveData();
             closeClinicalImportModal();
             initClinicalTab();
 
-            const totalParsed = parsedAppointments.length;
-            const skippedApts = totalParsed - appointmentsAdded;
-            if (skippedApts > 0) {
-                showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s) | ⚠️ ${skippedApts} duplicate(s) skipped`);
-            } else {
-                showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+            // Refresh Monthly Planner if it's been initialized
+            if (typeof mpRenderAllCalendars === 'function') {
+                mpRenderAllCalendars();
             }
+
+            if (isRefreshMode) {
+                showToast(`🔄 Refreshed: ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+            } else {
+                const totalParsed = parsedAppointments.length;
+                const skippedApts = totalParsed - appointmentsAdded;
+                if (skippedApts > 0) {
+                    showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s) | ⚠️ ${skippedApts} duplicate(s) skipped`);
+                } else {
+                    showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+                }
+            }
+        }
+
+        // ========== CROSS-TAB SYNC: Clinical → Monthly Planner ==========
+        function syncClinicalToMonthlyPlanner() {
+            if (!roadmapData.clinicalData?.appointments) return;
+            if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
+            if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
+
+            const appointments = roadmapData.clinicalData.appointments;
+            const patients = roadmapData.clinicalData.patients || {};
+            const customTasks = roadmapData.monthlyPlanner.customTasks;
+
+            // Remove all existing clinic tasks that were synced from Clinical tab
+            roadmapData.monthlyPlanner.customTasks = customTasks.filter(task => !task.clinicalAppointmentId);
+
+            // Add current appointments as Monthly Planner tasks
+            appointments.forEach(apt => {
+                if (apt.status === 'cancelled') return; // Skip cancelled
+
+                const patient = patients[apt.patientId] || {};
+                const patientName = patient.name || 'Unknown Patient';
+
+                // Create task linked to this appointment
+                const task = {
+                    id: 'clinic_' + apt.id,
+                    clinicalAppointmentId: apt.id, // Link back to clinical appointment
+                    date: apt.date,
+                    item: `${patientName} - ${apt.procedures || 'Appointment'}`,
+                    time: apt.time || '09:00',
+                    endTime: calculateEndTime(apt.time || '09:00', apt.duration || 60),
+                    type: 'clinic',
+                    notes: apt.notes || '',
+                    createdAt: new Date().toISOString(),
+                    syncedFromClinical: true
+                };
+
+                roadmapData.monthlyPlanner.customTasks.push(task);
+            });
+
+            // Extend MP_WEEKS if needed for dates beyond current range
+            extendWeeksIfNeeded();
+        }
+
+        function calculateEndTime(startTime, durationMinutes) {
+            if (!startTime) return '';
+            const [h, m] = startTime.split(':').map(Number);
+            const totalMinutes = h * 60 + m + durationMinutes;
+            const endH = Math.floor(totalMinutes / 60) % 24;
+            const endM = totalMinutes % 60;
+            return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
         }
 
         // Helper function for time conversion (if not already exists)
@@ -10937,13 +11044,103 @@ CHAIR: 9F
         // ==================== MONTHLY PLANNER FUNCTIONS ====================
         
         // Week definitions (Mon-Sun)
-        const MP_WEEKS = [
+        // Base weeks (can be extended dynamically)
+        let MP_WEEKS = [
             { num: 1, start: '2026-01-19', end: '2026-01-25', label: 'WEEK 1: Jan 19-25', color: '#059669' },
             { num: 2, start: '2026-01-26', end: '2026-02-01', label: 'WEEK 2: Jan 26 - Feb 1', color: '#059669' },
             { num: 3, start: '2026-02-02', end: '2026-02-08', label: '⚠️ WEEK 3: Feb 2-8', color: '#dc2626', critical: true },
             { num: 4, start: '2026-02-09', end: '2026-02-15', label: 'WEEK 4: Feb 9-15', color: '#7c3aed' },
             { num: 5, start: '2026-02-16', end: '2026-02-22', label: '🔴 WEEK 5: Feb 16-22 — PEDS WEEK', color: '#991b1b', critical: true }
         ];
+
+        // Dynamic week extension - adds weeks beyond Feb 22 as needed
+        function extendWeeksIfNeeded() {
+            // Get all dates from custom tasks and clinical appointments
+            const allDates = [];
+
+            // From Monthly Planner tasks
+            if (roadmapData.monthlyPlanner?.customTasks) {
+                roadmapData.monthlyPlanner.customTasks.forEach(task => {
+                    if (task.date) allDates.push(task.date);
+                });
+            }
+
+            // From Clinical appointments
+            if (roadmapData.clinicalData?.appointments) {
+                roadmapData.clinicalData.appointments.forEach(apt => {
+                    if (apt.date && apt.status !== 'cancelled') allDates.push(apt.date);
+                });
+            }
+
+            if (allDates.length === 0) return;
+
+            // Find the latest date
+            const latestDate = allDates.sort().pop();
+            const lastWeek = MP_WEEKS[MP_WEEKS.length - 1];
+
+            if (!lastWeek || latestDate <= lastWeek.end) return;
+
+            // Generate weeks until we cover the latest date
+            const weekColors = ['#059669', '#7c3aed', '#0ea5e9', '#8b5cf6', '#06b6d4'];
+            let currentEnd = parseLocalDate(lastWeek.end);
+            let weekNum = lastWeek.num;
+
+            while (true) {
+                // Start of new week (day after current end)
+                const newStart = new Date(currentEnd);
+                newStart.setDate(newStart.getDate() + 1);
+
+                // End of new week (6 days after start = 7 day week)
+                const newEnd = new Date(newStart);
+                newEnd.setDate(newEnd.getDate() + 6);
+
+                weekNum++;
+                const startStr = formatDateYMD(newStart);
+                const endStr = formatDateYMD(newEnd);
+
+                // Format label based on month
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const startMonth = monthNames[newStart.getMonth()];
+                const endMonth = monthNames[newEnd.getMonth()];
+                const startDay = newStart.getDate();
+                const endDay = newEnd.getDate();
+
+                let label;
+                if (startMonth === endMonth) {
+                    label = `WEEK ${weekNum}: ${startMonth} ${startDay}-${endDay}`;
+                } else {
+                    label = `WEEK ${weekNum}: ${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+                }
+
+                // Determine color based on month (rotating)
+                const monthIndex = newStart.getMonth();
+                const color = weekColors[monthIndex % weekColors.length];
+
+                MP_WEEKS.push({
+                    num: weekNum,
+                    start: startStr,
+                    end: endStr,
+                    label: label,
+                    color: color,
+                    generated: true // Mark as dynamically generated
+                });
+
+                currentEnd = newEnd;
+
+                // Stop if we've covered the latest date
+                if (endStr >= latestDate) break;
+
+                // Safety: don't generate more than 52 weeks total
+                if (weekNum >= 52) break;
+            }
+        }
+
+        function formatDateYMD(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
         
         // Static tasks (from original data) - these are read-only base tasks
         const MP_STATIC_TASKS = [
@@ -11020,7 +11217,13 @@ CHAIR: 9F
             if (needsSave) {
                 saveData();
             }
-            
+
+            // Sync clinical appointments to Monthly Planner (runs before render)
+            syncClinicalToMonthlyPlanner();
+
+            // Extend weeks dynamically if we have tasks/appointments beyond Feb 22
+            extendWeeksIfNeeded();
+
             mpRenderAllCalendars();
             mpRenderNotes();
             mpUpdateStats();
