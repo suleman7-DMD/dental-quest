@@ -2698,24 +2698,21 @@
             position: absolute;
             left: 2px;
             right: 2px;
-            padding: 4px 6px;
+            padding: 6px 8px;
             border-radius: 4px;
-            font-size: 0.75em;
+            font-size: 11px;
             cursor: pointer;
             border-left: 4px solid;
-            transition: transform 0.1s, box-shadow 0.1s;
-            overflow: hidden;
             z-index: 1;
-            line-height: 1.25;
+            line-height: 1.3;
             display: flex;
             flex-direction: column;
+            /* NO overflow:hidden - let content show */
         }
 
         .mp-cal-task:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
             z-index: 100;
-            overflow: visible;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
         }
 
         .mp-cal-task-name {
@@ -2725,23 +2722,12 @@
 
         .mp-cal-task-header {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 2px;
-            gap: 4px;
-        }
-        
-        .mp-cal-checkbox-wrapper {
-            display: flex;
+            justify-content: flex-end;
             align-items: center;
-        }
-        
-        .mp-cal-checkbox {
-            width: 12px;
-            height: 12px;
-            cursor: pointer;
-            accent-color: #22c55e;
-            margin: 0;
+            gap: 4px;
+            position: absolute;
+            top: 4px;
+            right: 4px;
         }
         
         .mp-task-completed {
@@ -2760,43 +2746,58 @@
         }
 
         .mp-cal-task-name {
-            font-weight: 700;
-            font-size: 1.05em;
-            line-height: 1.2;
-            margin-bottom: 2px;
-            flex-shrink: 0;
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 1.3;
+            margin-bottom: 3px;
+            margin-top: 2px;
         }
 
         .mp-cal-task-time {
-            font-size: 0.9em;
-            opacity: 0.9;
-            font-weight: 500;
+            font-size: 11px;
+            opacity: 0.95;
+            font-weight: 400;
             margin-bottom: 2px;
         }
 
         .mp-cal-task-location {
-            font-size: 0.85em;
-            opacity: 0.8;
+            font-size: 10px;
+            opacity: 0.85;
             margin-bottom: 2px;
         }
 
         .mp-cal-task-notes {
-            font-size: 0.8em;
-            opacity: 0.7;
+            font-size: 10px;
+            opacity: 0.8;
             margin-top: 2px;
-            line-height: 1.2;
-            flex-grow: 1;
-            overflow: hidden;
+            line-height: 1.25;
         }
 
         .mp-cal-task-type {
-            display: inline-block;
-            padding: 1px 4px;
-            font-size: 0.75em;
+            display: none; /* Hide type label - task name is more important */
+        }
+
+        .mp-cal-edit-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
             border-radius: 3px;
-            font-weight: 600;
-            background: rgba(0,0,0,0.25);
-            flex-shrink: 0;
+            padding: 2px 4px;
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .mp-cal-edit-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .mp-cal-checkbox {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #22c55e;
+            margin: 0;
         }
 
         /* Task type colors */
@@ -2842,27 +2843,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 3px;
-        }
-
-        /* Edit button on calendar task blocks */
-        .mp-cal-edit-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 2px 5px;
-            cursor: pointer;
-            font-size: 0.75em;
-            transition: all 0.2s;
-            opacity: 0.7;
-        }
-
-        .mp-cal-task:hover .mp-cal-edit-btn {
-            opacity: 1;
-        }
-
-        .mp-cal-edit-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
         }
 
         /* Edit button in table rows */
@@ -11398,8 +11378,8 @@ CHAIR: 9F
             const rangeEnd = timedTasks.length > 0 ? Math.min(23, maxHour + 1) : 21;
             
             // Pixel heights for Google Calendar-style layout
-            const hourHeightWithTask = 60;  // Hours with tasks - room for full content
-            const hourHeightEmpty = 24;     // Empty hours
+            const hourHeightWithTask = 80;  // Hours with tasks - room for full content
+            const hourHeightEmpty = 40;     // Empty hours - still needs visibility
             
             let html = '<div class="mp-calendar-wrapper">';
             
@@ -11532,8 +11512,8 @@ CHAIR: 9F
             const isCompleted = completedTasks.includes(String(taskId));
             
             // Heights matching mpCreateCalendarGrid
-            const heightWithTask = 60;
-            const heightEmpty = 24;
+            const heightWithTask = 80;
+            const heightEmpty = 40;
             
             // Calculate position and height
             const startHour = parseInt(task.time.split(':')[0]);
@@ -11587,25 +11567,22 @@ CHAIR: 9F
             }
 
             // Calculate min height based on content
-            const minHeight = Math.max(50, heightPx);
+            const minHeight = Math.max(60, heightPx);
 
             return `
                 <div class="mp-cal-task ${typeClass} ${completedClass}"
                      style="top: ${topPx}px; height: ${heightPx}px; min-height: ${minHeight}px;"
                      data-task-id="${taskId}">
                     <div class="mp-cal-task-header">
-                        <span class="mp-cal-task-type">${typeClass.toUpperCase()}</span>
-                        <div style="display: flex; gap: 4px; align-items: center;">
-                            <label class="mp-cal-checkbox-wrapper" onclick="event.stopPropagation();">
-                                <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
-                                       onchange="mpToggleTaskComplete('${taskId}')" />
-                            </label>
-                            <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
-                        </div>
+                        <label onclick="event.stopPropagation();">
+                            <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
+                                   onchange="mpToggleTaskComplete('${taskId}')" />
+                        </label>
+                        <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
                     </div>
                     <div class="mp-cal-task-name ${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</div>
-                    <div class="mp-cal-task-time">🕐 ${timeDisplay}</div>
-                    ${location ? `<div class="mp-cal-task-location">📍 ${escapeHtml(location)}</div>` : ''}
+                    <div class="mp-cal-task-time">${timeDisplay}</div>
+                    ${location ? `<div class="mp-cal-task-location">${escapeHtml(location)}</div>` : ''}
                     ${otherNotes ? `<div class="mp-cal-task-notes">${escapeHtml(otherNotes)}</div>` : ''}
                 </div>
             `;
