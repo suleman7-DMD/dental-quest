@@ -194,6 +194,36 @@ save immediately
 - Visibility change handler - saves on tab hide, refreshes on tab show
 - Fallback timer (3 seconds) - ensures app works even if Firebase is slow
 
+### Firebase Security Rules (IMPORTANT)
+The app uses client-side PIN authentication, not Firebase Auth. Current recommended rules:
+
+```json
+{
+  "rules": {
+    "users": {
+      "$userId": {
+        ".read": "$userId.beginsWith('user_')",
+        ".write": "$userId.beginsWith('user_')",
+        ".validate": "newData.hasChildren()"
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}
+```
+
+**To verify/update rules:**
+1. Go to Firebase Console → https://console.firebase.google.com
+2. Select "dental-student-quest" project
+3. Build → Realtime Database → Rules tab
+4. Paste rules and click "Publish"
+
+**Security Notes:**
+- Base64 PIN is NOT a cryptographic hash - it's reversible
+- Anyone who guesses your PIN can access your data
+- For production: consider adding Firebase Authentication
+
 ---
 
 ## CRITICAL BUGS TO AVOID
@@ -366,11 +396,12 @@ function calculateFinancialStatus() {
 - Reduces amphetamine half-life to 70% of normal (12h → 8.4h)
 - Only applies AFTER the specified time
 
-### Vitamin C Day Picker (FIXED)
-- Today/Tomorrow dropdown added next to time input
-- `isNextDay` field persists to Firebase
-- When "Tomorrow" selected, calculation adds 24 hours to the specified time
-- Summaries show "(TOMORROW)" label when applicable
+### Vitamin C Date Picker
+- Uses `<input type="date">` instead of Today/Tomorrow dropdown
+- `date` field (YYYY-MM-DD) persists to Firebase
+- Calculation uses actual date difference from today
+- Summaries show formatted date label when not today
+- Same pattern used for med doses and caffeine in All-Nighter mode
 
 ### Circadian Rhythm (Process C)
 - Wake Maintenance Zone: 2 hours before Forbidden Zone
