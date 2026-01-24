@@ -5169,6 +5169,7 @@
         let userPassword = null; // Simple password for privacy
         let saveDebounceTimer = null; // Debounce timer for Firebase saves
         let pendingSaveData = null; // Store pending save data
+        let offlineSyncPending = false; // Flag for pending offline sync
         
         // Hide loading overlay and mark initial load complete
         function markInitialLoadComplete() {
@@ -5933,6 +5934,8 @@
                                         savingToast.style.background = '#10b981';
                                         savingToast.textContent = '✓ Synced (retry)';
                                         updateSyncStatus('connected', 'Saved (retry)');
+                                        offlineSyncPending = false;
+                                        localStorage.removeItem('dentalQuestOfflineSyncPending');
                                         setTimeout(() => {
                                             if (savingToast && savingToast.parentNode) {
                                                 savingToast.remove();
@@ -5941,8 +5944,11 @@
                                     })
                                     .catch(err => {
                                         console.error('❌ Retry failed:', err);
-                                        savingToast.textContent = '✗ Sync failed';
-                                        updateSyncStatus('error', 'Save failed');
+                                        savingToast.textContent = '✗ Offline - will sync when back online';
+                                        updateSyncStatus('offline', 'Pending sync');
+                                        // Mark for sync when back online
+                                        offlineSyncPending = true;
+                                        localStorage.setItem('dentalQuestOfflineSyncPending', 'true');
                                         setTimeout(() => {
                                             if (savingToast && savingToast.parentNode) {
                                                 savingToast.remove();
@@ -6736,7 +6742,46 @@
                 }
             }
         });
-        
+
+        // Handle coming back online - sync any pending changes
+        window.addEventListener('online', function() {
+            console.log('🌐 Back online - checking for pending sync');
+            if (localStorage.getItem('dentalQuestOfflineSyncPending') === 'true' || offlineSyncPending) {
+                showToast('📤 Syncing offline changes...', '🔄');
+                // Force a fresh save which will push all current data to Firebase
+                if (firebaseInitialized && currentUser && database) {
+                    const data = JSON.parse(localStorage.getItem('dentalStudentQuestData') || '{}');
+                    if (Object.keys(data).length > 0) {
+                        database.ref('users/' + currentUser.uid + '/appData').set(data)
+                            .then(() => {
+                                offlineSyncPending = false;
+                                localStorage.removeItem('dentalQuestOfflineSyncPending');
+                                updateSyncStatus('connected', 'Synced');
+                                showToast('✓ Offline changes synced!', '✅');
+                            })
+                            .catch(err => {
+                                console.error('❌ Online sync failed:', err);
+                                showToast('Sync failed - will retry', '⚠️');
+                            });
+                    }
+                }
+            } else {
+                updateSyncStatus('connected', 'Online');
+            }
+        });
+
+        // Handle going offline
+        window.addEventListener('offline', function() {
+            console.log('📴 Gone offline');
+            updateSyncStatus('offline', 'Offline - changes saved locally');
+        });
+
+        // Check on load if there are pending syncs from previous session
+        if (localStorage.getItem('dentalQuestOfflineSyncPending') === 'true') {
+            offlineSyncPending = true;
+            console.log('⚠️ Pending offline sync detected from previous session');
+        }
+
         // Periodic heartbeat save every 2 minutes to ensure data is synced
         setInterval(() => {
             if (initialLoadComplete && firebaseInitialized) {
