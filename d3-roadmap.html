@@ -7494,7 +7494,12 @@ CHAIR: 9F
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('d3RoadmapData');
             if (saved) {
-                roadmapData = { ...roadmapData, ...JSON.parse(saved) };
+                try {
+                    roadmapData = { ...roadmapData, ...JSON.parse(saved) };
+                } catch (e) {
+                    console.error('❌ Failed to parse localStorage data:', e);
+                    // Don't crash - continue with defaults
+                }
             }
             initUI();
         }
