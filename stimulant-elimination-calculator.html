@@ -2251,11 +2251,8 @@
                             <div class="input-group" id="vitaminCTimeGroup" style="display: none;">
                                 <label>Vitamin C taken at:</label>
                                 <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="date" id="vitaminCDate" onchange="updateVitaminCDate(); recalculate(); saveState()" style="padding: 8px; border-radius: 6px; background: #161b22; border: 1px solid #30363d; color: #e6edf3; font-size: 0.9em;">
                                     <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState()">
-                                    <select id="vitaminCDay" onchange="updateVitaminCDay(); recalculate(); saveState();" style="padding: 8px; border-radius: 6px; background: #161b22; border: 1px solid #30363d; color: #e6edf3;">
-                                        <option value="today">Today</option>
-                                        <option value="tomorrow">Tomorrow</option>
-                                    </select>
                                 </div>
                             </div>
                             <div class="input-group" id="saunaTimeGroup" style="display: none;">
@@ -3318,7 +3315,7 @@
             // All-Nighter Mode: enables 48-hour view with yesterday's ghost load
             allNighterMode: false,
             modifiers: {
-                vitaminC: { active: false, time: '17:00', isNextDay: false },
+                vitaminC: { active: false, time: '17:00', date: null },
                 heavyLift: { active: false },
                 sauna: { active: false, time: '18:00' }
             },
@@ -4356,12 +4353,9 @@
                 const dateLabel = isToday ? 'Today' : formatDateLabel(medDate);
                 const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
 
-                // FIX Bug 4: In All-Nighter Mode, show date selector instead of label
+                // Show date picker in All-Nighter Mode, label otherwise
                 const dateSelector = state.allNighterMode ? `
-                    <select onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; min-width: 70px;">
-                        <option value="${today}" ${isToday ? 'selected' : ''}>Today</option>
-                        <option value="${yesterdayStr}" ${isYesterday ? 'selected' : ''}>Yesterday</option>
-                    </select>
+                    <input type="date" value="${medDate}" onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
                 ` : `<span style="font-size: 0.75em; ${dateStyle} min-width: 55px;">${dateLabel}</span>`;
 
                 return `
@@ -4499,12 +4493,10 @@
                 const dateLabel = isToday ? 'Today' : formatDateLabel(caffDate);
                 const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
 
-                // FIX Bug 4: In All-Nighter Mode, show date selector instead of label
+                // Show date picker in All-Nighter Mode, label otherwise
+                const caffDate = caff.date || today;
                 const dateSelector = state.allNighterMode ? `
-                    <select onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; min-width: 65px;">
-                        <option value="${today}" ${isToday ? 'selected' : ''}>Today</option>
-                        <option value="${yesterdayStr}" ${isYesterday ? 'selected' : ''}>Yesterday</option>
-                    </select>
+                    <input type="date" value="${caffDate}" onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
                 ` : `<span style="font-size: 0.7em; ${dateStyle} min-width: 50px;">${dateLabel}</span>`;
 
                 return `
@@ -4583,26 +4575,36 @@
             saunaGroup.style.display = showSauna ? 'flex' : 'none';
             container.style.display = (showVitC || showSauna) ? 'block' : 'none';
 
-            // Update Vitamin C day dropdown to match state
-            const vitCDayEl = document.getElementById('vitaminCDay');
-            if (vitCDayEl) {
-                vitCDayEl.value = state.modifiers.vitaminC.isNextDay ? 'tomorrow' : 'today';
+            // Update Vitamin C date input to match state
+            const vitCDateEl = document.getElementById('vitaminCDate');
+            if (vitCDateEl) {
+                // Default to today if no date set
+                vitCDateEl.value = state.modifiers.vitaminC.date || getLocalDateString();
             }
         }
 
-        function updateVitaminCDay() {
-            const vitCDayEl = document.getElementById('vitaminCDay');
-            if (vitCDayEl) {
-                state.modifiers.vitaminC.isNextDay = (vitCDayEl.value === 'tomorrow');
+        function updateVitaminCDate() {
+            const vitCDateEl = document.getElementById('vitaminCDate');
+            if (vitCDateEl) {
+                state.modifiers.vitaminC.date = vitCDateEl.value;
             }
         }
 
-        // Helper to get Vitamin C time in minutes, accounting for "tomorrow" setting
+        // Helper to get Vitamin C time in minutes from wake time, accounting for actual date
         function getVitaminCTimeMinutes() {
             if (!state.modifiers.vitaminC.active) return Infinity;
+
+            const today = getLocalDateString();
+            const vitCDate = state.modifiers.vitaminC.date || today;
             const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
-            // If "tomorrow" is selected, add 24 hours (1440 minutes)
-            return state.modifiers.vitaminC.isNextDay ? baseMinutes + 24 * 60 : baseMinutes;
+
+            // Calculate day offset from today
+            const todayDate = parseLocalDate(today);
+            const targetDate = parseLocalDate(vitCDate);
+            const daysDiff = Math.round((targetDate - todayDate) / (1000 * 60 * 60 * 24));
+
+            // Add/subtract 24 hours per day difference
+            return baseMinutes + (daysDiff * 24 * 60);
         }
 
         // ============================================
@@ -5252,9 +5254,9 @@
             
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
                 const vitCTimeEl = document.getElementById('vitaminCTime');
-                const vitCDayEl = document.getElementById('vitaminCDay');
+                const vitCDateEl = document.getElementById('vitaminCDate');
                 if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
-                if (vitCDayEl) state.modifiers.vitaminC.isNextDay = (vitCDayEl.value === 'tomorrow');
+                if (vitCDateEl) state.modifiers.vitaminC.date = vitCDateEl.value || getLocalDateString();
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTimeEl = document.getElementById('saunaTime');
@@ -6524,6 +6526,7 @@
                     if (!state.modifiers.vitaminC.active) {
                         state.modifiers.vitaminC.active = true;
                         state.modifiers.vitaminC.time = nowTime;
+                        state.modifiers.vitaminC.date = getLocalDateString();
                         document.querySelector('[data-modifier="vitaminC"]').classList.add('active');
                         document.getElementById('vitaminCTime').value = nowTime;
                         updateModifierTimeInputs();
@@ -8903,7 +8906,7 @@
                     modifiers: {
                         ...state.modifiers,
                         ...(loaded.modifiers || {}),
-                        // Deep merge vitaminC to preserve isNextDay field
+                        // Deep merge vitaminC to preserve date field
                         vitaminC: {
                             ...state.modifiers.vitaminC,
                             ...(loaded.modifiers?.vitaminC || {})
@@ -9194,8 +9197,10 @@
             // Build modifiers summary
             let modifierDetails = [];
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
-                const vitCDayLabel = state.modifiers.vitaminC.isNextDay ? ' (TOMORROW)' : '';
-                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDayLabel} → Half-life reduced to 70% after this time`);
+                const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
+                const today = getLocalDateString();
+                const vitCDateLabel = vitCDate !== today ? ` (${formatDateLabel(vitCDate)})` : '';
+                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDateLabel} → Half-life reduced to 70% after this time`);
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 modifierDetails.push(`• Sauna: Scheduled at ${state.modifiers.sauna.time} → +${saunaBonus.toFixed(1)}mg threshold (parasympathetic)`);
@@ -9302,7 +9307,9 @@
             // Build Vitamin C info
             let vitCInfo = '';
             if (state.modifiers.vitaminC.active) {
-                const dayLabel = state.modifiers.vitaminC.isNextDay ? 'TOMORROW' : 'today';
+                const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
+                const today = getLocalDateString();
+                const dayLabel = vitCDate !== today ? formatDateLabel(vitCDate) : 'today';
                 vitCInfo = `  • Vitamin C: Active at ${state.modifiers.vitaminC.time} ${dayLabel} → Half-life reduced to 70% after this time\n`;
             }
 
@@ -9510,11 +9517,7 @@ Current status at ${currentTime}:
             });
             updateModifierTimeInputs();
 
-            // Restore Vitamin C day selector
-            const vitCDayEl = document.getElementById('vitaminCDay');
-            if (vitCDayEl && state.modifiers.vitaminC.isNextDay) {
-                vitCDayEl.value = 'tomorrow';
-            }
+            // Restore Vitamin C date (handled by updateModifierTimeInputs now)
 
             // Update All-Nighter Mode UI
             updateAllNighterUI();
@@ -9799,6 +9802,7 @@ Current status at ${currentTime}:
             if (focusVitCEnabled) {
                 state.modifiers.vitaminC.active = true;
                 state.modifiers.vitaminC.time = '17:00'; // Default 5 PM
+                state.modifiers.vitaminC.date = today;
             }
 
             renderMedEntries();
@@ -9848,6 +9852,7 @@ Current status at ${currentTime}:
             if (focusVitCEnabled) {
                 state.modifiers.vitaminC.active = true;
                 state.modifiers.vitaminC.time = '17:00';
+                state.modifiers.vitaminC.date = today;
             }
 
             renderMedEntries();
@@ -10491,7 +10496,12 @@ Current status at ${currentTime}:
         function focusToggleVitC() {
             focusVitCEnabled = !focusVitCEnabled;
             state.modifiers.vitaminC.active = focusVitCEnabled;
-            
+
+            // Set date to today when enabling
+            if (focusVitCEnabled && !state.modifiers.vitaminC.date) {
+                state.modifiers.vitaminC.date = getLocalDateString();
+            }
+
             saveState();
             recalculate();
             renderFocusMode();
