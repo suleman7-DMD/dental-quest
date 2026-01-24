@@ -25,6 +25,46 @@
             color: #e6edf3;
         }
 
+        /* Cross-App Navigation */
+        .cross-app-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .cross-app-nav .nav-link {
+            padding: 8px 14px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .cross-app-nav .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .cross-app-nav .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .cross-app-nav {
+                gap: 4px;
+                padding: 8px;
+            }
+            .cross-app-nav .nav-link {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+        }
+
         /* Scale everything down 15% for less scrolling */
         .container {
             max-width: 1400px;
@@ -1645,6 +1685,14 @@
         </div>
     </div>
 
+    <!-- Cross-App Navigation -->
+    <nav class="cross-app-nav">
+        <a href="index.html" class="nav-link">🦷 Quest</a>
+        <a href="d3-roadmap.html" class="nav-link">📚 Roadmap</a>
+        <a href="stimulant-elimination-calculator.html" class="nav-link active">💊 Sleep Calc</a>
+        <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
+    </nav>
+
     <!-- ============================================ -->
     <!-- FOCUS MODE - MOBILE FIRST INTERFACE -->
     <!-- ============================================ -->
@@ -1917,10 +1965,7 @@
 
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <a href="index.html" style="color: #58a6ff; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
-                    ← Back to Quest
-                </a>
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                 <div id="syncStatus" style="font-size: 0.8em; color: #b0b8c4; display: flex; align-items: center; gap: 8px;">
                     <span id="syncIcon">⏳</span>
                     <span id="syncText">Connecting...</span>

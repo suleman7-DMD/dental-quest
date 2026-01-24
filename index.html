@@ -46,6 +46,46 @@
             }
         }
 
+        /* Cross-App Navigation */
+        .cross-app-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .cross-app-nav .nav-link {
+            padding: 8px 14px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .cross-app-nav .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .cross-app-nav .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .cross-app-nav {
+                gap: 4px;
+                padding: 8px;
+            }
+            .cross-app-nav .nav-link {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -4193,6 +4233,15 @@
         <span class="toast-icon" id="toastIcon">✅</span>
         <span class="toast-message" id="toastMessage">Success!</span>
     </div>
+
+    <!-- Cross-App Navigation -->
+    <nav class="cross-app-nav">
+        <a href="index.html" class="nav-link active">🦷 Quest</a>
+        <a href="d3-roadmap.html" class="nav-link">📚 Roadmap</a>
+        <a href="stimulant-elimination-calculator.html" class="nav-link">💊 Sleep Calc</a>
+        <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
+    </nav>
+
     <div class="container">
         <div class="header">
             <h1>🦷 Dental Student Quest</h1>

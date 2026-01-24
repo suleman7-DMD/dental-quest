@@ -366,12 +366,11 @@ function calculateFinancialStatus() {
 - Reduces amphetamine half-life to 70% of normal (12h → 8.4h)
 - Only applies AFTER the specified time
 
-### Known Bug: Vitamin C is "Day-Blind" (NEEDS FIX)
-- App only accepts HH:MM format (no date)
-- Always assumes the time is TODAY
-- If you enter "08:00" at 3 PM, app thinks Vitamin C was taken 7 hours ago
-- **Cannot model "take Vitamin C tomorrow at 8 AM"**
-- **Workaround**: Keep Vitamin C OFF while planning, set it after midnight when "tomorrow" becomes "today"
+### Vitamin C Day Picker (FIXED)
+- Today/Tomorrow dropdown added next to time input
+- `isNextDay` field persists to Firebase
+- When "Tomorrow" selected, calculation adds 24 hours to the specified time
+- Summaries show "(TOMORROW)" label when applicable
 
 ### Circadian Rhythm (Process C)
 - Wake Maintenance Zone: 2 hours before Forbidden Zone

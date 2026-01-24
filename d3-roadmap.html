@@ -24,6 +24,44 @@
             color: #e2e8f0;
         }
 
+        /* Cross-App Navigation */
+        .cross-app-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.3);
+            flex-wrap: wrap;
+        }
+        .cross-app-nav .nav-link {
+            padding: 8px 14px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .cross-app-nav .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .cross-app-nav .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .cross-app-nav {
+                gap: 4px;
+                padding: 8px;
+            }
+            .cross-app-nav .nav-link {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+        }
+
         /* Header */
         .header {
             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
@@ -4689,9 +4727,15 @@
     </style>
 </head>
 <body>
+    <!-- Cross-App Navigation -->
+    <nav class="cross-app-nav">
+        <a href="index.html" class="nav-link">🦷 Quest</a>
+        <a href="d3-roadmap.html" class="nav-link active">📚 Roadmap</a>
+        <a href="stimulant-elimination-calculator.html" class="nav-link">💊 Sleep Calc</a>
+        <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
+    </nav>
+
     <div class="header">
-        <a href="index.html" class="back-btn">← Back to Quest</a>
-        <a href="lecture-prompt-transformer.html" class="back-btn" style="left: auto; right: 20px;">📝 Lecture Transformer</a>
         <h1>📚 D3 Spring 2026 Roadmap</h1>
         <p>Your complete academic survival guide</p>
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
