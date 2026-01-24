@@ -541,6 +541,26 @@
             min-height: 44px;
         }
 
+        /* FIX Bug 6: Mobile touch and input improvements */
+        input[type="time"], input[type="number"], select {
+            -webkit-appearance: none;
+            appearance: none;
+            min-height: 44px;
+            font-size: 16px; /* Prevents iOS zoom on focus */
+            touch-action: manipulation; /* Prevents double-tap zoom */
+        }
+
+        /* Ensure all interactive elements are tappable */
+        .med-entry, .caffeine-entry, .focus-caffeine-entry {
+            touch-action: manipulation;
+        }
+
+        /* iOS-specific time input fixes */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            padding: 8px;
+            cursor: pointer;
+        }
+
         /* Empty state styling */
         .empty-state {
             text-align: center;
@@ -4258,11 +4278,19 @@
             if (med) {
                 if (field === 'dose') {
                     med.dose = parseInt(value);
+                    // Only re-render for dose changes (affects stacking warning display)
+                    renderMedEntries();
                 } else if (field === 'time') {
                     med.time = value;
+                    // DON'T re-render for time changes - it destroys the active input!
+                    // The stacking warning only depends on dose, not time
+                } else if (field === 'date') {
+                    // FIX Bug 4: Allow date changes in All-Nighter Mode
+                    med.date = value;
+                    renderMedEntries(); // Re-render to update date selector color
+                    renderGhostLoad(); // Update ghost load display
                 }
-                // CRITICAL: Must re-render to update stacking warning with new values
-                renderMedEntries();
+                // Always recalculate and save
                 recalculate();
                 saveState();
             }
@@ -4271,17 +4299,29 @@
         function renderMedEntries() {
             const container = document.getElementById('medEntries');
             const today = getLocalDateString(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getLocalDateString(yesterday);
 
             container.innerHTML = state.medications.map((med, index) => {
                 // FIX: Show date label for clarity (especially in overnight mode)
                 const medDate = med.date || today;
                 const isToday = medDate === today;
+                const isYesterday = medDate === yesterdayStr;
                 const dateLabel = isToday ? 'Today' : formatDateLabel(medDate);
                 const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
 
+                // FIX Bug 4: In All-Nighter Mode, show date selector instead of label
+                const dateSelector = state.allNighterMode ? `
+                    <select onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; min-width: 70px;">
+                        <option value="${today}" ${isToday ? 'selected' : ''}>Today</option>
+                        <option value="${yesterdayStr}" ${isYesterday ? 'selected' : ''}>Yesterday</option>
+                    </select>
+                ` : `<span style="font-size: 0.75em; ${dateStyle} min-width: 55px;">${dateLabel}</span>`;
+
                 return `
                 <div class="med-entry">
-                    <span style="font-size: 0.75em; ${dateStyle} min-width: 55px;">${dateLabel}</span>
+                    ${dateSelector}
                     <select onchange="updateMedEntry(${med.id}, 'dose', this.value)">
                         <option value="20" ${med.dose === 20 ? 'selected' : ''}>20mg XR</option>
                         <option value="30" ${med.dose === 30 ? 'selected' : ''}>30mg XR</option>
@@ -4382,6 +4422,7 @@
             const today = getLocalDateString(now);
             state.caffeine.push({ id: Date.now(), amount, name, time, date: today });
             renderCaffeineEntries();
+            renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
             recalculate();
             saveState();
         }
@@ -4389,6 +4430,7 @@
         function removeCaffeine(id) {
             state.caffeine = state.caffeine.filter(c => c.id !== id);
             renderCaffeineEntries();
+            renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
             recalculate();
             saveState();
         }
@@ -4397,6 +4439,9 @@
             const container = document.getElementById('caffeineEntries');
             if (!container) return;
             const today = getLocalDateString(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getLocalDateString(yesterday);
 
             container.innerHTML = state.caffeine.map((caff, index) => {
                 const isSipPart = caff.sipGroup !== undefined;
@@ -4405,12 +4450,21 @@
                 // FIX: Show date label for clarity (especially in overnight mode)
                 const caffDate = caff.date || today;
                 const isToday = caffDate === today;
+                const isYesterday = caffDate === yesterdayStr;
                 const dateLabel = isToday ? 'Today' : formatDateLabel(caffDate);
                 const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
 
+                // FIX Bug 4: In All-Nighter Mode, show date selector instead of label
+                const dateSelector = state.allNighterMode ? `
+                    <select onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; min-width: 65px;">
+                        <option value="${today}" ${isToday ? 'selected' : ''}>Today</option>
+                        <option value="${yesterdayStr}" ${isYesterday ? 'selected' : ''}>Yesterday</option>
+                    </select>
+                ` : `<span style="font-size: 0.7em; ${dateStyle} min-width: 50px;">${dateLabel}</span>`;
+
                 return `
                 <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);"' : ''}>
-                    <span style="font-size: 0.7em; ${dateStyle} min-width: 50px;">${dateLabel}</span>
+                    ${dateSelector}
                     <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
                     <input type="time" value="${caff.time}" onchange="updateCaffeineTime(${index}, this.value)"
                            style="padding: 4px 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 0.85em; width: 100px;">
@@ -4430,6 +4484,18 @@
                     renderFocusCaffeineList();
                     updateFocusSleepDisplay();
                 }
+            }
+        }
+
+        // FIX Bug 4: Allow date changes for caffeine in All-Nighter Mode
+        function updateCaffeineDate(index, newDate) {
+            if (state.caffeine[index]) {
+                state.caffeine[index].date = newDate;
+                renderCaffeineEntries(); // Re-render to update date selector color
+                renderFocusCaffeineList(); // Keep Focus Mode in sync
+                renderGhostLoad(); // Update ghost load display
+                recalculate();
+                saveState();
             }
         }
 
@@ -8527,11 +8593,12 @@
                     // Update localStorage
                     localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
                     
-                    // Re-render
+                    // Re-render both Full View and Focus Mode lists
                     document.getElementById('wakeTime').value = state.wakeTime;
                     document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
                     renderMedEntries();
                     renderCaffeineEntries();
+                    renderFocusCaffeineList(); // FIX: Also sync Focus Mode caffeine list
                     renderSleepCalendar();
                     renderSleepPerformance();
                     renderHistory();
@@ -8806,8 +8873,10 @@
                 // Clear today's entries (fresh start each day)
                 const today = getLocalDateString();
                 const lastDate = state.history[0]?.date;
-                
-                if (lastDate !== today) {
+
+                // FIX: Only clear if we HAVE a history date AND it's different from today
+                // Previously, empty history (undefined !== today) would clear modifiers on every reload
+                if (lastDate && lastDate !== today) {
                     // New day - clear entries but keep settings and history
                     state.medications = [];
                     state.caffeine = [];
@@ -8891,6 +8960,7 @@
                 
                 renderMedEntries();
                 renderCaffeineEntries();
+                renderFocusCaffeineList(); // FIX Bug 5: Sync Focus Mode on clear
                 document.querySelectorAll('.modifier-item').forEach(el => el.classList.remove('active'));
                 updateModifierTimeInputs();
                 initWorkoutPlanner(); // Re-initialize workout planner
@@ -9455,7 +9525,11 @@ Current status at ${currentTime}:
                 renderFocusMode();
             } else {
                 document.body.classList.remove('focus-mode');
-                recalculate(); // Refresh full view
+                // FIX: Explicitly re-render entries when switching to Full View
+                // This ensures caffeine/meds added in Focus Mode show correctly
+                renderMedEntries();
+                renderCaffeineEntries();
+                recalculate(); // Refresh full view calculations
             }
             
             // Update ALL toggle buttons (both in Focus and Full views)
@@ -9953,11 +10027,12 @@ Current status at ${currentTime}:
         function focusUpdateCaffeineTime(index, newTime) {
             if (state.caffeine[index]) {
                 state.caffeine[index].time = newTime;
-                
-                renderCaffeineEntries();
+
+                // DON'T re-render - it destroys the active input!
+                // Just recalculate and save
                 recalculate();
                 saveState();
-                
+
                 if (focusMode) {
                     updateFocusSleepDisplay();
                 }
