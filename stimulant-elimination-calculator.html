@@ -8776,7 +8776,13 @@
             // First load from localStorage (immediate)
             const saved = localStorage.getItem('stimulantCalculatorState');
             if (saved) {
-                const loaded = JSON.parse(saved);
+                let loaded;
+                try {
+                    loaded = JSON.parse(saved);
+                } catch (e) {
+                    console.error('❌ Failed to parse localStorage data:', e);
+                    return; // Don't crash - continue with defaults
+                }
                 
                 // Merge with defaults to handle new fields
                 state = {
