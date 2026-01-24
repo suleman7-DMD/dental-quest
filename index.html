@@ -1487,7 +1487,191 @@
             background: #0f1419 !important;
             color: #e6edf3;
         }
-        
+
+        /* Financial Modal Container */
+        .fin-modal-container {
+            max-width: 95%;
+            max-height: 95%;
+            overflow-y: auto;
+            padding: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .fin-modal-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 15px 20px;
+            border-bottom: 3px solid #30363d;
+            z-index: 100;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .fin-modal-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fin-modal-title-section {
+            flex: 1;
+        }
+
+        .fin-modal-title {
+            color: white;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .fin-modal-subtitle {
+            color: rgba(255,255,255,0.85);
+            margin: 3px 0 0 0;
+            font-size: 0.85em;
+        }
+
+        .fin-modal-close {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
+
+        .fin-modal-close:active {
+            transform: scale(0.95);
+        }
+
+        .fin-modal-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .fin-modal-stat {
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .fin-modal-stat-label {
+            font-size: 0.7em;
+            opacity: 0.9;
+            margin-bottom: 3px;
+            color: white;
+        }
+
+        .fin-modal-stat-value {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .fin-modal-stat-value.debt {
+            color: #fca5a5;
+        }
+
+        .fin-modal-stat-value.positive {
+            color: #86efac;
+        }
+
+        .fin-modal-stat-value.warning {
+            color: #fbbf24;
+        }
+
+        .fin-dashboard-content {
+            padding: 15px;
+            color: #e6edf3;
+        }
+
+        /* Mobile: Financial Modal */
+        @media (max-width: 768px) {
+            .fin-modal-container {
+                max-width: 100%;
+                max-height: 100vh;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .fin-modal-header {
+                padding: 12px 15px;
+                border-radius: 0;
+            }
+
+            .fin-modal-title {
+                font-size: 1.3em;
+            }
+
+            .fin-modal-close {
+                padding: 8px 14px;
+                font-size: 0.9em;
+            }
+
+            .fin-modal-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .fin-modal-stat {
+                padding: 8px;
+            }
+
+            .fin-modal-stat-label {
+                font-size: 0.65em;
+            }
+
+            .fin-modal-stat-value {
+                font-size: 0.95em;
+            }
+
+            .fin-dashboard-content {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fin-modal-header {
+                padding: 10px 12px;
+            }
+
+            .fin-modal-title {
+                font-size: 1.1em;
+            }
+
+            .fin-modal-subtitle {
+                font-size: 0.75em;
+            }
+
+            .fin-modal-close {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+
+            .fin-modal-stats {
+                gap: 6px;
+            }
+
+            .fin-modal-stat {
+                padding: 6px;
+            }
+
+            .fin-modal-stat-label {
+                font-size: 0.6em;
+            }
+
+            .fin-modal-stat-value {
+                font-size: 0.85em;
+            }
+
+            .fin-dashboard-content {
+                padding: 10px;
+            }
+        }
+
         .fin-section {
             background: #161b22;
             border: 1px solid #30363d;
@@ -1510,7 +1694,796 @@
             color: #58a6ff;
             margin: 0;
         }
-        
+
+        /* Master Cockpit - Responsive Classes */
+        .fin-master-cockpit {
+            overflow: hidden;
+        }
+
+        .fin-master-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .fin-master-title {
+            color: white;
+            font-size: 1.6em;
+            margin: 0;
+        }
+
+        .fin-master-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .fin-master-card {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .fin-master-label {
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+        }
+
+        .fin-master-value {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: white;
+            font-family: 'Monaco', monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .fin-update-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95em;
+            width: 100%;
+            touch-action: manipulation;
+        }
+
+        .fin-update-btn:active {
+            transform: scale(0.98);
+        }
+
+        .fin-health-badge {
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.95em;
+        }
+
+        .fin-master-updated {
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.6);
+            margin-top: 10px;
+        }
+
+        .fin-quick-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .fin-quick-stat {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .fin-quick-label {
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .fin-quick-value {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        /* Mobile: Master Cockpit */
+        @media (max-width: 768px) {
+            .fin-master-title {
+                font-size: 1.3em;
+            }
+
+            .fin-master-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .fin-master-card {
+                padding: 15px;
+            }
+
+            .fin-master-value {
+                font-size: 2em;
+            }
+
+            .fin-quick-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .fin-quick-stat {
+                padding: 10px;
+            }
+
+            .fin-quick-label {
+                font-size: 0.7em;
+            }
+
+            .fin-quick-value {
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fin-master-title {
+                font-size: 1.1em;
+            }
+
+            .fin-master-card {
+                padding: 12px;
+            }
+
+            .fin-master-label {
+                font-size: 0.75em;
+            }
+
+            .fin-master-value {
+                font-size: 1.6em;
+                margin: 8px 0;
+            }
+
+            .fin-update-btn {
+                padding: 10px 16px;
+                font-size: 0.9em;
+            }
+
+            .fin-health-badge {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .fin-quick-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .fin-quick-stat {
+                padding: 8px;
+            }
+
+            .fin-quick-label {
+                font-size: 0.65em;
+            }
+
+            .fin-quick-value {
+                font-size: 0.9em;
+            }
+        }
+
+        /* Recurring Expenses - Responsive Classes */
+        .fin-recurring-header {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .fin-recurring-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fin-recurring-total {
+            text-align: right;
+        }
+
+        .fin-recurring-total-label {
+            font-size: 0.85em;
+            color: #b0b8c4;
+        }
+
+        .fin-recurring-total-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .fin-expense-section {
+            margin-bottom: 20px;
+        }
+
+        .fin-expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fin-expense-header-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #b0b8c4;
+        }
+
+        .fin-add-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            touch-action: manipulation;
+        }
+
+        .fin-expense-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .fin-expense-item {
+            background: #21262d;
+            padding: 12px 14px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #30363d;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .fin-expense-info {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .fin-expense-name {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .fin-expense-category {
+            font-size: 0.75em;
+            color: #8b949e;
+        }
+
+        .fin-expense-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .fin-expense-amount {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #f87171;
+        }
+
+        .fin-edit-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            touch-action: manipulation;
+        }
+
+        .fin-delete-btn {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid #f87171;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            touch-action: manipulation;
+        }
+
+        /* Month Tracker */
+        .fin-month-tracker {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #30363d;
+        }
+
+        .fin-month-tracker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fin-month-tracker-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .fin-month-tracker-count {
+            font-size: 0.85em;
+            color: #b0b8c4;
+        }
+
+        .fin-month-tracker-tip {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: #93c5fd;
+        }
+
+        .fin-month-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .fin-month-item {
+            background: #21262d;
+            padding: 14px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #30363d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .fin-month-item:active {
+            transform: scale(0.98);
+        }
+
+        .fin-month-item.paid {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: #22c55e;
+        }
+
+        .fin-month-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fin-month-checkbox {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 6px;
+            background: #0d1117;
+            border: 2px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1em;
+        }
+
+        .fin-month-checkbox.checked {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .fin-month-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fin-month-label {
+            font-size: 1em;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .fin-month-label.paid {
+            color: #4ade80;
+        }
+
+        .fin-month-detail {
+            font-size: 0.75em;
+            color: #8b949e;
+        }
+
+        .fin-month-detail.paid {
+            color: #86efac;
+        }
+
+        .fin-month-right {
+            text-align: right;
+        }
+
+        .fin-month-amount {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #f87171;
+        }
+
+        .fin-month-amount.paid {
+            color: #4ade80;
+        }
+
+        .fin-month-tap {
+            font-size: 0.7em;
+            color: #8b949e;
+        }
+
+        .fin-month-footer {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fin-month-footer-label {
+            font-size: 0.9em;
+            color: #b0b8c4;
+        }
+
+        .fin-month-footer-amount {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #f87171;
+        }
+
+        /* Mobile: Recurring Expenses */
+        @media (max-width: 768px) {
+            .fin-recurring-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .fin-recurring-total {
+                text-align: left;
+            }
+
+            .fin-recurring-total-value {
+                font-size: 1.2em;
+            }
+
+            .fin-expense-item {
+                padding: 10px 12px;
+            }
+
+            .fin-expense-name {
+                font-size: 0.9em;
+            }
+
+            .fin-expense-amount {
+                font-size: 1em;
+            }
+
+            .fin-month-tracker {
+                padding: 12px;
+            }
+
+            .fin-month-item {
+                padding: 12px;
+            }
+
+            .fin-month-label {
+                font-size: 0.95em;
+            }
+
+            .fin-month-amount {
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fin-expense-header-title {
+                font-size: 0.9em;
+            }
+
+            .fin-add-btn {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+
+            .fin-expense-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .fin-expense-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .fin-month-tracker-tip {
+                font-size: 0.75em;
+                padding: 8px;
+            }
+
+            .fin-month-item {
+                padding: 10px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .fin-month-left {
+                gap: 10px;
+            }
+
+            .fin-month-checkbox {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                font-size: 0.9em;
+            }
+
+            .fin-month-label {
+                font-size: 0.85em;
+            }
+
+            .fin-month-detail {
+                font-size: 0.7em;
+            }
+
+            .fin-month-amount {
+                font-size: 0.95em;
+            }
+
+            .fin-month-footer-label {
+                font-size: 0.8em;
+            }
+
+            .fin-month-footer-amount {
+                font-size: 1em;
+            }
+        }
+
+        /* Projection Panel - Responsive Classes */
+        .fin-projection-section {
+            background: rgba(59, 130, 246, 0.05);
+            border: 2px solid #3b82f6;
+        }
+
+        .fin-projection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .fin-projection-title {
+            color: #58a6ff;
+            font-size: 1.4em;
+            margin: 0;
+        }
+
+        .fin-calc-breakdown {
+            background: #161b22;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .fin-calc-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #b0b8c4;
+            margin-bottom: 12px;
+        }
+
+        .fin-calc-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.9em;
+            color: #e6edf3;
+        }
+
+        .fin-calc-row.subtotal {
+            background: rgba(59, 130, 246, 0.1);
+            margin: 0 -15px;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .fin-calc-row.sub {
+            color: #b0b8c4;
+            padding-left: 10px;
+            border-bottom-color: #21262d;
+        }
+
+        .fin-calc-row.total {
+            font-weight: 600;
+        }
+
+        .fin-calc-value {
+            font-family: 'Monaco', monospace;
+            font-weight: 700;
+        }
+
+        .fin-calc-value.positive {
+            color: #4ade80;
+        }
+
+        .fin-calc-value.negative {
+            color: #f87171;
+        }
+
+        .fin-calc-value.highlight {
+            color: #60a5fa;
+        }
+
+        .fin-calc-all-paid {
+            padding: 12px;
+            text-align: center;
+            color: #4ade80;
+        }
+
+        .fin-projection-result {
+            padding: 20px;
+            border: 2px solid;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .fin-projection-label {
+            font-size: 0.85em;
+            color: #b0b8c4;
+            margin-bottom: 8px;
+        }
+
+        .fin-projection-amount {
+            font-size: 2.5em;
+            font-weight: 900;
+            font-family: 'Monaco', monospace;
+            margin: 8px 0;
+            word-break: break-all;
+        }
+
+        .fin-projection-status {
+            font-size: 1em;
+            font-weight: 700;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .fin-projection-days {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #b0b8c4;
+        }
+
+        .fin-progress-section {
+            margin-top: 15px;
+        }
+
+        .fin-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        /* Mobile: Projection Panel */
+        @media (max-width: 768px) {
+            .fin-projection-title {
+                font-size: 1.2em;
+            }
+
+            .fin-calc-breakdown {
+                padding: 12px;
+            }
+
+            .fin-calc-row {
+                font-size: 0.85em;
+                padding: 6px 0;
+            }
+
+            .fin-calc-row.subtotal {
+                margin: 0 -12px;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .fin-projection-result {
+                padding: 15px;
+            }
+
+            .fin-projection-amount {
+                font-size: 2em;
+            }
+
+            .fin-projection-status {
+                font-size: 0.9em;
+                padding: 8px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fin-projection-title {
+                font-size: 1.1em;
+            }
+
+            .fin-calc-title {
+                font-size: 0.85em;
+            }
+
+            .fin-calc-row {
+                font-size: 0.8em;
+            }
+
+            .fin-calc-row.sub {
+                padding-left: 5px;
+            }
+
+            .fin-projection-result {
+                padding: 12px;
+            }
+
+            .fin-projection-label {
+                font-size: 0.75em;
+            }
+
+            .fin-projection-amount {
+                font-size: 1.6em;
+            }
+
+            .fin-projection-status {
+                font-size: 0.8em;
+                padding: 6px 12px;
+            }
+
+            .fin-projection-days {
+                font-size: 0.75em;
+            }
+
+            .fin-progress-header {
+                font-size: 0.8em;
+            }
+
+            .progress-container {
+                height: 20px;
+            }
+
+            .progress-bar-fill {
+                font-size: 0.75em;
+            }
+        }
+
         .fin-badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -1890,7 +2863,279 @@
             border-left: 4px solid #dc2626;
             color: #f87171;
         }
-        
+
+        /* ============================================
+           FINANCIAL MODAL - MOBILE RESPONSIVE STYLES
+           ============================================ */
+
+        /* Mobile breakpoint for financial modal */
+        @media (max-width: 768px) {
+            /* Main modal container */
+            .financial-modal {
+                max-height: 100vh !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                height: 100vh;
+            }
+
+            /* Sticky header - more compact on mobile */
+            .financial-modal > div:first-child {
+                padding: 15px !important;
+                border-radius: 0 !important;
+            }
+
+            /* Header title smaller */
+            .financial-modal h2 {
+                font-size: 1.4em !important;
+            }
+
+            /* Header quick stats - 2x2 grid on mobile */
+            .financial-modal > div:first-child > div:last-child {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+
+            /* Stat boxes in header - compact */
+            .financial-modal > div:first-child > div:last-child > div {
+                padding: 10px !important;
+            }
+
+            .financial-modal > div:first-child > div:last-child > div > div:last-child {
+                font-size: 1.2em !important;
+            }
+
+            /* Dashboard content area */
+            #financialDashboard {
+                padding: 15px !important;
+            }
+
+            /* All fin-sections more compact */
+            .fin-section {
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+            }
+
+            /* Section headers */
+            .fin-section-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+            }
+
+            .fin-section-header h3 {
+                font-size: 1.2em !important;
+            }
+
+            /* Action items - touch-friendly */
+            .action-item {
+                padding: 14px !important;
+                min-height: 60px;
+            }
+
+            .action-checkbox {
+                width: 32px !important;
+                height: 32px !important;
+                min-width: 32px !important;
+            }
+
+            .action-title {
+                font-size: 1em !important;
+            }
+
+            /* Credit card items */
+            .credit-card-item {
+                padding: 14px !important;
+            }
+
+            .card-name {
+                font-size: 1em !important;
+            }
+
+            .card-stats {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            /* Edit panels - full width on mobile */
+            .edit-panel {
+                width: 95% !important;
+                max-width: 100% !important;
+                padding: 20px !important;
+                max-height: 85vh !important;
+            }
+
+            .edit-panel h3 {
+                font-size: 1.4em !important;
+            }
+
+            /* Edit buttons - stack vertically */
+            .edit-actions {
+                flex-direction: column !important;
+            }
+
+            /* Help modal - full screen on mobile */
+            .help-modal-content {
+                width: 95% !important;
+                max-height: 85vh !important;
+                padding: 20px !important;
+            }
+
+            .help-modal-content h2 {
+                font-size: 1.4em !important;
+            }
+
+            .help-modal-content h3 {
+                font-size: 1.1em !important;
+            }
+
+            /* Fin badges */
+            .fin-badge {
+                padding: 4px 10px !important;
+                font-size: 0.75em !important;
+            }
+        }
+
+        /* Extra small phones (iPhone SE, etc.) */
+        @media (max-width: 480px) {
+            /* Header even more compact */
+            .financial-modal > div:first-child {
+                padding: 12px !important;
+            }
+
+            .financial-modal h2 {
+                font-size: 1.2em !important;
+            }
+
+            /* Close button smaller */
+            .financial-modal > div:first-child button {
+                padding: 8px 16px !important;
+                font-size: 0.9em !important;
+            }
+
+            /* Header stats - single column on tiny screens */
+            .financial-modal > div:first-child > div:last-child {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            .financial-modal > div:first-child > div:last-child > div {
+                padding: 8px !important;
+            }
+
+            .financial-modal > div:first-child > div:last-child > div > div:first-child {
+                font-size: 0.7em !important;
+            }
+
+            .financial-modal > div:first-child > div:last-child > div > div:last-child {
+                font-size: 1em !important;
+            }
+
+            #financialDashboard {
+                padding: 10px !important;
+            }
+
+            .fin-section {
+                padding: 12px !important;
+                margin-bottom: 12px !important;
+                border-radius: 8px !important;
+            }
+
+            .fin-section-header h3 {
+                font-size: 1.1em !important;
+            }
+
+            /* Help button smaller */
+            .help-btn {
+                padding: 4px 8px !important;
+                font-size: 0.75em !important;
+            }
+
+            .action-item {
+                padding: 12px !important;
+                gap: 10px !important;
+            }
+
+            .action-checkbox {
+                width: 28px !important;
+                height: 28px !important;
+                min-width: 28px !important;
+            }
+
+            .action-title {
+                font-size: 0.95em !important;
+            }
+
+            .action-deadline {
+                font-size: 0.8em !important;
+            }
+
+            .action-notes {
+                font-size: 0.75em !important;
+            }
+
+            .credit-card-item {
+                padding: 12px !important;
+            }
+
+            .card-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+
+            .card-stats {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+
+            .card-stat {
+                padding: 8px !important;
+            }
+
+            .card-stat-label {
+                font-size: 0.65em !important;
+            }
+
+            .card-stat-value {
+                font-size: 0.95em !important;
+            }
+
+            .edit-panel {
+                padding: 15px !important;
+            }
+
+            .edit-panel h3 {
+                font-size: 1.2em !important;
+            }
+
+            .edit-field {
+                margin-bottom: 15px !important;
+            }
+
+            .edit-field label {
+                font-size: 0.9em !important;
+            }
+
+            .edit-field input,
+            .edit-field textarea,
+            .edit-field select {
+                padding: 10px !important;
+                font-size: 16px !important; /* Prevents iOS zoom */
+            }
+
+            .btn-save, .btn-cancel {
+                padding: 12px !important;
+                font-size: 1em !important;
+            }
+
+            .help-modal-content {
+                padding: 15px !important;
+            }
+
+            .help-section, .help-script, .help-tip, .help-warning {
+                padding: 12px !important;
+                font-size: 0.9em !important;
+            }
+        }
+
         /* Cash Flow */
         .cash-flow-item {
             background: #21262d;
@@ -3560,40 +4805,40 @@
 
                 <!-- Financial Modal -->
                 <div class="modal-overlay" id="financialModal" onclick="closeFinancials()">
-                    <div class="modal-content financial-modal" onclick="event.stopPropagation()" style="max-width: 95%; max-height: 95%; overflow-y: auto; background: #0f1419; padding: 0;">
+                    <div class="modal-content financial-modal fin-modal-container" onclick="event.stopPropagation()">
                         <!-- Sticky Header -->
-                        <div style="position: sticky; top: 0; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 25px; border-bottom: 3px solid #30363d; z-index: 100; border-radius: 12px 12px 0 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <div>
-                                    <h2 style="color: white; margin: 0; font-size: 2em;">💰 Financial Command Center</h2>
-                                    <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">D3 Spring 2026 | Path to Dr. Sully</p>
+                        <div class="fin-modal-header">
+                            <div class="fin-modal-header-top">
+                                <div class="fin-modal-title-section">
+                                    <h2 class="fin-modal-title">💰 Finances</h2>
+                                    <p class="fin-modal-subtitle">D3 Spring 2026</p>
                                 </div>
-                                <button onclick="closeFinancials()" style="background: #dc2626; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;">✕ Close</button>
+                                <button onclick="closeFinancials()" class="fin-modal-close">✕</button>
                             </div>
-                            
+
                             <!-- Quick Stats -->
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px;">
-                                <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
-                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Total Debt</div>
-                                    <div id="totalDebtStat" style="font-size: 1.6em; font-weight: bold; color: #fca5a5;">$12,311</div>
+                            <div class="fin-modal-stats">
+                                <div class="fin-modal-stat">
+                                    <div class="fin-modal-stat-label">Total Debt</div>
+                                    <div id="totalDebtStat" class="fin-modal-stat-value debt">$12,311</div>
                                 </div>
-                                <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Current Balance</div>
-                                    <div id="currentBalanceStat" style="font-size: 1.6em; font-weight: bold; color: #86efac;">$18,447</div>
+                                <div class="fin-modal-stat">
+                                    <div class="fin-modal-stat-label">Balance</div>
+                                    <div id="currentBalanceStat" class="fin-modal-stat-value positive">$18,447</div>
                                 </div>
-                                <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Actions Remaining</div>
-                                    <div id="actionsRemainingStat" style="font-size: 1.6em; font-weight: bold; color: #fbbf24;">12</div>
+                                <div class="fin-modal-stat">
+                                    <div class="fin-modal-stat-label">Actions</div>
+                                    <div id="actionsRemainingStat" class="fin-modal-stat-value warning">12</div>
                                 </div>
-                                <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Next Disbursement</div>
-                                    <div style="font-size: 1.6em; font-weight: bold; color: #86efac;">May 14, '26</div>
+                                <div class="fin-modal-stat">
+                                    <div class="fin-modal-stat-label">Disbursement</div>
+                                    <div class="fin-modal-stat-value positive">May 14</div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Financial Content -->
-                        <div id="financialDashboard" style="padding: 25px; color: #e6edf3;">
+                        <div id="financialDashboard" class="fin-dashboard-content">
                             <!-- Content will be loaded here -->
                         </div>
                     </div>
@@ -3603,7 +4848,7 @@
                 <div class="help-modal-overlay" id="financialHelpModal" onclick="closeFinancialHelp()">
                     <div class="help-modal-content" onclick="event.stopPropagation()">
                         <div id="helpContent"></div>
-                        <button onclick="closeHelpModal()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 20px; width: 100%;">
+                        <button onclick="closeFinancialHelp()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 20px; width: 100%;">
                             Close
                         </button>
                     </div>
@@ -5452,11 +6697,6 @@
                 // Close modals
                 const modals = document.querySelectorAll('.modal-overlay.show, .help-modal-overlay.show');
                 modals.forEach(modal => modal.classList.remove('show'));
-                
-                // Stop any active Pomodoro timer countdown sound if needed
-                if (typeof pomodoroAlarm !== 'undefined' && pomodoroAlarm) {
-                    pomodoroAlarm.pause();
-                }
             }
         });
 
@@ -5882,68 +7122,66 @@
 
         function renderMasterCockpit() {
             const status = calculateFinancialStatus();
-            const lastUpdated = financials.masterLiquidity.lastUpdated 
+            const lastUpdated = financials.masterLiquidity.lastUpdated
                 ? new Date(financials.masterLiquidity.lastUpdated).toLocaleString()
                 : 'Never';
-            
+
             return `
-                <div class="fin-section" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="color: white; font-size: 2em; margin: 0;">🎛️ MASTER LIQUIDITY CONTROL</h3>
+                <div class="fin-section fin-master-cockpit" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none;">
+                    <div class="fin-master-header">
+                        <h3 class="fin-master-title">🎛️ MASTER LIQUIDITY</h3>
                         <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('masterLiquidity')" style="border-color: white; color: white;">
-                            ❓ How To Use
+                            ❓ Help
                         </button>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+
+                    <div class="fin-master-grid">
                         <!-- Actual Cash -->
-                        <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; backdrop-filter: blur(10px);">
-                            <div style="font-size: 0.9em; color: rgba(255,255,255,0.8); margin-bottom: 8px;">💰 ACTUAL CASH IN CHECKING</div>
-                            <div style="font-size: 3em; font-weight: 900; color: white; font-family: 'Monaco', monospace; margin: 15px 0;">
+                        <div class="fin-master-card">
+                            <div class="fin-master-label">💰 ACTUAL CASH</div>
+                            <div class="fin-master-value">
                                 $${status.currentLiquid.toLocaleString()}
                             </div>
-                            <button onclick="updateMasterLiquidity()" 
-                                    style="background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1em; width: 100%;">
-                                ✏️ Update Cash Amount
+                            <button onclick="updateMasterLiquidity()" class="fin-update-btn">
+                                ✏️ Update Cash
                             </button>
-                            <div style="font-size: 0.75em; color: rgba(255,255,255,0.6); margin-top: 10px;">
-                                Last updated: ${lastUpdated}
+                            <div class="fin-master-updated">
+                                Updated: ${lastUpdated}
                             </div>
                         </div>
-                        
+
                         <!-- Projected May 14 -->
-                        <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px;">
-                            <div style="font-size: 0.9em; color: rgba(255,255,255,0.8); margin-bottom: 8px;">📊 PROJECTED MAY 14 BALANCE</div>
-                            <div style="font-size: 3em; font-weight: 900; font-family: 'Monaco', monospace; margin: 15px 0; color: ${status.healthColor};">
+                        <div class="fin-master-card">
+                            <div class="fin-master-label">📊 MAY 14 PROJECTION</div>
+                            <div class="fin-master-value" style="color: ${status.healthColor};">
                                 $${status.projectedBalance.toLocaleString()}
                             </div>
-                            <div style="padding: 10px 20px; background: ${status.healthColor}; border-radius: 6px; text-align: center; font-weight: 700; color: white;">
+                            <div class="fin-health-badge" style="background: ${status.healthColor};">
                                 ${status.healthMessage}
                             </div>
-                            <div style="font-size: 0.85em; color: rgba(255,255,255,0.8); margin-top: 10px;">
-                                Target: $${status.targetCushion.toLocaleString()} | 
-                                ${status.daysRemaining} days left
+                            <div class="fin-master-updated">
+                                Target: $${status.targetCushion.toLocaleString()} | ${status.daysRemaining} days
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Quick Calculations -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 0.8em; opacity: 0.8;">Committed Bills</div>
-                            <div style="font-size: 1.4em; font-weight: 700; color: #fca5a5;">-$${status.committedExpenses.toLocaleString()}</div>
+                    <div class="fin-quick-stats">
+                        <div class="fin-quick-stat">
+                            <div class="fin-quick-label">Committed Bills</div>
+                            <div class="fin-quick-value" style="color: #fca5a5;">-$${status.committedExpenses.toLocaleString()}</div>
                         </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 0.8em; opacity: 0.8;">Expected Income</div>
-                            <div style="font-size: 1.4em; font-weight: 700; color: #86efac;">+$${status.committedIncome.toLocaleString()}</div>
+                        <div class="fin-quick-stat">
+                            <div class="fin-quick-label">Expected Income</div>
+                            <div class="fin-quick-value" style="color: #86efac;">+$${status.committedIncome.toLocaleString()}</div>
                         </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 0.8em; opacity: 0.8;">Available After Bills</div>
-                            <div style="font-size: 1.4em; font-weight: 700; color: white;">$${status.availableCash.toLocaleString()}</div>
+                        <div class="fin-quick-stat">
+                            <div class="fin-quick-label">After Bills</div>
+                            <div class="fin-quick-value" style="color: white;">$${status.availableCash.toLocaleString()}</div>
                         </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 0.8em; opacity: 0.8;">Monthly Burn Rate</div>
-                            <div style="font-size: 1.4em; font-weight: 700; color: #fbbf24;">$${status.monthlyBurn.toLocaleString()}/mo</div>
+                        <div class="fin-quick-stat">
+                            <div class="fin-quick-label">Monthly Burn</div>
+                            <div class="fin-quick-value" style="color: #fbbf24;">$${status.monthlyBurn.toLocaleString()}</div>
                         </div>
                     </div>
                 </div>
@@ -5952,24 +7190,63 @@
 
         function updateMasterLiquidity() {
             const current = financials.masterLiquidity.currentCash;
-            const newAmount = prompt('Enter your ACTUAL cash in checking account:', current);
-            
-            if (newAmount === null) return;
-            
-            const amount = parseFloat(newAmount);
+
+            const overlay = document.createElement('div');
+            overlay.className = 'edit-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) overlay.remove();
+            };
+
+            overlay.innerHTML = `
+                <div class="edit-panel" onclick="event.stopPropagation()" style="max-width: 400px;">
+                    <h3 style="text-align: center;">💰 Update Cash Balance</h3>
+
+                    <div class="edit-field">
+                        <label>Actual Cash in Checking ($)</label>
+                        <input type="number" id="edit_cashAmount" value="${current}" step="0.01"
+                               inputmode="decimal" style="font-size: 1.5em; text-align: center; font-weight: 700;">
+                    </div>
+
+                    <div style="margin: 15px 0; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 0.9em; color: #93c5fd;">
+                        💡 Enter your actual bank balance to get accurate projections.
+                    </div>
+
+                    <div class="edit-actions">
+                        <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
+                        <button class="btn-save" onclick="saveMasterLiquidity()">Save</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Focus the input and select all
+            setTimeout(() => {
+                const input = document.getElementById('edit_cashAmount');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        function saveMasterLiquidity() {
+            const amount = parseFloat(document.getElementById('edit_cashAmount').value);
+
             if (isNaN(amount)) {
-                alert('Please enter a valid number');
+                showToast('Please enter a valid number', '⚠️');
                 return;
             }
-            
+
             financials.masterLiquidity.currentCash = amount;
             financials.masterLiquidity.lastUpdated = new Date().toISOString();
-            
+
             saveData();
             renderFinancialCockpit();
             updateCockpitStats();
-            
-            showToast(`Updated liquid cash: $${amount.toLocaleString()}`, '💰');
+            document.querySelector('.edit-overlay').remove();
+
+            showToast(`Updated: $${amount.toLocaleString()}`, '💰');
         }
 
         function renderCommittedBills() {
@@ -6033,11 +7310,11 @@
                                 <div class="action-content" style="flex: 1;">
                                     <div style="display: flex; justify-content: space-between; align-items: start;">
                                         <div>
-                                            <div class="action-title">${bill.description}</div>
+                                            <div class="action-title">${escapeHtml(bill.description)}</div>
                                             <div class="action-deadline ${urgencyClass === 'urgent' ? 'overdue' : urgencyClass === 'high' ? 'soon' : 'ok'}">
                                                 ${urgencyText}
                                             </div>
-                                            ${bill.notes ? `<div class="action-notes">${bill.notes}</div>` : ''}
+                                            ${bill.notes ? `<div class="action-notes">${escapeHtml(bill.notes)}</div>` : ''}
                                             ${bill.confirmationNumber ? `<div style="font-size: 0.85em; color: #4ade80; margin-top: 4px;">Confirmation: ${bill.confirmationNumber}</div>` : ''}
                                         </div>
                                         <div style="text-align: right;">
@@ -6106,9 +7383,9 @@
                     
                     <div class="edit-field">
                         <label>Notes</label>
-                        <textarea id="edit_notes" rows="2">${bill.notes || ''}</textarea>
+                        <textarea id="edit_billNotes" rows="2">${bill.notes || ''}</textarea>
                     </div>
-                    
+
                     <div class="edit-field">
                         <label>Confirmation Number</label>
                         <input type="text" id="edit_confirmation" value="${bill.confirmationNumber || ''}">
@@ -6131,7 +7408,7 @@
             bill.description = document.getElementById('edit_description').value;
             bill.amount = parseFloat(document.getElementById('edit_amount').value) || 0;
             bill.dueDate = document.getElementById('edit_dueDate').value;
-            bill.notes = document.getElementById('edit_notes').value || '';
+            bill.notes = document.getElementById('edit_billNotes').value || '';
             bill.confirmationNumber = document.getElementById('edit_confirmation').value || null;
             
             saveData();
@@ -6154,51 +7431,38 @@
 
             return `
                 <div class="fin-section">
-                    <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <h3 style="margin: 0;">🔄 Recurring Monthly Expenses</h3>
-                            <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('recurringExpenses')">❓ How To Use</button>
+                    <div class="fin-section-header fin-recurring-header">
+                        <div class="fin-recurring-title-row">
+                            <h3>🔄 Monthly Expenses</h3>
+                            <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('recurringExpenses')">❓</button>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.85em; color: #b0b8c4;">Monthly Total</div>
-                            <div style="font-size: 1.4em; font-weight: 700; color: #fbbf24;">$${total.toLocaleString()}/mo</div>
+                        <div class="fin-recurring-total">
+                            <div class="fin-recurring-total-label">Monthly Total</div>
+                            <div class="fin-recurring-total-value">$${total.toLocaleString()}/mo</div>
                         </div>
                     </div>
 
                     <!-- EXPENSE CATEGORIES -->
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="font-size: 1em; font-weight: 600; color: #b0b8c4;">📋 Your Monthly Expenses</div>
-                            <button onclick="addRecurringExpense()"
-                                    style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">
-                                + Add Expense
-                            </button>
+                    <div class="fin-expense-section">
+                        <div class="fin-expense-header">
+                            <div class="fin-expense-header-title">📋 Your Expenses</div>
+                            <button onclick="addRecurringExpense()" class="fin-add-btn">+ Add</button>
                         </div>
-                        <div style="display: grid; gap: 8px;">
+                        <div class="fin-expense-list">
                             ${Object.entries(expenses).map(([key, expense]) => `
-                                <div style="background: #21262d; padding: 14px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #30363d;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div>
-                                            <div style="font-size: 1em; font-weight: 600; color: #e6edf3;">
-                                                ${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                                            </div>
-                                            <div style="font-size: 0.8em; color: #8b949e;">
-                                                ${expense.category}${expense.notes ? ' • ' + expense.notes : ''}
-                                            </div>
+                                <div class="fin-expense-item">
+                                    <div class="fin-expense-info">
+                                        <div class="fin-expense-name">
+                                            ${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                                        </div>
+                                        <div class="fin-expense-category">
+                                            ${escapeHtml(expense.category)}${expense.notes ? ' • ' + escapeHtml(expense.notes) : ''}
                                         </div>
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="font-size: 1.2em; font-weight: 700; color: #f87171;">
-                                            $${expense.amount.toLocaleString()}
-                                        </div>
-                                        <button onclick="editRecurringExpense('${key}')"
-                                                style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
-                                            Edit
-                                        </button>
-                                        <button onclick="deleteRecurringExpense('${key}')"
-                                                style="background: transparent; color: #f87171; border: 1px solid #f87171; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
-                                            ×
-                                        </button>
+                                    <div class="fin-expense-actions">
+                                        <div class="fin-expense-amount">$${expense.amount.toLocaleString()}</div>
+                                        <button onclick="editRecurringExpense('${key}')" class="fin-edit-btn">Edit</button>
+                                        <button onclick="deleteRecurringExpense('${key}')" class="fin-delete-btn">×</button>
                                     </div>
                                 </div>
                             `).join('')}
@@ -6206,17 +7470,17 @@
                     </div>
 
                     <!-- MONTH-BY-MONTH PAYMENT TRACKING -->
-                    <div style="background: #161b22; border-radius: 12px; padding: 20px; border: 2px solid #30363d;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <div style="font-size: 1.1em; font-weight: 700; color: #58a6ff;">📅 Month-by-Month Payment Tracker</div>
-                            <div style="font-size: 0.9em; color: #b0b8c4;">${paidMonths}/${totalMonths} months paid</div>
+                    <div class="fin-month-tracker">
+                        <div class="fin-month-tracker-header">
+                            <div class="fin-month-tracker-title">📅 Month Tracker</div>
+                            <div class="fin-month-tracker-count">${paidMonths}/${totalMonths} paid</div>
                         </div>
 
-                        <div style="margin-bottom: 15px; padding: 10px 14px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 0.9em; color: #93c5fd;">
-                            💡 Check off each month's expenses as you pay them. Only unchecked months count toward your May 14 projection.
+                        <div class="fin-month-tracker-tip">
+                            💡 Check off months as you pay. Only unchecked months count toward projection.
                         </div>
 
-                        <div style="display: grid; gap: 10px;">
+                        <div class="fin-month-list">
                             ${Object.entries(monthlyPayments).map(([monthKey, monthData]) => {
                                 const fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
                                 const amount = Math.round(total * fraction);
@@ -6224,45 +7488,36 @@
                                 const paidDate = monthData.paidDate ? new Date(monthData.paidDate).toLocaleDateString() : null;
 
                                 return `
-                                    <div style="background: ${isPaid ? 'rgba(34, 197, 94, 0.1)' : '#21262d'};
-                                                padding: 16px; border-radius: 8px;
-                                                display: flex; justify-content: space-between; align-items: center;
-                                                border: 2px solid ${isPaid ? '#22c55e' : '#30363d'};
-                                                cursor: pointer; transition: all 0.2s ease;"
-                                         onclick="toggleMonthPaid('${monthKey}')">
-                                        <div style="display: flex; align-items: center; gap: 14px;">
-                                            <div style="width: 28px; height: 28px; border-radius: 6px;
-                                                        background: ${isPaid ? '#22c55e' : '#0d1117'};
-                                                        border: 2px solid ${isPaid ? '#22c55e' : '#30363d'};
-                                                        display: flex; align-items: center; justify-content: center;
-                                                        color: white; font-weight: 700; font-size: 1.1em;">
+                                    <div class="fin-month-item ${isPaid ? 'paid' : ''}" onclick="toggleMonthPaid('${monthKey}')">
+                                        <div class="fin-month-left">
+                                            <div class="fin-month-checkbox ${isPaid ? 'checked' : ''}">
                                                 ${isPaid ? '✓' : ''}
                                             </div>
-                                            <div>
-                                                <div style="font-size: 1.1em; font-weight: 600; color: ${isPaid ? '#4ade80' : '#e6edf3'};">
+                                            <div class="fin-month-info">
+                                                <div class="fin-month-label ${isPaid ? 'paid' : ''}">
                                                     ${monthData.label}${monthData.partial ? ' (partial)' : ''}
                                                 </div>
-                                                <div style="font-size: 0.85em; color: ${isPaid ? '#86efac' : '#8b949e'};">
-                                                    ${isPaid ? (paidDate ? 'Paid on ' + paidDate : '✓ Marked as paid') : (monthData.partial ? `${Math.round(fraction * 100)}% of monthly expenses` : 'Full month expenses')}
+                                                <div class="fin-month-detail ${isPaid ? 'paid' : ''}">
+                                                    ${isPaid ? (paidDate ? 'Paid ' + paidDate : '✓ Paid') : (monthData.partial ? `${Math.round(fraction * 100)}%` : 'Full month')}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-size: 1.3em; font-weight: 700; color: ${isPaid ? '#4ade80' : '#f87171'};">
+                                        <div class="fin-month-right">
+                                            <div class="fin-month-amount ${isPaid ? 'paid' : ''}">
                                                 ${isPaid ? '✓ PAID' : '-$' + amount.toLocaleString()}
                                             </div>
-                                            ${!isPaid ? `<div style="font-size: 0.8em; color: #8b949e;">Click to mark paid</div>` : ''}
+                                            ${!isPaid ? `<div class="fin-month-tap">Tap to pay</div>` : ''}
                                         </div>
                                     </div>
                                 `;
                             }).join('')}
                         </div>
 
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-size: 1em; color: #b0b8c4;">
-                                <strong>Unpaid Total:</strong> ${status.unpaidMonths.length} month${status.unpaidMonths.length !== 1 ? 's' : ''} remaining
+                        <div class="fin-month-footer">
+                            <div class="fin-month-footer-label">
+                                <strong>Unpaid:</strong> ${status.unpaidMonths.length} month${status.unpaidMonths.length !== 1 ? 's' : ''}
                             </div>
-                            <div style="font-size: 1.3em; font-weight: 700; color: #f87171;">
+                            <div class="fin-month-footer-amount">
                                 -$${status.unpaidMonthsTotal.toLocaleString()}
                             </div>
                         </div>
@@ -6436,104 +7691,79 @@
             const progressPercent = Math.max(0, Math.min(100, (status.projectedBalance / status.targetCushion) * 100));
 
             return `
-                <div class="fin-section" style="background: rgba(59, 130, 246, 0.05); border: 2px solid #3b82f6;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="color: #58a6ff; font-size: 1.8em; margin: 0;">📊 May 14 Projection Engine</h3>
-                        <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('projections')">❓ How This Works</button>
+                <div class="fin-section fin-projection-section">
+                    <div class="fin-projection-header">
+                        <h3 class="fin-projection-title">📊 Projection</h3>
+                        <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('projections')">❓</button>
                     </div>
 
                     <!-- CALCULATION BREAKDOWN -->
-                    <div style="background: #161b22; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-                        <div style="font-size: 1em; font-weight: 600; color: #b0b8c4; margin-bottom: 15px;">📐 Calculation Breakdown</div>
+                    <div class="fin-calc-breakdown">
+                        <div class="fin-calc-title">📐 Math</div>
 
-                        <!-- Starting Point -->
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
-                            <div style="color: #e6edf3;">Current Cash in Checking</div>
-                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #4ade80;">
-                                $${status.currentLiquid.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row">
+                            <span>Current Cash</span>
+                            <span class="fin-calc-value positive">$${status.currentLiquid.toLocaleString()}</span>
                         </div>
 
-                        <!-- Expected Income -->
                         ${status.committedIncome > 0 ? `
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
-                            <div style="color: #e6edf3;">+ Expected Income (unpaid)</div>
-                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #4ade80;">
-                                +$${status.committedIncome.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row">
+                            <span>+ Income</span>
+                            <span class="fin-calc-value positive">+$${status.committedIncome.toLocaleString()}</span>
                         </div>
                         ` : ''}
 
-                        <!-- Committed Bills -->
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
-                            <div style="color: #e6edf3;">− Unpaid One-Time Bills</div>
-                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #f87171;">
-                                -$${status.committedExpenses.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row">
+                            <span>− Bills</span>
+                            <span class="fin-calc-value negative">-$${status.committedExpenses.toLocaleString()}</span>
                         </div>
 
-                        <!-- Available After Bills -->
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d; background: rgba(59, 130, 246, 0.1); margin: 0 -20px; padding-left: 20px; padding-right: 20px;">
-                            <div style="color: #60a5fa; font-weight: 600;">= Available After Bills</div>
-                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #60a5fa;">
-                                $${status.availableCash.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row subtotal">
+                            <span>= Available</span>
+                            <span class="fin-calc-value highlight">$${status.availableCash.toLocaleString()}</span>
                         </div>
 
-                        <!-- Unpaid Months Breakdown -->
                         ${status.unpaidMonths.map(month => `
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #21262d;">
-                            <div style="color: #b0b8c4; padding-left: 15px;">
-                                − ${month.label}${month.partial ? ` (${Math.round(month.fraction * 100)}%)` : ''}
-                            </div>
-                            <div style="font-family: 'Monaco', monospace; color: #f87171;">
-                                -$${month.amount.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row sub">
+                            <span>− ${month.label}${month.partial ? ` (${Math.round(month.fraction * 100)}%)` : ''}</span>
+                            <span class="fin-calc-value negative">-$${month.amount.toLocaleString()}</span>
                         </div>
                         `).join('')}
 
                         ${status.unpaidMonths.length === 0 ? `
-                        <div style="padding: 15px; text-align: center; color: #4ade80;">
-                            ✓ All monthly expenses marked as paid!
-                        </div>
+                        <div class="fin-calc-all-paid">✓ All months paid!</div>
                         ` : ''}
 
-                        <!-- Total Recurring -->
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d;">
-                            <div style="color: #e6edf3; font-weight: 600;">− Total Unpaid Monthly Expenses</div>
-                            <div style="font-family: 'Monaco', monospace; font-weight: 700; color: #f87171;">
-                                -$${status.unpaidMonthsTotal.toLocaleString()}
-                            </div>
+                        <div class="fin-calc-row total">
+                            <span>− Monthly Total</span>
+                            <span class="fin-calc-value negative">-$${status.unpaidMonthsTotal.toLocaleString()}</span>
                         </div>
                     </div>
 
                     <!-- PROJECTED BALANCE -->
-                    <div style="padding: 25px; background: ${status.healthColor}15; border: 2px solid ${status.healthColor}; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 1em; color: #b0b8c4; margin-bottom: 8px;">PROJECTED MAY 14 BALANCE</div>
-                        <div style="font-size: 3.5em; font-weight: 900; color: ${status.healthColor}; font-family: 'Monaco', monospace; margin: 10px 0;">
+                    <div class="fin-projection-result" style="border-color: ${status.healthColor};">
+                        <div class="fin-projection-label">MAY 14 BALANCE</div>
+                        <div class="fin-projection-amount" style="color: ${status.healthColor};">
                             $${status.projectedBalance.toLocaleString()}
                         </div>
-                        <div style="font-size: 1.2em; font-weight: 700; color: ${status.healthColor}; padding: 12px; background: white; border-radius: 8px; margin-top: 15px;">
+                        <div class="fin-projection-status" style="background: ${status.healthColor};">
                             ${status.healthMessage}
                         </div>
-                        <div style="margin-top: 12px; font-size: 0.9em; color: #b0b8c4;">
-                            ${status.daysRemaining} days until next disbursement
+                        <div class="fin-projection-days">
+                            ${status.daysRemaining} days left
                         </div>
                     </div>
 
                     <!-- PROGRESS BAR -->
-                    <div style="margin-top: 25px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span style="font-weight: 600;">Progress to $${status.targetCushion.toLocaleString()} Target Cushion</span>
-                            <span style="font-weight: 700; color: ${status.healthColor};">${progressPercent.toFixed(0)}%</span>
+                    <div class="fin-progress-section">
+                        <div class="fin-progress-header">
+                            <span>Target: $${status.targetCushion.toLocaleString()}</span>
+                            <span style="color: ${status.healthColor}; font-weight: 700;">${progressPercent.toFixed(0)}%</span>
                         </div>
-                        <div class="progress-container" style="height: 30px;">
-                            <div class="progress-bar-fill" style="width: ${progressPercent}%; font-size: 1em;">
-                                ${progressPercent > 10 ? `$${status.projectedBalance.toLocaleString()}` : ''}
+                        <div class="progress-container">
+                            <div class="progress-bar-fill" style="width: ${progressPercent}%;">
+                                ${progressPercent > 15 ? `$${status.projectedBalance.toLocaleString()}` : ''}
                             </div>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 0.85em; color: #8b949e; text-align: center;">
-                            Target: Have $${status.targetCushion.toLocaleString()} cushion when May 14 disbursement arrives
                         </div>
                     </div>
                 </div>
@@ -6593,9 +7823,9 @@
                                      onclick="event.stopPropagation(); toggleActionItem('${item.id}')">
                                 </div>
                                 <div class="action-content">
-                                    <div class="action-title">${item.title}</div>
+                                    <div class="action-title">${escapeHtml(item.title)}</div>
                                     <div class="action-deadline ${deadlineClass}">${deadlineText}</div>
-                                    <div class="action-notes">${item.notes}</div>
+                                    <div class="action-notes">${escapeHtml(item.notes)}</div>
                                 </div>
                             </div>
                         `;
@@ -6715,9 +7945,9 @@
                     
                     <div class="edit-field">
                         <label>Notes</label>
-                        <textarea id="edit_notes" rows="3">${card.negotiationNotes || ''}</textarea>
+                        <textarea id="edit_cardNotes" rows="3">${card.negotiationNotes || ''}</textarea>
                     </div>
-                    
+
                     <div class="edit-actions">
                         <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
                         <button class="btn-save" onclick="saveCreditCardEdit('${cardId}')">Save Changes</button>
@@ -6736,7 +7966,7 @@
             card.daysLate = parseInt(document.getElementById('edit_daysLate').value) || 0;
             card.status = document.getElementById('edit_status').value || card.status;
             card.targetMin = parseFloat(document.getElementById('edit_targetMin').value) || 0;
-            card.negotiationNotes = document.getElementById('edit_notes').value || '';
+            card.negotiationNotes = document.getElementById('edit_cardNotes').value || '';
             
             // Recalculate recurring expenses for credit cards
             const totalMinimums = financials.creditCards.reduce((sum, c) => sum + c.targetMin, 0);
@@ -7352,7 +8582,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                             <div style="flex: 1;">
                                 <div style="font-size: 1.4em; font-weight: 700; color: #e6edf3; margin-bottom: 8px;">
-                                    ${urgencyIcon} ${event.description}
+                                    ${urgencyIcon} ${escapeHtml(event.description)}
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px; color: #b0b8c4; font-size: 0.95em;">
                                     <span>${categoryIcons[event.category]} ${categoryNames[event.category]}</span>
@@ -7374,7 +8604,7 @@
                         
                         ${event.notes ? `
                             <div style="color: #b0b8c4; font-style: italic;">
-                                📝 ${event.notes}
+                                📝 ${escapeHtml(event.notes)}
                             </div>
                         ` : ''}
                     </div>
@@ -8078,7 +9308,7 @@
                     <div class="planner-event-actions">
                         <button class="planner-event-btn" onclick="event.stopPropagation(); deletePlannerEvent(event, ${index})" title="Delete">×</button>
                     </div>
-                    <div class="planner-event-title">${block.task}</div>
+                    <div class="planner-event-title">${escapeHtml(block.task)}</div>
                     ${height >= 40 ? `<div class="planner-event-time">${formatTime(block.startTime)} - ${endTimeStr}</div>` : ''}
                 </div>
             `;
@@ -8672,7 +9902,7 @@
                 <button class="notebook-tab ${page.id === notebook.currentPageId ? 'active' : ''}" 
                         onclick="switchPage(${page.id})"
                         ondblclick="renamePage(${page.id})">
-                    ${page.title}
+                    ${escapeHtml(page.title)}
                     ${notebook.pages.length > 1 ? `<span class="notebook-tab-delete" onclick="event.stopPropagation(); deletePage(${page.id})">×</span>` : ''}
                 </button>
             `).join('');
@@ -9339,7 +10569,7 @@
                                onchange="toggleTask(${task.id})">
                         ${(isDoTodayView || isMustCompleteView) ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
                         <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
-                        <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                        <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
                         ${task.mustComplete ? '<span class="today-badge" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 EOD</span>' : ''}
                         ${task.doToday && !isDoTodayView && !task.mustComplete ? '<span class="today-badge">🔴 TODAY</span>' : ''}
                         ${!task.completed && !isDoTodayView && !isMustCompleteView ? `
@@ -9747,7 +10977,7 @@
                                onchange="uncompleteTaskFromDashboard(${task.id})"
                                title="Click to mark as incomplete">
                         <span class="expansion-task-text" style="text-decoration: line-through; opacity: 0.7;">
-                            ${task.text}
+                            ${escapeHtml(task.text)}
                             <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || 'Task'}</span>
                         </span>
                     </div>
@@ -9761,7 +10991,7 @@
                                onchange="toggleTaskFromDashboard(${task.id}, '${type}')"
                                ${task.completed ? 'checked' : ''}>
                         <span class="expansion-task-text">
-                            ${task.text}
+                            ${escapeHtml(task.text)}
                             <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || task.category || 'Task'}</span>
                         </span>
                     </div>

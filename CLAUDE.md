@@ -105,7 +105,7 @@
 ### Config (SAME Across All 3 Apps - DON'T CHANGE)
 ```javascript
 const firebaseConfig = {
-    apiKey: "AIzaSyCgh1lT7fA8d-O7r9t_9KwYb6p9Y8JvLMo",
+    apiKey: "AIzaSyCq0zU4Gm2kXKHDaCHzRD70p1B2NRXxKJc",
     authDomain: "dental-student-quest.firebaseapp.com",
     databaseURL: "https://dental-student-quest-default-rtdb.firebaseio.com",
     projectId: "dental-student-quest",
