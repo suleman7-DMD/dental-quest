@@ -4341,22 +4341,14 @@
         function renderMedEntries() {
             const container = document.getElementById('medEntries');
             const today = getLocalDateString(new Date());
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = getLocalDateString(yesterday);
 
             container.innerHTML = state.medications.map((med, index) => {
-                // FIX: Show date label for clarity (especially in overnight mode)
                 const medDate = med.date || today;
                 const isToday = medDate === today;
-                const isYesterday = medDate === yesterdayStr;
-                const dateLabel = isToday ? 'Today' : formatDateLabel(medDate);
-                const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
-
-                // Show date picker in All-Nighter Mode, label otherwise
-                const dateSelector = state.allNighterMode ? `
+                // Always show date picker for max precision
+                const dateSelector = `
                     <input type="date" value="${medDate}" onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
-                ` : `<span style="font-size: 0.75em; ${dateStyle} min-width: 55px;">${dateLabel}</span>`;
+                `;
 
                 return `
                 <div class="med-entry">
@@ -4478,26 +4470,17 @@
             const container = document.getElementById('caffeineEntries');
             if (!container) return;
             const today = getLocalDateString(new Date());
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = getLocalDateString(yesterday);
 
             container.innerHTML = state.caffeine.map((caff, index) => {
                 const isSipPart = caff.sipGroup !== undefined;
                 const sipBadge = isSipPart ? `<span style="font-size: 0.7em; color: #a78bfa; margin-left: 6px;">(sip ${caff.sipPart}/${caff.sipTotal})</span>` : '';
 
-                // FIX: Show date label for clarity (especially in overnight mode)
+                // Always show date picker for max precision
                 const caffDate = caff.date || today;
                 const isToday = caffDate === today;
-                const isYesterday = caffDate === yesterdayStr;
-                const dateLabel = isToday ? 'Today' : formatDateLabel(caffDate);
-                const dateStyle = isToday ? 'color: #10b981;' : 'color: #f59e0b;';
-
-                // Show date picker in All-Nighter Mode, label otherwise
-                const caffDate = caff.date || today;
-                const dateSelector = state.allNighterMode ? `
+                const dateSelector = `
                     <input type="date" value="${caffDate}" onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
-                ` : `<span style="font-size: 0.7em; ${dateStyle} min-width: 50px;">${dateLabel}</span>`;
+                `;
 
                 return `
                 <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);"' : ''}>
