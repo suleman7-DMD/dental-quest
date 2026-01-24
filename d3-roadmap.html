@@ -11525,7 +11525,7 @@ CHAIR: 9F
                     id: `custom_${Date.now()}`,
                     text: name,
                     required: required,
-                    completed: Math.min(completed, required),
+                    completed: Math.max(0, Math.min(completed, required)), // FIXED: Clamp to 0-required range
                     note: notes || null,
                     custom: true // Mark as custom so it can be deleted
                 };
@@ -11546,7 +11546,7 @@ CHAIR: 9F
                     if (item) {
                         item.text = name;
                         item.required = required;
-                        item.completed = Math.min(completed, required);
+                        item.completed = Math.max(0, Math.min(completed, required)); // FIXED: Clamp to 0-required range
                         item.note = notes || null;
 
                         // Update status based on completed count
@@ -12114,18 +12114,22 @@ CHAIR: 9F
         }
 
         function calculateEndTime(startTime, durationMinutes) {
-            if (!startTime) return '';
-            const [h, m] = startTime.split(':').map(Number);
-            const totalMinutes = h * 60 + m + durationMinutes;
+            if (!startTime || !startTime.includes(':')) return '';
+            const parts = startTime.split(':');
+            const h = parseInt(parts[0]) || 0;
+            const m = parseInt(parts[1]) || 0;
+            const totalMinutes = h * 60 + m + (durationMinutes || 0);
             const endH = Math.floor(totalMinutes / 60) % 24;
             const endM = totalMinutes % 60;
             return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
         }
 
-        // Helper function for time conversion (if not already exists)
+        // Helper function for time conversion
         function timeToMinutes(timeStr) {
-            if (!timeStr) return 0;
-            const [h, m] = timeStr.split(':').map(Number);
+            if (!timeStr || !timeStr.includes(':')) return 0;
+            const parts = timeStr.split(':');
+            const h = parseInt(parts[0]) || 0;
+            const m = parseInt(parts[1]) || 0;
             return h * 60 + m;
         }
 
@@ -12584,27 +12588,28 @@ CHAIR: 9F
         function dpPopulateDeadlineDropdown() {
             const dropdown = document.getElementById('dpTaskDropdown');
             if (!dropdown) return;
-            
+
             // Get upcoming deadlines from the deadlines array
             const now = new Date();
+            now.setHours(0, 0, 0, 0); // Normalize to start of day
             const upcomingDeadlines = deadlines.filter(d => {
-                const deadlineDate = new Date(d.date);
+                const deadlineDate = parseLocalDate(d.date); // FIXED: Use parseLocalDate for timezone safety
                 return deadlineDate >= now && !d.done;
-            }).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 20);
-            
+            }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date)).slice(0, 20);
+
             let html = '<option value="">-- Select a deadline --</option>';
-            
+
             // Group by urgency
             const urgent = upcomingDeadlines.filter(d => {
-                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                const days = Math.ceil((parseLocalDate(d.date) - now) / (1000 * 60 * 60 * 24));
                 return days <= 7;
             });
             const upcoming = upcomingDeadlines.filter(d => {
-                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                const days = Math.ceil((parseLocalDate(d.date) - now) / (1000 * 60 * 60 * 24));
                 return days > 7 && days <= 14;
             });
             const later = upcomingDeadlines.filter(d => {
-                const days = Math.ceil((new Date(d.date) - now) / (1000 * 60 * 60 * 24));
+                const days = Math.ceil((parseLocalDate(d.date) - now) / (1000 * 60 * 60 * 24));
                 return days > 14;
             });
             
@@ -13648,8 +13653,11 @@ CHAIR: 9F
             document.getElementById('mpModalTitle').textContent = '✏️ Edit Task';
             document.getElementById('mpModalItem').value = task.item || '';
             document.getElementById('mpModalDate').value = task.date || '';
-            document.getElementById('mpModalDate').min = '2026-01-19';
-            document.getElementById('mpModalDate').max = '2026-02-22';
+            // FIXED: Use dynamic date range from MP_WEEKS instead of hardcoded limits
+            const firstWeek = MP_WEEKS[0];
+            const lastWeek = MP_WEEKS[MP_WEEKS.length - 1];
+            document.getElementById('mpModalDate').min = firstWeek ? firstWeek.start : '2026-01-19';
+            document.getElementById('mpModalDate').max = lastWeek ? lastWeek.end : '2026-12-31';
             document.getElementById('mpModalTime').value = task.time || '';
             document.getElementById('mpModalEndTime').value = task.endTime || '';
             document.getElementById('mpModalType').value = task.type || 'other';
