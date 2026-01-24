@@ -5670,7 +5670,14 @@
         function loadData() {
             const saved = localStorage.getItem('dentalStudentQuestData');
             if (saved) {
-                const data = JSON.parse(saved);
+                let data;
+                try {
+                    data = JSON.parse(saved);
+                } catch (e) {
+                    console.error('❌ Failed to parse localStorage data:', e);
+                    showToast('Data corrupted - starting fresh', '⚠️');
+                    return; // Don't crash - continue with defaults
+                }
                 tasks = data.tasks || [];
                 
                 // Merge saved stats with default structure to handle new categories
@@ -6693,10 +6700,20 @@
             if (e.key === 'Escape') {
                 // Close dashboard expansions
                 closeAllExpansions();
-                
-                // Close modals
+
+                // Close modals with 'show' class
                 const modals = document.querySelectorAll('.modal-overlay.show, .help-modal-overlay.show');
                 modals.forEach(modal => modal.classList.remove('show'));
+
+                // FIX: Also close modals that use display:flex/none
+                const taskEditModal = document.getElementById('taskEditModal');
+                const planningModal = document.getElementById('planningModal');
+                if (taskEditModal && taskEditModal.style.display !== 'none') {
+                    closeTaskEditModal();
+                }
+                if (planningModal && planningModal.style.display !== 'none') {
+                    closePlanningModal();
+                }
             }
         });
 
@@ -10767,7 +10784,19 @@
         // Delete task
         function deleteTask(id) {
             tasks = tasks.filter(t => t.id !== id);
+
+            // FIX: Clean up orphaned references in focusModeData
+            if (focusModeData.oneThingId === id) {
+                focusModeData.oneThingId = null;
+                focusModeData.microSteps = [];
+            }
+            // Remove from todaysTasks arrays
+            ['big', 'medium', 'small'].forEach(size => {
+                focusModeData.todaysTasks[size] = focusModeData.todaysTasks[size].filter(taskId => taskId !== id);
+            });
+
             renderTasks();
+            if (currentView === 'focus') renderFocusMode();
             saveData();
         }
 
