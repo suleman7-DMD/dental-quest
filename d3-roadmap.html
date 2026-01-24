@@ -8050,10 +8050,15 @@ CHAIR: 9F
 
         // ==================== TAB SWITCHING ====================
         function switchTab(tabId, evt) {
+            // Close any open modals when switching tabs
+            document.querySelectorAll('.mp-modal-overlay').forEach(modal => {
+                modal.style.display = 'none';
+            });
+
             // Update buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if(evt && evt.target) evt.target.classList.add('active');
-            
+
             // Update content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
@@ -11703,7 +11708,11 @@ CHAIR: 9F
             // Try to parse other formats
             const date = new Date(dateStr);
             if (!isNaN(date.getTime())) {
-                return date.toISOString().split('T')[0];
+                // Use local date components, not UTC (fixes timezone bug)
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
             }
 
             return null;
@@ -11717,6 +11726,8 @@ CHAIR: 9F
 
             // Already in 24h format
             if (/^\d{1,2}:\d{2}$/.test(str)) {
+                const [h, m] = str.split(':').map(Number);
+                if (h > 23 || m > 59) return null; // Validate range
                 return str.padStart(5, '0');
             }
 
@@ -11730,6 +11741,7 @@ CHAIR: 9F
                 if (period === 'PM' && hours < 12) hours += 12;
                 if (period === 'AM' && hours === 12) hours = 0;
 
+                if (hours > 23 || minutes > 59) return null; // Validate range
                 return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
             }
 
@@ -12172,10 +12184,11 @@ CHAIR: 9F
                 // Add any custom deadlines
                 if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
                     roadmapData.customDeadlines.forEach(d => {
-                        const month = new Date(d.date).toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                        const dateObj = new Date(d.date + 'T12:00:00'); // Add noon to avoid timezone issues
+                        const month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
                         deadlines.push({
                             date: d.date,
-                            day: new Date(d.date).toLocaleString('en-US', { weekday: 'short' }),
+                            day: dateObj.toLocaleString('en-US', { weekday: 'short' }),
                             what: d.what,
                             course: d.course || 'Other',
                             weight: d.weight || '—',
