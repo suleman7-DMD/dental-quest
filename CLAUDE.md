@@ -412,6 +412,74 @@ function calculateFinancialStatus() {
 
 ## RECENT UPDATES (January 2026)
 
+### v32.1 Deep Audit & Cross-App Enhancements (Jan 23, 2026)
+
+Extended session with comprehensive improvements across all apps.
+
+#### Cross-App Navigation Bar (ALL 4 APPS)
+Added consistent navigation header to all apps for easy switching:
+- **Files updated:** index.html, d3-roadmap.html, stimulant-elimination-calculator.html, lecture-prompt-transformer.html
+- Purple gradient header with app links
+- Current app highlighted, others show on hover
+- Mobile responsive (stacks vertically)
+
+#### Offline Sync Queue (index.html)
+- Added `pendingSyncQueue[]` for offline operations
+- Online/offline event listeners auto-process queue
+- Operations saved to localStorage when offline, synced when back online
+- Pattern: `queueSyncOperation(operation)` → process on `navigator.onLine`
+
+#### Date Picker Overhaul (stimulant-elimination-calculator.html)
+**Changed from Today/Tomorrow dropdown to precise date pickers:**
+- All 3 components now use `<input type="date">` for max precision
+- Works in BOTH regular mode AND All-Nighter mode
+- Meds and caffeine have `max="${today}"` to prevent future dates
+- Vitamin C allows future dates (for planning)
+
+**State structure changes:**
+```javascript
+// OLD: modifiers.vitaminC.isNextDay (boolean)
+// NEW: modifiers.vitaminC.date (YYYY-MM-DD string)
+
+// Medication entries now include: { id, dose, time, date }
+// Caffeine entries now include: { id, amount, time, date, ... }
+```
+
+#### Pharmacokinetic Calculation Fixes (CRITICAL)
+**Bug: calculateCaffLoad() only handled today/yesterday**
+- Old code silently ignored dates 2+ days ago
+- Fix: Days-difference calculation handles any past date
+```javascript
+const daysDiff = Math.round((todayDate - doseDate) / (1000 * 60 * 60 * 24));
+if (daysDiff < 0) return; // Skip future
+if (daysDiff > 2) return; // Skip >48h (caffeine)
+const effectiveDoseTime = baseDoseTime - (daysDiff * 24 * 60);
+```
+
+**Bug: Undefined `doseTime` variable in calculateAmpLoad()**
+- XR calculation section referenced `doseTime` but only `baseDoseTime` was defined
+- Would cause ReferenceError for today's fresh doses
+- Fix: Changed all references to `baseDoseTime`
+
+**Bug: calculateAmpLoad() only handled today/yesterday**
+- Same pattern as caffeine - now uses days-difference
+- Skips doses >72h old (~6 half-lives = negligible)
+
+#### Deleted Redundant File
+- Removed `lecture-prompt-transformer.jsx` (HTML version already exists)
+
+#### Commits (Jan 23, 2026 Session)
+```
+47b483f Fix pharmacokinetic calculations for arbitrary date pickers
+becb36e Show date pickers in both regular and All-Nighter modes
+3dfc86c Update CLAUDE.md with Firebase rules + date picker docs
+90e37fa Replace date dropdowns with proper date inputs
+a37c0a6 Add offline sync queue to index.html
+090d8d7 Add cross-app navigation to all 4 apps
+```
+
+---
+
 ### v32 Production Audit Bug Fixes (Jan 23, 2026)
 
 Comprehensive production-grade audit of all 3 apps with 10 bugs fixed total.
