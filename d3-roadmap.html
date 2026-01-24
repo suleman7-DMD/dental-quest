@@ -9367,6 +9367,11 @@ CHAIR: 9F
             
             // Perio 2
             if (course.includes('perio')) {
+                if (what.includes('midterm')) {
+                    roadmapData.grades.perio = roadmapData.grades.perio || {};
+                    if (isComplete && grade !== null) roadmapData.grades.perio.midterm = grade;
+                    else delete roadmapData.grades.perio.midterm;
+                }
                 if (what.includes('final')) {
                     roadmapData.grades.perio = roadmapData.grades.perio || {};
                     if (isComplete && grade !== null) roadmapData.grades.perio.final = grade;
