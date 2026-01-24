@@ -6736,7 +6736,7 @@
             // Update refill date
             if (refillElement) {
                 if (med.refillDate) {
-                    const refillDate = new Date(med.refillDate);
+                    const refillDate = parseLocalDate(med.refillDate);
                     refillElement.textContent = refillDate.toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric', 
@@ -6753,9 +6753,8 @@
                 today.setHours(0, 0, 0, 0);
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
-                const refillDate = new Date(med.refillDate);
-                refillDate.setHours(0, 0, 0, 0);
-                
+                const refillDate = parseLocalDate(med.refillDate);
+
                 // Calculate days from TOMORROW until refill (not including today)
                 const daysFromTomorrow = Math.ceil((refillDate - tomorrow) / (1000 * 60 * 60 * 24));
                 
@@ -8499,9 +8498,8 @@
                 today.setHours(0, 0, 0, 0);
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
-                const refillDate = new Date(med.refillDate);
-                refillDate.setHours(0, 0, 0, 0);
-                
+                const refillDate = parseLocalDate(med.refillDate);
+
                 const daysFromTomorrow = Math.ceil((refillDate - tomorrow) / (1000 * 60 * 60 * 24));
                 const pillsNeeded = Math.max(0, daysFromTomorrow);
                 const actualPills = med.pills || 0;

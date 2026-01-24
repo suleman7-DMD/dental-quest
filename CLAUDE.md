@@ -382,6 +382,87 @@ function calculateFinancialStatus() {
 
 ## RECENT UPDATES (January 2026)
 
+### v32 Production Audit Bug Fixes (Jan 23, 2026)
+
+Comprehensive production-grade audit of all 3 apps with 10 bugs fixed total.
+
+#### stimulant-elimination-calculator.html (6 bugs fixed)
+
+**Bug 1: Time Input Not Persisting**
+- **Problem:** Changing medication time would reset the input field
+- **Cause:** `updateMedEntry()` called `renderMedEntries()` for every field change, destroying the active input
+- **Fix:** Added conditional to skip re-render for time-only changes (line 4276):
+  ```javascript
+  } else if (field === 'time') {
+      med.time = value;
+      // DON'T re-render for time changes - it destroys the active input!
+  }
+  ```
+
+**Bug 2: Caffeine Double-Counting When Switching Views**
+- **Problem:** Caffeine entries appeared twice after switching between Focus/Full view
+- **Cause:** `setViewMode()` and Firebase sync didn't call `renderFocusCaffeineList()`
+- **Fix:** Added missing render calls to `setViewMode('full')` and `syncStateFromFirebase()` (lines 9527, 9080)
+
+**Bug 3: Vitamin C Toggle Reset on Reload**
+- **Problem:** Vitamin C and workout modifiers cleared on every page load when history was empty
+- **Cause:** Code checked `if (lastDate !== today)` without verifying lastDate existed
+- **Fix:** Changed to `if (lastDate && lastDate !== today)` (line 8879)
+
+**Bug 4: All-Nighter Mode Missing Date Selectors**
+- **Problem:** Can't specify if med/caffeine was taken "yesterday" in all-nighter mode
+- **Fix:** Added Today/Yesterday dropdowns when `allNighterMode = true` (lines 4315-4319, 4458-4462)
+- **New function:** `updateCaffeineDate(index, newDate)` (line 4490)
+
+**Bug 5: Focus/Full View Caffeine Desync**
+- **Problem:** Adding/removing caffeine in one view didn't update the other
+- **Fix:** Added `renderFocusCaffeineList()` calls to `addCaffeine()`, `removeCaffeine()`, `clearToday()` (lines 4425, 4447, 4545)
+
+**Bug 6: Mobile Touch/Zoom Issues**
+- **Problem:** Mobile interface had small touch targets, iOS auto-zoom on inputs
+- **Fix:** Added CSS for 44px touch targets, 16px font size, `touch-action: manipulation` (lines 544-562)
+
+#### index.html (4 bugs fixed)
+
+**Bug 1: deleteTask() Orphaned References**
+- **Problem:** Deleting a task didn't clean up references in `focusModeData`
+- **Cause:** Task could still be referenced in `oneThingId` or `todaysTasks` after deletion
+- **Fix:** Added cleanup code to `deleteTask()` (line 10722):
+  ```javascript
+  if (focusModeData.oneThingId === id) {
+      focusModeData.oneThingId = null;
+      focusModeData.microSteps = [];
+  }
+  ['big', 'medium', 'small'].forEach(size => {
+      focusModeData.todaysTasks[size] = focusModeData.todaysTasks[size].filter(taskId => taskId !== id);
+  });
+  ```
+
+**Bug 2: loadData() Crash on Corrupted localStorage**
+- **Problem:** App would crash if localStorage contained invalid JSON
+- **Fix:** Wrapped `JSON.parse()` in try-catch with graceful fallback (line 5674):
+  ```javascript
+  try {
+      data = JSON.parse(saved);
+  } catch (e) {
+      console.error('❌ Failed to parse localStorage data:', e);
+      showToast('Data corrupted - starting fresh', '⚠️');
+      return;
+  }
+  ```
+
+**Bug 3: Escape Key Didn't Close All Modals**
+- **Problem:** Escape key only closed class-based modals, not display-based ones
+- **Fix:** Extended escape handler to check `taskEditModal` and `planningModal` (line 8640)
+
+**Bug 4: Medications Refill Date Off-by-One Day**
+- **Problem:** Refill date could be wrong by 1 day in EST/local timezone
+- **Cause:** `new Date("2026-02-15")` parses as UTC midnight, which is Feb 14th in EST
+- **Fix:** Changed 3 locations to use `parseLocalDate()` instead of `new Date(string)`:
+  - Line 6739: Display refill date
+  - Line 6754: Calculate days until refill
+  - Line 8502: Quick summary calculation
+
 ### v31 Clinical Tab & Competencies System (d3-roadmap.html)
 
 #### NEW: Clinical Tracker Tab
