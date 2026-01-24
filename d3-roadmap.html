@@ -143,6 +143,176 @@
             color: #f1f5f9;
         }
 
+        /* Do Today Tasks Widget (Cross-App Sync) */
+        .do-today-card {
+            border: 2px solid #dc2626;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        .do-today-badge {
+            background: #dc2626;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+        }
+
+        .do-today-badge.empty {
+            background: #059669;
+        }
+
+        .do-today-sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8em;
+            color: #9ca3af;
+            padding: 8px 0;
+            border-bottom: 1px solid #374151;
+            margin-bottom: 10px;
+        }
+
+        .do-today-sync-status .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f59e0b;
+            animation: pulse 1.5s infinite;
+        }
+
+        .do-today-sync-status.connected .sync-dot {
+            background: #10b981;
+            animation: none;
+        }
+
+        .do-today-sync-status.error .sync-dot {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .do-today-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .do-today-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #1f2937;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .do-today-item:hover {
+            background: #374151;
+            transform: translateX(4px);
+        }
+
+        .do-today-item:active {
+            transform: scale(0.98);
+        }
+
+        .do-today-item.completed {
+            opacity: 0.6;
+            border-left-color: #10b981;
+        }
+
+        .do-today-item.completed .do-today-text {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .do-today-checkbox {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid #dc2626;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .do-today-item.completed .do-today-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .do-today-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .do-today-text {
+            font-size: 0.95em;
+            color: #f3f4f6;
+            word-wrap: break-word;
+        }
+
+        .do-today-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .do-today-category {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #374151;
+            color: #9ca3af;
+        }
+
+        .do-today-xp {
+            font-size: 0.75em;
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .do-today-empty {
+            text-align: center;
+            padding: 30px 20px;
+            color: #10b981;
+        }
+
+        .do-today-empty-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .do-today-open-main {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .do-today-open-main:hover {
+            background: #2563eb;
+        }
+
         /* Alert Banners */
         .alert {
             padding: 15px 20px;
@@ -4564,6 +4734,20 @@
             <div id="currentDateDisplay" style="font-size: 1.3em; font-weight: 700;">Loading...</div>
         </div>
 
+        <!-- Today's Must-Do Tasks (Synced from Main App) -->
+        <div class="card do-today-card">
+            <div class="card-header">
+                <span class="card-title">🔴 Today's Must-Do Tasks</span>
+                <span id="doTodayCount" class="do-today-badge">0</span>
+            </div>
+            <div class="do-today-sync-status" id="doTodaySyncStatus">
+                <span class="sync-dot"></span> Syncing with main app...
+            </div>
+            <div id="doTodayTasksList" class="do-today-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
         <!-- Stats Row -->
         <div class="stats-row" id="dashboardStats">
             <!-- Populated by JS -->
@@ -6529,7 +6713,11 @@ CHAIR: 9F
         let currentUser = null;
         let userPath = null;
         let saveDebounceTimer = null;
-        
+
+        // Cross-app sync: Main app tasks
+        let mainAppTasksRef = null;
+        let mainAppTasks = [];
+
         // ==================== DATA ====================
         let roadmapData = {
             pedsLockedIn: 33.3,
@@ -7356,9 +7544,12 @@ CHAIR: 9F
                         updateSyncStatus('connected', 'Synced');
                     }
                     initUI();
-                    
+
                     // Set up real-time listener for cross-device sync
                     setupRealtimeSync();
+
+                    // Set up cross-app sync for main app "Do Today" tasks
+                    setupMainAppTasksSync();
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
@@ -7440,7 +7631,169 @@ CHAIR: 9F
             });
 
         }
-        
+
+        // ==================== CROSS-APP SYNC: MAIN APP TASKS ====================
+        // Syncs "Do Today" tasks from the main Dental Quest app
+
+        function setupMainAppTasksSync() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                updateDoTodaySyncStatus('error', 'Not connected');
+                renderDoTodayTasks();
+                return;
+            }
+
+            // Get the main app data path (same user, different app path)
+            const hashedPin = userPath.split('/')[1]; // Extract user_XXX from 'users/user_XXX/d3Roadmap'
+            const mainAppPath = 'users/' + hashedPin + '/appData/tasks';
+
+            // Remove any existing listener
+            if (mainAppTasksRef) {
+                mainAppTasksRef.off();
+            }
+
+            updateDoTodaySyncStatus('syncing', 'Syncing with main app...');
+
+            mainAppTasksRef = database.ref(mainAppPath);
+
+            // Set up real-time listener
+            mainAppTasksRef.on('value', snapshot => {
+                const tasks = snapshot.val();
+                mainAppTasks = tasks || [];
+                updateDoTodaySyncStatus('connected', 'Live sync active');
+                renderDoTodayTasks();
+            }, error => {
+                console.error('Main app tasks sync error:', error);
+                updateDoTodaySyncStatus('error', 'Sync failed');
+                renderDoTodayTasks();
+            });
+        }
+
+        function updateDoTodaySyncStatus(status, message) {
+            const statusEl = document.getElementById('doTodaySyncStatus');
+            if (!statusEl) return;
+
+            statusEl.className = 'do-today-sync-status ' + status;
+
+            if (status === 'connected') {
+                statusEl.innerHTML = '<span class="sync-dot"></span> 🟢 ' + message;
+            } else if (status === 'syncing') {
+                statusEl.innerHTML = '<span class="sync-dot"></span> ' + message;
+            } else if (status === 'error') {
+                statusEl.innerHTML = '<span class="sync-dot"></span> 🔴 ' + message;
+            } else {
+                statusEl.innerHTML = '<span class="sync-dot"></span> ' + message;
+            }
+        }
+
+        function renderDoTodayTasks() {
+            const listEl = document.getElementById('doTodayTasksList');
+            const countEl = document.getElementById('doTodayCount');
+            if (!listEl) return;
+
+            // Filter for doToday tasks
+            const doTodayTasks = mainAppTasks.filter(t => t.doToday === true);
+
+            // Update count badge
+            if (countEl) {
+                const incompleteCount = doTodayTasks.filter(t => !t.completed).length;
+                countEl.textContent = incompleteCount;
+                countEl.classList.toggle('empty', incompleteCount === 0);
+            }
+
+            // Empty state
+            if (doTodayTasks.length === 0) {
+                listEl.innerHTML = `
+                    <div class="do-today-empty">
+                        <div class="do-today-empty-icon">✨</div>
+                        <div>No "Must Do Today" tasks!</div>
+                        <div style="font-size: 0.85em; color: #9ca3af; margin-top: 5px;">
+                            Add tasks in the main app and mark them as "Do Today"
+                        </div>
+                        <a href="https://suleman7-dmd.github.io/dental-quest/" target="_blank" class="do-today-open-main">
+                            Open Main App →
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort: incomplete first, then by id (recent first)
+            const sorted = [...doTodayTasks].sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return (b.id || 0) - (a.id || 0);
+            });
+
+            // Category display names
+            const categoryNames = {
+                financial: '💰 Financial',
+                clinic: '🦷 Clinic',
+                health: '❤️ Health',
+                school: '📋 School',
+                academic: '📚 Academic',
+                future: '🚀 Future',
+                life: '🏡 Life'
+            };
+
+            listEl.innerHTML = sorted.map(task => `
+                <div class="do-today-item ${task.completed ? 'completed' : ''}"
+                     onclick="toggleMainAppTask(${task.id})">
+                    <div class="do-today-checkbox">
+                        ${task.completed ? '✓' : ''}
+                    </div>
+                    <div class="do-today-content">
+                        <div class="do-today-text">${escapeHtml(task.text || 'Untitled task')}</div>
+                        <div class="do-today-meta">
+                            <span class="do-today-category">${categoryNames[task.category] || task.category || 'Task'}</span>
+                            ${task.xp ? `<span class="do-today-xp">+${task.xp} XP</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleMainAppTask(taskId) {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('Not connected - cannot update', '⚠️');
+                return;
+            }
+
+            // Find the task
+            const taskIndex = mainAppTasks.findIndex(t => t.id === taskId);
+            if (taskIndex === -1) {
+                showToast('Task not found', '⚠️');
+                return;
+            }
+
+            const task = mainAppTasks[taskIndex];
+            const newCompleted = !task.completed;
+
+            // Update locally for immediate feedback
+            mainAppTasks[taskIndex].completed = newCompleted;
+            renderDoTodayTasks();
+
+            // Update in Firebase (main app's data path)
+            const hashedPin = userPath.split('/')[1];
+            const mainAppPath = 'users/' + hashedPin + '/appData/tasks';
+
+            database.ref(mainAppPath).set(mainAppTasks)
+                .then(() => {
+                    if (newCompleted) {
+                        showToast('✅ Task completed!', '🎉');
+                    } else {
+                        showToast('Task reopened', '↩️');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating main app task:', error);
+                    showToast('Failed to save', '❌');
+                    // Revert local change
+                    mainAppTasks[taskIndex].completed = !newCompleted;
+                    renderDoTodayTasks();
+                });
+        }
+
+        // ==================== END CROSS-APP SYNC ====================
+
         // Force sync from cloud - manual refresh button
         let lastForceSync = 0;
         function forceCloudSync() {
@@ -7841,6 +8194,9 @@ CHAIR: 9F
 
             // Render study progress widget
             renderStudyProgressWidget();
+
+            // Render Do Today tasks widget (cross-app sync)
+            renderDoTodayTasks();
         }
 
         function renderClinicalDashboardWidget() {
@@ -7916,8 +8272,8 @@ CHAIR: 9F
                                 <div style="font-weight: 700;">${dateStr.split(' ')[1]}</div>
                             </div>
                             <div style="flex: 1;">
-                                <div style="font-weight: 600;">${patient ? patient.name : 'Unknown Patient'}</div>
-                                <div style="font-size: 0.85em; color: #b0bcc8;">${apt.procedures || 'No procedures listed'}</div>
+                                <div style="font-weight: 600;">${escapeHtml(patient ? patient.name : 'Unknown Patient')}</div>
+                                <div style="font-size: 0.85em; color: #b0bcc8;">${escapeHtml(apt.procedures || 'No procedures listed')}</div>
                             </div>
                             <div style="font-size: 0.85em; color: #93c5fd;">${apt.time || ''}</div>
                         </div>
@@ -11399,9 +11755,9 @@ CHAIR: 9F
             listDiv.innerHTML = parsedLectures.map(lec => {
                 const timeStr = lec.startTime ? formatTime12h(lec.startTime) + (lec.endTime ? ' - ' + formatTime12h(lec.endTime) : '') : 'No time';
                 return `<div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <strong>${lec.date}</strong> | ${timeStr}<br>
-                    <span style="color: #93c5fd;">${lec.course}</span>
-                    ${lec.location ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">📍 ' + lec.location + '</span>' : ''}
+                    <strong>${escapeHtml(lec.date)}</strong> | ${timeStr}<br>
+                    <span style="color: #93c5fd;">${escapeHtml(lec.course)}</span>
+                    ${lec.location ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">📍 ' + escapeHtml(lec.location) + '</span>' : ''}
                 </div>`;
             }).join('');
 
@@ -11587,10 +11943,10 @@ CHAIR: 9F
             listDiv.innerHTML = parsedAppointments.map(apt => {
                 const timeStr = apt.time ? formatTime12h(apt.time) : 'No time';
                 return `<div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <strong>${apt.patientName}</strong> ${apt.chartNumber ? '(#' + apt.chartNumber + ')' : ''}<br>
-                    <span style="color: #93c5fd;">${apt.date} @ ${timeStr}</span>
-                    ${apt.procedure ? '<br><span style="color: #10b981;">' + apt.procedure + '</span>' : ''}
-                    ${apt.chair ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">Chair: ' + apt.chair + '</span>' : ''}
+                    <strong>${escapeHtml(apt.patientName)}</strong> ${apt.chartNumber ? '(#' + escapeHtml(apt.chartNumber) + ')' : ''}<br>
+                    <span style="color: #93c5fd;">${escapeHtml(apt.date)} @ ${timeStr}</span>
+                    ${apt.procedure ? '<br><span style="color: #10b981;">' + escapeHtml(apt.procedure) + '</span>' : ''}
+                    ${apt.chair ? '<br><span style="color: #b0bcc8; font-size: 0.85em;">Chair: ' + escapeHtml(apt.chair) + '</span>' : ''}
                 </div>`;
             }).join('');
 
