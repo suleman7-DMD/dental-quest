@@ -3826,69 +3826,71 @@
             const today = getLocalDateString();
 
             state.medications.forEach(med => {
-                const doseTime = timeToMinutes(med.time);
+                const baseDoseTime = timeToMinutes(med.time);
                 const totalDose = med.dose;
-                
-                // PHASE 3: Date filtering
-                // If medication has a date stamp, only include if it's today
-                // If no date stamp (legacy), assume it's today
-                if (med.date && med.date !== today) {
-                    // This medication is from a different day - skip it
-                    // FIX: Only include yesterday's doses if allNighterMode is ON
-                    // (matches caffeine behavior for consistency)
-                    if (!state.allNighterMode) {
-                        return; // Skip yesterday's doses in normal mode
+                const medDate = med.date || today;
+
+                // Calculate days offset from today (positive = past, negative = future)
+                const todayDate = parseLocalDate(today);
+                const doseDate = parseLocalDate(medDate);
+                const daysDiff = Math.round((todayDate - doseDate) / (1000 * 60 * 60 * 24));
+
+                // Skip future doses (daysDiff < 0)
+                if (daysDiff < 0) return;
+
+                // Skip doses from non-today in normal mode (only allow today)
+                if (daysDiff > 0 && !state.allNighterMode) return;
+
+                // Skip very old doses (>72 hours = ~6 half-lives, essentially zero)
+                if (daysDiff > 3) return;
+
+                // Adjust dose time by days offset (e.g., yesterday 8 PM = -240 mins from midnight today)
+                const effectiveDoseTime = baseDoseTime - (daysDiff * 24 * 60);
+
+                // For old doses (>12 hours ago), use simplified decay (XR fully released)
+                const elapsed = atMinutes - effectiveDoseTime;
+                if (elapsed < 0) return; // Dose hasn't happened yet
+
+                if (daysDiff > 0 || elapsed > 12 * 60) {
+                    // Old dose - treat as fully released, simple decay
+                    if (elapsed > 0 && elapsed < 72 * 60) {
+                        const halfLifeToUse = (state.modifiers.vitaminC.active && atMinutes > vitCTime)
+                            ? reducedHalfLife : baseHalfLife;
+                        const remaining = totalDose * Math.pow(0.5, elapsed / halfLifeToUse);
+                        totalLoad += remaining;
                     }
-
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = getLocalDateString(yesterday);
-
-                    if (med.date === yesterdayStr) {
-                        // Yesterday's dose - adjust timing for decay calculation
-                        // doseTime was yesterday, so effective elapsed time is longer
-                        const yesterdayDoseMinutes = doseTime; // Time of dose yesterday
-                        const effectiveDoseTime = -((24 * 60) - yesterdayDoseMinutes); // Negative = hours ago
-
-                        // Calculate decay for yesterday's dose
-                        const elapsed = atMinutes - effectiveDoseTime;
-                        if (elapsed > 0 && elapsed < 36 * 60) { // Only if within 36 hours
-                            // Add full decayed dose (no XR split needed for old doses)
-                            const remaining = totalDose * Math.pow(0.5, elapsed / baseHalfLife);
-                            totalLoad += remaining;
-                        }
-                    }
-                    return; // Skip normal processing for dated medications
+                    return;
                 }
-                
+
+                // Today's fresh dose - use full XR calculation
                 // XR splits into two releases
                 const immediateRelease = totalDose * 0.5;
                 const delayedRelease = totalDose * 0.5;
-                const delayedTime = doseTime + 240; // T+4 hours
-                
+                const delayedTime = baseDoseTime + 240; // T+4 hours
+
                 // DEBUG: Log XR calculation details (can be removed in production)
-                // console.log(`XR Calc: dose=${totalDose}mg at ${minutesToTime(doseTime)}, checking at ${minutesToTime(atMinutes)}`);
+                // console.log(`XR Calc: dose=${totalDose}mg at ${minutesToTime(baseDoseTime)}, checking at ${minutesToTime(atMinutes)}`);
                 // console.log(`  Immediate: ${immediateRelease}mg, Delayed: ${delayedRelease}mg at ${minutesToTime(delayedTime)}`);
-                
+
                 // Handle midnight rollover for atMinutes
                 // If atMinutes is early morning (< 6 AM) and dose was evening (> 18:00)
                 // Then we're checking tomorrow's time against yesterday's dose
                 let effectiveAtMinutes = atMinutes;
-                if (atMinutes < 6 * 60 && doseTime > 18 * 60) {
+                if (atMinutes < 6 * 60 && baseDoseTime > 18 * 60) {
                     effectiveAtMinutes = atMinutes + 24 * 60; // Treat as next day
                 }
-                
+
                 let immediateLoad = 0;
                 let delayedLoad = 0;
-                
+
                 // Calculate immediate release component
-                if (effectiveAtMinutes >= doseTime) {
-                    const elapsed = effectiveAtMinutes - doseTime;
-                    
+                if (effectiveAtMinutes >= baseDoseTime) {
+                    const elapsed = effectiveAtMinutes - baseDoseTime;
+
                     // If Vitamin C was taken, use reduced half-life for time after it
                     if (state.modifiers.vitaminC.active && effectiveAtMinutes > vitCTime) {
-                        const beforeVitC = Math.max(0, vitCTime - doseTime);
-                        const afterVitC = effectiveAtMinutes - Math.max(doseTime, vitCTime);
+                        const beforeVitC = Math.max(0, vitCTime - baseDoseTime);
+                        const afterVitC = effectiveAtMinutes - Math.max(baseDoseTime, vitCTime);
                         
                         // Decay before Vitamin C
                         let remaining = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
@@ -3932,48 +3934,37 @@
         }
 
         // Calculate caffeine load at a given time
-        // UPDATED: Now handles yesterday's caffeine in All-Nighter Mode
+        // UPDATED: Handles arbitrary past dates via days-difference calculation
         function calculateCaffLoad(atMinutes) {
             let totalLoad = 0;
-            const halfLife = state.settings.caffHalfLife * 60;
+            const halfLife = state.settings.caffHalfLife * 60; // in minutes
             const today = getLocalDateString();
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = getLocalDateString(yesterday);
 
             state.caffeine.forEach(caff => {
-                const doseTime = timeToMinutes(caff.time);
+                const baseDoseTime = timeToMinutes(caff.time);
+                const caffDate = caff.date || today;
 
-                // Handle dated caffeine entries (All-Nighter Mode support)
-                if (caff.date && caff.date !== today) {
-                    // Check if it's yesterday's caffeine (still relevant)
-                    if (caff.date === yesterdayStr && state.allNighterMode) {
-                        // Yesterday's dose - adjust timing for decay calculation
-                        // If dose was at 11:30 PM yesterday (1410 mins) and it's now 3 AM today (180 mins)
-                        // Effective elapsed = (24*60 - 1410) + 180 = 210 minutes
-                        const effectiveElapsed = (24 * 60 - doseTime) + atMinutes;
-                        if (effectiveElapsed > 0 && effectiveElapsed < 24 * 60) { // Only if within 24 hours
-                            totalLoad += caff.amount * Math.pow(0.5, effectiveElapsed / halfLife);
-                        }
-                    }
-                    // Skip caffeine from other days
-                    return;
-                }
+                // Calculate days offset from today (positive = past, negative = future)
+                const todayDate = parseLocalDate(today);
+                const doseDate = parseLocalDate(caffDate);
+                const daysDiff = Math.round((todayDate - doseDate) / (1000 * 60 * 60 * 24));
 
-                // Today's caffeine (or legacy entries without date)
-                // Handle midnight rollover for early morning queries
-                let effectiveAtMinutes = atMinutes;
-                if (atMinutes < 6 * 60 && doseTime > 18 * 60 && !caff.date) {
-                    // Early morning checking late evening dose without date = treat as yesterday
-                    if (state.allNighterMode) {
-                        const effectiveElapsed = (24 * 60 - doseTime) + atMinutes;
-                        totalLoad += caff.amount * Math.pow(0.5, effectiveElapsed / halfLife);
-                    }
-                    return;
-                }
+                // Skip future caffeine (daysDiff < 0)
+                if (daysDiff < 0) return;
 
-                if (effectiveAtMinutes >= doseTime) {
-                    const elapsed = effectiveAtMinutes - doseTime;
+                // In normal mode, only process today's caffeine
+                if (daysDiff > 0 && !state.allNighterMode) return;
+
+                // Skip very old caffeine (>48 hours = ~10 half-lives at 5hr, essentially zero)
+                if (daysDiff > 2) return;
+
+                // Adjust dose time by days offset
+                // daysDiff=1 means yesterday, so subtract 24*60 minutes
+                const effectiveDoseTime = baseDoseTime - (daysDiff * 24 * 60);
+
+                // Only count if the dose has already occurred
+                if (atMinutes >= effectiveDoseTime) {
+                    const elapsed = atMinutes - effectiveDoseTime;
                     totalLoad += caff.amount * Math.pow(0.5, elapsed / halfLife);
                 }
             });
@@ -4347,7 +4338,7 @@
                 const isToday = medDate === today;
                 // Always show date picker for max precision
                 const dateSelector = `
-                    <input type="date" value="${medDate}" onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
+                    <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
                 `;
 
                 return `
@@ -4479,7 +4470,7 @@
                 const caffDate = caff.date || today;
                 const isToday = caffDate === today;
                 const dateSelector = `
-                    <input type="date" value="${caffDate}" onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
+                    <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
                 `;
 
                 return `
