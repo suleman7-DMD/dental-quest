@@ -1340,84 +1340,155 @@ Here is the audio transcript for this lecture portion:
 
 Please create comprehensive study notes in markdown format. Include all clinically relevant details, procedures, and anything that could appear on an exam. Use tables for comparisons, numbered lists for procedures, and bold for key terms. Focus on practical clinical applications.`;
 
-        // New/Optimized template (detailed, structured)
-        const DEFAULT_TEMPLATE = `I am a THIRD year dental student in a didactic clinical [COURSE_NAME] course. You are transforming my professor's lecture (audio transcript + slides) on [LECTURE_TOPIC] into exam-ready study notes.
+        // New/Optimized template v3.2-FINAL (detailed, structured with algorithm/protocol blocks)
+        const DEFAULT_TEMPLATE = `# LECTURE NOTES TRANSFORMATION v3.2-FINAL
+
+You are a dental education expert creating exam-cram notes for a D3 student. Assume D1/D2 mastery.
+
+**Course:** [COURSE_NAME]
+**Lecture:** [LECTURE_TOPIC]
 
 ---
 
-## OUTPUT CALIBRATION (CRITICAL)
+## INSTRUCTION PRIORITY (Read First)
 
-**Target density:** ~1.5 pages of notes per 15 minutes of lecture content
-**Assumed baseline:** I already understand D1/D2 foundational concepts - don't re-explain basics like "what is caries" or "what is the periodontium"
-**Depth rule:**
-- HIGH YIELD (procedures, mechanisms, clinical decisions, anything flagged for exam): Full explanation with steps/pathways
-- MEDIUM YIELD (supporting science, rationale): 2-3 sentence explanation
-- LOW YIELD (historical context, tangential examples): Single line or omit
-
-**What "crammable but complete" means:**
-- Every testable concept is present
-- Explanations are tight - no redundant sentences
-- I can read the full notes for one lecture portion in 10-15 minutes
-- Nothing requires me to re-watch the lecture to understand
+If conflicts arise:
+1. **NEVER violate:** Synthesis rule (no direct quotes)
+2. **ALWAYS include:** All HIGH YIELD content, even if exceeds word target
+3. **PREFER:** Tables for comparisons; algorithm blocks for branching decisions
+4. **SACRIFICE FIRST:** LOW YIELD content, then MEDIUM YIELD depth
 
 ---
 
-## STRUCTURAL REQUIREMENTS
+## CALIBRATION
 
-1. **Procedures/Protocols:** Use numbered step-by-step pathways with all clinically relevant details
+**Density:** 500-800 words per 15-min portion (flexible based on content)
+- Do NOT pad thin content to hit minimum
+- Do NOT truncate dense content to stay under maximum
+- Target: Readable in 10-15 minutes
 
-2. **Comparisons/Categories:** Use tables with clear columns:
-   | Feature | Option A | Option B |
-   |---------|----------|----------|
-   | Data    | Data     | Data     |
-
-3. **Mechanisms/Pathways:** Use → arrows and numbered sequences
-
-4. **Exam flags:** If professor says "this will be on the exam" or uses a mnemonic, note it explicitly: ⚠️ **EXAM ALERT:** [content]
-
----
-
-## SYNTHESIS RULES (NON-NEGOTIABLE)
-
-- Do NOT quote the professor directly. Synthesize all content into polished explanatory prose.
-- ❌ Wrong: The professor stated: "If they're on opioids..."
-- ✅ Right: Prescribing additional opioids to a patient under an OMT contract—without provider coordination—can void that contract.
-- Slide content should be invisible - absorbed into your explanations
-- Exception: Direct quotes allowed ONLY for exam logistics, mnemonics, or explicit "this will be tested" statements
+**Depth Tiering:**
+- **HIGH YIELD** (procedures, mechanisms, clinical decisions, exam-flagged): Full explanation with pathways
+- **MEDIUM YIELD** (supporting science, rationale): 2-3 sentences
+- **LOW YIELD** (tangents, historical context, admin): One line or omit
 
 ---
 
-## MARKDOWN RULES
+## STRUCTURE & PROCESSING
 
-1. Math/Symbols: Unicode only (≥ ≤ → ° ² ₂) - NO LaTeX
-2. Tables: Pipes + separator row required
-3. Headers: Space after #
-4. Lists: Consistent bullets, 2-space indent for nesting
-5. Bold: **bold** not ** bold **
+For each concept, follow this pattern:
+
+1. **Classify:** Procedure, comparison, mechanism, definition, branching decision, protocol, or exam alert?
+2. **Format:**
+   - Procedure → Numbered step-by-step pathway
+   - Comparison/differential/criteria → Table
+   - Mechanism → Arrows (→) and numbered sequences
+   - Definition → Prose with clinical application in same sentence
+   - **Branching decision (YES/NO or multiple outcomes) → Code block algorithm**
+   - **Prescription/dosing/technical protocol → Code block reference**
+   - Exam alert → ⚠️ **EXAM ALERT:** [content]
+3. **Verify:** All transcript content accounted for
+
+**Format Selection Priority:**
+- Algorithm blocks: ONLY for true branching decisions (≥2 outcome pathways)
+- Protocol blocks: ONLY for specific prescriptions, dosing, or step-by-step parameters
+- Default: Prose + tables for all other content
+
+**Structural Requirements:**
+- Break content every 3-4 sentences with headers, tables, lists, or code blocks
+- Every definition includes clinical application in the same sentence
 
 ---
 
-## TRANSCRIPT HANDLING
+## OUTPUT TEMPLATE
 
-- Audio transcripts contain mistranscriptions - use context to infer correct terms
-- If a phrase is garbled but meaning is clear from context, present the correct concept
-- We will proceed piecewise through portions. Each response continues from the previous.
+**This portion covers:** [3-5 core concepts]
+
+## [Topic Header]
+
+**Core Concept:** [1-2 sentences with clinical relevance]
+
+| Feature | Option A | Option B |
+|---------|----------|----------|
+| Data    | Data     | Data     |
+
+**Procedure:**
+1. [Step with detail]
+2. [Step with detail]
+
+⚠️ **EXAM ALERT:** [if flagged]
+
+**Decision Algorithm** (when pathway has YES/NO or multiple outcomes):
+\`\`\`
+[Starting point]
+       ↓
+  [Assessment step]
+       ↓
+  [Decision question?]
+      /    \\
+    YES    NO
+     ↓      ↓
+ [Action] [Action]
+\`\`\`
+
+**Protocol Reference** (for prescriptions, dosing, technical parameters):
+\`\`\`
+Rx: [Drug and strength]
+Disp: [Quantity]
+Sig: [Instructions with warnings]
+\`\`\`
+
+✓ Tables: [count] | Algorithms: [count] | Omitted: [any LOW YIELD]
+
+---
+
+## SYNTHESIS RULE
+
+Absorb all content into polished explanatory prose. Source material should be invisible—only your synthesis remains.
+
+❌ Wrong: The professor stated: "If they're on opioids and they're on a contract..."
+✅ Right: Prescribing additional opioids to an OMT patient without provider coordination can void their treatment contract.
+
+Ground all claims in transcript, slides, or foundational dental science. Mark heavy inference with [INFERENCE].
+
+Exception: Direct quotes allowed ONLY for mnemonics, exam logistics, or explicit "this will be tested" statements.
+
+---
+
+## HANDLING
+
+**Transcripts:** Infer correct terms from mistranscriptions using context. If garbled beyond inference: "[Unclear - verify with recording]"
+
+**Contradictions:** If professor contradicts established science: "⚠️ Note: Professor stated X; standard guidance is Y"
+
+**Continuity:** Each response continues from previous portions. Don't re-explain concepts already covered.
+
+---
+
+## FORMAT
+
+- **Symbols:** Unicode only (≥ ≤ → ° ² ₂) — NO LaTeX
+- **Tables:** Pipes + separator row required (\`|---|---|\`)
+- **Algorithm blocks:** Use ↓ for vertical flow, / \\ for branches, indentation for hierarchy
+- **Protocol blocks:** Triple backticks, Rx/Disp/Sig format
+- **Headers:** Space after # (\`## Header\` not \`##Header\`)
+- **Bold:** \`**bold**\` not \`** bold **\`
 
 ---
 
 ## INPUT
 
-**Lecture slides text:**
+**Lecture slides:**
 [SLIDE_TEXT]
 
 ---
 
-**Audio transcript for this portion:**
+**Audio transcript:**
 [AUDIO_TEXT]
 
 ---
 
-Now produce exam-ready notes at the calibrated density. Begin.`;
+Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for comparisons, algorithms for branching decisions, scannable structure. Begin.`;
 
         // ==================== TEMPLATE MANAGEMENT ====================
         const TEMPLATE_STORAGE_KEY = 'lecturePromptTemplate';
