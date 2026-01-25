@@ -819,10 +819,10 @@
                     <div class="input-group">
                         <label style="display: flex; align-items: center; gap: 6px;">
                             Output Portion Type
-                            <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full v3.2-FINAL prompt&#10;Continuation: Lighter reinforcement block (~65 tokens)&#10;Checkpoint: Full prompt reset&#10;Correction: Fix drift + continue">?</span>
+                            <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full v3.3 prompt&#10;Continuation: Lighter reinforcement block (~65 tokens)&#10;Checkpoint: Full prompt reset&#10;Correction: Fix drift + continue">?</span>
                         </label>
                         <select id="t-portion-type" onchange="updateTransformPortionTypeUI()" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                            <option value="first">First Portion (Full v3.2-FINAL prompt)</option>
+                            <option value="first">First Portion (Full v3.3 prompt)</option>
                             <option value="continuation">Continuation (Reinforcement Block)</option>
                             <option value="checkpoint">Checkpoint (Full prompt reset)</option>
                             <option value="correction">Correction (Fix drift + continue)</option>
@@ -1010,7 +1010,7 @@
                             <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full prompt for starting a lecture&#10;Continuation: Lighter reinforcement block for portions 2-4, 6-8&#10;Checkpoint: Full prompt reset at portion 5+ for long lectures&#10;Correction: When you notice drift and need to fix it">?</span>
                         </label>
                         <select id="b-portion-type" onchange="updatePortionTypeUI()" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                            <option value="first">First Portion (Full v3.2-FINAL prompt)</option>
+                            <option value="first">First Portion (Full v3.3 prompt)</option>
                             <option value="continuation">Continuation (Reinforcement Block)</option>
                             <option value="checkpoint">Checkpoint (Full prompt reset)</option>
                             <option value="correction">Correction (Fix drift + continue)</option>
@@ -1418,8 +1418,8 @@ Here is the audio transcript for this lecture portion:
 
 Please create comprehensive study notes in markdown format. Include all clinically relevant details, procedures, and anything that could appear on an exam. Use tables for comparisons, numbered lists for procedures, and bold for key terms. Focus on practical clinical applications.`;
 
-        // New/Optimized template v3.2-FINAL (detailed, structured with algorithm/protocol blocks)
-        const DEFAULT_TEMPLATE = `# LECTURE NOTES TRANSFORMATION v3.2-FINAL
+        // New/Optimized template v3.3 (detailed, structured with blind spot prevention)
+        const DEFAULT_TEMPLATE = `# LECTURE NOTES TRANSFORMATION v3.3
 
 You are a dental education expert creating exam-cram notes for a D3 student. Assume D1/D2 mastery.
 
@@ -1475,6 +1475,46 @@ For each concept, follow this pattern:
 **Structural Requirements:**
 - Break content every 3-4 sentences with headers, tables, lists, or code blocks
 - Every definition includes clinical application in the same sentence
+
+---
+
+## EXPLANATORY DEPTH RULES (v3.3)
+
+### 1. MECHANISM CHAINS (Never truncate)
+When explaining HOW something works, include 3 levels:
+- Level 1: What happens at molecular/cellular level
+- Level 2: What that causes at tissue/system level
+- Level 3: What the clinician sees/does
+
+❌ "Lag phase lasts 4-6 weeks"
+✅ "Force compresses PDL → tissue hyalinizes → osteoclasts must remove dead tissue before movement resumes → 4-6 week delay"
+
+### 2. DEFINE ON FIRST USE
+Any clinical term must have: [What it is] → [How it works] → [Why it matters]
+❌ "Consider the ceiling effect"
+✅ "Ceiling effect: max analgesia reached regardless of dose increase → ibuprofen ~600mg for dental pain → higher doses add toxicity without benefit"
+
+### 3. EXCEPTION CAPTURE
+When stating a rule, immediately follow with "EXCEPT:" if exceptions exist.
+❌ "Ceiling effect limits dose escalation"
+✅ "Ceiling effect limits dose escalation EXCEPT: TMJ pain may respond to higher doses"
+
+### 4. MEMORY HOOKS (Preserve, strip attribution)
+Keep memorable phrases/analogies that aid recall. Remove professor attribution.
+❌ Cut entirely
+❌ "The professor said 'dead patients don't care about your notes'"
+✅ "Dead patients don't care about your notes → always assess breathing first"
+
+### 5. CLINICAL PROTOCOL RULE
+For any "what do I do when X" scenario, preserve the full decision tree even if LOW YIELD classification otherwise applies.
+→ Protocols are examable even when rare
+
+### 6. TEACHING PATHWAY RULE
+For complex concepts (multi-step mechanisms, diagnostic differentials), include ONE clear sequential pathway showing how pieces connect—don't just list facts.
+
+### 7. KEY TAKEAWAYS (Required per major topic)
+End each major section with:
+🔑 **Key Takeaways:** [3-5 exam-focused bullets]
 
 ---
 
@@ -1566,16 +1606,18 @@ Exception: Direct quotes allowed ONLY for mnemonics, exam logistics, or explicit
 
 ---
 
-Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for comparisons, algorithms for branching decisions, scannable structure. Begin.`;
+Produce exam-ready notes. Reminder: NO direct quotes, 3-level mechanism chains, define terms on first use, include exceptions, preserve memory hooks, end with Key Takeaways. Begin.`;
 
         // Standard Reinforcement Block for Portions 2-4, 6-8 (~65 tokens)
         const STANDARD_REINFORCEMENT_TEMPLATE = `## CONTINUATION - PORTION [PORTION_NUM]
 
-**Maintain v3.2-FINAL:**
-- NO direct quotes (synthesize)
-- Algorithm blocks for branching decisions
-- Protocol blocks for prescriptions/dosing
-- HIGH YIELD → full detail | LOW YIELD → one line or omit
+**Maintain v3.3:**
+- NO direct quotes (synthesize all content)
+- Mechanism chains → 3 levels (molecular → tissue → clinical)
+- Define terms on first use (what → how → why)
+- Exceptions → always include "EXCEPT when..."
+- Memory hooks → keep phrases, strip attribution
+- End major topics with 🔑 Key Takeaways
 
 **Slides:**
 [SLIDE_TEXT]
@@ -1594,11 +1636,13 @@ Continue notes.`;
 
 **Correction (Priority [CORRECTION_PRIORITY]):** [CORRECTION_TEXT]
 
-**Maintain v3.2-FINAL:**
-- NO direct quotes (synthesize)
-- Algorithm blocks for branching decisions
-- Protocol blocks for prescriptions/dosing
-- HIGH YIELD → full detail | LOW YIELD → one line or omit
+**Maintain v3.3:**
+- NO direct quotes (synthesize all content)
+- Mechanism chains → 3 levels (molecular → tissue → clinical)
+- Define terms on first use (what → how → why)
+- Exceptions → always include "EXCEPT when..."
+- Memory hooks → keep phrases, strip attribution
+- End major topics with 🔑 Key Takeaways
 
 **Slides:**
 [SLIDE_TEXT]
@@ -2271,7 +2315,7 @@ Continue notes with correction applied.`;
 
             // Choose template based on portion type
             let template;
-            let templateLabel = 'v3.2-FINAL';
+            let templateLabel = 'v3.3';
 
             if (portionType === 'continuation') {
                 template = STANDARD_REINFORCEMENT_TEMPLATE;
@@ -2282,7 +2326,7 @@ Continue notes with correction applied.`;
             } else {
                 // First or Checkpoint - use full template
                 template = getCurrentTemplate();
-                templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.2-FINAL)' : 'First Portion (v3.2-FINAL)';
+                templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
             }
 
             // Replace placeholders
@@ -2447,7 +2491,7 @@ Continue notes with correction applied.`;
                     templateLabel = portionType === 'checkpoint' ? 'Checkpoint (Legacy)' : 'First Portion (Legacy)';
                 } else if (templateChoice === 'new') {
                     template = getCurrentTemplate();
-                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.2-FINAL)' : 'First Portion (v3.2-FINAL)';
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
                 } else if (templateChoice.startsWith('custom:')) {
                     const customName = templateChoice.replace('custom:', '');
                     const savedTemplates = getQuickEditTemplates();
