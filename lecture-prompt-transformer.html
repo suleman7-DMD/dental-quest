@@ -11,6 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/docx@9.0.0/build/index.umd.min.js"></script>
     <!-- File Saver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- PDF Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
 
     <style>
         * {
@@ -1224,12 +1227,15 @@
                 <button class="btn btn-success" onclick="downloadAsWord()">
                     📄 Download as Word (.docx)
                 </button>
+                <button class="btn btn-primary" onclick="downloadAsPdf()" style="background: #dc2626;">
+                    📕 Download as PDF (.pdf)
+                </button>
                 <button class="btn btn-secondary" onclick="copyAllMarkdown()">
                     📋 Copy All Markdown
                 </button>
             </div>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
-                Filename: <span id="export-filename-preview">lecture-notes.docx</span>
+                Filename: <span id="export-filename-preview">lecture-notes</span>
             </div>
 
             <!-- Format Info -->
@@ -2909,16 +2915,30 @@ Continue notes with correction applied.`;
                         break;
 
                     case 'code':
-                        children.push(new docx.Paragraph({
-                            children: [new docx.TextRun({
-                                text: token.text,
-                                font: 'Courier New',
-                                size: 20,
-                                color: COLORS.text,
-                            })],
-                            spacing: { before: 60, after: 60, line: LINE_SPACING, lineRule: docx.LineRuleType.EXACT },
-                            shading: { fill: 'F0F0F0' },
-                        }));
+                        // Split code block into lines and create a paragraph for each
+                        // This preserves the visual structure of algorithms/decision trees
+                        const codeLines = token.text.split('\n');
+                        codeLines.forEach((line, lineIndex) => {
+                            // Convert leading spaces to non-breaking spaces to preserve indentation
+                            const leadingSpaces = line.match(/^(\s*)/)[1];
+                            const preservedLine = '\u00A0'.repeat(leadingSpaces.length) + line.trimStart();
+
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({
+                                    text: preservedLine || '\u00A0', // Use nbsp for empty lines to preserve them
+                                    font: 'Courier New',
+                                    size: 20,
+                                    color: COLORS.text,
+                                })],
+                                spacing: {
+                                    before: lineIndex === 0 ? 60 : 0,
+                                    after: lineIndex === codeLines.length - 1 ? 60 : 0,
+                                    line: 240, // Single line spacing for code
+                                    lineRule: docx.LineRuleType.EXACT
+                                },
+                                shading: { fill: 'F0F0F0' },
+                            }));
+                        });
                         break;
 
                     case 'hr':
@@ -3194,6 +3214,266 @@ Continue notes with correction applied.`;
                 rows: rows,
                 width: { size: 100, type: docx.WidthType.PERCENTAGE },
             });
+        }
+
+        // ==================== PDF EXPORT ====================
+
+        function downloadAsPdf() {
+            if (collectedNotes.length === 0) {
+                showToast('No portions to export', 'error');
+                return;
+            }
+
+            const downloadBtn = document.querySelector('button[onclick="downloadAsPdf()"]');
+            const originalBtnText = downloadBtn ? downloadBtn.innerHTML : null;
+
+            if (downloadBtn) {
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '⏳ Generating...';
+                downloadBtn.style.opacity = '0.7';
+                downloadBtn.style.cursor = 'wait';
+            }
+
+            const allMarkdown = collectedNotes.map(n => n.content).join('\n\n---\n\n');
+            const filename = getExportFilename().replace('.docx', '.pdf');
+
+            const restoreButton = () => {
+                if (downloadBtn && originalBtnText) {
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = originalBtnText;
+                    downloadBtn.style.opacity = '';
+                    downloadBtn.style.cursor = '';
+                }
+            };
+
+            try {
+                const docDefinition = createPdfDocument(allMarkdown);
+                pdfMake.createPdf(docDefinition).download(filename);
+                showToast('PDF downloaded!');
+                restoreButton();
+            } catch (err) {
+                console.error('PDF Export error:', err);
+                showToast('PDF export failed: ' + err.message, 'error');
+                restoreButton();
+            }
+        }
+
+        function createPdfDocument(markdownText) {
+            const FONT_SIZE = 11;
+            const HEADER_SIZES = { 1: 16, 2: 14, 3: 13, 4: 12, 5: 11, 6: 11 };
+            const COLORS = {
+                header: '#3b82f6',
+                bold: '#10b981',
+                italic: '#8b5cf6',
+                text: '#1a1a1a'
+            };
+
+            const tokens = marked.lexer(markdownText);
+            const content = [];
+
+            function parseInlineForPdf(text) {
+                if (!text) return [{ text: '' }];
+                if (typeof text !== 'string') {
+                    text = String(text.raw || text.text || text);
+                }
+                text = text.replace(/<[^>]+>/g, '');
+
+                const result = [];
+                const pattern = /(\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?:[^*]|\*\*)+\*|`[^`]+`|~~(?:[^~]|~(?!~))+~~)/g;
+                const parts = text.split(pattern);
+
+                parts.forEach(part => {
+                    if (!part) return;
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        result.push({ text: part.slice(2, -2), bold: true, color: COLORS.bold });
+                    } else if (part.startsWith('~~') && part.endsWith('~~')) {
+                        result.push({ text: part.slice(2, -2), decoration: 'lineThrough' });
+                    } else if (part.startsWith('*') && part.endsWith('*')) {
+                        result.push({ text: part.slice(1, -1), italics: true, color: COLORS.italic });
+                    } else if (part.startsWith('`') && part.endsWith('`')) {
+                        result.push({ text: part.slice(1, -1), font: 'Courier', fontSize: FONT_SIZE - 1 });
+                    } else {
+                        result.push({ text: part });
+                    }
+                });
+                return result.length > 0 ? result : [{ text: text }];
+            }
+
+            function processListItems(items, ordered, level) {
+                const listContent = [];
+                items.forEach((item, idx) => {
+                    let itemText = '';
+                    if (item.tokens && item.tokens.length > 0) {
+                        const textToken = item.tokens.find(t => t.type === 'text' || t.type === 'paragraph');
+                        if (textToken) itemText = textToken.text || textToken.raw || '';
+                        else itemText = item.text || '';
+                    } else {
+                        itemText = item.text || '';
+                    }
+                    itemText = itemText.split('\n')[0].trim();
+
+                    if (itemText) {
+                        const indent = level * 15;
+                        const bullet = ordered ? `${idx + 1}. ` : '• ';
+                        listContent.push({
+                            text: [{ text: bullet }, ...parseInlineForPdf(itemText)],
+                            fontSize: FONT_SIZE,
+                            margin: [indent, 0, 0, 2]
+                        });
+                    }
+
+                    if (item.tokens) {
+                        item.tokens.forEach(subToken => {
+                            if (subToken.type === 'list') {
+                                listContent.push(...processListItems(subToken.items, subToken.ordered, level + 1));
+                            }
+                        });
+                    }
+                });
+                return listContent;
+            }
+
+            tokens.forEach(token => {
+                switch (token.type) {
+                    case 'heading':
+                        content.push({
+                            text: parseInlineForPdf(token.text),
+                            fontSize: HEADER_SIZES[token.depth] || FONT_SIZE,
+                            bold: true,
+                            color: COLORS.header,
+                            margin: [0, 8, 0, 4]
+                        });
+                        break;
+
+                    case 'paragraph':
+                        content.push({
+                            text: parseInlineForPdf(token.text),
+                            fontSize: FONT_SIZE,
+                            margin: [0, 0, 0, 4]
+                        });
+                        break;
+
+                    case 'list':
+                        content.push(...processListItems(token.items, token.ordered, 0));
+                        break;
+
+                    case 'table':
+                        const tableBody = [];
+                        // Header row
+                        if (token.header && token.header.length > 0) {
+                            tableBody.push(token.header.map(cell => {
+                                const cellText = typeof cell === 'string' ? cell :
+                                    (cell.tokens ? cell.tokens.map(t => t.text || t.raw || '').join('') :
+                                    (cell.text || cell.raw || String(cell || '')));
+                                return {
+                                    text: parseInlineForPdf(cellText),
+                                    bold: true,
+                                    fillColor: '#e0e7ff',
+                                    fontSize: FONT_SIZE,
+                                    margin: [2, 2, 2, 2]
+                                };
+                            }));
+                        }
+                        // Data rows
+                        if (token.rows && token.rows.length > 0) {
+                            token.rows.forEach((row, rowIdx) => {
+                                tableBody.push(row.map(cell => {
+                                    const cellText = typeof cell === 'string' ? cell :
+                                        (cell.tokens ? cell.tokens.map(t => t.text || t.raw || '').join('') :
+                                        (cell.text || cell.raw || String(cell || '')));
+                                    return {
+                                        text: parseInlineForPdf(cellText),
+                                        fontSize: FONT_SIZE,
+                                        fillColor: rowIdx % 2 === 0 ? '#f8fafc' : '#ffffff',
+                                        margin: [2, 2, 2, 2]
+                                    };
+                                }));
+                            });
+                        }
+                        if (tableBody.length > 0) {
+                            const colCount = tableBody[0].length;
+                            content.push({
+                                table: {
+                                    headerRows: 1,
+                                    widths: Array(colCount).fill('*'),
+                                    body: tableBody
+                                },
+                                layout: {
+                                    hLineWidth: () => 0.5,
+                                    vLineWidth: () => 0.5,
+                                    hLineColor: () => '#cbd5e1',
+                                    vLineColor: () => '#cbd5e1',
+                                    paddingLeft: () => 4,
+                                    paddingRight: () => 4,
+                                    paddingTop: () => 2,
+                                    paddingBottom: () => 2
+                                },
+                                margin: [0, 4, 0, 8]
+                            });
+                        }
+                        break;
+
+                    case 'code':
+                        // Split code into lines to preserve algorithm structure
+                        const codeLines = token.text.split('\n');
+                        const codeContent = codeLines.map(line => ({
+                            text: line || ' ',
+                            font: 'Courier',
+                            fontSize: 10,
+                            preserveLeadingSpaces: true
+                        }));
+                        content.push({
+                            stack: codeContent,
+                            fillColor: '#f0f0f0',
+                            margin: [0, 4, 0, 4]
+                        });
+                        break;
+
+                    case 'hr':
+                        content.push({
+                            canvas: [{
+                                type: 'line',
+                                x1: 0, y1: 0,
+                                x2: 515, y2: 0,
+                                lineWidth: 0.5,
+                                lineColor: '#cbd5e1'
+                            }],
+                            margin: [0, 8, 0, 8]
+                        });
+                        break;
+
+                    case 'blockquote':
+                        const blockquoteText = token.text || (token.tokens ? token.tokens.map(t => t.text || t.raw || '').join(' ') : '');
+                        content.push({
+                            text: parseInlineForPdf(blockquoteText),
+                            fontSize: FONT_SIZE,
+                            italics: true,
+                            margin: [20, 4, 0, 4],
+                            color: '#666666'
+                        });
+                        break;
+
+                    default:
+                        if (token.raw && token.raw.trim()) {
+                            content.push({
+                                text: token.raw.trim(),
+                                fontSize: FONT_SIZE,
+                                margin: [0, 0, 0, 2]
+                            });
+                        }
+                }
+            });
+
+            return {
+                pageSize: 'LETTER',
+                pageMargins: [7, 7, 7, 7], // 0.1 inch margins (7 points)
+                defaultStyle: {
+                    font: 'Helvetica',
+                    fontSize: FONT_SIZE,
+                    lineHeight: 1.0
+                },
+                content: content
+            };
         }
     </script>
 </body>
