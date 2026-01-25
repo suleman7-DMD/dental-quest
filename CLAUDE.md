@@ -412,79 +412,262 @@ function calculateFinancialStatus() {
 
 ## RECENT UPDATES (January 2026)
 
-### v33 Lecture Prompt v3.2-FINAL Implementation (Jan 25, 2026)
+### v33 Lecture Prompt v3.2-FINAL + Multi-Portion Workflow (Jan 25, 2026)
 
-#### Prompt Engineering Optimization (lecture-prompt-transformer.html)
-Implemented research-backed v3.2-FINAL prompt template based on extensive A/B testing across 4 trial runs.
+Extended session involving rigorous Analyst A/B debate to optimize lecture-to-notes prompt engineering.
 
-**Key Changes:**
-- **61% word count reduction** with no content loss (verified across Model 1 + Model 2)
-- **Workflow improvement:** 4-6 iterations → 1 iteration (70% time savings)
-- **7 cognitive-load-compliant sections** (consolidated from 13)
+---
 
-**New Features in DEFAULT_TEMPLATE:**
-- **INSTRUCTION PRIORITY section:** Clear hierarchy for conflict resolution
-- **CALIBRATION with density targets:** 500-800 words per 15-min portion
-- **Depth Tiering:** HIGH/MEDIUM/LOW YIELD classification
-- **Algorithm Code Blocks:** For branching decisions (YES/NO pathways)
-  ```
-  [Decision question?]
-      /    \
-    YES    NO
-     ↓      ↓
-  [Action] [Action]
-  ```
-- **Protocol Code Blocks:** For prescriptions/dosing (Rx/Disp/Sig format)
-- **Format Selection Priority:** Anti-overuse clause prevents format inflation
-- **Grounding rule:** Mark heavy inference with [INFERENCE]
+#### BACKGROUND: The Problem Being Solved
 
-**Technical Details:**
-- Template location: `DEFAULT_TEMPLATE` constant (line 1344)
-- Escaped backticks for code blocks: `\`\`\`` inside template literal
-- All 4 required placeholders preserved: [COURSE_NAME], [LECTURE_TOPIC], [SLIDE_TEXT], [AUDIO_TEXT]
-- Quick Edit "New (Optimized)" option now loads v3.2-FINAL
+**Sully's Original Workflow (Painful):**
+1. Download audio transcript from Echo360
+2. Download PDF lecture slides
+3. Break 1-2 hour lectures into 15-20 minute chunks (5-8 portions per lecture)
+4. Use comprehensive prompt to generate notes
+5. Output too long → use condensation prompt
+6. Manual markdown → Word conversion
+7. Run on both LLMs (Claude and Gemini), compare outputs
+8. **Pain point:** 4-6 iterations per lecture chunk, inconsistent results
 
-**Research Backing:**
-- Prompt repetition (Dec 2025 research)
-- Step-back prompting
-- Cognitive load theory (7±2 sections)
-- Pink Elephant Problem (reframe negatives as positives)
+**Goal:** Reduce iterations, improve consistency, create sustainable workflow for 5 exams in February.
 
-#### Multi-Portion Workflow System (NEW)
-Added intelligent portion-type selector for iterative lecture processing:
+---
 
-**Portion Types:**
-| Type | When to Use | Token Cost |
-|------|-------------|------------|
-| First Portion | Starting a new lecture (Portion 1) | ~600 tokens |
-| Continuation | Portions 2-4, 6-8 (Reinforcement Block) | ~65 tokens |
-| Checkpoint | Portion 5+ for long lectures (full prompt reset) | ~600 tokens |
-| Correction | When drift observed, fix + continue | ~80 tokens |
+#### PHASE 1: v3.2-FINAL Prompt Development
 
-**New Templates Added:**
-- `STANDARD_REINFORCEMENT_TEMPLATE` - Lightweight continuation block
-- `CORRECTION_TEMPLATE` - With priority-level insertion for corrections
+**Trial Run Results (4 trials across 2 models):**
+- Original prompt vs NEW prompt comparison
+- **Finding:** 61% word count reduction with no content loss
+- **Finding:** 4-6 iterations → 1 iteration (70% time savings)
 
-**Recommended Workflow:**
+**Research Applied:**
+| Technique | How Applied |
+|-----------|-------------|
+| Prompt Repetition (Dec 2025 Google Research) | Key instructions repeated, placed close to generation point |
+| Step-back Prompting | "Classify first, then format" processing pattern |
+| Cognitive Load Theory (7±2) | Consolidated from 13 sections to 7 sections |
+| Pink Elephant Problem | Reframed negatives as positives (what TO do, not what NOT to do) |
+| ReAct Framework | Classify → Format → Verify pattern |
+
+**v3.2-FINAL Key Features:**
+1. **INSTRUCTION PRIORITY section** - Clear hierarchy for conflict resolution
+2. **CALIBRATION** - 500-800 words per 15-min portion (flexible)
+3. **Depth Tiering** - HIGH/MEDIUM/LOW YIELD classification
+4. **Algorithm Code Blocks** - For branching decisions:
+   ```
+   [Decision question?]
+       /    \
+     YES    NO
+      ↓      ↓
+   [Action] [Action]
+   ```
+5. **Protocol Code Blocks** - For prescriptions (Rx/Disp/Sig format)
+6. **Format Selection Priority** - Anti-overuse clause prevents format inflation
+7. **Grounding Rule** - Mark heavy inference with [INFERENCE]
+8. **Synthesis Rule** - NO direct professor quotes (synthesize all content)
+
+---
+
+#### PHASE 2: Multi-Portion Workflow Debate (Analyst A vs B)
+
+**The Core Question:** How to handle portions 2-N within the same chat conversation?
+
+**Analyst B's Initial Proposal (Simple):**
+- Portion 1: Full prompt
+- Portions 2-N: Just paste content with `## NEXT PORTION` header
+- Rationale: Instructions already in context
+
+**Analyst A's Rebuttal:**
+- Cited prompt repetition research: Instructions at END of context have stronger influence
+- By Portion 5, original instructions buried under ~10,000 tokens
+- "Lost in the Middle" phenomenon: Models attend less to middle of long contexts
+- Simple continuation leads to DRIFT (model starts quoting directly, stops using tables)
+
+**Analyst B's Counter-Attack:**
+1. **Scope creep concern** - Reinforcement block getting bloated
+2. **Arbitrary checkpoint formula** - "Portion 5" has no empirical basis
+3. **Correction embedding conflicts** - Need hierarchical priority integration
+4. **Adaptive Reinforcement proposal** - Only reinforce what's actually drifting
+
+**Final Convergence (Both Analysts Agreed):**
+
+| Element | Converged Position |
+|---------|-------------------|
+| Reinforcement Block needed? | ✅ Yes |
+| Token budget | ~65 tokens (principled inclusion criteria) |
+| Checkpoint timing | Portion 5 for 8+ portion lectures (simple rule + behavioral override) |
+| Corrections | Priority-level insertion (2, 2.5, 3, 4) |
+| "PORTION X of ~Y" framing | ❌ Dropped (no proven benefit, estimate errors) |
+| A/B testing needed | ✅ Yes (theoretical debate has diminishing returns) |
+
+**Principled Inclusion Criteria for Reinforcement Block:**
+Include ONLY instructions that:
+1. Have high drift probability (synthesis rule drifts most)
+2. Are invisible in output (can't self-correct by looking)
+3. Are novel to v3.2-FINAL (algorithms/protocols may be forgotten)
+
+---
+
+#### PHASE 3: Implementation
+
+**Templates Added to lecture-prompt-transformer.html:**
+
+```javascript
+// Full prompt (~600 tokens)
+const DEFAULT_TEMPLATE = `# LECTURE NOTES TRANSFORMATION v3.2-FINAL...`
+
+// Reinforcement block (~65 tokens)
+const STANDARD_REINFORCEMENT_TEMPLATE = `## CONTINUATION - PORTION [PORTION_NUM]
+
+**Maintain v3.2-FINAL:**
+- NO direct quotes (synthesize)
+- Algorithm blocks for branching decisions
+- Protocol blocks for prescriptions/dosing
+- HIGH YIELD → full detail | LOW YIELD → one line or omit
+
+**Slides:**
+[SLIDE_TEXT]
+
+---
+
+**Transcript:**
+[AUDIO_TEXT]
+
+---
+
+Continue notes.`
+
+// Correction block (~80 tokens)
+const CORRECTION_TEMPLATE = `## CORRECTION + CONTINUATION - PORTION [PORTION_NUM]
+
+**Correction (Priority [CORRECTION_PRIORITY]):** [CORRECTION_TEXT]
+
+**Maintain v3.2-FINAL:**
+- NO direct quotes (synthesize)
+- Algorithm blocks for branching decisions
+- Protocol blocks for prescriptions/dosing
+- HIGH YIELD → full detail | LOW YIELD → one line or omit
+
+**Slides:**
+[SLIDE_TEXT]
+
+---
+
+**Transcript:**
+[AUDIO_TEXT]
+
+---
+
+Continue notes with correction applied.`
 ```
-Portion 1 → First Portion (full v3.2-FINAL)
-Portions 2-4 → Continuation (Reinforcement Block)
-Portion 5 → Checkpoint (full reset if 8+ portion lecture)
-Portions 6-8 → Continuation
-Portion 9+ → Consider new chat
+
+**UI Changes (Both Build + Transform Existing tabs):**
+- Portion Type dropdown: First Portion / Continuation / Checkpoint / Correction
+- Portion Number input (shown for non-first portions)
+- Correction fields: text input + priority dropdown
+- Help tooltip explaining each option
+
+**Functions Added:**
+- `updatePortionTypeUI()` - Show/hide fields based on selection
+- `updateTransformPortionTypeUI()` - Same for Transform tab
+- Modified `generateBuildPrompt()` and `generateTransformPrompt()` to handle all portion types
+
+---
+
+#### RECOMMENDED WORKFLOW
+
+**For Sully's typical 5-8 portion lectures (each lecture = separate chat):**
+
+```
+LECTURE START (new chat)
+├── Portion 1 → First Portion (full v3.2-FINAL)
+├── Portion 2 → Continuation
+├── Portion 3 → Continuation
+├── Portion 4 → Continuation
+├── Portion 5 → Checkpoint (if 6+ portions total)
+├── Portion 6 → Continuation
+├── Portion 7 → Continuation
+└── Portion 8 → Continuation
+
+DRIFT DETECTED AT ANY POINT?
+└── Use Correction instead, specify what's wrong + priority level
 ```
 
 **Correction Priority Levels:**
-- Priority 2: HIGH (after synthesis rule)
-- Priority 2.5: MID-HIGH (default)
-- Priority 3: MEDIUM (after HIGH YIELD rule)
-- Priority 4: LOW (sacrifice last)
+| Priority | Meaning | When to Use |
+|----------|---------|-------------|
+| 2 | HIGH | Right after synthesis rule (most important) |
+| 2.5 | MID-HIGH | Default, good for most corrections |
+| 3 | MEDIUM | After HIGH YIELD rule |
+| 4 | LOW | Sacrifice last if conflicts |
 
-**UI Changes:**
-- Portion Type dropdown in Build tab
-- Portion Number input (shown for continuation/checkpoint/correction)
-- Correction fields (text + priority) shown only for correction type
-- Help tooltip explaining each portion type
+**When to Use Each Portion Type:**
+| Situation | Select |
+|-----------|--------|
+| Starting any new lecture | First Portion |
+| Portions 2, 3, 4 in same chat | Continuation |
+| Portion 5+ of long lecture (8+ portions) | Checkpoint |
+| Model quoting directly, missing tables, etc. | Correction |
+
+---
+
+#### TESTING STATUS
+
+**Status:** User testing in progress (Jan 25, 2026)
+
+**What to Monitor:**
+- Format consistency across portions (tables, algorithms, no direct quotes)
+- Whether Continuation block maintains quality vs full prompt
+- Drift patterns that trigger Correction usage
+- Optimal checkpoint timing for different lecture lengths
+
+**Post-Testing TODO:**
+- Adjust Reinforcement Block content based on observed drift
+- Refine checkpoint timing formula if needed
+- Consider Adaptive Reinforcement (only reinforce drifting elements) as power-user option
+
+---
+
+#### TECHNICAL REFERENCE
+
+**File:** `lecture-prompt-transformer.html`
+
+**Key Constants:**
+- `DEFAULT_TEMPLATE` - Full v3.2-FINAL prompt (line ~1344)
+- `STANDARD_REINFORCEMENT_TEMPLATE` - Continuation block (line ~1493)
+- `CORRECTION_TEMPLATE` - Correction block (line ~1512)
+- `LEGACY_TEMPLATE` - Old simple format (kept for comparison)
+
+**Key Functions:**
+- `generateBuildPrompt()` - Build tab prompt generation
+- `generateTransformPrompt()` - Transform tab prompt generation
+- `updatePortionTypeUI()` - Build tab UI updates
+- `updateTransformPortionTypeUI()` - Transform tab UI updates
+- `getCurrentTemplate()` - Returns custom or default template
+
+**Placeholders:**
+- `[COURSE_NAME]` - Course name
+- `[LECTURE_TOPIC]` - Lecture topic
+- `[SLIDE_TEXT]` - Slide content
+- `[AUDIO_TEXT]` - Transcript content
+- `[PORTION_NUM]` - Portion number (continuation/correction)
+- `[CORRECTION_TEXT]` - What needs fixing (correction only)
+- `[CORRECTION_PRIORITY]` - Priority level (correction only)
+
+**localStorage:**
+- `lecturePromptTemplate` - Custom template storage
+- User must "Reset to Default" in Template tab to get v3.2-FINAL if old template cached
+
+---
+
+#### COMMITS (Jan 25, 2026)
+
+```
+82cb4c5 Add portion type selector to Transform Existing tab
+d9f8ab7 Add multi-portion workflow system to lecture transformer
+80d3cd6 Implement v3.2-FINAL lecture prompt template
+```
 
 ---
 
