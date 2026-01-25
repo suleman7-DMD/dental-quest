@@ -814,6 +814,45 @@
                     </div>
                 </div>
 
+                <!-- Portion Type Selector for Transform -->
+                <div class="input-row" style="margin-top: 12px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            Output Portion Type
+                            <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full v3.2-FINAL prompt&#10;Continuation: Lighter reinforcement block (~65 tokens)&#10;Checkpoint: Full prompt reset&#10;Correction: Fix drift + continue">?</span>
+                        </label>
+                        <select id="t-portion-type" onchange="updateTransformPortionTypeUI()" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="first">First Portion (Full v3.2-FINAL prompt)</option>
+                            <option value="continuation">Continuation (Reinforcement Block)</option>
+                            <option value="checkpoint">Checkpoint (Full prompt reset)</option>
+                            <option value="correction">Correction (Fix drift + continue)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="t-portion-num-group" style="display: none;">
+                        <label>Portion #</label>
+                        <input type="number" id="t-portion-num" min="2" value="2" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; width: 80px;">
+                    </div>
+                </div>
+
+                <!-- Correction Fields for Transform -->
+                <div id="t-correction-fields" style="display: none; margin-top: 12px; padding: 16px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div class="input-row">
+                        <div class="input-group" style="flex: 3;">
+                            <label style="color: #ef4444;">Correction Text</label>
+                            <input type="text" id="t-correction-text" placeholder="e.g., Emphasize clinical applications more" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label style="color: #ef4444;">Priority</label>
+                            <select id="t-correction-priority" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                                <option value="2">2 (HIGH)</option>
+                                <option value="2.5" selected>2.5 (MID-HIGH)</option>
+                                <option value="3">3 (MEDIUM)</option>
+                                <option value="4">4 (LOW)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="textarea-container">
                     <div class="textarea-header">
                         <span class="section-label">Original Prompt (paste your full old-format prompt)</span>
@@ -2219,19 +2258,54 @@ Continue notes with correction applied.`;
             const audioText = document.getElementById('t-extracted-audio').value || '[AUDIO TEXT NOT FOUND - PASTE MANUALLY]';
             const courseName = document.getElementById('t-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('t-lecture-topic').value || '[LECTURE_TOPIC]';
+            const portionType = document.getElementById('t-portion-type').value;
+            const portionNum = document.getElementById('t-portion-num').value || '2';
+            const correctionText = document.getElementById('t-correction-text').value || '[SPECIFY CORRECTION]';
+            const correctionPriority = document.getElementById('t-correction-priority').value || '2.5';
 
-            // Fixed: use global regex for replacement (consistent with other functions)
-            const newPrompt = getCurrentTemplate()
+            // Validate correction has text
+            if (portionType === 'correction' && !document.getElementById('t-correction-text').value.trim()) {
+                showToast('Please enter correction text', 'error');
+                return;
+            }
+
+            // Choose template based on portion type
+            let template;
+            let templateLabel = 'v3.2-FINAL';
+
+            if (portionType === 'continuation') {
+                template = STANDARD_REINFORCEMENT_TEMPLATE;
+                templateLabel = 'Continuation (Reinforcement)';
+            } else if (portionType === 'correction') {
+                template = CORRECTION_TEMPLATE;
+                templateLabel = 'Correction Block';
+            } else {
+                // First or Checkpoint - use full template
+                template = getCurrentTemplate();
+                templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.2-FINAL)' : 'First Portion (v3.2-FINAL)';
+            }
+
+            // Replace placeholders
+            const newPrompt = template
                 .replace(/\[COURSE_NAME\]/g, courseName)
                 .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
                 .replace(/\[SLIDE_TEXT\]/g, slideText)
-                .replace(/\[AUDIO_TEXT\]/g, audioText);
+                .replace(/\[AUDIO_TEXT\]/g, audioText)
+                .replace(/\[PORTION_NUM\]/g, portionNum)
+                .replace(/\[CORRECTION_TEXT\]/g, correctionText)
+                .replace(/\[CORRECTION_PRIORITY\]/g, correctionPriority);
 
             document.getElementById('t-new-prompt').value = newPrompt;
             updateStats('t-new-prompt');
 
             // Update verification panel
             updateVerification('t', slideText, audioText, courseName, lectureTopic);
+
+            // Update output label
+            const labelEl = document.querySelector('#transform-step-3 .section-label.green');
+            if (labelEl) {
+                labelEl.textContent = `New Optimized Prompt (${templateLabel})`;
+            }
 
             goToTransformStep(3);
             showToast('New prompt generated!');
@@ -2264,6 +2338,33 @@ Continue notes with correction applied.`;
             topicVerify.className = `verification-item ${topicValid ? 'success' : 'warning'}`;
         }
 
+        // Update UI for Transform tab portion type
+        function updateTransformPortionTypeUI() {
+            const portionType = document.getElementById('t-portion-type').value;
+            const portionNumGroup = document.getElementById('t-portion-num-group');
+            const correctionFields = document.getElementById('t-correction-fields');
+
+            if (portionType === 'first') {
+                portionNumGroup.style.display = 'none';
+                correctionFields.style.display = 'none';
+            } else if (portionType === 'correction') {
+                portionNumGroup.style.display = 'block';
+                correctionFields.style.display = 'block';
+            } else {
+                portionNumGroup.style.display = 'block';
+                correctionFields.style.display = 'none';
+            }
+
+            // Update portion number defaults for checkpoint
+            const portionNumInput = document.getElementById('t-portion-num');
+            if (portionType === 'checkpoint') {
+                portionNumInput.value = Math.max(portionNumInput.value, 5);
+                portionNumInput.min = 5;
+            } else {
+                portionNumInput.min = 2;
+            }
+        }
+
         function resetTransform() {
             document.getElementById('t-original-prompt').value = '';
             document.getElementById('t-extracted-slides').value = '';
@@ -2271,6 +2372,10 @@ Continue notes with correction applied.`;
             document.getElementById('t-new-prompt').value = '';
             document.getElementById('t-course-name').value = '';
             document.getElementById('t-lecture-topic').value = '';
+            document.getElementById('t-portion-type').value = 'first';
+            document.getElementById('t-portion-num').value = '2';
+            document.getElementById('t-correction-text').value = '';
+            updateTransformPortionTypeUI();
 
             // Reset stats
             ['t-original-prompt', 't-extracted-slides', 't-extracted-audio', 't-new-prompt'].forEach(updateStats);
