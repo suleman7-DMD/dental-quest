@@ -963,6 +963,45 @@
                     </div>
                 </div>
 
+                <!-- Portion Type Selector (for multi-portion workflow) -->
+                <div class="input-row" style="margin-top: 12px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            Portion Type
+                            <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full prompt for starting a lecture&#10;Continuation: Lighter reinforcement block for portions 2-4, 6-8&#10;Checkpoint: Full prompt reset at portion 5+ for long lectures&#10;Correction: When you notice drift and need to fix it">?</span>
+                        </label>
+                        <select id="b-portion-type" onchange="updatePortionTypeUI()" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="first">First Portion (Full v3.2-FINAL prompt)</option>
+                            <option value="continuation">Continuation (Reinforcement Block)</option>
+                            <option value="checkpoint">Checkpoint (Full prompt reset)</option>
+                            <option value="correction">Correction (Fix drift + continue)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="portion-num-group" style="display: none;">
+                        <label>Portion #</label>
+                        <input type="number" id="b-portion-num" min="2" value="2" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; width: 80px;">
+                    </div>
+                </div>
+
+                <!-- Correction Fields (shown only for Correction type) -->
+                <div id="correction-fields" style="display: none; margin-top: 12px; padding: 16px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div class="input-row">
+                        <div class="input-group" style="flex: 3;">
+                            <label style="color: #ef4444;">Correction Text (what needs fixing)</label>
+                            <input type="text" id="b-correction-text" placeholder="e.g., Emphasize clinical applications more" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label style="color: #ef4444;">Priority Level</label>
+                            <select id="b-correction-priority" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                                <option value="2">2 (HIGH - after synthesis rule)</option>
+                                <option value="2.5" selected>2.5 (MID-HIGH)</option>
+                                <option value="3">3 (MEDIUM - after HIGH YIELD)</option>
+                                <option value="4">4 (LOW - sacrifice last)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dual-pane">
                     <div class="textarea-container">
                         <div class="textarea-header">
@@ -1489,6 +1528,50 @@ Exception: Direct quotes allowed ONLY for mnemonics, exam logistics, or explicit
 ---
 
 Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for comparisons, algorithms for branching decisions, scannable structure. Begin.`;
+
+        // Standard Reinforcement Block for Portions 2-4, 6-8 (~65 tokens)
+        const STANDARD_REINFORCEMENT_TEMPLATE = `## CONTINUATION - PORTION [PORTION_NUM]
+
+**Maintain v3.2-FINAL:**
+- NO direct quotes (synthesize)
+- Algorithm blocks for branching decisions
+- Protocol blocks for prescriptions/dosing
+- HIGH YIELD → full detail | LOW YIELD → one line or omit
+
+**Slides:**
+[SLIDE_TEXT]
+
+---
+
+**Transcript:**
+[AUDIO_TEXT]
+
+---
+
+Continue notes.`;
+
+        // Correction Block template with priority insertion
+        const CORRECTION_TEMPLATE = `## CORRECTION + CONTINUATION - PORTION [PORTION_NUM]
+
+**Correction (Priority [CORRECTION_PRIORITY]):** [CORRECTION_TEXT]
+
+**Maintain v3.2-FINAL:**
+- NO direct quotes (synthesize)
+- Algorithm blocks for branching decisions
+- Protocol blocks for prescriptions/dosing
+- HIGH YIELD → full detail | LOW YIELD → one line or omit
+
+**Slides:**
+[SLIDE_TEXT]
+
+---
+
+**Transcript:**
+[AUDIO_TEXT]
+
+---
+
+Continue notes with correction applied.`;
 
         // ==================== TEMPLATE MANAGEMENT ====================
         const TEMPLATE_STORAGE_KEY = 'lecturePromptTemplate';
@@ -2221,6 +2304,10 @@ Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for co
             const courseName = document.getElementById('b-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('b-lecture-topic').value || '[LECTURE_TOPIC]';
             const templateChoice = document.getElementById('b-template-choice').value;
+            const portionType = document.getElementById('b-portion-type').value;
+            const portionNum = document.getElementById('b-portion-num').value || '2';
+            const correctionText = document.getElementById('b-correction-text').value || '[SPECIFY CORRECTION]';
+            const correctionPriority = document.getElementById('b-correction-priority').value || '2.5';
 
             // Validation
             if (!slideText.trim() && !audioText.trim()) {
@@ -2228,39 +2315,60 @@ Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for co
                 return;
             }
 
+            // Validate correction type has correction text
+            if (portionType === 'correction' && !document.getElementById('b-correction-text').value.trim()) {
+                showToast('Please enter correction text', 'error');
+                return;
+            }
+
             const finalSlideText = slideText.trim() || '[SLIDE TEXT NOT PROVIDED]';
             const finalAudioText = audioText.trim() || '[AUDIO TEXT NOT PROVIDED]';
 
-            // Choose template based on selection
+            // Choose template based on PORTION TYPE first, then output template
             let template;
             let templateLabel = 'Optimized';
 
-            if (templateChoice === 'legacy') {
-                template = LEGACY_TEMPLATE;
-                templateLabel = 'Legacy';
-            } else if (templateChoice === 'new') {
-                template = getCurrentTemplate(); // Uses custom or default new template
-                templateLabel = 'Optimized';
-            } else if (templateChoice.startsWith('custom:')) {
-                // Custom saved template
-                const customName = templateChoice.replace('custom:', '');
-                const savedTemplates = getQuickEditTemplates();
-                if (savedTemplates[customName] && savedTemplates[customName].fullTemplate) {
-                    template = savedTemplates[customName].fullTemplate;
-                    templateLabel = customName;
+            // Portion type determines which template structure to use
+            if (portionType === 'continuation') {
+                template = STANDARD_REINFORCEMENT_TEMPLATE;
+                templateLabel = 'Continuation (Reinforcement)';
+            } else if (portionType === 'correction') {
+                template = CORRECTION_TEMPLATE;
+                templateLabel = 'Correction Block';
+            } else if (portionType === 'checkpoint' || portionType === 'first') {
+                // Checkpoint and First both use full prompt
+                if (templateChoice === 'legacy') {
+                    template = LEGACY_TEMPLATE;
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (Legacy)' : 'First Portion (Legacy)';
+                } else if (templateChoice === 'new') {
+                    template = getCurrentTemplate();
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.2-FINAL)' : 'First Portion (v3.2-FINAL)';
+                } else if (templateChoice.startsWith('custom:')) {
+                    const customName = templateChoice.replace('custom:', '');
+                    const savedTemplates = getQuickEditTemplates();
+                    if (savedTemplates[customName] && savedTemplates[customName].fullTemplate) {
+                        template = savedTemplates[customName].fullTemplate;
+                        templateLabel = portionType === 'checkpoint' ? `Checkpoint (${customName})` : `First Portion (${customName})`;
+                    } else {
+                        showToast('Custom template not found, using default', 'error');
+                        template = getCurrentTemplate();
+                    }
                 } else {
-                    showToast('Custom template not found, using default', 'error');
                     template = getCurrentTemplate();
                 }
             } else {
                 template = getCurrentTemplate();
             }
 
-            const newPrompt = template
+            // Replace placeholders
+            let newPrompt = template
                 .replace(/\[COURSE_NAME\]/g, courseName)
                 .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
                 .replace(/\[SLIDE_TEXT\]/g, finalSlideText)
-                .replace(/\[AUDIO_TEXT\]/g, finalAudioText);
+                .replace(/\[AUDIO_TEXT\]/g, finalAudioText)
+                .replace(/\[PORTION_NUM\]/g, portionNum)
+                .replace(/\[CORRECTION_TEXT\]/g, correctionText)
+                .replace(/\[CORRECTION_PRIORITY\]/g, correctionPriority);
 
             document.getElementById('b-new-prompt').value = newPrompt;
             updateStats('b-new-prompt');
@@ -2271,11 +2379,39 @@ Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for co
             // Update label to show which template was used
             const labelEl = document.querySelector('#build-step-2 .section-label.green');
             if (labelEl) {
-                labelEl.textContent = `New Prompt (${templateLabel} Format)`;
+                labelEl.textContent = `New Prompt (${templateLabel})`;
             }
 
             goToBuildStep(2);
             showToast(`Prompt created with ${templateLabel} template!`);
+        }
+
+        // Update UI based on portion type selection
+        function updatePortionTypeUI() {
+            const portionType = document.getElementById('b-portion-type').value;
+            const portionNumGroup = document.getElementById('portion-num-group');
+            const correctionFields = document.getElementById('correction-fields');
+
+            // Show portion number for continuation, checkpoint, correction
+            if (portionType === 'first') {
+                portionNumGroup.style.display = 'none';
+                correctionFields.style.display = 'none';
+            } else if (portionType === 'correction') {
+                portionNumGroup.style.display = 'block';
+                correctionFields.style.display = 'block';
+            } else {
+                portionNumGroup.style.display = 'block';
+                correctionFields.style.display = 'none';
+            }
+
+            // Update portion number defaults
+            const portionNumInput = document.getElementById('b-portion-num');
+            if (portionType === 'checkpoint') {
+                portionNumInput.value = Math.max(portionNumInput.value, 5);
+                portionNumInput.min = 5;
+            } else {
+                portionNumInput.min = 2;
+            }
         }
 
         function resetBuild() {
@@ -2284,6 +2420,10 @@ Produce exam-ready notes. Reminder: NO direct quotes (synthesize), tables for co
             document.getElementById('b-new-prompt').value = '';
             document.getElementById('b-course-name').value = '';
             document.getElementById('b-lecture-topic').value = '';
+            document.getElementById('b-portion-type').value = 'first';
+            document.getElementById('b-portion-num').value = '2';
+            document.getElementById('b-correction-text').value = '';
+            updatePortionTypeUI();
 
             ['b-slide-text', 'b-audio-text', 'b-new-prompt'].forEach(updateStats);
 

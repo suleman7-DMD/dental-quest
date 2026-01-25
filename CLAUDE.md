@@ -450,6 +450,42 @@ Implemented research-backed v3.2-FINAL prompt template based on extensive A/B te
 - Cognitive load theory (7±2 sections)
 - Pink Elephant Problem (reframe negatives as positives)
 
+#### Multi-Portion Workflow System (NEW)
+Added intelligent portion-type selector for iterative lecture processing:
+
+**Portion Types:**
+| Type | When to Use | Token Cost |
+|------|-------------|------------|
+| First Portion | Starting a new lecture (Portion 1) | ~600 tokens |
+| Continuation | Portions 2-4, 6-8 (Reinforcement Block) | ~65 tokens |
+| Checkpoint | Portion 5+ for long lectures (full prompt reset) | ~600 tokens |
+| Correction | When drift observed, fix + continue | ~80 tokens |
+
+**New Templates Added:**
+- `STANDARD_REINFORCEMENT_TEMPLATE` - Lightweight continuation block
+- `CORRECTION_TEMPLATE` - With priority-level insertion for corrections
+
+**Recommended Workflow:**
+```
+Portion 1 → First Portion (full v3.2-FINAL)
+Portions 2-4 → Continuation (Reinforcement Block)
+Portion 5 → Checkpoint (full reset if 8+ portion lecture)
+Portions 6-8 → Continuation
+Portion 9+ → Consider new chat
+```
+
+**Correction Priority Levels:**
+- Priority 2: HIGH (after synthesis rule)
+- Priority 2.5: MID-HIGH (default)
+- Priority 3: MEDIUM (after HIGH YIELD rule)
+- Priority 4: LOW (sacrifice last)
+
+**UI Changes:**
+- Portion Type dropdown in Build tab
+- Portion Number input (shown for continuation/checkpoint/correction)
+- Correction fields (text + priority) shown only for correction type
+- Help tooltip explaining each portion type
+
 ---
 
 ### v32.1 Deep Audit & Cross-App Enhancements (Jan 23, 2026)
