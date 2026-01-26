@@ -2539,6 +2539,435 @@
                 max-height: 90vh;
             }
         }
+
+        /* ============================================
+           BODY COMP TRACKER V2.0 - NEW STYLES
+           ============================================ */
+
+        /* Body Composition Trend Card */
+        .comp-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .comp-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .comp-status {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .comp-status.success {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .comp-status.warning {
+            background: var(--accent-yellow-dim);
+            color: var(--accent-yellow);
+        }
+
+        .comp-status.danger {
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+        }
+
+        .comp-status.neutral {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .comp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .comp-stat {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+
+        .comp-stat-value {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .comp-stat-value.positive {
+            color: var(--accent-green);
+        }
+
+        .comp-stat-value.negative {
+            color: var(--accent-red);
+        }
+
+        .comp-stat-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .comp-stat-detail {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .comp-ratio {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .comp-footer {
+            text-align: center;
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+
+        .comp-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Nudge/Alert Banner */
+        .nudge-banner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid;
+        }
+
+        .nudge-banner.warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .nudge-banner.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .nudge-banner.success {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .nudge-banner.info {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .nudge-icon {
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .nudge-text {
+            flex: 1;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: var(--text-primary);
+        }
+
+        .nudge-dismiss {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.4em;
+            cursor: pointer;
+            padding: 0 5px;
+            line-height: 1;
+        }
+
+        .nudge-dismiss:hover {
+            color: var(--text-primary);
+        }
+
+        /* Refeed Tracker Card */
+        .refeed-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .refeed-card.alert {
+            border-color: var(--accent-yellow);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--bg-secondary));
+        }
+
+        .refeed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .refeed-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .refeed-badge {
+            background: var(--accent-yellow);
+            color: #000;
+            font-size: 0.7em;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .refeed-progress-container {
+            margin-bottom: 12px;
+        }
+
+        .refeed-progress-bar {
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .refeed-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-yellow));
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .refeed-card.alert .refeed-progress-fill {
+            background: var(--accent-yellow);
+        }
+
+        .refeed-progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .refeed-remaining {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .refeed-message {
+            background: var(--accent-yellow-dim);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .refeed-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-yellow);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refeed-btn:hover {
+            background: #fbbf24;
+            transform: translateY(-1px);
+        }
+
+        .refeed-last {
+            text-align: center;
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        /* TDEE Breakdown Display */
+        .tdee-breakdown {
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            padding: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* Meal Actions */
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .meal-item:last-child {
+            border-bottom: none;
+        }
+
+        .meal-info {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .meal-time {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+
+        .meal-macros {
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .meal-calories {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .meal-protein {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .meal-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .meal-item:hover .meal-actions {
+            opacity: 1;
+        }
+
+        .meal-action-btn {
+            background: none;
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .meal-action-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .meal-action-btn.delete:hover {
+            background: var(--accent-red-dim);
+        }
+
+        .meal-delete {
+            display: none;
+        }
+
+        .no-meals {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Export Sections */
+        .export-section {
+            margin-bottom: 20px;
+        }
+
+        .export-section-title {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .export-text {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            font-family: 'Monaco', 'Menlo', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--text-primary);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .export-text.claude-format {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .copy-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-green-dim);
+        }
+
+        .copy-btn.claude {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .copy-btn.claude:hover {
+            background: rgba(139, 92, 246, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -2690,6 +3119,9 @@
                 </div>
             </div>
 
+            <!-- TDEE Breakdown -->
+            <div id="tdeeBreakdown" class="tdee-breakdown"></div>
+
             <!-- Progress Section -->
             <div class="progress-section">
                 <div class="progress-header">
@@ -2777,6 +3209,12 @@
 
             <!-- PROGRESS TAB -->
             <div id="progressTab" class="tab-content">
+                <!-- Body Composition Trend -->
+                <div id="bodyCompTrend"></div>
+
+                <!-- Refeed Tracker -->
+                <div id="refeedTracker"></div>
+
                 <!-- Summer Cut Goal Card -->
                 <div class="summer-goal-card">
                     <div class="goal-header">
@@ -3070,6 +3508,14 @@
                     <input type="number" id="weightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
                 </div>
 
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label">Body fat % (from smart scale, optional)</label>
+                    <input type="number" id="bodyFatInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                    <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">
+                        Leave blank if not using smart scale
+                    </div>
+                </div>
+
                 <div class="weight-trend" id="weightTrend">
                     <!-- Populated by JS -->
                 </div>
@@ -3091,7 +3537,8 @@
                     <!-- Generated export text -->
                 </div>
                 <div class="export-actions">
-                    <button class="copy-btn" onclick="copyExport()">📋 Copy to Clipboard</button>
+                    <button class="copy-btn" onclick="copyExport()">📋 Copy Full Report</button>
+                    <button class="copy-btn claude" onclick="copyClaudeExport()">🤖 Copy for Claude</button>
                 </div>
             </div>
         </div>
@@ -3373,10 +3820,41 @@
             return Math.round((10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5);
         }
 
-        function calculateTDEE(weight_lbs, height_cm, age, activeCalories) {
+        function calculateTDEE(weight_lbs, height_cm, age, todayActiveCalories) {
             const bmr = calculateBMR(weight_lbs, height_cm, age);
-            // TDEE = BMR + active calories from Apple Watch
-            return bmr + (activeCalories || 0);
+
+            // Get recent active calories from daily logs for 7-day rolling average
+            const recentLogs = Object.values(state.dailyLogs)
+                .filter(log => log.activeCalories != null && log.activeCalories > 0)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 7);
+
+            let avgActiveCalories;
+
+            if (recentLogs.length >= 3) {
+                // Use 7-day average if we have enough data
+                const sum = recentLogs.reduce((total, log) => total + log.activeCalories, 0);
+                avgActiveCalories = Math.round(sum / recentLogs.length);
+            } else {
+                // Fall back to today's input if not enough history
+                avgActiveCalories = todayActiveCalories || 0;
+            }
+
+            return bmr + avgActiveCalories;
+        }
+
+        // Get 7-day average active calories for display
+        function get7DayAvgActiveCalories() {
+            const recentLogs = Object.values(state.dailyLogs)
+                .filter(log => log.activeCalories != null && log.activeCalories > 0)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 7);
+
+            if (recentLogs.length >= 3) {
+                const sum = recentLogs.reduce((total, log) => total + log.activeCalories, 0);
+                return { avg: Math.round(sum / recentLogs.length), days: recentLogs.length };
+            }
+            return { avg: state.today.activeCalories || 0, days: 0 };
         }
 
         function calculateMode(sleepHours, isBrainDay) {
@@ -3485,6 +3963,18 @@
             document.getElementById('targetProtein').textContent = targets.protein;
             document.getElementById('targetFloor').textContent = formatNumber(targets.floor);
 
+            // TDEE Breakdown display
+            const bmr = calculateBMR(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age);
+            const activeInfo = get7DayAvgActiveCalories();
+            const tdeeBreakdown = document.getElementById('tdeeBreakdown');
+            if (tdeeBreakdown) {
+                tdeeBreakdown.innerHTML = `
+                    BMR: ${formatNumber(bmr)} + Active: ${activeInfo.avg}
+                    ${activeInfo.days >= 3 ? `<span style="color: var(--text-muted)">(${activeInfo.days}-day avg)</span>` : ''}
+                    = TDEE: ${formatNumber(bmr + activeInfo.avg)}
+                `;
+            }
+
             // Progress bars
             const calPercent = Math.min((totals.calories / targets.calories) * 100, 100);
             const proteinPercent = Math.min((totals.protein / targets.protein) * 100, 100);
@@ -3536,7 +4026,7 @@
             const meals = state.today.meals || [];
 
             if (meals.length === 0) {
-                mealsList.innerHTML = '<div class="empty-state">No meals logged yet. Tap + Add Meal to start.</div>';
+                mealsList.innerHTML = '<div class="no-meals">No meals logged yet. Tap + Add Meal to start.</div>';
                 return;
             }
 
@@ -3550,7 +4040,10 @@
                         <div class="meal-calories">${meal.calories} cal</div>
                         <div class="meal-protein">${meal.protein}g protein</div>
                     </div>
-                    <button class="meal-delete" onclick="deleteMeal(${index})">×</button>
+                    <div class="meal-actions">
+                        <button class="meal-action-btn" onclick="editMeal(${index})" title="Edit">✏️</button>
+                        <button class="meal-action-btn delete" onclick="deleteMeal(${index})" title="Delete">🗑️</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -3571,6 +4064,8 @@
         // ============================================
         // MEAL MANAGEMENT
         // ============================================
+
+        let editingMealIndex = null;
 
         function openAddMealModal() {
             renderFrequentFoods();
@@ -3597,6 +4092,43 @@
 
         function closeAddMealModal() {
             document.getElementById('addMealModal').classList.remove('active');
+
+            // Reset form
+            document.getElementById('mealNameInput').value = '';
+            document.getElementById('mealCalInput').value = '';
+            document.getElementById('mealProteinInput').value = '';
+            document.getElementById('mealCarbsInput').value = '';
+
+            // Reset title and button
+            const modalTitle = document.querySelector('#addMealModal .modal-title');
+            const submitBtn = document.querySelector('#addMealModal .submit-btn');
+            if (modalTitle) modalTitle.textContent = '🍽️ Add Meal';
+            if (submitBtn) submitBtn.textContent = 'Add Meal';
+
+            editingMealIndex = null;
+        }
+
+        function editMeal(index) {
+            const meal = state.today.meals[index];
+            if (!meal) return;
+
+            editingMealIndex = index;
+
+            // Pre-fill the form
+            document.getElementById('mealNameInput').value = meal.name;
+            document.getElementById('mealCalInput').value = meal.calories;
+            document.getElementById('mealProteinInput').value = meal.protein;
+            document.getElementById('mealCarbsInput').value = meal.carbs || 0;
+
+            // Change modal title and button
+            const modalTitle = document.querySelector('#addMealModal .modal-title');
+            const submitBtn = document.querySelector('#addMealModal .submit-btn');
+
+            if (modalTitle) modalTitle.textContent = '✏️ Edit Meal';
+            if (submitBtn) submitBtn.textContent = 'Update Meal';
+
+            // Open modal
+            document.getElementById('addMealModal').classList.add('active');
         }
 
         function addFrequentFood(foodId) {
@@ -3650,36 +4182,45 @@
                 return;
             }
 
-            // Add meal
+            // Create meal object
             const meal = {
-                id: 'meal_' + Date.now(),
+                id: editingMealIndex !== null ? state.today.meals[editingMealIndex].id : 'meal_' + Date.now(),
                 name: name,
                 calories: calories,
                 protein: protein,
                 carbs: carbs,
-                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                time: editingMealIndex !== null ? state.today.meals[editingMealIndex].time : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
                 fromLibrary: false
             };
 
-            state.today.meals.push(meal);
-
-            // Save to frequent foods if checked
-            if (saveToFrequent) {
-                const newFood = {
-                    id: 'ff_custom_' + Date.now(),
-                    name: name,
-                    calories: calories,
-                    protein: protein,
-                    uses: 1
-                };
-                state.frequentFoods.push(newFood);
-                showToast(`✓ Added ${name} to frequent foods`);
+            if (editingMealIndex !== null) {
+                // Update existing meal
+                state.today.meals[editingMealIndex] = meal;
+                editingMealIndex = null;
+                showToast('✓ Meal updated');
             } else {
-                showToast(`✓ Added ${name}`);
-            }
+                // Add new meal
+                state.today.meals.push(meal);
 
-            // Award XP for logging meal
-            awardXP(XP_REWARDS.logMeal, 'Meal logged');
+                // Save to frequent foods if checked
+                if (saveToFrequent) {
+                    const newFood = {
+                        id: 'ff_custom_' + Date.now(),
+                        name: name,
+                        calories: calories,
+                        protein: protein,
+                        carbs: carbs,
+                        uses: 1
+                    };
+                    state.frequentFoods.push(newFood);
+                    showToast(`✓ Added ${name} to frequent foods`);
+                } else {
+                    showToast(`✓ Added ${name}`);
+                }
+
+                // Award XP for logging meal (only for new meals)
+                awardXP(XP_REWARDS.logMeal, 'Meal logged');
+            }
 
             saveState();
             renderMealsList();
@@ -3840,9 +4381,20 @@
 
             let nudge = null;
 
+            // PRIORITY 1: SEVERE UNDEREATING by 5pm - DANGER LEVEL
+            // <1000 cal by 5pm is metabolic sabotage on stimulants
+            if (hour >= 17 && totals.calories < 1000 && !dismissedNudges.has('severe_undereating')) {
+                nudge = {
+                    id: 'severe_undereating',
+                    type: 'danger',
+                    icon: '🚨',
+                    text: `Only ${totals.calories} cal by 5pm — stimulant appetite suppression may be masking hunger. Eat a real meal tonight.`
+                };
+            }
+
             // STIMULANT CRASH PROTECTION: 4-5 PM + <1200 cal
             // The Adderall crash hits around 4-5 PM, creating binge risk
-            if ((hour === 16 || hour === 17) && totals.calories < 1200 && !dismissedNudges.has('crash_warning')) {
+            else if ((hour === 16 || hour === 17) && totals.calories < 1200 && !dismissedNudges.has('crash_warning')) {
                 nudge = {
                     id: 'crash_warning',
                     type: 'crash-warning',
@@ -3851,8 +4403,18 @@
                 };
             }
 
-            // 3 PM + <1000 cal
-            if (hour >= 15 && hour < 16 && totals.calories < 1000 && !dismissedNudges.has('low_intake')) {
+            // MODERATE UNDEREATING: 3 PM + <600 cal
+            else if (hour >= 15 && hour < 17 && totals.calories < 600 && !dismissedNudges.has('moderate_undereating')) {
+                nudge = {
+                    id: 'moderate_undereating',
+                    type: 'warning',
+                    icon: '⚠️',
+                    text: `${totals.calories} cal so far — you're way under. Don't let Adderall trick you into skipping meals.`
+                };
+            }
+
+            // 3 PM + <1000 cal (lighter warning)
+            else if (hour >= 15 && hour < 16 && totals.calories < 1000 && !dismissedNudges.has('low_intake')) {
                 nudge = {
                     id: 'low_intake',
                     type: 'warning',
@@ -3861,8 +4423,19 @@
                 };
             }
 
+            // PROTEIN BEHIND at dinner time: 6pm + <50% of target
+            else if (hour >= 18 && totals.protein < targets.protein * 0.5 && !dismissedNudges.has('protein_critical')) {
+                const needed = targets.protein - totals.protein;
+                nudge = {
+                    id: 'protein_critical',
+                    type: 'warning',
+                    icon: '🥩',
+                    text: `Protein at ${totals.protein}g — need ${needed}g more tonight to preserve muscle.`
+                };
+            }
+
             // 8 PM + protein < 80%
-            if (hour >= 20 && totals.protein < targets.protein * 0.8 && !dismissedNudges.has('protein_reminder')) {
+            else if (hour >= 20 && totals.protein < targets.protein * 0.8 && !dismissedNudges.has('protein_reminder')) {
                 const shortfall = targets.protein - totals.protein;
                 nudge = {
                     id: 'protein_reminder',
@@ -3873,7 +4446,7 @@
             }
 
             // 6 PM + Brain Day + carbs < 100
-            if (hour >= 18 && state.today.isBrainDay && totals.carbs < 100 && !dismissedNudges.has('brain_fuel')) {
+            else if (hour >= 18 && state.today.isBrainDay && totals.carbs < 100 && !dismissedNudges.has('brain_fuel')) {
                 nudge = {
                     id: 'brain_fuel',
                     type: 'warning',
@@ -4055,6 +4628,8 @@
 
         function saveWeighIn() {
             const weight = parseFloat(document.getElementById('weightInput').value);
+            const bodyFatInput = document.getElementById('bodyFatInput');
+            const bodyFat = bodyFatInput ? parseFloat(bodyFatInput.value) || null : null;
 
             if (isNaN(weight) || weight < 100 || weight > 400) {
                 showToast('Please enter a valid weight (100-400 lbs)');
@@ -4063,7 +4638,10 @@
 
             const weighIn = {
                 date: getLocalDateString(),
-                weight: weight
+                weight: weight,
+                bodyFat: bodyFat,
+                leanMass: bodyFat ? Math.round((weight * (1 - bodyFat / 100)) * 10) / 10 : null,
+                fatMass: bodyFat ? Math.round((weight * (bodyFat / 100)) * 10) / 10 : null
             };
 
             // Check if already weighed in today
@@ -4079,6 +4657,9 @@
 
             // Update current weight in profile
             state.profile.currentWeight_lbs = weight;
+            if (bodyFat) {
+                state.profile.currentBodyFat = bodyFat;
+            }
 
             // Award XP for weekly weigh-in (only for new weigh-ins)
             if (isNewWeighIn) {
@@ -4114,7 +4695,8 @@
             saveState();
             closeWeighInModal();
             renderDashboard();
-            showToast(`✓ Weight logged: ${weight} lbs`);
+            renderProgressTab();
+            showToast(`✓ Weight logged: ${weight} lbs` + (bodyFat ? ` @ ${bodyFat}% BF` : ''));
         }
 
         // ============================================
@@ -4123,7 +4705,16 @@
 
         function openExportModal() {
             const preview = document.getElementById('exportPreview');
-            preview.textContent = generateExportText();
+            preview.innerHTML = `
+                <div class="export-section">
+                    <div class="export-section-title">Full Report</div>
+                    <pre class="export-text">${generateExportText()}</pre>
+                </div>
+                <div class="export-section">
+                    <div class="export-section-title">Claude Format (Parseable)</div>
+                    <pre class="export-text claude-format">${generateClaudeExport()}</pre>
+                </div>
+            `;
             document.getElementById('exportModal').classList.add('active');
         }
 
@@ -4261,6 +4852,94 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             });
         }
 
+        // Calculate week stats for export
+        function calculateWeekStats() {
+            const today = new Date();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay()); // Sunday
+
+            let totalDeficit = 0;
+            let perfectDays = 0;
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + i);
+                const dateStr = getLocalDateString(date);
+                const log = state.dailyLogs[dateStr];
+
+                if (log) {
+                    totalDeficit += log.deficit || 0;
+                    if (log.perfect) perfectDays++;
+                }
+            }
+
+            return { totalDeficit: Math.round(totalDeficit), perfectDays };
+        }
+
+        // Generate structured export for Claude
+        function generateClaudeExport() {
+            const totals = getTodayTotals();
+            const targets = state.today.targets;
+            const mode = state.today.mode || 'GREEN';
+            const deficit = getCurrentDeficit();
+            const date = getLocalDateString();
+
+            // Get recent weigh-in
+            const recentWeighIn = state.weighIns.length > 0
+                ? state.weighIns[state.weighIns.length - 1]
+                : null;
+
+            // Calculate week stats
+            const weekStats = calculateWeekStats();
+
+            // Build structured export
+            let export_str = `BODY_COMP_LOG|${date}\n`;
+            export_str += `SLEEP:${state.today.sleepHours || 0}h|MODE:${mode}\n`;
+            export_str += `TARGET_CAL:${targets.calories}|ACTUAL_CAL:${totals.calories}|DEFICIT:${deficit}\n`;
+            export_str += `TARGET_PROTEIN:${targets.protein}g|ACTUAL_PROTEIN:${totals.protein}g\n`;
+            export_str += `FLOOR:${targets.floor}|ACTIVE_CAL:${state.today.activeCalories || 0}\n`;
+            export_str += `MEALS:${state.today.meals.length}\n`;
+
+            if (recentWeighIn) {
+                export_str += `WEIGHT:${recentWeighIn.weight}`;
+                if (recentWeighIn.bodyFat) {
+                    export_str += `|BF:${recentWeighIn.bodyFat}%`;
+                    export_str += `|LEAN:${recentWeighIn.leanMass}|FAT:${recentWeighIn.fatMass}`;
+                }
+                export_str += `\n`;
+            }
+
+            export_str += `GOAL:${state.profile.goalWeight_lbs}|REMAINING:${(state.profile.currentWeight_lbs - state.profile.goalWeight_lbs).toFixed(1)}\n`;
+            export_str += `WEEK_DEFICIT:${weekStats.totalDeficit}|WEEK_PERFECT:${weekStats.perfectDays}/7\n`;
+            export_str += `CUMULATIVE_DEFICIT:${state.refeedTracker.cumulativeDeficit || 0}\n`;
+            export_str += `STREAK:${state.gamification.streak}|XP:${state.gamification.xp}\n`;
+            export_str += `---\n`;
+            export_str += `MEALS:${state.today.meals.map(m => `${m.name}(${m.calories}cal/${m.protein}g)`).join('|')}\n`;
+
+            // Add status flags
+            let flags = [];
+            if (totals.calories < 1000) flags.push('UNDEREATING');
+            if (totals.protein < targets.protein * 0.8) flags.push('LOW_PROTEIN');
+            if ((state.refeedTracker.cumulativeDeficit || 0) >= 7000) flags.push('NEEDS_REFEED');
+            if (state.today.sleepHours && state.today.sleepHours < 5) flags.push('SLEEP_DEPRIVED');
+            if (deficit < 0) flags.push('SURPLUS');
+
+            if (flags.length > 0) {
+                export_str += `FLAGS:${flags.join(',')}\n`;
+            }
+
+            return export_str;
+        }
+
+        function copyClaudeExport() {
+            const text = generateClaudeExport();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✓ Copied Claude format');
+            }).catch(() => {
+                showToast('Failed to copy');
+            });
+        }
+
         // ============================================
         // SETTINGS
         // ============================================
@@ -4359,8 +5038,28 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         frequentFoods: loaded.frequentFoods || state.frequentFoods,
                         weighIns: loaded.weighIns || [],
                         dailyLogs: loaded.dailyLogs || {},
-                        refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) }
+                        refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) },
+                        gamification: { ...state.gamification, ...(loaded.gamification || {}) },
+                        achievements: { ...state.achievements, ...(loaded.achievements || {}) }
                     };
+
+                    // MIGRATION: Ensure weigh-ins have body comp fields
+                    if (state.weighIns) {
+                        state.weighIns = state.weighIns.map(w => ({
+                            ...w,
+                            bodyFat: w.bodyFat || null,
+                            leanMass: w.leanMass || null,
+                            fatMass: w.fatMass || null
+                        }));
+                    }
+
+                    // MIGRATION: Ensure today has all new fields
+                    if (!state.today.alerts) {
+                        state.today.alerts = {
+                            undereatingShown: false,
+                            lowProteinShown: false
+                        };
+                    }
 
                     // Check if it's a new day
                     const today = getLocalDateString();
@@ -4383,9 +5082,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             activeCalories: 0,
                             isBrainDay: false,
                             mode: null,
-                            targets: { calories: 2000, protein: 172, floor: 1900 },
+                            targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
                             meals: [],
-                            setupComplete: false
+                            setupComplete: false,
+                            magnesiumTaken: false,
+                            waterGoalMet: false,
+                            cnsProtectionAwarded: false,
+                            alerts: {
+                                undereatingShown: false,
+                                lowProteinShown: false
+                            }
                         };
                     }
 
@@ -5031,10 +5737,161 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // ============================================
 
         function renderProgressTab() {
+            renderBodyCompTrend();
+            renderRefeedTracker();
             renderSummerProgress();
             renderWeightChart();
             renderDeficitTracking();
             renderWeeklySummary();
+        }
+
+        // Body Composition Trend Card
+        function renderBodyCompTrend() {
+            const container = document.getElementById('bodyCompTrend');
+            if (!container) return;
+
+            const weighInsWithBF = state.weighIns.filter(w => w.bodyFat != null && w.leanMass != null);
+
+            if (weighInsWithBF.length < 2) {
+                container.innerHTML = `
+                    <div class="comp-card">
+                        <div class="comp-title">📊 Body Composition</div>
+                        <div class="comp-empty">
+                            Log 2+ weigh-ins with body fat % to see composition trends
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const first = weighInsWithBF[0];
+            const latest = weighInsWithBF[weighInsWithBF.length - 1];
+
+            const fatChange = (latest.fatMass - first.fatMass).toFixed(1);
+            const leanChange = (latest.leanMass - first.leanMass).toFixed(1);
+            const totalChange = (latest.weight - first.weight).toFixed(1);
+
+            // Calculate what percentage of weight loss was fat vs muscle
+            const totalLost = first.weight - latest.weight;
+            const fatLost = first.fatMass - latest.fatMass;
+            const fatLossPercent = totalLost > 0 ? Math.round((fatLost / totalLost) * 100) : 0;
+
+            // Determine status
+            let status, statusClass, statusIcon;
+            if (parseFloat(leanChange) >= 0 && parseFloat(fatChange) < 0) {
+                status = 'Optimal — losing fat, preserving muscle';
+                statusClass = 'success';
+                statusIcon = '🎯';
+            } else if (parseFloat(leanChange) < -1 && parseFloat(fatChange) < 0) {
+                status = 'Warning — losing muscle with fat';
+                statusClass = 'warning';
+                statusIcon = '⚠️';
+            } else if (parseFloat(leanChange) < 0 && parseFloat(fatChange) >= 0) {
+                status = 'Bad — losing muscle, not fat';
+                statusClass = 'danger';
+                statusIcon = '🚨';
+            } else {
+                status = 'Tracking...';
+                statusClass = 'neutral';
+                statusIcon = '📈';
+            }
+
+            container.innerHTML = `
+                <div class="comp-card">
+                    <div class="comp-title">📊 Body Composition Trend</div>
+                    <div class="comp-status ${statusClass}">
+                        ${statusIcon} ${status}
+                    </div>
+                    <div class="comp-grid">
+                        <div class="comp-stat">
+                            <div class="comp-stat-value ${parseFloat(fatChange) < 0 ? 'positive' : 'negative'}">
+                                ${parseFloat(fatChange) < 0 ? '' : '+'}${fatChange} lbs
+                            </div>
+                            <div class="comp-stat-label">Fat Mass</div>
+                            <div class="comp-stat-detail">${first.fatMass} → ${latest.fatMass}</div>
+                        </div>
+                        <div class="comp-stat">
+                            <div class="comp-stat-value ${parseFloat(leanChange) >= 0 ? 'positive' : 'negative'}">
+                                ${parseFloat(leanChange) >= 0 ? '+' : ''}${leanChange} lbs
+                            </div>
+                            <div class="comp-stat-label">Lean Mass</div>
+                            <div class="comp-stat-detail">${first.leanMass} → ${latest.leanMass}</div>
+                        </div>
+                    </div>
+                    ${totalLost > 0 ? `
+                        <div class="comp-ratio">
+                            Of ${Math.abs(totalChange)} lbs lost: <strong>${fatLossPercent}% fat</strong>, ${100 - fatLossPercent}% lean
+                        </div>
+                    ` : ''}
+                    <div class="comp-footer">
+                        Since ${new Date(first.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        (${weighInsWithBF.length} weigh-ins)
+                    </div>
+                </div>
+            `;
+        }
+
+        // Refeed Tracker Card
+        function renderRefeedTracker() {
+            const container = document.getElementById('refeedTracker');
+            if (!container) return;
+
+            const cumDeficit = state.refeedTracker.cumulativeDeficit || 0;
+            const threshold = 7000;
+            const progress = Math.min((cumDeficit / threshold) * 100, 100);
+            const remaining = Math.max(threshold - cumDeficit, 0);
+
+            const needsRefeed = cumDeficit >= threshold;
+            const lastRefeed = state.refeedTracker.lastRefeedDate;
+
+            container.innerHTML = `
+                <div class="refeed-card ${needsRefeed ? 'alert' : ''}">
+                    <div class="refeed-header">
+                        <span class="refeed-title">🍽️ Refeed Tracker</span>
+                        ${needsRefeed ? '<span class="refeed-badge">REFEED RECOMMENDED</span>' : ''}
+                    </div>
+
+                    <div class="refeed-progress-container">
+                        <div class="refeed-progress-bar">
+                            <div class="refeed-progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="refeed-progress-labels">
+                            <span>${formatNumber(cumDeficit)} kcal</span>
+                            <span>${formatNumber(threshold)} kcal</span>
+                        </div>
+                    </div>
+
+                    ${needsRefeed ? `
+                        <div class="refeed-message">
+                            You've accumulated a ${formatNumber(cumDeficit)} kcal deficit since your last refeed.
+                            Consider 1-2 days at maintenance calories to restore leptin and glycogen.
+                        </div>
+                        <button class="refeed-btn" onclick="completeRefeed()">
+                            ✓ Mark Refeed Complete
+                        </button>
+                    ` : `
+                        <div class="refeed-remaining">
+                            ${formatNumber(remaining)} kcal until refeed recommended
+                        </div>
+                    `}
+
+                    ${lastRefeed ? `
+                        <div class="refeed-last">
+                            Last refeed: ${new Date(lastRefeed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function completeRefeed() {
+            if (confirm('Mark refeed as complete? This will reset the cumulative deficit counter.')) {
+                state.refeedTracker.cumulativeDeficit = 0;
+                state.refeedTracker.lastRefeedDate = getLocalDateString();
+                saveState();
+                renderRefeedTracker();
+                showToast('✓ Refeed logged — counter reset');
+            }
         }
 
         function renderSummerProgress() {
