@@ -92,6 +92,7 @@
 | `d3-roadmap.html` | ~13,700 | ~628KB | Academic tracker: 7+ tabs, Clinical Tab with Competencies, Peds AT RISK, grade calculator, deadlines, monthly planner |
 | `stimulant-elimination-calculator.html` | ~10,600 | ~523KB | Pharmacokinetic sleep prediction: Process S + Process C circadian modeling, caffeine tracking, sleep debt, workout planner |
 | `lecture-prompt-transformer.html` | ~2,800 | ~119KB | Standalone tool: Transform lecture content for Claude study assistance |
+| `body-comp-tracker.html` | ~5,200 | ~220KB | Body composition/calorie tracker: Summer cut goal, mode system (GREEN/YELLOW/ORANGE based on sleep), gamification, XP/levels/achievements, calendar heatmap, weekly insights |
 
 ### Working Directory
 - Files should be copied to `/home/claude/` for editing
