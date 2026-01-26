@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Comp Tracker</title>
+
+    <!-- Firebase SDK - Same as Dental Quest App -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-green: #10b981;
+            --accent-green-dim: rgba(16, 185, 129, 0.2);
+            --accent-yellow: #f59e0b;
+            --accent-yellow-dim: rgba(245, 158, 11, 0.2);
+            --accent-orange: #f97316;
+            --accent-orange-dim: rgba(249, 115, 22, 0.2);
+            --accent-red: #ef4444;
+            --accent-red-dim: rgba(239, 68, 68, 0.2);
+            --accent-purple: #8b5cf6;
+            --accent-purple-dim: rgba(139, 92, 246, 0.2);
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.2);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color-hover: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: var(--text-primary);
+        }
+
+        /* Cross-App Navigation */
+        .cross-app-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .cross-app-nav .nav-link {
+            padding: 8px 14px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .cross-app-nav .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .cross-app-nav .nav-link.active {
+            background: rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .cross-app-nav {
+                gap: 4px;
+                padding: 8px;
+            }
+            .cross-app-nav .nav-link {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 5px;
+        }
+
+        .header h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Mode Badge */
+        .mode-banner {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-banner.green {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .mode-banner.yellow {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .mode-banner.orange {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        .mode-label {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .mode-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .mode-banner.green .mode-value { color: var(--accent-green); }
+        .mode-banner.yellow .mode-value { color: var(--accent-yellow); }
+        .mode-banner.orange .mode-value { color: var(--accent-orange); }
+
+        .mode-subtitle {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        /* Target Cards */
+        .targets-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .target-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .target-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .target-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-stats {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.calories {
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+        }
+
+        .progress-bar-fill.protein {
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+        }
+
+        .deficit-display {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        .deficit-value {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .deficit-value.on-track { color: var(--accent-green); }
+        .deficit-value.over { color: var(--accent-yellow); }
+        .deficit-value.danger { color: var(--accent-red); }
+
+        .deficit-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Meals Section */
+        .meals-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .add-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .add-btn:active {
+            transform: scale(0.97);
+        }
+
+        .meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .meal-info {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .meal-time {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+
+        .meal-macros {
+            text-align: right;
+        }
+
+        .meal-calories {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .meal-protein {
+            font-size: 0.75em;
+            color: var(--accent-purple);
+        }
+
+        .meal-delete {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .meal-item:hover .meal-delete {
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1em;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-green);
+        }
+
+        .checkbox-label {
+            font-size: 0.9em;
+            color: var(--text-primary);
+        }
+
+        /* Frequent Foods Grid */
+        .frequent-foods-section {
+            margin-bottom: 20px;
+        }
+
+        .frequent-foods-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .frequent-foods-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .frequent-food-btn {
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .frequent-food-btn:hover {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .frequent-food-btn:active {
+            transform: scale(0.97);
+        }
+
+        .ff-name {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ff-macros {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            color: var(--text-muted);
+            font-size: 0.8em;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Morning Setup Screen */
+        .setup-screen {
+            display: none;
+        }
+
+        .setup-screen.active {
+            display: block;
+        }
+
+        .setup-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .setup-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .setup-emoji {
+            font-size: 2em;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* Dashboard Screen */
+        .dashboard-screen {
+            display: none;
+        }
+
+        .dashboard-screen.active {
+            display: block;
+        }
+
+        /* Nudge Banner */
+        .nudge-banner {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .nudge-banner.warning {
+            background: var(--accent-yellow-dim);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent-yellow);
+        }
+
+        .nudge-banner.info {
+            background: var(--accent-blue-dim);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--accent-blue);
+        }
+
+        .nudge-banner.success {
+            background: var(--accent-green-dim);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+        }
+
+        .nudge-icon {
+            font-size: 1.2em;
+        }
+
+        .nudge-text {
+            flex: 1;
+        }
+
+        .nudge-dismiss {
+            background: none;
+            border: none;
+            color: inherit;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Weigh-in Modal Extras */
+        .weight-trend {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .weight-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .weight-stat-label {
+            color: var(--text-secondary);
+        }
+
+        .weight-stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .weight-stat-value.positive {
+            color: var(--accent-green);
+        }
+
+        .weight-stat-value.negative {
+            color: var(--accent-red);
+        }
+
+        /* Export Modal */
+        .export-preview {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8em;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .export-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn {
+            background: var(--accent-green);
+            border: none;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+        }
+
+        /* Settings Modal */
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section-title {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .targets-grid {
+                gap: 8px;
+            }
+
+            .target-card {
+                padding: 12px 8px;
+            }
+
+            .target-value {
+                font-size: 1.4em;
+            }
+
+            .modal {
+                max-height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cross-App Navigation -->
+    <nav class="cross-app-nav">
+        <a href="index.html" class="nav-link">🦷 Quest</a>
+        <a href="d3-roadmap.html" class="nav-link">📚 Roadmap</a>
+        <a href="stimulant-elimination-calculator.html" class="nav-link">💊 Sleep Calc</a>
+        <a href="body-comp-tracker.html" class="nav-link active">🏋️ Body Comp</a>
+        <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Body Comp Tracker</h1>
+            <div class="header-actions">
+                <div class="sync-status">
+                    <span id="syncIcon">⏳</span>
+                    <span id="syncText">Connecting...</span>
+                </div>
+                <button class="header-btn" onclick="forceCloudSync()" title="Sync">🔄</button>
+                <button class="header-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+                <button class="header-btn" onclick="openExportModal()" title="Export">📤</button>
+            </div>
+        </div>
+
+        <!-- Morning Setup Screen -->
+        <div id="setupScreen" class="setup-screen active">
+            <div class="setup-card">
+                <span class="setup-emoji">☀️</span>
+                <h2 class="setup-title">Morning Setup</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Hours slept last night</label>
+                    <input type="number" id="sleepInput" class="form-input" min="0" max="14" step="0.5" placeholder="e.g., 6.5">
+                    <div id="sleepAutoFill" style="font-size: 0.8em; color: var(--text-muted); margin-top: 5px;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Active calories (from Apple Watch)</label>
+                    <input type="number" id="activeCalInput" class="form-input" min="0" max="2000" placeholder="e.g., 450">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="brainDayCheck">
+                        <span class="checkbox-label">Heavy brain day (exam/clinic)</span>
+                    </label>
+                </div>
+
+                <button class="submit-btn" onclick="startDay()">Start Day →</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Screen -->
+        <div id="dashboardScreen" class="dashboard-screen">
+            <!-- Nudge Banner (shown conditionally) -->
+            <div id="nudgeBanner" class="nudge-banner warning" style="display: none;">
+                <span class="nudge-icon">⚠️</span>
+                <span class="nudge-text" id="nudgeText"></span>
+                <button class="nudge-dismiss" onclick="dismissNudge()">×</button>
+            </div>
+
+            <!-- Mode Banner -->
+            <div id="modeBanner" class="mode-banner green">
+                <div class="mode-label">Today's Mode</div>
+                <div class="mode-value" id="modeValue">🟢 GREEN</div>
+                <div class="mode-subtitle" id="modeSubtitle">6+ hours sleep — full deficit</div>
+            </div>
+
+            <!-- Target Cards -->
+            <div class="targets-grid">
+                <div class="target-card">
+                    <div class="target-value" id="targetCals">2,000</div>
+                    <div class="target-label">Calories</div>
+                </div>
+                <div class="target-card">
+                    <div class="target-value" id="targetProtein">172</div>
+                    <div class="target-label">Protein (g)</div>
+                </div>
+                <div class="target-card">
+                    <div class="target-value" id="targetFloor">1,900</div>
+                    <div class="target-label">Floor</div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-title">Today's Progress</span>
+                    <span class="progress-stats" id="progressStats">0 / 3 meals</span>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar-label">
+                        <span>Calories</span>
+                        <span id="calProgress">0 / 2,000</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill calories" id="calProgressBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar-label">
+                        <span>Protein</span>
+                        <span id="proteinProgress">0 / 172g</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill protein" id="proteinProgressBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="deficit-display">
+                    <div class="deficit-value on-track" id="deficitValue">0 kcal</div>
+                    <div class="deficit-label" id="deficitLabel">deficit so far</div>
+                </div>
+            </div>
+
+            <!-- Meals Section -->
+            <div class="meals-section">
+                <div class="section-header">
+                    <span class="section-title">Meals</span>
+                    <button class="add-btn" onclick="openAddMealModal()">+ Add Meal</button>
+                </div>
+                <div class="meals-list" id="mealsList">
+                    <div class="empty-state">No meals logged yet. Tap + Add Meal to start.</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="add-btn" style="flex: 1; background: var(--accent-purple);" onclick="openWeighInModal()">⚖️ Weigh In</button>
+                <button class="add-btn" style="flex: 1; background: var(--bg-tertiary); color: var(--text-secondary);" onclick="resetDay()">Reset Day</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Meal Modal -->
+    <div id="addMealModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Add Meal</span>
+                <button class="modal-close" onclick="closeAddMealModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Frequent Foods -->
+                <div class="frequent-foods-section">
+                    <div class="frequent-foods-label">Frequent Foods (tap to add)</div>
+                    <div class="frequent-foods-grid" id="frequentFoodsGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="divider">OR</div>
+
+                <!-- Custom Entry -->
+                <div class="form-group">
+                    <label class="form-label">Food name</label>
+                    <input type="text" id="mealNameInput" class="form-input" placeholder="e.g., Chicken + rice">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Calories</label>
+                        <input type="number" id="mealCalInput" class="form-input" placeholder="e.g., 450">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Protein (g)</label>
+                        <input type="number" id="mealProteinInput" class="form-input" placeholder="e.g., 35">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="saveToFrequent">
+                        <span class="checkbox-label">Save to Frequent Foods</span>
+                    </label>
+                </div>
+
+                <button class="submit-btn" onclick="addCustomMeal()">Add Meal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weigh-in Modal -->
+    <div id="weighInModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">⚖️ Weekly Weigh-In</span>
+                <button class="modal-close" onclick="closeWeighInModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Today's weight (lbs)</label>
+                    <input type="number" id="weightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                </div>
+
+                <div class="weight-trend" id="weightTrend">
+                    <!-- Populated by JS -->
+                </div>
+
+                <button class="submit-btn" onclick="saveWeighIn()" style="margin-top: 20px;">Save Weigh-In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">📤 Daily Export</span>
+                <button class="modal-close" onclick="closeExportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-preview" id="exportPreview">
+                    <!-- Generated export text -->
+                </div>
+                <div class="export-actions">
+                    <button class="copy-btn" onclick="copyExport()">📋 Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">⚙️ Settings</span>
+                <button class="modal-close" onclick="closeSettingsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <div class="settings-section-title">Profile</div>
+                    <div class="form-group">
+                        <label class="form-label">Current weight (lbs)</label>
+                        <input type="number" id="settingsWeight" class="form-input" step="0.1">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" id="settingsHeight" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Age</label>
+                            <input type="number" id="settingsAge" class="form-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Goals</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Goal weight (lbs)</label>
+                            <input type="number" id="settingsGoalWeight" class="form-input" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Base TDEE</label>
+                            <input type="number" id="settingsTDEE" class="form-input">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="saveSettings()">Save Settings</button>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="clearAllData()" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 0.85em;">
+                        Clear All Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+
+        let state = {
+            // Profile (set once, adjust as needed)
+            profile: {
+                currentWeight_lbs: 190,
+                height_cm: 178,
+                age: 30,
+                startingWeight_lbs: 190,
+                goalWeight_lbs: 170,
+                tdee_base: 2500,
+                startDate: null,
+                targetDate: '2026-06-01'
+            },
+
+            // Today's data
+            today: {
+                date: null,
+                sleepHours: null,
+                activeCalories: 0,
+                isBrainDay: false,
+                mode: null,
+                targets: {
+                    calories: 2000,
+                    protein: 172,
+                    floor: 1900
+                },
+                meals: [],
+                setupComplete: false
+            },
+
+            // Historical daily logs
+            dailyLogs: {},
+
+            // Frequent foods library
+            frequentFoods: [
+                { id: 'ff_001', name: 'Just Bare Chicken (6oz)', calories: 340, protein: 38, uses: 0 },
+                { id: 'ff_002', name: 'Just Bare Chicken (3oz)', calories: 170, protein: 19, uses: 0 },
+                { id: 'ff_003', name: 'Vital Farms Egg (1)', calories: 70, protein: 6, uses: 0 },
+                { id: 'ff_004', name: 'Vital Farms Eggs (2)', calories: 140, protein: 12, uses: 0 },
+                { id: 'ff_005', name: '365 Salmon Patty', calories: 170, protein: 17, uses: 0 },
+                { id: 'ff_006', name: 'Orgain Shake 30g', calories: 160, protein: 30, uses: 0 },
+                { id: 'ff_007', name: 'Orgain Plant 20g', calories: 150, protein: 20, uses: 0 },
+                { id: 'ff_008', name: 'Oikos Greek Yogurt', calories: 90, protein: 15, uses: 0 },
+                { id: 'ff_009', name: 'Chipotle 2x Chicken Bowl', calories: 1035, protein: 81, uses: 0 },
+                { id: 'ff_010', name: 'Chipotle + 1 Tortilla', calories: 1355, protein: 89, uses: 0 },
+                { id: 'ff_011', name: "Dave's 2 Sliders + Mac", calories: 1200, protein: 55, uses: 0 },
+                { id: 'ff_012', name: '365 Margherita Pizza', calories: 880, protein: 32, uses: 0 },
+                { id: 'ff_013', name: '365 Wheat Bread (1 slice)', calories: 90, protein: 4, uses: 0 },
+                { id: 'ff_014', name: '365 Wheat Bread (2 slices)', calories: 180, protein: 8, uses: 0 },
+                { id: 'ff_015', name: 'Eggs + Toast (2+2)', calories: 320, protein: 20, uses: 0 },
+                { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, uses: 0 },
+                { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, uses: 0 },
+                { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, uses: 0 },
+                { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, uses: 0 },
+                { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, uses: 0 },
+                { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, uses: 0 }
+            ],
+
+            // Weekly weigh-ins
+            weighIns: [],
+
+            // Refeed tracking
+            refeedTracker: {
+                cumulativeDeficit: 0,
+                lastRefeedDate: null,
+                weeksInDeficit: 0,
+                lastDietBreak: null
+            }
+        };
+
+        // ============================================
+        // FIREBASE CONFIGURATION (Same as other apps)
+        // ============================================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCq0zU4Gm2kXKHDaCHzRD70p1B2NRXxKJc",
+            authDomain: "dental-student-quest.firebaseapp.com",
+            databaseURL: "https://dental-student-quest-default-rtdb.firebaseio.com",
+            projectId: "dental-student-quest",
+            storageBucket: "dental-student-quest.firebasestorage.app",
+            messagingSenderId: "894381493570",
+            appId: "1:894381493570:web:857d7d8fe247ef985e4cdb"
+        };
+
+        let firebaseInitialized = false;
+        let database = null;
+        let firebaseSyncEnabled = false;
+        let currentUser = null;
+        let userPath = null;
+        let realtimeSyncEnabled = false;
+        let lastKnownTimestamp = null;
+        let firebaseSaveTimeout = null;
+        let lastLocalSave = 0;
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function getLocalDateString(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updateSyncStatus(status, text) {
+            const iconEl = document.getElementById('syncIcon');
+            const textEl = document.getElementById('syncText');
+            if (iconEl && textEl) {
+                if (status === 'connected') {
+                    iconEl.textContent = '🟢';
+                    textEl.textContent = text || 'Synced';
+                } else if (status === 'syncing') {
+                    iconEl.textContent = '🔄';
+                    textEl.textContent = text || 'Syncing...';
+                } else if (status === 'offline') {
+                    iconEl.textContent = '🔴';
+                    textEl.textContent = text || 'Offline';
+                } else if (status === 'error') {
+                    iconEl.textContent = '⚠️';
+                    textEl.textContent = text || 'Sync error';
+                } else {
+                    iconEl.textContent = '⏳';
+                    textEl.textContent = text || 'Connecting...';
+                }
+            }
+        }
+
+        // ============================================
+        // CORE ALGORITHMS
+        // ============================================
+
+        function calculateBMR(weight_lbs, height_cm, age) {
+            const weight_kg = weight_lbs / 2.205;
+            // Mifflin-St Jeor equation for males
+            return Math.round((10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5);
+        }
+
+        function calculateTDEE(weight_lbs, height_cm, age, activeCalories) {
+            const bmr = calculateBMR(weight_lbs, height_cm, age);
+            // TDEE = BMR + active calories from Apple Watch
+            return bmr + (activeCalories || 0);
+        }
+
+        function calculateMode(sleepHours, isBrainDay) {
+            // Brain day doesn't change mode, just adds carb reminder
+            if (sleepHours >= 6) return 'GREEN';
+            if (sleepHours >= 5) return 'YELLOW';
+            return 'ORANGE';
+        }
+
+        function calculateTargets(mode, tdee, weight_lbs) {
+            const weight_kg = weight_lbs / 2.205;
+            const protein_base = Math.round(weight_kg * 2.0); // 2g/kg
+
+            const modes = {
+                'GREEN': {
+                    deficit: 500,
+                    proteinMultiplier: 1.0,
+                    floor: 1900
+                },
+                'YELLOW': {
+                    deficit: 300,
+                    proteinMultiplier: 1.10,
+                    floor: 2000
+                },
+                'ORANGE': {
+                    deficit: 0,
+                    proteinMultiplier: 1.15,
+                    floor: tdee
+                }
+            };
+
+            const m = modes[mode] || modes['GREEN'];
+            const targetCals = Math.max(tdee - m.deficit, m.floor);
+
+            return {
+                calories: targetCals,
+                protein: Math.round(protein_base * m.proteinMultiplier),
+                floor: m.floor,
+                deficit: m.deficit
+            };
+        }
+
+        function getModeDisplay(mode) {
+            const displays = {
+                'GREEN': { emoji: '🟢', label: 'GREEN', subtitle: '6+ hours sleep — full deficit', class: 'green' },
+                'YELLOW': { emoji: '🟡', label: 'YELLOW', subtitle: '5-6 hours sleep — moderate deficit', class: 'yellow' },
+                'ORANGE': { emoji: '🟠', label: 'ORANGE', subtitle: '<5 hours sleep — maintenance day', class: 'orange' }
+            };
+            return displays[mode] || displays['GREEN'];
+        }
+
+        // ============================================
+        // DAILY CALCULATIONS
+        // ============================================
+
+        function getTodayTotals() {
+            const meals = state.today.meals || [];
+            return {
+                calories: meals.reduce((sum, m) => sum + (m.calories || 0), 0),
+                protein: meals.reduce((sum, m) => sum + (m.protein || 0), 0),
+                mealCount: meals.length
+            };
+        }
+
+        function getCurrentDeficit() {
+            const totals = getTodayTotals();
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                state.today.activeCalories
+            );
+            return tdee - totals.calories;
+        }
+
+        // ============================================
+        // UI RENDERING
+        // ============================================
+
+        function renderDashboard() {
+            const mode = state.today.mode || 'GREEN';
+            const modeDisplay = getModeDisplay(mode);
+            const targets = state.today.targets;
+            const totals = getTodayTotals();
+            const currentDeficit = getCurrentDeficit();
+
+            // Mode banner
+            const modeBanner = document.getElementById('modeBanner');
+            modeBanner.className = `mode-banner ${modeDisplay.class}`;
+            document.getElementById('modeValue').textContent = `${modeDisplay.emoji} ${modeDisplay.label}`;
+            document.getElementById('modeSubtitle').textContent = modeDisplay.subtitle;
+
+            // Brain day indicator
+            if (state.today.isBrainDay) {
+                document.getElementById('modeSubtitle').textContent += ' • 🧠 Hit 150g carbs';
+            }
+
+            // Target cards
+            document.getElementById('targetCals').textContent = formatNumber(targets.calories);
+            document.getElementById('targetProtein').textContent = targets.protein;
+            document.getElementById('targetFloor').textContent = formatNumber(targets.floor);
+
+            // Progress bars
+            const calPercent = Math.min((totals.calories / targets.calories) * 100, 100);
+            const proteinPercent = Math.min((totals.protein / targets.protein) * 100, 100);
+
+            document.getElementById('calProgress').textContent = `${formatNumber(totals.calories)} / ${formatNumber(targets.calories)}`;
+            document.getElementById('calProgressBar').style.width = `${calPercent}%`;
+
+            document.getElementById('proteinProgress').textContent = `${totals.protein} / ${targets.protein}g`;
+            document.getElementById('proteinProgressBar').style.width = `${proteinPercent}%`;
+
+            document.getElementById('progressStats').textContent = `${totals.mealCount} meal${totals.mealCount !== 1 ? 's' : ''} logged`;
+
+            // Deficit display
+            const deficitEl = document.getElementById('deficitValue');
+            const deficitLabelEl = document.getElementById('deficitLabel');
+
+            if (currentDeficit >= 0) {
+                deficitEl.textContent = `${formatNumber(currentDeficit)} kcal`;
+                deficitEl.className = 'deficit-value on-track';
+                deficitLabelEl.textContent = 'deficit so far';
+            } else {
+                deficitEl.textContent = `+${formatNumber(Math.abs(currentDeficit))} kcal`;
+                deficitEl.className = 'deficit-value danger';
+                deficitLabelEl.textContent = 'surplus (over target)';
+            }
+
+            // Check for nudges
+            checkAndShowNudges();
+        }
+
+        function renderMealsList() {
+            const mealsList = document.getElementById('mealsList');
+            const meals = state.today.meals || [];
+
+            if (meals.length === 0) {
+                mealsList.innerHTML = '<div class="empty-state">No meals logged yet. Tap + Add Meal to start.</div>';
+                return;
+            }
+
+            mealsList.innerHTML = meals.map((meal, index) => `
+                <div class="meal-item">
+                    <div class="meal-info">
+                        <div class="meal-name">${meal.name}</div>
+                        <div class="meal-time">${meal.time || ''}</div>
+                    </div>
+                    <div class="meal-macros">
+                        <div class="meal-calories">${meal.calories} cal</div>
+                        <div class="meal-protein">${meal.protein}g protein</div>
+                    </div>
+                    <button class="meal-delete" onclick="deleteMeal(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderFrequentFoods() {
+            const grid = document.getElementById('frequentFoodsGrid');
+            // Sort by usage, take top 8
+            const sorted = [...state.frequentFoods].sort((a, b) => (b.uses || 0) - (a.uses || 0)).slice(0, 8);
+
+            grid.innerHTML = sorted.map(food => `
+                <button class="frequent-food-btn" onclick="addFrequentFood('${food.id}')">
+                    <div class="ff-name">${food.name}</div>
+                    <div class="ff-macros">${food.calories} cal • ${food.protein}g</div>
+                </button>
+            `).join('');
+        }
+
+        // ============================================
+        // MEAL MANAGEMENT
+        // ============================================
+
+        function openAddMealModal() {
+            renderFrequentFoods();
+            document.getElementById('addMealModal').classList.add('active');
+            document.getElementById('mealNameInput').value = '';
+            document.getElementById('mealCalInput').value = '';
+            document.getElementById('mealProteinInput').value = '';
+            document.getElementById('saveToFrequent').checked = false;
+        }
+
+        function closeAddMealModal() {
+            document.getElementById('addMealModal').classList.remove('active');
+        }
+
+        function addFrequentFood(foodId) {
+            const food = state.frequentFoods.find(f => f.id === foodId);
+            if (!food) return;
+
+            // Add meal
+            const meal = {
+                id: 'meal_' + Date.now(),
+                name: food.name,
+                calories: food.calories,
+                protein: food.protein,
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                fromLibrary: true,
+                libraryId: foodId
+            };
+
+            state.today.meals.push(meal);
+
+            // Increment usage
+            food.uses = (food.uses || 0) + 1;
+
+            saveState();
+            renderMealsList();
+            renderDashboard();
+            closeAddMealModal();
+            showToast(`✓ Added ${food.name}`);
+        }
+
+        function addCustomMeal() {
+            const name = document.getElementById('mealNameInput').value.trim();
+            const calories = parseInt(document.getElementById('mealCalInput').value) || 0;
+            const protein = parseInt(document.getElementById('mealProteinInput').value) || 0;
+            const saveToFrequent = document.getElementById('saveToFrequent').checked;
+
+            if (!name) {
+                showToast('Please enter a food name');
+                return;
+            }
+
+            if (calories <= 0) {
+                showToast('Please enter calories');
+                return;
+            }
+
+            // Add meal
+            const meal = {
+                id: 'meal_' + Date.now(),
+                name: name,
+                calories: calories,
+                protein: protein,
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                fromLibrary: false
+            };
+
+            state.today.meals.push(meal);
+
+            // Save to frequent foods if checked
+            if (saveToFrequent) {
+                const newFood = {
+                    id: 'ff_custom_' + Date.now(),
+                    name: name,
+                    calories: calories,
+                    protein: protein,
+                    uses: 1
+                };
+                state.frequentFoods.push(newFood);
+                showToast(`✓ Added ${name} to frequent foods`);
+            } else {
+                showToast(`✓ Added ${name}`);
+            }
+
+            saveState();
+            renderMealsList();
+            renderDashboard();
+            closeAddMealModal();
+        }
+
+        function deleteMeal(index) {
+            if (confirm('Delete this meal?')) {
+                state.today.meals.splice(index, 1);
+                saveState();
+                renderMealsList();
+                renderDashboard();
+                showToast('Meal deleted');
+            }
+        }
+
+        // ============================================
+        // MORNING SETUP
+        // ============================================
+
+        function startDay() {
+            const sleepHours = parseFloat(document.getElementById('sleepInput').value);
+            const activeCalories = parseInt(document.getElementById('activeCalInput').value) || 0;
+            const isBrainDay = document.getElementById('brainDayCheck').checked;
+
+            if (isNaN(sleepHours) || sleepHours < 0 || sleepHours > 14) {
+                showToast('Please enter valid sleep hours (0-14)');
+                return;
+            }
+
+            // Calculate mode and targets
+            const mode = calculateMode(sleepHours, isBrainDay);
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                activeCalories
+            );
+            const targets = calculateTargets(mode, tdee, state.profile.currentWeight_lbs);
+
+            // Update today's state
+            state.today.date = getLocalDateString();
+            state.today.sleepHours = sleepHours;
+            state.today.activeCalories = activeCalories;
+            state.today.isBrainDay = isBrainDay;
+            state.today.mode = mode;
+            state.today.targets = targets;
+            state.today.setupComplete = true;
+
+            // If start date not set, set it
+            if (!state.profile.startDate) {
+                state.profile.startDate = getLocalDateString();
+            }
+
+            saveState();
+
+            // Switch screens
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.add('active');
+
+            renderDashboard();
+            renderMealsList();
+
+            const modeDisplay = getModeDisplay(mode);
+            showToast(`${modeDisplay.emoji} ${modeDisplay.label} mode activated`);
+        }
+
+        function resetDay() {
+            if (confirm('Reset today\'s data? This will clear all meals and let you redo morning setup.')) {
+                state.today = {
+                    date: getLocalDateString(),
+                    sleepHours: null,
+                    activeCalories: 0,
+                    isBrainDay: false,
+                    mode: null,
+                    targets: { calories: 2000, protein: 172, floor: 1900 },
+                    meals: [],
+                    setupComplete: false
+                };
+
+                saveState();
+
+                // Switch back to setup
+                document.getElementById('dashboardScreen').classList.remove('active');
+                document.getElementById('setupScreen').classList.add('active');
+
+                // Clear inputs
+                document.getElementById('sleepInput').value = '';
+                document.getElementById('activeCalInput').value = '';
+                document.getElementById('brainDayCheck').checked = false;
+
+                showToast('Day reset');
+            }
+        }
+
+        // ============================================
+        // NUDGES / CONTEXTUAL ALERTS
+        // ============================================
+
+        let dismissedNudges = new Set();
+
+        function checkAndShowNudges() {
+            const now = new Date();
+            const hour = now.getHours();
+            const totals = getTodayTotals();
+            const targets = state.today.targets;
+
+            let nudge = null;
+
+            // 3 PM + <1000 cal
+            if (hour >= 15 && totals.calories < 1000 && !dismissedNudges.has('low_intake')) {
+                nudge = {
+                    id: 'low_intake',
+                    type: 'warning',
+                    icon: '⚠️',
+                    text: `Low intake — only ${totals.calories} cal by 3 PM. Adderall suppressing appetite? Eat something.`
+                };
+            }
+
+            // 8 PM + protein < 80%
+            if (hour >= 20 && totals.protein < targets.protein * 0.8 && !dismissedNudges.has('protein_reminder')) {
+                const shortfall = targets.protein - totals.protein;
+                nudge = {
+                    id: 'protein_reminder',
+                    type: 'info',
+                    icon: '🌙',
+                    text: `${shortfall}g short on protein. Consider cottage cheese or shake before bed.`
+                };
+            }
+
+            // Show nudge if any
+            const banner = document.getElementById('nudgeBanner');
+            if (nudge) {
+                banner.className = `nudge-banner ${nudge.type}`;
+                document.getElementById('nudgeText').textContent = nudge.text;
+                banner.querySelector('.nudge-icon').textContent = nudge.icon;
+                banner.style.display = 'flex';
+                banner.dataset.nudgeId = nudge.id;
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function dismissNudge() {
+            const banner = document.getElementById('nudgeBanner');
+            const nudgeId = banner.dataset.nudgeId;
+            if (nudgeId) {
+                dismissedNudges.add(nudgeId);
+            }
+            banner.style.display = 'none';
+        }
+
+        // ============================================
+        // WEIGH-IN
+        // ============================================
+
+        function openWeighInModal() {
+            document.getElementById('weighInModal').classList.add('active');
+            document.getElementById('weightInput').value = '';
+            renderWeightTrend();
+        }
+
+        function closeWeighInModal() {
+            document.getElementById('weighInModal').classList.remove('active');
+        }
+
+        function renderWeightTrend() {
+            const trendEl = document.getElementById('weightTrend');
+            const weighIns = state.weighIns || [];
+
+            if (weighIns.length === 0) {
+                trendEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; font-size: 0.9em;">No weigh-ins yet. Start tracking your progress!</p>';
+                return;
+            }
+
+            const latest = weighIns[weighIns.length - 1];
+            const start = state.profile.startingWeight_lbs;
+            const goal = state.profile.goalWeight_lbs;
+            const current = latest.weight_lbs;
+            const lost = start - current;
+            const remaining = current - goal;
+            const progressPercent = Math.round((lost / (start - goal)) * 100);
+
+            // Calculate rate
+            let weeklyRate = 0;
+            if (weighIns.length >= 2) {
+                const first = weighIns[0];
+                const daysDiff = Math.max(1, (new Date(latest.date) - new Date(first.date)) / (1000 * 60 * 60 * 24));
+                const weeksDiff = daysDiff / 7;
+                const totalLost = first.weight_lbs - current;
+                weeklyRate = (totalLost / weeksDiff).toFixed(1);
+            }
+
+            trendEl.innerHTML = `
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Starting weight</span>
+                    <span class="weight-stat-value">${start} lbs</span>
+                </div>
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Current weight</span>
+                    <span class="weight-stat-value">${current} lbs</span>
+                </div>
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Total lost</span>
+                    <span class="weight-stat-value ${lost > 0 ? 'positive' : ''}">${lost > 0 ? '-' : ''}${Math.abs(lost).toFixed(1)} lbs</span>
+                </div>
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Remaining to goal</span>
+                    <span class="weight-stat-value">${remaining.toFixed(1)} lbs</span>
+                </div>
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Weekly rate</span>
+                    <span class="weight-stat-value">${weeklyRate} lbs/week</span>
+                </div>
+                <div class="weight-stat">
+                    <span class="weight-stat-label">Progress</span>
+                    <span class="weight-stat-value">${progressPercent}%</span>
+                </div>
+            `;
+        }
+
+        function saveWeighIn() {
+            const weight = parseFloat(document.getElementById('weightInput').value);
+
+            if (isNaN(weight) || weight < 100 || weight > 400) {
+                showToast('Please enter a valid weight (100-400 lbs)');
+                return;
+            }
+
+            const weighIn = {
+                date: getLocalDateString(),
+                weight_lbs: weight
+            };
+
+            // Check if already weighed in today
+            const today = getLocalDateString();
+            const existingIndex = state.weighIns.findIndex(w => w.date === today);
+
+            if (existingIndex >= 0) {
+                state.weighIns[existingIndex] = weighIn;
+            } else {
+                state.weighIns.push(weighIn);
+            }
+
+            // Update current weight in profile
+            state.profile.currentWeight_lbs = weight;
+
+            // Check for TDEE recalibration (every 5 lbs lost)
+            const lost = state.profile.startingWeight_lbs - weight;
+            const milestones = Math.floor(lost / 5);
+            if (milestones > 0) {
+                const adjustment = milestones * 50;
+                // Could show a notification about TDEE adjustment here
+            }
+
+            saveState();
+            closeWeighInModal();
+            renderDashboard();
+            showToast(`✓ Weight logged: ${weight} lbs`);
+        }
+
+        // ============================================
+        // EXPORT
+        // ============================================
+
+        function openExportModal() {
+            const preview = document.getElementById('exportPreview');
+            preview.textContent = generateExportText();
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function generateExportText() {
+            const totals = getTodayTotals();
+            const targets = state.today.targets;
+            const mode = state.today.mode || 'GREEN';
+            const modeDisplay = getModeDisplay(mode);
+            const deficit = getCurrentDeficit();
+
+            const date = new Date().toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+            });
+
+            let text = `══════════════════════════════════════
+DAILY LOG — ${date}
+══════════════════════════════════════
+
+MODE: ${modeDisplay.emoji} ${modeDisplay.label} (${state.today.sleepHours}h sleep)
+TARGETS: ${formatNumber(targets.calories)} cal | ${targets.protein}g protein | Floor: ${formatNumber(targets.floor)}
+
+MEALS:
+`;
+
+            if (state.today.meals.length === 0) {
+                text += '• No meals logged\n';
+            } else {
+                state.today.meals.forEach(meal => {
+                    text += `• ${meal.name} — ${meal.calories} cal, ${meal.protein}g protein\n`;
+                });
+            }
+
+            text += `
+TOTALS: ${formatNumber(totals.calories)} cal | ${totals.protein}g protein
+`;
+
+            if (deficit >= 0) {
+                text += `DEFICIT: ${formatNumber(deficit)} kcal`;
+                if (targets.deficit && Math.abs(deficit - targets.deficit) > 100) {
+                    text += deficit > targets.deficit ? ' ⚠️ (higher than target)' : ' ✅';
+                }
+            } else {
+                text += `SURPLUS: +${formatNumber(Math.abs(deficit))} kcal ⚠️`;
+            }
+
+            // Protein check
+            const proteinPercent = Math.round((totals.protein / targets.protein) * 100);
+            text += `\nPROTEIN: ${proteinPercent}% of target`;
+            if (proteinPercent < 80) {
+                text += ` ⚠️ (${targets.protein - totals.protein}g short)`;
+            } else {
+                text += ' ✅';
+            }
+
+            text += `
+
+ACTIVE CALORIES: ${state.today.activeCalories} (manual input)
+TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories))}
+
+══════════════════════════════════════`;
+
+            return text;
+        }
+
+        function copyExport() {
+            const text = generateExportText();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✓ Copied to clipboard');
+            }).catch(() => {
+                showToast('Failed to copy');
+            });
+        }
+
+        // ============================================
+        // SETTINGS
+        // ============================================
+
+        function openSettingsModal() {
+            document.getElementById('settingsWeight').value = state.profile.currentWeight_lbs;
+            document.getElementById('settingsHeight').value = state.profile.height_cm;
+            document.getElementById('settingsAge').value = state.profile.age;
+            document.getElementById('settingsGoalWeight').value = state.profile.goalWeight_lbs;
+            document.getElementById('settingsTDEE').value = state.profile.tdee_base;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            state.profile.currentWeight_lbs = parseFloat(document.getElementById('settingsWeight').value) || 190;
+            state.profile.height_cm = parseInt(document.getElementById('settingsHeight').value) || 178;
+            state.profile.age = parseInt(document.getElementById('settingsAge').value) || 30;
+            state.profile.goalWeight_lbs = parseFloat(document.getElementById('settingsGoalWeight').value) || 170;
+            state.profile.tdee_base = parseInt(document.getElementById('settingsTDEE').value) || 2500;
+
+            saveState();
+            closeSettingsModal();
+
+            // Recalculate targets if setup is complete
+            if (state.today.setupComplete) {
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs);
+                saveState();
+                renderDashboard();
+            }
+
+            showToast('Settings saved');
+        }
+
+        function clearAllData() {
+            if (confirm('This will delete ALL your data including meals, weigh-ins, and settings. Are you sure?')) {
+                if (confirm('This cannot be undone. Type "DELETE" to confirm.')) {
+                    localStorage.removeItem('bodyCompTrackerState');
+                    location.reload();
+                }
+            }
+        }
+
+        // ============================================
+        // STORAGE (Local + Firebase)
+        // ============================================
+
+        function saveState() {
+            // Save to localStorage immediately
+            const now = Date.now();
+            if (now - lastLocalSave > 500) {
+                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                lastLocalSave = now;
+            }
+
+            // Debounce Firebase saves
+            if (firebaseSaveTimeout) {
+                clearTimeout(firebaseSaveTimeout);
+            }
+
+            firebaseSaveTimeout = setTimeout(() => {
+                saveToFirebase();
+            }, 2000);
+        }
+
+        function saveStateImmediate() {
+            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+            if (firebaseSaveTimeout) {
+                clearTimeout(firebaseSaveTimeout);
+                firebaseSaveTimeout = null;
+            }
+
+            saveToFirebase();
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('bodyCompTrackerState');
+            if (saved) {
+                try {
+                    const loaded = JSON.parse(saved);
+                    state = {
+                        ...state,
+                        ...loaded,
+                        profile: { ...state.profile, ...(loaded.profile || {}) },
+                        today: { ...state.today, ...(loaded.today || {}) },
+                        frequentFoods: loaded.frequentFoods || state.frequentFoods,
+                        weighIns: loaded.weighIns || [],
+                        dailyLogs: loaded.dailyLogs || {},
+                        refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) }
+                    };
+
+                    // Check if it's a new day
+                    const today = getLocalDateString();
+                    if (state.today.date && state.today.date !== today) {
+                        // Save yesterday's data to dailyLogs
+                        if (state.today.setupComplete) {
+                            state.dailyLogs[state.today.date] = { ...state.today };
+
+                            // Update refeed tracker
+                            const deficit = getCurrentDeficit();
+                            if (deficit > 0) {
+                                state.refeedTracker.cumulativeDeficit += deficit;
+                            }
+                        }
+
+                        // Reset for new day
+                        state.today = {
+                            date: today,
+                            sleepHours: null,
+                            activeCalories: 0,
+                            isBrainDay: false,
+                            mode: null,
+                            targets: { calories: 2000, protein: 172, floor: 1900 },
+                            meals: [],
+                            setupComplete: false
+                        };
+                    }
+
+                    // Ensure arrays exist
+                    if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                    if (!Array.isArray(state.weighIns)) state.weighIns = [];
+                    if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+
+                } catch (e) {
+                    console.error('Failed to parse localStorage:', e);
+                }
+            }
+        }
+
+        function saveToFirebase() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                return;
+            }
+
+            const saveTime = new Date().toISOString();
+            lastKnownTimestamp = saveTime;
+
+            database.ref(userPath).set({
+                state: state,
+                lastUpdated: saveTime
+            })
+            .then(() => {
+                updateSyncStatus('connected', 'Saved ✓');
+            })
+            .catch(error => {
+                console.error('Firebase save error:', error);
+            });
+        }
+
+        function loadFromFirebase() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                updateSyncStatus('offline', 'Not connected');
+                return;
+            }
+
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+
+                    if (data && data.state) {
+                        const firebaseState = data.state;
+
+                        // Merge Firebase data
+                        state = {
+                            ...state,
+                            profile: { ...state.profile, ...(firebaseState.profile || {}) },
+                            today: { ...state.today, ...(firebaseState.today || {}) },
+                            frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                            weighIns: firebaseState.weighIns || state.weighIns,
+                            dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
+                            refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) }
+                        };
+
+                        // Ensure arrays
+                        if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                        if (!Array.isArray(state.weighIns)) state.weighIns = [];
+                        if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+
+                        // Check for new day
+                        const today = getLocalDateString();
+                        if (state.today.date && state.today.date !== today) {
+                            if (state.today.setupComplete) {
+                                state.dailyLogs[state.today.date] = { ...state.today };
+                            }
+                            state.today = {
+                                date: today,
+                                sleepHours: null,
+                                activeCalories: 0,
+                                isBrainDay: false,
+                                mode: null,
+                                targets: { calories: 2000, protein: 172, floor: 1900 },
+                                meals: [],
+                                setupComplete: false
+                            };
+                        }
+
+                        localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+                        updateSyncStatus('connected', 'Synced ✓');
+                        showToast('☁️ Synced from cloud');
+                    } else {
+                        updateSyncStatus('connected', 'Connected');
+                        saveToFirebase();
+                    }
+
+                    // Initialize UI
+                    initializeUI();
+                    setupRealtimeSync();
+                })
+                .catch(error => {
+                    console.error('Firebase load error:', error);
+                    updateSyncStatus('error', 'Load failed');
+                    initializeUI();
+                });
+        }
+
+        function setupRealtimeSync() {
+            if (realtimeSyncEnabled || !database || !userPath) return;
+            realtimeSyncEnabled = true;
+
+            let isFirstLoad = true;
+
+            database.ref(userPath).on('value', snapshot => {
+                if (isFirstLoad) {
+                    isFirstLoad = false;
+                    const data = snapshot.val();
+                    if (data && data.lastUpdated) {
+                        lastKnownTimestamp = data.lastUpdated;
+                    }
+                    return;
+                }
+
+                const data = snapshot.val();
+                if (data && data.state && data.lastUpdated) {
+                    if (data.lastUpdated === lastKnownTimestamp) {
+                        return;
+                    }
+
+                    lastKnownTimestamp = data.lastUpdated;
+
+                    const firebaseState = data.state;
+                    state = {
+                        ...state,
+                        profile: { ...state.profile, ...(firebaseState.profile || {}) },
+                        today: { ...state.today, ...(firebaseState.today || {}) },
+                        frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                        weighIns: firebaseState.weighIns || state.weighIns,
+                        dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
+                        refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) }
+                    };
+
+                    if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                    if (!Array.isArray(state.weighIns)) state.weighIns = [];
+                    if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+
+                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+                    initializeUI();
+                    updateSyncStatus('connected', '🔄 Updated');
+                    showToast('📥 Synced from another device');
+                }
+            });
+        }
+
+        function forceCloudSync() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                updateSyncStatus('offline', 'Not connected');
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Fetching...');
+
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (!data || !data.state) {
+                        showToast('No cloud data found');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+
+                    const firebaseState = data.state;
+                    state = {
+                        ...state,
+                        profile: { ...state.profile, ...(firebaseState.profile || {}) },
+                        today: { ...state.today, ...(firebaseState.today || {}) },
+                        frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                        weighIns: firebaseState.weighIns || state.weighIns,
+                        dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
+                        refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) }
+                    };
+
+                    if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                    if (!Array.isArray(state.weighIns)) state.weighIns = [];
+                    if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+
+                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+                    initializeUI();
+                    updateSyncStatus('connected', 'Synced ✓');
+                    showToast('✅ Synced from cloud');
+                })
+                .catch(err => {
+                    console.error('Force sync failed:', err);
+                    updateSyncStatus('error', 'Sync failed');
+                    showToast('❌ Sync failed');
+                });
+        }
+
+        // Try to pull sleep data from stimulant calculator
+        async function tryGetSleepFromStimCalc() {
+            if (!firebaseSyncEnabled || !database || !userPath) return null;
+
+            try {
+                const stimPath = userPath.replace('/bodyCompTracker', '/stimulantCalculator');
+                const snapshot = await database.ref(stimPath + '/state').once('value');
+                const stimState = snapshot.val();
+
+                if (stimState && stimState.hoursSleptLastNight !== undefined) {
+                    return stimState.hoursSleptLastNight;
+                }
+            } catch (e) {
+                console.log('Could not read from stimulant calculator:', e);
+            }
+
+            return null;
+        }
+
+        // ============================================
+        // FIREBASE INITIALIZATION
+        // ============================================
+
+        function initFirebase() {
+            const fallbackTimer = setTimeout(() => {
+                if (!firebaseSyncEnabled) {
+                    console.warn('Firebase timeout - running in offline mode');
+                    updateSyncStatus('offline', 'Offline mode');
+                    initializeUI();
+                }
+            }, 3000);
+
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.warn('Firebase SDK not loaded');
+                    clearTimeout(fallbackTimer);
+                    firebaseSyncEnabled = false;
+                    updateSyncStatus('offline', 'Offline mode');
+                    initializeUI();
+                    return;
+                }
+
+                if (!firebase.apps || !firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                firebaseInitialized = true;
+                clearTimeout(fallbackTimer);
+
+                const savedPin = localStorage.getItem('dentalQuestPin');
+
+                if (savedPin) {
+                    setupUserAuth(savedPin);
+                } else {
+                    setTimeout(() => promptForPin(), 500);
+                }
+            } catch (error) {
+                console.error('Firebase init error:', error);
+                clearTimeout(fallbackTimer);
+                firebaseSyncEnabled = false;
+                updateSyncStatus('error', 'Init failed');
+                initializeUI();
+            }
+        }
+
+        function setupUserAuth(pin) {
+            const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
+            currentUser = { uid: hashedPin };
+            userPath = 'users/' + hashedPin + '/bodyCompTracker';
+            firebaseSyncEnabled = true;
+
+            updateSyncStatus('syncing', 'Syncing...');
+            loadFromFirebase();
+        }
+
+        function promptForPin() {
+            if (document.getElementById('pinPromptOverlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'pinPromptOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+
+            overlay.innerHTML = `
+                <div style="background: var(--bg-secondary); padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: white;">
+                    <h3 style="margin-bottom: 15px;">🔐 Enter Your PIN</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
+                    <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--accent-green); background: var(--bg-primary); color: white; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: var(--bg-tertiary); color: white; cursor: pointer;">Skip (Local Only)</button>
+                        <button onclick="submitPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: var(--accent-green); color: white; cursor: pointer; font-weight: 600;">Connect</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            setTimeout(() => {
+                const input = document.getElementById('pinInput');
+                if (input) {
+                    input.focus();
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') submitPin();
+                    });
+                }
+            }, 100);
+        }
+
+        function submitPin() {
+            const input = document.getElementById('pinInput');
+            const pin = input ? input.value.trim() : '';
+
+            if (pin) {
+                localStorage.setItem('dentalQuestPin', pin);
+                setupUserAuth(pin);
+                showToast('✅ Connected with PIN!');
+            } else {
+                showToast('Please enter a PIN');
+                return;
+            }
+
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
+        }
+
+        function skipPin() {
+            firebaseSyncEnabled = false;
+            updateSyncStatus('offline', 'Local only');
+            showToast('Using offline mode');
+
+            const overlay = document.getElementById('pinPromptOverlay');
+            if (overlay) overlay.remove();
+
+            initializeUI();
+        }
+
+        // ============================================
+        // UI INITIALIZATION
+        // ============================================
+
+        async function initializeUI() {
+            // Show correct screen based on state
+            if (state.today.setupComplete && state.today.date === getLocalDateString()) {
+                document.getElementById('setupScreen').classList.remove('active');
+                document.getElementById('dashboardScreen').classList.add('active');
+                renderDashboard();
+                renderMealsList();
+            } else {
+                document.getElementById('dashboardScreen').classList.remove('active');
+                document.getElementById('setupScreen').classList.add('active');
+
+                // Try to auto-fill sleep from stimulant calculator
+                const sleepFromStim = await tryGetSleepFromStimCalc();
+                if (sleepFromStim !== null) {
+                    document.getElementById('sleepInput').value = sleepFromStim;
+                    document.getElementById('sleepAutoFill').textContent = '↑ Auto-filled from Sleep Calculator';
+                }
+            }
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+
+        // Save on page unload
+        window.addEventListener('beforeunload', function() {
+            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+        });
+
+        // Save when tab becomes hidden, refresh when visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                saveStateImmediate();
+            } else {
+                if (firebaseSyncEnabled) {
+                    forceCloudSync();
+                }
+            }
+        });
+
+        // Close modals on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAddMealModal();
+                closeWeighInModal();
+                closeExportModal();
+                closeSettingsModal();
+            }
+        });
+
+        // Close modals when clicking overlay
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadState();
+            initFirebase();
+        });
+    </script>
+</body>
+</html>
