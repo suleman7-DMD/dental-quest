@@ -852,13 +852,507 @@
             margin-bottom: 10px;
         }
 
-        /* Dashboard Screen */
+        /* Dashboard Screen (now "Details View") */
         .dashboard-screen {
             display: none;
         }
 
         .dashboard-screen.active {
             display: block;
+        }
+
+        /* ============================================ */
+        /* SIMPLE VIEW - Default Dashboard (v3)        */
+        /* ============================================ */
+
+        .simple-view {
+            display: none;
+        }
+
+        .simple-view.active {
+            display: block;
+        }
+
+        /* Big Status Display */
+        .status-hero {
+            text-align: center;
+            padding: 30px 20px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .status-label {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .status-label.green { color: var(--accent-green); }
+        .status-label.yellow { color: var(--accent-yellow); }
+        .status-label.red { color: var(--accent-red); }
+
+        .status-subtitle {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bars Section */
+        .simple-progress {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-row {
+            margin-bottom: 15px;
+        }
+
+        .progress-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-name {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .progress-values {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .progress-values strong {
+            color: var(--text-primary);
+        }
+
+        .simple-progress-bar {
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .simple-progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .simple-progress-fill.calories {
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+        }
+
+        .simple-progress-fill.protein {
+            background: linear-gradient(90deg, var(--accent-purple), #ec4899);
+        }
+
+        /* Context Cards */
+        .context-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .context-card.nudge {
+            border-left: 4px solid var(--accent-yellow);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+        }
+
+        .context-card.nudge.danger {
+            border-left-color: var(--accent-red);
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
+        }
+
+        .context-card.nudge.info {
+            border-left-color: var(--accent-blue);
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent);
+        }
+
+        .context-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .context-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .context-detail {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .context-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .context-content {
+            flex: 1;
+        }
+
+        /* Schedule Card (God Mode 8A.1) */
+        .schedule-card {
+            border-left: 4px solid var(--accent-purple);
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.08), transparent);
+        }
+
+        .schedule-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .schedule-card .card-header span:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .intensity-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+        }
+
+        .intensity-badge.easy { background: var(--accent-green); }
+        .intensity-badge.medium { background: var(--accent-yellow); color: #1a1a1a; }
+        .intensity-badge.hard { background: var(--accent-red); }
+
+        .schedule-summary {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .blocked-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .blocked-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .blocked-item .time {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 90px;
+        }
+
+        .front-load-warning {
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: var(--accent-red);
+            margin-top: 10px;
+        }
+
+        /* Exam Day Card (God Mode 8A.3) */
+        .exam-day-card {
+            border-left: 4px solid var(--accent-yellow);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), transparent);
+        }
+
+        .exam-day-card .exam-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--accent-yellow);
+            margin-bottom: 12px;
+        }
+
+        .exam-day-card .exam-section {
+            margin-bottom: 10px;
+        }
+
+        .exam-day-card .exam-section strong {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .exam-day-card .exam-section ul {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .exam-day-card .exam-section li {
+            font-size: 0.85em;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .exam-day-card .exam-caffeine {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .exam-day-card .exam-meal {
+            font-size: 0.9em;
+            color: var(--accent-yellow);
+            font-weight: 500;
+        }
+
+        /* Sleep Debt Indicator (God Mode 8A.4) */
+        .sleep-debt-card {
+            border-left: 4px solid var(--accent-orange);
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.1), transparent);
+        }
+
+        .sleep-debt-card.moderate {
+            border-left-color: var(--accent-yellow);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+        }
+
+        .sleep-debt-card.high {
+            border-left-color: var(--accent-orange);
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.12), transparent);
+        }
+
+        .sleep-debt-card.severe {
+            border-left-color: var(--accent-red);
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), transparent);
+        }
+
+        .sleep-debt-card .debt-header {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .sleep-debt-card.moderate .debt-header { color: var(--accent-yellow); }
+        .sleep-debt-card.high .debt-header { color: var(--accent-orange); }
+        .sleep-debt-card.severe .debt-header { color: var(--accent-red); }
+
+        .sleep-debt-card .debt-details {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .sleep-debt-card .debt-warning {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: var(--accent-red);
+        }
+
+        /* Stimulant Context Panel */
+        .stim-context {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stim-context-header {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stim-context-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stim-item {
+            font-size: 0.85em;
+        }
+
+        .stim-label {
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .stim-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .stim-value.good { color: var(--accent-green); }
+        .stim-value.warning { color: var(--accent-yellow); }
+        .stim-value.danger { color: var(--accent-red); }
+
+        /* Mode Badge */
+        .mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .mode-badge.green {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .mode-badge.yellow {
+            background: var(--accent-yellow-dim);
+            color: var(--accent-yellow);
+        }
+
+        .mode-badge.orange {
+            background: var(--accent-orange-dim);
+            color: var(--accent-orange);
+        }
+
+        /* Action Buttons */
+        .simple-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .details-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .details-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Exam/Inventory Row */
+        .info-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .info-chip {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85em;
+        }
+
+        .info-chip-icon {
+            margin-right: 6px;
+        }
+
+        .info-chip-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .info-chip.warning {
+            border-color: var(--accent-yellow);
+            background: var(--accent-yellow-dim);
+        }
+
+        .info-chip.danger {
+            border-color: var(--accent-red);
+            background: var(--accent-red-dim);
         }
 
         /* Nudge Banner */
@@ -905,6 +1399,529 @@
             opacity: 0.7;
             cursor: pointer;
             font-size: 1.1em;
+        }
+
+        /* ============================================
+           QUICK MEAL MODAL (Phase 4)
+           ============================================ */
+
+        .quick-meal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quick-meal-btn {
+            padding: 16px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .quick-meal-btn:hover {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .quick-meal-btn:active {
+            transform: scale(0.96);
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .quick-meal-name {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.2;
+            /* Truncate long names */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .quick-meal-macros {
+            font-size: 0.8em;
+            color: var(--accent-green);
+            font-weight: 500;
+        }
+
+        .quick-meal-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 15px 0;
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        .quick-meal-divider::before,
+        .quick-meal-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .quick-meal-paste {
+            margin-bottom: 15px;
+        }
+
+        .quick-meal-paste textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.85em;
+            resize: none;
+            height: 60px;
+        }
+
+        .quick-meal-paste textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .quick-meal-paste textarea:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .quick-meal-paste-hint {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .quick-meal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quick-meal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-meal-actions .parse-btn {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: white;
+        }
+
+        .quick-meal-actions .parse-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .quick-meal-actions .custom-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .quick-meal-actions .custom-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        .quick-meal-recent {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .quick-meal-recent-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .recent-meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .recent-meal-item:hover {
+            background: var(--accent-green-dim);
+        }
+
+        .recent-meal-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .recent-meal-name {
+            font-size: 0.85em;
+            color: var(--text-primary);
+        }
+
+        .recent-meal-macros {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           WEEKLY EXPORT MODAL (Phase 7)
+           ============================================ */
+
+        .weekly-export-header {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--accent-purple-dim), var(--accent-blue-dim));
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .weekly-export-header .week-range {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .weekly-export-header .week-summary {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .weekly-export-preview {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .weekly-day-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .weekly-day-row:last-child {
+            border-bottom: none;
+        }
+
+        .weekly-day-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 45px;
+        }
+
+        .weekly-day-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+        }
+
+        .weekly-day-stat {
+            color: var(--text-secondary);
+        }
+
+        .weekly-day-stat.good {
+            color: var(--accent-green);
+        }
+
+        .weekly-day-stat.warning {
+            color: var(--accent-yellow);
+        }
+
+        .weekly-day-stat.danger {
+            color: var(--accent-red);
+        }
+
+        .weekly-day-row.no-data {
+            opacity: 0.5;
+        }
+
+        .weekly-totals {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .weekly-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.9em;
+        }
+
+        .weekly-total-label {
+            color: var(--text-secondary);
+        }
+
+        .weekly-total-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .weekly-total-value.highlight {
+            color: var(--accent-green);
+        }
+
+        .weekly-total-value.warning {
+            color: var(--accent-yellow);
+        }
+
+        .weekly-flags {
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--accent-yellow-dim);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-yellow);
+        }
+
+        .weekly-flags-title {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            margin-bottom: 5px;
+        }
+
+        .weekly-flags-list {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .weekly-export-hint {
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        .weekly-workout-summary {
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--accent-purple-dim);
+            border-radius: 8px;
+        }
+
+        .weekly-workout-title {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 5px;
+        }
+
+        .weekly-workout-stats {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           BODY COMP MODAL (Phase 6)
+           ============================================ */
+
+        .body-comp-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .body-comp-tab {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .body-comp-tab:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .body-comp-tab.active {
+            background: linear-gradient(135deg, var(--accent-purple-dim), var(--accent-blue-dim));
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+
+        .body-comp-panel {
+            display: none;
+        }
+
+        .body-comp-panel.active {
+            display: block;
+        }
+
+        .navy-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: var(--accent-blue-dim);
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .measure-hint {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .navy-preview {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .navy-preview.calculated {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .navy-preview-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .navy-preview-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .navy-preview.calculated .navy-preview-value {
+            color: var(--accent-green);
+        }
+
+        .navy-breakdown {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .navy-breakdown .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .navy-breakdown .breakdown-label {
+            color: var(--text-muted);
+        }
+
+        .navy-breakdown .breakdown-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .navy-breakdown .breakdown-value.fat {
+            color: var(--accent-yellow);
+        }
+
+        .navy-breakdown .breakdown-value.lean {
+            color: var(--accent-green);
+        }
+
+        .body-comp-history {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .body-comp-history-title {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .body-comp-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .body-comp-history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-date {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .history-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85em;
+        }
+
+        .history-bf {
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        .history-weight {
+            color: var(--text-secondary);
+        }
+
+        .history-change {
+            font-size: 0.8em;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .history-change.good {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .history-change.bad {
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+        }
+
+        .body-comp-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
         }
 
         /* Toast Notification */
@@ -2537,6 +3554,139 @@
 
             .modal {
                 max-height: 90vh;
+                margin: 10px;
+            }
+
+            /* Quick Meal Modal mobile */
+            .quick-meal-grid {
+                gap: 8px;
+            }
+
+            .quick-meal-btn {
+                padding: 14px 10px;
+            }
+
+            .quick-meal-name {
+                font-size: 0.85em;
+            }
+
+            /* Body Comp Modal mobile */
+            .body-comp-tabs {
+                flex-direction: row;
+                gap: 6px;
+            }
+
+            .body-comp-tab {
+                padding: 10px 8px;
+                font-size: 0.85em;
+            }
+
+            .navy-preview-value {
+                font-size: 2em;
+            }
+
+            /* Weekly Export mobile */
+            .weekly-day-stats {
+                gap: 8px;
+                font-size: 0.8em;
+            }
+
+            .weekly-total-row {
+                font-size: 0.85em;
+            }
+
+            /* Improve touch targets */
+            .action-btn,
+            .submit-btn,
+            .details-btn {
+                min-height: 48px;
+            }
+
+            .quick-meal-btn,
+            .body-comp-tab,
+            .copy-btn {
+                min-height: 44px;
+            }
+
+            /* Simple View mobile tweaks */
+            .status-icon {
+                font-size: 3em;
+            }
+
+            .status-label {
+                font-size: 1.5em;
+            }
+
+            .info-row {
+                gap: 8px;
+            }
+
+            .info-chip {
+                padding: 8px 10px;
+                font-size: 0.8em;
+            }
+
+            /* God Mode Cards mobile (8A) */
+            .schedule-card .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .schedule-card .schedule-summary {
+                font-size: 0.9em;
+            }
+
+            .blocked-item {
+                font-size: 0.8em;
+                padding: 5px 8px;
+            }
+
+            .blocked-item .time {
+                min-width: 80px;
+            }
+
+            .exam-day-card .exam-title {
+                font-size: 0.95em;
+            }
+
+            .exam-day-card .exam-section li {
+                font-size: 0.8em;
+            }
+
+            .exam-day-card .exam-caffeine,
+            .exam-day-card .exam-meal {
+                font-size: 0.8em;
+            }
+
+            .sleep-debt-card .debt-header {
+                font-size: 0.9em;
+            }
+
+            .sleep-debt-card .debt-details {
+                font-size: 0.8em;
+            }
+
+            .front-load-warning,
+            .sleep-debt-card .debt-warning {
+                font-size: 0.8em;
+                padding: 8px;
+            }
+        }
+
+        /* Touch interaction improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .quick-meal-btn:active,
+            .action-btn:active,
+            .body-comp-tab:active {
+                transform: scale(0.96);
+            }
+
+            /* Disable hover effects on touch devices */
+            .quick-meal-btn:hover,
+            .frequent-food-btn:hover {
+                background: var(--bg-primary);
+                border-color: var(--border-color);
             }
         }
 
@@ -2995,8 +4145,158 @@
             </div>
         </div>
 
-        <!-- Morning Setup Screen -->
-        <div id="setupScreen" class="setup-screen active">
+        <!-- ============================================ -->
+        <!-- SIMPLE VIEW - Default Dashboard (v3)        -->
+        <!-- ============================================ -->
+        <div id="simpleView" class="simple-view active">
+
+            <!-- Status Hero -->
+            <div class="status-hero" id="statusHero">
+                <span class="status-icon" id="statusIcon">✅</span>
+                <div class="status-label green" id="statusLabel">ON TRACK</div>
+                <div class="status-subtitle" id="statusSubtitle">Looking good so far</div>
+            </div>
+
+            <!-- Progress Bars -->
+            <div class="simple-progress">
+                <div class="progress-row">
+                    <div class="progress-label-row">
+                        <span class="progress-name">Calories</span>
+                        <span class="progress-values"><strong id="calCurrent">0</strong> / <span id="calTarget">1900</span></span>
+                    </div>
+                    <div class="simple-progress-bar">
+                        <div class="simple-progress-fill calories" id="calProgressFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="progress-row">
+                    <div class="progress-label-row">
+                        <span class="progress-name">Protein</span>
+                        <span class="progress-values"><strong id="proCurrent">0</strong>g / <span id="proTarget">172</span>g</span>
+                    </div>
+                    <div class="simple-progress-bar">
+                        <div class="simple-progress-fill protein" id="proProgressFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Card (God Mode 8A.1) -->
+            <div class="context-card schedule-card" id="scheduleCard" style="display: none;">
+                <div class="card-header">
+                    <span>📅 Today's Schedule</span>
+                    <span class="intensity-badge" id="scheduleIntensity">EASY</span>
+                </div>
+                <div class="schedule-summary" id="scheduleSummary">Loading schedule...</div>
+                <div class="blocked-list" id="blockedList"></div>
+                <div class="front-load-warning" id="frontLoadWarning" style="display: none;"></div>
+            </div>
+
+            <!-- Exam Day Card (God Mode 8A.3) -->
+            <div class="context-card exam-day-card" id="examDayCard" style="display: none;">
+                <div class="exam-title" id="examTitle">🧠 EXAM DAY</div>
+                <div class="exam-section">
+                    <strong>Nutrition:</strong>
+                    <ul id="examNutritionList"></ul>
+                </div>
+                <div class="exam-caffeine" id="examCaffeine"></div>
+                <div class="exam-meal" id="examMeal"></div>
+            </div>
+
+            <!-- Sleep Debt Indicator (God Mode 8A.4) -->
+            <div class="context-card sleep-debt-card" id="sleepDebtCard" style="display: none;">
+                <div class="debt-header" id="debtHeader">😴 Sleep Debt</div>
+                <div class="debt-details" id="debtDetails"></div>
+                <div class="debt-warning" id="debtWarning" style="display: none;"></div>
+            </div>
+
+            <!-- Eating Nudge (Dynamic) -->
+            <div class="context-card nudge" id="eatingNudge" style="display: none;">
+                <div class="context-row">
+                    <span class="context-icon" id="nudgeIcon">💊</span>
+                    <div class="context-content">
+                        <div class="context-title" id="nudgeTitle">Adderall active until ~2pm</div>
+                        <div class="context-detail" id="nudgeDetail">→ Eat something before the crash</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workout Recommendation -->
+            <div class="context-card" id="workoutCard">
+                <div class="context-row">
+                    <span class="context-icon">🏋️</span>
+                    <div class="context-content">
+                        <div class="context-title" id="workoutTitle">Gym streak: 0 days</div>
+                        <div class="context-detail" id="workoutDetail">Last workout: Never logged</div>
+                        <div class="context-detail" id="workoutRec" style="color: var(--accent-green); margin-top: 4px;">→ Good day to start</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam + Pills Row -->
+            <div class="info-row">
+                <div class="info-chip" id="examChip">
+                    <span class="info-chip-icon">📚</span>
+                    <span class="info-chip-value" id="examInfo">No upcoming exams</span>
+                </div>
+                <div class="info-chip" id="pillsChip">
+                    <span class="info-chip-icon">💊</span>
+                    <span class="info-chip-value" id="pillsInfo">-- pills</span>
+                </div>
+            </div>
+
+            <!-- Stimulant Context Panel -->
+            <div class="stim-context" id="stimContext">
+                <div class="stim-context-header">
+                    <span>📊</span> Stimulant Context
+                </div>
+                <div class="stim-context-grid">
+                    <div class="stim-item">
+                        <span class="stim-label">Adderall</span>
+                        <span class="stim-value" id="stimAdderall">Not synced</span>
+                    </div>
+                    <div class="stim-item">
+                        <span class="stim-label">Caffeine</span>
+                        <span class="stim-value" id="stimCaffeine">Not synced</span>
+                    </div>
+                    <div class="stim-item">
+                        <span class="stim-label">Projected Sleep</span>
+                        <span class="stim-value good" id="stimSleep">--</span>
+                    </div>
+                    <div class="stim-item">
+                        <span class="stim-label">Sleep Last Night</span>
+                        <span class="stim-value" id="stimSleepHours">--</span>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <span class="mode-badge green" id="modeBadge">🟢 GREEN MODE</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="simple-actions">
+                <button class="action-btn primary" onclick="openQuickMealModal()">
+                    <span>+</span> Log Meal
+                </button>
+                <button class="action-btn secondary" onclick="openWorkoutModal()">
+                    <span>💪</span> Workout
+                </button>
+            </div>
+
+            <button class="details-btn" onclick="showDetailsView()">
+                <span>📊</span> View Details & History
+            </button>
+
+            <button class="details-btn" onclick="openWeeklyExportModal()" style="margin-top: 10px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)); border-color: rgba(139, 92, 246, 0.3);">
+                <span>📤</span> Weekly Check-In for Claude
+            </button>
+
+            <button class="details-btn" onclick="openBodyCompModal()" style="margin-top: 10px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15)); border-color: rgba(236, 72, 153, 0.3);">
+                <span>📏</span> Monthly Body Comp Check-In
+            </button>
+
+        </div>
+
+        <!-- Morning Setup Screen (Now hidden by default - only for manual override) -->
+        <div id="setupScreen" class="setup-screen">
             <div class="setup-card">
                 <span class="setup-emoji">☀️</span>
                 <h2 class="setup-title">Morning Setup</h2>
@@ -3040,8 +4340,13 @@
             </div>
         </div>
 
-        <!-- Main Dashboard Screen -->
+        <!-- Main Dashboard Screen (Details View) -->
         <div id="dashboardScreen" class="dashboard-screen">
+            <!-- Back to Simple View Button -->
+            <button class="details-btn" onclick="showSimpleView()" style="margin-bottom: 15px;">
+                <span>←</span> Back to Simple View
+            </button>
+
             <!-- XP & Level Bar -->
             <div class="xp-bar-container" id="xpBarContainer">
                 <div class="xp-header">
@@ -3544,6 +4849,122 @@
         </div>
     </div>
 
+    <!-- Weekly Export Modal (Phase 7) -->
+    <div id="weeklyExportModal" class="modal-overlay">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <span class="modal-title">📊 Weekly Check-In</span>
+                <button class="modal-close" onclick="closeWeeklyExportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="weekly-export-header" id="weeklyExportHeader">
+                    <!-- Week range display -->
+                </div>
+                <div class="weekly-export-preview" id="weeklyExportPreview">
+                    <!-- Generated weekly summary -->
+                </div>
+                <div class="export-actions" style="margin-top: 15px;">
+                    <button class="copy-btn claude" onclick="copyWeeklyExport()" style="width: 100%;">
+                        🤖 Copy for Claude Check-In
+                    </button>
+                </div>
+                <div class="weekly-export-hint">
+                    Paste this into Claude for personalized feedback on your week
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body Comp Check-In Modal (Phase 6) -->
+    <div id="bodyCompModal" class="modal-overlay">
+        <div class="modal" style="max-width: 420px;">
+            <div class="modal-header">
+                <span class="modal-title">📏 Monthly Body Comp</span>
+                <button class="modal-close" onclick="closeBodyCompModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Method Tabs -->
+                <div class="body-comp-tabs">
+                    <button class="body-comp-tab active" onclick="setBodyCompTab('navy')" id="navyTab">
+                        📏 Navy Method
+                    </button>
+                    <button class="body-comp-tab" onclick="setBodyCompTab('scale')" id="scaleTab">
+                        ⚖️ Smart Scale
+                    </button>
+                </div>
+
+                <!-- Navy Method Panel -->
+                <div id="navyPanel" class="body-comp-panel active">
+                    <div class="navy-info">
+                        <span>📐</span> Measure with a soft tape measure
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Weight (lbs)</label>
+                        <input type="number" id="navyWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Neck (inches)</label>
+                            <input type="number" id="neckInput" class="form-input" step="0.1" placeholder="e.g., 15.5">
+                            <div class="measure-hint">Below Adam's apple</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Waist (inches)</label>
+                            <input type="number" id="waistInput" class="form-input" step="0.1" placeholder="e.g., 34">
+                            <div class="measure-hint">At belly button</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Calculation Preview -->
+                    <div class="navy-preview" id="navyPreview">
+                        <div class="navy-preview-label">Estimated Body Fat</div>
+                        <div class="navy-preview-value" id="navyBfPreview">--%</div>
+                        <div class="navy-breakdown" id="navyBreakdown">
+                            Enter measurements above
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="saveNavyMeasurement()">Save Body Comp</button>
+                </div>
+
+                <!-- Smart Scale Panel -->
+                <div id="scalePanel" class="body-comp-panel">
+                    <div class="navy-info">
+                        <span>⚖️</span> Enter reading from your smart scale
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Weight (lbs)</label>
+                        <input type="number" id="scaleWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Body Fat % (from scale)</label>
+                        <input type="number" id="scaleBfInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                    </div>
+
+                    <!-- Live Calculation Preview -->
+                    <div class="navy-preview" id="scalePreview">
+                        <div class="navy-preview-label">Body Composition</div>
+                        <div class="navy-preview-value" id="scaleBfPreview">--%</div>
+                        <div class="navy-breakdown" id="scaleBreakdown">
+                            Enter weight and body fat above
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="saveScaleMeasurement()">Save Body Comp</button>
+                </div>
+
+                <!-- History Preview -->
+                <div class="body-comp-history" id="bodyCompHistory">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay">
         <div class="modal">
@@ -3635,13 +5056,15 @@
             // Profile (set once, adjust as needed)
             profile: {
                 currentWeight_lbs: 190,
-                height_cm: 178,
+                height_cm: 174,        // 5'8.5" - CORRECTED from 178
+                height_inches: 68.5,   // For Navy method body fat calculation
                 age: 30,
                 startingWeight_lbs: 190,
+                startingBodyFat: 27,   // Starting BF% estimate
                 goalWeight_lbs: 170,
                 tdee_base: 2500,
-                tdee_original: 2500,  // Store original for reference
-                lastMilestone: 0,     // Track weight loss milestones (every 5 lbs)
+                tdee_original: 2500,   // Store original for reference
+                lastMilestone: 0,      // Track weight loss milestones (every 5 lbs)
                 startDate: null,
                 targetDate: '2026-06-01'
             },
@@ -3656,7 +5079,7 @@
                 targets: {
                     calories: 2000,
                     protein: 172,
-                    carbs: 150,       // Carb target for brain days
+                    carbs: 150,        // Carb target for brain days
                     floor: 1900
                 },
                 meals: [],
@@ -3664,7 +5087,83 @@
                 // Micronutrient tracking
                 magnesiumTaken: false,
                 waterGoalMet: false,
-                cnsProtectionAwarded: false
+                cnsProtectionAwarded: false,
+                // Workout tracking
+                workedOut: false,
+                workouts: [],          // Array of { type, duration, calories, time }
+                lastMealTime: null     // Track for nudge system
+            },
+
+            // Ecosystem context (pulled from other apps - READ ONLY)
+            ecosystemContext: {
+                // From Stimulant Calculator
+                stimulant: {
+                    sleepHours: null,
+                    wakeTime: null,
+                    lastAdderallTime: null,
+                    lastAdderallDose: null,
+                    totalAdderallToday: 0,
+                    isBooster: false,          // true if medications.length > 1
+                    lastCaffeineTime: null,
+                    caffeineMg: 0,
+                    projectedSleepTime: null,
+                    lastSynced: null
+                },
+                // From Dental Quest (medications)
+                inventory: {
+                    pills30mg: null,
+                    pills20mg: null,
+                    refillDate30mg: null,
+                    refillDate20mg: null,
+                    daysUntilRefill: null,
+                    willRunOut: false,
+                    lastSynced: null
+                },
+                // From D3 Roadmap
+                academic: {
+                    nextExam: null,            // { name, date, weight, priority }
+                    daysUntilExam: null,
+                    upcomingExams: [],         // Next 30 days
+                    lastSynced: null
+                },
+                // Schedule data (God Mode 8A.1)
+                schedule: {
+                    todayTasks: [],
+                    tomorrowTasks: [],
+                    blockedWindows: [],
+                    eatingWindows: [],
+                    totalEatingHours: 0,
+                    frontLoadRequired: false,
+                    frontLoadDeadline: null,
+                    scheduleIntensity: 'EASY',  // EASY | MEDIUM | HARD
+                    lastSynced: null
+                },
+                // Exam day data (God Mode 8A.3)
+                examDay: {
+                    isExamDay: false,
+                    examName: null,
+                    examTime: null,
+                    minutesUntilExam: null,
+                    phase: null  // MORNING_PREP | PRE_EXAM | FINAL_HOUR | DURING_EXAM | POST_EXAM
+                },
+                // Sleep debt data (God Mode 8A.4)
+                sleepDebt: {
+                    last7Days: [],
+                    totalSleep: 0,
+                    avgSleep: 0,
+                    weeklyDebt: 0,
+                    consecutiveBadNights: 0,
+                    severity: 'LOW'  // LOW | MODERATE | HIGH | SEVERE
+                },
+                // Combined stimulant effect (God Mode 8A.8)
+                stimulantEffect: {
+                    adderallEffect: 0,
+                    caffeineEffect: 0,
+                    combinedEffect: 0,
+                    suppressionLevel: 'LOW',  // LOW | MODERATE | HIGH | SEVERE
+                    suppressionEnd: null,
+                    crashRiskWindow: { start: null, end: null, intensity: 'NORMAL' }
+                }
             },
 
             // Historical daily logs
@@ -3703,6 +5202,9 @@
 
             // Weekly weigh-ins
             weighIns: [],
+
+            // Body comp history (Phase 6 - monthly tape measurements)
+            bodyCompHistory: [],
 
             // Refeed tracking
             refeedTracker: {
@@ -3786,6 +5288,59 @@
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
+        }
+
+        // ============================================
+        // SCHEDULE HELPER FUNCTIONS (God Mode 8A.1)
+        // ============================================
+
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [hours, mins] = timeStr.split(':').map(Number);
+            return hours * 60 + (mins || 0);
+        }
+
+        function minutesToTime(mins) {
+            const hours = Math.floor(mins / 60);
+            const minutes = mins % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        function calculateEatingWindows(blockedWindows) {
+            const dayStart = 7 * 60;  // 7am
+            const dayEnd = 22 * 60;   // 10pm
+            const windows = [];
+
+            let currentStart = dayStart;
+
+            for (const block of blockedWindows) {
+                if (block.startMinutes > currentStart) {
+                    windows.push({
+                        start: minutesToTime(currentStart),
+                        end: minutesToTime(block.startMinutes),
+                        duration: block.startMinutes - currentStart,
+                        type: 'eating'
+                    });
+                }
+                currentStart = Math.max(currentStart, block.endMinutes);
+            }
+
+            // Add final window if there's time after last block
+            if (currentStart < dayEnd) {
+                windows.push({
+                    start: minutesToTime(currentStart),
+                    end: minutesToTime(dayEnd),
+                    duration: dayEnd - currentStart,
+                    type: 'eating'
+                });
+            }
+
+            return windows;
+        }
+
+        function getFirstMajorBlock(blockedWindows) {
+            // Find first block that's >= 2 hours
+            return blockedWindows.find(b => (b.endMinutes - b.startMinutes) >= 120);
         }
 
         function showToast(message) {
@@ -4027,6 +5582,1227 @@
 
             // Render XP bar
             renderXPBar();
+        }
+
+        // ============================================
+        // SIMPLE VIEW RENDERING (v3)
+        // ============================================
+
+        function renderSimpleView() {
+            const totals = getTodayTotals();
+            const targets = state.today.targets || { calories: 1900, protein: 172 };
+            const mode = state.today.mode || 'GREEN';
+
+            // Update status
+            const status = getSimpleStatus();
+            document.getElementById('statusIcon').textContent = status.icon;
+            document.getElementById('statusLabel').textContent = status.label;
+            document.getElementById('statusLabel').className = `status-label ${status.color}`;
+            document.getElementById('statusSubtitle').textContent = status.subtitle;
+
+            // Update progress bars
+            const calPercent = Math.min((totals.calories / targets.calories) * 100, 100);
+            const proPercent = Math.min((totals.protein / targets.protein) * 100, 100);
+
+            document.getElementById('calCurrent').textContent = totals.calories;
+            document.getElementById('calTarget').textContent = targets.calories;
+            document.getElementById('calProgressFill').style.width = `${calPercent}%`;
+
+            document.getElementById('proCurrent').textContent = totals.protein;
+            document.getElementById('proTarget').textContent = targets.protein;
+            document.getElementById('proProgressFill').style.width = `${proPercent}%`;
+
+            // Update eating nudge
+            const nudge = getEatingNudge();
+            const nudgeEl = document.getElementById('eatingNudge');
+            if (nudge) {
+                nudgeEl.style.display = 'block';
+                nudgeEl.className = `context-card nudge ${nudge.type === 'danger' ? 'danger' : nudge.type === 'info' ? 'info' : ''}`;
+                document.getElementById('nudgeIcon').textContent = nudge.icon;
+                document.getElementById('nudgeTitle').textContent = nudge.title;
+                document.getElementById('nudgeDetail').textContent = '→ ' + nudge.message;
+            } else {
+                nudgeEl.style.display = 'none';
+            }
+
+            // Update workout recommendation
+            const workout = getWorkoutRecommendation();
+            document.getElementById('workoutTitle').textContent = `Gym streak: ${state.gamification.streak || 0} days`;
+            document.getElementById('workoutDetail').textContent = workout.info;
+            document.getElementById('workoutRec').textContent = '→ ' + workout.recommendation;
+            document.getElementById('workoutRec').style.color = workout.color;
+
+            // Update exam chip
+            const academic = state.ecosystemContext?.academic;
+            const examChip = document.getElementById('examChip');
+            if (academic?.nextExam) {
+                const days = academic.daysUntilExam;
+                document.getElementById('examInfo').textContent = `${academic.nextExam.name} in ${days}d`;
+                examChip.className = days <= 3 ? 'info-chip danger' : days <= 7 ? 'info-chip warning' : 'info-chip';
+            } else {
+                document.getElementById('examInfo').textContent = 'No upcoming exams';
+                examChip.className = 'info-chip';
+            }
+
+            // Update pills chip
+            const inventory = state.ecosystemContext?.inventory;
+            const pillsChip = document.getElementById('pillsChip');
+            if (inventory?.pills30mg != null) {
+                const totalPills = Math.min(inventory.pills30mg, inventory.pills20mg);
+                document.getElementById('pillsInfo').textContent = `${totalPills} pills left`;
+                pillsChip.className = inventory.willRunOut ? 'info-chip danger' : totalPills <= 7 ? 'info-chip warning' : 'info-chip';
+            } else {
+                document.getElementById('pillsInfo').textContent = 'Not synced';
+                pillsChip.className = 'info-chip';
+            }
+
+            // Update stimulant context
+            const stim = state.ecosystemContext?.stimulant;
+            if (stim?.lastSynced) {
+                document.getElementById('stimAdderall').textContent = stim.totalAdderallToday > 0
+                    ? `${stim.totalAdderallToday}mg${stim.isBooster ? ' ⚠️' : ''} @ ${stim.lastAdderallTime || '--'}`
+                    : 'None today';
+                document.getElementById('stimCaffeine').textContent = stim.caffeineMg > 0
+                    ? `${stim.caffeineMg}mg`
+                    : 'None';
+                document.getElementById('stimSleep').textContent = stim.projectedSleepTime || '--';
+
+                // Color code projected sleep
+                const sleepEl = document.getElementById('stimSleep');
+                if (stim.projectedSleepTime) {
+                    const hour = parseInt(stim.projectedSleepTime.split(':')[0]) || 0;
+                    const isPM = stim.projectedSleepTime.toLowerCase().includes('pm');
+                    const hour24 = isPM && hour !== 12 ? hour + 12 : hour;
+                    sleepEl.className = hour24 >= 24 || hour24 < 6 ? 'stim-value danger' : hour24 > 23 ? 'stim-value warning' : 'stim-value good';
+                }
+
+                document.getElementById('stimSleepHours').textContent = stim.sleepHours != null
+                    ? `${stim.sleepHours}h`
+                    : '--';
+                document.getElementById('stimSleepHours').className = stim.sleepHours >= 6 ? 'stim-value good' : stim.sleepHours >= 5 ? 'stim-value warning' : 'stim-value danger';
+            }
+
+            // Update mode badge
+            const modeBadge = document.getElementById('modeBadge');
+            const modeConfig = {
+                'GREEN': { emoji: '🟢', label: 'GREEN MODE', class: 'green' },
+                'YELLOW': { emoji: '🟡', label: 'YELLOW MODE', class: 'yellow' },
+                'ORANGE': { emoji: '🟠', label: 'ORANGE MODE', class: 'orange' }
+            };
+            const mc = modeConfig[mode] || modeConfig['GREEN'];
+            modeBadge.textContent = `${mc.emoji} ${mc.label}`;
+            modeBadge.className = `mode-badge ${mc.class}`;
+
+            // Update schedule card (God Mode 8A.1)
+            renderScheduleCard();
+
+            // Update exam day card (God Mode 8A.3)
+            renderExamDayCard();
+
+            // Update sleep debt indicator (God Mode 8A.4)
+            renderSleepDebtIndicator();
+        }
+
+        // ============================================
+        // SCHEDULE CARD RENDERING (God Mode 8A.1)
+        // ============================================
+
+        function renderScheduleCard() {
+            const schedule = state.ecosystemContext?.schedule;
+            const scheduleCard = document.getElementById('scheduleCard');
+
+            if (!schedule || !schedule.lastSynced || schedule.blockedWindows.length === 0) {
+                // Hide if no schedule data or no blocks
+                if (scheduleCard) scheduleCard.style.display = 'none';
+                return;
+            }
+
+            // Show the card
+            scheduleCard.style.display = 'block';
+
+            // Update intensity badge
+            const intensityBadge = document.getElementById('scheduleIntensity');
+            const intensityClass = schedule.scheduleIntensity.toLowerCase();
+            intensityBadge.textContent = schedule.scheduleIntensity;
+            intensityBadge.className = `intensity-badge ${intensityClass}`;
+
+            // Update summary
+            document.getElementById('scheduleSummary').textContent =
+                `${schedule.totalEatingHours} hours to eat today`;
+
+            // Update blocked list
+            const blockedList = document.getElementById('blockedList');
+            if (schedule.blockedWindows.length > 0) {
+                const icons = {
+                    'clinic': '🦷',
+                    'lecture': '📚',
+                    'exam': '📝',
+                    'lab': '🔬'
+                };
+                blockedList.innerHTML = schedule.blockedWindows.map(block => `
+                    <div class="blocked-item">
+                        ${icons[block.type] || '📌'}
+                        <span class="time">${block.start}-${block.end}</span>
+                        ${escapeHtml(block.name)}
+                    </div>
+                `).join('');
+            } else {
+                blockedList.innerHTML = '';
+            }
+
+            // Update front-load warning
+            const frontLoadWarning = document.getElementById('frontLoadWarning');
+            if (schedule.frontLoadRequired && schedule.frontLoadDeadline) {
+                frontLoadWarning.style.display = 'block';
+                frontLoadWarning.textContent = `⚠️ Front-load required: Get 70% of calories by ${schedule.frontLoadDeadline}`;
+            } else {
+                frontLoadWarning.style.display = 'none';
+            }
+        }
+
+        function getScheduleAwareNudge() {
+            const schedule = state.ecosystemContext?.schedule;
+            if (!schedule || !schedule.lastSynced) return null;
+
+            const { blockedWindows, frontLoadRequired, frontLoadDeadline, totalEatingHours } = schedule;
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const totals = getTodayTotals();
+            const targets = state.today.targets || { calories: 1900, protein: 172 };
+
+            // Find next blocked window
+            const nextBlock = blockedWindows.find(b => b.startMinutes > currentMinutes);
+            const minutesUntilBlock = nextBlock ? nextBlock.startMinutes - currentMinutes : null;
+
+            // NUDGE: Block starting soon, haven't eaten enough
+            if (nextBlock && minutesUntilBlock <= 30 && minutesUntilBlock > 0) {
+                const blockDuration = nextBlock.endMinutes - nextBlock.startMinutes;
+                if (blockDuration >= 90) { // 1.5+ hour block
+                    const expectedProgress = getExpectedProgress(currentMinutes);
+                    const actualProgress = totals.calories / targets.calories;
+
+                    if (actualProgress < expectedProgress * 0.7) {
+                        const icon = nextBlock.type === 'clinic' ? '🦷' : nextBlock.type === 'exam' ? '📝' : '📚';
+                        return {
+                            type: 'warning',
+                            icon: icon,
+                            title: `${nextBlock.name} in ${minutesUntilBlock} min`,
+                            message: `Eat something NOW or wait ${Math.round(blockDuration / 60)} hours`
+                        };
+                    }
+                }
+            }
+
+            // NUDGE: Front-loading deadline approaching
+            if (frontLoadRequired && frontLoadDeadline) {
+                const deadlineMinutes = timeToMinutes(frontLoadDeadline);
+                const minutesUntilDeadline = deadlineMinutes - currentMinutes;
+
+                if (minutesUntilDeadline > 0 && minutesUntilDeadline <= 60) {
+                    const frontLoadProgress = totals.calories / (targets.calories * 0.7);
+                    if (frontLoadProgress < 0.8) {
+                        const calNeeded = Math.round((targets.calories * 0.7) - totals.calories);
+                        return {
+                            type: 'danger',
+                            icon: '⚠️',
+                            title: `${minutesUntilDeadline} min until schedule blocks eating`,
+                            message: `Need ${calNeeded} more cal NOW`
+                        };
+                    }
+                }
+            }
+
+            // NUDGE: Hard schedule day warning (morning)
+            if (totalEatingHours < 5 && currentMinutes < 10 * 60) {
+                return {
+                    type: 'info',
+                    icon: '📅',
+                    title: `Brutal schedule today (${totalEatingHours}hr to eat)`,
+                    message: 'Front-load your meals'
+                };
+            }
+
+            return null;
+        }
+
+        function getExpectedProgress(currentMinutes) {
+            // Return expected calorie progress based on time of day
+            const hour = currentMinutes / 60;
+            if (hour < 9) return 0.1;
+            if (hour < 12) return 0.25;
+            if (hour < 15) return 0.45;
+            if (hour < 18) return 0.65;
+            if (hour < 21) return 0.85;
+            return 1.0;
+        }
+
+        // ============================================
+        // EXAM DAY PROTOCOL (God Mode 8A.3)
+        // ============================================
+
+        function checkExamDay() {
+            const schedule = state.ecosystemContext?.schedule;
+            const todayTasks = schedule?.todayTasks;
+
+            if (!todayTasks || todayTasks.length === 0) return null;
+
+            // Find exam in today's tasks
+            const exam = todayTasks.find(t =>
+                t.type?.toLowerCase() === 'exam' ||
+                t.name?.toLowerCase().includes('exam') ||
+                t.title?.toLowerCase().includes('exam')
+            );
+
+            if (!exam) return null;
+
+            const examTime = exam.startTime;
+            if (!examTime) return null;
+
+            const examMinutes = timeToMinutes(examTime);
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const minutesUntilExam = examMinutes - currentMinutes;
+
+            return {
+                isExamDay: true,
+                examName: exam.name || exam.title || 'Exam',
+                examTime: examTime,
+                minutesUntilExam: minutesUntilExam,
+                phase: getExamPhase(minutesUntilExam)
+            };
+        }
+
+        function getExamPhase(minutesUntil) {
+            if (minutesUntil > 240) return 'MORNING_PREP';    // 4+ hours before
+            if (minutesUntil > 60) return 'PRE_EXAM';         // 1-4 hours before
+            if (minutesUntil > 0) return 'FINAL_HOUR';        // <1 hour before
+            if (minutesUntil > -180) return 'DURING_EXAM';    // During (assume 3hr exam)
+            return 'POST_EXAM';                                // After
+        }
+
+        function subtractHours(timeStr, hours) {
+            if (!timeStr) return '';
+            const [h, m] = timeStr.split(':').map(Number);
+            let newHour = h - hours;
+            if (newHour < 0) newHour += 24;
+            return `${newHour.toString().padStart(2, '0')}:${(m || 0).toString().padStart(2, '0')}`;
+        }
+
+        function getExamDayGuidance() {
+            const examInfo = checkExamDay();
+            if (!examInfo) return null;
+
+            const { examName, examTime, minutesUntilExam, phase } = examInfo;
+            const safeExamName = escapeHtml(examName);
+
+            const guidance = {
+                MORNING_PREP: {
+                    title: `🧠 EXAM DAY: ${safeExamName} at ${examTime}`,
+                    nutrition: [
+                        '✅ Complex carbs for brain fuel (oatmeal, banana, toast)',
+                        '✅ Moderate protein (eggs, yogurt, protein shake)',
+                        '✅ Stay hydrated (water, not just coffee)',
+                        '❌ Avoid heavy/greasy foods (brain fog)',
+                        '❌ Avoid sugar spikes (crash during exam)'
+                    ],
+                    caffeine: `☕ Coffee OK but finish by ${subtractHours(examTime, 4)} (4hrs before)`,
+                    meal: '💡 Eat a solid breakfast. Your brain needs glucose.'
+                },
+                PRE_EXAM: {
+                    title: `🧠 ${safeExamName} in ${Math.round(minutesUntilExam / 60)} hours`,
+                    nutrition: [
+                        '✅ Light snack if hungry (banana, protein bar)',
+                        '❌ No heavy meals (blood to digestion, not brain)',
+                        '❌ No more caffeine (anxiety risk)'
+                    ],
+                    caffeine: '☕ No more caffeine. Steady focus, not jitters.',
+                    meal: '💡 Light snack only. Save the big meal for after.'
+                },
+                FINAL_HOUR: {
+                    title: `🧠 ${safeExamName} starting soon!`,
+                    nutrition: [
+                        '✅ Small snack if needed (nuts, fruit)',
+                        '✅ Water',
+                        '❌ Nothing heavy'
+                    ],
+                    caffeine: '☕ No caffeine.',
+                    meal: '💡 You should already be fueled. Light snack max.'
+                },
+                DURING_EXAM: {
+                    title: `🧠 ${safeExamName} in progress...`,
+                    nutrition: [
+                        '🎯 Focus on the exam!',
+                        '✅ Sip water if needed'
+                    ],
+                    caffeine: '',
+                    meal: '💡 You got this!'
+                },
+                POST_EXAM: {
+                    title: `✅ ${safeExamName} complete!`,
+                    nutrition: [
+                        '✅ Eat a full meal — you earned it',
+                        '✅ Protein for recovery',
+                        '✅ Whatever sounds good'
+                    ],
+                    caffeine: '☕ Caffeine OK if before your cutoff time.',
+                    meal: '💡 Full meal. Refuel. You did it.'
+                }
+            };
+
+            return guidance[phase] || null;
+        }
+
+        function renderExamDayCard() {
+            const examCard = document.getElementById('examDayCard');
+            const guidance = getExamDayGuidance();
+
+            if (!guidance) {
+                if (examCard) examCard.style.display = 'none';
+                // Also update state
+                state.ecosystemContext.examDay = {
+                    isExamDay: false,
+                    examName: null,
+                    examTime: null,
+                    minutesUntilExam: null,
+                    phase: null
+                };
+                return;
+            }
+
+            // Update state
+            const examInfo = checkExamDay();
+            state.ecosystemContext.examDay = examInfo;
+
+            // Show the card
+            examCard.style.display = 'block';
+
+            // Update content
+            document.getElementById('examTitle').innerHTML = guidance.title;
+            document.getElementById('examNutritionList').innerHTML =
+                guidance.nutrition.map(n => `<li>${n}</li>`).join('');
+            document.getElementById('examCaffeine').textContent = guidance.caffeine;
+            document.getElementById('examMeal').textContent = guidance.meal;
+        }
+
+        // ============================================
+        // SLEEP DEBT ACCUMULATION (God Mode 8A.4)
+        // ============================================
+
+        async function calculateSleepDebt(basePath) {
+            try {
+                // Try to get sleep history from stimulant calculator
+                const stimSnapshot = await database.ref(basePath + '/stimulantCalculator/state').once('value');
+                const stimData = stimSnapshot.val();
+
+                // Collect last 7 days of sleep data
+                const last7Days = [];
+                for (let i = 0; i < 7; i++) {
+                    const date = getLocalDateString(new Date(Date.now() - i * 86400000));
+                    let hours = null;
+
+                    // Try stimulant calc sleep history first
+                    if (stimData?.sleepHistory?.[date]) {
+                        hours = stimData.sleepHistory[date].hours || stimData.sleepHistory[date];
+                    }
+                    // Fall back to body comp daily logs
+                    else if (state.dailyLogs?.[date]?.sleepHours) {
+                        hours = state.dailyLogs[date].sleepHours;
+                    }
+                    // Today's sleep from current state
+                    else if (i === 0 && state.today?.sleepHours) {
+                        hours = state.today.sleepHours;
+                    }
+
+                    last7Days.push({ date, hours });
+                }
+
+                // Calculate totals (target = 7 hours/night = 49 hours/week)
+                const TARGET_WEEKLY = 49;
+                const daysWithData = last7Days.filter(d => d.hours !== null && d.hours !== undefined);
+                const totalSleep = daysWithData.reduce((sum, d) => sum + d.hours, 0);
+                const avgSleep = daysWithData.length > 0 ? totalSleep / daysWithData.length : 6;
+
+                // Extrapolate weekly total if missing days
+                const projectedWeekly = avgSleep * 7;
+                const weeklyDebt = TARGET_WEEKLY - projectedWeekly;
+
+                // Consecutive bad nights (<5.5 hours)
+                let consecutiveBadNights = 0;
+                for (const day of last7Days) {
+                    if (day.hours !== null && day.hours < 5.5) {
+                        consecutiveBadNights++;
+                    } else if (day.hours !== null) {
+                        break; // Stop counting when we hit a good night
+                    }
+                }
+
+                const severity = getSleepDebtSeverity(weeklyDebt, consecutiveBadNights);
+
+                state.ecosystemContext.sleepDebt = {
+                    last7Days,
+                    totalSleep: Math.round(totalSleep * 10) / 10,
+                    avgSleep: Math.round(avgSleep * 10) / 10,
+                    weeklyDebt: Math.round(weeklyDebt * 10) / 10,
+                    consecutiveBadNights,
+                    severity
+                };
+
+                console.log('😴 Sleep debt calculated:', state.ecosystemContext.sleepDebt);
+                return state.ecosystemContext.sleepDebt;
+
+            } catch (error) {
+                console.error('❌ Error calculating sleep debt:', error);
+                return null;
+            }
+        }
+
+        function getSleepDebtSeverity(weeklyDebt, consecutiveBad) {
+            if (weeklyDebt > 10 || consecutiveBad >= 4) return 'SEVERE';
+            if (weeklyDebt > 7 || consecutiveBad >= 3) return 'HIGH';
+            if (weeklyDebt > 4 || consecutiveBad >= 2) return 'MODERATE';
+            return 'LOW';
+        }
+
+        function renderSleepDebtIndicator() {
+            const sleepDebt = state.ecosystemContext?.sleepDebt;
+            const debtCard = document.getElementById('sleepDebtCard');
+
+            if (!sleepDebt || sleepDebt.severity === 'LOW') {
+                if (debtCard) debtCard.style.display = 'none';
+                return;
+            }
+
+            // Show the card
+            debtCard.style.display = 'block';
+            debtCard.className = `context-card sleep-debt-card ${sleepDebt.severity.toLowerCase()}`;
+
+            // Update header
+            const debtSign = sleepDebt.weeklyDebt > 0 ? '+' : '';
+            document.getElementById('debtHeader').textContent =
+                `😴 Sleep Debt: ${debtSign}${sleepDebt.weeklyDebt}hr this week`;
+
+            // Update details
+            let details = `Avg: ${sleepDebt.avgSleep}hr/night (target: 7hr)`;
+            if (sleepDebt.consecutiveBadNights >= 2) {
+                details += `<br>${sleepDebt.consecutiveBadNights} bad nights in a row`;
+            }
+            document.getElementById('debtDetails').innerHTML = details;
+
+            // Update warning for severe
+            const warningEl = document.getElementById('debtWarning');
+            if (sleepDebt.severity === 'SEVERE') {
+                warningEl.style.display = 'block';
+                warningEl.textContent = 'Forced maintenance mode. Your body needs recovery, not deficit.';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        function applySleepDebtModeOverride() {
+            const sleepDebt = state.ecosystemContext?.sleepDebt;
+            if (!sleepDebt) return;
+
+            // SEVERE sleep debt forces ORANGE mode
+            if (sleepDebt.severity === 'SEVERE' && state.today.mode !== 'ORANGE') {
+                state.today.mode = 'ORANGE';
+                state.today.modeReason = 'Sleep debt override';
+                console.log('🔴 Mode forced to ORANGE due to severe sleep debt');
+            }
+            // HIGH sleep debt bumps GREEN → YELLOW
+            else if (sleepDebt.severity === 'HIGH' && state.today.mode === 'GREEN') {
+                state.today.mode = 'YELLOW';
+                state.today.modeReason = 'Sleep debt adjustment';
+                console.log('🟡 Mode bumped to YELLOW due to high sleep debt');
+            }
+        }
+
+        // ============================================
+        // EXAM STRESS MULTIPLIER (God Mode 8A.5)
+        // ============================================
+
+        function applyExamStressMultiplier() {
+            const academic = state.ecosystemContext?.academic;
+            const daysUntilExam = academic?.daysUntilExam;
+            const nextExam = academic?.nextExam;
+
+            if (!nextExam || daysUntilExam == null || daysUntilExam > 7) {
+                // No adjustment needed
+                state.today.targets.calorieMultiplier = 1.0;
+                state.today.targets.multiplierReason = null;
+                return;
+            }
+
+            // Historical pattern: Sully undereats as exams approach
+            // Counter this by raising targets
+            let multiplier = 1.0;
+            let reason = '';
+
+            if (daysUntilExam <= 3) {
+                multiplier = 1.20; // +20%
+                reason = `📝 Exam in ${daysUntilExam} day${daysUntilExam !== 1 ? 's' : ''}. Targets +20% (you undereat before exams)`;
+            } else if (daysUntilExam <= 7) {
+                multiplier = 1.10; // +10%
+                reason = `📝 Exam in ${daysUntilExam} days. Targets +10%`;
+            }
+
+            if (multiplier > 1.0) {
+                const baseCalories = state.today.targets.calories;
+                state.today.targets.calories = Math.round(baseCalories * multiplier);
+                state.today.targets.calorieMultiplier = multiplier;
+                state.today.targets.multiplierReason = reason;
+                console.log(`📝 Exam stress multiplier applied: ${multiplier}x (${reason})`);
+            }
+        }
+
+        // ============================================
+        // CAFFEINE × ADDERALL MODELING (God Mode 8A.8)
+        // ============================================
+
+        function parseTimeToDate(timeStr) {
+            // Parse HH:MM string to Date object for today
+            if (!timeStr) return null;
+            const [h, m] = timeStr.split(':').map(Number);
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m || 0);
+        }
+
+        function calculateCombinedStimulantEffect() {
+            const stim = state.ecosystemContext?.stimulant;
+            if (!stim?.lastAdderallTime) return null;
+
+            const now = new Date();
+            const adderallTime = parseTimeToDate(stim.lastAdderallTime);
+            if (!adderallTime) return null;
+
+            const hoursSinceAdderall = (now - adderallTime) / (1000 * 60 * 60);
+
+            // Base Adderall XR curve
+            // Peak: 1-4 hours, wearing off: 4-8 hours, minimal: 8+ hours
+            let adderallEffect = 0;
+            if (hoursSinceAdderall < 0) adderallEffect = 0; // Future dose
+            else if (hoursSinceAdderall < 1) adderallEffect = 0.7;
+            else if (hoursSinceAdderall < 4) adderallEffect = 1.0;
+            else if (hoursSinceAdderall < 8) adderallEffect = 0.6;
+            else if (hoursSinceAdderall < 10) adderallEffect = 0.3;
+            else adderallEffect = 0.1;
+
+            // Caffeine effect (if taken)
+            let caffeineEffect = 0;
+            if (stim.caffeineMg > 0 && stim.lastCaffeineTime) {
+                const caffeineTime = parseTimeToDate(stim.lastCaffeineTime);
+                if (caffeineTime) {
+                    const hoursSinceCaffeine = (now - caffeineTime) / (1000 * 60 * 60);
+                    if (hoursSinceCaffeine >= 0) {
+                        // Caffeine half-life ~5 hours
+                        const caffeineRemaining = Math.pow(0.5, hoursSinceCaffeine / 5);
+                        caffeineEffect = (stim.caffeineMg / 200) * caffeineRemaining; // Normalized to 200mg
+                    }
+                }
+            }
+
+            // Combined effect (synergistic, not just additive)
+            const combinedEffect = adderallEffect + (caffeineEffect * 0.5) + (adderallEffect * caffeineEffect * 0.3);
+
+            // Translate to appetite suppression
+            let suppressionLevel, suppressionEnd;
+            if (combinedEffect > 1.2) {
+                suppressionLevel = 'SEVERE';
+                suppressionEnd = estimateSuppressionEnd(adderallTime, stim.caffeineMg);
+            } else if (combinedEffect > 0.8) {
+                suppressionLevel = 'HIGH';
+                suppressionEnd = estimateSuppressionEnd(adderallTime, 0);
+            } else if (combinedEffect > 0.4) {
+                suppressionLevel = 'MODERATE';
+                suppressionEnd = null;
+            } else {
+                suppressionLevel = 'LOW';
+                suppressionEnd = null;
+            }
+
+            const result = {
+                adderallEffect: Math.round(adderallEffect * 100),
+                caffeineEffect: Math.round(caffeineEffect * 100),
+                combinedEffect: Math.round(combinedEffect * 100),
+                suppressionLevel,
+                suppressionEnd,
+                crashRiskWindow: calculateCrashWindow(adderallTime, stim.caffeineMg || 0)
+            };
+
+            // Update state
+            state.ecosystemContext.stimulantEffect = result;
+            return result;
+        }
+
+        function estimateSuppressionEnd(adderallTime, caffeineMg) {
+            // Base: 4 hours after Adderall dose
+            let endTime = new Date(adderallTime.getTime() + 4 * 60 * 60 * 1000);
+
+            // Caffeine extends suppression
+            if (caffeineMg > 100) {
+                endTime = new Date(endTime.getTime() + 45 * 60 * 1000); // +45 min
+            }
+            if (caffeineMg > 200) {
+                endTime = new Date(endTime.getTime() + 30 * 60 * 1000); // +30 more
+            }
+
+            return endTime.toTimeString().slice(0, 5);
+        }
+
+        function calculateCrashWindow(adderallTime, caffeineMg) {
+            // Crash typically 8-10 hours after Adderall
+            const baseStart = new Date(adderallTime.getTime() + 8 * 60 * 60 * 1000);
+            const baseEnd = new Date(adderallTime.getTime() + 10 * 60 * 60 * 1000);
+
+            // High caffeine can make crash sharper
+            const crashIntensity = caffeineMg > 200 ? 'SHARP' : caffeineMg > 100 ? 'MODERATE' : 'NORMAL';
+
+            return {
+                start: baseStart.toTimeString().slice(0, 5),
+                end: baseEnd.toTimeString().slice(0, 5),
+                intensity: crashIntensity
+            };
+        }
+
+        function getEnhancedStimulantNudge() {
+            const stimEffect = calculateCombinedStimulantEffect();
+            if (!stimEffect) return null;
+
+            const totals = getTodayTotals();
+            const { suppressionLevel, suppressionEnd, crashRiskWindow } = stimEffect;
+
+            // NUDGE: Severe suppression active
+            if (suppressionLevel === 'SEVERE' && totals.calories < 400) {
+                return {
+                    type: 'warning',
+                    icon: '💊☕',
+                    title: 'Double stimulant load active',
+                    message: `Appetite GONE until ~${suppressionEnd}. Force an Orgain shake NOW.`
+                };
+            }
+
+            // NUDGE: Crash window active
+            if (crashRiskWindow.start && crashRiskWindow.end) {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const startMinutes = timeToMinutes(crashRiskWindow.start);
+                const endMinutes = timeToMinutes(crashRiskWindow.end);
+
+                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                    if (totals.calories < 1200) {
+                        const intensityMsg = crashRiskWindow.intensity === 'SHARP'
+                            ? 'High caffeine made it sharper.'
+                            : '';
+                        return {
+                            type: 'danger',
+                            icon: '⚠️',
+                            title: 'Stimulant crash window NOW',
+                            message: `${intensityMsg} Eat immediately or risk binge later.`
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // ============================================
+        // TOMORROW PREVIEW (God Mode 8A.2)
+        // ============================================
+
+        function getTomorrowPreview() {
+            const schedule = state.ecosystemContext?.schedule;
+            const tomorrowTasks = schedule?.tomorrowTasks;
+
+            if (!tomorrowTasks || tomorrowTasks.length === 0) {
+                return { intensity: 'EASY', message: null };
+            }
+
+            // Calculate tomorrow's blocked time
+            const blockedTomorrow = tomorrowTasks
+                .filter(t => t.startTime && t.endTime &&
+                    ['clinic', 'lecture', 'exam', 'lab'].includes(t.type?.toLowerCase()))
+                .map(t => ({
+                    ...t,
+                    duration: timeToMinutes(t.endTime) - timeToMinutes(t.startTime)
+                }));
+
+            const totalBlocked = blockedTomorrow.reduce((sum, t) => sum + t.duration, 0);
+            const eatingHours = (15 * 60 - totalBlocked) / 60; // 7am-10pm = 15 hours minus blocked
+
+            // Check for back-to-back sessions
+            const hasBackToBack = checkBackToBack(blockedTomorrow);
+
+            // Check for exams
+            const hasExam = blockedTomorrow.some(t =>
+                t.type?.toLowerCase() === 'exam' ||
+                t.name?.toLowerCase().includes('exam')
+            );
+
+            let intensity = 'EASY';
+            let message = null;
+
+            if (hasExam) {
+                intensity = 'EXAM';
+                const exam = blockedTomorrow.find(t =>
+                    t.type?.toLowerCase() === 'exam' ||
+                    t.name?.toLowerCase().includes('exam')
+                );
+                message = `📝 ${exam.name || 'Exam'} tomorrow at ${exam.startTime}. Get good sleep tonight!`;
+            } else if (eatingHours < 5 || hasBackToBack) {
+                intensity = 'HARD';
+                message = `📅 Tomorrow is brutal (${eatingHours.toFixed(1)}hr to eat). Prep grab-and-go meals tonight.`;
+            } else if (eatingHours < 7) {
+                intensity = 'MEDIUM';
+                message = `📅 Moderate schedule tomorrow. Plan your meals ahead.`;
+            }
+
+            return { intensity, message, eatingHours, blockedTomorrow };
+        }
+
+        function checkBackToBack(tasks) {
+            if (!tasks || tasks.length < 2) return false;
+            const sorted = [...tasks].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+            for (let i = 0; i < sorted.length - 1; i++) {
+                const gap = timeToMinutes(sorted[i + 1].startTime) - timeToMinutes(sorted[i].endTime);
+                if (gap < 60) return true; // Less than 1 hour between sessions
+            }
+            return false;
+        }
+
+        function getEveningPrepNudge() {
+            const hour = new Date().getHours();
+            if (hour < 19 || hour > 22) return null; // Only show 7pm-10pm
+
+            const tomorrow = getTomorrowPreview();
+
+            if (tomorrow.intensity === 'EXAM') {
+                return {
+                    type: 'info',
+                    icon: '📝',
+                    title: 'Tomorrow: Exam Day',
+                    message: tomorrow.message
+                };
+            }
+
+            if (tomorrow.intensity === 'HARD') {
+                return {
+                    type: 'warning',
+                    icon: '📅',
+                    title: 'Tomorrow: Brutal schedule',
+                    message: tomorrow.message
+                };
+            }
+
+            return null;
+        }
+
+        // ============================================
+        // WEEKLY RHYTHM ANALYSIS (God Mode 8A.7)
+        // ============================================
+
+        function analyzeWeeklyRhythm() {
+            const dailyLogs = state.dailyLogs || {};
+
+            // Aggregate by day of week
+            const dayStats = {
+                0: { name: 'Sunday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                1: { name: 'Monday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                2: { name: 'Tuesday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                3: { name: 'Wednesday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                4: { name: 'Thursday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                5: { name: 'Friday', calories: [], protein: [], gymDays: 0, totalDays: 0 },
+                6: { name: 'Saturday', calories: [], protein: [], gymDays: 0, totalDays: 0 }
+            };
+
+            for (const [dateStr, log] of Object.entries(dailyLogs)) {
+                const date = parseLocalDate(dateStr);
+                if (!date) continue;
+                const dayOfWeek = date.getDay();
+
+                dayStats[dayOfWeek].totalDays++;
+                if (log.totalCalories) dayStats[dayOfWeek].calories.push(log.totalCalories);
+                if (log.totalProtein) dayStats[dayOfWeek].protein.push(log.totalProtein);
+                if (log.workedOut) dayStats[dayOfWeek].gymDays++;
+            }
+
+            // Calculate averages and gym rates
+            const analysis = [];
+            for (const [day, stats] of Object.entries(dayStats)) {
+                if (stats.totalDays < 2) continue; // Need at least 2 data points
+
+                const avgCal = stats.calories.length > 0
+                    ? Math.round(stats.calories.reduce((a, b) => a + b, 0) / stats.calories.length)
+                    : null;
+                const avgProtein = stats.protein.length > 0
+                    ? Math.round(stats.protein.reduce((a, b) => a + b, 0) / stats.protein.length)
+                    : null;
+                const gymRate = stats.totalDays > 0
+                    ? Math.round((stats.gymDays / stats.totalDays) * 100)
+                    : 0;
+
+                analysis.push({
+                    day: parseInt(day),
+                    name: stats.name,
+                    avgCalories: avgCal,
+                    avgProtein: avgProtein,
+                    gymRate: gymRate,
+                    totalDays: stats.totalDays
+                });
+            }
+
+            // Identify weak days (below average)
+            const daysWithCal = analysis.filter(a => a.avgCalories);
+            const overallAvgCal = daysWithCal.length > 0
+                ? daysWithCal.reduce((sum, a) => sum + a.avgCalories, 0) / daysWithCal.length
+                : 0;
+            const weakDays = analysis.filter(a => a.avgCalories && a.avgCalories < overallAvgCal * 0.9);
+
+            return {
+                byDay: analysis,
+                weakDays: weakDays.map(d => d.name),
+                overallAvgCalories: Math.round(overallAvgCal)
+            };
+        }
+
+        function getWeakDayNudge() {
+            const rhythm = analyzeWeeklyRhythm();
+            if (!rhythm.byDay.length || rhythm.byDay.length < 3) return null; // Need enough data
+
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+            if (rhythm.weakDays.includes(today)) {
+                return {
+                    type: 'info',
+                    icon: '📊',
+                    title: `${today}: Your weak day`,
+                    message: 'Historically your weakest day. Stay focused!'
+                };
+            }
+
+            return null;
+        }
+
+        // ============================================
+        // PROTEIN DISTRIBUTION WARNING (God Mode 8A.6)
+        // ============================================
+
+        function analyzeProteinDistribution() {
+            const meals = state.today.meals || [];
+            if (meals.length === 0) return null;
+
+            let proteinBefore6pm = 0;
+            let proteinAfter6pm = 0;
+
+            for (const meal of meals) {
+                const mealHour = parseInt(meal.time?.split(':')[0]) || 12;
+                if (mealHour < 18) {
+                    proteinBefore6pm += meal.protein || 0;
+                } else {
+                    proteinAfter6pm += meal.protein || 0;
+                }
+            }
+
+            const totalProtein = proteinBefore6pm + proteinAfter6pm;
+            if (totalProtein === 0) return null;
+
+            const percentAfter6pm = (proteinAfter6pm / totalProtein) * 100;
+
+            return {
+                proteinBefore6pm,
+                proteinAfter6pm,
+                percentAfter6pm: Math.round(percentAfter6pm),
+                isBackLoaded: percentAfter6pm > 50
+            };
+        }
+
+        function getProteinDistributionNudge() {
+            const hour = new Date().getHours();
+
+            // Only show this nudge after 8pm (when pattern is clear)
+            if (hour < 20) return null;
+
+            const dist = analyzeProteinDistribution();
+            if (!dist || !dist.isBackLoaded) return null;
+
+            return {
+                type: 'info',
+                icon: '🥩',
+                title: `${dist.percentAfter6pm}% protein after 6pm`,
+                message: 'Try moving 30-40g to morning for better muscle synthesis'
+            };
+        }
+
+        function getSimpleStatus() {
+            const hour = new Date().getHours();
+            const totals = getTodayTotals();
+            const targets = state.today.targets || { calories: 1900, protein: 172 };
+
+            // Expected progress by time of day
+            const expectedByHour = { 9: 0.15, 12: 0.35, 15: 0.50, 18: 0.70, 21: 0.90 };
+            const nearestHour = Math.floor(hour / 3) * 3;
+            const expected = expectedByHour[nearestHour] || 0.5;
+
+            const actualCalories = totals.calories / targets.calories;
+            const actualProtein = totals.protein / targets.protein;
+
+            // DANGER: Severe undereating after 5pm
+            if (hour >= 17 && totals.calories < 800) {
+                return {
+                    icon: '🚨',
+                    label: 'EAT NOW',
+                    color: 'red',
+                    subtitle: `Only ${totals.calories} cal — way too low`
+                };
+            }
+
+            // WARNING: Behind on calories
+            if (actualCalories < expected * 0.6) {
+                const deficit = Math.round(expected * targets.calories - totals.calories);
+                return {
+                    icon: '⚠️',
+                    label: 'BEHIND',
+                    color: 'yellow',
+                    subtitle: `~${deficit} cal behind pace`
+                };
+            }
+
+            // WARNING: Behind on protein (evening)
+            if (hour >= 18 && actualProtein < 0.5) {
+                const needed = targets.protein - totals.protein;
+                return {
+                    icon: '🥩',
+                    label: 'NEED PROTEIN',
+                    color: 'yellow',
+                    subtitle: `${needed}g protein still needed`
+                };
+            }
+
+            // ON TRACK
+            return {
+                icon: '✅',
+                label: 'ON TRACK',
+                color: 'green',
+                subtitle: totals.calories > 0 ? `${totals.mealCount} meal${totals.mealCount !== 1 ? 's' : ''} logged` : 'Ready to start logging'
+            };
+        }
+
+        function getEatingNudge() {
+            const hour = new Date().getHours();
+            const totals = getTodayTotals();
+            const targets = state.today.targets || { calories: 1900, protein: 172 };
+            const stim = state.ecosystemContext?.stimulant;
+
+            // PRIORITY: Schedule-aware nudges (God Mode 8A.1)
+            const scheduleNudge = getScheduleAwareNudge();
+            if (scheduleNudge && (scheduleNudge.type === 'danger' || scheduleNudge.type === 'warning')) {
+                return scheduleNudge;
+            }
+
+            // PRIORITY: Enhanced stimulant nudges (God Mode 8A.8)
+            const stimNudge = getEnhancedStimulantNudge();
+            if (stimNudge && (stimNudge.type === 'danger' || stimNudge.type === 'warning')) {
+                return stimNudge;
+            }
+
+            // Calculate hours since last Adderall
+            let hoursSinceAdderall = null;
+            if (stim?.lastAdderallTime) {
+                const [h, m] = stim.lastAdderallTime.split(':').map(Number);
+                const adderallMinutes = h * 60 + m;
+                const nowMinutes = hour * 60 + new Date().getMinutes();
+                hoursSinceAdderall = (nowMinutes - adderallMinutes) / 60;
+            }
+
+            // Calculate hours since last meal
+            const lastMeal = state.today.meals?.[state.today.meals.length - 1];
+            let hoursSinceMeal = null;
+            if (lastMeal?.time) {
+                const [h, m] = lastMeal.time.split(':').map(Number);
+                const mealMinutes = h * 60 + m;
+                const nowMinutes = hour * 60 + new Date().getMinutes();
+                hoursSinceMeal = (nowMinutes - mealMinutes) / 60;
+            }
+
+            // NUDGE 1: Peak suppression + no recent food
+            if (hoursSinceAdderall !== null && hoursSinceAdderall < 4 && hoursSinceAdderall >= 0) {
+                if ((hoursSinceMeal === null || hoursSinceMeal >= 3) && totals.calories < 400) {
+                    const wearOffHour = Math.round((parseInt(stim.lastAdderallTime.split(':')[0]) + 4) % 24);
+                    const wearOffTime = wearOffHour > 12 ? `${wearOffHour - 12}pm` : `${wearOffHour}am`;
+                    return {
+                        type: 'info',
+                        icon: '💊',
+                        title: `Adderall active until ~${wearOffTime}`,
+                        message: 'Eat now while you can override the suppression'
+                    };
+                }
+            }
+
+            // NUDGE 2: Wearing off + low calories
+            if (hoursSinceAdderall !== null && hoursSinceAdderall >= 4 && hoursSinceAdderall < 8 && totals.calories < 800) {
+                return {
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: `Only ${totals.calories} cal so far`,
+                    message: 'Adderall wearing off — eat before the crash'
+                };
+            }
+
+            // NUDGE 3: Crash zone + severe undereating
+            if (hoursSinceAdderall !== null && hoursSinceAdderall >= 8 && totals.calories < 1000) {
+                return {
+                    type: 'danger',
+                    icon: '🚨',
+                    title: `${totals.calories} cal by ${hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'pm' : 'am'}`,
+                    message: 'Eat a real meal now'
+                };
+            }
+
+            // NUDGE 4: Late sleep projected
+            if (stim?.projectedSleepTime) {
+                const sleepHour = parseInt(stim.projectedSleepTime.split(':')[0]) || 0;
+                const isPM = stim.projectedSleepTime.toLowerCase().includes('pm');
+                const sleepHour24 = isPM && sleepHour !== 12 ? sleepHour + 12 : sleepHour;
+
+                if ((sleepHour24 >= 24 || sleepHour24 < 6) && hour < 18 && totals.calories < targets.calories * 0.7) {
+                    return {
+                        type: 'warning',
+                        icon: '🌙',
+                        title: `Late sleep projected (${stim.projectedSleepTime})`,
+                        message: 'Front-load eating — aim for 70% by 6pm'
+                    };
+                }
+            }
+
+            // NUDGE 5: Protein behind in evening
+            if (hour >= 18 && totals.protein < targets.protein * 0.5) {
+                const needed = targets.protein - totals.protein;
+                return {
+                    type: 'warning',
+                    icon: '🥩',
+                    title: `Protein at ${totals.protein}g`,
+                    message: `Need ${needed}g more tonight to preserve muscle`
+                };
+            }
+
+            // NUDGE 6: Time-based checkpoint (backup)
+            const expectedByHour = { 11: 0.25, 14: 0.45, 17: 0.65, 20: 0.85 };
+            const expected = expectedByHour[hour];
+            if (expected && (totals.calories / targets.calories) < expected * 0.6) {
+                const needed = Math.round(expected * targets.calories);
+                return {
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: `Behind pace`,
+                    message: `Should be ~${needed} cal by now, you're at ${totals.calories}`
+                };
+            }
+
+            // NUDGE 7: Evening prep for tomorrow (God Mode 8A.2)
+            const eveningPrepNudge = getEveningPrepNudge();
+            if (eveningPrepNudge) return eveningPrepNudge;
+
+            // NUDGE 8: Weak day warning (God Mode 8A.7)
+            const weakDayNudge = getWeakDayNudge();
+            if (weakDayNudge) return weakDayNudge;
+
+            // NUDGE 9: Protein distribution warning (God Mode 8A.6)
+            const proteinDistNudge = getProteinDistributionNudge();
+            if (proteinDistNudge) return proteinDistNudge;
+
+            return null; // No nudge needed
+        }
+
+        function getWorkoutRecommendation() {
+            const mode = state.today.mode || 'GREEN';
+            const streak = state.gamification?.streak || 0;
+            const academic = state.ecosystemContext?.academic;
+
+            // Find last workout
+            let lastWorkoutDate = null;
+            let lastWorkoutType = null;
+            let daysSinceWorkout = 99;
+
+            // Check today first
+            if (state.today.workedOut) {
+                daysSinceWorkout = 0;
+                lastWorkoutType = state.today.workouts?.[0]?.type || 'Workout';
+                lastWorkoutDate = 'Today';
+            } else {
+                // Check daily logs
+                const sortedDates = Object.keys(state.dailyLogs).sort().reverse();
+                for (const date of sortedDates) {
+                    const log = state.dailyLogs[date];
+                    if (log.workedOut) {
+                        lastWorkoutDate = date;
+                        lastWorkoutType = log.workouts?.[0]?.type || 'Workout';
+                        const logDate = parseLocalDate(date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        daysSinceWorkout = Math.round((today - logDate) / (1000 * 60 * 60 * 24));
+                        break;
+                    }
+                }
+            }
+
+            // Format last workout info
+            let info = 'Last workout: ';
+            if (daysSinceWorkout === 0) {
+                info += `Today (${lastWorkoutType})`;
+            } else if (daysSinceWorkout === 1) {
+                info += `Yesterday (${lastWorkoutType})`;
+            } else if (daysSinceWorkout < 99) {
+                info += `${daysSinceWorkout} days ago (${lastWorkoutType})`;
+            } else {
+                info += 'Never logged';
+            }
+
+            // Generate recommendation
+            let recommendation = '';
+            let color = 'var(--text-secondary)';
+
+            if (mode === 'ORANGE') {
+                recommendation = 'Rest recommended — sleep was rough';
+                color = 'var(--accent-orange)';
+            } else if (daysSinceWorkout === 0) {
+                recommendation = 'Already worked out today ✓';
+                color = 'var(--accent-green)';
+            } else if (daysSinceWorkout >= 3) {
+                recommendation = '3+ days since gym — go today';
+                color = 'var(--accent-red)';
+            } else if (daysSinceWorkout >= 2 && mode === 'GREEN') {
+                recommendation = 'Good day to lift';
+                color = 'var(--accent-green)';
+            } else if (daysSinceWorkout === 1) {
+                if (lastWorkoutType === 'Lift') {
+                    recommendation = 'Lifted yesterday — cardio OK, or rest';
+                } else {
+                    recommendation = 'Rest day fine, or lift if you want';
+                }
+                color = 'var(--accent-blue)';
+            } else {
+                recommendation = 'Good day to start';
+                color = 'var(--accent-green)';
+            }
+
+            // Exam override
+            if (academic?.daysUntilExam <= 3 && daysSinceWorkout >= 2) {
+                recommendation += ' (exam soon — keep it light)';
+            }
+
+            return { info, recommendation, color };
+        }
+
+        function showDetailsView() {
+            document.getElementById('simpleView').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.add('active');
+            renderDashboard();
+            renderMealsList();
+        }
+
+        function showSimpleView() {
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('simpleView').classList.add('active');
+            renderSimpleView();
         }
 
         function renderMealsList() {
@@ -4293,15 +7069,358 @@
 
             saveState();
 
-            // Switch screens
+            // Switch to Simple View (v3)
             document.getElementById('setupScreen').classList.remove('active');
-            document.getElementById('dashboardScreen').classList.add('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('simpleView').classList.add('active');
 
-            renderDashboard();
-            renderMealsList();
+            renderSimpleView();
 
             const modeDisplay = getModeDisplay(mode);
             showToast(`${modeDisplay.emoji} ${modeDisplay.label} mode activated`);
+        }
+
+        // ============================================
+        // QUICK MEAL MODAL (v3)
+        // ============================================
+
+        function openQuickMealModal() {
+            // Create quick meal modal if it doesn't exist
+            let modal = document.getElementById('quickMealModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'quickMealModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
+
+            // Get top 6 frequent foods sorted by usage
+            const topFoods = [...state.frequentFoods]
+                .sort((a, b) => (b.uses || 0) - (a.uses || 0))
+                .slice(0, 6);
+
+            // Get recent meals from today (last 3)
+            const recentMeals = (state.today.meals || [])
+                .slice(-3)
+                .reverse();
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 380px;">
+                    <div class="modal-header">
+                        <span class="modal-title">🍽️ Quick Log</span>
+                        <button class="modal-close" onclick="closeQuickMealModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9em;">Tap to add instantly:</p>
+
+                        <div class="quick-meal-grid">
+                            ${topFoods.map(food => `
+                                <button class="quick-meal-btn" onclick="quickAddMeal('${food.id}')">
+                                    <div class="quick-meal-name">${escapeHtml(food.name)}</div>
+                                    <div class="quick-meal-macros">${food.calories} cal • ${food.protein}g P</div>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        ${recentMeals.length > 0 ? `
+                            <div class="quick-meal-recent">
+                                <div class="quick-meal-recent-label">Today's Meals (tap to repeat)</div>
+                                ${recentMeals.map((meal, idx) => `
+                                    <div class="recent-meal-item" onclick="repeatMeal(${state.today.meals.length - 1 - idx})">
+                                        <span class="recent-meal-name">${escapeHtml(meal.name)}</span>
+                                        <span class="recent-meal-macros">${meal.calories} cal</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div class="quick-meal-divider">Claude paste</div>
+
+                        <div class="quick-meal-paste">
+                            <textarea id="quickMealPaste" placeholder="MEAL|Name|Calories|Protein|Carbs|Fat"></textarea>
+                            <div class="quick-meal-paste-hint">Paste from Claude • Multiple lines OK</div>
+                        </div>
+
+                        <div class="quick-meal-actions">
+                            <button class="parse-btn" onclick="parseQuickMealPaste()">Add Pasted</button>
+                            <button class="custom-btn" onclick="closeQuickMealModal(); openAddMealModal();">Custom Entry</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+
+            // Click outside to close
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    closeQuickMealModal();
+                }
+            };
+        }
+
+        function closeQuickMealModal() {
+            const modal = document.getElementById('quickMealModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function quickAddMeal(foodId) {
+            const food = state.frequentFoods.find(f => f.id === foodId);
+            if (!food) return;
+
+            // Add meal
+            const meal = {
+                name: food.name,
+                calories: food.calories,
+                protein: food.protein,
+                carbs: food.carbs || 0,
+                time: new Date().toTimeString().slice(0, 5)
+            };
+
+            if (!state.today.meals) state.today.meals = [];
+            state.today.meals.push(meal);
+
+            // Increment usage
+            food.uses = (food.uses || 0) + 1;
+
+            // Update totals
+            state.today.totalCalories += meal.calories;
+            state.today.totalProtein += meal.protein;
+            state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+
+            saveState();
+            closeQuickMealModal();
+            renderSimpleView();
+            showToast(`✓ ${food.name} logged`);
+
+            // Award XP
+            awardXP(10, 'Logged meal');
+        }
+
+        function repeatMeal(mealIndex) {
+            const originalMeal = state.today.meals[mealIndex];
+            if (!originalMeal) return;
+
+            // Create copy with new time
+            const meal = {
+                name: originalMeal.name,
+                calories: originalMeal.calories,
+                protein: originalMeal.protein,
+                carbs: originalMeal.carbs || 0,
+                time: new Date().toTimeString().slice(0, 5)
+            };
+
+            state.today.meals.push(meal);
+
+            // Update totals
+            state.today.totalCalories += meal.calories;
+            state.today.totalProtein += meal.protein;
+            state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+
+            saveState();
+            closeQuickMealModal();
+            renderSimpleView();
+            showToast(`✓ ${meal.name} repeated`);
+
+            // Award XP
+            awardXP(10, 'Logged meal');
+        }
+
+        function parseQuickMealPaste() {
+            const textarea = document.getElementById('quickMealPaste');
+            if (!textarea) return;
+
+            const text = textarea.value.trim();
+            if (!text) {
+                showToast('Paste meal data first', '⚠️');
+                return;
+            }
+
+            const lines = text.split('\n').filter(line => line.trim());
+            let addedCount = 0;
+
+            for (const line of lines) {
+                // Format: MEAL|Name|Calories|Protein|Carbs|Fat
+                if (line.startsWith('MEAL|')) {
+                    const parts = line.split('|');
+                    if (parts.length >= 4) {
+                        const meal = {
+                            name: parts[1] || 'Unknown',
+                            calories: parseInt(parts[2]) || 0,
+                            protein: parseInt(parts[3]) || 0,
+                            carbs: parseInt(parts[4]) || 0,
+                            fat: parseInt(parts[5]) || 0,
+                            time: new Date().toTimeString().slice(0, 5)
+                        };
+
+                        if (!state.today.meals) state.today.meals = [];
+                        state.today.meals.push(meal);
+
+                        state.today.totalCalories += meal.calories;
+                        state.today.totalProtein += meal.protein;
+                        state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+
+                        addedCount++;
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                saveState();
+                closeQuickMealModal();
+                renderSimpleView();
+                showToast(`✓ Added ${addedCount} meal${addedCount > 1 ? 's' : ''}`);
+                awardXP(10 * addedCount, 'Logged meals');
+            } else {
+                showToast('No valid MEAL| lines found', '⚠️');
+            }
+        }
+
+        // ============================================
+        // WORKOUT MODAL (v3)
+        // ============================================
+
+        function openWorkoutModal() {
+            // Create workout modal if it doesn't exist
+            let modal = document.getElementById('workoutModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'workoutModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal" style="max-width: 350px;">
+                        <div class="modal-header">
+                            <span class="modal-title">💪 Log Workout</span>
+                            <button class="modal-close" onclick="closeWorkoutModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin-bottom: 15px; color: var(--text-secondary);">What did you do?</p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                                <button class="action-btn secondary" onclick="logQuickWorkout('Lift')" style="padding: 20px;">
+                                    🏋️ Lift
+                                </button>
+                                <button class="action-btn secondary" onclick="logQuickWorkout('Run')" style="padding: 20px;">
+                                    🏃 Run
+                                </button>
+                                <button class="action-btn secondary" onclick="logQuickWorkout('Cardio')" style="padding: 20px;">
+                                    💪 Cardio
+                                </button>
+                                <button class="action-btn secondary" onclick="logQuickWorkout('Walk')" style="padding: 20px;">
+                                    🚶 Walk
+                                </button>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Or paste detailed data from Claude:</label>
+                                <textarea id="workoutPasteInput" class="form-input" rows="3" placeholder="WORKOUT|Lift|45|280|17:00"></textarea>
+                            </div>
+
+                            <button class="submit-btn" onclick="parseWorkoutInput()">Save Workout</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            modal.classList.add('active');
+        }
+
+        function closeWorkoutModal() {
+            const modal = document.getElementById('workoutModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function logQuickWorkout(type) {
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            // Default durations and calories by type
+            const defaults = {
+                'Lift': { duration: 45, calories: 250 },
+                'Run': { duration: 30, calories: 350 },
+                'Cardio': { duration: 30, calories: 300 },
+                'Walk': { duration: 30, calories: 150 }
+            };
+
+            const workout = {
+                type: type,
+                duration: defaults[type]?.duration || 30,
+                calories: defaults[type]?.calories || 200,
+                time: time
+            };
+
+            // Add to today's workouts
+            if (!state.today.workouts) state.today.workouts = [];
+            state.today.workouts.push(workout);
+            state.today.workedOut = true;
+
+            // Add workout calories to active calories for TDEE adjustment
+            state.today.activeCalories = (state.today.activeCalories || 0) + workout.calories;
+
+            // Recalculate targets with new active calories
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                state.today.activeCalories
+            );
+            state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+            saveState();
+            closeWorkoutModal();
+            renderSimpleView();
+
+            showToast(`${type} logged! +${workout.calories} cal ceiling`);
+        }
+
+        function parseWorkoutInput() {
+            const input = document.getElementById('workoutPasteInput').value.trim();
+            if (!input) {
+                showToast('Please enter workout data or use quick buttons');
+                return;
+            }
+
+            const lines = input.split('\n').filter(l => l.trim());
+            let totalCalories = 0;
+
+            for (const line of lines) {
+                if (line.startsWith('WORKOUT|')) {
+                    const parts = line.split('|');
+                    const workout = {
+                        type: parts[1] || 'Workout',
+                        duration: parseInt(parts[2]) || 30,
+                        calories: parseInt(parts[3]) || 200,
+                        time: parts[4] || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
+                    };
+
+                    if (!state.today.workouts) state.today.workouts = [];
+                    state.today.workouts.push(workout);
+                    totalCalories += workout.calories;
+                }
+            }
+
+            if (totalCalories > 0) {
+                state.today.workedOut = true;
+                state.today.activeCalories = (state.today.activeCalories || 0) + totalCalories;
+
+                // Recalculate targets
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+                saveState();
+                closeWorkoutModal();
+                renderSimpleView();
+                showToast(`Workout logged! +${totalCalories} cal ceiling`);
+            } else {
+                showToast('Could not parse workout data. Use format: WORKOUT|Type|Duration|Calories|Time');
+            }
         }
 
         function saveDayLog() {
@@ -4958,6 +8077,706 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // WEEKLY EXPORT (Phase 7)
+        // ============================================
+
+        function openWeeklyExportModal() {
+            const weekData = calculateFullWeekData();
+            renderWeeklyExportPreview(weekData);
+            document.getElementById('weeklyExportModal').classList.add('active');
+        }
+
+        function closeWeeklyExportModal() {
+            document.getElementById('weeklyExportModal').classList.remove('active');
+        }
+
+        function calculateFullWeekData() {
+            const today = new Date();
+            const weekData = {
+                days: [],
+                totals: {
+                    calories: 0,
+                    protein: 0,
+                    deficit: 0,
+                    sleepHours: 0,
+                    workouts: 0,
+                    daysLogged: 0,
+                    perfectDays: 0
+                },
+                weekStart: null,
+                weekEnd: null,
+                weighIns: [],
+                workoutTypes: {}
+            };
+
+            // Get last 7 days (including today)
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = getLocalDateString(date);
+                const log = state.dailyLogs[dateStr];
+                const isToday = i === 0;
+
+                // Use today's live data if it's today
+                const dayData = {
+                    date: dateStr,
+                    dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                    dayNum: date.getDate(),
+                    hasData: false,
+                    calories: 0,
+                    protein: 0,
+                    deficit: 0,
+                    sleepHours: null,
+                    mode: null,
+                    workouts: [],
+                    isPerfect: false
+                };
+
+                if (isToday && state.today.setupComplete) {
+                    // Use live today data
+                    const totals = getTodayTotals();
+                    dayData.hasData = true;
+                    dayData.calories = totals.calories;
+                    dayData.protein = totals.protein;
+                    dayData.deficit = getCurrentDeficit();
+                    dayData.sleepHours = state.today.sleepHours;
+                    dayData.mode = state.today.mode;
+                    dayData.workouts = state.today.workouts || [];
+                    dayData.isPerfect = totals.protein >= (state.today.targets?.protein || 150) * 0.8 &&
+                                        dayData.deficit >= 0;
+                } else if (log) {
+                    dayData.hasData = true;
+                    dayData.calories = log.calories || 0;
+                    dayData.protein = log.protein || 0;
+                    dayData.deficit = log.deficit || 0;
+                    dayData.sleepHours = log.sleepHours;
+                    dayData.mode = log.mode;
+                    dayData.workouts = log.workouts || [];
+                    dayData.isPerfect = log.perfect || false;
+                }
+
+                weekData.days.push(dayData);
+
+                // Accumulate totals
+                if (dayData.hasData) {
+                    weekData.totals.daysLogged++;
+                    weekData.totals.calories += dayData.calories;
+                    weekData.totals.protein += dayData.protein;
+                    weekData.totals.deficit += dayData.deficit;
+                    if (dayData.sleepHours) weekData.totals.sleepHours += dayData.sleepHours;
+                    if (dayData.isPerfect) weekData.totals.perfectDays++;
+
+                    // Count workouts
+                    dayData.workouts.forEach(w => {
+                        weekData.totals.workouts++;
+                        const type = w.type || 'Other';
+                        weekData.workoutTypes[type] = (weekData.workoutTypes[type] || 0) + 1;
+                    });
+                }
+            }
+
+            // Set week range
+            weekData.weekStart = weekData.days[0].date;
+            weekData.weekEnd = weekData.days[6].date;
+
+            // Get weigh-ins from this week
+            weekData.weighIns = state.weighIns.filter(w => {
+                return w.date >= weekData.weekStart && w.date <= weekData.weekEnd;
+            });
+
+            return weekData;
+        }
+
+        function renderWeeklyExportPreview(weekData) {
+            const headerEl = document.getElementById('weeklyExportHeader');
+            const previewEl = document.getElementById('weeklyExportPreview');
+
+            // Format week range
+            const startDate = new Date(weekData.weekStart + 'T12:00:00');
+            const endDate = new Date(weekData.weekEnd + 'T12:00:00');
+            const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            // Calculate averages
+            const avgCalories = weekData.totals.daysLogged > 0
+                ? Math.round(weekData.totals.calories / weekData.totals.daysLogged) : 0;
+            const avgProtein = weekData.totals.daysLogged > 0
+                ? Math.round(weekData.totals.protein / weekData.totals.daysLogged) : 0;
+            const avgSleep = weekData.totals.sleepHours > 0 && weekData.totals.daysLogged > 0
+                ? (weekData.totals.sleepHours / weekData.totals.daysLogged).toFixed(1) : '--';
+
+            // Weight change
+            let weightChange = null;
+            if (weekData.weighIns.length >= 2) {
+                const first = weekData.weighIns[0].weight;
+                const last = weekData.weighIns[weekData.weighIns.length - 1].weight;
+                weightChange = last - first;
+            }
+
+            // Estimated fat loss from deficit
+            const estFatLoss = weekData.totals.deficit > 0
+                ? (weekData.totals.deficit / 3500).toFixed(2) : '0';
+
+            // Header
+            headerEl.innerHTML = `
+                <div class="week-range">${startStr} — ${endStr}</div>
+                <div class="week-summary">${weekData.totals.daysLogged}/7 days logged • ${weekData.totals.workouts} workouts</div>
+            `;
+
+            // Daily breakdown
+            let daysHtml = weekData.days.map(day => {
+                if (!day.hasData) {
+                    return `
+                        <div class="weekly-day-row no-data">
+                            <span class="weekly-day-label">${day.dayName}</span>
+                            <span class="weekly-day-stats">
+                                <span class="weekly-day-stat">No data</span>
+                            </span>
+                        </div>
+                    `;
+                }
+
+                const deficitClass = day.deficit >= 400 ? 'good' : day.deficit >= 0 ? '' : 'danger';
+                const proteinClass = day.protein >= 140 ? 'good' : day.protein >= 100 ? 'warning' : 'danger';
+
+                return `
+                    <div class="weekly-day-row">
+                        <span class="weekly-day-label">${day.dayName}</span>
+                        <span class="weekly-day-stats">
+                            <span class="weekly-day-stat">${formatNumber(day.calories)} cal</span>
+                            <span class="weekly-day-stat ${proteinClass}">${day.protein}g P</span>
+                            <span class="weekly-day-stat ${deficitClass}">${day.deficit >= 0 ? '-' : '+'}${Math.abs(day.deficit)}</span>
+                            ${day.workouts.length > 0 ? '<span class="weekly-day-stat good">💪</span>' : ''}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            // Totals section
+            let totalsHtml = `
+                <div class="weekly-totals">
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Avg Daily Calories</span>
+                        <span class="weekly-total-value">${formatNumber(avgCalories)}</span>
+                    </div>
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Avg Daily Protein</span>
+                        <span class="weekly-total-value">${avgProtein}g</span>
+                    </div>
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Total Weekly Deficit</span>
+                        <span class="weekly-total-value ${weekData.totals.deficit >= 3500 ? 'highlight' : ''}">${formatNumber(Math.round(weekData.totals.deficit))} cal</span>
+                    </div>
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Est. Fat Loss</span>
+                        <span class="weekly-total-value highlight">~${estFatLoss} lbs</span>
+                    </div>
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Avg Sleep</span>
+                        <span class="weekly-total-value">${avgSleep}h</span>
+                    </div>
+                    <div class="weekly-total-row">
+                        <span class="weekly-total-label">Perfect Days</span>
+                        <span class="weekly-total-value">${weekData.totals.perfectDays}/7</span>
+                    </div>
+                    ${weightChange !== null ? `
+                        <div class="weekly-total-row">
+                            <span class="weekly-total-label">Scale Change</span>
+                            <span class="weekly-total-value ${weightChange <= 0 ? 'highlight' : 'warning'}">${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} lbs</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            // Workout summary
+            let workoutHtml = '';
+            if (weekData.totals.workouts > 0) {
+                const workoutList = Object.entries(weekData.workoutTypes)
+                    .map(([type, count]) => `${type}: ${count}`)
+                    .join(' • ');
+                workoutHtml = `
+                    <div class="weekly-workout-summary">
+                        <div class="weekly-workout-title">💪 Workouts This Week</div>
+                        <div class="weekly-workout-stats">${workoutList}</div>
+                    </div>
+                `;
+            }
+
+            // Flags/alerts
+            let flagsHtml = '';
+            const flags = [];
+            if (weekData.totals.daysLogged < 5) flags.push('Low tracking consistency');
+            if (avgProtein < 130 && weekData.totals.daysLogged > 0) flags.push('Protein below target');
+            if (avgSleep !== '--' && parseFloat(avgSleep) < 6) flags.push('Sleep debt accumulating');
+            if (weekData.totals.deficit < 2500 && weekData.totals.daysLogged >= 5) flags.push('Deficit below fat loss pace');
+            if (weekData.totals.workouts < 3) flags.push('Consider adding workouts');
+
+            if (flags.length > 0) {
+                flagsHtml = `
+                    <div class="weekly-flags">
+                        <div class="weekly-flags-title">⚠️ Areas to Improve</div>
+                        <div class="weekly-flags-list">${flags.join(' • ')}</div>
+                    </div>
+                `;
+            }
+
+            previewEl.innerHTML = daysHtml + totalsHtml + workoutHtml + flagsHtml;
+        }
+
+        function generateWeeklyClaudeExport() {
+            const weekData = calculateFullWeekData();
+            const today = new Date();
+
+            // Get current weight and goal
+            const currentWeight = state.profile.currentWeight_lbs;
+            const goalWeight = state.profile.goalWeight_lbs;
+            const remaining = currentWeight - goalWeight;
+
+            // Calculate averages
+            const avgCalories = weekData.totals.daysLogged > 0
+                ? Math.round(weekData.totals.calories / weekData.totals.daysLogged) : 0;
+            const avgProtein = weekData.totals.daysLogged > 0
+                ? Math.round(weekData.totals.protein / weekData.totals.daysLogged) : 0;
+            const avgDeficit = weekData.totals.daysLogged > 0
+                ? Math.round(weekData.totals.deficit / weekData.totals.daysLogged) : 0;
+            const avgSleep = weekData.totals.sleepHours > 0 && weekData.totals.daysLogged > 0
+                ? (weekData.totals.sleepHours / weekData.totals.daysLogged).toFixed(1) : 0;
+
+            // Build export
+            let text = `WEEKLY_CHECK_IN|${weekData.weekStart}|${weekData.weekEnd}\n`;
+            text += `PROFILE|Weight:${currentWeight}|Goal:${goalWeight}|Remaining:${remaining.toFixed(1)}\n`;
+            text += `TRACKING|DaysLogged:${weekData.totals.daysLogged}/7|PerfectDays:${weekData.totals.perfectDays}\n`;
+            text += `AVERAGES|Calories:${avgCalories}|Protein:${avgProtein}g|Deficit:${avgDeficit}|Sleep:${avgSleep}h\n`;
+            text += `TOTALS|WeeklyDeficit:${Math.round(weekData.totals.deficit)}|EstFatLoss:${(weekData.totals.deficit / 3500).toFixed(2)}lbs\n`;
+            text += `WORKOUTS|Count:${weekData.totals.workouts}`;
+            if (Object.keys(weekData.workoutTypes).length > 0) {
+                text += `|Types:${Object.entries(weekData.workoutTypes).map(([t, c]) => `${t}(${c})`).join(',')}`;
+            }
+            text += '\n';
+
+            // Daily breakdown
+            text += `---DAILY_BREAKDOWN---\n`;
+            weekData.days.forEach(day => {
+                if (day.hasData) {
+                    text += `${day.dayName}|Cal:${day.calories}|Pro:${day.protein}g|Def:${day.deficit}`;
+                    if (day.sleepHours) text += `|Sleep:${day.sleepHours}h`;
+                    if (day.workouts.length > 0) text += `|Workout:${day.workouts.map(w => w.type).join(',')}`;
+                    text += '\n';
+                } else {
+                    text += `${day.dayName}|NO_DATA\n`;
+                }
+            });
+
+            // Weight trend
+            if (weekData.weighIns.length > 0) {
+                text += `---WEIGH_INS---\n`;
+                weekData.weighIns.forEach(w => {
+                    text += `${w.date}|${w.weight}lbs`;
+                    if (w.bodyFat) text += `|BF:${w.bodyFat}%`;
+                    text += '\n';
+                });
+            }
+
+            // Ecosystem context if available
+            if (state.ecosystemContext) {
+                const eco = state.ecosystemContext;
+                if (eco.stimulant && eco.stimulant.lastSynced) {
+                    text += `---STIMULANT_CONTEXT---\n`;
+                    text += `Adderall:${eco.stimulant.totalAdderallToday || 0}mg|Caffeine:${eco.stimulant.caffeineMg || 0}mg\n`;
+                }
+                if (eco.academic && eco.academic.nextExam) {
+                    text += `---ACADEMIC---\n`;
+                    text += `NextExam:${eco.academic.nextExam.name}|In:${eco.academic.daysUntilExam}days\n`;
+                }
+            }
+
+            // Flags
+            const flags = [];
+            if (weekData.totals.daysLogged < 5) flags.push('LOW_TRACKING');
+            if (avgProtein < 130) flags.push('LOW_PROTEIN');
+            if (parseFloat(avgSleep) < 6 && avgSleep > 0) flags.push('SLEEP_DEBT');
+            if (weekData.totals.deficit < 2500 && weekData.totals.daysLogged >= 5) flags.push('SLOW_PROGRESS');
+            if (weekData.totals.workouts < 3) flags.push('LOW_ACTIVITY');
+            if ((state.refeedTracker?.cumulativeDeficit || 0) >= 7000) flags.push('NEEDS_REFEED');
+
+            if (flags.length > 0) {
+                text += `FLAGS:${flags.join(',')}\n`;
+            }
+
+            // Cumulative progress
+            text += `---CUMULATIVE---\n`;
+            text += `CumulativeDeficit:${state.refeedTracker?.cumulativeDeficit || 0}\n`;
+            text += `Streak:${state.gamification?.streak || 0}|Level:${state.gamification?.level || 1}|XP:${state.gamification?.xp || 0}\n`;
+
+            return text;
+        }
+
+        function copyWeeklyExport() {
+            const text = generateWeeklyClaudeExport();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✓ Copied weekly check-in for Claude');
+                awardXP(25, 'Weekly check-in');
+            }).catch(() => {
+                showToast('Failed to copy');
+            });
+        }
+
+        // ============================================
+        // BODY COMP CHECK-IN (Phase 6)
+        // ============================================
+
+        function openBodyCompModal() {
+            // Pre-fill weight if available
+            const currentWeight = state.profile.currentWeight_lbs;
+            document.getElementById('navyWeightInput').value = currentWeight || '';
+            document.getElementById('scaleWeightInput').value = currentWeight || '';
+
+            // Clear other inputs
+            document.getElementById('neckInput').value = '';
+            document.getElementById('waistInput').value = '';
+            document.getElementById('scaleBfInput').value = '';
+
+            // Reset previews
+            resetNavyPreview();
+            resetScalePreview();
+
+            // Set default tab
+            setBodyCompTab('navy');
+
+            // Render history
+            renderBodyCompHistory();
+
+            document.getElementById('bodyCompModal').classList.add('active');
+
+            // Set up live calculation listeners
+            setupBodyCompListeners();
+        }
+
+        function closeBodyCompModal() {
+            document.getElementById('bodyCompModal').classList.remove('active');
+        }
+
+        function setBodyCompTab(tab) {
+            // Update tab buttons
+            document.getElementById('navyTab').classList.toggle('active', tab === 'navy');
+            document.getElementById('scaleTab').classList.toggle('active', tab === 'scale');
+
+            // Update panels
+            document.getElementById('navyPanel').classList.toggle('active', tab === 'navy');
+            document.getElementById('scalePanel').classList.toggle('active', tab === 'scale');
+        }
+
+        function setupBodyCompListeners() {
+            // Navy method inputs
+            const navyInputs = ['navyWeightInput', 'neckInput', 'waistInput'];
+            navyInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateNavyPreview);
+                }
+            });
+
+            // Scale inputs
+            const scaleInputs = ['scaleWeightInput', 'scaleBfInput'];
+            scaleInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateScalePreview);
+                }
+            });
+        }
+
+        function calculateNavyBodyFat(waist, neck, height) {
+            // Navy method formula for men:
+            // BF% = 86.010 × log10(waist - neck) - 70.041 × log10(height) + 36.76
+            if (waist <= neck) return null; // Invalid measurements
+
+            const bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 36.76;
+
+            // Validate result
+            if (bf < 3 || bf > 50) return null;
+
+            return Math.round(bf * 10) / 10;
+        }
+
+        function updateNavyPreview() {
+            const weight = parseFloat(document.getElementById('navyWeightInput').value);
+            const neck = parseFloat(document.getElementById('neckInput').value);
+            const waist = parseFloat(document.getElementById('waistInput').value);
+            const height = state.profile.height_inches || 68.5;
+
+            const preview = document.getElementById('navyPreview');
+            const bfEl = document.getElementById('navyBfPreview');
+            const breakdownEl = document.getElementById('navyBreakdown');
+
+            if (!weight || !neck || !waist) {
+                resetNavyPreview();
+                return;
+            }
+
+            const bodyFat = calculateNavyBodyFat(waist, neck, height);
+
+            if (bodyFat === null) {
+                bfEl.textContent = 'Invalid';
+                breakdownEl.innerHTML = 'Check measurements (waist must be larger than neck)';
+                preview.classList.remove('calculated');
+                return;
+            }
+
+            // Calculate body composition
+            const fatMass = Math.round((weight * bodyFat / 100) * 10) / 10;
+            const leanMass = Math.round((weight * (1 - bodyFat / 100)) * 10) / 10;
+
+            // Update preview
+            preview.classList.add('calculated');
+            bfEl.textContent = `${bodyFat}%`;
+            breakdownEl.innerHTML = `
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Weight</span>
+                    <span class="breakdown-value">${weight} lbs</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Fat Mass</span>
+                    <span class="breakdown-value fat">${fatMass} lbs</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Lean Mass</span>
+                    <span class="breakdown-value lean">${leanMass} lbs</span>
+                </div>
+            `;
+        }
+
+        function resetNavyPreview() {
+            const preview = document.getElementById('navyPreview');
+            const bfEl = document.getElementById('navyBfPreview');
+            const breakdownEl = document.getElementById('navyBreakdown');
+
+            preview.classList.remove('calculated');
+            bfEl.textContent = '--%';
+            breakdownEl.innerHTML = 'Enter measurements above';
+        }
+
+        function updateScalePreview() {
+            const weight = parseFloat(document.getElementById('scaleWeightInput').value);
+            const bodyFat = parseFloat(document.getElementById('scaleBfInput').value);
+
+            const preview = document.getElementById('scalePreview');
+            const bfEl = document.getElementById('scaleBfPreview');
+            const breakdownEl = document.getElementById('scaleBreakdown');
+
+            if (!weight || !bodyFat) {
+                resetScalePreview();
+                return;
+            }
+
+            if (bodyFat < 5 || bodyFat > 50) {
+                bfEl.textContent = 'Invalid';
+                breakdownEl.innerHTML = 'Body fat must be between 5% and 50%';
+                preview.classList.remove('calculated');
+                return;
+            }
+
+            // Calculate body composition
+            const fatMass = Math.round((weight * bodyFat / 100) * 10) / 10;
+            const leanMass = Math.round((weight * (1 - bodyFat / 100)) * 10) / 10;
+
+            // Update preview
+            preview.classList.add('calculated');
+            bfEl.textContent = `${bodyFat}%`;
+            breakdownEl.innerHTML = `
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Weight</span>
+                    <span class="breakdown-value">${weight} lbs</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Fat Mass</span>
+                    <span class="breakdown-value fat">${fatMass} lbs</span>
+                </div>
+                <div class="breakdown-row">
+                    <span class="breakdown-label">Lean Mass</span>
+                    <span class="breakdown-value lean">${leanMass} lbs</span>
+                </div>
+            `;
+        }
+
+        function resetScalePreview() {
+            const preview = document.getElementById('scalePreview');
+            const bfEl = document.getElementById('scaleBfPreview');
+            const breakdownEl = document.getElementById('scaleBreakdown');
+
+            preview.classList.remove('calculated');
+            bfEl.textContent = '--%';
+            breakdownEl.innerHTML = 'Enter weight and body fat above';
+        }
+
+        function saveNavyMeasurement() {
+            const weight = parseFloat(document.getElementById('navyWeightInput').value);
+            const neck = parseFloat(document.getElementById('neckInput').value);
+            const waist = parseFloat(document.getElementById('waistInput').value);
+            const height = state.profile.height_inches || 68.5;
+
+            if (!weight || !neck || !waist) {
+                showToast('Please fill in all measurements', '⚠️');
+                return;
+            }
+
+            const bodyFat = calculateNavyBodyFat(waist, neck, height);
+
+            if (bodyFat === null) {
+                showToast('Invalid measurements', '⚠️');
+                return;
+            }
+
+            // Calculate composition
+            const fatMass = Math.round((weight * bodyFat / 100) * 10) / 10;
+            const leanMass = Math.round((weight * (1 - bodyFat / 100)) * 10) / 10;
+
+            // Create measurement record
+            const measurement = {
+                date: getLocalDateString(),
+                method: 'navy',
+                weight: weight,
+                bodyFat: bodyFat,
+                fatMass: fatMass,
+                leanMass: leanMass,
+                measurements: {
+                    neck: neck,
+                    waist: waist
+                }
+            };
+
+            // Save to body comp history
+            if (!state.bodyCompHistory) state.bodyCompHistory = [];
+            state.bodyCompHistory.push(measurement);
+
+            // Also save as a weigh-in
+            state.weighIns.push({
+                date: measurement.date,
+                weight: weight,
+                bodyFat: bodyFat,
+                leanMass: leanMass,
+                fatMass: fatMass,
+                method: 'navy'
+            });
+
+            // Update profile
+            state.profile.currentWeight_lbs = weight;
+            state.profile.currentBodyFat = bodyFat;
+
+            saveState();
+            closeBodyCompModal();
+            renderSimpleView();
+            showToast(`✓ Body comp logged: ${bodyFat}% BF`);
+            awardXP(50, 'Monthly body comp check-in');
+        }
+
+        function saveScaleMeasurement() {
+            const weight = parseFloat(document.getElementById('scaleWeightInput').value);
+            const bodyFat = parseFloat(document.getElementById('scaleBfInput').value);
+
+            if (!weight || !bodyFat) {
+                showToast('Please fill in weight and body fat', '⚠️');
+                return;
+            }
+
+            if (bodyFat < 5 || bodyFat > 50) {
+                showToast('Body fat must be between 5% and 50%', '⚠️');
+                return;
+            }
+
+            // Calculate composition
+            const fatMass = Math.round((weight * bodyFat / 100) * 10) / 10;
+            const leanMass = Math.round((weight * (1 - bodyFat / 100)) * 10) / 10;
+
+            // Create measurement record
+            const measurement = {
+                date: getLocalDateString(),
+                method: 'scale',
+                weight: weight,
+                bodyFat: bodyFat,
+                fatMass: fatMass,
+                leanMass: leanMass
+            };
+
+            // Save to body comp history
+            if (!state.bodyCompHistory) state.bodyCompHistory = [];
+            state.bodyCompHistory.push(measurement);
+
+            // Also save as a weigh-in
+            state.weighIns.push({
+                date: measurement.date,
+                weight: weight,
+                bodyFat: bodyFat,
+                leanMass: leanMass,
+                fatMass: fatMass,
+                method: 'scale'
+            });
+
+            // Update profile
+            state.profile.currentWeight_lbs = weight;
+            state.profile.currentBodyFat = bodyFat;
+
+            saveState();
+            closeBodyCompModal();
+            renderSimpleView();
+            showToast(`✓ Body comp logged: ${bodyFat}% BF`);
+            awardXP(50, 'Monthly body comp check-in');
+        }
+
+        function renderBodyCompHistory() {
+            const container = document.getElementById('bodyCompHistory');
+            const history = state.bodyCompHistory || [];
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="body-comp-empty">
+                        No body comp check-ins yet.<br>
+                        Take your first measurement to track progress!
+                    </div>
+                `;
+                return;
+            }
+
+            // Get last 5 measurements, most recent first
+            const recent = history.slice(-5).reverse();
+
+            // Calculate changes
+            let prevBf = null;
+            const rows = recent.map((m, idx) => {
+                const date = new Date(m.date + 'T12:00:00');
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                let changeHtml = '';
+                if (idx < recent.length - 1) {
+                    const older = recent[idx + 1];
+                    const bfChange = m.bodyFat - older.bodyFat;
+                    if (bfChange !== 0) {
+                        const isGood = bfChange < 0;
+                        changeHtml = `<span class="history-change ${isGood ? 'good' : 'bad'}">${bfChange > 0 ? '+' : ''}${bfChange.toFixed(1)}%</span>`;
+                    }
+                }
+
+                const methodIcon = m.method === 'navy' ? '📏' : '⚖️';
+
+                return `
+                    <div class="body-comp-history-item">
+                        <span class="history-date">${methodIcon} ${dateStr}</span>
+                        <span class="history-stats">
+                            <span class="history-bf">${m.bodyFat}%</span>
+                            <span class="history-weight">${m.weight} lbs</span>
+                            ${changeHtml}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="body-comp-history-title">Recent Check-Ins</div>
+                ${rows}
+            `;
+        }
+
+        // ============================================
         // SETTINGS
         // ============================================
 
@@ -5062,6 +8881,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         today: { ...state.today, ...(loaded.today || {}) },
                         frequentFoods: loaded.frequentFoods || state.frequentFoods,
                         weighIns: loaded.weighIns || [],
+                        bodyCompHistory: loaded.bodyCompHistory || [],
                         dailyLogs: loaded.dailyLogs || {},
                         refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) },
                         gamification: { ...state.gamification, ...(loaded.gamification || {}) },
@@ -5164,6 +8984,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     if (data && data.state) {
                         const firebaseState = data.state;
 
+                        // Preserve ecosystemContext (local-only, not saved to Firebase)
+                        const preservedEcosystem = state.ecosystemContext;
+
                         // Merge Firebase data
                         state = {
                             ...state,
@@ -5171,12 +8994,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             today: { ...state.today, ...(firebaseState.today || {}) },
                             frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
                             weighIns: firebaseState.weighIns || state.weighIns,
+                            bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                             dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
-                            refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) }
+                            refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
+                            gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
+                            achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                         };
+
+                        // Restore ecosystemContext (it's loaded separately via loadEcosystemData)
+                        state.ecosystemContext = preservedEcosystem;
 
                         // Ensure arrays
                         if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                        if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
                         if (!Array.isArray(state.weighIns)) state.weighIns = [];
                         if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
 
@@ -5194,6 +9024,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                                 mode: null,
                                 targets: { calories: 2000, protein: 172, floor: 1900 },
                                 meals: [],
+                                workouts: [],
+                                workedOut: false,
                                 setupComplete: false
                             };
                         }
@@ -5249,6 +9081,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         today: { ...state.today, ...(firebaseState.today || {}) },
                         frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
                         weighIns: firebaseState.weighIns || state.weighIns,
+                        bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                         gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
@@ -5294,6 +9127,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         today: { ...state.today, ...(firebaseState.today || {}) },
                         frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
                         weighIns: firebaseState.weighIns || state.weighIns,
+                        bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                         gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
@@ -5391,6 +9225,243 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             updateSyncStatus('syncing', 'Syncing...');
             loadFromFirebase();
+
+            // Load cross-app ecosystem data
+            loadEcosystemData(hashedPin);
+        }
+
+        // ============================================
+        // ECOSYSTEM DATA INTEGRATION
+        // Pulls READ-ONLY data from other apps
+        // ============================================
+
+        async function loadEcosystemData(hashedPin) {
+            if (!database || !hashedPin) return;
+
+            const basePath = 'users/' + hashedPin;
+            const now = new Date().toISOString();
+
+            try {
+                // 1. STIMULANT CALCULATOR DATA
+                const stimSnapshot = await database.ref(basePath + '/stimulantCalculator/state').once('value');
+                const stimData = stimSnapshot.val();
+
+                if (stimData) {
+                    // Get today's medications (filter by today's date)
+                    const today = getLocalDateString();
+                    const todayMeds = (stimData.medications || []).filter(m => m.date === today);
+                    const totalDose = todayMeds.reduce((sum, m) => sum + (m.dose || 0), 0);
+                    const lastMed = todayMeds.length > 0 ? todayMeds[todayMeds.length - 1] : null;
+
+                    // Get today's caffeine
+                    const todayCaffeine = (stimData.caffeine || []).filter(c => c.date === today);
+                    const totalCaffeine = todayCaffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
+                    const lastCaff = todayCaffeine.length > 0 ? todayCaffeine[todayCaffeine.length - 1] : null;
+
+                    state.ecosystemContext.stimulant = {
+                        sleepHours: stimData.hoursSleptLastNight || null,
+                        wakeTime: stimData.wakeTime || null,
+                        lastAdderallTime: lastMed?.time || null,
+                        lastAdderallDose: lastMed?.dose || null,
+                        totalAdderallToday: totalDose,
+                        isBooster: todayMeds.length > 1,
+                        lastCaffeineTime: lastCaff?.time || null,
+                        caffeineMg: totalCaffeine,
+                        projectedSleepTime: stimData.projectedSleepTime || null,
+                        lastSynced: now
+                    };
+
+                    // Auto-set today's sleep hours from stimulant calc if not set
+                    if (state.today.sleepHours === null && stimData.hoursSleptLastNight != null) {
+                        state.today.sleepHours = stimData.hoursSleptLastNight;
+                    }
+                }
+
+                // 2. DENTAL QUEST MEDICATIONS (Pill Inventory)
+                const questSnapshot = await database.ref(basePath + '/appData/medications').once('value');
+                const questMeds = questSnapshot.val();
+
+                if (questMeds) {
+                    const pills30 = questMeds['30mg']?.pills || 0;
+                    const pills20 = questMeds['20mg']?.pills || 0;
+                    const refill30 = questMeds['30mg']?.refillDate || null;
+                    const refill20 = questMeds['20mg']?.refillDate || null;
+
+                    // Use whichever refill date is set (usually the same)
+                    const refillDate = refill30 || refill20;
+                    let daysUntilRefill = null;
+                    let willRunOut = false;
+
+                    if (refillDate) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const refill = parseLocalDate(refillDate);
+                        daysUntilRefill = Math.ceil((refill - today) / (1000 * 60 * 60 * 24));
+
+                        // 50mg XR = 1x 30mg + 1x 20mg per day
+                        // Check if either will run out
+                        willRunOut = pills30 < daysUntilRefill || pills20 < daysUntilRefill;
+                    }
+
+                    state.ecosystemContext.inventory = {
+                        pills30mg: pills30,
+                        pills20mg: pills20,
+                        refillDate30mg: refill30,
+                        refillDate20mg: refill20,
+                        daysUntilRefill: daysUntilRefill,
+                        willRunOut: willRunOut,
+                        lastSynced: now
+                    };
+                }
+
+                // 3. D3 ROADMAP EXAMS
+                const roadmapSnapshot = await database.ref(basePath + '/d3Roadmap/exams').once('value');
+                const examsData = roadmapSnapshot.val();
+
+                if (examsData && Array.isArray(examsData)) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    // Filter for upcoming exams (not passed)
+                    const upcomingExams = examsData
+                        .map(exam => {
+                            const examDate = parseLocalDate(exam.date);
+                            const daysUntil = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
+                            return { ...exam, daysUntil };
+                        })
+                        .filter(exam => exam.daysUntil >= 0)
+                        .sort((a, b) => a.daysUntil - b.daysUntil);
+
+                    const nextExam = upcomingExams[0] || null;
+
+                    state.ecosystemContext.academic = {
+                        nextExam: nextExam,
+                        daysUntilExam: nextExam?.daysUntil || null,
+                        upcomingExams: upcomingExams.slice(0, 5), // Next 5 exams
+                        lastSynced: now
+                    };
+                }
+
+                // 4. D3 ROADMAP SCHEDULE (God Mode 8A.1)
+                await loadTodaySchedule(basePath, now);
+
+                // 5. SLEEP DEBT CALCULATION (God Mode 8A.4)
+                await calculateSleepDebt(basePath);
+
+                // Apply sleep debt mode override if needed (God Mode 8A.4)
+                applySleepDebtModeOverride();
+
+                // Apply exam stress multiplier (God Mode 8A.5)
+                if (state.today.setupComplete && state.today.targets) {
+                    applyExamStressMultiplier();
+                }
+
+                console.log('✅ Ecosystem data loaded:', state.ecosystemContext);
+
+                // Re-render if UI is already initialized
+                if (state.today.setupComplete) {
+                    renderDashboard();
+                }
+
+            } catch (error) {
+                console.error('❌ Error loading ecosystem data:', error);
+                // Non-fatal - app still works without cross-app data
+            }
+        }
+
+        // Helper: Parse date string as local date (avoid UTC issues)
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return null;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        // ============================================
+        // SCHEDULE LOADING (God Mode 8A.1)
+        // ============================================
+
+        async function loadTodaySchedule(basePath, now) {
+            try {
+                // Load Monthly Planner data from D3 Roadmap
+                const plannerSnapshot = await database.ref(basePath + '/d3Roadmap/monthlyPlanner').once('value');
+                const plannerData = plannerSnapshot.val();
+
+                if (!plannerData) {
+                    console.log('📅 No monthly planner data found');
+                    return;
+                }
+
+                const today = getLocalDateString();
+                const tomorrow = getLocalDateString(new Date(Date.now() + 86400000));
+
+                // Combine custom tasks and static tasks if available
+                let allTasks = [];
+
+                // Check for customTasks array (older format)
+                if (plannerData.customTasks && Array.isArray(plannerData.customTasks)) {
+                    allTasks = allTasks.concat(plannerData.customTasks);
+                }
+
+                // Check for tasks object (newer format)
+                if (plannerData.tasks) {
+                    if (Array.isArray(plannerData.tasks)) {
+                        allTasks = allTasks.concat(plannerData.tasks);
+                    } else {
+                        // If tasks is an object, convert to array
+                        allTasks = allTasks.concat(Object.values(plannerData.tasks));
+                    }
+                }
+
+                // Filter tasks for today and tomorrow
+                const todayTasks = allTasks.filter(t => t && t.date === today);
+                const tomorrowTasks = allTasks.filter(t => t && t.date === tomorrow);
+
+                // Calculate blocked windows from today's tasks
+                const blockedWindows = todayTasks
+                    .filter(t => t.startTime && t.endTime &&
+                        ['clinic', 'lecture', 'exam', 'lab'].includes(t.type?.toLowerCase()))
+                    .map(t => ({
+                        type: t.type?.toLowerCase() || 'other',
+                        name: t.name || t.title || 'Blocked',
+                        start: t.startTime,
+                        end: t.endTime,
+                        startMinutes: timeToMinutes(t.startTime),
+                        endMinutes: timeToMinutes(t.endTime)
+                    }))
+                    .sort((a, b) => a.startMinutes - b.startMinutes);
+
+                // Calculate eating windows (inverse of blocked)
+                const eatingWindows = calculateEatingWindows(blockedWindows);
+                const totalEatingHours = eatingWindows.reduce((sum, w) => sum + w.duration, 0) / 60;
+
+                // Determine if front-loading required (< 6 hours to eat)
+                const frontLoadRequired = totalEatingHours < 6;
+                const firstMajorBlock = getFirstMajorBlock(blockedWindows);
+                const frontLoadDeadline = frontLoadRequired && firstMajorBlock ? firstMajorBlock.start : null;
+
+                // Determine schedule intensity
+                let scheduleIntensity = 'EASY';
+                if (totalEatingHours < 5) scheduleIntensity = 'HARD';
+                else if (totalEatingHours < 7) scheduleIntensity = 'MEDIUM';
+
+                state.ecosystemContext.schedule = {
+                    todayTasks,
+                    tomorrowTasks,
+                    blockedWindows,
+                    eatingWindows,
+                    totalEatingHours: Math.round(totalEatingHours * 10) / 10,
+                    frontLoadRequired,
+                    frontLoadDeadline,
+                    scheduleIntensity,
+                    lastSynced: now
+                };
+
+                console.log('📅 Schedule loaded:', state.ecosystemContext.schedule);
+
+            } catch (error) {
+                console.error('❌ Error loading schedule:', error);
+                // Non-fatal - app still works without schedule data
+            }
         }
 
         function promptForPin() {
@@ -6439,6 +10510,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     targets: { calories: 2000, protein: 172, floor: 1900 },
                     meals: [],
                     setupComplete: false,
+                    workedOut: false,
+                    workouts: [],
+                    lastMealTime: null,
                     calTargetAwarded: false,
                     proteinTargetAwarded: false,
                     perfectDayAwarded: false
@@ -6446,24 +10520,82 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 saveState();
             }
 
-            // Show correct screen based on state
-            if (state.today.setupComplete && state.today.date === todayStr) {
-                document.getElementById('setupScreen').classList.remove('active');
-                document.getElementById('dashboardScreen').classList.add('active');
-                renderDashboard();
-                renderMealsList();
-                syncMicronutrientUI();
-            } else {
-                document.getElementById('dashboardScreen').classList.remove('active');
-                document.getElementById('setupScreen').classList.add('active');
+            // v3: AUTO-START DAY using ecosystem data (no manual setup required)
+            await autoStartDay();
 
-                // Try to auto-fill sleep from stimulant calculator
-                const sleepFromStim = await tryGetSleepFromStimCalc();
-                if (sleepFromStim !== null) {
-                    document.getElementById('sleepInput').value = sleepFromStim;
-                    document.getElementById('sleepAutoFill').textContent = '↑ Auto-filled from Sleep Calculator';
-                }
+            // Always show Simple View by default
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('simpleView').classList.add('active');
+
+            // Render Simple View
+            renderSimpleView();
+        }
+
+        // v3: Auto-start the day using ecosystem data
+        async function autoStartDay() {
+            const todayStr = getLocalDateString();
+
+            // If already set up for today, just return
+            if (state.today.setupComplete && state.today.date === todayStr) {
+                return;
             }
+
+            // Set today's date
+            state.today.date = todayStr;
+
+            // Get sleep hours from ecosystem context (already loaded) or fallback
+            let sleepHours = state.ecosystemContext?.stimulant?.sleepHours;
+
+            if (sleepHours === null || sleepHours === undefined) {
+                // Try direct fetch as backup
+                sleepHours = await tryGetSleepFromStimCalc();
+            }
+
+            // Default to 6 hours if we can't get sleep data (GREEN mode)
+            sleepHours = sleepHours ?? 6;
+            state.today.sleepHours = sleepHours;
+
+            // Get active calories from 7-day average
+            const activeInfo = get7DayAvgActiveCalories();
+            state.today.activeCalories = activeInfo.avg || 300; // Default 300 if no history
+
+            // Calculate mode based on sleep
+            state.today.mode = calculateMode(sleepHours, false);
+
+            // Calculate TDEE and targets
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                state.today.activeCalories
+            );
+            state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, false);
+
+            // Mark as setup complete
+            state.today.setupComplete = true;
+
+            // Save state
+            saveState();
+
+            console.log('✅ Auto-started day:', {
+                date: state.today.date,
+                sleepHours: state.today.sleepHours,
+                mode: state.today.mode,
+                targets: state.today.targets
+            });
+        }
+
+        // Show manual setup screen (optional override)
+        function showManualSetup() {
+            document.getElementById('simpleView').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('setupScreen').classList.add('active');
+
+            // Pre-fill with current values
+            document.getElementById('sleepInput').value = state.today.sleepHours || '';
+            document.getElementById('activeCalInput').value = state.today.activeCalories || '';
+            document.getElementById('brainDayCheck').checked = state.today.isBrainDay || false;
         }
 
         // ============================================
@@ -6503,6 +10635,24 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     this.classList.remove('active');
                 }
             });
+        });
+
+        // Escape key to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close any open modal
+                const modals = [
+                    'addMealModal', 'weighInModal', 'exportModal', 'settingsModal',
+                    'metabolicModal', 'quickMealModal', 'workoutModal',
+                    'weeklyExportModal', 'bodyCompModal'
+                ];
+                modals.forEach(id => {
+                    const modal = document.getElementById(id);
+                    if (modal && modal.classList.contains('active')) {
+                        modal.classList.remove('active');
+                    }
+                });
+            }
         });
 
         // ============================================
