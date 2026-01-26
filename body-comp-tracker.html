@@ -492,6 +492,184 @@
             padding: 20px;
         }
 
+        /* Metabolic Adaptation Modal */
+        .metabolic-modal {
+            max-width: 380px;
+        }
+
+        .metabolic-header {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
+            border-bottom: none;
+        }
+
+        .metabolic-header .modal-title {
+            color: white;
+        }
+
+        .metabolic-body {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .metabolic-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .metabolic-congrats {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 10px;
+        }
+
+        .metabolic-message {
+            font-size: 1.1em;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .metabolic-explanation {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .metabolic-adjustment {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .adjustment-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .adjustment-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent-yellow);
+        }
+
+        .metabolic-new-tdee {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .metabolic-new-tdee span {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        /* Carb Progress Bar (Brain Day) */
+        .progress-bar-fill.carbs {
+            background: linear-gradient(90deg, var(--accent-yellow), var(--accent-orange));
+        }
+
+        .carb-target-section {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .carb-target-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .carb-target-label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--accent-yellow);
+        }
+
+        .carb-target-value {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        /* Micronutrient Toggles */
+        .micro-toggles {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .micro-toggle-header {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .micro-toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .micro-toggle-item:last-child {
+            border-bottom: none;
+        }
+
+        .micro-checkbox {
+            width: 24px;
+            height: 24px;
+            accent-color: var(--accent-green);
+            cursor: pointer;
+        }
+
+        .micro-label {
+            flex: 1;
+            font-size: 0.9em;
+            color: var(--text-primary);
+        }
+
+        .micro-xp {
+            font-size: 0.75em;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* Stimulant Crash Warning */
+        .nudge-banner.crash-warning {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2));
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .nudge-banner.crash-warning .nudge-icon {
+            animation: shake 0.5s ease infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
         /* Form Styles */
         .form-group {
             margin-bottom: 16px;
@@ -2412,6 +2590,23 @@
                     </label>
                 </div>
 
+                <!-- Micronutrient Safety Section -->
+                <div class="micro-toggles">
+                    <div class="micro-toggle-header">
+                        💊 CNS Protection (Stimulant Support)
+                    </div>
+                    <div class="micro-toggle-item">
+                        <input type="checkbox" id="magnesiumCheck" class="micro-checkbox">
+                        <span class="micro-label">Magnesium/Zinc taken?</span>
+                        <span class="micro-xp">+5 XP</span>
+                    </div>
+                    <div class="micro-toggle-item">
+                        <input type="checkbox" id="waterCheck" class="micro-checkbox">
+                        <span class="micro-label">3L Water goal met?</span>
+                        <span class="micro-xp">+5 XP</span>
+                    </div>
+                </div>
+
                 <button class="submit-btn" onclick="startDay()">Start Day →</button>
             </div>
         </div>
@@ -2522,6 +2717,20 @@
                     </div>
                 </div>
 
+                <!-- Carb Target Bar (Brain Days only) -->
+                <div class="carb-target-section" id="carbTargetSection" style="display: none;">
+                    <div class="carb-target-header">
+                        <span class="carb-target-label">🧠 Brain Fuel (Carbs)</span>
+                        <span class="carb-target-value" id="carbProgress">0 / 150g</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill carbs" id="carbProgressBar" style="width: 0%;"></div>
+                    </div>
+                    <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 6px;">
+                        Your brain needs glucose for clinic! Hit 150g for peak performance.
+                    </div>
+                </div>
+
                 <div class="deficit-display">
                     <div class="deficit-value on-track" id="deficitValue">0 kcal</div>
                     <div class="deficit-label" id="deficitLabel">deficit so far</div>
@@ -2536,6 +2745,26 @@
                 </div>
                 <div class="meals-list" id="mealsList">
                     <div class="empty-state">No meals logged yet. Tap + Add Meal to start.</div>
+                </div>
+            </div>
+
+            <!-- End-of-Day Micronutrient Tracking -->
+            <div class="micro-toggles" id="eodMicroToggles">
+                <div class="micro-toggle-header">
+                    💊 CNS Protection Check-In
+                </div>
+                <div class="micro-toggle-item">
+                    <input type="checkbox" id="eodMagnesiumCheck" class="micro-checkbox" onchange="updateMicronutrients()">
+                    <span class="micro-label">Magnesium/Zinc taken today?</span>
+                    <span class="micro-xp" id="magXpLabel">+5 XP</span>
+                </div>
+                <div class="micro-toggle-item">
+                    <input type="checkbox" id="eodWaterCheck" class="micro-checkbox" onchange="updateMicronutrients()">
+                    <span class="micro-label">3L Water consumed?</span>
+                    <span class="micro-xp" id="waterXpLabel">+5 XP</span>
+                </div>
+                <div class="micro-status" id="microStatus" style="margin-top: 10px; font-size: 0.85em; color: var(--text-muted); text-align: center;">
+                    <!-- Status message will appear here -->
                 </div>
             </div>
 
@@ -2809,6 +3038,13 @@
                     </div>
                 </div>
 
+                <div class="form-row" id="carbsInputRow">
+                    <div class="form-group">
+                        <label class="form-label">Carbs (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
+                        <input type="number" id="mealCarbsInput" class="form-input" placeholder="e.g., 40">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="checkbox-group">
                         <input type="checkbox" id="saveToFrequent">
@@ -2912,6 +3148,34 @@
         </div>
     </div>
 
+    <!-- Metabolic Adaptation Modal -->
+    <div id="metabolicModal" class="modal-overlay">
+        <div class="modal metabolic-modal">
+            <div class="modal-header metabolic-header">
+                <span class="modal-title">⚡ Metabolic Adaptation</span>
+                <button class="modal-close" onclick="closeMetabolicModal()">×</button>
+            </div>
+            <div class="modal-body metabolic-body">
+                <div class="metabolic-icon">🔥</div>
+                <div class="metabolic-congrats">Congratulations!</div>
+                <div class="metabolic-message" id="metabolicMessage">
+                    You've lost 5 lbs!
+                </div>
+                <div class="metabolic-explanation">
+                    Your body now burns fewer calories at rest. This is normal metabolic adaptation.
+                </div>
+                <div class="metabolic-adjustment">
+                    <div class="adjustment-label">TDEE Adjusted:</div>
+                    <div class="adjustment-value" id="metabolicAdjustment">-50 kcal/day</div>
+                </div>
+                <div class="metabolic-new-tdee">
+                    New Base TDEE: <span id="newTDEE">2,450</span> kcal
+                </div>
+                <button class="submit-btn" onclick="closeMetabolicModal()">Got it! 💪</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
@@ -2929,6 +3193,8 @@
                 startingWeight_lbs: 190,
                 goalWeight_lbs: 170,
                 tdee_base: 2500,
+                tdee_original: 2500,  // Store original for reference
+                lastMilestone: 0,     // Track weight loss milestones (every 5 lbs)
                 startDate: null,
                 targetDate: '2026-06-01'
             },
@@ -2943,38 +3209,49 @@
                 targets: {
                     calories: 2000,
                     protein: 172,
+                    carbs: 150,       // Carb target for brain days
                     floor: 1900
                 },
                 meals: [],
-                setupComplete: false
+                setupComplete: false,
+                // Micronutrient tracking
+                magnesiumTaken: false,
+                waterGoalMet: false,
+                cnsProtectionAwarded: false
             },
 
             // Historical daily logs
             dailyLogs: {},
 
-            // Frequent foods library
+            // Frequent foods library (with carbs for brain day tracking)
             frequentFoods: [
-                { id: 'ff_001', name: 'Just Bare Chicken (6oz)', calories: 340, protein: 38, uses: 0 },
-                { id: 'ff_002', name: 'Just Bare Chicken (3oz)', calories: 170, protein: 19, uses: 0 },
-                { id: 'ff_003', name: 'Vital Farms Egg (1)', calories: 70, protein: 6, uses: 0 },
-                { id: 'ff_004', name: 'Vital Farms Eggs (2)', calories: 140, protein: 12, uses: 0 },
-                { id: 'ff_005', name: '365 Salmon Patty', calories: 170, protein: 17, uses: 0 },
-                { id: 'ff_006', name: 'Orgain Shake 30g', calories: 160, protein: 30, uses: 0 },
-                { id: 'ff_007', name: 'Orgain Plant 20g', calories: 150, protein: 20, uses: 0 },
-                { id: 'ff_008', name: 'Oikos Greek Yogurt', calories: 90, protein: 15, uses: 0 },
-                { id: 'ff_009', name: 'Chipotle 2x Chicken Bowl', calories: 1035, protein: 81, uses: 0 },
-                { id: 'ff_010', name: 'Chipotle + 1 Tortilla', calories: 1355, protein: 89, uses: 0 },
-                { id: 'ff_011', name: "Dave's 2 Sliders + Mac", calories: 1200, protein: 55, uses: 0 },
-                { id: 'ff_012', name: '365 Margherita Pizza', calories: 880, protein: 32, uses: 0 },
-                { id: 'ff_013', name: '365 Wheat Bread (1 slice)', calories: 90, protein: 4, uses: 0 },
-                { id: 'ff_014', name: '365 Wheat Bread (2 slices)', calories: 180, protein: 8, uses: 0 },
-                { id: 'ff_015', name: 'Eggs + Toast (2+2)', calories: 320, protein: 20, uses: 0 },
-                { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, uses: 0 },
-                { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, uses: 0 },
-                { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, uses: 0 },
-                { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, uses: 0 },
-                { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, uses: 0 },
-                { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, uses: 0 }
+                { id: 'ff_001', name: 'Just Bare Chicken (6oz)', calories: 340, protein: 38, carbs: 18, uses: 0 },
+                { id: 'ff_002', name: 'Just Bare Chicken (3oz)', calories: 170, protein: 19, carbs: 9, uses: 0 },
+                { id: 'ff_003', name: 'Vital Farms Egg (1)', calories: 70, protein: 6, carbs: 0, uses: 0 },
+                { id: 'ff_004', name: 'Vital Farms Eggs (2)', calories: 140, protein: 12, carbs: 0, uses: 0 },
+                { id: 'ff_005', name: '365 Salmon Patty', calories: 170, protein: 17, carbs: 2, uses: 0 },
+                { id: 'ff_006', name: 'Orgain Shake 30g', calories: 160, protein: 30, carbs: 3, uses: 0 },
+                { id: 'ff_007', name: 'Orgain Plant 20g', calories: 150, protein: 20, carbs: 15, uses: 0 },
+                { id: 'ff_008', name: 'Oikos Greek Yogurt', calories: 90, protein: 15, carbs: 4, uses: 0 },
+                { id: 'ff_009', name: 'Chipotle 2x Chicken Bowl', calories: 1035, protein: 81, carbs: 85, uses: 0 },
+                { id: 'ff_010', name: 'Chipotle + 1 Tortilla', calories: 1355, protein: 89, carbs: 130, uses: 0 },
+                { id: 'ff_011', name: "Dave's 2 Sliders + Mac", calories: 1200, protein: 55, carbs: 95, uses: 0 },
+                { id: 'ff_012', name: '365 Margherita Pizza', calories: 880, protein: 32, carbs: 96, uses: 0 },
+                { id: 'ff_013', name: '365 Wheat Bread (1 slice)', calories: 90, protein: 4, carbs: 17, uses: 0 },
+                { id: 'ff_014', name: '365 Wheat Bread (2 slices)', calories: 180, protein: 8, carbs: 34, uses: 0 },
+                { id: 'ff_015', name: 'Eggs + Toast (2+2)', calories: 320, protein: 20, carbs: 34, uses: 0 },
+                { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, carbs: 20, uses: 0 },
+                { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, carbs: 30, uses: 0 },
+                { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, carbs: 38, uses: 0 },
+                { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, carbs: 42, uses: 0 },
+                { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, carbs: 3, uses: 0 },
+                { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 },
+                // Clinic Fuel options for Brain Days
+                { id: 'ff_022', name: '🧠 Gatorade + Banana', calories: 230, protein: 1, carbs: 58, uses: 0, clinicFuel: true },
+                { id: 'ff_023', name: '🧠 Clif Bar', calories: 250, protein: 10, carbs: 44, uses: 0, clinicFuel: true },
+                { id: 'ff_024', name: '🧠 Apple + PB (2 tbsp)', calories: 285, protein: 7, carbs: 36, uses: 0, clinicFuel: true },
+                { id: 'ff_025', name: '🧠 Orange Juice (12oz)', calories: 165, protein: 2, carbs: 39, uses: 0, clinicFuel: true },
+                { id: 'ff_026', name: '🧠 Honey Stinger Waffle', calories: 160, protein: 1, carbs: 29, uses: 0, clinicFuel: true }
             ],
 
             // Weekly weigh-ins
@@ -3109,7 +3386,7 @@
             return 'ORANGE';
         }
 
-        function calculateTargets(mode, tdee, weight_lbs) {
+        function calculateTargets(mode, tdee, weight_lbs, isBrainDay = false) {
             const weight_kg = weight_lbs / 2.205;
             const protein_base = Math.round(weight_kg * 2.0); // 2g/kg
 
@@ -3134,9 +3411,14 @@
             const m = modes[mode] || modes['GREEN'];
             const targetCals = Math.max(tdee - m.deficit, m.floor);
 
+            // Brain Day: 150g carbs minimum for cognitive performance
+            // (~600 kcal from carbs, ensuring brain gets glucose)
+            const carbTarget = isBrainDay ? 150 : 0;
+
             return {
                 calories: targetCals,
                 protein: Math.round(protein_base * m.proteinMultiplier),
+                carbs: carbTarget,
                 floor: m.floor,
                 deficit: m.deficit
             };
@@ -3160,6 +3442,7 @@
             return {
                 calories: meals.reduce((sum, m) => sum + (m.calories || 0), 0),
                 protein: meals.reduce((sum, m) => sum + (m.protein || 0), 0),
+                carbs: meals.reduce((sum, m) => sum + (m.carbs || 0), 0),
                 mealCount: meals.length
             };
         }
@@ -3194,7 +3477,7 @@
 
             // Brain day indicator
             if (state.today.isBrainDay) {
-                document.getElementById('modeSubtitle').textContent += ' • 🧠 Hit 150g carbs';
+                document.getElementById('modeSubtitle').textContent += ' • 🧠 Clinic Day';
             }
 
             // Target cards
@@ -3213,6 +3496,19 @@
             document.getElementById('proteinProgressBar').style.width = `${proteinPercent}%`;
 
             document.getElementById('progressStats').textContent = `${totals.mealCount} meal${totals.mealCount !== 1 ? 's' : ''} logged`;
+
+            // Carb progress bar (Brain Days only)
+            const carbSection = document.getElementById('carbTargetSection');
+            if (carbSection) {
+                if (state.today.isBrainDay && targets.carbs > 0) {
+                    carbSection.style.display = 'block';
+                    const carbPercent = Math.min((totals.carbs / targets.carbs) * 100, 100);
+                    document.getElementById('carbProgress').textContent = `${totals.carbs} / ${targets.carbs}g`;
+                    document.getElementById('carbProgressBar').style.width = `${carbPercent}%`;
+                } else {
+                    carbSection.style.display = 'none';
+                }
+            }
 
             // Deficit display
             const deficitEl = document.getElementById('deficitValue');
@@ -3282,7 +3578,21 @@
             document.getElementById('mealNameInput').value = '';
             document.getElementById('mealCalInput').value = '';
             document.getElementById('mealProteinInput').value = '';
+            document.getElementById('mealCarbsInput').value = '';
             document.getElementById('saveToFrequent').checked = false;
+
+            // Highlight carbs input on Brain Days
+            const carbsRow = document.getElementById('carbsInputRow');
+            if (carbsRow && state.today.isBrainDay) {
+                carbsRow.style.background = 'rgba(245, 158, 11, 0.1)';
+                carbsRow.style.borderRadius = '8px';
+                carbsRow.style.padding = '10px';
+                carbsRow.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+            } else if (carbsRow) {
+                carbsRow.style.background = 'none';
+                carbsRow.style.border = 'none';
+                carbsRow.style.padding = '0';
+            }
         }
 
         function closeAddMealModal() {
@@ -3299,6 +3609,7 @@
                 name: food.name,
                 calories: food.calories,
                 protein: food.protein,
+                carbs: food.carbs || 0,
                 time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
                 fromLibrary: true,
                 libraryId: foodId
@@ -3326,6 +3637,7 @@
             const name = document.getElementById('mealNameInput').value.trim();
             const calories = parseInt(document.getElementById('mealCalInput').value) || 0;
             const protein = parseInt(document.getElementById('mealProteinInput').value) || 0;
+            const carbs = parseInt(document.getElementById('mealCarbsInput').value) || 0;
             const saveToFrequent = document.getElementById('saveToFrequent').checked;
 
             if (!name) {
@@ -3344,6 +3656,7 @@
                 name: name,
                 calories: calories,
                 protein: protein,
+                carbs: carbs,
                 time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
                 fromLibrary: false
             };
@@ -3409,7 +3722,7 @@
                 state.profile.age,
                 activeCalories
             );
-            const targets = calculateTargets(mode, tdee, state.profile.currentWeight_lbs);
+            const targets = calculateTargets(mode, tdee, state.profile.currentWeight_lbs, isBrainDay);
 
             // Update today's state
             state.today.date = getLocalDateString();
@@ -3419,6 +3732,10 @@
             state.today.mode = mode;
             state.today.targets = targets;
             state.today.setupComplete = true;
+            // Reset micronutrient tracking for new day
+            state.today.magnesiumTaken = false;
+            state.today.waterGoalMet = false;
+            state.today.cnsProtectionAwarded = false;
 
             // If start date not set, set it
             if (!state.profile.startDate) {
@@ -3523,8 +3840,19 @@
 
             let nudge = null;
 
+            // STIMULANT CRASH PROTECTION: 4-5 PM + <1200 cal
+            // The Adderall crash hits around 4-5 PM, creating binge risk
+            if ((hour === 16 || hour === 17) && totals.calories < 1200 && !dismissedNudges.has('crash_warning')) {
+                nudge = {
+                    id: 'crash_warning',
+                    type: 'crash-warning',
+                    icon: '⚡',
+                    text: `Dopamine Crash Warning: Eat 30g Protein + Fruit NOW to prevent evening binge. Your Adderall is wearing off.`
+                };
+            }
+
             // 3 PM + <1000 cal
-            if (hour >= 15 && totals.calories < 1000 && !dismissedNudges.has('low_intake')) {
+            if (hour >= 15 && hour < 16 && totals.calories < 1000 && !dismissedNudges.has('low_intake')) {
                 nudge = {
                     id: 'low_intake',
                     type: 'warning',
@@ -3541,6 +3869,16 @@
                     type: 'info',
                     icon: '🌙',
                     text: `${shortfall}g short on protein. Consider cottage cheese or shake before bed.`
+                };
+            }
+
+            // 6 PM + Brain Day + carbs < 100
+            if (hour >= 18 && state.today.isBrainDay && totals.carbs < 100 && !dismissedNudges.has('brain_fuel')) {
+                nudge = {
+                    id: 'brain_fuel',
+                    type: 'warning',
+                    icon: '🧠',
+                    text: `Brain Fuel Low: Only ${totals.carbs}g carbs on clinic day. Eat some quick carbs to restore cognitive function.`
                 };
             }
 
@@ -3567,6 +3905,69 @@
         }
 
         // ============================================
+        // MICRONUTRIENT TRACKING (CNS Protection)
+        // ============================================
+
+        function updateMicronutrients() {
+            const magChecked = document.getElementById('eodMagnesiumCheck').checked;
+            const waterChecked = document.getElementById('eodWaterCheck').checked;
+
+            state.today.magnesiumTaken = magChecked;
+            state.today.waterGoalMet = waterChecked;
+
+            // Update UI labels
+            const magLabel = document.getElementById('magXpLabel');
+            const waterLabel = document.getElementById('waterXpLabel');
+            const statusEl = document.getElementById('microStatus');
+
+            if (magLabel) {
+                magLabel.textContent = magChecked ? '✓' : '+5 XP';
+                magLabel.style.color = magChecked ? 'var(--accent-green)' : 'var(--accent-green)';
+            }
+
+            if (waterLabel) {
+                waterLabel.textContent = waterChecked ? '✓' : '+5 XP';
+                waterLabel.style.color = waterChecked ? 'var(--accent-green)' : 'var(--accent-green)';
+            }
+
+            // Award XP if both are checked and not already awarded
+            if (magChecked && waterChecked && !state.today.cnsProtectionAwarded) {
+                state.today.cnsProtectionAwarded = true;
+                awardXP(10, 'CNS Protection');
+
+                if (statusEl) {
+                    statusEl.innerHTML = '<span style="color: var(--accent-green);">🛡️ CNS Protected! Magnesium + hydration supports stimulant recovery.</span>';
+                }
+            } else if (magChecked && waterChecked) {
+                if (statusEl) {
+                    statusEl.innerHTML = '<span style="color: var(--accent-green);">🛡️ CNS Protected!</span>';
+                }
+            } else if (magChecked || waterChecked) {
+                if (statusEl) {
+                    statusEl.textContent = 'Complete both for CNS Protection bonus!';
+                }
+            } else {
+                if (statusEl) {
+                    statusEl.textContent = 'Stimulants deplete magnesium & hydration. Check when done.';
+                }
+            }
+
+            saveState();
+        }
+
+        function syncMicronutrientUI() {
+            // Sync checkboxes with state when loading
+            const magCheck = document.getElementById('eodMagnesiumCheck');
+            const waterCheck = document.getElementById('eodWaterCheck');
+
+            if (magCheck) magCheck.checked = state.today.magnesiumTaken || false;
+            if (waterCheck) waterCheck.checked = state.today.waterGoalMet || false;
+
+            // Update labels
+            updateMicronutrients();
+        }
+
+        // ============================================
         // WEIGH-IN
         // ============================================
 
@@ -3578,6 +3979,23 @@
 
         function closeWeighInModal() {
             document.getElementById('weighInModal').classList.remove('active');
+        }
+
+        function showMetabolicAdaptationModal(lbsLost, adjustment, newTDEE) {
+            const messageEl = document.getElementById('metabolicMessage');
+            const adjustmentEl = document.getElementById('metabolicAdjustment');
+            const newTDEEEl = document.getElementById('newTDEE');
+
+            if (messageEl) messageEl.textContent = `You've lost ${lbsLost} lbs!`;
+            if (adjustmentEl) adjustmentEl.textContent = `-${adjustment} kcal/day`;
+            if (newTDEEEl) newTDEEEl.textContent = formatNumber(newTDEE);
+
+            document.getElementById('metabolicModal').classList.add('active');
+            triggerConfetti();
+        }
+
+        function closeMetabolicModal() {
+            document.getElementById('metabolicModal').classList.remove('active');
         }
 
         function renderWeightTrend() {
@@ -3669,10 +4087,25 @@
 
             // Check for TDEE recalibration (every 5 lbs lost)
             const lost = state.profile.startingWeight_lbs - weight;
-            const milestones = Math.floor(lost / 5);
-            if (milestones > 0) {
-                const adjustment = milestones * 50;
-                // Could show a notification about TDEE adjustment here
+            const currentMilestone = Math.floor(lost / 5);
+            const previousMilestone = state.profile.lastMilestone || 0;
+
+            if (currentMilestone > previousMilestone && currentMilestone > 0) {
+                // New milestone reached - apply TDEE adjustment
+                const newMilestones = currentMilestone - previousMilestone;
+                const adjustment = newMilestones * 50;
+
+                // Store original TDEE if not already stored
+                if (!state.profile.tdee_original) {
+                    state.profile.tdee_original = state.profile.tdee_base;
+                }
+
+                // Apply the adjustment
+                state.profile.tdee_base -= adjustment;
+                state.profile.lastMilestone = currentMilestone;
+
+                // Show metabolic adaptation modal
+                showMetabolicAdaptationModal(newMilestones * 5, adjustment, state.profile.tdee_base);
             }
 
             // Check weight loss achievements
@@ -3753,6 +4186,66 @@ TOTALS: ${formatNumber(totals.calories)} cal | ${totals.protein}g protein
 
 ACTIVE CALORIES: ${state.today.activeCalories} (manual input)
 TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories))}
+
+──────────────────────────────────────
+📅 LAST 7 DAYS TRENDS
+──────────────────────────────────────
+`;
+
+            // Calculate last 7 days trends
+            const today = new Date();
+            let totalSleep = 0;
+            let sleepDays = 0;
+            let totalDeficit = 0;
+            let deficitDays = 0;
+            let trendData = [];
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = getLocalDateString(date);
+                const log = state.dailyLogs[dateStr];
+
+                if (log) {
+                    const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    let dayInfo = `${dayLabel}: `;
+
+                    if (log.sleepHours !== undefined && log.sleepHours !== null) {
+                        totalSleep += log.sleepHours;
+                        sleepDays++;
+                        dayInfo += `${log.sleepHours}h sleep`;
+                    }
+
+                    if (log.deficit !== undefined) {
+                        totalDeficit += log.deficit;
+                        deficitDays++;
+                        const deficitSign = log.deficit >= 0 ? '-' : '+';
+                        dayInfo += log.sleepHours ? `, ${deficitSign}${Math.abs(log.deficit)} cal` : `${deficitSign}${Math.abs(log.deficit)} cal`;
+                    }
+
+                    if (log.sleepHours !== undefined || log.deficit !== undefined) {
+                        trendData.push(dayInfo);
+                    }
+                }
+            }
+
+            if (trendData.length > 0) {
+                text += trendData.join('\n') + '\n\n';
+
+                const avgSleep = sleepDays > 0 ? (totalSleep / sleepDays).toFixed(1) : 'N/A';
+                const avgDeficit = deficitDays > 0 ? Math.round(totalDeficit / deficitDays) : 'N/A';
+                const totalWeeklyDeficit = deficitDays > 0 ? formatNumber(Math.round(totalDeficit)) : 'N/A';
+
+                text += `AVERAGES (${Math.max(sleepDays, deficitDays)} days logged):
+• Avg Sleep: ${avgSleep}${avgSleep !== 'N/A' ? 'h' : ''}
+• Avg Daily Deficit: ${avgDeficit !== 'N/A' ? formatNumber(avgDeficit) + ' cal' : 'N/A'}
+• Total Weekly Deficit: ${totalWeeklyDeficit}${totalWeeklyDeficit !== 'N/A' ? ' cal' : ''}
+• Est. Fat Loss: ~${deficitDays > 0 ? (totalDeficit / 3500).toFixed(2) : '0'} lbs`;
+            } else {
+                text += 'No data logged in the last 7 days.\nStart logging to see weekly trends!';
+            }
+
+            text += `
 
 ══════════════════════════════════════`;
 
@@ -5072,6 +5565,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 document.getElementById('dashboardScreen').classList.add('active');
                 renderDashboard();
                 renderMealsList();
+                syncMicronutrientUI();
             } else {
                 document.getElementById('dashboardScreen').classList.remove('active');
                 document.getElementById('setupScreen').classList.add('active');
