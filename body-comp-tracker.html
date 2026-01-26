@@ -1257,6 +1257,109 @@
             color: var(--accent-orange);
         }
 
+        /* Logic Log Button (8A.9) */
+        .logic-log-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .logic-log-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-purple);
+        }
+
+        /* Logic Modal */
+        .logic-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .logic-modal-content {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logic-modal-content h3 {
+            margin: 0 0 15px 0;
+            color: var(--text-primary);
+            font-size: 1.1em;
+        }
+
+        .logic-modal pre {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            line-height: 1.4;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            flex: 1;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .logic-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+
+        .logic-modal-buttons button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .logic-modal-buttons .btn-copy {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .logic-modal-buttons .btn-copy:hover {
+            background: var(--accent-purple-bright);
+        }
+
+        .logic-modal-buttons .btn-close {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .logic-modal-buttons .btn-close:hover {
+            background: var(--bg-secondary);
+        }
+
         /* Action Buttons */
         .simple-actions {
             display: grid;
@@ -4269,6 +4372,7 @@
                 <div style="text-align: center;">
                     <span class="mode-badge green" id="modeBadge">🟢 GREEN MODE</span>
                 </div>
+                <button onclick="showLogicModal()" class="logic-log-btn">📋 Show Logic</button>
             </div>
 
             <!-- Action Buttons -->
@@ -6420,8 +6524,8 @@
                 const dayOfWeek = date.getDay();
 
                 dayStats[dayOfWeek].totalDays++;
-                if (log.totalCalories) dayStats[dayOfWeek].calories.push(log.totalCalories);
-                if (log.totalProtein) dayStats[dayOfWeek].protein.push(log.totalProtein);
+                if (log.calories) dayStats[dayOfWeek].calories.push(log.calories);
+                if (log.protein) dayStats[dayOfWeek].protein.push(log.protein);
                 if (log.workedOut) dayStats[dayOfWeek].gymDays++;
             }
 
@@ -7448,7 +7552,8 @@
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories,  // FIX: was missing - needed for 7-day TDEE average
                 mealCount: totals.mealCount,
-                perfect: perfect
+                perfect: perfect,
+                workedOut: today.workedOut || false  // FIX: was missing - needed for weekly gym rate
             };
 
             // Update cumulative deficit for refeed tracking
@@ -8422,6 +8527,382 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // LOGIC TRANSPARENCY (God Mode 8A.9)
+        // ============================================
+
+        function generateLogicLog() {
+            const now = new Date();
+            const log = [];
+
+            // ========== HEADER ==========
+            log.push('═══════════════════════════════════════════════════════════');
+            log.push('BODY COMP TRACKER — DAILY LOGIC LOG');
+            log.push('═══════════════════════════════════════════════════════════');
+            log.push(`Generated: ${now.toLocaleString()}`);
+            log.push(`App Version: 3.0 (God Mode)`);
+            log.push('');
+
+            // ========== SECTION 1: DATA SOURCES ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 1: DATA SOURCES (Where data came from)         │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            // Stimulant Calculator Data
+            log.push('FROM STIMULANT CALCULATOR (/stimulantCalculator/state):');
+            const stim = state.ecosystemContext?.stimulant || {};
+            log.push(`  • Sleep last night: ${stim.sleepHours ?? 'NULL'} hrs`);
+            log.push(`  • Wake time: ${stim.wakeTime ?? 'NULL'}`);
+            log.push(`  • Total Adderall: ${stim.totalAdderallToday ?? 0} mg`);
+            log.push(`  • Last Adderall time: ${stim.lastAdderallTime ?? 'NULL'}`);
+            log.push(`  • Caffeine total: ${stim.caffeineMg ?? 0} mg`);
+            log.push(`  • Last caffeine: ${stim.lastCaffeineTime ?? 'NULL'}`);
+            log.push(`  • Projected sleep: ${stim.projectedSleepTime ?? 'NULL'}`);
+            log.push(`  • Booster taken: ${stim.isBooster ?? false}`);
+            log.push(`  • Last synced: ${stim.lastSynced ? new Date(stim.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push('');
+
+            // Dental Quest Data
+            log.push('FROM DENTAL QUEST (/appData/medications):');
+            const inv = state.ecosystemContext?.inventory || {};
+            log.push(`  • 30mg pills: ${inv.pills30mg ?? 'NULL'}`);
+            log.push(`  • 20mg pills: ${inv.pills20mg ?? 'NULL'}`);
+            log.push(`  • Total pills: ${(inv.pills30mg || 0) + (inv.pills20mg || 0)}`);
+            log.push(`  • Refill date: ${inv.refillDate30mg ?? 'NULL'}`);
+            log.push(`  • Days until refill: ${inv.daysUntilRefill ?? 'NULL'}`);
+            log.push(`  • Will run out: ${inv.willRunOut ?? 'NULL'}`);
+            log.push(`  • Last synced: ${inv.lastSynced ? new Date(inv.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push('');
+
+            // D3 Roadmap Data
+            log.push('FROM D3 ROADMAP (/d3Roadmap):');
+            const academic = state.ecosystemContext?.academic || {};
+            log.push(`  • Next exam: ${academic.nextExam?.name ?? 'NULL'}`);
+            log.push(`  • Exam date: ${academic.nextExam?.date ?? 'NULL'}`);
+            log.push(`  • Days until exam: ${academic.daysUntilExam ?? 'NULL'}`);
+            log.push(`  • Last synced: ${academic.lastSynced ? new Date(academic.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push('');
+
+            // Schedule Data (from D3 Roadmap)
+            log.push('FROM D3 ROADMAP - SCHEDULE (/d3Roadmap/monthlyPlanner):');
+            const sched = state.ecosystemContext?.schedule || {};
+            log.push(`  • Today's tasks: ${sched.todayTasks?.length ?? 0} items`);
+            if (sched.todayTasks?.length > 0) {
+                sched.todayTasks.slice(0, 5).forEach(t => {
+                    log.push(`    - ${t.startTime || '??:??'}-${t.endTime || '??:??'}: ${t.name || t.title || 'Task'} (${t.type || 'other'})`);
+                });
+                if (sched.todayTasks.length > 5) log.push(`    - ...and ${sched.todayTasks.length - 5} more`);
+            }
+            log.push(`  • Blocked windows: ${sched.blockedWindows?.length ?? 0}`);
+            log.push(`  • Total eating hours: ${sched.totalEatingHours ?? 'NULL'}`);
+            log.push(`  • Schedule intensity: ${sched.scheduleIntensity ?? 'NULL'}`);
+            log.push(`  • Front-load required: ${sched.frontLoadRequired ?? false}`);
+            log.push(`  • Front-load deadline: ${sched.frontLoadDeadline ?? 'N/A'}`);
+            log.push(`  • Last synced: ${sched.lastSynced ? new Date(sched.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push('');
+
+            // Sleep Debt Data
+            log.push('CALCULATED - SLEEP DEBT (last 7 days):');
+            const debt = state.ecosystemContext?.sleepDebt || {};
+            log.push(`  • Last 7 days: ${JSON.stringify(debt.last7Days?.map(d => d.hours) ?? [])}`);
+            log.push(`  • Total sleep: ${debt.totalSleep ?? 'NULL'} hrs`);
+            log.push(`  • Average sleep: ${debt.avgSleep ?? 'NULL'} hrs/night`);
+            log.push(`  • Weekly target: 49 hrs (7 hrs × 7 nights)`);
+            log.push(`  • Weekly debt: ${debt.weeklyDebt ?? 'NULL'} hrs`);
+            log.push(`  • Consecutive bad nights: ${debt.consecutiveBadNights ?? 'NULL'}`);
+            log.push(`  • Severity: ${debt.severity ?? 'LOW'}`);
+            log.push('');
+
+            // ========== SECTION 2: MODE CALCULATION ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 2: MODE CALCULATION                            │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const sleepHours = state.today?.sleepHours ?? stim.sleepHours ?? 6;
+            log.push('MODE DETERMINATION LOGIC:');
+            log.push(`  Input: ${sleepHours} hours of sleep`);
+            log.push('  Rules:');
+            log.push('    • 6+ hours → GREEN (full deficit safe)');
+            log.push('    • 5-6 hours → YELLOW (reduced deficit)');
+            log.push('    • <5 hours → ORANGE (maintenance only)');
+            log.push(`  Base Result: ${sleepHours >= 6 ? 'GREEN' : sleepHours >= 5 ? 'YELLOW' : 'ORANGE'}`);
+            log.push('');
+
+            log.push('OVERRIDE CHECKS:');
+            log.push(`  • Sleep debt severity: ${debt.severity ?? 'LOW'}`);
+            if (debt.severity === 'SEVERE') {
+                log.push('    → OVERRIDE: Forcing ORANGE mode due to severe sleep debt');
+            } else if (debt.severity === 'HIGH' && sleepHours >= 6) {
+                log.push('    → OVERRIDE: Bumping GREEN → YELLOW due to high sleep debt');
+            } else {
+                log.push('    → No override applied');
+            }
+            log.push('');
+
+            log.push(`FINAL MODE: ${state.today?.mode ?? 'UNKNOWN'}`);
+            log.push(`Mode reason: ${state.today?.modeReason ?? 'Standard calculation'}`);
+            log.push('');
+
+            // ========== SECTION 3: TARGET CALCULATION ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 3: TARGET CALCULATION                          │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const profile = state.profile || {};
+            log.push('PROFILE DATA:');
+            log.push(`  • Weight: ${profile.currentWeight_lbs ?? 'NULL'} lbs`);
+            log.push(`  • Height: ${profile.height_cm ?? 174} cm`);
+            log.push(`  • Age: ${profile.age ?? 30}`);
+            log.push('');
+
+            log.push('BMR CALCULATION (Mifflin-St Jeor):');
+            const weightKg = (profile.currentWeight_lbs || 190) / 2.205;
+            const heightCm = profile.height_cm || 174;
+            const age = profile.age || 30;
+            const bmr = Math.round((10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5);
+            log.push(`  Formula: 10 × weight(kg) + 6.25 × height(cm) - 5 × age + 5`);
+            log.push(`  = 10 × ${weightKg.toFixed(1)} + 6.25 × ${heightCm} - 5 × ${age} + 5`);
+            log.push(`  = ${bmr} cal/day (BMR)`);
+            log.push('');
+
+            log.push('TDEE CALCULATION:');
+            const activeInfo = get7DayAvgActiveCalories();
+            const tdee = bmr + activeInfo.avg;
+            log.push(`  Formula: BMR + Active Calories`);
+            log.push(`  = ${bmr} + ${activeInfo.avg} (${activeInfo.days >= 3 ? activeInfo.days + '-day avg' : 'today'})`);
+            log.push(`  = ${tdee} cal/day (TDEE)`);
+            log.push('');
+
+            log.push('MODE-BASED TARGETS:');
+            const mode = state.today?.mode || 'GREEN';
+            const deficits = { 'GREEN': 500, 'YELLOW': 300, 'ORANGE': 0 };
+            const floors = { 'GREEN': 1900, 'YELLOW': 2000, 'ORANGE': tdee };
+
+            log.push(`  Mode: ${mode}`);
+            log.push(`  Deficit: ${deficits[mode]} cal`);
+            log.push(`  Raw target: ${tdee} - ${deficits[mode]} = ${tdee - deficits[mode]} cal`);
+            log.push(`  Floor: ${floors[mode]} cal`);
+            log.push(`  Final calorie target: ${Math.max(tdee - deficits[mode], floors[mode])} cal`);
+            log.push('');
+
+            // Exam stress multiplier
+            log.push('EXAM STRESS MULTIPLIER:');
+            const daysUntil = academic.daysUntilExam;
+            const targets = state.today?.targets || {};
+            if (targets.calorieMultiplier && targets.calorieMultiplier > 1) {
+                log.push(`  • Multiplier: ${targets.calorieMultiplier}x`);
+                log.push(`  • Reason: ${targets.multiplierReason || 'Exam approaching'}`);
+            } else if (daysUntil && daysUntil <= 3) {
+                log.push(`  • Exam in ${daysUntil} days → +20% expected`);
+            } else if (daysUntil && daysUntil <= 7) {
+                log.push(`  • Exam in ${daysUntil} days → +10% expected`);
+            } else {
+                log.push(`  • Exam in ${daysUntil ?? '?'} days → No multiplier`);
+            }
+            log.push('');
+
+            log.push('FINAL TARGETS:');
+            log.push(`  • Calories: ${targets.calories ?? 'NULL'} cal`);
+            log.push(`  • Protein: ${targets.protein ?? 'NULL'}g`);
+            log.push(`  • Floor: ${targets.floor ?? 'NULL'} cal`);
+            log.push('');
+
+            // ========== SECTION 4: STIMULANT ANALYSIS ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 4: STIMULANT EFFECT ANALYSIS                   │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const stimEffect = state.ecosystemContext?.stimulantEffect || {};
+            const hoursSinceAdderall = calculateHoursSinceTime(stim.lastAdderallTime);
+
+            log.push('ADDERALL EFFECT CURVE:');
+            log.push(`  • Last dose time: ${stim.lastAdderallTime ?? 'NULL'}`);
+            log.push(`  • Hours since dose: ${hoursSinceAdderall?.toFixed(1) ?? 'NULL'} hours`);
+            log.push('  • Effect curve:');
+            log.push('      0-1 hr:  70% (ramping up)');
+            log.push('      1-4 hr:  100% (peak)');
+            log.push('      4-8 hr:  60% (wearing off)');
+            log.push('      8-10 hr: 30% (crash zone)');
+            log.push('      10+ hr:  10% (minimal)');
+            log.push(`  • Current effect: ${stimEffect.adderallEffect ?? 'NULL'}%`);
+            log.push('');
+
+            log.push('CAFFEINE EFFECT:');
+            log.push(`  • Total caffeine: ${stim.caffeineMg ?? 0}mg`);
+            log.push(`  • Last caffeine: ${stim.lastCaffeineTime ?? 'NULL'}`);
+            log.push(`  • Half-life: ~5 hours`);
+            log.push(`  • Current effect: ${stimEffect.caffeineEffect ?? 'NULL'}%`);
+            log.push('');
+
+            log.push('COMBINED EFFECT:');
+            log.push(`  • Formula: Adderall + (Caffeine × 0.5) + (Adderall × Caffeine × 0.3)`);
+            log.push(`  • Combined effect: ${stimEffect.combinedEffect ?? 'NULL'}%`);
+            log.push(`  • Suppression level: ${stimEffect.suppressionLevel ?? 'LOW'}`);
+            log.push(`  • Appetite returns: ~${stimEffect.suppressionEnd ?? 'NULL'}`);
+            log.push(`  • Crash window: ${stimEffect.crashRiskWindow?.start ?? '?'} - ${stimEffect.crashRiskWindow?.end ?? '?'}`);
+            log.push(`  • Crash intensity: ${stimEffect.crashRiskWindow?.intensity ?? 'NORMAL'}`);
+            log.push('');
+
+            // ========== SECTION 5: CURRENT STATUS ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 5: CURRENT STATUS                              │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const totals = getTodayTotals();
+
+            log.push('LOGGED TODAY:');
+            log.push(`  • Meals: ${state.today?.meals?.length ?? 0}`);
+            if (state.today?.meals?.length > 0) {
+                state.today.meals.forEach((m, i) => {
+                    log.push(`    ${i + 1}. ${m.time || '??:??'} - ${m.name}: ${m.calories} cal, ${m.protein}g pro`);
+                });
+            }
+            log.push(`  • Total calories: ${totals.calories}`);
+            log.push(`  • Total protein: ${totals.protein}g`);
+            log.push(`  • Total carbs: ${totals.carbs}g`);
+            log.push('');
+
+            log.push('PROGRESS:');
+            const calPct = targets.calories ? Math.round((totals.calories / targets.calories) * 100) : 0;
+            const proPct = targets.protein ? Math.round((totals.protein / targets.protein) * 100) : 0;
+            log.push(`  • Calories: ${totals.calories} / ${targets.calories || '?'} (${calPct}%)`);
+            log.push(`  • Protein: ${totals.protein}g / ${targets.protein || '?'}g (${proPct}%)`);
+            log.push('');
+
+            const hour = now.getHours();
+            const expectedPct = Math.min(100, Math.round(((hour - 7) / 15) * 100));
+            log.push('TIME-BASED EXPECTATION:');
+            log.push(`  • Current time: ${now.toLocaleTimeString()}`);
+            log.push(`  • Hours since 7am: ${Math.max(0, hour - 7)}`);
+            log.push(`  • Expected progress: ~${expectedPct}%`);
+            log.push(`  • Actual progress: ${calPct}%`);
+            log.push(`  • Status: ${calPct >= expectedPct * 0.8 ? 'ON TRACK' : 'BEHIND'}`);
+            log.push('');
+
+            // ========== SECTION 6: ACTIVE NUDGE ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 6: ACTIVE NUDGE ANALYSIS                       │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const activeNudge = getEatingNudge();
+            log.push('CURRENTLY DISPLAYED:');
+            if (activeNudge) {
+                log.push(`  • Type: ${activeNudge.type}`);
+                log.push(`  • Icon: ${activeNudge.icon}`);
+                log.push(`  • Title: "${activeNudge.title}"`);
+                log.push(`  • Message: "${activeNudge.message}"`);
+            } else {
+                log.push('  • No active nudge');
+            }
+            log.push('');
+
+            // ========== SECTION 7: WORKOUT STATUS ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 7: WORKOUT STATUS                              │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const workoutRec = getWorkoutRecommendation();
+            log.push('GYM DATA:');
+            log.push(`  • Worked out today: ${state.today?.workedOut ?? false}`);
+            log.push(`  • Last workout info: ${workoutRec.info}`);
+            log.push(`  • Current streak: ${state.gamification?.streak || 0} days`);
+            log.push(`  • Recommendation: "${workoutRec.recommendation}"`);
+            log.push('');
+
+            // ========== SECTION 8: EXAM DAY CHECK ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 8: EXAM DAY STATUS                             │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            const examDay = state.ecosystemContext?.examDay || {};
+            log.push(`  • Is exam day: ${examDay.isExamDay ?? false}`);
+            if (examDay.isExamDay) {
+                log.push(`  • Exam: ${examDay.examName}`);
+                log.push(`  • Time: ${examDay.examTime}`);
+                log.push(`  • Phase: ${examDay.phase}`);
+            }
+            log.push('');
+
+            // ========== SECTION 9: SYNC STATUS ==========
+            log.push('┌─────────────────────────────────────────────────────────┐');
+            log.push('│ SECTION 9: SYNC STATUS                                 │');
+            log.push('└─────────────────────────────────────────────────────────┘');
+            log.push('');
+
+            log.push(`  • Firebase connected: ${firebaseSyncEnabled ?? false}`);
+            log.push(`  • User path: ${userPath ? '.../' + userPath.split('/').pop() : 'NULL'}`);
+            log.push('');
+
+            // ========== FOOTER ==========
+            log.push('═══════════════════════════════════════════════════════════');
+            log.push('END OF LOGIC LOG');
+            log.push('═══════════════════════════════════════════════════════════');
+            log.push('');
+            log.push('TO VERIFY: Copy this log and paste to Claude with the prompt:');
+            log.push('"Review this Body Comp Tracker logic log. Verify all');
+            log.push('calculations are correct and flag any inconsistencies."');
+
+            return log.join('\n');
+        }
+
+        function calculateHoursSinceTime(timeStr) {
+            if (!timeStr) return null;
+            const [hours, mins] = timeStr.split(':').map(Number);
+            const then = new Date();
+            then.setHours(hours, mins || 0, 0, 0);
+            const now = new Date();
+            return (now - then) / (1000 * 60 * 60);
+        }
+
+        function showLogicModal() {
+            const logText = generateLogicLog();
+
+            const modal = document.createElement('div');
+            modal.className = 'logic-modal';
+            modal.id = 'logicModal';
+            modal.innerHTML = `
+                <div class="logic-modal-content">
+                    <h3>📋 Daily Logic Log</h3>
+                    <pre id="logic-log-text">${escapeHtml(logText)}</pre>
+                    <div class="logic-modal-buttons">
+                        <button onclick="copyLogicLog()" class="btn-copy">📋 Copy to Clipboard</button>
+                        <button onclick="closeLogicModal()" class="btn-close">Close</button>
+                    </div>
+                </div>
+            `;
+
+            // Click outside to close
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    closeLogicModal();
+                }
+            };
+
+            document.body.appendChild(modal);
+        }
+
+        function copyLogicLog() {
+            const text = document.getElementById('logic-log-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✓ Logic log copied to clipboard');
+            }).catch(() => {
+                showToast('Failed to copy');
+            });
+        }
+
+        function closeLogicModal() {
+            const modal = document.getElementById('logicModal');
+            if (modal) modal.remove();
+        }
+
+        // ============================================
         // BODY COMP CHECK-IN (Phase 6)
         // ============================================
 
@@ -9358,9 +9839,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 console.log('✅ Ecosystem data loaded:', state.ecosystemContext);
 
-                // Re-render if UI is already initialized
+                // Re-render if UI is already initialized (both views for God Mode cards)
                 if (state.today.setupComplete) {
-                    renderDashboard();
+                    renderSimpleView();  // FIX: App defaults to Simple View, not Dashboard
                 }
 
             } catch (error) {
