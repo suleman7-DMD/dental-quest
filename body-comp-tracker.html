@@ -4063,7 +4063,7 @@
 
             grid.innerHTML = sorted.map(food => `
                 <button class="frequent-food-btn" onclick="addFrequentFood('${food.id}')">
-                    <div class="ff-name">${food.name}</div>
+                    <div class="ff-name">${escapeHtml(food.name)}</div>
                     <div class="ff-macros">${food.calories} cal • ${food.protein}g</div>
                 </button>
             `).join('');
@@ -5002,9 +5002,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function clearAllData() {
             if (confirm('This will delete ALL your data including meals, weigh-ins, and settings. Are you sure?')) {
-                if (confirm('This cannot be undone. Type "DELETE" to confirm.')) {
+                // FIX: Use prompt() to actually verify user typed DELETE
+                const typed = prompt('This cannot be undone. Type DELETE to confirm:');
+                if (typed === 'DELETE') {
                     localStorage.removeItem('bodyCompTrackerState');
+                    // Also clear Firebase data
+                    if (firebaseSyncEnabled && database && userPath) {
+                        database.ref(userPath).remove();
+                    }
                     location.reload();
+                } else if (typed !== null) {
+                    showToast('Cancelled — you must type DELETE exactly');
                 }
             }
         }
@@ -5563,7 +5571,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function updateStreak() {
             const today = getLocalDateString();
-            const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
+            // FIX: Use date arithmetic instead of ms subtraction (DST-safe)
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterday = getLocalDateString(yesterdayDate);
             const lastCompleted = state.gamification.lastCompletedDate;
 
             if (lastCompleted === today) {
