@@ -85,19 +85,24 @@
 - **Repo**: github.com/suleman7-DMD/dental-quest
 - **Pattern**: Single-file HTML apps with embedded CSS/JS (NO build system, NO npm, NO tests)
 
-### Files (Current Versions - Updated Jan 23, 2026)
+### Files (Current Versions - Updated Jan 26, 2026)
 | File | Lines | Size | Purpose |
 |------|-------|------|---------|
 | `index.html` | ~10,500 | ~458KB | Main app: Focus Mode (1-3-5 rule), tasks/XP, dashboard, financials, notebook, calendar, medications, pomodoro |
 | `d3-roadmap.html` | ~13,700 | ~628KB | Academic tracker: 7+ tabs, Clinical Tab with Competencies, Peds AT RISK, grade calculator, deadlines, monthly planner |
 | `stimulant-elimination-calculator.html` | ~10,600 | ~523KB | Pharmacokinetic sleep prediction: Process S + Process C circadian modeling, caffeine tracking, sleep debt, workout planner |
 | `lecture-prompt-transformer.html` | ~2,800 | ~119KB | Standalone tool: Transform lecture content for Claude study assistance |
-| `body-comp-tracker.html` | ~5,200 | ~220KB | Body composition/calorie tracker: Summer cut goal, mode system (GREEN/YELLOW/ORANGE based on sleep), gamification, XP/levels/achievements, calendar heatmap, weekly insights |
+| `body-comp-tracker.html` | **~11,200** | ~480KB | **v3 GOD MODE COMPLETE**: 9 predictive intelligence features, cross-app Firebase integration, schedule-aware eating, exam day protocol, sleep debt tracking, stimulant modeling, logic transparency |
 
 ### Working Directory
 - Files should be copied to `/home/claude/` for editing
 - Output to `/mnt/user-data/outputs/` for delivery
 - Use `present_files` tool to give user download link
+
+### External Documentation
+- **Local Project Path**: `/Users/suleman/coding-projects/dental-quest/`
+- **Body Comp v3 Specification**: Detailed consultant spec document exists in project folder (separate from this file)
+- Check project folder for any additional planning/specification documents
 
 ---
 
@@ -131,14 +136,14 @@ users/user_[hashedPin]/
 ├── appData/                    (index.html)
 │   ├── tasks[]
 │   ├── stats{}
-│   ├── medications{}
+│   ├── medications{}           ← Body Comp Tracker READS this for pill inventory
 │   ├── calendarNotes{}
 │   ├── notebook{}
 │   ├── financials{}
 │   │   ├── masterLiquidity{}
 │   │   ├── committedBills[]
 │   │   ├── recurringExpenses{}
-│   │   ├── monthlyPayments{}    ← NEW: tracks Feb/Mar/Apr/May paid status
+│   │   ├── monthlyPayments{}    ← tracks Feb/Mar/Apr/May paid status
 │   │   ├── creditCards[]
 │   │   └── actionItems[]
 │   ├── pillAssignments{}
@@ -147,26 +152,38 @@ users/user_[hashedPin]/
 │   └── focusModeData{}
 ├── stimulantCalculator/        (stimulant-elimination-calculator.html)
 │   ├── state{}
+│   │   ├── ...existing fields...
+│   │   ├── projectedSleepTime   ← NEW (v34): String like "11:45 PM"
+│   │   └── projectedSleepMinutes ← NEW (v34): Raw minutes for calculations
 │   └── lastUpdated
-└── d3Roadmap/                  (d3-roadmap.html)
-    ├── pedsLockedIn (default: 33.3)
-    ├── mandatoryItems{}
-    ├── grades{}
-    ├── editedDeadlines{}
-    ├── customDeadlines[]
-    ├── examStudyProgress{}
-    ├── monthlyPlanner{}
-    │   ├── notes[]
-    │   ├── customTasks[]
-    │   ├── overriddenStatic[]
-    │   └── completedTasks[]
-    ├── clinicalData{}           ← NEW (v31)
-    │   ├── patients{}
-    │   ├── appointments[]
-    │   ├── completedProcedures[]
-    │   └── competencies{}       ← All graduation requirements
-    ├── dailyPlanner{}
-    └── lastSaved
+├── d3Roadmap/                  (d3-roadmap.html)
+│   ├── pedsLockedIn (default: 33.3)
+│   ├── mandatoryItems{}
+│   ├── grades{}
+│   ├── editedDeadlines{}
+│   ├── customDeadlines[]
+│   ├── examStudyProgress{}
+│   ├── exams[]                  ← NEW (v34): Synced from static exams array
+│   ├── monthlyPlanner{}
+│   │   ├── notes[]
+│   │   ├── customTasks[]
+│   │   ├── overriddenStatic[]
+│   │   └── completedTasks[]
+│   ├── clinicalData{}           ← (v31)
+│   │   ├── patients{}
+│   │   ├── appointments[]
+│   │   ├── completedProcedures[]
+│   │   └── competencies{}       ← All graduation requirements
+│   ├── dailyPlanner{}
+│   └── lastSaved
+└── bodyCompTracker/            (body-comp-tracker.html) ← NEW (v34)
+    ├── state{}
+    │   ├── today{}              ← Daily tracking (date, calories, protein, meals[], workouts[])
+    │   ├── ecosystemContext{}   ← Cross-app data (stimulant, inventory, academic)
+    │   ├── history[]            ← Historical daily records
+    │   ├── gamification{}       ← XP, level, achievements
+    │   └── settings{}           ← User preferences, targets
+    └── lastUpdated
 ```
 
 ### Sync Pattern (CRITICAL - DON'T BREAK)
@@ -412,6 +429,707 @@ function calculateFinancialStatus() {
 ---
 
 ## RECENT UPDATES (January 2026)
+
+### v34 Body Comp Tracker v3 Overhaul (Jan 26, 2026)
+
+Major overhaul of body-comp-tracker.html with cross-app Firebase integration and simplified UX.
+
+**IMPORTANT:** Detailed v3 specification document is at `/Users/suleman/coding-projects/dental-quest/` (separate file from consultant).
+
+---
+
+#### PHILOSOPHY CHANGE
+
+**OLD:** User must understand TDEE, deficits, protein targets, modes
+**NEW:** Wake up → app already knows everything → see if on track → log food with minimal friction
+
+**Key Insight from Sully:** "I don't need this app to prevent a spiral because my sleep tracker app already does that. This app should be mainly meant to track my calories and body comp goals, but integrated with that important data to help me out."
+
+---
+
+#### SULLY'S PHYSICAL STATS (CORRECTED)
+
+| Stat | Value | Notes |
+|------|-------|-------|
+| Height | 5'8.5" (174 cm / 68.5 inches) | NOT 5'10" as originally spec'd |
+| Current Weight | 190 lbs | As of Jan 2026 |
+| Goal Weight | 170 lbs | Target by June 1, 2026 |
+| Body Fat | ~27% ± 2% | Starting estimate |
+| Adderall | 50mg XR max | One 30mg + one 20mg pill (separate counters) |
+| Typical Sleep | 4-6 hours | Chronic sleep deprivation |
+
+**The Death Spiral (what the integration prevents):**
+Procrastinate → 2pm panic → extra Adderall → undereating → ruined sleep → can't workout → week cooked
+
+---
+
+#### CROSS-APP FIREBASE INTEGRATION (READ-ONLY PULLS)
+
+Body Comp Tracker pulls data from 3 other apps:
+
+```
+Source App              | Firebase Path                                    | Data Pulled
+------------------------|--------------------------------------------------|---------------------------
+Stimulant Calculator    | /users/{pin}/stimulantCalculator/state           | sleepHours, wakeTime, medications, caffeine, projectedSleepTime
+Dental Quest (index)    | /users/{pin}/appData/medications                 | 30mg count, 20mg count, refill dates
+D3 Roadmap              | /users/{pin}/d3Roadmap/exams                     | exam schedule for "exam week" detection
+```
+
+**New Firebase Paths Added:**
+- `stimulantCalculator/state.projectedSleepTime` - String like "11:45 PM"
+- `stimulantCalculator/state.projectedSleepMinutes` - Raw minutes for calculations
+- `d3Roadmap/exams[]` - Array of exam objects synced from static exams array
+
+---
+
+#### ECOSYSTEM CONTEXT (NEW STATE STRUCTURE)
+
+```javascript
+state.ecosystemContext = {
+    stimulant: {
+        sleepHours: null,           // From sleep calculator
+        wakeTime: null,             // When user woke up
+        lastAdderallTime: null,     // Time of last dose
+        lastAdderallDose: null,     // Dose amount (mg)
+        totalAdderallToday: 0,      // Sum of all doses
+        isBooster: false,           // medications.length > 1 means booster taken
+        lastCaffeineTime: null,     // Time of last caffeine
+        caffeineMg: 0,              // Total caffeine today
+        projectedSleepTime: null,   // When calculator predicts sleep
+        lastSynced: null            // Timestamp
+    },
+    inventory: {
+        pills30mg: null,            // Remaining 30mg pills
+        pills20mg: null,            // Remaining 20mg pills
+        refillDate30mg: null,       // When 30mg refills
+        refillDate20mg: null,       // When 20mg refills
+        daysUntilRefill: null,      // Days until next refill
+        willRunOut: false,          // Warning flag
+        lastSynced: null
+    },
+    academic: {
+        nextExam: null,             // Next exam object
+        daysUntilExam: null,        // Days until next exam
+        upcomingExams: [],          // All upcoming exams
+        lastSynced: null
+    }
+};
+```
+
+---
+
+#### SIMPLE VIEW (DEFAULT VIEW)
+
+The new default view shows everything at a glance:
+
+```
+┌─────────────────────────────────────────┐
+│  [STATUS HERO]                          │
+│  🟢 ON TRACK / 🟡 BEHIND / 🔴 WAY BEHIND │
+│  + status message                       │
+├─────────────────────────────────────────┤
+│  [PROGRESS BARS]                        │
+│  Calories: ████████░░ 1,200/1,800       │
+│  Protein:  ██████░░░░ 90g/150g          │
+├─────────────────────────────────────────┤
+│  [EATING NUDGE] (stimulant-aware)       │
+│  "Adderall wearing off - eat now!"      │
+├─────────────────────────────────────────┤
+│  [WORKOUT REC]                          │
+│  "Recovery day - sleep debt too high"   │
+├─────────────────────────────────────────┤
+│  [CONTEXT CHIPS]                        │
+│  📚 PC2 in 3 days | 💊 12 pills left    │
+├─────────────────────────────────────────┤
+│  [STIMULANT PANEL]                      │
+│  30mg XR @ 8am | Projected sleep: 11pm  │
+├─────────────────────────────────────────┤
+│  [Log Meal]  [Workout]  [Details →]     │
+└─────────────────────────────────────────┘
+```
+
+---
+
+#### STIMULANT-AWARE EATING NUDGES
+
+Based on Adderall pharmacokinetics:
+
+| Hours Since Dose | Phase | Nudge |
+|------------------|-------|-------|
+| 0-4h | Peak suppression | "Appetite suppressed - small snack OK" |
+| 4-8h | Wearing off | "⚡ Best eating window - appetite returning!" |
+| 8+h | Crash zone | "🔴 Crash zone - eat NOW before too tired" |
+| No dose | No meds | Standard hunger-based nudges |
+
+**Booster Detection:** `medications.length > 1` indicates a second dose was taken
+
+---
+
+#### WORKOUT RECOMMENDATIONS
+
+Based on sleep and recovery:
+
+| Sleep Hours | Recommendation |
+|-------------|----------------|
+| < 5h | "❌ Recovery day - sleep debt too high" |
+| 5-6h | "⚠️ Light activity only (walk, stretch)" |
+| 6+h | "✅ Good to train - [workout suggestion]" |
+
+Additional factors: exam proximity, consecutive poor sleep days
+
+---
+
+#### CLAUDE PASTE FORMAT (PIPE-DELIMITED)
+
+For quick logging via Claude conversation:
+
+**Meals:**
+```
+MEAL|Chicken Breast|350|45|0|8
+MEAL|Greek Yogurt|150|15|12|5
+```
+Format: `MEAL|Name|Calories|Protein|Carbs|Fat`
+
+**Workouts:**
+```
+WORKOUT|Push Day|45|250|14:30
+WORKOUT|Cardio|30|300|07:00
+```
+Format: `WORKOUT|Type|Duration|CaloriesBurned|Time`
+
+---
+
+#### KEY FUNCTIONS ADDED
+
+```javascript
+loadEcosystemData(hashedPin)     // Pulls from all 3 Firebase sources
+renderSimpleView()               // Renders the Simple View dashboard
+getSimpleStatus()                // Returns { icon, label, message, color }
+getEatingNudge()                 // Stimulant-aware eating recommendation
+getWorkoutRecommendation()       // Sleep-based workout advice
+autoStartDay()                   // Skip manual setup, pull sleep from ecosystem
+showDetailsView()                // Switch to full dashboard
+showSimpleView()                 // Switch back to simple view
+openWorkoutModal()               // Quick workout logging
+parseWorkoutInput(text)          // Parse Claude paste format for workouts
+```
+
+---
+
+#### MODE SYSTEM (UNCHANGED)
+
+Based on sleep hours from ecosystem:
+- **GREEN** (6+h): Full deficit, normal training
+- **YELLOW** (5-6h): Reduced deficit, lighter training
+- **ORANGE** (<5h): Maintenance calories, recovery only
+
+---
+
+#### IMPLEMENTATION STATUS (Jan 26, 2026)
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Foundation (Firebase paths, ecosystemContext) | ✅ Complete |
+| 2 | Simple View Dashboard | ✅ Complete |
+| 3 | Stimulant-aware nudges | ✅ Complete (part of Phase 2) |
+| 4 | Quick-tap meal grid | ✅ Complete |
+| 5 | Workout integration | ✅ Complete (part of Phase 2) |
+| 6 | Monthly body comp (Navy method) | ✅ Complete |
+| 7 | Weekly Claude export | ✅ Complete |
+| **8A** | **God Mode Features (8 predictive intelligence features)** | ✅ Complete |
+| **8A.9** | **Logic Transparency diagnostic tool** | ✅ Complete |
+| **8B** | **Debug Audit (3 bugs fixed)** | ✅ Complete |
+
+**🎉 BODY COMP TRACKER v3 IS COMPLETE!** Deployed January 26, 2026.
+
+---
+
+#### QUICK-TAP MEAL MODAL (Phase 4)
+
+Lightweight modal for minimal-friction meal logging:
+
+```
+┌─────────────────────────────────────────┐
+│  🍽️ Quick Log                      ×    │
+├─────────────────────────────────────────┤
+│  Tap to add instantly:                  │
+│                                         │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Chicken  │  │ Eggs x2  │             │
+│  │ 340 • 38g│  │ 140 • 12g│             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Greek    │  │ Protein  │             │
+│  │ Yogurt   │  │ Shake    │             │
+│  └──────────┘  └──────────┘             │
+│  ... (top 6 frequent foods)             │
+│                                         │
+│  ─────── Today's Meals ───────          │
+│  [Chicken Breast         340 cal]       │
+│  [Greek Yogurt           150 cal]       │
+│  (tap to repeat)                        │
+│                                         │
+│  ─────── Claude paste ───────           │
+│  ┌─────────────────────────────┐        │
+│  │ MEAL|Name|Cal|Pro|Carb|Fat  │        │
+│  └─────────────────────────────┘        │
+│                                         │
+│  [Add Pasted]  [Custom Entry]           │
+└─────────────────────────────────────────┘
+```
+
+**Key Functions:**
+- `openQuickMealModal()` - Creates/shows the quick-tap modal
+- `closeQuickMealModal()` - Closes the modal
+- `quickAddMeal(foodId)` - One-tap add from frequent foods
+- `repeatMeal(mealIndex)` - Repeat a meal from today
+- `parseQuickMealPaste()` - Parse Claude pipe-delimited format
+
+**Features:**
+- Top 6 frequent foods sorted by usage
+- "Today's Meals" section for quick repeats
+- Multi-line Claude paste parsing
+- One-tap closes modal + updates Simple View
+- Awards 10 XP per meal logged
+
+---
+
+#### WEEKLY EXPORT MODAL (Phase 7)
+
+Comprehensive weekly check-in export for Claude feedback sessions:
+
+**Visual Preview Shows:**
+- Week date range (e.g., "Jan 20 — Jan 26")
+- Days logged count and workout count
+- Daily breakdown with calories, protein, deficit, workout indicator
+- Weekly totals: avg calories, avg protein, total deficit, est. fat loss
+- Weight change if multiple weigh-ins that week
+- Workout summary by type
+- Flags/alerts for areas to improve
+
+**Claude Export Format:**
+```
+WEEKLY_CHECK_IN|2026-01-20|2026-01-26
+PROFILE|Weight:190|Goal:170|Remaining:20.0
+TRACKING|DaysLogged:6/7|PerfectDays:4
+AVERAGES|Calories:1850|Protein:145g|Deficit:450|Sleep:5.8h
+TOTALS|WeeklyDeficit:2700|EstFatLoss:0.77lbs
+WORKOUTS|Count:4|Types:Lift(2),Cardio(2)
+---DAILY_BREAKDOWN---
+Mon|Cal:1900|Pro:150g|Def:400|Sleep:6h|Workout:Lift
+Tue|Cal:1800|Pro:140g|Def:500|Sleep:5h
+...
+---WEIGH_INS---
+2026-01-20|191.5lbs
+2026-01-26|190.2lbs
+---STIMULANT_CONTEXT---
+Adderall:50mg|Caffeine:200mg
+---ACADEMIC---
+NextExam:PC2 Midterm|In:7days
+FLAGS:LOW_PROTEIN,SLEEP_DEBT
+---CUMULATIVE---
+CumulativeDeficit:12500
+Streak:15|Level:5|XP:1250
+```
+
+**Key Functions:**
+- `openWeeklyExportModal()` - Opens modal with generated preview
+- `closeWeeklyExportModal()` - Closes modal
+- `calculateFullWeekData()` - Aggregates last 7 days of data
+- `renderWeeklyExportPreview()` - Renders visual preview
+- `generateWeeklyClaudeExport()` - Generates parseable export string
+- `copyWeeklyExport()` - Copies to clipboard + awards 25 XP
+
+**Flags Detected:**
+- `LOW_TRACKING` - Less than 5 days logged
+- `LOW_PROTEIN` - Average protein < 130g
+- `SLEEP_DEBT` - Average sleep < 6h
+- `SLOW_PROGRESS` - Weekly deficit < 2500 (with 5+ days logged)
+- `LOW_ACTIVITY` - Less than 3 workouts
+- `NEEDS_REFEED` - Cumulative deficit >= 7000
+
+---
+
+#### BODY COMP CHECK-IN MODAL (Phase 6)
+
+Monthly body composition tracking using tape measurements (Navy method) or smart scale:
+
+**Two Methods:**
+1. **Navy Method (📏)** - Tape measure: neck + waist → calculates body fat %
+2. **Smart Scale (⚖️)** - Enter weight + body fat % from smart scale
+
+**Navy Method Formula (Men):**
+```
+Body Fat % = 86.010 × log10(waist - neck) - 70.041 × log10(height) + 36.76
+```
+- Waist: Measure at belly button level
+- Neck: Measure below Adam's apple
+- Height: Uses stored profile value (68.5 inches for Sully)
+
+**Live Preview Features:**
+- Real-time body fat calculation as measurements are entered
+- Body composition breakdown: weight, fat mass, lean mass
+- Validates measurements (waist must be larger than neck)
+- Visual highlight when valid calculation achieved
+
+**Data Stored:**
+```javascript
+bodyCompHistory: [
+    {
+        date: '2026-01-26',
+        method: 'navy',           // 'navy' or 'scale'
+        weight: 188.5,
+        bodyFat: 24.5,
+        fatMass: 46.2,
+        leanMass: 142.3,
+        measurements: {           // Only for Navy method
+            neck: 15.5,
+            waist: 34
+        }
+    }
+]
+```
+
+**Key Functions:**
+- `openBodyCompModal()` - Opens modal, pre-fills weight, sets up listeners
+- `closeBodyCompModal()` - Closes modal
+- `setBodyCompTab(tab)` - Switches between Navy/Scale tabs
+- `calculateNavyBodyFat(waist, neck, height)` - Navy method formula
+- `updateNavyPreview()` / `updateScalePreview()` - Live calculation display
+- `saveNavyMeasurement()` / `saveScaleMeasurement()` - Save to history
+- `renderBodyCompHistory()` - Shows last 5 check-ins with change indicators
+
+**Gamification:**
+- Awards 50 XP for each body comp check-in
+- Also saves to weighIns array for weight tracking integration
+
+---
+
+#### FILES MODIFIED
+
+**body-comp-tracker.html** (+1400 lines total):
+- Fixed height: 178 → 174 cm, added height_inches: 68.5
+- Added startingBodyFat: 27
+- Added ecosystemContext to state
+- Added loadEcosystemData() function
+- Added Simple View CSS (~250 lines)
+- Added Simple View HTML structure (~100 lines)
+- Added all Simple View JS functions
+- Added workout modal and logging
+- Modified loadFromFirebase() to preserve ecosystemContext
+- Modified initializeUI() to auto-start and show Simple View
+- **Phase 4**: Added Quick Meal Modal CSS (~160 lines)
+- **Phase 4**: Added `openQuickMealModal()`, `closeQuickMealModal()`, `quickAddMeal()`, `repeatMeal()`, `parseQuickMealPaste()`
+- **Phase 7**: Added Weekly Export Modal CSS (~130 lines)
+- **Phase 7**: Added `openWeeklyExportModal()`, `closeWeeklyExportModal()`, `calculateFullWeekData()`, `renderWeeklyExportPreview()`, `generateWeeklyClaudeExport()`, `copyWeeklyExport()`
+- **Phase 7**: Added "Weekly Check-In for Claude" button to Simple View
+- **Phase 6**: Added Body Comp Modal CSS (~170 lines)
+- **Phase 6**: Added `openBodyCompModal()`, `closeBodyCompModal()`, `setBodyCompTab()`, `calculateNavyBodyFat()`, `updateNavyPreview()`, `updateScalePreview()`, `saveNavyMeasurement()`, `saveScaleMeasurement()`, `renderBodyCompHistory()`
+- **Phase 6**: Added "Monthly Body Comp Check-In" button to Simple View
+- **Phase 6**: Added `bodyCompHistory: []` to state and Firebase sync patterns
+
+**stimulant-elimination-calculator.html** (+6 lines):
+- Added storage of projectedSleepTime and projectedSleepMinutes to state
+
+**d3-roadmap.html** (+10 lines):
+- Added exams: [] to roadmapData
+- Added sync logic to copy static exams array to Firebase
+
+---
+
+### v35 Body Comp v3 God Mode Expansion + Debug Audit (Jan 26, 2026)
+
+Major expansion adding 9 predictive intelligence features and comprehensive debug audit.
+
+---
+
+#### GOD MODE PHILOSOPHY
+
+**The data already exists across Sully's app ecosystem. The app should USE it to be predictive, not just reactive.**
+
+Data sources:
+- **Stimulant Calculator**: Sleep history (7 days), caffeine timing, Adderall dosing
+- **D3 Roadmap**: Schedule (clinic, lecture, exam times), exam dates
+- **Dental Quest**: Pill inventory, refill dates
+
+---
+
+#### GOD MODE FEATURES (8A.1-8A.8)
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **8A.1** | Schedule-aware eating windows | P1 |
+| **8A.2** | Tomorrow preview & meal prep alerts | P6 |
+| **8A.3** | Exam day protocol (4 phases) | P2 |
+| **8A.4** | Sleep debt accumulation (7-day) | P3 |
+| **8A.5** | Exam stress multiplier (+10%/+20%) | P4 |
+| **8A.6** | Protein distribution warning | P8 |
+| **8A.7** | Weekly rhythm analysis | P7 |
+| **8A.8** | Caffeine × Adderall combined modeling | P5 |
+| **8A.9** | Logic Transparency diagnostic tool | NEW |
+
+---
+
+#### 8A.1: SCHEDULE-AWARE EATING WINDOWS
+
+Pulls today's schedule from D3 Roadmap Monthly Planner:
+
+```javascript
+state.ecosystemContext.schedule = {
+    todayTasks: [],           // Tasks from monthlyPlanner
+    tomorrowTasks: [],        // For evening preview
+    blockedWindows: [],       // { start, end, name, type, startMinutes, endMinutes }
+    eatingWindows: [],        // Inverse of blocked (when CAN eat)
+    totalEatingHours: 0,      // Sum of eating window durations
+    frontLoadRequired: false, // true if <6 hours eating time
+    frontLoadDeadline: null,  // Time to get 70% calories by
+    scheduleIntensity: 'EASY' // EASY (≥7hr) | MEDIUM (5-7hr) | HARD (<5hr)
+};
+```
+
+**UI:** Schedule card shows blocked windows, eating hours, intensity badge, front-load warning.
+
+---
+
+#### 8A.3: EXAM DAY PROTOCOL
+
+Detects exams in today's schedule and provides phase-specific guidance:
+
+| Phase | Timing | Nutrition Guidance |
+|-------|--------|-------------------|
+| MORNING_PREP | 4+ hours before | Complex carbs, moderate protein, hydrate |
+| PRE_EXAM | 1-4 hours before | Light snack, hydrate, no new caffeine |
+| FINAL_HOUR | <1 hour before | Deep breaths, trust prep |
+| POST_EXAM | After exam | Full meal, celebrate appropriately |
+
+**UI:** Exam day card with phase-specific nutrition tips and caffeine cutoff.
+
+---
+
+#### 8A.4: SLEEP DEBT ACCUMULATION
+
+Pulls last 7 days of sleep from Stimulant Calculator:
+
+```javascript
+state.ecosystemContext.sleepDebt = {
+    last7Days: [],              // Array of { date, hours }
+    totalSleep: 0,              // Sum of last 7 days
+    avgSleep: 0,                // Average per night
+    weeklyDebt: 0,              // 49 - totalSleep (target = 7hr × 7 nights)
+    consecutiveBadNights: 0,    // Count of nights <5.5 hours
+    severity: 'LOW'             // LOW | MODERATE | HIGH | SEVERE
+};
+```
+
+**Mode Overrides:**
+- **SEVERE** debt → Forces ORANGE mode (maintenance only)
+- **HIGH** debt → Bumps GREEN → YELLOW
+
+**UI:** Sleep debt indicator when MODERATE or worse.
+
+---
+
+#### 8A.5: EXAM STRESS MULTIPLIER
+
+Automatically raises calorie targets when exams approach:
+
+| Days Until Exam | Multiplier | Reason |
+|-----------------|------------|--------|
+| ≤3 days | +20% | Historical pattern: undereating before exams |
+| 4-7 days | +10% | Moderate stress period |
+| 8+ days | None | Normal operation |
+
+---
+
+#### 8A.8: CAFFEINE × ADDERALL COMBINED MODELING
+
+```javascript
+state.ecosystemContext.stimulantEffect = {
+    adderallEffect: 0,          // 0-100% based on hours since dose
+    caffeineEffect: 0,          // 0-100% based on mg and half-life
+    combinedEffect: 0,          // Synergistic formula
+    suppressionLevel: 'LOW',    // LOW | MODERATE | HIGH | SEVERE
+    suppressionEnd: null,       // Time when appetite returns
+    crashRiskWindow: {          // When crash is most likely
+        start: null,
+        end: null,
+        intensity: 'NORMAL'     // NORMAL | SHARP (high caffeine)
+    }
+};
+```
+
+**Adderall Effect Curve:**
+- 0-1 hr: 70% (ramping)
+- 1-4 hr: 100% (peak)
+- 4-8 hr: 60% (wearing off)
+- 8-10 hr: 30% (crash zone)
+- 10+ hr: 10% (minimal)
+
+**Combined Formula:**
+`Adderall + (Caffeine × 0.5) + (Adderall × Caffeine × 0.3)`
+
+---
+
+#### 8A.9: LOGIC TRANSPARENCY
+
+"📋 Show Logic" button generates comprehensive diagnostic log:
+
+**Sections (9 total):**
+1. Data Sources (Stim Calc, Dental Quest, D3 Roadmap)
+2. Mode Calculation
+3. Target Calculation (BMR, TDEE, mode-based)
+4. Stimulant Effect Analysis
+5. Current Status (meals, progress)
+6. Active Nudge Analysis
+7. Workout Status
+8. Exam Day Status
+9. Sync Status
+
+**Usage:** Copy log → paste to Claude → verify calculations correct.
+
+---
+
+#### DEBUG AUDIT RESULTS (Jan 26, 2026)
+
+**3 Bugs Found & Fixed:**
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| 1 | CRITICAL | `analyzeWeeklyRhythm()` used `log.totalCalories` instead of `log.calories` | Changed property names |
+| 2 | HIGH | `saveDayLog()` missing `workedOut` field | Added to daily log object |
+| 3 | HIGH | `loadEcosystemData()` called `renderDashboard()` but app is in Simple View | Changed to `renderSimpleView()` |
+
+**Audit Stats:**
+- Lines audited: ~1,500
+- Functions examined: 42
+- XSS vulnerabilities: 0 (all user input escaped)
+
+---
+
+#### NEW UI COMPONENTS
+
+**Schedule Card:**
+```
+┌─────────────────────────────────────────┐
+│ 📅 Today's Schedule          [HARD]     │
+│ 5.5 hours to eat today                  │
+│                                         │
+│ 🦷 8:30-11:30  Clinic AM               │
+│ 📚 12:30-3:30  Lecture                 │
+│ 🦷 4:00-7:00   Clinic PM               │
+│                                         │
+│ ⚠️ Front-load required: 70% by 8:30am  │
+└─────────────────────────────────────────┘
+```
+
+**Exam Day Card:**
+```
+┌─────────────────────────────────────────┐
+│ 🧠 EXAM DAY: PC2 Midterm at 9:00        │
+│                                         │
+│ Nutrition:                              │
+│ ✅ Complex carbs for brain fuel         │
+│ ✅ Moderate protein                     │
+│ ❌ Avoid heavy/greasy foods             │
+│                                         │
+│ ☕ Finish caffeine by 5:00am            │
+│ 💡 Eat solid breakfast - brain needs    │
+│    glucose                              │
+└─────────────────────────────────────────┘
+```
+
+**Sleep Debt Indicator:**
+```
+┌─────────────────────────────────────────┐
+│ 😴 Sleep Debt: HIGH                     │
+│ 5.2 hr avg (need 7) • 12.6 hr debt     │
+│ 3 consecutive nights under 5.5 hours   │
+│                                         │
+│ ⚠️ Mode bumped GREEN → YELLOW           │
+└─────────────────────────────────────────┘
+```
+
+---
+
+#### KEY FUNCTIONS ADDED (God Mode)
+
+```javascript
+// Schedule (8A.1)
+loadTodaySchedule()              // Pulls from D3 Roadmap
+calculateEatingWindows()         // Inverse of blocked windows
+renderScheduleCard()             // UI rendering
+getScheduleAwareNudge()          // "Clinic in 20 min, eat now"
+
+// Exam Day (8A.3)
+checkExamDay()                   // Detects exam in schedule
+getExamPhase()                   // MORNING_PREP | PRE_EXAM | FINAL_HOUR | POST_EXAM
+getExamDayGuidance()             // Phase-specific nutrition tips
+renderExamDayCard()              // UI rendering
+
+// Sleep Debt (8A.4)
+calculateSleepDebt()             // 7-day aggregation
+getSleepDebtSeverity()           // LOW | MODERATE | HIGH | SEVERE
+applySleepDebtModeOverride()     // SEVERE→ORANGE, HIGH→bump GREEN
+renderSleepDebtIndicator()       // UI rendering
+
+// Exam Multiplier (8A.5)
+applyExamStressMultiplier()      // +10%/+20% to calorie target
+
+// Tomorrow Preview (8A.2)
+getTomorrowPreview()             // Tomorrow's eating hours
+getEveningPrepNudge()            // "Tomorrow is brutal, prep meals"
+
+// Weekly Rhythm (8A.7)
+analyzeWeeklyRhythm()            // Aggregate by day of week
+getWeakDayNudge()                // "Wednesday is your weak day"
+
+// Protein Distribution (8A.6)
+analyzeProteinDistribution()     // Before/after 6pm split
+getProteinDistributionNudge()    // "50% protein after 6pm"
+
+// Stimulant Modeling (8A.8)
+calculateCombinedStimulantEffect() // Adderall + Caffeine synergy
+getEnhancedStimulantNudge()      // Crash window warnings
+
+// Logic Transparency (8A.9)
+generateLogicLog()               // 9-section diagnostic output
+showLogicModal()                 // Modal display
+copyLogicLog()                   // Clipboard copy
+```
+
+---
+
+#### FILE STATS
+
+**body-comp-tracker.html:**
+- Lines: 10,668 → 11,159 (+491 lines)
+- Functions: 156 total
+- CSS: +100 lines (God Mode cards, logic modal)
+- JS: +380 lines (God Mode features, logic transparency)
+
+---
+
+#### COMMITS
+
+```
+38ab1a1 Debug audit + Logic Transparency (8A.9): Fix 3 bugs, add diagnostic tool
+c879e25 Body Comp Tracker v3 God Mode: 8 predictive intelligence features
+```
+
+---
+
+#### DOCUMENTATION FILES
+
+| File | Purpose |
+|------|---------|
+| `body-comp-v3-godmode-spec.md` | Full God Mode implementation spec |
+| `body-comp-v3-master-backup.md` | Complete project context backup |
+| `body-comp-v3-accountability.md` | Phase checklist and checkpoints |
+| `body-comp-v3-coder-briefing.md` | Expansion briefing for coder |
+| `body-comp-v3-logic-transparency.md` | 8A.9 feature spec |
+| `body-comp-v3-debugger-prompt.md` | 8-phase debug audit prompt |
+
+---
 
 ### v33 Lecture Prompt v3.2-FINAL + Multi-Portion Workflow (Jan 25, 2026)
 
