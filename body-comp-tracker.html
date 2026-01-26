@@ -3081,10 +3081,10 @@
 
             <!-- Dashboard Tabs -->
             <div class="dashboard-tabs">
-                <button class="dashboard-tab active" onclick="switchDashboardTab('today')">📊 Today</button>
-                <button class="dashboard-tab" onclick="switchDashboardTab('progress')">🎯 Progress</button>
-                <button class="dashboard-tab" onclick="switchDashboardTab('calendar')">📅 Calendar</button>
-                <button class="dashboard-tab" onclick="switchDashboardTab('badges')">🏆 Badges</button>
+                <button class="dashboard-tab active" onclick="switchDashboardTab('today', event)">📊 Today</button>
+                <button class="dashboard-tab" onclick="switchDashboardTab('progress', event)">🎯 Progress</button>
+                <button class="dashboard-tab" onclick="switchDashboardTab('calendar', event)">📅 Calendar</button>
+                <button class="dashboard-tab" onclick="switchDashboardTab('badges', event)">🏆 Badges</button>
             </div>
 
             <!-- TODAY TAB -->
@@ -3780,6 +3780,14 @@
             return num.toLocaleString();
         }
 
+        // FIX: Escape HTML to prevent XSS in user input
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -4033,8 +4041,8 @@
             mealsList.innerHTML = meals.map((meal, index) => `
                 <div class="meal-item">
                     <div class="meal-info">
-                        <div class="meal-name">${meal.name}</div>
-                        <div class="meal-time">${meal.time || ''}</div>
+                        <div class="meal-name">${escapeHtml(meal.name)}</div>
+                        <div class="meal-time">${escapeHtml(meal.time) || ''}</div>
                     </div>
                     <div class="meal-macros">
                         <div class="meal-calories">${meal.calories} cal</div>
@@ -4311,6 +4319,7 @@
             const perfect = calHit && proteinHit;
 
             state.dailyLogs[today.date] = {
+                date: today.date,
                 calories: totals.calories,
                 protein: totals.protein,
                 deficit: deficit,
@@ -4318,6 +4327,7 @@
                 targetProtein: targets.protein,
                 mode: today.mode,
                 sleepHours: today.sleepHours,
+                activeCalories: today.activeCalories,  // FIX: was missing - needed for 7-day TDEE average
                 mealCount: totals.mealCount,
                 perfect: perfect
             };
@@ -4583,7 +4593,7 @@
             const latest = weighIns[weighIns.length - 1];
             const start = state.profile.startingWeight_lbs;
             const goal = state.profile.goalWeight_lbs;
-            const current = latest.weight_lbs;
+            const current = latest.weight;  // FIX: was weight_lbs
             const lost = start - current;
             const remaining = current - goal;
             const progressPercent = Math.round((lost / (start - goal)) * 100);
@@ -4594,7 +4604,7 @@
                 const first = weighIns[0];
                 const daysDiff = Math.max(1, (new Date(latest.date) - new Date(first.date)) / (1000 * 60 * 60 * 24));
                 const weeksDiff = daysDiff / 7;
-                const totalLost = first.weight_lbs - current;
+                const totalLost = first.weight - current;  // FIX: was weight_lbs
                 weeklyRate = (totalLost / weeksDiff).toFixed(1);
             }
 
@@ -4629,10 +4639,17 @@
         function saveWeighIn() {
             const weight = parseFloat(document.getElementById('weightInput').value);
             const bodyFatInput = document.getElementById('bodyFatInput');
-            const bodyFat = bodyFatInput ? parseFloat(bodyFatInput.value) || null : null;
+            const bodyFatValue = bodyFatInput ? parseFloat(bodyFatInput.value) : NaN;
+            const bodyFat = isNaN(bodyFatValue) ? null : bodyFatValue;
 
             if (isNaN(weight) || weight < 100 || weight > 400) {
                 showToast('Please enter a valid weight (100-400 lbs)');
+                return;
+            }
+
+            // FIX: Validate body fat range in JavaScript (not just HTML)
+            if (bodyFat !== null && (bodyFat < 5 || bodyFat > 50)) {
+                showToast('Body fat must be between 5% and 50%');
                 return;
             }
 
@@ -5459,12 +5476,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             streakBonus: 5  // per day of streak
         };
 
-        function switchDashboardTab(tabName) {
+        function switchDashboardTab(tabName, e) {
             // Update tab buttons
             document.querySelectorAll('.dashboard-tab').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (e && e.target) e.target.classList.add('active');  // FIX: was using implicit global event
 
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -5498,19 +5515,21 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Update UI elements
             const levelBadge = document.getElementById('levelBadge');
             const levelName = document.getElementById('levelName');
-            const xpCurrent = document.getElementById('xpCurrent');
+            const xpTotalEl = document.getElementById('xpTotal');  // FIX: was xpCurrent
             const xpNext = document.getElementById('xpNext');
             const xpBarFill = document.getElementById('xpBarFill');
-            const streakCount = document.getElementById('streakCount');
-            const totalDaysCount = document.getElementById('totalDaysCount');
+            const currentStreakEl = document.getElementById('currentStreak');  // FIX: was streakCount
+            const totalDaysEl = document.getElementById('totalDays');  // FIX: was totalDaysCount
+            const perfectDaysEl = document.getElementById('perfectDays');
 
             if (levelBadge) levelBadge.textContent = currentLevel.level;
             if (levelName) levelName.textContent = currentLevel.name;
-            if (xpCurrent) xpCurrent.textContent = formatNumber(gam.xp);
-            if (xpNext) xpNext.textContent = formatNumber(nextLevel.xpRequired);
+            if (xpTotalEl) xpTotalEl.textContent = formatNumber(gam.xp) + ' XP';
+            if (xpNext) xpNext.textContent = formatNumber(nextLevel.xpRequired - gam.xp) + ' XP to next level';
             if (xpBarFill) xpBarFill.style.width = progress + '%';
-            if (streakCount) streakCount.textContent = gam.streak;
-            if (totalDaysCount) totalDaysCount.textContent = gam.totalDaysTracked;
+            if (currentStreakEl) currentStreakEl.textContent = gam.streak;
+            if (totalDaysEl) totalDaysEl.textContent = gam.totalDaysTracked;
+            if (perfectDaysEl) perfectDaysEl.textContent = gam.perfectDays;
         }
 
         function getLevelInfo(xp) {
