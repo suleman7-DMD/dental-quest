@@ -10189,8 +10189,12 @@ CHAIR: 9F
             deadlines.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
             // Store in roadmapData
-            if (!roadmapData.customDeadlines) roadmapData.customDeadlines = [];
-            roadmapData.customDeadlines.push(newDeadline);
+            if (!roadmapData.customDeadlines || Array.isArray(roadmapData.customDeadlines)) {
+                roadmapData.customDeadlines = migrateArrayToObject(roadmapData.customDeadlines, 'deadline');
+            }
+            const deadlineId = generateId('deadline');
+            newDeadline.id = deadlineId;
+            roadmapData.customDeadlines[deadlineId] = newDeadline;
             
             saveData();
             renderDeadlines();
@@ -10448,19 +10452,26 @@ CHAIR: 9F
             
             // Also remove from customDeadlines if it was custom
             if (roadmapData.customDeadlines) {
-                roadmapData.customDeadlines = roadmapData.customDeadlines.filter(d => 
-                    !(d.date === deadline.date && d.what === deadline.what && d.course === deadline.course)
-                );
+                Object.keys(roadmapData.customDeadlines).forEach(id => {
+                    const d = roadmapData.customDeadlines[id];
+                    if (d && d.date === deadline.date && d.what === deadline.what && d.course === deadline.course) {
+                        delete roadmapData.customDeadlines[id];
+                    }
+                });
             }
-            
+
             // Store the deletion (for syncing)
-            if (!roadmapData.deletedDeadlines) roadmapData.deletedDeadlines = [];
-            roadmapData.deletedDeadlines.push({
+            if (!roadmapData.deletedDeadlines || Array.isArray(roadmapData.deletedDeadlines)) {
+                roadmapData.deletedDeadlines = migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted');
+            }
+            const deletedId = generateId('deleted');
+            roadmapData.deletedDeadlines[deletedId] = {
+                id: deletedId,
                 date: deadline.date,
                 what: deadline.what,
                 course: deadline.course,
                 deletedAt: new Date().toISOString()
-            });
+            };
             
             // Remove from editedDeadlines if it was there
             if (roadmapData.editedDeadlines && roadmapData.editedDeadlines[index]) {
@@ -11561,9 +11572,11 @@ CHAIR: 9F
 
             // Also remove any appointments for this patient
             if (roadmapData.clinicalData.appointments) {
-                roadmapData.clinicalData.appointments = roadmapData.clinicalData.appointments.filter(
-                    apt => apt.patientId !== patientId
-                );
+                Object.keys(roadmapData.clinicalData.appointments).forEach(id => {
+                    if (roadmapData.clinicalData.appointments[id]?.patientId === patientId) {
+                        delete roadmapData.clinicalData.appointments[id];
+                    }
+                });
             }
 
             saveData();
@@ -11749,12 +11762,14 @@ CHAIR: 9F
             if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
 
             // Update or add
-            const existingIndex = roadmapData.clinicalData.appointments.findIndex(a => a.id === aptId);
-            if (existingIndex >= 0) {
-                apt.status = roadmapData.clinicalData.appointments[existingIndex].status; // Preserve status
-                roadmapData.clinicalData.appointments[existingIndex] = apt;
+            if (!roadmapData.clinicalData.appointments || Array.isArray(roadmapData.clinicalData.appointments)) {
+                roadmapData.clinicalData.appointments = migrateArrayToObject(roadmapData.clinicalData.appointments, 'appt');
+            }
+            if (roadmapData.clinicalData.appointments[aptId]) {
+                apt.status = roadmapData.clinicalData.appointments[aptId].status; // Preserve status
+                roadmapData.clinicalData.appointments[aptId] = apt;
             } else {
-                roadmapData.clinicalData.appointments.push(apt);
+                roadmapData.clinicalData.appointments[aptId] = apt;
             }
 
             // Create deadline if requested
@@ -11763,8 +11778,12 @@ CHAIR: 9F
                 const patientName = patient?.name || 'Patient';
 
                 // Add to custom deadlines
-                if (!roadmapData.customDeadlines) roadmapData.customDeadlines = [];
-                roadmapData.customDeadlines.push({
+                if (!roadmapData.customDeadlines || Array.isArray(roadmapData.customDeadlines)) {
+                    roadmapData.customDeadlines = migrateArrayToObject(roadmapData.customDeadlines, 'deadline');
+                }
+                const clinicalDeadlineId = generateId('deadline');
+                roadmapData.customDeadlines[clinicalDeadlineId] = {
+                    id: clinicalDeadlineId,
                     date: date,
                     what: `🏥 ${patientName} - ${apt.procedures || 'Clinic Apt'}`,
                     course: 'Clinical',
@@ -11773,7 +11792,7 @@ CHAIR: 9F
                     done: false,
                     grade: null,
                     clinicalAptId: aptId
-                });
+                };
             }
 
             // CRITICAL: Sync to Monthly Planner
@@ -11801,11 +11820,17 @@ CHAIR: 9F
 
             if (!confirm('Delete this appointment?')) return;
 
-            roadmapData.clinicalData.appointments = roadmapData.clinicalData.appointments.filter(a => a.id !== aptId);
+            if (roadmapData.clinicalData.appointments && roadmapData.clinicalData.appointments[aptId]) {
+                delete roadmapData.clinicalData.appointments[aptId];
+            }
 
             // Also remove linked deadline if exists
             if (roadmapData.customDeadlines) {
-                roadmapData.customDeadlines = roadmapData.customDeadlines.filter(d => d.clinicalAptId !== aptId);
+                Object.keys(roadmapData.customDeadlines).forEach(id => {
+                    if (roadmapData.customDeadlines[id]?.clinicalAptId === aptId) {
+                        delete roadmapData.customDeadlines[id];
+                    }
+                });
             }
 
             // CRITICAL: Sync to Monthly Planner
@@ -12875,8 +12900,9 @@ CHAIR: 9F
                 }
 
                 // Create task for Monthly Planner
+                const taskId = generateId('ctask');
                 const task = {
-                    id: Date.now() + Math.random(),
+                    id: taskId,
                     date: lec.date,
                     item: lec.course,
                     time: lec.startTime || '',
@@ -12887,7 +12913,10 @@ CHAIR: 9F
                     imported: true
                 };
 
-                roadmapData.monthlyPlanner.customTasks.push(task);
+                if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
+                    roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
+                }
+                roadmapData.monthlyPlanner.customTasks[taskId] = task;
                 imported++;
             });
 
@@ -13073,7 +13102,7 @@ CHAIR: 9F
 
                 // Skip duplicates only in non-refresh mode
                 if (!isRefreshMode) {
-                    const isDuplicateApt = roadmapData.clinicalData.appointments.some(existing => {
+                    const isDuplicateApt = getValues(roadmapData.clinicalData.appointments).some(existing => {
                         return existing.patientId === patientId &&
                                existing.date === apt.date &&
                                existing.time === (apt.time || '09:00');
@@ -13082,8 +13111,11 @@ CHAIR: 9F
                 }
 
                 // Create appointment
-                const appointmentId = 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                roadmapData.clinicalData.appointments.push({
+                const appointmentId = generateId('appt');
+                if (!roadmapData.clinicalData.appointments || Array.isArray(roadmapData.clinicalData.appointments)) {
+                    roadmapData.clinicalData.appointments = migrateArrayToObject(roadmapData.clinicalData.appointments, 'appt');
+                }
+                roadmapData.clinicalData.appointments[appointmentId] = {
                     id: appointmentId,
                     patientId: patientId,
                     date: apt.date,
@@ -13093,7 +13125,7 @@ CHAIR: 9F
                     notes: apt.chair ? 'Chair: ' + apt.chair : '',
                     status: 'scheduled',
                     imported: true
-                });
+                };
                 appointmentsAdded++;
             });
 
@@ -13126,25 +13158,31 @@ CHAIR: 9F
         function syncClinicalToMonthlyPlanner() {
             if (!roadmapData.clinicalData?.appointments) return;
             if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
-            if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
+            if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
+                roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
+            }
 
             const appointments = roadmapData.clinicalData.appointments;
             const patients = roadmapData.clinicalData.patients || {};
-            const customTasks = roadmapData.monthlyPlanner.customTasks;
 
             // Remove all existing clinic tasks that were synced from Clinical tab
-            roadmapData.monthlyPlanner.customTasks = customTasks.filter(task => !task.clinicalAppointmentId);
+            Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(id => {
+                if (roadmapData.monthlyPlanner.customTasks[id]?.clinicalAppointmentId) {
+                    delete roadmapData.monthlyPlanner.customTasks[id];
+                }
+            });
 
             // Add current appointments as Monthly Planner tasks
-            appointments.forEach(apt => {
+            getValues(appointments).forEach(apt => {
                 if (apt.status === 'cancelled') return; // Skip cancelled
 
                 const patient = patients[apt.patientId] || {};
                 const patientName = patient.name || 'Unknown Patient';
 
                 // Create task linked to this appointment
+                const taskId = 'clinic_' + apt.id;
                 const task = {
-                    id: 'clinic_' + apt.id,
+                    id: taskId,
                     clinicalAppointmentId: apt.id, // Link back to clinical appointment
                     date: apt.date,
                     item: `${patientName} - ${apt.procedures || 'Appointment'}`,
@@ -13156,7 +13194,7 @@ CHAIR: 9F
                     syncedFromClinical: true
                 };
 
-                roadmapData.monthlyPlanner.customTasks.push(task);
+                roadmapData.monthlyPlanner.customTasks[taskId] = task;
             });
 
             // Extend MP_WEEKS if needed for dates beyond current range
@@ -13188,8 +13226,13 @@ CHAIR: 9F
 
             // Sync static exams array to roadmapData for cross-app integration
             // Body Comp Tracker pulls this from Firebase
-            if (!roadmapData.exams || roadmapData.exams.length === 0) {
-                roadmapData.exams = exams.map(e => ({ ...e })); // Deep copy
+            if (!roadmapData.exams || getCount(roadmapData.exams) === 0) {
+                // Convert static exams array to object format
+                roadmapData.exams = {};
+                exams.forEach((e, i) => {
+                    const examId = e.id || generateId('exam') + '_' + i;
+                    roadmapData.exams[examId] = { ...e, id: examId };
+                });
                 // Save to Firebase so Body Comp Tracker can access exams
                 setTimeout(() => saveData(), 100);
             }
@@ -13244,8 +13287,9 @@ CHAIR: 9F
             
             try {
                 // Add any custom deadlines
-                if (roadmapData.customDeadlines && roadmapData.customDeadlines.length > 0) {
-                    roadmapData.customDeadlines.forEach(d => {
+                const customDeadlineValues = getValues(roadmapData.customDeadlines);
+                if (customDeadlineValues.length > 0) {
+                    customDeadlineValues.forEach(d => {
                         const dateObj = new Date(d.date + 'T12:00:00'); // Add noon to avoid timezone issues
                         const month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
                         deadlines.push({
@@ -14011,14 +14055,14 @@ CHAIR: 9F
 
             // From Monthly Planner tasks
             if (roadmapData.monthlyPlanner?.customTasks) {
-                roadmapData.monthlyPlanner.customTasks.forEach(task => {
+                getValues(roadmapData.monthlyPlanner.customTasks).forEach(task => {
                     if (task.date) allDates.push(task.date);
                 });
             }
 
             // From Clinical appointments
             if (roadmapData.clinicalData?.appointments) {
-                roadmapData.clinicalData.appointments.forEach(apt => {
+                getValues(roadmapData.clinicalData.appointments).forEach(apt => {
                     if (apt.date && apt.status !== 'cancelled') allDates.push(apt.date);
                 });
             }
@@ -14143,24 +14187,26 @@ CHAIR: 9F
             if (!roadmapData.monthlyPlanner) {
                 roadmapData.monthlyPlanner = { notes: [], customTasks: [], overriddenStatic: [], completedTasks: [] };
             }
-            if (!roadmapData.monthlyPlanner.notes) {
-                roadmapData.monthlyPlanner.notes = [];
+            if (!roadmapData.monthlyPlanner.notes || Array.isArray(roadmapData.monthlyPlanner.notes)) {
+                roadmapData.monthlyPlanner.notes = migrateArrayToObject(roadmapData.monthlyPlanner.notes, 'note');
             }
-            if (!roadmapData.monthlyPlanner.customTasks) {
-                roadmapData.monthlyPlanner.customTasks = [];
+            if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
+                roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
             }
-            if (!roadmapData.monthlyPlanner.overriddenStatic) {
-                roadmapData.monthlyPlanner.overriddenStatic = [];
+            if (!roadmapData.monthlyPlanner.overriddenStatic || Array.isArray(roadmapData.monthlyPlanner.overriddenStatic)) {
+                roadmapData.monthlyPlanner.overriddenStatic = migrateArrayToObject(roadmapData.monthlyPlanner.overriddenStatic, 'override');
             }
-            if (!roadmapData.monthlyPlanner.completedTasks) {
-                roadmapData.monthlyPlanner.completedTasks = [];
+            if (!roadmapData.monthlyPlanner.completedTasks || Array.isArray(roadmapData.monthlyPlanner.completedTasks)) {
+                roadmapData.monthlyPlanner.completedTasks = migrateArrayToObject(roadmapData.monthlyPlanner.completedTasks, 'completed');
             }
-            
+
             // DATA INTEGRITY CHECK: Ensure all converted tasks have their static sources in overriddenStatic
             let needsSave = false;
-            roadmapData.monthlyPlanner.customTasks.forEach(task => {
-                if (task.convertedFrom && !roadmapData.monthlyPlanner.overriddenStatic.includes(task.convertedFrom)) {
-                    roadmapData.monthlyPlanner.overriddenStatic.push(task.convertedFrom);
+            getValues(roadmapData.monthlyPlanner.customTasks).forEach(task => {
+                const overriddenValues = getValues(roadmapData.monthlyPlanner.overriddenStatic).map(o => o.value || o);
+                if (task.convertedFrom && !overriddenValues.includes(task.convertedFrom)) {
+                    const overrideId = generateId('override');
+                    roadmapData.monthlyPlanner.overriddenStatic[overrideId] = { id: overrideId, value: task.convertedFrom };
                     needsSave = true;
                 }
             });
@@ -14181,21 +14227,29 @@ CHAIR: 9F
         }
         
         function mpToggleTaskComplete(taskId) {
-            if (!roadmapData.monthlyPlanner.completedTasks) {
-                roadmapData.monthlyPlanner.completedTasks = [];
+            if (!roadmapData.monthlyPlanner.completedTasks || Array.isArray(roadmapData.monthlyPlanner.completedTasks)) {
+                roadmapData.monthlyPlanner.completedTasks = migrateArrayToObject(roadmapData.monthlyPlanner.completedTasks, 'completed');
             }
-            
+
             const taskIdStr = String(taskId);
-            const index = roadmapData.monthlyPlanner.completedTasks.indexOf(taskIdStr);
-            
-            if (index === -1) {
-                roadmapData.monthlyPlanner.completedTasks.push(taskIdStr);
+            // Check if this task is already completed
+            const isCompleted = Object.values(roadmapData.monthlyPlanner.completedTasks).some(c => c.value === taskIdStr || c === taskIdStr);
+
+            if (!isCompleted) {
+                const completedId = generateId('completed');
+                roadmapData.monthlyPlanner.completedTasks[completedId] = { id: completedId, value: taskIdStr, completedAt: Date.now() };
                 showToast('Task completed! 🎉');
             } else {
-                roadmapData.monthlyPlanner.completedTasks.splice(index, 1);
+                // Find and remove the completed entry
+                Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(id => {
+                    const entry = roadmapData.monthlyPlanner.completedTasks[id];
+                    if (entry?.value === taskIdStr || entry === taskIdStr) {
+                        delete roadmapData.monthlyPlanner.completedTasks[id];
+                    }
+                });
                 showToast('Task unmarked');
             }
-            
+
             saveData();
             mpRenderAllCalendars();
             mpUpdateStats();
@@ -14779,16 +14833,19 @@ CHAIR: 9F
                 // Check if this is a static task being converted
                 if (mpCurrentTask.isStatic) {
                     // Mark static task as overridden
-                    if (!roadmapData.monthlyPlanner.overriddenStatic) {
-                        roadmapData.monthlyPlanner.overriddenStatic = [];
+                    if (!roadmapData.monthlyPlanner.overriddenStatic || Array.isArray(roadmapData.monthlyPlanner.overriddenStatic)) {
+                        roadmapData.monthlyPlanner.overriddenStatic = migrateArrayToObject(roadmapData.monthlyPlanner.overriddenStatic, 'override');
                     }
-                    if (!roadmapData.monthlyPlanner.overriddenStatic.includes(mpCurrentTask.staticId)) {
-                        roadmapData.monthlyPlanner.overriddenStatic.push(mpCurrentTask.staticId);
+                    const overriddenValues = getValues(roadmapData.monthlyPlanner.overriddenStatic).map(o => o.value || o);
+                    if (!overriddenValues.includes(mpCurrentTask.staticId)) {
+                        const overrideId = generateId('override');
+                        roadmapData.monthlyPlanner.overriddenStatic[overrideId] = { id: overrideId, value: mpCurrentTask.staticId };
                     }
-                    
+
                     // Create new custom task
+                    const newTaskId = generateId('ctask');
                     const newTask = {
-                        id: Date.now(),
+                        id: newTaskId,
                         item: item,
                         date: date,
                         time: time,
@@ -14798,7 +14855,10 @@ CHAIR: 9F
                         createdAt: new Date().toISOString(),
                         convertedFrom: mpCurrentTask.staticId
                     };
-                    roadmapData.monthlyPlanner.customTasks.push(newTask);
+                    if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
+                        roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
+                    }
+                    roadmapData.monthlyPlanner.customTasks[newTaskId] = newTask;
                     showToast('Task updated!');
                 } else {
                     // Update existing custom task
@@ -14812,8 +14872,9 @@ CHAIR: 9F
                 }
             } else {
                 // Create new task
+                const newTaskId = generateId('ctask');
                 const newTask = {
-                    id: Date.now(),
+                    id: newTaskId,
                     item: item,
                     date: date,
                     time: time,
@@ -14822,7 +14883,10 @@ CHAIR: 9F
                     notes: notes,
                     createdAt: new Date().toISOString()
                 };
-                roadmapData.monthlyPlanner.customTasks.push(newTask);
+                if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
+                    roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
+                }
+                roadmapData.monthlyPlanner.customTasks[newTaskId] = newTask;
                 showToast('Task added!');
             }
             
@@ -14836,14 +14900,16 @@ CHAIR: 9F
         function mpDeleteCurrentTask() {
             if (!mpCurrentTask) return;
             if (!confirm('Delete this task?')) return;
-            
+
             if (mpCurrentTask.isStatic) {
                 // Mark static task as deleted/hidden
-                if (!roadmapData.monthlyPlanner.overriddenStatic) {
-                    roadmapData.monthlyPlanner.overriddenStatic = [];
+                if (!roadmapData.monthlyPlanner.overriddenStatic || Array.isArray(roadmapData.monthlyPlanner.overriddenStatic)) {
+                    roadmapData.monthlyPlanner.overriddenStatic = migrateArrayToObject(roadmapData.monthlyPlanner.overriddenStatic, 'override');
                 }
-                if (!roadmapData.monthlyPlanner.overriddenStatic.includes(mpCurrentTask.staticId)) {
-                    roadmapData.monthlyPlanner.overriddenStatic.push(mpCurrentTask.staticId);
+                const overriddenValues = getValues(roadmapData.monthlyPlanner.overriddenStatic).map(o => o.value || o);
+                if (!overriddenValues.includes(mpCurrentTask.staticId)) {
+                    const overrideId = generateId('override');
+                    roadmapData.monthlyPlanner.overriddenStatic[overrideId] = { id: overrideId, value: mpCurrentTask.staticId };
                 }
                 showToast('Task removed');
             } else {
