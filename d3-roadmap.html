@@ -8430,11 +8430,42 @@ CHAIR: 9F
             }
         }
         
+        // CRITICAL: Firebase converts arrays to objects with numeric keys
+        // This helper ensures we always get proper arrays back
+        function ensureArray(val, fallback = []) {
+            if (!val) return fallback;
+            if (Array.isArray(val)) return val;
+            // Firebase converted array to object - convert back
+            if (typeof val === 'object') {
+                return Object.values(val);
+            }
+            return fallback;
+        }
+
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('d3RoadmapData');
             if (saved) {
                 try {
-                    roadmapData = { ...roadmapData, ...JSON.parse(saved) };
+                    const data = JSON.parse(saved);
+                    // Apply same array sanitization as Firebase load
+                    roadmapData = {
+                        ...roadmapData,
+                        ...data,
+                        customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
+                        monthlyPlanner: {
+                            notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
+                            customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
+                            overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
+                            completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
+                        },
+                        clinicalData: {
+                            patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
+                            appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
+                            completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
+                            competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
+                        },
+                        exams: ensureArray(data.exams, roadmapData.exams || [])
+                    };
                 } catch (e) {
                     console.error('❌ Failed to parse localStorage data:', e);
                     // Don't crash - continue with defaults
@@ -8442,7 +8473,7 @@ CHAIR: 9F
             }
             initUI();
         }
-        
+
         function loadFromFirebase() {
             if (!firebaseSyncEnabled || !database || !userPath) {
                 loadFromLocalStorage();
@@ -8455,6 +8486,7 @@ CHAIR: 9F
                     const data = snapshot.val();
                     if (data) {
                         // Merge Firebase data with defaults
+                        // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
                         roadmapData = {
                             ...roadmapData,
                             pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
@@ -8462,21 +8494,22 @@ CHAIR: 9F
                             grades: { ...roadmapData.grades, ...(data.grades || {}) },
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                            customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                            customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                             monthlyPlanner: {
-                                notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
-                                customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
-                                overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
-                                completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                                notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
+                                customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
+                                overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
+                                completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
                             },
                             clinicalData: {
                                 patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
-                                completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                                appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
+                                completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
                                 competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                             },
                             dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                            exams: ensureArray(data.exams, roadmapData.exams || []),
                             lastSaved: data.lastSaved
                         };
 
@@ -8530,6 +8563,7 @@ CHAIR: 9F
                     lastRemoteUpdate = remoteLastSaved;
 
                     // Deep merge the data (match loadFromFirebase pattern exactly)
+                    // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
                     roadmapData = {
                         ...roadmapData,
                         ...data,
@@ -8538,21 +8572,22 @@ CHAIR: 9F
                         grades: { ...roadmapData.grades, ...(data.grades || {}) },
                         editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                         completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                        customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                        customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
                         examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                         monthlyPlanner: {
-                            notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
-                            customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
-                            overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
-                            completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                            notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
+                            customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
+                            overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
+                            completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
                         },
                         clinicalData: {
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                            appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
-                            completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                            appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
+                            completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
                             competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                         },
                         dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                        exams: ensureArray(data.exams, roadmapData.exams || []),
                         lastSaved: data.lastSaved
                     };
 
@@ -13275,6 +13310,7 @@ CHAIR: 9F
                             if (snapshot.exists()) {
                                 const data = snapshot.val();
                                 // Proper deep merge for all nested objects (match loadFromFirebase pattern)
+                                // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
                                 roadmapData = {
                                     ...roadmapData,
                                     ...data,
@@ -13283,21 +13319,22 @@ CHAIR: 9F
                                     grades: { ...roadmapData.grades, ...(data.grades || {}) },
                                     editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                                     completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                                    customDeadlines: data.customDeadlines || roadmapData.customDeadlines,
+                                    customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
                                     examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                                     monthlyPlanner: {
-                                        notes: data.monthlyPlanner?.notes || roadmapData.monthlyPlanner?.notes || [],
-                                        customTasks: data.monthlyPlanner?.customTasks || roadmapData.monthlyPlanner?.customTasks || [],
-                                        overriddenStatic: data.monthlyPlanner?.overriddenStatic || roadmapData.monthlyPlanner?.overriddenStatic || [],
-                                        completedTasks: data.monthlyPlanner?.completedTasks || roadmapData.monthlyPlanner?.completedTasks || []
+                                        notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
+                                        customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
+                                        overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
+                                        completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
                                     },
                                     clinicalData: {
                                         patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                        appointments: data.clinicalData?.appointments || roadmapData.clinicalData?.appointments || [],
-                                        completedProcedures: data.clinicalData?.completedProcedures || roadmapData.clinicalData?.completedProcedures || [],
+                                        appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
+                                        completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
                                         competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                                     },
                                     dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                                    exams: ensureArray(data.exams, roadmapData.exams || []),
                                     lastSaved: data.lastSaved
                                 };
                                 initUI();
