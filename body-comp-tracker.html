@@ -6909,25 +6909,21 @@
             let daysSinceWorkout = 99;
             let gymStreak = 0;
 
+            // Collect all workout dates (including today if applicable)
+            const workoutDates = [];
+
             // First check today - multiple ways to detect workout
             const todayWorkouts = state.today.workouts || [];
             const didWorkoutToday = (
                 state.today.workedOut === true ||
-                todayWorkouts.length > 0 ||
-                (state.today.date === todayStr && state.today.activeCalories > 0 && todayWorkouts.length > 0)
+                todayWorkouts.length > 0
             );
 
-            if (didWorkoutToday && todayWorkouts.length > 0) {
+            if (didWorkoutToday) {
+                workoutDates.push(todayStr);
                 daysSinceWorkout = 0;
                 lastWorkoutType = todayWorkouts[todayWorkouts.length - 1]?.type || 'Workout';
                 lastWorkoutDate = todayStr;
-                gymStreak = 1;
-            } else if (state.today.workedOut && state.today.date === todayStr) {
-                // workedOut is true but no workouts array - still count it
-                daysSinceWorkout = 0;
-                lastWorkoutType = 'Workout';
-                lastWorkoutDate = todayStr;
-                gymStreak = 1;
             }
 
             // Check daily logs for historical workouts
@@ -6936,6 +6932,9 @@
                 if (date === todayStr) continue; // Already checked today
                 const log = state.dailyLogs[date];
                 if (log && log.workedOut) {
+                    workoutDates.push(date);
+
+                    // Track last workout if not found yet
                     if (lastWorkoutDate === null) {
                         lastWorkoutDate = date;
                         lastWorkoutType = log.workouts?.[0]?.type || 'Workout';
@@ -6944,15 +6943,41 @@
                         today.setHours(0, 0, 0, 0);
                         daysSinceWorkout = Math.round((today - logDate) / (1000 * 60 * 60 * 24));
                     }
+                }
+            }
 
-                    // Count gym streak (consecutive days)
-                    const expectedDate = new Date();
-                    expectedDate.setDate(expectedDate.getDate() - gymStreak);
-                    const expectedStr = getLocalDateString(expectedDate);
-                    if (date === expectedStr) {
+            // Calculate gym streak from collected workout dates
+            // Sort newest first
+            workoutDates.sort().reverse();
+
+            if (workoutDates.length > 0) {
+                gymStreak = 1; // At least 1 workout exists
+
+                // Check for consecutive days
+                for (let i = 1; i < workoutDates.length; i++) {
+                    const currentDate = parseLocalDate(workoutDates[i - 1]);
+                    const prevDate = parseLocalDate(workoutDates[i]);
+                    const dayDiff = Math.round((currentDate - prevDate) / (1000 * 60 * 60 * 24));
+
+                    if (dayDiff === 1) {
                         gymStreak++;
                     } else {
                         break; // Streak broken
+                    }
+                }
+
+                // If most recent workout is NOT today and NOT yesterday, streak is broken
+                const mostRecentWorkout = workoutDates[0];
+                if (mostRecentWorkout !== todayStr) {
+                    const recentDate = parseLocalDate(mostRecentWorkout);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const daysSinceMostRecent = Math.round((today - recentDate) / (1000 * 60 * 60 * 24));
+
+                    // Streak only counts if most recent workout was yesterday or today
+                    // If it was 2+ days ago, the streak is broken (reset to 0)
+                    if (daysSinceMostRecent > 1) {
+                        gymStreak = 0;
                     }
                 }
             }
@@ -9166,7 +9191,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push('GYM DATA:');
             log.push(`  • Worked out today: ${state.today?.workedOut ?? false}`);
             log.push(`  • Last workout info: ${workoutRec.info}`);
-            log.push(`  • Current streak: ${state.gamification?.streak || 0} days`);
+            log.push(`  • Gym streak: ${workoutRec.gymStreak || 0} days`);
+            log.push(`  • Days since workout: ${workoutRec.daysSinceWorkout}`);
             log.push(`  • Recommendation: "${workoutRec.recommendation}"`);
             log.push('');
 
