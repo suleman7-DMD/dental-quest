@@ -5224,8 +5224,8 @@
         let currentView = 'focus'; // 'focus' or 'full'
         let focusModeData = {
             oneThingId: null,
-            microSteps: [],
-            todaysTasks: { big: [], medium: [], small: [] },
+            microSteps: {},  // Object for Firebase safety
+            todaysTasks: { big: {}, medium: {}, small: {} },  // Objects: { taskId: true }
             focusTimerSeconds: 0,
             focusTimerRunning: false,
             focusTimerInterval: null,
@@ -5256,12 +5256,12 @@
             '30mg': {
                 pills: 30,
                 refillDate: null,
-                dosesLogged: [] // Array of {date: 'YYYY-MM-DD', count: 1}
+                dosesLogged: {}  // Object: { 'YYYY-MM-DD': { date, count } } for Firebase safety
             },
             '20mg': {
                 pills: 30,
                 refillDate: null,
-                dosesLogged: []
+                dosesLogged: {}
             }
         };
 
@@ -5274,7 +5274,7 @@
 
 
         let notebook = {
-            pages: [],
+            pages: {},  // Object with page IDs as keys for Firebase safety
             currentPageId: null
         };
 
@@ -5824,6 +5824,75 @@
             return obj;
         }
 
+        // Migrate task ID array to object (for todaysTasks)
+        // Handles: [], [1,2,3], {}, {0: 1, 1: 2}, {id1: true, id2: true}
+        function migrateTaskIdArrayToObject(data) {
+            if (!data) return {};
+            // Already an object with non-numeric keys (correct format)
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const keys = Object.keys(data);
+                if (keys.length === 0) return {};
+                // Check if it's already in { taskId: true } format
+                if (keys.every(k => isNaN(parseInt(k)))) return data;
+                // It's a sparse array from Firebase (numeric keys) - convert values
+                const result = {};
+                Object.values(data).forEach(id => {
+                    if (id) result[id] = true;
+                });
+                return result;
+            }
+            // It's an array - convert each ID to key
+            if (Array.isArray(data)) {
+                const result = {};
+                data.forEach(id => {
+                    if (id) result[id] = true;
+                });
+                return result;
+            }
+            return {};
+        }
+
+        // Get task IDs from todaysTasks object (returns array for iteration)
+        function getTaskIds(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;  // Legacy support
+            return Object.keys(obj).filter(k => obj[k] === true);
+        }
+
+        // Check if task ID is in todaysTasks object
+        function hasTaskId(obj, taskId) {
+            if (!obj || !taskId) return false;
+            if (Array.isArray(obj)) return obj.includes(taskId);  // Legacy support
+            return !!obj[taskId];
+        }
+
+        // Migrate dosesLogged array to object keyed by date
+        function migrateDosesLoggedToObject(data) {
+            if (!data) return {};
+            // Already an object with date keys
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const keys = Object.keys(data);
+                if (keys.length === 0) return {};
+                // Check if it's already in { 'YYYY-MM-DD': { date, count } } format
+                if (keys.every(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return data;
+                // It's a sparse array from Firebase (numeric keys) - convert
+                const result = {};
+                Object.values(data).forEach(item => {
+                    if (item && item.date) result[item.date] = item;
+                });
+                return result;
+            }
+            // It's an array - convert each item using date as key
+            if (Array.isArray(data)) {
+                const result = {};
+                data.forEach(item => {
+                    if (item && item.date) result[item.date] = item;
+                });
+                return result;
+            }
+            return {};
+        }
+
         // ==================== BACKUP MANAGER ====================
         const BackupManager = {
             maxBackups: 5,
@@ -5907,12 +5976,12 @@
                         ...medications,
                         ...data.medications
                     };
-                    // Ensure dosesLogged arrays are proper arrays
+                    // Ensure dosesLogged objects are proper arrays
                     if (medications['30mg']) {
-                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                        medications['30mg'].dosesLogged = migrateDosesLoggedToObject(medications['30mg'].dosesLogged);
                     }
                     if (medications['20mg']) {
-                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                        medications['20mg'].dosesLogged = migrateDosesLoggedToObject(medications['20mg'].dosesLogged);
                     }
                 }
 
@@ -5921,11 +5990,13 @@
                     calendarNotes = data.calendarNotes;
                 }
 
-                // Load notebook with array protection
+                // Load notebook with object migration
                 if (data.notebook) {
+                    const migratedPages = migrateArrayToObject(data.notebook.pages, 'page');
+                    const pageIds = Object.keys(migratedPages);
                     notebook = {
-                        pages: ensureArray(data.notebook.pages, []),
-                        currentPageId: data.notebook.currentPageId || (data.notebook.pages && data.notebook.pages[0]?.id) || null
+                        pages: migratedPages,
+                        currentPageId: data.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                     };
                 }
 
@@ -5934,12 +6005,12 @@
                     financials = {
                         ...financials,
                         masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
+                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
                         recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
                         monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
-                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
-                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
+                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
+                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
                     };
                 }
                 
@@ -5976,16 +6047,16 @@
                     });
                 }
 
-                // Load Focus Mode data with array protection for all arrays
+                // Load Focus Mode data with object migration for Firebase safety
                 if (data.focusModeData) {
                     focusModeData = {
                         ...focusModeData,
                         oneThingId: data.focusModeData.oneThingId || null,
                         microSteps: migrateArrayToObject(data.focusModeData.microSteps, 'step'),
                         todaysTasks: {
-                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
-                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
-                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
+                            big: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.big),
+                            medium: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.medium),
+                            small: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.small)
                         },
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                     };
@@ -6288,7 +6359,7 @@
                         '20mg': medications['20mg'].pills
                     },
                     calendarNotesCount: Object.keys(calendarNotes).length,
-                    notebookPages: notebook.pages.length,
+                    notebookPages: getCount(notebook.pages),
                     countdownEvents: getCount(calendarEvents)
                 }
             };
@@ -6374,13 +6445,13 @@
                             '30mg': {
                                 pills: 30,
                                 refillDate: null,
-                                dosesLogged: [],
+                                dosesLogged: {},
                                 ...(checkpoint.medications['30mg'] || {})
                             },
                             '20mg': {
                                 pills: 30,
                                 refillDate: null,
-                                dosesLogged: [],
+                                dosesLogged: {},
                                 ...(checkpoint.medications['20mg'] || {})
                             }
                         };
@@ -6393,14 +6464,16 @@
                         calendarNotes = {};
                     }
 
-                    // Restore notebook
+                    // Restore notebook with object migration
                     if (checkpoint.notebook) {
+                        const migratedPages = migrateArrayToObject(checkpoint.notebook.pages, 'page');
+                        const pageIds = Object.keys(migratedPages);
                         notebook = {
-                            pages: checkpoint.notebook.pages || [],
-                            currentPageId: checkpoint.notebook.currentPageId || (checkpoint.notebook.pages && checkpoint.notebook.pages[0]?.id) || null
+                            pages: migratedPages,
+                            currentPageId: checkpoint.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                         };
                     } else {
-                        notebook = { pages: [], currentPageId: null };
+                        notebook = { pages: {}, currentPageId: null };
                     }
                     
                     // Restore financials (if available - backward compatible)
@@ -6659,12 +6732,12 @@
                                 ...medications,
                                 ...data.medications
                             };
-                            // Ensure dosesLogged arrays
+                            // Ensure dosesLogged objects
                             if (medications['30mg']) {
-                                medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                                medications['30mg'].dosesLogged = migrateDosesLoggedToObject(medications['30mg'].dosesLogged);
                             }
                             if (medications['20mg']) {
-                                medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                                medications['20mg'].dosesLogged = migrateDosesLoggedToObject(medications['20mg'].dosesLogged);
                             }
                         }
 
@@ -6673,9 +6746,11 @@
                         }
 
                         if (data.notebook) {
+                            const migratedPages = migrateArrayToObject(data.notebook.pages, 'page');
+                            const pageIds = Object.keys(migratedPages);
                             notebook = {
-                                pages: ensureArray(data.notebook.pages, []),
-                                currentPageId: data.notebook.currentPageId || (data.notebook.pages && data.notebook.pages[0]?.id) || null
+                                pages: migratedPages,
+                                currentPageId: data.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                             };
                         }
 
@@ -6683,12 +6758,12 @@
                             financials = {
                                 ...financials,
                                 masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                                committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
+                                committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
                                 recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
                                 monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                                creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
-                                actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
-                                customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                                creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
+                                actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
+                                customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
                             };
                         }
 
@@ -6731,7 +6806,7 @@
                                 date: data.dailyPlanner.date || null,
                                 goal: data.dailyPlanner.goal || '',
                                 bedtime: data.dailyPlanner.bedtime || '23:00',
-                                blocks: ensureArray(data.dailyPlanner.blocks, []),
+                                blocks: migrateArrayToObject(data.dailyPlanner.blocks, 'block'),
                                 lastReset: data.dailyPlanner.lastReset || null
                             };
                             checkPlannerReset();
@@ -6743,9 +6818,9 @@
                                 oneThingId: data.focusModeData.oneThingId || null,
                                 microSteps: migrateArrayToObject(data.focusModeData.microSteps, 'step'),
                                 todaysTasks: {
-                                    big: ensureArray(data.focusModeData.todaysTasks?.big, []),
-                                    medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
-                                    small: ensureArray(data.focusModeData.todaysTasks?.small, [])
+                                    big: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.big),
+                                    medium: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.medium),
+                                    small: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.small)
                                 },
                                 focusTimerSeconds: data.focusModeData.focusTimerSeconds || 0,
                                 focusTimerRunning: false,
@@ -6871,12 +6946,12 @@
 
                                 if (data.medications) {
                                     medications = { ...medications, ...data.medications };
-                                    // Ensure dosesLogged arrays
+                                    // Ensure dosesLogged objects
                                     if (medications['30mg']) {
-                                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                                        medications['30mg'].dosesLogged = migrateDosesLoggedToObject(medications['30mg'].dosesLogged);
                                     }
                                     if (medications['20mg']) {
-                                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                                        medications['20mg'].dosesLogged = migrateDosesLoggedToObject(medications['20mg'].dosesLogged);
                                     }
                                 }
 
@@ -6885,9 +6960,11 @@
                                 }
 
                                 if (data.notebook) {
+                                    const migratedPages = migrateArrayToObject(data.notebook.pages, 'page');
+                                    const pageIds = Object.keys(migratedPages);
                                     notebook = {
-                                        pages: ensureArray(data.notebook.pages, []),
-                                        currentPageId: data.notebook.currentPageId || null
+                                        pages: migratedPages,
+                                        currentPageId: data.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                                     };
                                 }
 
@@ -6895,12 +6972,12 @@
                                     financials = {
                                         ...financials,
                                         masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
+                                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
                                         recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
                                         monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
-                                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
-                                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
+                                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
+                                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
                                     };
                                 }
 
@@ -6920,7 +6997,7 @@
                                         date: data.dailyPlanner.date || null,
                                         goal: data.dailyPlanner.goal || '',
                                         bedtime: data.dailyPlanner.bedtime || '23:00',
-                                        blocks: ensureArray(data.dailyPlanner.blocks, []),
+                                        blocks: migrateArrayToObject(data.dailyPlanner.blocks, 'block'),
                                         lastReset: data.dailyPlanner.lastReset || null
                                     };
                                 }
@@ -6931,9 +7008,9 @@
                                         oneThingId: data.focusModeData.oneThingId || null,
                                         microSteps: migrateArrayToObject(data.focusModeData.microSteps, 'step'),
                                         todaysTasks: {
-                                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
-                                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
-                                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
+                                            big: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.big),
+                                            medium: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.medium),
+                                            small: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.small)
                                         },
                                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                                     };
@@ -7165,15 +7242,14 @@
             if (med.pills > 0) {
                 med.pills--;
 
-                // Log the dose for today
+                // Log the dose for today (object keyed by date for Firebase safety)
                 const today = getLocalDateString();
-                if (!med.dosesLogged) med.dosesLogged = [];
+                if (!med.dosesLogged) med.dosesLogged = {};
 
-                const existingDose = med.dosesLogged.find(d => d.date === today);
-                if (existingDose) {
-                    existingDose.count++;
+                if (med.dosesLogged[today]) {
+                    med.dosesLogged[today].count++;
                 } else {
-                    med.dosesLogged.push({ date: today, count: 1 });
+                    med.dosesLogged[today] = { date: today, count: 1 };
                 }
 
                 // Visual feedback - pulse the button
@@ -7202,13 +7278,12 @@
 
                 ['30mg', '20mg'].forEach(medType => {
                     const med = medications[medType];
-                    if (!med.dosesLogged) med.dosesLogged = [];
-                    
-                    const existingDose = med.dosesLogged.find(d => d.date === today);
-                    if (existingDose) {
-                        existingDose.count++;
+                    if (!med.dosesLogged) med.dosesLogged = {};
+
+                    if (med.dosesLogged[today]) {
+                        med.dosesLogged[today].count++;
                     } else {
-                        med.dosesLogged.push({ date: today, count: 1 });
+                        med.dosesLogged[today] = { date: today, count: 1 };
                     }
                 });
                 
@@ -7323,7 +7398,7 @@
             const liquid = financials.masterLiquidity.currentCash || 0;
 
             // Calculate committed payments (unpaid one-time bills from committedBills)
-            const unpaidBills = financials.committedBills.filter(bill => !bill.paid);
+            const unpaidBills = getValues(financials.committedBills).filter(bill => !bill.paid);
             const committedExpenses = unpaidBills
                 .filter(bill => bill.type === 'expense')
                 .reduce((sum, bill) => sum + bill.amount, 0);
@@ -7412,11 +7487,11 @@
             const status = calculateFinancialStatus();
             
             // Update header stats
-            const totalDebt = financials.creditCards.reduce((sum, card) => sum + card.balance, 0);
+            const totalDebt = getValues(financials.creditCards).reduce((sum, card) => sum + card.balance, 0);
             totalDebtEl.textContent = '$' + totalDebt.toLocaleString();
             currentBalanceEl.textContent = '$' + status.currentLiquid.toLocaleString();
             
-            const unpaidBills = financials.committedBills.filter(bill => !bill.paid && bill.type === 'expense').length;
+            const unpaidBills = getValues(financials.committedBills).filter(bill => !bill.paid && bill.type === 'expense').length;
             actionsRemainingEl.textContent = unpaidBills;
         }
 
@@ -7579,8 +7654,8 @@
         }
 
         function renderCommittedBills() {
-            const unpaid = financials.committedBills.filter(bill => !bill.paid);
-            const paid = financials.committedBills.filter(bill => bill.paid);
+            const unpaid = getValues(financials.committedBills).filter(bill => !bill.paid);
+            const paid = getValues(financials.committedBills).filter(bill => bill.paid);
             
             const totalUnpaidExpenses = unpaid.filter(b => b.type === 'expense').reduce((sum, b) => sum + b.amount, 0);
             const totalUnpaidIncome = unpaid.filter(b => b.type === 'income').reduce((sum, b) => sum + b.amount, 0);
@@ -7668,7 +7743,7 @@
         }
 
         function toggleBillPaid(billId) {
-            const bill = financials.committedBills.find(b => b.id === billId);
+            const bill = getValues(financials.committedBills).find(b => b.id === billId);
             if (!bill) return;
             
             bill.paid = !bill.paid;
@@ -7683,7 +7758,7 @@
         }
 
         function editBill(billId) {
-            const bill = financials.committedBills.find(b => b.id === billId);
+            const bill = getValues(financials.committedBills).find(b => b.id === billId);
             if (!bill) return;
             
             const overlay = document.createElement('div');
@@ -7732,7 +7807,7 @@
         }
 
         function saveBillEdit(billId) {
-            const bill = financials.committedBills.find(b => b.id === billId);
+            const bill = getValues(financials.committedBills).find(b => b.id === billId);
             if (!bill) return;
             
             bill.description = document.getElementById('edit_description').value;
@@ -8104,7 +8179,7 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            const sorted = [...financials.actionItems].sort((a, b) => {
+            const sorted = [...getValues(financials.actionItems)].sort((a, b) => {
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
                 const priorityOrder = { urgent: 0, high: 1, medium: 2 };
                 if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
@@ -8165,7 +8240,7 @@
         }
 
         function toggleActionItem(itemId) {
-            const item = financials.actionItems.find(i => i.id === itemId);
+            const item = getValues(financials.actionItems).find(i => i.id === itemId);
             if (item) {
                 item.completed = !item.completed;
                 saveData();
@@ -8179,7 +8254,7 @@
         }
 
         function renderCreditCards() {
-            const sorted = [...financials.creditCards].sort((a, b) => a.priority - b.priority);
+            const sorted = [...getValues(financials.creditCards)].sort((a, b) => a.priority - b.priority);
             const totalBalance = sorted.reduce((sum, card) => sum + card.balance, 0);
             const totalMinimums = sorted.reduce((sum, card) => sum + card.targetMin, 0);
             
@@ -8240,7 +8315,7 @@
         }
 
         function editCreditCard(cardId) {
-            const card = financials.creditCards.find(c => c.id === cardId);
+            const card = getValues(financials.creditCards).find(c => c.id === cardId);
             if (!card) return;
             
             const overlay = document.createElement('div');
@@ -8289,7 +8364,7 @@
         }
 
         function saveCreditCardEdit(cardId) {
-            const card = financials.creditCards.find(c => c.id === cardId);
+            const card = getValues(financials.creditCards).find(c => c.id === cardId);
             if (!card) return;
             
             card.balance = parseFloat(document.getElementById('edit_balance').value) || 0;
@@ -8299,7 +8374,7 @@
             card.negotiationNotes = document.getElementById('edit_cardNotes').value || '';
             
             // Recalculate recurring expenses for credit cards
-            const totalMinimums = financials.creditCards.reduce((sum, c) => sum + c.targetMin, 0);
+            const totalMinimums = getValues(financials.creditCards).reduce((sum, c) => sum + c.targetMin, 0);
             financials.recurringExpenses.creditCards.amount = totalMinimums;
             
             saveData();
@@ -9053,7 +9128,7 @@
             date: null,
             goal: '',
             bedtime: '23:00',
-            blocks: [],
+            blocks: {},  // Object for Firebase safety
             lastReset: null
         };
 
@@ -9228,7 +9303,7 @@
                 if (focusModeData) {
                     focusModeData.oneThingId = null;
                     focusModeData.microSteps = {};  // Object for Firebase safety
-                    focusModeData.todaysTasks = { big: [], medium: [], small: [] };
+                    focusModeData.todaysTasks = { big: {}, medium: {}, small: {} };  // Objects for Firebase safety
                     focusModeData.focusTimerSeconds = 0;
                 }
                 
@@ -9259,7 +9334,7 @@
                             date: data.date || dailyPlanner.date,
                             goal: data.goal || '',
                             bedtime: data.bedtime || '23:00',
-                            blocks: data.blocks || [],
+                            blocks: migrateArrayToObject(data.blocks, 'block'),
                             lastReset: data.lastReset || null
                         };
                     }
@@ -9279,7 +9354,7 @@
                             date: data.date || null,
                             goal: data.goal || '',
                             bedtime: data.bedtime || '23:00',
-                            blocks: ensureArray(data.blocks, []),
+                            blocks: migrateArrayToObject(data.blocks, 'block'),
                             lastReset: data.lastReset || null
                         };
                     } catch (e) {
@@ -9323,11 +9398,11 @@
                 if (!dailyPlanner) {
                     dailyPlanner = {
                         date: getTodayDateString(),
-                        blocks: []
+                        blocks: {}
                     };
                 }
                 if (!dailyPlanner.blocks) {
-                    dailyPlanner.blocks = [];
+                    dailyPlanner.blocks = {};
                 }
                 
                 checkPlannerReset();
@@ -9610,17 +9685,17 @@
             
             // Add current time line
             html += '<div class="planner-current-time-line" id="plannerCurrentTimeLine"></div>';
-            
+
             // Add events (sorted by time)
-            if (dailyPlanner.blocks && dailyPlanner.blocks.length > 0) {
-                const sortedBlocks = [...dailyPlanner.blocks].sort((a, b) => {
+            const blocks = getValues(dailyPlanner.blocks);
+            if (blocks.length > 0) {
+                const sortedBlocks = [...blocks].sort((a, b) => {
                     return (a.startTime || '').localeCompare(b.startTime || '');
                 });
-                
-                sortedBlocks.forEach((block, index) => {
-                    const originalIndex = dailyPlanner.blocks.indexOf(block);
+
+                sortedBlocks.forEach(block => {
                     if (block.startTime && block.task) {
-                        html += renderPlannerEvent(block, originalIndex);
+                        html += renderPlannerEvent(block, block.id);
                     }
                 });
             }
@@ -9630,7 +9705,7 @@
             updatePlannerFooterStats();
         }
 
-        function renderPlannerEvent(block, index) {
+        function renderPlannerEvent(block, blockId) {
             const [startH, startM] = block.startTime.split(':').map(Number);
             const duration = block.duration || 30;
             
@@ -9650,10 +9725,10 @@
             return `
                 <div class="planner-event ${block.completed ? 'completed' : ''}" 
                      style="top: ${top}px; height: ${height}px;"
-                     onclick="togglePlannerEvent(${index})"
+                     onclick="togglePlannerEvent('${blockId}')"
                      title="Click to mark ${block.completed ? 'incomplete' : 'complete'}. Right-click to delete.">
                     <div class="planner-event-actions">
-                        <button class="planner-event-btn" onclick="event.stopPropagation(); deletePlannerEvent(event, ${index})" title="Delete">×</button>
+                        <button class="planner-event-btn" onclick="event.stopPropagation(); deletePlannerEvent(event, '${blockId}')" title="Delete">×</button>
                     </div>
                     <div class="planner-event-title">${escapeHtml(block.task)}</div>
                     ${height >= 40 ? `<div class="planner-event-time">${formatTime(block.startTime)} - ${endTimeStr}</div>` : ''}
@@ -9688,13 +9763,14 @@
                 return;
             }
             
-            dailyPlanner.blocks.push({
-                id: Date.now(),
+            const blockId = generateId('block');
+            dailyPlanner.blocks[blockId] = {
+                id: blockId,
                 startTime: time,
                 duration: duration,
                 task: task,
                 completed: false
-            });
+            };
             
             // Clear input
             if (taskInput) taskInput.value = '';
@@ -9729,23 +9805,23 @@
             }
         }
 
-        function togglePlannerEvent(index) {
-            if (dailyPlanner.blocks[index]) {
-                dailyPlanner.blocks[index].completed = !dailyPlanner.blocks[index].completed;
+        function togglePlannerEvent(blockId) {
+            if (dailyPlanner.blocks[blockId]) {
+                dailyPlanner.blocks[blockId].completed = !dailyPlanner.blocks[blockId].completed;
                 saveDailyPlanner();
                 renderPlannerTimeline();
-                
-                if (dailyPlanner.blocks[index].completed) {
+
+                if (dailyPlanner.blocks[blockId].completed) {
                     showToast('Task completed!', '✅');
                 }
             }
         }
 
-        function deletePlannerEvent(event, index) {
+        function deletePlannerEvent(event, blockId) {
             event.preventDefault();
             event.stopPropagation();
-            
-            dailyPlanner.blocks.splice(index, 1);
+
+            delete dailyPlanner.blocks[blockId];
             saveDailyPlanner();
             renderPlannerTimeline();
             showToast('Task deleted', '🗑️');
@@ -9753,17 +9829,18 @@
 
         function updatePlannerFooterStats() {
             if (!dailyPlanner.blocks) return;
-            
-            const total = dailyPlanner.blocks.length;
-            const completed = dailyPlanner.blocks.filter(b => b.completed).length;
-            const totalMinutes = dailyPlanner.blocks.reduce((sum, b) => sum + (b.duration || 30), 0);
+
+            const blocks = getValues(dailyPlanner.blocks);
+            const total = blocks.length;
+            const completed = blocks.filter(b => b.completed).length;
+            const totalMinutes = blocks.reduce((sum, b) => sum + (b.duration || 30), 0);
             const hours = Math.floor(totalMinutes / 60);
             const mins = totalMinutes % 60;
-            
+
             const taskCountEl = document.getElementById('plannerTaskCount');
             const totalTimeEl = document.getElementById('plannerTotalTime');
             const completedCountEl = document.getElementById('plannerCompletedCount');
-            
+
             if (taskCountEl) taskCountEl.textContent = total;
             if (totalTimeEl) totalTimeEl.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
             if (completedCountEl) completedCountEl.textContent = completed;
@@ -9771,7 +9848,7 @@
 
         function clearDailyPlanner() {
             if (confirm('Clear all tasks for today?')) {
-                dailyPlanner.blocks = [];
+                dailyPlanner.blocks = {};
                 saveDailyPlanner();
                 renderPlannerTimeline();
                 showToast('Planner cleared', '🗑️');
@@ -9786,13 +9863,14 @@
         function addQuickBreak() {
             const timeInput = document.getElementById('plannerNewTime');
             const time = timeInput?.value || '12:00';
-            dailyPlanner.blocks.push({
-                id: Date.now(),
+            const blockId = generateId('block');
+            dailyPlanner.blocks[blockId] = {
+                id: blockId,
                 startTime: time,
                 duration: 15,
                 task: '☕ Break',
                 completed: false
-            });
+            };
             saveDailyPlanner();
             renderPlannerTimeline();
             showToast('Break added!', '☕');
@@ -9800,13 +9878,14 @@
         function addQuickPomodoro() {
             const timeInput = document.getElementById('plannerNewTime');
             const time = timeInput?.value || '12:00';
-            dailyPlanner.blocks.push({
-                id: Date.now(),
+            const blockId = generateId('block');
+            dailyPlanner.blocks[blockId] = {
+                id: blockId,
                 startTime: time,
                 duration: 25,
                 task: '🍅 Focus',
                 completed: false
-            });
+            };
             saveDailyPlanner();
             renderPlannerTimeline();
             showToast('Focus block added!', '🍅');
@@ -9939,9 +10018,11 @@
             }
 
             if (data.notebook) {
+                const migratedPages = migrateArrayToObject(data.notebook.pages, 'page');
+                const pageIds = Object.keys(migratedPages);
                 notebook = {
-                    pages: data.notebook.pages || [],
-                    currentPageId: data.notebook.currentPageId || null
+                    pages: migratedPages,
+                    currentPageId: data.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                 };
             }
 
@@ -10074,12 +10155,12 @@
 
                 if (data.medications) {
                     medications = { ...medications, ...data.medications };
-                    // Ensure dosesLogged arrays
+                    // Ensure dosesLogged objects
                     if (medications['30mg']) {
-                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                        medications['30mg'].dosesLogged = migrateDosesLoggedToObject(medications['30mg'].dosesLogged);
                     }
                     if (medications['20mg']) {
-                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                        medications['20mg'].dosesLogged = migrateDosesLoggedToObject(medications['20mg'].dosesLogged);
                     }
                 }
 
@@ -10099,7 +10180,7 @@
                         date: data.dailyPlanner.date || null,
                         goal: data.dailyPlanner.goal || '',
                         bedtime: data.dailyPlanner.bedtime || '23:00',
-                        blocks: ensureArray(data.dailyPlanner.blocks, []),
+                        blocks: migrateArrayToObject(data.dailyPlanner.blocks, 'block'),
                         lastReset: data.dailyPlanner.lastReset || null
                     };
                 }
@@ -10109,9 +10190,9 @@
                         oneThingId: data.focusModeData.oneThingId || null,
                         microSteps: migrateArrayToObject(data.focusModeData.microSteps, 'step'),
                         todaysTasks: {
-                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
-                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
-                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
+                            big: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.big),
+                            medium: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.medium),
+                            small: migrateTaskIdArrayToObject(data.focusModeData.todaysTasks?.small)
                         },
                         // Timer fields: use incoming data (sync across devices), but keep interval null (local only)
                         focusTimerSeconds: data.focusModeData.focusTimerSeconds || 0,
@@ -10124,9 +10205,11 @@
                 if (data.calendarEvents !== undefined) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
 
                 if (data.notebook) {
+                    const migratedPages = migrateArrayToObject(data.notebook.pages, 'page');
+                    const pageIds = Object.keys(migratedPages);
                     notebook = {
-                        pages: ensureArray(data.notebook.pages, []),
-                        currentPageId: data.notebook.currentPageId || null
+                        pages: migratedPages,
+                        currentPageId: data.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
                     };
                 }
 
@@ -10134,10 +10217,10 @@
                     financials = {
                         ...financials,
                         ...data.financials,
-                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
-                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
-                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
-                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
+                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
+                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
+                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
                     };
                 }
                 
@@ -10172,14 +10255,14 @@
             try {
                 // Ensure notebook is properly initialized
                 if (!notebook) {
-                    notebook = { pages: [], currentPageId: null };
+                    notebook = { pages: {}, currentPageId: null };
                 }
                 if (!notebook.pages) {
-                    notebook.pages = [];
+                    notebook.pages = {};
                 }
-                
+
                 // Initialize with first page if none exist
-                if (notebook.pages.length === 0) {
+                if (getCount(notebook.pages) === 0) {
                     createNewPage();
                 }
                 
@@ -10198,45 +10281,48 @@
         }
 
         function createNewPage() {
-            const pageNumber = notebook.pages.length + 1;
+            const pageCount = getCount(notebook.pages);
+            const pageNumber = pageCount + 1;
+            const id = generateId('page');
             const newPage = {
-                id: Date.now(),
+                id: id,
                 title: `Page ${pageNumber}`,
                 content: '',
                 created: new Date().toISOString(),
                 modified: new Date().toISOString(),
                 charCount: 0
             };
-            
-            notebook.pages.push(newPage);
-            notebook.currentPageId = newPage.id;
-            
-            if (notebook.pages.length === 20) {
+
+            notebook.pages[id] = newPage;
+            notebook.currentPageId = id;
+
+            if (getCount(notebook.pages) === 20) {
                 showToast('Maximum 20 pages reached', 'ℹ️');
             }
-            
+
             renderNotebookTabs();
             renderNotebookContent();
             saveNotebook();
         }
 
         function deletePage(pageId) {
-            if (notebook.pages.length === 1) {
+            if (getCount(notebook.pages) === 1) {
                 showToast('Cannot delete the last page', '⚠️');
                 return;
             }
-            
+
             if (!confirm('Delete this page? This cannot be undone.')) {
                 return;
             }
-            
-            notebook.pages = notebook.pages.filter(p => p.id !== pageId);
-            
+
+            delete notebook.pages[pageId];
+
             // Switch to first page if we deleted current page
             if (notebook.currentPageId === pageId) {
-                notebook.currentPageId = notebook.pages[0].id;
+                const pageIds = Object.keys(notebook.pages);
+                notebook.currentPageId = pageIds.length > 0 ? pageIds[0] : null;
             }
-            
+
             renderNotebookTabs();
             renderNotebookContent();
             saveNotebook();
@@ -10254,26 +10340,27 @@
 
         function renderNotebookTabs() {
             const tabsContainer = document.getElementById('notebookTabs');
-            
-            if (notebook.pages.length === 0) {
+            const pages = getValues(notebook.pages);
+
+            if (pages.length === 0) {
                 tabsContainer.innerHTML = '<div class="notebook-empty"><h3>No pages yet</h3><p>Click "+ New Page" to start</p></div>';
                 return;
             }
-            
-            tabsContainer.innerHTML = notebook.pages.map(page => `
-                <button class="notebook-tab ${page.id === notebook.currentPageId ? 'active' : ''}" 
-                        onclick="switchPage(${page.id})"
-                        ondblclick="renamePage(${page.id})">
+
+            tabsContainer.innerHTML = pages.map(page => `
+                <button class="notebook-tab ${page.id === notebook.currentPageId ? 'active' : ''}"
+                        onclick="switchPage('${page.id}')"
+                        ondblclick="renamePage('${page.id}')">
                     ${escapeHtml(page.title)}
-                    ${notebook.pages.length > 1 ? `<span class="notebook-tab-delete" onclick="event.stopPropagation(); deletePage(${page.id})">×</span>` : ''}
+                    ${pages.length > 1 ? `<span class="notebook-tab-delete" onclick="event.stopPropagation(); deletePage('${page.id}')">×</span>` : ''}
                 </button>
             `).join('');
         }
 
         function renderNotebookContent() {
             const contentContainer = document.getElementById('notebookContent');
-            const currentPage = notebook.pages.find(p => p.id === notebook.currentPageId);
-            
+            const currentPage = notebook.pages[notebook.currentPageId];
+
             if (!currentPage) {
                 contentContainer.innerHTML = '<div class="notebook-empty"><h3>No page selected</h3></div>';
                 return;
@@ -10375,8 +10462,8 @@
 
         function saveCurrentPageContent() {
             const editor = document.getElementById('notebookEditor');
-            const currentPage = notebook.pages.find(p => p.id === notebook.currentPageId);
-            
+            const currentPage = notebook.pages[notebook.currentPageId];
+
             if (editor && currentPage) {
                 currentPage.content = editor.innerHTML;
                 currentPage.modified = new Date().toISOString();
@@ -10385,9 +10472,9 @@
         }
 
         function renamePage(pageId) {
-            const page = notebook.pages.find(p => p.id === pageId);
+            const page = notebook.pages[pageId];
             if (!page) return;
-            
+
             const newTitle = prompt('Enter new page name:', page.title);
             if (newTitle && newTitle.trim()) {
                 page.title = newTitle.trim();
@@ -11146,9 +11233,11 @@
                 focusModeData.oneThingId = null;
                 focusModeData.microSteps = {};  // Object for Firebase safety
             }
-            // Remove from todaysTasks arrays
+            // Remove from todaysTasks objects
             ['big', 'medium', 'small'].forEach(size => {
-                focusModeData.todaysTasks[size] = focusModeData.todaysTasks[size].filter(taskId => taskId !== id);
+                if (focusModeData.todaysTasks[size]) {
+                    delete focusModeData.todaysTasks[size][id];
+                }
             });
 
             renderTasks();
@@ -11689,10 +11778,10 @@
             const sizeLabels = { big: '🔴 Big Tasks', medium: '🟡 Medium Tasks', small: '🟢 Small Tasks' };
             if (title) title.textContent = `Add ${sizeLabels[size]} to Today`;
             
-            const sizeTasks = getValues(tasks).filter(t => 
-                !t.completed && 
+            const sizeTasks = getValues(tasks).filter(t =>
+                !t.completed &&
                 (t.size === size || (!t.size && size === 'medium')) &&
-                !(focusModeData.todaysTasks[size] || []).includes(t.id)
+                !hasTaskId(focusModeData.todaysTasks[size], t.id)
             );
             
             if (body) {
@@ -11767,8 +11856,9 @@
                 const size = planningMode;
                 // Don't add if it's already the ONE thing
                 if (selectedPlanningTaskId !== focusModeData.oneThingId) {
-                    if (!(focusModeData.todaysTasks[size] || []).includes(selectedPlanningTaskId)) {
-                        focusModeData.todaysTasks[size].push(selectedPlanningTaskId);
+                    if (!hasTaskId(focusModeData.todaysTasks[size], selectedPlanningTaskId)) {
+                        if (!focusModeData.todaysTasks[size]) focusModeData.todaysTasks[size] = {};
+                        focusModeData.todaysTasks[size][selectedPlanningTaskId] = true;
                     }
                 }
                 showToast(`✅ Added to ${size} tasks!`, '📋');
@@ -11791,9 +11881,9 @@
             // Filter out ONE thing from size lists to avoid double counting
             const oneThingId = focusModeData.oneThingId;
             const counts = {
-                big: (focusModeData.todaysTasks.big || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
-                medium: (focusModeData.todaysTasks.medium || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
-                small: (focusModeData.todaysTasks.small || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length
+                big: getTaskIds(focusModeData.todaysTasks.big).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
+                medium: getTaskIds(focusModeData.todaysTasks.medium).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
+                small: getTaskIds(focusModeData.todaysTasks.small).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length
             };
             
             // ONE thing always counts as the BIG task (slot 1)
@@ -11875,10 +11965,11 @@
             };
 
             tasks[id] = task;
-            
+
             // Add to today's focus tasks
-            if (!focusModeData.todaysTasks[task.size].includes(task.id)) {
-                focusModeData.todaysTasks[task.size].push(task.id);
+            if (!hasTaskId(focusModeData.todaysTasks[task.size], task.id)) {
+                if (!focusModeData.todaysTasks[task.size]) focusModeData.todaysTasks[task.size] = {};
+                focusModeData.todaysTasks[task.size][task.id] = true;
             }
             
             input.value = '';
@@ -11908,7 +11999,7 @@
             if (!container) return;
             
             // Filter out the ONE thing from medium/small lists to avoid duplication
-            const taskIds = (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) || [];
+            const taskIds = getTaskIds(focusModeData.todaysTasks && focusModeData.todaysTasks[size]);
             const filteredIds = taskIds.filter(id => id !== focusModeData.oneThingId);
             const todaysTasks = filteredIds.map(id => getValues(tasks).find(t => t.id === id)).filter(t => t && !t.completed);
             
@@ -11948,21 +12039,21 @@
             
             // Initialize todaysTasks if needed
             if (!focusModeData.todaysTasks) {
-                focusModeData.todaysTasks = { big: [], medium: [], small: [] };
+                focusModeData.todaysTasks = { big: {}, medium: {}, small: {} };
             }
             if (!focusModeData.todaysTasks[size]) {
-                focusModeData.todaysTasks[size] = [];
+                focusModeData.todaysTasks[size] = {};
             }
-            
+
             // Check if already added
-            if (focusModeData.todaysTasks[size].includes(taskId)) {
+            if (hasTaskId(focusModeData.todaysTasks[size], taskId)) {
                 showToast('Task already in Focus Mode!', '⚠️');
                 return;
             }
-            
+
             // Check size limits (1-3-5 rule)
             const limits = { big: 1, medium: 3, small: 5 };
-            const currentCount = focusModeData.todaysTasks[size].length;
+            const currentCount = getTaskIds(focusModeData.todaysTasks[size]).length;
             
             // For big tasks, check if ONE thing is set
             if (size === 'big' && focusModeData.oneThingId) {
@@ -11975,9 +12066,9 @@
                 return;
             }
             
-            // Add to focus mode
-            focusModeData.todaysTasks[size].push(taskId);
-            
+            // Add to focus mode (object key = taskId, value = true)
+            focusModeData.todaysTasks[size][taskId] = true;
+
             saveData();
             renderTasks();
             if (currentView === 'focus') renderFocusMode();
@@ -11989,7 +12080,7 @@
         function removeFromToday(taskId, size) {
             // Remove task from today's list (doesn't delete the task, just removes from focus)
             if (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) {
-                focusModeData.todaysTasks[size] = focusModeData.todaysTasks[size].filter(id => id !== taskId);
+                delete focusModeData.todaysTasks[size][taskId];
             }
             renderFocusMode();
             saveData();
@@ -12020,9 +12111,9 @@
             
             const todaysTaskIds = [
                 focusModeData.oneThingId,
-                ...(focusModeData.todaysTasks.big || []),
-                ...(focusModeData.todaysTasks.medium || []),
-                ...(focusModeData.todaysTasks.small || [])
+                ...getTaskIds(focusModeData.todaysTasks.big),
+                ...getTaskIds(focusModeData.todaysTasks.medium),
+                ...getTaskIds(focusModeData.todaysTasks.small)
             ].filter(Boolean);
             
             const backlogTasks = getValues(tasks).filter(t => !t.completed && !todaysTaskIds.includes(t.id));
@@ -12058,8 +12149,9 @@
             if (smallTasks.length === 0) { showToast('No small tasks found!', '⚠️'); return; }
             const randomTask = smallTasks[Math.floor(Math.random() * smallTasks.length)];
             showToast(`🎲 Try: "${randomTask.text.substring(0, 40)}..."`, '⚡');
-            if (!(focusModeData.todaysTasks.small || []).includes(randomTask.id)) {
-                focusModeData.todaysTasks.small.push(randomTask.id);
+            if (!hasTaskId(focusModeData.todaysTasks.small, randomTask.id)) {
+                if (!focusModeData.todaysTasks.small) focusModeData.todaysTasks.small = {};
+                focusModeData.todaysTasks.small[randomTask.id] = true;
                 renderFocusMode();
                 saveData();
             }
@@ -12143,7 +12235,7 @@
                 
                 // Ensure focusModeData is properly initialized
                 if (!focusModeData.todaysTasks) {
-                    focusModeData.todaysTasks = { big: [], medium: [], small: [] };
+                    focusModeData.todaysTasks = { big: {}, medium: {}, small: {} };
                 }
                 
                 renderFocusMode();
