@@ -4782,7 +4782,7 @@
 
     <!-- Tab Navigation -->
     <nav class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('dashboard', event)">🎯 Dashboard</button>
+        <button class="tab-btn active" onclick="switchTab('dashboard', event)" aria-label="View Dashboard tab">🎯 Dashboard</button>
         <button class="tab-btn" onclick="switchTab('deadlines', event)" aria-label="View Deadlines tab">📅 Deadlines</button>
         <button class="tab-btn" onclick="switchTab('courses', event)" aria-label="View Courses tab">📚 Courses</button>
         <button class="tab-btn" onclick="switchTab('grades', event)" aria-label="View Grades tab">📊 Grades</button>
@@ -5447,7 +5447,7 @@
                 <span class="card-title">Select Course</span>
             </div>
             <div class="grade-input-row">
-                <select id="gradeCoursePicker" onchange="loadCourseGrades()" style="flex: 1; padding: 12px; font-size: 1em;">
+                <select id="gradeCoursePicker" onchange="loadCourseGrades()" aria-label="Select course for grade calculator" style="flex: 1; padding: 12px; font-size: 1em;">
                     <option value="oralmed">Oral Medicine (OD 531)</option>
                     <option value="paincontrol">Pain Control 2 (OS 532)</option>
                     <option value="critthink">Critical Thinking (GD 660)</option>
@@ -5519,7 +5519,7 @@
                 <span class="card-title">Select Course</span>
             </div>
             <div class="grade-input-row">
-                <select id="examCoursePicker" onchange="loadExamCourseContent()" style="flex: 1; padding: 12px; font-size: 1em;">
+                <select id="examCoursePicker" onchange="loadExamCourseContent()" aria-label="Select course for exam content" style="flex: 1; padding: 12px; font-size: 1em;">
                     <option value="">-- Select a Course --</option>
                     <option value="peds">Pediatric Dentistry (PD530) ⚠️ AT RISK</option>
                     <option value="ortho">Orthodontics (OR530)</option>
@@ -6259,10 +6259,10 @@
         </div>
 
         <!-- Sub-tabs for Clinical -->
-        <div class="clinical-subtabs" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-            <button class="clinical-subtab active" onclick="switchClinicalSubtab('patients', this)">👤 My Patients</button>
-            <button class="clinical-subtab" onclick="switchClinicalSubtab('appointments', this)">📅 Appointments</button>
-            <button class="clinical-subtab" onclick="switchClinicalSubtab('competencies', this)">🎯 Competencies</button>
+        <div class="clinical-subtabs" role="tablist" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="clinical-subtab active" onclick="switchClinicalSubtab('patients', this)" aria-label="View My Patients" role="tab">👤 My Patients</button>
+            <button class="clinical-subtab" onclick="switchClinicalSubtab('appointments', this)" aria-label="View Appointments" role="tab">📅 Appointments</button>
+            <button class="clinical-subtab" onclick="switchClinicalSubtab('competencies', this)" aria-label="View Competencies" role="tab">🎯 Competencies</button>
             <div style="flex-grow: 1;"></div>
             <button onclick="openClinicalImportModal()" style="padding: 8px 16px; background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">📥 Import from axiUm</button>
         </div>
@@ -6273,10 +6273,10 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="color: #10b981; margin: 0;">👤 My Patients</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="patientSearchInput" placeholder="Search patients..."
+                        <input type="text" id="patientSearchInput" placeholder="Search patients..." aria-label="Search patients"
                                style="padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; width: 180px;"
                                oninput="filterPatients()">
-                        <select id="patientFilterStatus" onchange="filterPatients()" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
+                        <select id="patientFilterStatus" onchange="filterPatients()" aria-label="Filter patients by status" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
                             <option value="all">All Patients</option>
                             <option value="active">Active</option>
                             <option value="needsAttention">Needs Attention</option>
@@ -6338,16 +6338,16 @@
             <div class="mp-modal-body" style="display: grid; gap: 15px;">
                 <input type="hidden" id="patientModalId">
                 <div class="mp-modal-field">
-                    <label>Patient Name/Initials *</label>
+                    <label for="patientModalName">Patient Name/Initials *</label>
                     <input type="text" id="patientModalName" placeholder="e.g., John D. or JD">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="mp-modal-field">
-                        <label>Chart Number</label>
+                        <label for="patientModalChart">Chart Number</label>
                         <input type="text" id="patientModalChart" placeholder="e.g., 12345">
                     </div>
                     <div class="mp-modal-field">
-                        <label>ASA Class</label>
+                        <label for="patientModalASA">ASA Class</label>
                         <select id="patientModalASA">
                             <option value="ASA I">ASA I - Healthy</option>
                             <option value="ASA II">ASA II - Mild systemic</option>
@@ -6358,7 +6358,7 @@
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="mp-modal-field">
-                        <label>Perio Status</label>
+                        <label for="patientModalPerio">Perio Status</label>
                         <select id="patientModalPerio">
                             <option value="healthy">Healthy</option>
                             <option value="gingivitis">Gingivitis</option>
@@ -6368,7 +6368,7 @@
                         </select>
                     </div>
                     <div class="mp-modal-field">
-                        <label>Patient Status</label>
+                        <label for="patientModalStatus">Patient Status</label>
                         <select id="patientModalStatus">
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
@@ -6436,18 +6436,18 @@
             <div class="mp-modal-body" style="display: grid; gap: 15px;">
                 <input type="hidden" id="appointmentModalId">
                 <div class="mp-modal-field">
-                    <label>Patient *</label>
+                    <label for="appointmentModalPatient">Patient *</label>
                     <select id="appointmentModalPatient" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
                         <option value="">Select patient...</option>
                     </select>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="mp-modal-field">
-                        <label>Date *</label>
+                        <label for="appointmentModalDate">Date *</label>
                         <input type="date" id="appointmentModalDate">
                     </div>
                     <div class="mp-modal-field">
-                        <label>Time *</label>
+                        <label for="appointmentModalTime">Time *</label>
                         <select id="appointmentModalTime">
                             <option value="08:00">8:00 AM</option>
                             <option value="08:30">8:30 AM</option>
@@ -6473,7 +6473,7 @@
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="mp-modal-field">
-                        <label>Duration</label>
+                        <label for="appointmentModalDuration">Duration</label>
                         <select id="appointmentModalDuration">
                             <option value="60">1 hour</option>
                             <option value="90">1.5 hours</option>
@@ -6484,16 +6484,16 @@
                         </select>
                     </div>
                     <div class="mp-modal-field">
-                        <label>Chair</label>
+                        <label for="appointmentModalChair">Chair</label>
                         <input type="text" id="appointmentModalChair" placeholder="e.g., 3A-12">
                     </div>
                 </div>
                 <div class="mp-modal-field">
-                    <label>Procedures Planned</label>
+                    <label for="appointmentModalProcedures">Procedures Planned</label>
                     <input type="text" id="appointmentModalProcedures" placeholder="e.g., MOD Composite #30, Prophy">
                 </div>
                 <div class="mp-modal-field">
-                    <label>Notes</label>
+                    <label for="appointmentModalNotes">Notes</label>
                     <input type="text" id="appointmentModalNotes" placeholder="Any special notes...">
                 </div>
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 5px;">
