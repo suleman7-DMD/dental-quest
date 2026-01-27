@@ -1342,6 +1342,156 @@
             margin-top: 20px;
         }
 
+        /* Checkpoint System Styles */
+        .checkpoint-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .checkpoint-btn {
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .checkpoint-btn.create { background: rgba(34, 197, 94, 0.2); color: #22c55e; border-color: #22c55e; }
+        .checkpoint-btn.restore { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-color: #3b82f6; }
+        .checkpoint-btn.force-upload { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: #f59e0b; }
+        .checkpoint-btn.force-pull { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; border-color: #8b5cf6; }
+
+        .checkpoint-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.2);
+        }
+
+        .checkpoint-btn:active {
+            transform: translateY(0);
+        }
+
+        .checkpoint-modal {
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .checkpoint-list {
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .checkpoint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .checkpoint-info {
+            flex: 1;
+        }
+
+        .checkpoint-name {
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .checkpoint-meta {
+            font-size: 0.8em;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .checkpoint-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .checkpoint-actions button {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            font-size: 0.75em;
+            cursor: pointer;
+        }
+
+        .checkpoint-actions .restore { background: #3b82f6; color: white; }
+        .checkpoint-actions .export { background: rgba(255,255,255,0.1); color: #e6edf3; }
+        .checkpoint-actions .delete { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+        .force-sync-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .force-sync-section h3 {
+            font-size: 0.9em;
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+
+        .force-sync-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .force-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .force-btn.upload { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .force-btn.download { background: rgba(139,92,246,0.2); color: #8b5cf6; }
+        .force-btn:hover { filter: brightness(1.2); }
+
+        .checkpoint-actions-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkpoint-actions-bar .action-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #e6edf3;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .checkpoint-actions-bar .action-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .checkpoint-controls {
+                gap: 4px;
+            }
+            .checkpoint-btn {
+                padding: 3px 8px;
+                font-size: 0.7em;
+            }
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -1966,11 +2116,17 @@
 
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;">
                 <div id="syncStatus" style="font-size: 0.8em; color: #b0b8c4; display: flex; align-items: center; gap: 8px;">
                     <span id="syncIcon">⏳</span>
                     <span id="syncText">Connecting...</span>
                     <button onclick="forceCloudSync()" style="padding: 3px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄</button>
+                </div>
+                <div class="checkpoint-controls">
+                    <button onclick="createCheckpoint()" class="checkpoint-btn create" title="Save a named checkpoint">💾 Checkpoint</button>
+                    <button onclick="showCheckpointManager()" class="checkpoint-btn restore" title="View and restore checkpoints">📂 Restore</button>
+                    <button onclick="forceUploadToCloud()" class="checkpoint-btn force-upload" title="Make this device's data the master">☁️⬆️ Upload</button>
+                    <button onclick="forcePullFromCloud()" class="checkpoint-btn force-pull" title="Overwrite local with cloud data">☁️⬇️ Pull</button>
                 </div>
             </div>
             <!-- View Toggle for Full View -->
@@ -3371,6 +3527,7 @@
         // ============================================
         let isInitialLoad = true;      // Block ALL saves until data loaded
         let hasLoadedFromCloud = false; // Track if we've checked Firebase
+        let pinValidated = false;      // Track if PIN has been validated (prevents race condition)
 
         // Check if state has real user data (not just defaults)
         function isEmptyState(data) {
@@ -8624,7 +8781,8 @@
             currentUser = { uid: hashedPin };
             userPath = 'users/' + hashedPin + '/stimulantCalculator';
             firebaseSyncEnabled = true;
-            
+            pinValidated = true;  // CRITICAL: Mark PIN as validated before any saves
+
             updateSyncStatus('syncing', 'Syncing...');
             
             // Load from Firebase
@@ -9060,6 +9218,326 @@
                 });
         }
 
+        // ============================================
+        // CHECKPOINT SYSTEM - MANUAL BACKUP/RESTORE
+        // ============================================
+
+        function createCheckpoint(name = null) {
+            const timestamp = new Date().toISOString();
+            const checkpointName = name || `Checkpoint ${new Date().toLocaleString()}`;
+
+            const checkpoint = {
+                name: checkpointName,
+                timestamp: timestamp,
+                state: JSON.parse(JSON.stringify(state)),
+                source: 'manual'
+            };
+
+            // Get existing checkpoints
+            let checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+
+            // Add new checkpoint at the beginning
+            checkpoints.unshift(checkpoint);
+
+            // Keep only last 10 checkpoints
+            if (checkpoints.length > 10) {
+                checkpoints = checkpoints.slice(0, 10);
+            }
+
+            localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints));
+            showToast('✅ Checkpoint created: ' + checkpointName);
+            return checkpoint;
+        }
+
+        function showCheckpointManager() {
+            const checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+
+            let checkpointListHTML = '';
+            if (checkpoints.length === 0) {
+                checkpointListHTML = '<p style="color: #888; text-align: center;">No checkpoints saved yet</p>';
+            } else {
+                checkpointListHTML = checkpoints.map((cp, index) => {
+                    const date = new Date(cp.timestamp);
+                    const meds = cp.state?.medications ? Object.keys(cp.state.medications).length : 0;
+                    const caffeine = cp.state?.caffeine ? Object.keys(cp.state.caffeine).length : 0;
+                    return `
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-info">
+                                <div class="checkpoint-name">${cp.name}</div>
+                                <div class="checkpoint-meta">
+                                    ${date.toLocaleDateString()} ${date.toLocaleTimeString()} ·
+                                    ${meds} meds · ${caffeine} caffeine
+                                </div>
+                            </div>
+                            <div class="checkpoint-actions">
+                                <button onclick="restoreCheckpoint(${index})" class="restore">Restore</button>
+                                <button onclick="exportCheckpoint(${index})" class="export">Export</button>
+                                <button onclick="deleteCheckpoint(${index})" class="delete">×</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'checkpoint-modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div class="modal-content checkpoint-modal" style="background: #1e293b; padding: 25px; border-radius: 16px; max-width: 500px; width: 90%; color: #e6edf3;">
+                    <h2 style="margin-bottom: 15px;">📦 Checkpoint Manager</h2>
+
+                    <div class="checkpoint-actions-bar">
+                        <button onclick="createCheckpoint(); document.getElementById('checkpoint-modal')?.remove(); showCheckpointManager();" class="action-btn">💾 Create Checkpoint</button>
+                        <button onclick="exportAllCheckpoints()" class="action-btn">📤 Export All</button>
+                        <label class="action-btn" style="cursor: pointer; text-align: center;">
+                            📥 Import
+                            <input type="file" accept=".json" onchange="importCheckpoint(event)" style="display: none;">
+                        </label>
+                    </div>
+
+                    <div class="checkpoint-list">
+                        ${checkpointListHTML}
+                    </div>
+
+                    <div class="force-sync-section">
+                        <h3>⚠️ Force Sync (Use with caution)</h3>
+                        <div class="force-sync-buttons">
+                            <button onclick="forceUploadToCloud()" class="force-btn upload">
+                                ⬆️ Force Upload (Local → Cloud)
+                            </button>
+                            <button onclick="forcePullFromCloud()" class="force-btn download">
+                                ⬇️ Force Pull (Cloud → Local)
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="document.getElementById('checkpoint-modal').remove()" style="width: 100%; margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: #e6edf3; cursor: pointer;">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function restoreCheckpoint(index) {
+            const checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) {
+                showToast('❌ Checkpoint not found');
+                return;
+            }
+
+            if (!confirm(`Restore checkpoint "${checkpoint.name}"?\n\nThis will replace your current data.`)) {
+                return;
+            }
+
+            // Create auto-backup before restore
+            createCheckpoint('Auto-backup before restore');
+
+            // Restore state
+            state = JSON.parse(JSON.stringify(checkpoint.state));
+            state._version = Date.now();
+            state._dataLoaded = true;
+
+            // Save to localStorage and Firebase
+            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+            saveToFirebase();
+
+            // Refresh UI
+            renderAll();
+
+            showToast('✅ Restored: ' + checkpoint.name);
+            document.getElementById('checkpoint-modal')?.remove();
+        }
+
+        function deleteCheckpoint(index) {
+            if (!confirm('Delete this checkpoint?')) return;
+
+            let checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+            checkpoints.splice(index, 1);
+            localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints));
+
+            showToast('🗑️ Checkpoint deleted');
+            document.getElementById('checkpoint-modal')?.remove();
+            showCheckpointManager();
+        }
+
+        function exportCheckpoint(index) {
+            const checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) {
+                showToast('❌ Checkpoint not found');
+                return;
+            }
+
+            const blob = new Blob([JSON.stringify(checkpoint, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `stimcalc-checkpoint-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📤 Checkpoint exported');
+        }
+
+        function exportAllCheckpoints() {
+            const checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+
+            if (checkpoints.length === 0) {
+                showToast('No checkpoints to export');
+                return;
+            }
+
+            const exportData = {
+                app: 'stimulant-elimination-calculator',
+                exportDate: new Date().toISOString(),
+                currentState: JSON.parse(JSON.stringify(state)),
+                checkpoints: checkpoints
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `stimcalc-full-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📤 Full backup exported');
+        }
+
+        function importCheckpoint(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // Check if it's a full backup or single checkpoint
+                    if (data.checkpoints && Array.isArray(data.checkpoints)) {
+                        // Full backup - import all checkpoints
+                        let existing = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+                        existing = [...data.checkpoints, ...existing].slice(0, 20);
+                        localStorage.setItem('stimCalcCheckpoints', JSON.stringify(existing));
+                        showToast(`📥 Imported ${data.checkpoints.length} checkpoints`);
+                    } else if (data.state) {
+                        // Single checkpoint
+                        let checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
+                        checkpoints.unshift(data);
+                        localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints.slice(0, 10)));
+                        showToast('📥 Checkpoint imported');
+                    } else {
+                        showToast('❌ Invalid checkpoint file');
+                        return;
+                    }
+
+                    document.getElementById('checkpoint-modal')?.remove();
+                    showCheckpointManager();
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showToast('❌ Failed to import: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function forceUploadToCloud() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Upload\n\nThis will OVERWRITE all cloud data with your local data.\n\nAre you sure?')) {
+                return;
+            }
+
+            // Create checkpoint first
+            createCheckpoint('Auto-backup before force upload');
+
+            updateSyncStatus('syncing', 'Uploading...');
+
+            state._version = Date.now();
+            state._lastModified = new Date().toISOString();
+
+            database.ref(userPath).set({
+                state: state,
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+            })
+            .then(() => {
+                safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+                updateSyncStatus('connected', 'Force uploaded ✓');
+                showToast('⬆️ Force uploaded to cloud');
+                document.getElementById('checkpoint-modal')?.remove();
+            })
+            .catch(err => {
+                console.error('Force upload failed:', err);
+                updateSyncStatus('error', 'Upload failed');
+                showToast('❌ Upload failed: ' + err.message);
+            });
+        }
+
+        function forcePullFromCloud() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?')) {
+                return;
+            }
+
+            // Create checkpoint first
+            createCheckpoint('Auto-backup before force pull');
+
+            updateSyncStatus('syncing', 'Pulling...');
+
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+
+                    if (!data || !data.state) {
+                        showToast('⚠️ No cloud data found');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+
+                    const firebaseState = data.state;
+
+                    // Full overwrite - no merging
+                    state = {
+                        ...getDefaultState(),
+                        ...firebaseState,
+                        _dataLoaded: true
+                    };
+
+                    // Migrate any arrays to objects
+                    state.medications = migrateArrayToObject(state.medications, 'med');
+                    state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+                    state.history = migrateArrayToObject(state.history, 'hist');
+
+                    safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+
+                    renderAll();
+                    updateSyncStatus('connected', 'Force pulled ✓');
+                    showToast('⬇️ Pulled from cloud');
+                    document.getElementById('checkpoint-modal')?.remove();
+                })
+                .catch(err => {
+                    console.error('Force pull failed:', err);
+                    updateSyncStatus('error', 'Pull failed');
+                    showToast('❌ Pull failed: ' + err.message);
+                });
+        }
+
         // Helper to apply remote state
         function applyRemoteState(firebaseState) {
             state = deepMerge(state, {
@@ -9188,6 +9666,12 @@
             // ============================================
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
+
+            // GUARD 0: Never save before PIN is validated
+            if (!pinValidated) {
+                console.warn('⚠️ BLOCKED: Save attempted before PIN validation');
+                return false;
+            }
 
             // GUARD A: Never save during initial load
             if (isInitialLoad) {
