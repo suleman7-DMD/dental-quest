@@ -5774,7 +5774,7 @@
 
             // Update workout recommendation
             const workout = getWorkoutRecommendation();
-            document.getElementById('workoutTitle').textContent = `Gym streak: ${state.gamification.streak || 0} days`;
+            document.getElementById('workoutTitle').textContent = `Gym streak: ${workout.gymStreak || 0} days`;
             document.getElementById('workoutDetail').textContent = workout.info;
             document.getElementById('workoutRec').textContent = '→ ' + workout.recommendation;
             document.getElementById('workoutRec').style.color = workout.color;
@@ -6900,38 +6900,59 @@
 
         function getWorkoutRecommendation() {
             const mode = state.today.mode || 'GREEN';
-            const streak = state.gamification?.streak || 0;
             const academic = state.ecosystemContext?.academic;
+            const todayStr = getLocalDateString();
 
-            // Find last workout
+            // Find last workout from all sources
             let lastWorkoutDate = null;
             let lastWorkoutType = null;
             let daysSinceWorkout = 99;
-            const todayStr = getLocalDateString();
+            let gymStreak = 0;
 
-            // Check today first - verify date matches to avoid stale data
-            const todayWorkouts = (state.today.workouts || []).filter(w =>
-                !w.date || w.date === todayStr  // Include workouts without date (legacy) or matching today
+            // First check today - multiple ways to detect workout
+            const todayWorkouts = state.today.workouts || [];
+            const didWorkoutToday = (
+                state.today.workedOut === true ||
+                todayWorkouts.length > 0 ||
+                (state.today.date === todayStr && state.today.activeCalories > 0 && todayWorkouts.length > 0)
             );
-            const didWorkoutToday = state.today.workedOut && state.today.date === todayStr && todayWorkouts.length > 0;
 
-            if (didWorkoutToday) {
+            if (didWorkoutToday && todayWorkouts.length > 0) {
                 daysSinceWorkout = 0;
-                lastWorkoutType = todayWorkouts[0]?.type || 'Workout';
-                lastWorkoutDate = 'Today';
-            } else {
-                // Check daily logs
-                const sortedDates = Object.keys(state.dailyLogs).sort().reverse();
-                for (const date of sortedDates) {
-                    const log = state.dailyLogs[date];
-                    if (log.workedOut) {
+                lastWorkoutType = todayWorkouts[todayWorkouts.length - 1]?.type || 'Workout';
+                lastWorkoutDate = todayStr;
+                gymStreak = 1;
+            } else if (state.today.workedOut && state.today.date === todayStr) {
+                // workedOut is true but no workouts array - still count it
+                daysSinceWorkout = 0;
+                lastWorkoutType = 'Workout';
+                lastWorkoutDate = todayStr;
+                gymStreak = 1;
+            }
+
+            // Check daily logs for historical workouts
+            const sortedDates = Object.keys(state.dailyLogs).sort().reverse();
+            for (const date of sortedDates) {
+                if (date === todayStr) continue; // Already checked today
+                const log = state.dailyLogs[date];
+                if (log && log.workedOut) {
+                    if (lastWorkoutDate === null) {
                         lastWorkoutDate = date;
                         lastWorkoutType = log.workouts?.[0]?.type || 'Workout';
                         const logDate = parseLocalDate(date);
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         daysSinceWorkout = Math.round((today - logDate) / (1000 * 60 * 60 * 24));
-                        break;
+                    }
+
+                    // Count gym streak (consecutive days)
+                    const expectedDate = new Date();
+                    expectedDate.setDate(expectedDate.getDate() - gymStreak);
+                    const expectedStr = getLocalDateString(expectedDate);
+                    if (date === expectedStr) {
+                        gymStreak++;
+                    } else {
+                        break; // Streak broken
                     }
                 }
             }
@@ -6981,7 +7002,7 @@
                 recommendation += ' (exam soon — keep it light)';
             }
 
-            return { info, recommendation, color };
+            return { info, recommendation, color, gymStreak, daysSinceWorkout };
         }
 
         function showDetailsView() {
@@ -9657,8 +9678,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         // Helper to merge frequentFoods arrays - preserves local additions while updating usage counts
         function mergeFrequentFoods(local, remote) {
-            if (!remote || !Array.isArray(remote)) return local || [];
-            if (!local || !Array.isArray(local)) return remote;
+            // IMPORTANT: Empty arrays are truthy - check length too!
+            const hasLocal = local && Array.isArray(local) && local.length > 0;
+            const hasRemote = remote && Array.isArray(remote) && remote.length > 0;
+
+            if (!hasRemote && !hasLocal) {
+                // Both empty - return defaults from state initialization
+                console.warn('⚠️ Both local and remote frequentFoods empty - using defaults');
+                return getDefaultFrequentFoods();
+            }
+            if (!hasRemote) return local;
+            if (!hasLocal) return remote;
 
             // Create a map of remote foods by ID
             const remoteMap = new Map();
@@ -9704,6 +9734,38 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             return merged;
         }
 
+        // Default frequent foods - used when both local and Firebase are empty
+        function getDefaultFrequentFoods() {
+            return [
+                { id: 'ff_001', name: 'Just Bare Chicken (6oz)', calories: 340, protein: 38, carbs: 18, uses: 0 },
+                { id: 'ff_002', name: 'Just Bare Chicken (3oz)', calories: 170, protein: 19, carbs: 9, uses: 0 },
+                { id: 'ff_003', name: 'Vital Farms Egg (1)', calories: 70, protein: 6, carbs: 0, uses: 0 },
+                { id: 'ff_004', name: 'Vital Farms Eggs (2)', calories: 140, protein: 12, carbs: 0, uses: 0 },
+                { id: 'ff_005', name: '365 Salmon Patty', calories: 170, protein: 17, carbs: 2, uses: 0 },
+                { id: 'ff_006', name: 'Orgain Shake 30g', calories: 160, protein: 30, carbs: 3, uses: 0 },
+                { id: 'ff_007', name: 'Orgain Plant 20g', calories: 150, protein: 20, carbs: 15, uses: 0 },
+                { id: 'ff_008', name: 'Oikos Greek Yogurt', calories: 90, protein: 15, carbs: 4, uses: 0 },
+                { id: 'ff_009', name: 'Chipotle 2x Chicken Bowl', calories: 1035, protein: 81, carbs: 85, uses: 0 },
+                { id: 'ff_010', name: 'Chipotle + 1 Tortilla', calories: 1355, protein: 89, carbs: 130, uses: 0 },
+                { id: 'ff_011', name: "Dave's 2 Sliders + Mac", calories: 1200, protein: 55, carbs: 95, uses: 0 },
+                { id: 'ff_012', name: '365 Margherita Pizza', calories: 880, protein: 32, carbs: 96, uses: 0 },
+                { id: 'ff_013', name: '365 Wheat Bread (1 slice)', calories: 90, protein: 4, carbs: 17, uses: 0 },
+                { id: 'ff_014', name: '365 Wheat Bread (2 slices)', calories: 180, protein: 8, carbs: 34, uses: 0 },
+                { id: 'ff_015', name: 'Eggs + Toast (2+2)', calories: 320, protein: 20, carbs: 34, uses: 0 },
+                { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, carbs: 20, uses: 0 },
+                { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, carbs: 30, uses: 0 },
+                { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, carbs: 38, uses: 0 },
+                { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, carbs: 42, uses: 0 },
+                { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, carbs: 3, uses: 0 },
+                { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 },
+                { id: 'ff_022', name: '🧠 Gatorade + Banana', calories: 230, protein: 1, carbs: 58, uses: 0, clinicFuel: true },
+                { id: 'ff_023', name: '🧠 Clif Bar', calories: 250, protein: 10, carbs: 44, uses: 0, clinicFuel: true },
+                { id: 'ff_024', name: '🧠 Apple + PB (2 tbsp)', calories: 285, protein: 7, carbs: 36, uses: 0, clinicFuel: true },
+                { id: 'ff_025', name: '🧠 Orange Juice (12oz)', calories: 165, protein: 2, carbs: 39, uses: 0, clinicFuel: true },
+                { id: 'ff_026', name: '🧠 Honey Stinger Waffle', calories: 160, protein: 1, carbs: 29, uses: 0, clinicFuel: true }
+            ];
+        }
+
         function saveState() {
             // ALWAYS save to localStorage immediately (no throttle - this was causing data loss)
             localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
@@ -9734,12 +9796,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (saved) {
                 try {
                     const loaded = JSON.parse(saved);
+                    // FIX: Empty arrays are truthy - check length!
+                    const loadedFoods = loaded.frequentFoods;
+                    const hasLoadedFoods = loadedFoods && Array.isArray(loadedFoods) && loadedFoods.length > 0;
+
                     state = {
                         ...state,
                         ...loaded,
                         profile: { ...state.profile, ...(loaded.profile || {}) },
                         today: { ...state.today, ...(loaded.today || {}) },
-                        frequentFoods: loaded.frequentFoods || state.frequentFoods,
+                        frequentFoods: hasLoadedFoods ? loadedFoods : state.frequentFoods,
                         weighIns: loaded.weighIns || [],
                         bodyCompHistory: loaded.bodyCompHistory || [],
                         dailyLogs: loaded.dailyLogs || {},
