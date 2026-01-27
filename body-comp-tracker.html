@@ -5147,6 +5147,19 @@
 
                 <button class="submit-btn" onclick="saveSettings()">Save Settings</button>
 
+                <div class="settings-section" style="margin-top: 20px;">
+                    <div class="settings-section-title">Data Management</div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="exportData()" style="flex: 1; padding: 10px; background: var(--accent-green); color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                            📤 Export Data
+                        </button>
+                        <label style="flex: 1; padding: 10px; background: var(--accent-blue); color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; text-align: center;">
+                            📥 Import Data
+                            <input type="file" accept=".json" onchange="importData(this.files[0]); this.value='';" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+
                 <div style="margin-top: 20px; text-align: center;">
                     <button onclick="clearAllData()" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 0.85em;">
                         Clear All Data
@@ -5380,7 +5393,11 @@
                 deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '7 days hitting deficit target', icon: '📉', xp: 250, unlocked: false },
                 early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast before 9am 5 times', icon: '🌅', xp: 150, unlocked: false },
                 perfect_week: { id: 'perfect_week', name: 'Perfect Week', desc: 'Hit all targets for 7 days', icon: '✨', xp: 400, unlocked: false }
-            }
+            },
+
+            // Version control for conflict detection
+            _version: Date.now(),
+            _lastModified: new Date().toISOString()
         };
 
         // ============================================
@@ -5463,6 +5480,122 @@
             }
         };
         setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
+
+        // ============================================
+        // CONNECTION MONITOR
+        // ============================================
+
+        let isOnline = navigator.onLine;
+        let pendingSync = false;
+
+        function setupConnectionMonitor() {
+            if (!database) return;
+
+            const connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', (snap) => {
+                const connected = snap.val() === true;
+                if (connected && !isOnline) {
+                    isOnline = true;
+                    if (pendingSync) {
+                        syncPendingChanges();
+                    }
+                    updateSyncStatus('connected', 'Online');
+                } else if (!connected && isOnline) {
+                    isOnline = false;
+                    updateSyncStatus('offline', 'Offline');
+                }
+                isOnline = connected;
+            });
+        }
+
+        window.addEventListener('online', () => {
+            isOnline = true;
+            showToast('📶 Back online - syncing...');
+            syncPendingChanges();
+        });
+
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            updateSyncStatus('offline', 'Offline - changes saved locally');
+        });
+
+        function syncPendingChanges() {
+            if (!isOnline) {
+                pendingSync = true;
+                return;
+            }
+            pendingSync = false;
+            saveToFirebase();
+        }
+
+        // ============================================
+        // EXPORT / IMPORT FUNCTIONS
+        // ============================================
+
+        function exportData() {
+            const exportData = {
+                exportedAt: new Date().toISOString(),
+                version: state._version,
+                state: state
+            };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `body-comp-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('📤 Data exported successfully');
+        }
+
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    const importedState = imported.state || imported;
+
+                    // Create backup before import
+                    BackupManager.createBackup();
+
+                    // Migrate and load
+                    state = {
+                        ...state,
+                        ...importedState,
+                        profile: { ...state.profile, ...(importedState.profile || {}) },
+                        today: {
+                            ...state.today,
+                            ...(importedState.today || {}),
+                            meals: migrateArrayToObject(importedState.today?.meals, 'meal'),
+                            workouts: migrateArrayToObject(importedState.today?.workouts, 'workout')
+                        },
+                        frequentFoods: migrateArrayToObject(importedState.frequentFoods, 'ff'),
+                        weighIns: migrateArrayToObject(importedState.weighIns, 'weighin'),
+                        bodyCompHistory: migrateArrayToObject(importedState.bodyCompHistory, 'bodycomp'),
+                        dailyLogs: importedState.dailyLogs || {},
+                        refeedTracker: { ...state.refeedTracker, ...(importedState.refeedTracker || {}) },
+                        gamification: {
+                            ...state.gamification,
+                            ...(importedState.gamification || {}),
+                            badges: migrateArrayToObject(importedState.gamification?.badges, 'badge')
+                        },
+                        achievements: { ...state.achievements, ...(importedState.achievements || {}) },
+                        _version: Date.now(),
+                        _lastModified: new Date().toISOString()
+                    };
+
+                    saveStateImmediate();
+                    renderSimpleView();
+                    showToast('📥 Data imported successfully');
+                } catch (err) {
+                    console.error('Import failed:', err);
+                    alert('Import failed: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
 
         // ============================================
         // FIREBASE CONFIGURATION (Same as other apps)
@@ -9246,8 +9379,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const totals = getTodayTotals();
 
             log.push('LOGGED TODAY:');
-            log.push(`  • Meals: ${state.today?.meals?.length ?? 0}`);
-            if (state.today?.meals?.length > 0) {
+            log.push(`  • Meals: ${getCount(state.today?.meals)}`);
+            if (getCount(state.today?.meals) > 0) {
                 getValues(state.today.meals).forEach((m, i) => {
                     log.push(`    ${i + 1}. ${m.time || '??:??'} - ${m.name}: ${m.calories} cal, ${m.protein}g P, ${m.carbs || 0}g C`);
                 });
@@ -9256,8 +9389,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  • Total protein: ${totals.protein}g / ${targets.protein}g`);
             log.push(`  • Total carbs: ${totals.carbs}g / ${targets.carbs || 150}g`);
             log.push('');
-            log.push(`  • Workouts: ${state.today?.workouts?.length ?? 0}`);
-            if (state.today?.workouts?.length > 0) {
+            log.push(`  • Workouts: ${getCount(state.today?.workouts)}`);
+            if (getCount(state.today?.workouts) > 0) {
                 getValues(state.today.workouts).forEach((w, i) => {
                     log.push(`    ${i + 1}. ${w.time || '??:??'} - ${w.type}: ${w.duration}min, +${w.calories}cal (${w.date || 'today'})`);
                 });
@@ -9906,6 +10039,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         function saveState() {
+            // Update version control on every save
+            state._version = Date.now();
+            state._lastModified = new Date().toISOString();
+
             // ALWAYS save to localStorage immediately (no throttle - this was causing data loss)
             localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
@@ -9920,6 +10057,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         function saveStateImmediate() {
+            // Update version control on every save
+            state._version = Date.now();
+            state._lastModified = new Date().toISOString();
+
             localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
             if (firebaseSaveTimeout) {
@@ -10223,6 +10364,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     const firebaseState = data.state;
 
+                    // Version check: skip if local is newer (prevent overwriting local edits)
+                    const localVersion = state._version || 0;
+                    const cloudVersion = firebaseState._version || 0;
+
+                    if (localVersion > cloudVersion) {
+                        console.log('Realtime sync: local version newer, skipping merge');
+                        return;
+                    }
+
                     // Merge frequentFoods - preserve local additions
                     const mergedFrequentFoods = mergeFrequentFoods(
                         state.frequentFoods,
@@ -10289,6 +10439,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     }
 
                     const firebaseState = data.state;
+
+                    // Version check: if local is newer, push to cloud instead of overwriting
+                    const localVersion = state._version || 0;
+                    const cloudVersion = firebaseState._version || 0;
+
+                    if (localVersion > cloudVersion) {
+                        // Local is newer - push to cloud
+                        console.log('Local version newer, pushing to cloud');
+                        saveToFirebase();
+                        updateSyncStatus('connected', 'Pushed local ✓');
+                        return;
+                    }
 
                     // Merge frequentFoods - preserve local additions
                     const mergedFrequentFoods = mergeFrequentFoods(
@@ -10429,6 +10591,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             currentUser = { uid: hashedPin };
             userPath = 'users/' + hashedPin + '/bodyCompTracker';
             firebaseSyncEnabled = true;
+
+            // Setup connection monitor for offline detection
+            setupConnectionMonitor();
 
             updateSyncStatus('syncing', 'Syncing...');
 
