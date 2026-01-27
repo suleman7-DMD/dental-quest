@@ -4255,10 +4255,16 @@
             <p>Level up your life, one task at a time</p>
             
             <!-- Sync Status Indicator -->
-            <div id="syncStatusBar" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; padding: 8px 16px; background: rgba(0,0,0,0.2); border-radius: 20px; font-size: 0.85em;">
-                <span id="syncStatusIcon">⏳</span>
-                <span id="syncStatusText">Connecting...</span>
-                <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync Now</button>
+            <div id="syncStatusBar" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 10px 0; padding: 8px 16px; background: rgba(0,0,0,0.2); border-radius: 20px; font-size: 0.85em;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="syncStatusIcon">⏳</span>
+                    <span id="syncStatusText">Connecting...</span>
+                    <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync Now</button>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+                    <button onclick="forceUploadToCloud()" style="padding: 3px 10px; background: rgba(245,158,11,0.3); border: 1px solid #f59e0b; border-radius: 10px; color: #fcd34d; font-size: 0.75em; cursor: pointer;" title="Overwrite cloud with local data">☁️⬆️ Force Upload</button>
+                    <button onclick="forcePullFromCloud()" style="padding: 3px 10px; background: rgba(139,92,246,0.3); border: 1px solid #8b5cf6; border-radius: 10px; color: #c4b5fd; font-size: 0.75em; cursor: pointer;" title="Overwrite local with cloud data">☁️⬇️ Force Pull</button>
+                </div>
             </div>
             
             <div class="data-controls">
@@ -5174,6 +5180,7 @@
         let currentUser = null;
         let initialLoadComplete = false; // CRITICAL: Prevents saving empty data before Firebase loads
         let hasLoadedFromCloud = false;  // Track if we've checked Firebase
+        let pinValidated = false;        // Track if PIN has been validated (prevents race condition)
         let userPassword = null; // Simple password for privacy
         let saveDebounceTimer = null; // Debounce timer for Firebase saves
         let pendingSaveData = null; // Store pending save data
@@ -6107,6 +6114,12 @@
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
 
+            // GUARD 0: Never save before PIN is validated
+            if (firebaseInitialized && !pinValidated) {
+                console.warn('⚠️ BLOCKED: Save attempted before PIN validation');
+                return;
+            }
+
             // GUARD A: Don't save to Firebase until initial load completes
             // This prevents empty data from overwriting Firebase when a new session starts
             if (firebaseInitialized && !initialLoadComplete) {
@@ -6725,8 +6738,8 @@
                     uid: hashedPin
                 };
                 firebaseInitialized = true;
-                
-                
+                pinValidated = true;  // CRITICAL: Mark PIN as validated before any saves
+
                 // Load data from Firebase
                 loadDataFromFirebase();
                     
@@ -10146,7 +10159,92 @@
                 renderFocusMode();
             }
         }
-        
+
+        // Force upload local data to cloud (overwrites cloud)
+        function forceUploadToCloud() {
+            if (!firebaseInitialized || !currentUser || !database) {
+                showToast('❌ Not connected to cloud', '⚠️');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Upload\n\nThis will OVERWRITE all cloud data with your local data.\n\nAre you sure?')) {
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Uploading...');
+
+            const saveTimestamp = Date.now();
+            lastKnownSaveTime = saveTimestamp;
+
+            const data = {
+                tasks: tasks || {},
+                stats,
+                medications,
+                calendarNotes: calendarNotes || {},
+                notebook,
+                financials,
+                pillAssignments,
+                calendarEvents: calendarEvents || {},
+                dailyPlanner,
+                focusModeData: {
+                    oneThingId: focusModeData.oneThingId,
+                    microSteps: focusModeData.microSteps,
+                    todaysTasks: focusModeData.todaysTasks,
+                    lastPlanningDate: focusModeData.lastPlanningDate
+                },
+                lastCriticalEODReset,
+                lastSaved: saveTimestamp
+            };
+
+            database.ref('users/' + currentUser.uid + '/appData').set(data)
+                .then(() => {
+                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                    updateSyncStatus('connected', 'Force uploaded ✓');
+                    showToast('⬆️ Force uploaded to cloud', '☁️');
+                })
+                .catch(err => {
+                    console.error('Force upload failed:', err);
+                    updateSyncStatus('error', 'Upload failed');
+                    showToast('❌ Upload failed: ' + err.message, '⚠️');
+                });
+        }
+
+        // Force pull cloud data to local (overwrites local)
+        function forcePullFromCloud() {
+            if (!firebaseInitialized || !currentUser || !database) {
+                showToast('❌ Not connected to cloud', '⚠️');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?')) {
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Pulling...');
+
+            database.ref('users/' + currentUser.uid + '/appData').once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+
+                    if (!data) {
+                        showToast('⚠️ No cloud data found', '☁️');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+
+                    // Full overwrite - apply all remote data
+                    applyRemoteData(data);
+
+                    updateSyncStatus('connected', 'Force pulled ✓');
+                    showToast('⬇️ Pulled from cloud', '☁️');
+                })
+                .catch(err => {
+                    console.error('Force pull failed:', err);
+                    updateSyncStatus('error', 'Pull failed');
+                    showToast('❌ Pull failed: ' + err.message, '⚠️');
+                });
+        }
+
         // Debug function - call from browser console: debugSyncStatus()
         window.debugSyncStatus = function() {
             const pin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
