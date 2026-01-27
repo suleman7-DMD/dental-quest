@@ -4589,6 +4589,17 @@
                 </div>
             </div>
 
+            <!-- Workouts Section (v35) -->
+            <div class="meals-section" id="workoutsSection">
+                <div class="section-header">
+                    <span class="section-title">🏋️ Workouts</span>
+                    <button class="add-btn" onclick="openWorkoutModal()">+ Log Workout</button>
+                </div>
+                <div class="meals-list" id="workoutsList">
+                    <div class="empty-state">No workouts logged today.</div>
+                </div>
+            </div>
+
             <!-- End-of-Day Micronutrient Tracking -->
             <div class="micro-toggles" id="eodMicroToggles">
                 <div class="micro-toggle-header">
@@ -6106,7 +6117,13 @@
 
                     // Try stimulant calc sleep history first
                     if (stimData?.sleepHistory?.[date]) {
-                        hours = stimData.sleepHistory[date].hours || stimData.sleepHistory[date];
+                        // Field is 'hoursSlept' not 'hours' in stimulant calculator
+                        const entry = stimData.sleepHistory[date];
+                        hours = typeof entry === 'object' ? entry.hoursSlept : entry;
+                        // Validate - ignore placeholder values (< 0.5h is invalid)
+                        if (hours !== null && hours !== undefined && (isNaN(hours) || hours < 0.5)) {
+                            hours = null;
+                        }
                     }
                     // Fall back to body comp daily logs
                     else if (state.dailyLogs?.[date]?.sleepHours) {
@@ -6825,11 +6842,17 @@
             let lastWorkoutDate = null;
             let lastWorkoutType = null;
             let daysSinceWorkout = 99;
+            const todayStr = getLocalDateString();
 
-            // Check today first
-            if (state.today.workedOut) {
+            // Check today first - verify date matches to avoid stale data
+            const todayWorkouts = (state.today.workouts || []).filter(w =>
+                !w.date || w.date === todayStr  // Include workouts without date (legacy) or matching today
+            );
+            const didWorkoutToday = state.today.workedOut && state.today.date === todayStr && todayWorkouts.length > 0;
+
+            if (didWorkoutToday) {
                 daysSinceWorkout = 0;
-                lastWorkoutType = state.today.workouts?.[0]?.type || 'Workout';
+                lastWorkoutType = todayWorkouts[0]?.type || 'Workout';
                 lastWorkoutDate = 'Today';
             } else {
                 // Check daily logs
@@ -6901,6 +6924,7 @@
             document.getElementById('dashboardScreen').classList.add('active');
             renderDashboard();
             renderMealsList();
+            renderWorkoutsList();
         }
 
         function showSimpleView() {
@@ -6934,6 +6958,124 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // ============================================
+        // WORKOUT LIST RENDERING (v35)
+        // ============================================
+
+        function renderWorkoutsList() {
+            const workoutsList = document.getElementById('workoutsList');
+            if (!workoutsList) return;
+
+            const workouts = state.today.workouts || [];
+            const todayStr = getLocalDateString();
+
+            // Filter to only today's workouts (in case of stale data)
+            const todayWorkouts = workouts.filter(w => !w.date || w.date === todayStr);
+
+            if (todayWorkouts.length === 0) {
+                workoutsList.innerHTML = '<div class="no-meals">No workouts logged today.</div>';
+                return;
+            }
+
+            // Use original index in state.today.workouts for edit/delete
+            workoutsList.innerHTML = todayWorkouts.map((workout) => {
+                const originalIndex = workouts.indexOf(workout);
+                return `
+                <div class="meal-item">
+                    <div class="meal-info">
+                        <div class="meal-name">${escapeHtml(workout.type)}</div>
+                        <div class="meal-time">${escapeHtml(workout.time) || ''}</div>
+                    </div>
+                    <div class="meal-macros">
+                        <div class="meal-calories">${workout.duration} min</div>
+                        <div class="meal-protein">+${workout.calories} cal ceiling</div>
+                    </div>
+                    <div class="meal-actions">
+                        <button class="meal-action-btn" onclick="editWorkout(${originalIndex})" title="Edit">✏️</button>
+                        <button class="meal-action-btn delete" onclick="deleteWorkout(${originalIndex})" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        let editingWorkoutIndex = null;
+
+        function editWorkout(index) {
+            const workout = state.today.workouts[index];
+            if (!workout) return;
+
+            // Show a prompt dialog for editing (simple approach)
+            const newType = prompt('Workout type:', workout.type);
+            if (newType === null) return; // Cancelled
+
+            const newDuration = prompt('Duration (minutes):', workout.duration);
+            if (newDuration === null) return;
+
+            const newCalories = prompt('Calories burned:', workout.calories);
+            if (newCalories === null) return;
+
+            // Calculate the difference for active calories adjustment
+            const oldCalories = workout.calories;
+            const calDiff = (parseInt(newCalories) || 0) - oldCalories;
+
+            // Update the workout
+            workout.type = newType || workout.type;
+            workout.duration = parseInt(newDuration) || workout.duration;
+            workout.calories = parseInt(newCalories) || workout.calories;
+
+            // Adjust active calories
+            state.today.activeCalories = (state.today.activeCalories || 0) + calDiff;
+
+            // Recalculate targets if calories changed
+            if (calDiff !== 0) {
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+            }
+
+            saveState();
+            saveDayLog();
+            renderWorkoutsList();
+            renderDashboard();
+            showToast('Workout updated');
+        }
+
+        function deleteWorkout(index) {
+            if (!confirm('Delete this workout?')) return;
+
+            const workout = state.today.workouts[index];
+            if (!workout) return;
+
+            // Subtract calories from active calories
+            state.today.activeCalories = (state.today.activeCalories || 0) - workout.calories;
+            if (state.today.activeCalories < 0) state.today.activeCalories = 0;
+
+            // Remove workout
+            state.today.workouts.splice(index, 1);
+
+            // Update workedOut flag
+            state.today.workedOut = state.today.workouts.length > 0;
+
+            // Recalculate targets
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                state.today.activeCalories
+            );
+            state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+            saveState();
+            saveDayLog();
+            renderWorkoutsList();
+            renderDashboard();
+            showToast('Workout deleted');
         }
 
         function renderFrequentFoods() {
@@ -7274,25 +7416,25 @@
             const food = state.frequentFoods.find(f => f.id === foodId);
             if (!food) return;
 
-            // Add meal
+            // Add meal with unique ID
             const meal = {
+                id: 'meal_' + Date.now(),
                 name: food.name,
                 calories: food.calories,
                 protein: food.protein,
                 carbs: food.carbs || 0,
+                fat: food.fat || 0,
                 time: new Date().toTimeString().slice(0, 5)
             };
 
             if (!state.today.meals) state.today.meals = [];
             state.today.meals.push(meal);
 
-            // Increment usage
+            // Increment usage counter for frequent foods sorting
             food.uses = (food.uses || 0) + 1;
 
-            // Update totals
-            state.today.totalCalories += meal.calories;
-            state.today.totalProtein += meal.protein;
-            state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+            // Note: totals are calculated via getTodayTotals() from meals array
+            // No need to track separate totalCalories/totalProtein fields
 
             saveState();
             closeQuickMealModal();
@@ -7307,21 +7449,21 @@
             const originalMeal = state.today.meals[mealIndex];
             if (!originalMeal) return;
 
-            // Create copy with new time
+            // Create copy with new ID and time
             const meal = {
+                id: 'meal_' + Date.now(),
                 name: originalMeal.name,
                 calories: originalMeal.calories,
                 protein: originalMeal.protein,
                 carbs: originalMeal.carbs || 0,
+                fat: originalMeal.fat || 0,
                 time: new Date().toTimeString().slice(0, 5)
             };
 
             state.today.meals.push(meal);
 
-            // Update totals
-            state.today.totalCalories += meal.calories;
-            state.today.totalProtein += meal.protein;
-            state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+            // Note: totals are calculated via getTodayTotals() from meals array
+            // No need to track separate totalCalories/totalProtein fields
 
             saveState();
             closeQuickMealModal();
@@ -7351,6 +7493,7 @@
                     const parts = line.split('|');
                     if (parts.length >= 4) {
                         const meal = {
+                            id: 'meal_' + Date.now() + '_' + addedCount,
                             name: parts[1] || 'Unknown',
                             calories: parseInt(parts[2]) || 0,
                             protein: parseInt(parts[3]) || 0,
@@ -7362,9 +7505,8 @@
                         if (!state.today.meals) state.today.meals = [];
                         state.today.meals.push(meal);
 
-                        state.today.totalCalories += meal.calories;
-                        state.today.totalProtein += meal.protein;
-                        state.today.totalCarbs = (state.today.totalCarbs || 0) + meal.carbs;
+                        // Note: totals are calculated via getTodayTotals() from meals array
+                        // No need to track separate totalCalories/totalProtein fields
 
                         addedCount++;
                     }
@@ -7449,10 +7591,12 @@
             };
 
             const workout = {
+                id: 'workout_' + Date.now(),
                 type: type,
                 duration: defaults[type]?.duration || 30,
                 calories: defaults[type]?.calories || 200,
-                time: time
+                time: time,
+                date: getLocalDateString()  // Store local date for proper day tracking
             };
 
             // Add to today's workouts
@@ -7473,6 +7617,11 @@
             state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
 
             saveState();
+
+            // Save to daily logs and update streak immediately
+            saveDayLog();
+            updateStreak();
+
             closeWorkoutModal();
             renderSimpleView();
 
@@ -7493,10 +7642,12 @@
                 if (line.startsWith('WORKOUT|')) {
                     const parts = line.split('|');
                     const workout = {
+                        id: 'workout_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                         type: parts[1] || 'Workout',
                         duration: parseInt(parts[2]) || 30,
                         calories: parseInt(parts[3]) || 200,
-                        time: parts[4] || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
+                        time: parts[4] || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`,
+                        date: getLocalDateString()  // Store local date for proper day tracking
                     };
 
                     if (!state.today.workouts) state.today.workouts = [];
@@ -7519,6 +7670,11 @@
                 state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
 
                 saveState();
+
+                // Save to daily logs and update streak immediately
+                saveDayLog();
+                updateStreak();
+
                 closeWorkoutModal();
                 renderSimpleView();
                 showToast(`Workout logged! +${totalCalories} cal ceiling`);
@@ -9276,7 +9432,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function saveSettings() {
             state.profile.currentWeight_lbs = parseFloat(document.getElementById('settingsWeight').value) || 190;
-            state.profile.height_cm = parseInt(document.getElementById('settingsHeight').value) || 178;
+            state.profile.height_cm = parseInt(document.getElementById('settingsHeight').value) || 174;
             state.profile.age = parseInt(document.getElementById('settingsAge').value) || 30;
             state.profile.goalWeight_lbs = parseFloat(document.getElementById('settingsGoalWeight').value) || 170;
             state.profile.tdee_base = parseInt(document.getElementById('settingsTDEE').value) || 2500;
@@ -9321,15 +9477,60 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // STORAGE (Local + Firebase)
         // ============================================
 
-        function saveState() {
-            // Save to localStorage immediately
-            const now = Date.now();
-            if (now - lastLocalSave > 500) {
-                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
-                lastLocalSave = now;
-            }
+        // Helper to merge frequentFoods arrays - preserves local additions while updating usage counts
+        function mergeFrequentFoods(local, remote) {
+            if (!remote || !Array.isArray(remote)) return local || [];
+            if (!local || !Array.isArray(local)) return remote;
 
-            // Debounce Firebase saves
+            // Create a map of remote foods by ID
+            const remoteMap = new Map();
+            remote.forEach(food => {
+                if (food && food.id) remoteMap.set(food.id, food);
+            });
+
+            // Create a map of local foods by ID
+            const localMap = new Map();
+            local.forEach(food => {
+                if (food && food.id) localMap.set(food.id, food);
+            });
+
+            // Merge: keep all local foods, update uses from remote if higher
+            const merged = [];
+            const seenIds = new Set();
+
+            // First, process all local foods
+            local.forEach(food => {
+                if (!food || !food.id) return;
+                const remoteFood = remoteMap.get(food.id);
+                if (remoteFood) {
+                    // Use the higher usage count
+                    merged.push({
+                        ...food,
+                        ...remoteFood,
+                        uses: Math.max(food.uses || 0, remoteFood.uses || 0)
+                    });
+                } else {
+                    // Local-only food (newly added)
+                    merged.push(food);
+                }
+                seenIds.add(food.id);
+            });
+
+            // Then add any remote foods that weren't in local (from another device)
+            remote.forEach(food => {
+                if (food && food.id && !seenIds.has(food.id)) {
+                    merged.push(food);
+                }
+            });
+
+            return merged;
+        }
+
+        function saveState() {
+            // ALWAYS save to localStorage immediately (no throttle - this was causing data loss)
+            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+            // Debounce Firebase saves (2 seconds to batch rapid changes)
             if (firebaseSaveTimeout) {
                 clearTimeout(firebaseSaveTimeout);
             }
@@ -9440,8 +9641,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const saveTime = new Date().toISOString();
             lastKnownTimestamp = saveTime;
 
+            // Create a copy of state WITHOUT ecosystemContext (that's read-only from other apps)
+            const stateToSave = {
+                profile: state.profile,
+                today: state.today,
+                frequentFoods: state.frequentFoods,
+                weighIns: state.weighIns,
+                bodyCompHistory: state.bodyCompHistory,
+                dailyLogs: state.dailyLogs,
+                refeedTracker: state.refeedTracker,
+                gamification: state.gamification,
+                achievements: state.achievements
+                // NOTE: ecosystemContext is NOT saved - it's pulled from other apps
+            };
+
             database.ref(userPath).set({
-                state: state,
+                state: stateToSave,
                 lastUpdated: saveTime
             })
             .then(() => {
@@ -9449,6 +9664,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             })
             .catch(error => {
                 console.error('Firebase save error:', error);
+                updateSyncStatus('error', 'Save failed');
             });
         }
 
@@ -9468,12 +9684,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         // Preserve ecosystemContext (local-only, not saved to Firebase)
                         const preservedEcosystem = state.ecosystemContext;
 
+                        // Merge frequentFoods - preserve local additions while updating usage counts
+                        const mergedFrequentFoods = mergeFrequentFoods(
+                            state.frequentFoods,
+                            firebaseState.frequentFoods
+                        );
+
                         // Merge Firebase data
                         state = {
                             ...state,
                             profile: { ...state.profile, ...(firebaseState.profile || {}) },
                             today: { ...state.today, ...(firebaseState.today || {}) },
-                            frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                            frequentFoods: mergedFrequentFoods,
                             weighIns: firebaseState.weighIns || state.weighIns,
                             bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                             dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
@@ -9556,11 +9778,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     lastKnownTimestamp = data.lastUpdated;
 
                     const firebaseState = data.state;
+
+                    // Merge frequentFoods - preserve local additions
+                    const mergedFrequentFoods = mergeFrequentFoods(
+                        state.frequentFoods,
+                        firebaseState.frequentFoods
+                    );
+
                     state = {
                         ...state,
                         profile: { ...state.profile, ...(firebaseState.profile || {}) },
                         today: { ...state.today, ...(firebaseState.today || {}) },
-                        frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                        frequentFoods: mergedFrequentFoods,
                         weighIns: firebaseState.weighIns || state.weighIns,
                         bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
@@ -9569,14 +9798,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                     };
 
+                    // Ensure arrays are properly set
                     if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                    if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
                     if (!Array.isArray(state.weighIns)) state.weighIns = [];
                     if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
                     if (!Array.isArray(state.gamification.badges)) state.gamification.badges = [];
+                    if (!Array.isArray(state.bodyCompHistory)) state.bodyCompHistory = [];
 
                     localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
-                    initializeUI();
+                    // Re-render Simple View (the default view in v3)
+                    renderSimpleView();
                     updateSyncStatus('connected', '🔄 Updated');
                     showToast('📥 Synced from another device');
                 }
@@ -9602,11 +9835,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     }
 
                     const firebaseState = data.state;
+
+                    // Merge frequentFoods - preserve local additions
+                    const mergedFrequentFoods = mergeFrequentFoods(
+                        state.frequentFoods,
+                        firebaseState.frequentFoods
+                    );
+
                     state = {
                         ...state,
                         profile: { ...state.profile, ...(firebaseState.profile || {}) },
                         today: { ...state.today, ...(firebaseState.today || {}) },
-                        frequentFoods: firebaseState.frequentFoods || state.frequentFoods,
+                        frequentFoods: mergedFrequentFoods,
                         weighIns: firebaseState.weighIns || state.weighIns,
                         bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
@@ -9615,10 +9855,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                     };
 
+                    // Ensure arrays are properly set
                     if (!Array.isArray(state.today.meals)) state.today.meals = [];
+                    if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
                     if (!Array.isArray(state.weighIns)) state.weighIns = [];
                     if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
                     if (!Array.isArray(state.gamification.badges)) state.gamification.badges = [];
+                    if (!Array.isArray(state.bodyCompHistory)) state.bodyCompHistory = [];
 
                     localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
@@ -9656,9 +9899,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // FIREBASE INITIALIZATION
         // ============================================
 
+        let waitingForPin = false;  // Flag to prevent premature initializeUI
+
         function initFirebase() {
             const fallbackTimer = setTimeout(() => {
-                if (!firebaseSyncEnabled) {
+                // Don't initialize UI if we're waiting for PIN input
+                if (!firebaseSyncEnabled && !waitingForPin) {
                     console.warn('Firebase timeout - running in offline mode');
                     updateSyncStatus('offline', 'Offline mode');
                     initializeUI();
@@ -9671,7 +9917,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     clearTimeout(fallbackTimer);
                     firebaseSyncEnabled = false;
                     updateSyncStatus('offline', 'Offline mode');
-                    initializeUI();
+                    // Still need PIN for local storage identification
+                    const savedPin = localStorage.getItem('dentalQuestPin');
+                    if (!savedPin) {
+                        waitingForPin = true;
+                        setTimeout(() => promptForPin(), 300);
+                    } else {
+                        initializeUI();
+                    }
                     return;
                 }
 
@@ -9687,14 +9940,23 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (savedPin) {
                     setupUserAuth(savedPin);
                 } else {
-                    setTimeout(() => promptForPin(), 500);
+                    // Mark that we're waiting for PIN - don't let fallback timer fire
+                    waitingForPin = true;
+                    setTimeout(() => promptForPin(), 300);
                 }
             } catch (error) {
                 console.error('Firebase init error:', error);
                 clearTimeout(fallbackTimer);
                 firebaseSyncEnabled = false;
                 updateSyncStatus('error', 'Init failed');
-                initializeUI();
+                // Still prompt for PIN even on error
+                const savedPin = localStorage.getItem('dentalQuestPin');
+                if (!savedPin) {
+                    waitingForPin = true;
+                    setTimeout(() => promptForPin(), 300);
+                } else {
+                    initializeUI();
+                }
             }
         }
 
@@ -9705,10 +9967,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             firebaseSyncEnabled = true;
 
             updateSyncStatus('syncing', 'Syncing...');
-            loadFromFirebase();
 
-            // Load cross-app ecosystem data
-            loadEcosystemData(hashedPin);
+            // Load ecosystem data first (in parallel with Firebase), then load user data
+            // This ensures ecosystem context is available when UI renders
+            loadEcosystemData(hashedPin).then(() => {
+                loadFromFirebase();
+            }).catch(() => {
+                // Even if ecosystem data fails, still load user data
+                loadFromFirebase();
+            });
         }
 
         // ============================================
@@ -9839,10 +10106,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 console.log('✅ Ecosystem data loaded:', state.ecosystemContext);
 
-                // Re-render if UI is already initialized (both views for God Mode cards)
-                if (state.today.setupComplete) {
-                    renderSimpleView();  // FIX: App defaults to Simple View, not Dashboard
-                }
+                // Ecosystem data is now loaded - UI will be rendered by loadFromFirebase callback
 
             } catch (error) {
                 console.error('❌ Error loading ecosystem data:', error);
@@ -9982,6 +10246,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const pin = input ? input.value.trim() : '';
 
             if (pin) {
+                waitingForPin = false;  // Clear the flag
                 localStorage.setItem('dentalQuestPin', pin);
                 setupUserAuth(pin);
                 showToast('✅ Connected with PIN!');
@@ -9995,6 +10260,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         function skipPin() {
+            waitingForPin = false;  // Clear the flag
             firebaseSyncEnabled = false;
             updateSyncStatus('offline', 'Local only');
             showToast('Using offline mode');
