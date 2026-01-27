@@ -2655,6 +2655,13 @@
                     <button class="btn btn-secondary" onclick="clearToday()">🗑️ Clear Today</button>
                     <button class="btn btn-primary" onclick="saveDay()">💾 Save & Log</button>
                 </div>
+                <div class="button-row" style="margin-top: 10px; justify-content: center; gap: 10px;">
+                    <button class="btn" onclick="BackupManager.exportData()" style="background: #374151; font-size: 0.85em; padding: 8px 14px;">📤 Export Backup</button>
+                    <label class="btn" style="background: #374151; font-size: 0.85em; padding: 8px 14px; cursor: pointer;">
+                        📥 Import Backup
+                        <input type="file" accept=".json" onchange="BackupManager.importData(this.files[0]); this.value='';" style="display: none;">
+                    </label>
+                </div>
             </div>
 
             <!-- Right Column: Results -->
@@ -3420,7 +3427,31 @@
             return Object.keys(obj).length;
         }
 
-        // Backup Manager
+        // Safe localStorage wrapper with quota handling
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.error('localStorage quota exceeded - clearing old backups');
+                    // Try to free space by clearing old backups
+                    try {
+                        localStorage.removeItem('stimcalc_backups');
+                        localStorage.setItem(key, value);
+                        return true;
+                    } catch (e2) {
+                        console.error('Still cannot save after clearing backups:', e2);
+                        showToast('⚠️ Storage full - data may not persist');
+                        return false;
+                    }
+                }
+                console.error('localStorage error:', e);
+                return false;
+            }
+        }
+
+        // Backup Manager with export/import
         const BackupManager = {
             maxBackups: 5,
             createBackup() {
@@ -3430,16 +3461,72 @@
                     if (!currentData) return;
                     backups.unshift({ timestamp: Date.now(), data: currentData });
                     while (backups.length > this.maxBackups) backups.pop();
-                    localStorage.setItem('stimcalc_backups', JSON.stringify(backups));
+                    safeLocalStorageSet('stimcalc_backups', JSON.stringify(backups));
                 } catch (e) { console.error('Backup failed:', e); }
             },
             restoreBackup(timestamp) {
                 const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
                 const backup = backups.find(b => b.timestamp === timestamp);
                 if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
-                    localStorage.setItem('stimulantCalculatorState', backup.data);
+                    safeLocalStorageSet('stimulantCalculatorState', backup.data);
                     location.reload();
                 }
+            },
+            exportData() {
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    appVersion: '3.0',
+                    state: state
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `stimulant-calc-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('📥 Backup downloaded');
+            },
+            importData(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!imported.state) {
+                            showToast('❌ Invalid backup file');
+                            return;
+                        }
+                        // Create backup of current state before import
+                        this.createBackup();
+                        // Apply imported state with migration
+                        state = {
+                            ...state,
+                            ...imported.state,
+                            medications: migrateArrayToObject(imported.state.medications, 'med'),
+                            caffeine: migrateArrayToObject(imported.state.caffeine, 'caf'),
+                            history: migrateArrayToObject(imported.state.history, 'hist'),
+                            _version: (imported.state._version || state._version || 0) + 1
+                        };
+                        safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+                        saveToFirebase();
+                        // Re-render
+                        document.getElementById('wakeTime').value = state.wakeTime;
+                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+                        renderMedEntries();
+                        renderCaffeineEntries();
+                        renderSleepCalendar();
+                        renderSleepPerformance();
+                        renderHistory();
+                        recalculate();
+                        showToast('✅ Backup imported successfully');
+                    } catch (err) {
+                        console.error('Import failed:', err);
+                        showToast('❌ Failed to import backup');
+                    }
+                };
+                reader.readAsText(file);
             }
         };
         setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
@@ -8458,7 +8545,19 @@
                 database = firebase.database();
                 firebaseInitialized = true;
                 clearTimeout(fallbackTimer);
-                
+
+                // Monitor Firebase connection state
+                database.ref('.info/connected').on('value', (snapshot) => {
+                    const connected = snapshot.val() === true;
+                    if (connected) {
+                        if (firebaseSyncEnabled) {
+                            updateSyncStatus('connected', 'Connected');
+                        }
+                    } else {
+                        updateSyncStatus('offline', 'Offline');
+                    }
+                });
+
                 // Check for saved PIN (same as Dental Quest uses)
                 const savedPin = localStorage.getItem('dentalQuestPin');
                 
@@ -8607,7 +8706,7 @@
                         };
                         
                         // Save merged state to localStorage
-                        localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                        safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
                         
                         // Re-render everything
                         document.getElementById('wakeTime').value = state.wakeTime;
@@ -8758,7 +8857,7 @@
                     };
                     
                     // Update localStorage
-                    localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                    safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
                     
                     // Re-render both Full View and Focus Mode lists
                     document.getElementById('wakeTime').value = state.wakeTime;
@@ -8828,8 +8927,8 @@
 
                     // Check for conflicts
                     if (localChangesSinceLastSync && lastSyncTimestamp && remoteTimestamp > lastSyncTimestamp) {
-                        const localData = { doses: ensureArray(state.medications, []), lastSaved: lastSyncTimestamp };
-                        const remoteData = { doses: ensureArray(remoteState.medications, []), lastSaved: remoteTimestamp };
+                        const localData = { doses: getValues(state.medications), lastSaved: lastSyncTimestamp };
+                        const remoteData = { doses: getValues(remoteState.medications), lastSaved: remoteTimestamp };
 
                         showSyncConflictModal(localData, remoteData, (choice) => {
                             if (choice === 'local') {
@@ -8885,7 +8984,7 @@
             if (!state.caffeine || Array.isArray(state.caffeine)) state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
             if (!state.history || Array.isArray(state.history)) state.history = migrateArrayToObject(state.history, 'hist');
 
-            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
             // Re-render everything
             document.getElementById('wakeTime').value = state.wakeTime;
@@ -8917,7 +9016,7 @@
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 // Tab is being hidden - ensure data is saved immediately
-                localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).set({
                         state: state,
@@ -8961,7 +9060,7 @@
 
         // Save on page unload to prevent data loss during debounce window
         window.addEventListener('beforeunload', function() {
-            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
         });
 
         // ============================================
@@ -8979,7 +9078,7 @@
             // Always save to localStorage immediately (but not too often)
             const now = Date.now();
             if (now - lastLocalSave > 500) { // Max twice per second for localStorage
-                localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+                safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
                 lastLocalSave = now;
             }
 
@@ -8998,7 +9097,7 @@
             // Mark that local changes exist (for conflict detection)
             markLocalChange();
 
-            localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
+            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
             // Clear any pending debounced save
             if (firebaseSaveTimeout) {
