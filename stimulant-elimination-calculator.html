@@ -5419,7 +5419,11 @@
             }
             
             if (sleepTimeDisplay) sleepTimeDisplay.textContent = minutesToTime(displaySleepTime);
-            
+
+            // Store projected sleep time for cross-app integration (Body Comp Tracker pulls this)
+            state.projectedSleepTime = minutesToTime(displaySleepTime);
+            state.projectedSleepMinutes = sleepTime; // Raw minutes for calculations
+
             // Calculate time remaining
             let remaining = sleepTime - now;
             if (remaining < 0) remaining += 24 * 60; // Handle day rollover
@@ -9507,7 +9511,16 @@ Current status at ${currentTime}:
             
             // Initial calculation
             recalculate();
-            
+
+            // Save projectedSleepTime to Firebase after initial calculation
+            // This ensures cross-app integration works even if user doesn't make changes
+            setTimeout(() => {
+                if (state.projectedSleepTime) {
+                    saveState();
+                    console.log('💾 Initial projectedSleepTime saved:', state.projectedSleepTime);
+                }
+            }, 1000);
+
             // Setup graph tooltip
             setupGraphTooltip();
             
