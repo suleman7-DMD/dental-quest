@@ -7675,32 +7675,33 @@ CHAIR: 9F
                 ortho: { midterm: null }
             },
             editedDeadlines: {},
-            customDeadlines: [],
+            customDeadlines: {},  // Object with ID keys for Firebase safety
+            deletedDeadlines: {}, // Object with ID keys for Firebase safety
             completedDeadlines: {},  // Track completed deadlines with grades - CRITICAL for sync
             examStudyProgress: {}, // Tracks which lectures have been studied: { 'peds-exam2-lec11': true, ... }
             dailyPlanner: {
                 date: null,
                 focus: '',
                 notes: '',
-                blocks: [],
+                blocks: {},
                 pomodorosCompleted: 0,
                 bedtime: '23:00'
             },
             monthlyPlanner: {
-                notes: [],
-                customTasks: [],
-                overriddenStatic: [],
-                completedTasks: []
+                notes: {},
+                customTasks: {},
+                overriddenStatic: {},
+                completedTasks: {}
             },
             // Clinical patient tracking
             clinicalData: {
                 patients: {},           // Patient records keyed by ID
-                appointments: [],       // Scheduled appointments
-                completedProcedures: [], // Logged completed procedures for competency
+                appointments: {},       // Object with ID keys for Firebase safety
+                completedProcedures: {}, // Object with ID keys for Firebase safety
                 competencies: null      // Graduation requirements - initialized from DEFAULT_COMPETENCIES
             },
             // Exams array for cross-app integration (Body Comp Tracker pulls this)
-            exams: [],
+            exams: {},  // Object with ID keys for Firebase safety
             lastSaved: null
         };
         
@@ -8442,6 +8443,52 @@ CHAIR: 9F
             return fallback;
         }
 
+        // Generate unique IDs for object-based storage (prevents Firebase array corruption)
+        function generateId(prefix = 'item') {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            return `${prefix}_${timestamp}_${random}`;
+        }
+
+        // Get values from object as array (works with both objects and arrays)
+        function getValues(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;
+            return Object.values(obj).filter(v => v !== null && v !== undefined);
+        }
+
+        // Get count of items in object or array
+        function getCount(obj) {
+            if (!obj) return 0;
+            if (Array.isArray(obj)) return obj.length;
+            return Object.keys(obj).length;
+        }
+
+        // Convert array to object with unique IDs (for migration)
+        function migrateArrayToObject(data, keyPrefix) {
+            if (!data) return {};
+            // If it's already an object with non-numeric keys, return as-is
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const keys = Object.keys(data);
+                if (keys.length === 0) return {};
+                if (keys.every(k => typeof k === 'string' && k.includes('_'))) {
+                    return data; // Already migrated
+                }
+                // Has numeric keys - Firebase corrupted it
+                data = Object.values(data).filter(v => v !== null && v !== undefined);
+            }
+            if (!Array.isArray(data)) return {};
+            const result = {};
+            data.forEach((item, index) => {
+                if (item === null || item === undefined) return;
+                const id = item.id && typeof item.id === 'string' && item.id.includes('_')
+                    ? item.id
+                    : generateId(keyPrefix) + '_' + index;
+                result[id] = { ...item, id };
+            });
+            return result;
+        }
+
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('d3RoadmapData');
             if (saved) {
@@ -8451,21 +8498,21 @@ CHAIR: 9F
                     roadmapData = {
                         ...roadmapData,
                         ...data,
-                        customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
-                        deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
+                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
                         monthlyPlanner: {
-                            notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
-                            customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
-                            overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
-                            completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
+                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
                         },
                         clinicalData: {
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                            appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
-                            completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
+                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                             competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                         },
-                        exams: ensureArray(data.exams, roadmapData.exams || [])
+                        exams: migrateArrayToObject(data.exams, 'exam')
                     };
                 } catch (e) {
                     console.error('❌ Failed to parse localStorage data:', e);
@@ -8495,23 +8542,23 @@ CHAIR: 9F
                             grades: { ...roadmapData.grades, ...(data.grades || {}) },
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                            customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
-                            deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
+                            customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                            deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                             monthlyPlanner: {
-                                notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
-                                customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
-                                overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
-                                completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
+                                notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                                customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                                overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                                completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
                             },
                             clinicalData: {
                                 patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
-                                completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
+                                appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                                completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                                 competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                             },
                             dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
-                            exams: ensureArray(data.exams, roadmapData.exams || []),
+                            exams: migrateArrayToObject(data.exams, 'exam'),
                             lastSaved: data.lastSaved
                         };
 
@@ -8574,23 +8621,23 @@ CHAIR: 9F
                         grades: { ...roadmapData.grades, ...(data.grades || {}) },
                         editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                         completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                        customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
-                        deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
+                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
                         examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                         monthlyPlanner: {
-                            notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
-                            customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
-                            overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
-                            completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
+                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
                         },
                         clinicalData: {
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                            appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
-                            completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
+                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                             competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                         },
                         dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
-                        exams: ensureArray(data.exams, roadmapData.exams || []),
+                        exams: migrateArrayToObject(data.exams, 'exam'),
                         lastSaved: data.lastSaved
                     };
 
@@ -8860,22 +8907,22 @@ CHAIR: 9F
                 grades: data.grades || {},
                 editedDeadlines: data.editedDeadlines || {},
                 completedDeadlines: data.completedDeadlines || {},
-                customDeadlines: ensureArray(data.customDeadlines, []),
-                deletedDeadlines: ensureArray(data.deletedDeadlines, []),
+                customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
                 examStudyProgress: data.examStudyProgress || {},
                 monthlyPlanner: {
-                    notes: ensureArray(data.monthlyPlanner?.notes, []),
-                    customTasks: ensureArray(data.monthlyPlanner?.customTasks, []),
-                    overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, []),
-                    completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, [])
+                    notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                    customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                    overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
                 },
                 clinicalData: {
                     patients: data.clinicalData?.patients || {},
-                    appointments: ensureArray(data.clinicalData?.appointments, []),
-                    completedProcedures: ensureArray(data.clinicalData?.completedProcedures, []),
+                    appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                    completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                     competencies: data.clinicalData?.competencies || null
                 },
-                exams: ensureArray(data.exams, []),
+                exams: migrateArrayToObject(data.exams, 'exam'),
                 dailyPlanner: data.dailyPlanner,
                 lastSaved: data.lastSaved
             });
@@ -13324,23 +13371,23 @@ CHAIR: 9F
                                     grades: { ...roadmapData.grades, ...(data.grades || {}) },
                                     editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                                     completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                                    customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
-                                    deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
+                                    customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                                    deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
                                     examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                                     monthlyPlanner: {
-                                        notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
-                                        customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
-                                        overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, roadmapData.monthlyPlanner?.overriddenStatic || []),
-                                        completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, roadmapData.monthlyPlanner?.completedTasks || [])
+                                        notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                                        customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                                        overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                                        completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
                                     },
                                     clinicalData: {
                                         patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                        appointments: ensureArray(data.clinicalData?.appointments, roadmapData.clinicalData?.appointments || []),
-                                        completedProcedures: ensureArray(data.clinicalData?.completedProcedures, roadmapData.clinicalData?.completedProcedures || []),
+                                        appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                                        completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                                         competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
                                     },
                                     dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
-                                    exams: ensureArray(data.exams, roadmapData.exams || []),
+                                    exams: migrateArrayToObject(data.exams, 'exam'),
                                     lastSaved: data.lastSaved
                                 };
                                 initUI();

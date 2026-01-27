@@ -5341,10 +5341,10 @@
             ],
 
             // Weekly weigh-ins
-            weighIns: [],
+            weighIns: {},  // Object with ID keys for Firebase safety
 
             // Body comp history (Phase 6 - monthly tape measurements)
-            bodyCompHistory: [],
+            bodyCompHistory: {},  // Object with ID keys for Firebase safety
 
             // Refeed tracking
             refeedTracker: {
@@ -5399,6 +5399,45 @@
         // Generate unique IDs
         function generateId(prefix = 'item') {
             return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        }
+
+        // Get values from object as array (works with both objects and arrays)
+        function getValues(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;
+            return Object.values(obj).filter(v => v !== null && v !== undefined);
+        }
+
+        // Get count of items in object or array
+        function getCount(obj) {
+            if (!obj) return 0;
+            if (Array.isArray(obj)) return obj.length;
+            return Object.keys(obj).length;
+        }
+
+        // Convert array to object with unique IDs (for Firebase safety)
+        function migrateArrayToObject(data, keyPrefix) {
+            if (!data) return {};
+            // If it's already an object with non-numeric keys, return as-is
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const keys = Object.keys(data);
+                if (keys.length === 0) return {};
+                if (keys.every(k => typeof k === 'string' && k.includes('_'))) {
+                    return data; // Already migrated
+                }
+                // Has numeric keys - Firebase corrupted it
+                data = Object.values(data).filter(v => v !== null && v !== undefined);
+            }
+            if (!Array.isArray(data)) return {};
+            const result = {};
+            data.forEach((item, index) => {
+                if (item === null || item === undefined) return;
+                const id = item.id && typeof item.id === 'string' && item.id.includes('_')
+                    ? item.id
+                    : generateId(keyPrefix) + '_' + index;
+                result[id] = { ...item, id };
+            });
+            return result;
         }
 
         // Backup Manager
@@ -9874,8 +9913,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         profile: { ...state.profile, ...(loaded.profile || {}) },
                         today: { ...state.today, ...(loaded.today || {}) },
                         frequentFoods: hasLoadedFoods ? loadedFoods : state.frequentFoods,
-                        weighIns: ensureArray(loaded.weighIns, []),
-                        bodyCompHistory: ensureArray(loaded.bodyCompHistory, []),
+                        weighIns: migrateArrayToObject(loaded.weighIns, 'weighin'),
+                        bodyCompHistory: migrateArrayToObject(loaded.bodyCompHistory, 'bodycomp'),
                         dailyLogs: loaded.dailyLogs || {},
                         refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) },
                         gamification: { ...state.gamification, ...(loaded.gamification || {}) },

@@ -5212,7 +5212,7 @@
         // APP VARIABLES
         // ============================================
         let currentCategory = 'dotoday';
-        let tasks = [];
+        let tasks = {}; // Object with ID keys for Firebase safety
         let timerInterval = null;
         let currentSeconds = 25 * 60;
         let isWorkSession = true;
@@ -5270,7 +5270,7 @@
             '30mg': {}, // { 'YYYY-MM-DD': true/false } - true = has pill assigned
             '20mg': {}
         };
-        let calendarEvents = []; // Array of: { id, description, category, date, time, notes, dateStr }
+        let calendarEvents = {}; // Object with ID keys for Firebase safety
 
 
         let notebook = {
@@ -5756,6 +5756,20 @@
             return fallback;
         }
 
+        // Get values from object as array (works with both objects and arrays)
+        function getValues(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;
+            return Object.values(obj).filter(v => v !== null && v !== undefined);
+        }
+
+        // Get count of items in object or array
+        function getCount(obj) {
+            if (!obj) return 0;
+            if (Array.isArray(obj)) return obj.length;
+            return Object.keys(obj).length;
+        }
+
         // Convert array to object with unique IDs (for migration)
         function migrateArrayToObject(data, keyPrefix) {
             if (!data) return {};
@@ -5872,7 +5886,7 @@
                     return; // Don't crash - continue with defaults
                 }
                 // CRITICAL: Use ensureArray() to handle Firebase array→object conversion
-                tasks = ensureArray(data.tasks, []);
+                tasks = migrateArrayToObject(data.tasks, 'task');
 
                 // Merge saved stats with default structure to handle new categories
                 if (data.stats) {
@@ -5939,17 +5953,26 @@
                 
                 // Load calendar events with array protection
                 if (data.calendarEvents) {
-                    calendarEvents = ensureArray(data.calendarEvents, []);
+                    calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
                     // Remove past events using local timezone
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    calendarEvents = calendarEvents.filter(event => {
-                        if (!event || !event.dateStr || typeof event.dateStr !== 'string') return false;
+                    Object.keys(calendarEvents).forEach(id => {
+                        const event = calendarEvents[id];
+                        if (!event || !event.dateStr || typeof event.dateStr !== 'string') {
+                            delete calendarEvents[id];
+                            return;
+                        }
                         const [year, month, day] = event.dateStr.split('-').map(Number);
-                        if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+                        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                            delete calendarEvents[id];
+                            return;
+                        }
                         const eventDate = new Date(year, month - 1, day);
                         eventDate.setHours(0, 0, 0, 0);
-                        return eventDate >= today;
+                        if (eventDate < today) {
+                            delete calendarEvents[id];
+                        }
                     });
                 }
 
@@ -6258,15 +6281,15 @@
                 pillAssignments,
                 calendarEvents,
                 metadata: {
-                    totalTasks: tasks.length,
-                    completedTasks: tasks.filter(t => t.completed).length,
+                    totalTasks: getCount(tasks),
+                    completedTasks: getValues(tasks).filter(t => t.completed).length,
                     medicationTracking: {
                         '30mg': medications['30mg'].pills,
                         '20mg': medications['20mg'].pills
                     },
                     calendarNotesCount: Object.keys(calendarNotes).length,
                     notebookPages: notebook.pages.length,
-                    countdownEvents: calendarEvents.length
+                    countdownEvents: getCount(calendarEvents)
                 }
             };
             
@@ -6325,7 +6348,7 @@
                     if (!confirm(confirmMessage)) return;
 
                     // Restore tasks
-                    tasks = ensureArray(checkpoint.tasks, []);
+                    tasks = migrateArrayToObject(checkpoint.tasks, 'task');
                     
                     // Restore stats with migration
                     if (checkpoint.stats) {
@@ -6406,20 +6429,29 @@
                     
                     // Restore calendar events (if available - backward compatible)
                     if (checkpoint.calendarEvents) {
-                        calendarEvents = checkpoint.calendarEvents;
+                        calendarEvents = migrateArrayToObject(checkpoint.calendarEvents, 'event');
                         // Remove past events using local timezone
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
-                        calendarEvents = calendarEvents.filter(event => {
-                            if (!event || !event.dateStr || typeof event.dateStr !== 'string') return false;
+                        Object.keys(calendarEvents).forEach(id => {
+                            const event = calendarEvents[id];
+                            if (!event || !event.dateStr || typeof event.dateStr !== 'string') {
+                                delete calendarEvents[id];
+                                return;
+                            }
                             const [year, month, day] = event.dateStr.split('-').map(Number);
-                            if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+                            if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                                delete calendarEvents[id];
+                                return;
+                            }
                             const eventDate = new Date(year, month - 1, day);
                             eventDate.setHours(0, 0, 0, 0);
-                            return eventDate >= today;
+                            if (eventDate < today) {
+                                delete calendarEvents[id];
+                            }
                         });
                     } else {
-                        calendarEvents = [];
+                        calendarEvents = {};
                     }
                     // If no financials/pillAssignments/calendarEvents in checkpoint, keep default values (backward compatible)
                     
@@ -6472,7 +6504,7 @@
             if (!doubleConfirm) return;
             
             // Clear everything
-            tasks = [];
+            tasks = {};
             stats = {
                 totalXPGained: 0,
                 totalTasks: 0,
@@ -6608,7 +6640,7 @@
                         lastKnownSaveTime = data.lastSaved || Date.now();
                         
                         // Load all data with ARRAY PROTECTION (Firebase converts arrays to objects)
-                        tasks = ensureArray(data.tasks, []);
+                        tasks = migrateArrayToObject(data.tasks, 'task');
 
                         if (data.stats) {
                             stats = {
@@ -6670,17 +6702,26 @@
 
                         // Load calendar events from Firebase with array protection
                         if (data.calendarEvents) {
-                            calendarEvents = ensureArray(data.calendarEvents, []);
+                            calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
                             // Remove past events using local timezone
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
-                            calendarEvents = calendarEvents.filter(event => {
-                                if (!event || !event.dateStr || typeof event.dateStr !== 'string') return false;
+                            Object.keys(calendarEvents).forEach(id => {
+                                const event = calendarEvents[id];
+                                if (!event || !event.dateStr || typeof event.dateStr !== 'string') {
+                                    delete calendarEvents[id];
+                                    return;
+                                }
                                 const [year, month, day] = event.dateStr.split('-').map(Number);
-                                if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+                                if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                                    delete calendarEvents[id];
+                                    return;
+                                }
                                 const eventDate = new Date(year, month - 1, day);
                                 eventDate.setHours(0, 0, 0, 0);
-                                return eventDate >= today;
+                                if (eventDate < today) {
+                                    delete calendarEvents[id];
+                                }
                             });
                         }
 
@@ -6737,7 +6778,7 @@
                         markInitialLoadComplete();
                         
                         showToast('Data loaded from cloud ☁️', '✅');
-                        updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
+                        updateSyncStatus('connected', `Synced (${getCount(tasks)} tasks)`);
                     } else {
                         // No cloud data, check localStorage
                         loadData();
@@ -6817,7 +6858,7 @@
                                 
                                 // Update ALL local data - COMPLETE LIST
                                 // CRITICAL: Use ensureArray() for all arrays - Firebase converts arrays to objects
-                                if (data.tasks !== undefined) tasks = ensureArray(data.tasks, []);
+                                if (data.tasks !== undefined) tasks = migrateArrayToObject(data.tasks, 'task');
 
                                 if (data.stats) {
                                     stats = {
@@ -6871,7 +6912,7 @@
                                 }
 
                                 if (data.calendarEvents !== undefined) {
-                                    calendarEvents = ensureArray(data.calendarEvents, []);
+                                    calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
                                 }
 
                                 if (data.dailyPlanner) {
@@ -8683,7 +8724,7 @@
                                  currentDate < parseLocalDate(medications['20mg'].refillDate) && !is20mgRefill;
                 
                 // Get events for this day
-                const dayEvents = calendarEvents.filter(e => e.dateStr === dateStr);
+                const dayEvents = getValues(calendarEvents).filter(e => e.dateStr === dateStr);
                 
                 let dayBg = '#0d1117';
                 let borderColor = '#30363d';
@@ -8794,7 +8835,7 @@
         function renderCountdowns() {
             const container = document.getElementById('countdownsList');
             
-            if (calendarEvents.length === 0) {
+            if (getCount(calendarEvents) === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #b0b8c4;">
                         <p style="font-size: 1.2em;">No countdowns yet. Click "+ Add New Countdown" to create one!</p>
@@ -8946,24 +8987,24 @@
             
             if (editingCountdownId) {
                 // Editing existing
-                const event = calendarEvents.find(e => e.id === editingCountdownId);
-                if (event) {
-                    event.description = description;
-                    event.category = category;
-                    event.dateStr = date;
-                    event.time = time;
-                    event.notes = notes;
+                if (calendarEvents[editingCountdownId]) {
+                    calendarEvents[editingCountdownId].description = description;
+                    calendarEvents[editingCountdownId].category = category;
+                    calendarEvents[editingCountdownId].dateStr = date;
+                    calendarEvents[editingCountdownId].time = time;
+                    calendarEvents[editingCountdownId].notes = notes;
                 }
             } else {
                 // Creating new
-                calendarEvents.push({
-                    id: Date.now().toString(),
+                const id = generateId('event');
+                calendarEvents[id] = {
+                    id: id,
                     description,
                     category,
                     dateStr: date,
                     time,
                     notes
-                });
+                };
             }
             
             saveData();
@@ -8973,7 +9014,7 @@
         }
         
         function editCountdown(eventId) {
-            const event = calendarEvents.find(e => e.id === eventId);
+            const event = calendarEvents[eventId];
             if (!event) return;
             
             const action = confirm(`Edit or Delete "${event.description}"?\n\nOK = Edit\nCancel = Go back\n\nTo delete, click Edit then use the Delete button.`);
@@ -8994,7 +9035,9 @@
         
         function deleteCountdown(eventId) {
             if (confirm('Delete this countdown?')) {
-                calendarEvents = calendarEvents.filter(e => e.id !== eventId);
+                if (calendarEvents[eventId]) {
+                    delete calendarEvents[eventId];
+                }
                 saveData();
                 renderMasterCalendar();
                 closeAddCountdown();
@@ -9401,7 +9444,7 @@
             const dropdown = document.getElementById('plannerTaskDropdown');
             if (!dropdown || !tasks) return;
             
-            const incompleteTasks = tasks.filter(t => !t.completed);
+            const incompleteTasks = getValues(tasks).filter(t => !t.completed);
             
             // Group by category
             const categories = {
@@ -9449,7 +9492,7 @@
             const taskId = parseInt(dropdown.value);
             if (!taskId) return;
             
-            const task = tasks.find(t => t.id === taskId);
+            const task = tasks[taskId];
             if (task) {
                 taskInput.value = task.text;
             }
@@ -9844,7 +9887,7 @@
                             } else if (choice === 'remote') {
                                 // Keep remote - apply cloud data
                                 applyRemoteData(remoteData);
-                                showToast(`✅ Synced ${tasks.length} tasks from cloud`, '☁️');
+                                showToast(`✅ Synced ${getCount(tasks)} tasks from cloud`, '☁️');
                             } else if (choice === 'merge') {
                                 // Deep merge - local takes precedence for conflicts
                                 const merged = deepMerge(remoteData, localData);
@@ -9863,8 +9906,8 @@
                     applyRemoteData(remoteData);
                     localChangesSinceLastSync = false;
                     lastSyncTimestamp = Date.now();
-                    updateSyncStatus('connected', `Synced (${tasks.length} tasks)`);
-                    showToast(`✅ Synced ${tasks.length} tasks from cloud`, '☁️');
+                    updateSyncStatus('connected', `Synced (${getCount(tasks)} tasks)`);
+                    showToast(`✅ Synced ${getCount(tasks)} tasks from cloud`, '☁️');
                 })
                 .catch(err => {
                     console.error('Force sync failed:', err);
@@ -9877,7 +9920,7 @@
         function applyRemoteData(data) {
             lastKnownSaveTime = data.lastSaved || Date.now();
 
-            tasks = ensureArray(data.tasks, []);
+            tasks = migrateArrayToObject(data.tasks, 'task');
 
             if (data.stats) {
                 stats = deepMerge(stats, {
@@ -9914,7 +9957,7 @@
             }
 
             if (data.calendarEvents !== undefined) {
-                calendarEvents = data.calendarEvents || [];
+                calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
             }
 
             if (data.dailyPlanner) {
@@ -9957,7 +10000,7 @@
                 lastKnownSaveTime,
                 mainDataSyncEnabled,
                 hasRealtimeListener: !!realtimeSyncListener,
-                tasksCount: tasks.length
+                tasksCount: getCount(tasks)
             };
         };
         
@@ -10018,7 +10061,7 @@
                 lastKnownSaveTime = incomingTime;
                 
                 // Update ALL local data with ARRAY PROTECTION (Firebase converts arrays to objects)
-                if (data.tasks !== undefined) tasks = ensureArray(data.tasks, []);
+                if (data.tasks !== undefined) tasks = migrateArrayToObject(data.tasks, 'task');
 
                 if (data.stats) {
                     stats = {
@@ -10078,7 +10121,7 @@
                     };
                 }
 
-                if (data.calendarEvents !== undefined) calendarEvents = ensureArray(data.calendarEvents, []);
+                if (data.calendarEvents !== undefined) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
 
                 if (data.notebook) {
                     notebook = {
@@ -10733,8 +10776,9 @@
                 markMustComplete = true;
             }
 
+            const id = generateId('task');
             const task = {
-                id: Date.now(),
+                id: id,
                 text: text,
                 category: taskCategory,
                 completed: false,
@@ -10743,10 +10787,10 @@
                 createdAt: new Date().toISOString(),
                 size: 'medium',
                 highLeverage: false,
-                sortOrder: tasks.length
+                sortOrder: getCount(tasks)
             };
 
-            tasks.push(task);
+            tasks[id] = task;
             input.value = '';
             renderTasks();
             if (currentView === 'focus') renderFocusMode();
@@ -10774,7 +10818,7 @@
             };
 
             // Get tasks for current category
-            const categoryTasks = tasks.filter(t => t.category === currentCategory);
+            const categoryTasks = getValues(tasks).filter(t => t.category === currentCategory);
             const completedTasks = categoryTasks.filter(t => t.completed);
             const totalTasks = categoryTasks.length;
             
@@ -10799,13 +10843,13 @@
             
             if (currentCategory === 'dotoday') {
                 // Show all tasks marked as "Do Today" across all categories
-                filteredTasks = tasks.filter(t => t.doToday && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.doToday && !t.completed);
             } else if (currentCategory === 'mustcomplete') {
                 // Show tasks marked as must complete by EOD
-                filteredTasks = tasks.filter(t => t.mustComplete && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.mustComplete && !t.completed);
             } else {
                 // Show only incomplete tasks for the current category
-                filteredTasks = tasks.filter(t => t.category === currentCategory && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.category === currentCategory && !t.completed);
             }
             
             // Sort by sortOrder if exists
@@ -10814,7 +10858,7 @@
             // Update task counts for all categories
             const categories = ['financial', 'clinic', 'health', 'school', 'academic', 'future', 'life'];
             categories.forEach(cat => {
-                const count = tasks.filter(t => t.category === cat && !t.completed).length;
+                const count = getValues(tasks).filter(t => t.category === cat && !t.completed).length;
                 const countElement = document.getElementById(`count-${cat}`);
                 if (countElement) {
                     countElement.textContent = `(${count})`;
@@ -10822,14 +10866,14 @@
             });
             
             // Update "Do Today" count
-            const doTodayCount = tasks.filter(t => t.doToday && !t.completed).length;
+            const doTodayCount = getValues(tasks).filter(t => t.doToday && !t.completed).length;
             const doTodayCountElement = document.getElementById('count-dotoday');
             if (doTodayCountElement) {
                 doTodayCountElement.textContent = `(${doTodayCount})`;
             }
             
             // Update "Must Complete" count
-            const mustCompleteCount = tasks.filter(t => t.mustComplete && !t.completed).length;
+            const mustCompleteCount = getValues(tasks).filter(t => t.mustComplete && !t.completed).length;
             const mustCompleteCountElement = document.getElementById('count-mustcomplete');
             if (mustCompleteCountElement) {
                 mustCompleteCountElement.textContent = `(${mustCompleteCount})`;
@@ -10956,19 +11000,19 @@
             if (draggedTaskId === targetTaskId) return;
             
             // Find indices
-            const draggedTask = tasks.find(t => t.id === draggedTaskId);
-            const targetTask = tasks.find(t => t.id === targetTaskId);
+            const draggedTask = tasks[draggedTaskId];
+            const targetTask = tasks[targetTaskId];
             
             if (!draggedTask || !targetTask) return;
             
             // Get filtered tasks for current view to determine visual order
             let filteredTasks;
             if (currentCategory === 'dotoday') {
-                filteredTasks = tasks.filter(t => t.doToday && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.doToday && !t.completed);
             } else if (currentCategory === 'mustcomplete') {
-                filteredTasks = tasks.filter(t => t.mustComplete && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.mustComplete && !t.completed);
             } else {
-                filteredTasks = tasks.filter(t => t.category === currentCategory && !t.completed);
+                filteredTasks = getValues(tasks).filter(t => t.category === currentCategory && !t.completed);
             }
             
             // Update sortOrder for all filtered tasks
@@ -10999,7 +11043,7 @@
         
         // Toggle Must Complete
         function toggleMustComplete(id) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks[id];
             if (!task) return;
             
             task.mustComplete = !task.mustComplete;
@@ -11022,7 +11066,7 @@
 
         // Toggle task completion
         function toggleTask(id) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks[id];
             if (!task) return;
 
             task.completed = !task.completed;
@@ -11079,7 +11123,7 @@
 
         // Toggle "Do Today" status
         function toggleDoToday(id) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks[id];
             if (!task) return;
             
             task.doToday = !task.doToday;
@@ -11093,7 +11137,9 @@
 
         // Delete task
         function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
+            if (tasks[id]) {
+                delete tasks[id];
+            }
 
             // FIX: Clean up orphaned references in focusModeData
             if (focusModeData.oneThingId === id) {
@@ -11112,7 +11158,7 @@
 
         // Start timer for specific task
         function startTaskTimer(id) {
-            const task = tasks.find(t => t.id === id);
+            const task = tasks[id];
             if (!task) return;
 
             currentTask = task;
@@ -11269,11 +11315,11 @@
             let tasksToShow = [];
             
             if (type === 'doToday') {
-                tasksToShow = tasks.filter(t => t.doToday && !t.completed);
+                tasksToShow = getValues(tasks).filter(t => t.doToday && !t.completed);
             } else if (type === 'remaining') {
-                tasksToShow = tasks.filter(t => !t.completed);
+                tasksToShow = getValues(tasks).filter(t => !t.completed);
             } else if (type === 'completed') {
-                tasksToShow = tasks.filter(t => t.completed);
+                tasksToShow = getValues(tasks).filter(t => t.completed);
                 // Sort by completion time (newest first)
                 tasksToShow.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
             }
@@ -11345,7 +11391,7 @@
         }
 
         function uncompleteTaskFromDashboard(taskId) {
-            const task = tasks.find(t => t.id === taskId);
+            const task = tasks[taskId];
             if (task && task.completed) {
                 task.completed = false;
                 delete task.completedAt;
@@ -11381,10 +11427,10 @@
             const doTodayElement = document.getElementById('tasksToDoToday');
             
             // Calculate metrics
-            const incompleteTasks = tasks.filter(t => !t.completed);
+            const incompleteTasks = getValues(tasks).filter(t => !t.completed);
             const tasksRemaining = incompleteTasks.length;
             const totalXPAvailable = tasksRemaining * 20;
-            const doTodayTasks = tasks.filter(t => t.doToday && !t.completed).length;
+            const doTodayTasks = getValues(tasks).filter(t => t.doToday && !t.completed).length;
             
             if (totalXPElement) totalXPElement.textContent = stats.totalXPGained;
             if (totalElement) totalElement.textContent = stats.totalTasks;
@@ -11809,8 +11855,9 @@
                 return;
             }
             
+            const id = generateId('task');
             const task = {
-                id: Date.now(),
+                id: id,
                 text: input.value.trim(),
                 category: categorySelect.value,
                 completed: false,
@@ -11819,8 +11866,8 @@
                 size: sizeSelect.value,
                 highLeverage: false
             };
-            
-            tasks.push(task);
+
+            tasks[id] = task;
             
             // Add to today's focus tasks
             if (!focusModeData.todaysTasks[task.size].includes(task.id)) {

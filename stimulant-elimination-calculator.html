@@ -3311,8 +3311,9 @@
         let state = {
             wakeTime: '06:45',
             hoursSleptLastNight: 8,
-            medications: [],
-            caffeine: [],
+            // OBJECTS with ID keys (not arrays) - prevents Firebase corruption
+            medications: {},  // { 'med_123_abc': { id, dose, time, date } }
+            caffeine: {},     // { 'caf_123_abc': { id, amount, time, date } }
             // All-Nighter Mode: enables 48-hour view with yesterday's ghost load
             allNighterMode: false,
             modifiers: {
@@ -3349,7 +3350,9 @@
                 caffThreshold: 25,
                 weight: 190
             },
-            history: [],
+            // OBJECT with ID keys - prevents Firebase corruption
+            history: {},  // { 'hist_123_abc': { id, date, predictedSleep, actualSleep, ... } }
+            _version: 0,  // Incremented on every save for conflict detection
             // Enhanced sleep history: stores hours slept AND wake time for each day
             // { 'YYYY-MM-DD': { hoursSlept: number, wakeTime: 'HH:MM' } }
             sleepHistory: {}
@@ -3371,6 +3374,50 @@
         // Generate unique IDs
         function generateId(prefix = 'item') {
             return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        }
+
+        // Convert array to object with unique IDs (migration helper)
+        // This PREVENTS Firebase's array→object corruption by using objects from the start
+        function migrateArrayToObject(arr, prefix = 'item') {
+            if (!arr) return {};
+            // Already an object with string keys? Return as-is
+            if (!Array.isArray(arr) && typeof arr === 'object') {
+                // Check if it looks like our ID-keyed object
+                const keys = Object.keys(arr);
+                if (keys.length === 0) return {};
+                if (keys.every(k => typeof k === 'string' && k.includes('_'))) {
+                    return arr; // Already migrated
+                }
+                // Firebase-corrupted sparse object (numeric keys) - convert to proper object
+                arr = Object.values(arr).filter(v => v !== null && v !== undefined);
+            }
+            if (!Array.isArray(arr)) return {};
+
+            const obj = {};
+            arr.forEach((item, index) => {
+                if (item === null || item === undefined) return;
+                // Use existing ID if present, otherwise generate one
+                // Add small offset to ensure uniqueness even if items have same timestamp
+                const id = item.id && typeof item.id === 'string' && item.id.includes('_')
+                    ? item.id
+                    : generateId(prefix) + '_' + index;
+                obj[id] = { ...item, id };
+            });
+            return obj;
+        }
+
+        // Get values from object as array (for iteration)
+        function getValues(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj; // Backwards compat during migration
+            return Object.values(obj).filter(v => v !== null && v !== undefined);
+        }
+
+        // Get count of items in object
+        function getCount(obj) {
+            if (!obj) return 0;
+            if (Array.isArray(obj)) return obj.length;
+            return Object.keys(obj).length;
         }
 
         // Backup Manager
@@ -3868,7 +3915,8 @@
             const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
             const today = getLocalDateString();
 
-            state.medications.forEach(med => {
+            // FIX: Use getValues() for object iteration
+            getValues(state.medications).forEach(med => {
                 const baseDoseTime = timeToMinutes(med.time);
                 const totalDose = med.dose;
                 const medDate = med.date || today;
@@ -3983,7 +4031,7 @@
             const halfLife = state.settings.caffHalfLife * 60; // in minutes
             const today = getLocalDateString();
 
-            state.caffeine.forEach(caff => {
+            getValues(state.caffeine).forEach(caff => {
                 const baseDoseTime = timeToMinutes(caff.time);
                 const caffDate = caff.date || today;
 
@@ -4018,8 +4066,9 @@
         // Find when amphetamine clears threshold
         function findAmpClearTime() {
             const threshold = getEffectiveThreshold(); // Use effective threshold with sleep debt
-            
-            if (state.medications.length === 0) return null;
+
+            // FIX: Use getCount() for object
+            if (getCount(state.medications) === 0) return null;
             
             // Binary search from now to 36 hours later
             const now = getCurrentMinutes();
@@ -4047,7 +4096,7 @@
         function findCaffClearTime() {
             const threshold = state.settings.caffThreshold;
             
-            if (state.caffeine.length === 0) return null;
+            if (getCount(state.caffeine) === 0) return null;
             
             const now = getCurrentMinutes();
             let low = now;
@@ -4312,10 +4361,14 @@
             const now = new Date();
             const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             const today = getLocalDateString(now); // YYYY-MM-DD format
-            
-            // PHASE 3: Add date stamp to prevent phantom loads
-            const entry = { id: Date.now(), dose, time: defaultTime, date: today };
-            state.medications.push(entry);
+
+            // FIX: Use object with unique ID key instead of array
+            const id = generateId('med');
+            const entry = { id, dose, time: defaultTime, date: today };
+            if (!state.medications || Array.isArray(state.medications)) {
+                state.medications = migrateArrayToObject(state.medications, 'med');
+            }
+            state.medications[id] = entry;
             renderMedEntries();
             recalculate();
             saveState();
@@ -4328,29 +4381,44 @@
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = getLocalDateString(yesterday);
-            
+
+            // FIX: Work with object instead of array
+            if (!state.medications) state.medications = {};
+            if (Array.isArray(state.medications)) {
+                state.medications = migrateArrayToObject(state.medications, 'med');
+            }
+
             // Keep today's meds and yesterday's meds (for overnight decay)
             // Remove anything older
-            const originalCount = state.medications.length;
-            state.medications = state.medications.filter(med => {
-                if (!med.date) return true; // Legacy entries without date - keep for now
-                return med.date === today || med.date === yesterdayStr;
+            const originalCount = getCount(state.medications);
+            const idsToDelete = [];
+            Object.entries(state.medications).forEach(([id, med]) => {
+                if (!med) return;
+                if (!med.date) return; // Legacy entries without date - keep for now
+                if (med.date !== today && med.date !== yesterdayStr) {
+                    idsToDelete.push(id);
+                }
             });
-            
-            if (state.medications.length !== originalCount) {
+            idsToDelete.forEach(id => delete state.medications[id]);
+
+            if (getCount(state.medications) !== originalCount) {
                 saveState();
             }
         }
 
         function removeMedEntry(id) {
-            state.medications = state.medications.filter(m => m.id !== id);
+            // FIX: Delete from object instead of filter array
+            if (state.medications && state.medications[id]) {
+                delete state.medications[id];
+            }
             renderMedEntries();
             recalculate();
             saveState();
         }
 
         function updateMedEntry(id, field, value) {
-            const med = state.medications.find(m => m.id === id);
+            // FIX: Direct object access instead of .find()
+            const med = state.medications ? state.medications[id] : null;
             if (med) {
                 if (field === 'dose') {
                     med.dose = parseInt(value);
@@ -4376,18 +4444,20 @@
             const container = document.getElementById('medEntries');
             const today = getLocalDateString(new Date());
 
-            container.innerHTML = state.medications.map((med, index) => {
+            // FIX: Use getValues() to iterate object as array
+            const meds = getValues(state.medications);
+            container.innerHTML = meds.map((med, index) => {
                 const medDate = med.date || today;
                 const isToday = medDate === today;
-                // Always show date picker for max precision
+                // Use string ID with quotes in onclick handlers
                 const dateSelector = `
-                    <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry(${med.id}, 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
+                    <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
                 `;
 
                 return `
                 <div class="med-entry">
                     ${dateSelector}
-                    <select onchange="updateMedEntry(${med.id}, 'dose', this.value)">
+                    <select onchange="updateMedEntry('${med.id}', 'dose', this.value)">
                         <option value="20" ${med.dose === 20 ? 'selected' : ''}>20mg XR</option>
                         <option value="30" ${med.dose === 30 ? 'selected' : ''}>30mg XR</option>
                         <option value="40" ${med.dose === 40 ? 'selected' : ''}>40mg XR (20+20)</option>
@@ -4395,9 +4465,9 @@
                         <option value="60" ${med.dose === 60 ? 'selected' : ''}>60mg XR (30+30)</option>
                         <option value="70" ${med.dose === 70 ? 'selected' : ''}>70mg XR (30+20+20)</option>
                     </select>
-                    <input type="time" value="${med.time}" onchange="updateMedEntry(${med.id}, 'time', this.value)">
+                    <input type="time" value="${med.time}" onchange="updateMedEntry('${med.id}', 'time', this.value)">
                     ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
-                    <button class="remove-btn" onclick="removeMedEntry(${med.id})">×</button>
+                    <button class="remove-btn" onclick="removeMedEntry('${med.id}')">×</button>
                 </div>
             `}).join('');
 
@@ -4421,9 +4491,11 @@
         function updateStackingWarning() {
             const warningEl = document.getElementById('stackingWarning');
             if (!warningEl) return;
-            
-            const totalDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
-            const numDoses = state.medications.length;
+
+            // FIX: Use getValues() and getCount() for object
+            const meds = getValues(state.medications);
+            const totalDose = meds.reduce((sum, m) => sum + m.dose, 0);
+            const numDoses = meds.length;
             const sleepDebt = Math.max(0, 8 - state.hoursSleptLastNight);
             
             if (numDoses > 1) {
@@ -4485,7 +4557,12 @@
             const now = new Date();
             const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             const today = getLocalDateString(now);
-            state.caffeine.push({ id: Date.now(), amount, name, time, date: today });
+            // FIX: Use object with ID key instead of array push
+            const id = generateId('caf');
+            if (!state.caffeine || Array.isArray(state.caffeine)) {
+                state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+            }
+            state.caffeine[id] = { id, amount, name, time, date: today };
             renderCaffeineEntries();
             renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
             recalculate();
@@ -4493,7 +4570,10 @@
         }
 
         function removeCaffeine(id) {
-            state.caffeine = state.caffeine.filter(c => c.id !== id);
+            // FIX: Delete from object instead of filter array
+            if (state.caffeine && state.caffeine[id]) {
+                delete state.caffeine[id];
+            }
             renderCaffeineEntries();
             renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
             recalculate();
@@ -4505,31 +4585,35 @@
             if (!container) return;
             const today = getLocalDateString(new Date());
 
-            container.innerHTML = state.caffeine.map((caff, index) => {
+            // FIX: Use getValues() to iterate object
+            const caffArray = getValues(state.caffeine);
+            container.innerHTML = caffArray.map((caff, index) => {
                 const isSipPart = caff.sipGroup !== undefined;
                 const sipBadge = isSipPart ? `<span style="font-size: 0.7em; color: #a78bfa; margin-left: 6px;">(sip ${caff.sipPart}/${caff.sipTotal})</span>` : '';
 
                 // Always show date picker for max precision
                 const caffDate = caff.date || today;
                 const isToday = caffDate === today;
+                // Use string ID in onclick handlers
                 const dateSelector = `
-                    <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate(${index}, this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
+                    <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate('${caff.id}', this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
                 `;
 
                 return `
                 <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);"' : ''}>
                     ${dateSelector}
                     <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
-                    <input type="time" value="${caff.time}" onchange="updateCaffeineTime(${index}, this.value)"
+                    <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
                            style="padding: 4px 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 0.85em; width: 100px;">
-                    <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine(${caff.id})">×</button>
+                    <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
                 </div>
             `}).join('');
         }
-        
-        function updateCaffeineTime(index, newTime) {
-            if (state.caffeine[index]) {
-                state.caffeine[index].time = newTime;
+
+        // FIX: Change from index-based to ID-based access
+        function updateCaffeineTime(id, newTime) {
+            if (state.caffeine && state.caffeine[id]) {
+                state.caffeine[id].time = newTime;
                 recalculate();
                 saveState();
                 
@@ -4542,9 +4626,10 @@
         }
 
         // FIX Bug 4: Allow date changes for caffeine in All-Nighter Mode
-        function updateCaffeineDate(index, newDate) {
-            if (state.caffeine[index]) {
-                state.caffeine[index].date = newDate;
+        // FIX: Change from index-based to ID-based access
+        function updateCaffeineDate(id, newDate) {
+            if (state.caffeine && state.caffeine[id]) {
+                state.caffeine[id].date = newDate;
                 renderCaffeineEntries(); // Re-render to update date selector color
                 renderFocusCaffeineList(); // Keep Focus Mode in sync
                 renderGhostLoad(); // Update ghost load display
@@ -4669,7 +4754,8 @@
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = getLocalDateString(yesterday);
 
-            return state.medications.filter(med => med.date === yesterdayStr);
+            // FIX: Use getValues() for object
+            return getValues(state.medications).filter(med => med.date === yesterdayStr);
         }
 
         // Get yesterday's caffeine for display
@@ -4678,7 +4764,7 @@
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = getLocalDateString(yesterday);
 
-            return state.caffeine.filter(caff => caff.date === yesterdayStr);
+            return getValues(state.caffeine).filter(caff => caff.date === yesterdayStr);
         }
 
         // Calculate remaining load from a yesterday dose
@@ -5712,7 +5798,7 @@
             }
             
             // Caffeine cutoff warning
-            if (now < noon && state.caffeine.length === 0) {
+            if (now < noon && getCount(state.caffeine) === 0) {
                 const timeUntilCutoff = noon - now;
                 const hours = Math.floor(timeUntilCutoff / 60);
                 const mins = timeUntilCutoff % 60;
@@ -5811,7 +5897,7 @@
             }
             
             // No meds logged
-            if (state.medications.length === 0) {
+            if (getCount(state.medications) === 0) {
                 recommendations.push({
                     type: 'info',
                     icon: '💊',
@@ -5846,16 +5932,17 @@
             const effectiveThreshold = getEffectiveThreshold();
             
             // Get total dose for context
-            const totalAmpDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
-            
+            const medsArray = getValues(state.medications);
+            const totalAmpDose = medsArray.reduce((sum, m) => sum + m.dose, 0);
+
             if (totalAmpDose === 0) {
                 container.innerHTML = '<div style="color: #b0b8c4; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
                 return;
             }
-            
+
             // Find peak time (about 2-4 hours after last dose for XR)
-            if (state.medications.length > 0) {
-                const lastDoseTime = Math.max(...state.medications.map(m => timeToMinutes(m.time)));
+            if (medsArray.length > 0) {
+                const lastDoseTime = Math.max(...medsArray.map(m => timeToMinutes(m.time)));
                 const peakTime = lastDoseTime + 180; // ~3 hours after dose
                 
                 if (peakTime > now && peakTime < sleepTime) {
@@ -6415,13 +6502,17 @@
             const now = getCurrentMinutes();
             const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
             
-            const tempCaff = { id: 999999, amount, name: 'Simulated', time: nowTime };
-            state.caffeine.push(tempCaff);
-            
+            const tempId = 'temp_simulation_999999';
+            const tempCaff = { id: tempId, amount, name: 'Simulated', time: nowTime };
+            if (!state.caffeine || Array.isArray(state.caffeine)) {
+                state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+            }
+            state.caffeine[tempId] = tempCaff;
+
             const { sleepTime } = calculateSleepTime();
-            
+
             // Remove temp caffeine
-            state.caffeine = state.caffeine.filter(c => c.id !== 999999);
+            delete state.caffeine[tempId];
             
             return sleepTime;
         }
@@ -6739,8 +6830,9 @@
             ctx.fill();
             
             // Add "Stimulant Blockade" label in the shaded area
-            const peakTime = state.medications.length > 0 ? 
-                Math.min(...state.medications.map(m => timeToMinutes(m.time))) + 180 : // ~3 hrs after first dose
+            const medsForPeak = getValues(state.medications);
+            const peakTime = medsForPeak.length > 0 ?
+                Math.min(...medsForPeak.map(m => timeToMinutes(m.time))) + 180 : // ~3 hrs after first dose
                 startTime + 360;
             
             if (peakTime >= startTime && peakTime <= endTime) {
@@ -6966,21 +7058,27 @@
         
         function saveDay() {
             const { sleepTime } = calculateSleepTime();
-            
+
+            const id = generateId('hist');
             const entry = {
-                id: Date.now(),
+                id: id,
                 date: getLocalDateString(),
-                medications: [...state.medications],
-                caffeine: [...state.caffeine],
+                medications: getValues(state.medications), // Store snapshot as array for simplicity
+                caffeine: getValues(state.caffeine),
                 modifiers: JSON.parse(JSON.stringify(state.modifiers)),
                 predictedSleep: sleepTime,
                 actualSleep: null
             };
-            
-            state.history.unshift(entry);
+
+            // Ensure history is an object
+            if (!state.history || Array.isArray(state.history)) {
+                state.history = migrateArrayToObject(state.history, 'hist');
+            }
+            state.history[id] = entry;
+
             // History limit REMOVED - keep full history for long-term tracking
             // Text data is minimal; 10 years of history < 1MB
-            
+
             saveState();
             renderHistory();
             showToast('Day saved! Log actual sleep time tomorrow.');
@@ -6988,18 +7086,20 @@
 
         function renderHistory() {
             const container = document.getElementById('historyList');
-            
+
             // Clean up corrupted history entries (from the old bug)
             cleanupHistory();
-            
-            if (state.history.length === 0) {
+
+            const historyValues = getValues(state.history).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (historyValues.length === 0) {
                 container.innerHTML = '<p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
                 return;
             }
-            
+
             // Show up to 30 entries (expanded from 10)
             const displayCount = 30;
-            const entriesToShow = state.history.slice(0, displayCount);
+            const entriesToShow = historyValues.slice(0, displayCount);
             
             let html = entriesToShow.map(entry => {
                 const date = new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -7044,9 +7144,9 @@
             }).join('');
             
             // Add count indicator if there are more entries
-            if (state.history.length > displayCount) {
+            if (historyValues.length > displayCount) {
                 html += `<p style="color: #b0b8c4; text-align: center; padding: 10px; font-size: 0.85em;">
-                    Showing ${displayCount} of ${state.history.length} entries
+                    Showing ${displayCount} of ${historyValues.length} entries
                 </p>`;
             }
             
@@ -7055,11 +7155,13 @@
         
         // Clean up corrupted history entries
         function cleanupHistory() {
-            if (!state.history || state.history.length === 0) return;
-            
+            const historyValues = getValues(state.history);
+            if (historyValues.length === 0) return;
+
             // Group entries by date and keep only one per day (the most recent one with valid data)
             const byDate = {};
-            state.history.forEach(entry => {
+            const idsToRemove = [];
+            historyValues.forEach(entry => {
                 const date = entry.date;
                 if (!byDate[date]) {
                     byDate[date] = entry;
@@ -7068,21 +7170,26 @@
                     const existing = byDate[date];
                     const existingHasMeds = existing.medications && existing.medications.length > 0;
                     const newHasMeds = entry.medications && entry.medications.length > 0;
-                    
+
                     if (newHasMeds && !existingHasMeds) {
+                        idsToRemove.push(existing.id);
                         byDate[date] = entry;
                     } else if (entry.id > existing.id) {
+                        idsToRemove.push(existing.id);
                         byDate[date] = entry;
+                    } else {
+                        idsToRemove.push(entry.id);
                     }
                 }
             });
-            
-            // Rebuild history from deduplicated entries, sorted by date descending
-            const cleaned = Object.values(byDate).sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Only save if we actually cleaned something
-            if (cleaned.length < state.history.length) {
-                state.history = cleaned;
+
+            // Remove duplicate entries
+            if (idsToRemove.length > 0) {
+                idsToRemove.forEach(id => {
+                    if (state.history && state.history[id]) {
+                        delete state.history[id];
+                    }
+                });
                 saveState();
             }
         }
@@ -8160,7 +8267,7 @@
 
         function showFeedbackModal() {
             // Check if there's a recent entry without feedback
-            const recent = state.history.find(h => h.actualSleep === null);
+            const recent = getValues(state.history).find(h => h.actualSleep === null);
             if (recent) {
                 document.getElementById('feedbackPredicted').textContent = minutesToTime(recent.predictedSleep > 24*60 ? recent.predictedSleep - 24*60 : recent.predictedSleep);
                 document.getElementById('feedbackModal').classList.add('show');
@@ -8178,9 +8285,9 @@
                 return;
             }
             
-            const recent = state.history.find(h => h.actualSleep === null);
-            if (recent) {
-                recent.actualSleep = timeToMinutes(actualTime);
+            const recent = getValues(state.history).find(h => h.actualSleep === null);
+            if (recent && state.history[recent.id]) {
+                state.history[recent.id].actualSleep = timeToMinutes(actualTime);
                 saveState();
                 renderHistory();
                 closeFeedbackModal();
@@ -8192,7 +8299,7 @@
         }
 
         function suggestCalibration() {
-            const withFeedback = state.history.filter(h => h.actualSleep !== null).slice(0, 5);
+            const withFeedback = getValues(state.history).filter(h => h.actualSleep !== null).slice(0, 5);
             if (withFeedback.length < 3) return;
             
             const avgDiff = withFeedback.reduce((sum, h) => sum + (h.actualSleep - h.predictedSleep), 0) / withFeedback.length;
@@ -8480,22 +8587,23 @@
                     
                     if (data && data.state) {
                         const firebaseState = data.state;
-                        
+
                         // Prefer Firebase data over local (Firebase is source of truth when available)
-                        // CRITICAL: Use ensureArray() for all arrays - Firebase converts arrays to objects
+                        // FIX: Migrate arrays to objects to PREVENT Firebase corruption
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
                             allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
-                            // Arrays with ensureArray protection
-                            medications: ensureArray(firebaseState.medications, state.medications),
-                            caffeine: ensureArray(firebaseState.caffeine, state.caffeine),
-                            history: ensureArray(firebaseState.history, state.history),
+                            // OBJECTS with ID keys (migrated from arrays)
+                            medications: migrateArrayToObject(firebaseState.medications || state.medications, 'med'),
+                            caffeine: migrateArrayToObject(firebaseState.caffeine || state.caffeine, 'caf'),
+                            history: migrateArrayToObject(firebaseState.history || state.history, 'hist'),
                             modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                             settings: { ...state.settings, ...(firebaseState.settings || {}) },
                             sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
                             workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
-                            nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
+                            nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) },
+                            _version: (firebaseState._version || 0) + 1
                         };
                         
                         // Save merged state to localStorage
@@ -8631,21 +8739,22 @@
                     
                     lastKnownTimestamp = data.lastUpdated;
                     
-                    // Merge in the new data with ARRAY PROTECTION
+                    // Merge in the new data - MIGRATE arrays to objects
                     const firebaseState = data.state;
                     state = {
                         wakeTime: firebaseState.wakeTime || state.wakeTime,
                         hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
                         allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
-                        // Arrays with ensureArray protection (Firebase converts arrays to objects)
-                        medications: ensureArray(firebaseState.medications, state.medications),
-                        caffeine: ensureArray(firebaseState.caffeine, state.caffeine),
-                        history: ensureArray(firebaseState.history, state.history),
+                        // OBJECTS with ID keys (migrated from arrays to prevent Firebase corruption)
+                        medications: migrateArrayToObject(firebaseState.medications || state.medications, 'med'),
+                        caffeine: migrateArrayToObject(firebaseState.caffeine || state.caffeine, 'caf'),
+                        history: migrateArrayToObject(firebaseState.history || state.history, 'hist'),
                         modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                         settings: { ...state.settings, ...(firebaseState.settings || {}) },
                         sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
                         workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
-                        nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
+                        nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) },
+                        _version: (firebaseState._version || 0) + 1
                     };
                     
                     // Update localStorage
@@ -8759,20 +8868,22 @@
             state = deepMerge(state, {
                 wakeTime: firebaseState.wakeTime,
                 hoursSleptLastNight: firebaseState.hoursSleptLastNight,
-                medications: ensureArray(firebaseState.medications, []),
-                caffeine: ensureArray(firebaseState.caffeine, []),
-                history: ensureArray(firebaseState.history, []),
+                // FIX: Migrate to objects to prevent Firebase corruption
+                medications: migrateArrayToObject(firebaseState.medications, 'med'),
+                caffeine: migrateArrayToObject(firebaseState.caffeine, 'caf'),
+                history: migrateArrayToObject(firebaseState.history, 'hist'),
                 modifiers: firebaseState.modifiers || {},
                 settings: firebaseState.settings || {},
                 sleepHistory: firebaseState.sleepHistory || {},
                 workoutPlan: firebaseState.workoutPlan || {},
-                nicotine: firebaseState.nicotine || {}
+                nicotine: firebaseState.nicotine || {},
+                _version: (firebaseState._version || state._version || 0) + 1
             });
 
-            // Double-check arrays are valid (belt + suspenders)
-            if (!Array.isArray(state.medications)) state.medications = [];
-            if (!Array.isArray(state.caffeine)) state.caffeine = [];
-            if (!Array.isArray(state.history)) state.history = [];
+            // Ensure objects are valid (belt + suspenders)
+            if (!state.medications || Array.isArray(state.medications)) state.medications = migrateArrayToObject(state.medications, 'med');
+            if (!state.caffeine || Array.isArray(state.caffeine)) state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+            if (!state.history || Array.isArray(state.history)) state.history = migrateArrayToObject(state.history, 'hist');
 
             localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
 
@@ -8814,7 +8925,7 @@
                     }).catch(err => console.error('Save on hide failed:', err));
                 }
             } else if (document.visibilityState === 'visible') {
-                // Tab is visible again - refresh from Firebase with ARRAY PROTECTION
+                // Tab is visible again - refresh from Firebase and MIGRATE to objects
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
@@ -8825,15 +8936,16 @@
                                 state = {
                                     ...state,
                                     ...fs,
-                                    // Arrays with ensureArray protection
-                                    medications: ensureArray(fs.medications, state.medications),
-                                    caffeine: ensureArray(fs.caffeine, state.caffeine),
-                                    history: ensureArray(fs.history, state.history),
+                                    // FIX: Migrate to objects to prevent Firebase corruption
+                                    medications: migrateArrayToObject(fs.medications || state.medications, 'med'),
+                                    caffeine: migrateArrayToObject(fs.caffeine || state.caffeine, 'caf'),
+                                    history: migrateArrayToObject(fs.history || state.history, 'hist'),
                                     modifiers: { ...state.modifiers, ...(fs.modifiers || {}) },
                                     settings: { ...state.settings, ...(fs.settings || {}) },
                                     sleepHistory: { ...state.sleepHistory, ...(fs.sleepHistory || {}) },
                                     workoutPlan: { ...state.workoutPlan, ...(fs.workoutPlan || {}) },
-                                    nicotine: { ...state.nicotine, ...(fs.nicotine || {}) }
+                                    nicotine: { ...state.nicotine, ...(fs.nicotine || {}) },
+                                    _version: (fs._version || state._version || 0) + 1
                                 };
 
                                 renderMedEntries();
@@ -8929,21 +9041,23 @@
                     nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) }
                 };
 
-                // Ensure arrays are valid after localStorage merge (Firebase may have corrupted them)
-                state.medications = ensureArray(state.medications, []);
-                state.caffeine = ensureArray(state.caffeine, []);
-                state.history = ensureArray(state.history, []);
+                // FIX: Migrate arrays to objects to prevent Firebase corruption
+                state.medications = migrateArrayToObject(state.medications, 'med');
+                state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+                state.history = migrateArrayToObject(state.history, 'hist');
 
                 // Clear today's entries (fresh start each day)
                 const today = getLocalDateString();
-                const lastDate = state.history[0]?.date;
+                // Get most recent history entry to check date
+                const historyValues = getValues(state.history);
+                const lastDate = historyValues.length > 0 ? historyValues[0]?.date : null;
 
                 // FIX: Only clear if we HAVE a history date AND it's different from today
                 // Previously, empty history (undefined !== today) would clear modifiers on every reload
                 if (lastDate && lastDate !== today) {
                     // New day - clear entries but keep settings and history
-                    state.medications = [];
-                    state.caffeine = [];
+                    state.medications = {};
+                    state.caffeine = {};
                     Object.keys(state.modifiers).forEach(k => {
                         if (state.modifiers[k]) {
                             state.modifiers[k].active = false;
@@ -8990,8 +9104,9 @@
 
         function clearToday() {
             if (confirm('Clear all of today\'s entries?')) {
-                state.medications = [];
-                state.caffeine = [];
+                // FIX: Use empty objects instead of arrays
+                state.medications = {};
+                state.caffeine = {};
                 Object.keys(state.modifiers).forEach(k => {
                     if (state.modifiers[k]) {
                         state.modifiers[k].active = false;
@@ -9146,14 +9261,14 @@
             
             // Build caffeine details
             let caffeineDetails = [];
-            if (state.caffeine.length === 0) {
+            if (getCount(state.caffeine) === 0) {
                 caffeineDetails.push('None logged');
             } else {
                 // Group sip mode entries
                 const sipGroups = {};
                 const regularEntries = [];
-                
-                state.caffeine.forEach((c, i) => {
+
+                getValues(state.caffeine).forEach((c, i) => {
                     if (c.sipGroup) {
                         if (!sipGroups[c.sipGroup]) {
                             sipGroups[c.sipGroup] = { entries: [], meta: null };
@@ -9201,10 +9316,11 @@
             
             // Build medication details
             let medDetails = [];
-            if (state.medications.length === 0) {
+            const medsForDetails = getValues(state.medications);
+            if (medsForDetails.length === 0) {
                 medDetails.push('None logged');
             } else {
-                state.medications.forEach((m, i) => {
+                medsForDetails.forEach((m, i) => {
                     const type = m.dose >= 20 ? 'XR' : 'IR';
                     medDetails.push(`${i+1}. ${m.dose}mg ${type} at ${m.time}`);
                 });
@@ -9269,8 +9385,9 @@
             
             // Calculate crash time
             let crashTime = null;
-            if (state.medications.length > 0) {
-                const latestDose = state.medications.reduce((latest, m) => {
+            const medsForCrash = getValues(state.medications);
+            if (medsForCrash.length > 0) {
+                const latestDose = medsForCrash.reduce((latest, m) => {
                     const t = timeToMinutes(m.time);
                     return t > latest ? t : latest;
                 }, 0);
@@ -9563,7 +9680,7 @@ Current status at ${currentTime}:
             
             // Check for pending feedback
             setTimeout(() => {
-                const recent = state.history.find(h => h.actualSleep === null);
+                const recent = getValues(state.history).find(h => h.actualSleep === null);
                 if (recent && recent.date !== getLocalDateString()) {
                     showFeedbackModal();
                 }
@@ -9818,10 +9935,13 @@ Current status at ${currentTime}:
             const time = document.getElementById('focusMedTime').value;
             const today = getLocalDateString(new Date());
 
-            // FIX: ADD medication instead of replacing (prevents data loss)
-            // Standard dose: 30mg + 20mg XR = 50mg total
-            const entry = { id: Date.now(), dose: 50, time: time, date: today };
-            state.medications.push(entry);
+            // FIX: Use object with ID key instead of array push
+            const id = generateId('med');
+            const entry = { id, dose: 50, time: time, date: today };
+            if (!state.medications || Array.isArray(state.medications)) {
+                state.medications = migrateArrayToObject(state.medications, 'med');
+            }
+            state.medications[id] = entry;
 
             // Auto-enable Vitamin C
             if (focusVitCEnabled) {
@@ -9869,9 +9989,13 @@ Current status at ${currentTime}:
                 dose = parseInt(select.value);
             }
 
-            // FIX: ADD medication instead of replacing (prevents data loss)
-            const entry = { id: Date.now(), dose: dose, time: time, date: today };
-            state.medications.push(entry);
+            // FIX: Use object with ID key instead of array push
+            const id = generateId('med');
+            const entry = { id, dose: dose, time: time, date: today };
+            if (!state.medications || Array.isArray(state.medications)) {
+                state.medications = migrateArrayToObject(state.medications, 'med');
+            }
+            state.medications[id] = entry;
 
             // Auto-enable Vitamin C
             if (focusVitCEnabled) {
@@ -9891,7 +10015,16 @@ Current status at ${currentTime}:
         function focusEditMeds() {
             // FIX: Don't wipe all medications - just clear today's meds and allow re-entry
             const today = getLocalDateString(new Date());
-            state.medications = state.medications.filter(med => med.date !== today);
+            // FIX: Delete from object instead of array filter
+            if (!state.medications) state.medications = {};
+            if (Array.isArray(state.medications)) {
+                state.medications = migrateArrayToObject(state.medications, 'med');
+            }
+            Object.entries(state.medications).forEach(([id, med]) => {
+                if (med && med.date === today) {
+                    delete state.medications[id];
+                }
+            });
             renderMedEntries();
             saveState();
             recalculate();
@@ -9904,14 +10037,16 @@ Current status at ${currentTime}:
             const confirmed = document.getElementById('focusMedsConfirmed');
             const summary = document.getElementById('focusMedsSummary');
 
-            if (state.medications.length > 0) {
+            // FIX: Use getValues() for object
+            const medsArray = getValues(state.medications);
+            if (medsArray.length > 0) {
                 notConfirmed.style.display = 'none';
                 confirmed.style.display = 'block';
-                const totalDose = state.medications.reduce((sum, m) => sum + m.dose, 0);
-                const numDoses = state.medications.length;
+                const totalDose = medsArray.reduce((sum, m) => sum + m.dose, 0);
+                const numDoses = medsArray.length;
 
                 // FIX: Show all medication times, not just first
-                const medTimes = state.medications.map(m => minutesToTime(timeToMinutes(m.time))).join(', ');
+                const medTimes = medsArray.map(m => minutesToTime(timeToMinutes(m.time))).join(', ');
                 let summaryText = `${totalDose}mg XR`;
                 if (numDoses === 1) {
                     summaryText += ` at ${medTimes}`;
@@ -9950,25 +10085,25 @@ Current status at ${currentTime}:
             
             if (!container) return;
             
-            if (state.caffeine.length === 0) {
+            if (getCount(state.caffeine) === 0) {
                 container.innerHTML = '<div style="text-align: center; color: #b0b8c4; padding: 12px; font-size: 0.9em;">No caffeine logged. Tap a button below to add.</div>';
                 if (statusEl) statusEl.innerHTML = '';
                 return;
             }
-            
+
             // Group entries: separate regular vs sip mode
             const sipGroups = {};
             const regularEntries = [];
-            
-            state.caffeine.forEach((caff, index) => {
+
+            getValues(state.caffeine).forEach((caff) => {
                 if (caff.sipGroup) {
                     if (!sipGroups[caff.sipGroup]) {
-                        sipGroups[caff.sipGroup] = { entries: [], indices: [] };
+                        sipGroups[caff.sipGroup] = { entries: [], ids: [] };
                     }
                     sipGroups[caff.sipGroup].entries.push(caff);
-                    sipGroups[caff.sipGroup].indices.push(index);
+                    sipGroups[caff.sipGroup].ids.push(caff.id);
                 } else {
-                    regularEntries.push({ ...caff, index });
+                    regularEntries.push({ ...caff });
                 }
             });
             
@@ -10030,9 +10165,11 @@ Current status at ${currentTime}:
             
             // Update status
             if (statusEl) {
-                const total = state.caffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
-                const entryText = state.caffeine.length === 1 ? 'entry' : 'entries';
-                statusEl.innerHTML = `<span>${state.caffeine.length} ${entryText} • ${Math.round(total)}mg total</span>
+                const caffeineValues = getValues(state.caffeine);
+                const total = caffeineValues.reduce((sum, c) => sum + (c.amount || 0), 0);
+                const count = caffeineValues.length;
+                const entryText = count === 1 ? 'entry' : 'entries';
+                statusEl.innerHTML = `<span>${count} ${entryText} • ${Math.round(total)}mg total</span>
                     <button onclick="focusClearAllCaffeine()" style="margin-left: 10px; padding: 4px 10px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 0.8em; cursor: pointer;">Clear All</button>`;
             }
         }
@@ -10051,7 +10188,12 @@ Current status at ${currentTime}:
         // Remove entire sip group
         function focusRemoveSipGroup(groupId) {
             if (confirm('Remove this entire sip session?')) {
-                state.caffeine = state.caffeine.filter(c => c.sipGroup !== groupId);
+                // Delete all entries with this sipGroup
+                Object.keys(state.caffeine || {}).forEach(id => {
+                    if (state.caffeine[id] && state.caffeine[id].sipGroup === groupId) {
+                        delete state.caffeine[id];
+                    }
+                });
                 renderFocusCaffeineList();
                 renderCaffeineEntries();
                 recalculate();
@@ -10078,13 +10220,17 @@ Current status at ${currentTime}:
                 setTimeout(() => btn.classList.remove('added'), 500);
             }
 
-            state.caffeine.push({
-                id: Date.now(),
+            const id = generateId('caf');
+            if (!state.caffeine || Array.isArray(state.caffeine)) {
+                state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+            }
+            state.caffeine[id] = {
+                id,
                 amount,
                 name,
                 time,
                 date: today
-            });
+            };
 
             renderFocusCaffeineList();
             renderCaffeineEntries();
@@ -10114,12 +10260,11 @@ Current status at ${currentTime}:
             }
         }
         
-        // Remove caffeine entry from Focus View
-        function focusRemoveCaffeine(index) {
-            if (state.caffeine[index]) {
-                const removed = state.caffeine[index];
-                state.caffeine.splice(index, 1);
-                
+        // Remove caffeine entry from Focus View (now uses ID instead of index)
+        function focusRemoveCaffeine(id) {
+            if (state.caffeine && state.caffeine[id]) {
+                delete state.caffeine[id];
+
                 renderFocusCaffeineList();
                 renderCaffeineEntries();
                 recalculate();
@@ -10289,8 +10434,12 @@ Current status at ${currentTime}:
                     runningTotal += mgPerDose;
                 }
 
-                state.caffeine.push({
-                    id: sipGroupId + i,
+                const sipId = generateId('sip') + '_' + i;
+                if (!state.caffeine || Array.isArray(state.caffeine)) {
+                    state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
+                }
+                state.caffeine[sipId] = {
+                    id: sipId,
                     amount: thisDoseMg,
                     name: drinkName,
                     time: doseTime,
@@ -10299,7 +10448,7 @@ Current status at ${currentTime}:
                     sipPart: i + 1,
                     sipTotal: numDoses,
                     sipMeta: i === 0 ? sipSession : null // Store metadata on first entry only
-                });
+                };
             }
             
             focusCloseSipMode();
@@ -10392,7 +10541,8 @@ Current status at ${currentTime}:
         
         function focusClearAllCaffeine() {
             if (confirm('Clear all caffeine entries?')) {
-                state.caffeine = [];
+                // FIX: Use empty object instead of array
+                state.caffeine = {};
                 renderFocusCaffeineList();
                 renderCaffeineEntries();
                 saveState();
@@ -10649,7 +10799,7 @@ Current status at ${currentTime}:
             ctx.setLineDash([]);
             
             // Draw caffeine curve (yellow) - draw first so amphetamine is on top
-            if (state.caffeine.length > 0) {
+            if (getCount(state.caffeine) > 0) {
                 ctx.strokeStyle = '#f59e0b';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
@@ -10764,7 +10914,8 @@ Current status at ${currentTime}:
             const now = new Date();
             const defaultTime = `${now.getHours().toString().padStart(2, '0')}:00`;
             const medTimeInput = document.getElementById('focusMedTime');
-            if (medTimeInput && !state.medications.length) {
+            // FIX: Use getCount() for object
+            if (medTimeInput && !getCount(state.medications)) {
                 medTimeInput.value = defaultTime;
             }
             
