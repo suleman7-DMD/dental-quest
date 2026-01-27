@@ -9254,7 +9254,7 @@ CHAIR: 9F
             if (!container) return;
 
             const patients = roadmapData.clinicalData?.patients || {};
-            const appointments = roadmapData.clinicalData?.appointments || [];
+            const appointments = getValues(roadmapData.clinicalData?.appointments);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -11286,8 +11286,8 @@ CHAIR: 9F
 
         function updateClinicalStats() {
             const patients = roadmapData.clinicalData?.patients || {};
-            const appointments = roadmapData.clinicalData?.appointments || [];
-            const procedures = roadmapData.clinicalData?.completedProcedures || [];
+            const appointments = getValues(roadmapData.clinicalData?.appointments);
+            const procedures = getValues(roadmapData.clinicalData?.completedProcedures);
 
             // Count active patients
             const activePatients = Object.values(patients).filter(p => p.status === 'active').length;
@@ -11549,7 +11549,7 @@ CHAIR: 9F
                 lastUpdated: new Date().toISOString()
             };
 
-            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
             if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
 
             roadmapData.clinicalData.patients[patientId] = patient;
@@ -11592,7 +11592,7 @@ CHAIR: 9F
 
         function renderAppointmentsList() {
             const container = document.getElementById('appointmentsList');
-            const appointments = roadmapData.clinicalData?.appointments || [];
+            const appointments = getValues(roadmapData.clinicalData?.appointments);
             const patients = roadmapData.clinicalData?.patients || {};
 
             // Sort by date
@@ -11758,8 +11758,8 @@ CHAIR: 9F
                 createdAt: new Date().toISOString()
             };
 
-            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
-            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
+            if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
+            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
 
             // Update or add
             if (!roadmapData.clinicalData.appointments || Array.isArray(roadmapData.clinicalData.appointments)) {
@@ -13051,14 +13051,14 @@ CHAIR: 9F
 
             // Ensure clinicalData structure exists
             if (!roadmapData.clinicalData) {
-                roadmapData.clinicalData = { patients: {}, appointments: [], completedProcedures: [] };
+                roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
             }
             if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
-            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = [];
+            if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
 
             // In refresh mode, clear all existing appointments
             if (isRefreshMode) {
-                roadmapData.clinicalData.appointments = [];
+                roadmapData.clinicalData.appointments = {};
             }
 
             let patientsAdded = 0;
@@ -14492,12 +14492,12 @@ CHAIR: 9F
         function mpGetWeekTasks(week) {
             // Combine static and custom tasks for this week
             const allTasks = [];
-            const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
-            const customTasks = roadmapData.monthlyPlanner?.customTasks || [];
-            
+            const overridden = getValues(roadmapData.monthlyPlanner?.overriddenStatic);
+            const customTasks = getValues(roadmapData.monthlyPlanner?.customTasks);
+
             // Build a set of all static IDs that have been converted to custom tasks
             // This catches cases where overriddenStatic wasn't updated properly
-            const convertedStaticIds = new Set(overridden);
+            const convertedStaticIds = new Set(overridden.map(o => o.value || o));
             customTasks.forEach(ct => {
                 if (ct.convertedFrom) {
                     convertedStaticIds.add(ct.convertedFrom);
@@ -14533,8 +14533,8 @@ CHAIR: 9F
         function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
             const typeClass = task.type || 'other';
             const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
-            const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
-            const isCompleted = completedTasks.includes(String(taskId));
+            const completedTasks = getValues(roadmapData.monthlyPlanner?.completedTasks);
+            const isCompleted = completedTasks.some(c => (c.value || c) === String(taskId));
             
             // Heights matching mpCreateCalendarGrid
             const heightWithTask = 80;
@@ -14624,7 +14624,7 @@ CHAIR: 9F
         
         function mpCreateUntimedSection(week) {
             const tasks = mpGetWeekTasks(week).filter(t => !t.time);
-            const completedTasks = roadmapData.monthlyPlanner?.completedTasks || [];
+            const completedTasks = getValues(roadmapData.monthlyPlanner?.completedTasks);
             
             if (tasks.length === 0) {
                 return `
@@ -14763,7 +14763,7 @@ CHAIR: 9F
                 }
             } else {
                 // Find in custom tasks
-                task = (roadmapData.monthlyPlanner?.customTasks || []).find(t => t.id == taskId);
+                task = getValues(roadmapData.monthlyPlanner?.customTasks).find(t => t.id == taskId);
             }
             
             if (!task) {
@@ -14914,10 +14914,8 @@ CHAIR: 9F
                 showToast('Task removed');
             } else {
                 // Delete custom task
-                const tasks = roadmapData.monthlyPlanner?.customTasks || [];
-                const idx = tasks.findIndex(t => t.id === mpCurrentTask.id);
-                if (idx !== -1) {
-                    tasks.splice(idx, 1);
+                if (roadmapData.monthlyPlanner?.customTasks?.[mpCurrentTask.id]) {
+                    delete roadmapData.monthlyPlanner.customTasks[mpCurrentTask.id];
                     showToast('Task deleted');
                 }
             }
@@ -14932,11 +14930,11 @@ CHAIR: 9F
             // Get all tasks from all weeks - only count FUTURE tasks
             const today = getLocalDateString();
             let allTasks = [];
-            const overridden = roadmapData.monthlyPlanner?.overriddenStatic || [];
-            const customTasks = roadmapData.monthlyPlanner?.customTasks || [];
-            
+            const overridden = getValues(roadmapData.monthlyPlanner?.overriddenStatic);
+            const customTasks = getValues(roadmapData.monthlyPlanner?.customTasks);
+
             // Build a set of all static IDs that have been converted to custom tasks
-            const convertedStaticIds = new Set(overridden);
+            const convertedStaticIds = new Set(overridden.map(o => o.value || o));
             customTasks.forEach(ct => {
                 if (ct.convertedFrom) {
                     convertedStaticIds.add(ct.convertedFrom);
@@ -15054,8 +15052,7 @@ CHAIR: 9F
         }
         
         function mpEditNote(noteId) {
-            const notes = roadmapData.monthlyPlanner?.notes || [];
-            const note = notes.find(n => n.id === noteId);
+            const note = roadmapData.monthlyPlanner?.notes?.[noteId];
             if (!note) return;
             
             const noteEl = document.querySelector(`.mp-note-item[data-id="${noteId}"]`);
