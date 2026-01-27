@@ -9879,6 +9879,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     if (!Array.isArray(state.weighIns)) state.weighIns = [];
                     if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
 
+                    // FIX: If frequentFoods is empty, populate with defaults
+                    if (state.frequentFoods.length === 0) {
+                        console.warn('⚠️ frequentFoods empty after load - populating defaults');
+                        state.frequentFoods = getDefaultFrequentFoods();
+                    }
+
                 } catch (e) {
                     console.error('Failed to parse localStorage:', e);
                 }
@@ -9964,6 +9970,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
                         if (!Array.isArray(state.weighIns)) state.weighIns = [];
                         if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+
+                        // FIX: If frequentFoods is empty after merge, populate with defaults
+                        if (state.frequentFoods.length === 0) {
+                            console.warn('⚠️ frequentFoods empty after Firebase merge - populating defaults');
+                            state.frequentFoods = getDefaultFrequentFoods();
+                        }
 
                         // Check for new day
                         const today = getLocalDateString();
