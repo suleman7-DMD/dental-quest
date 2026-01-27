@@ -14987,21 +14987,22 @@ CHAIR: 9F
                 return;
             }
             
+            const noteId = generateId('note');
             const note = {
-                id: Date.now(),
+                id: noteId,
                 text: text,
                 createdAt: new Date().toISOString()
             };
-            
-            // Ensure array exists
+
+            // Ensure object exists
             if (!roadmapData.monthlyPlanner) {
-                roadmapData.monthlyPlanner = { notes: [], customTasks: [], overriddenStatic: [] };
+                roadmapData.monthlyPlanner = { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {} };
             }
-            if (!roadmapData.monthlyPlanner.notes) {
-                roadmapData.monthlyPlanner.notes = [];
+            if (!roadmapData.monthlyPlanner.notes || Array.isArray(roadmapData.monthlyPlanner.notes)) {
+                roadmapData.monthlyPlanner.notes = migrateArrayToObject(roadmapData.monthlyPlanner.notes, 'note');
             }
-            
-            roadmapData.monthlyPlanner.notes.unshift(note);
+
+            roadmapData.monthlyPlanner.notes[noteId] = note;
             input.value = '';
             
             saveData();
@@ -15015,17 +15016,20 @@ CHAIR: 9F
             
             if (!container) return;
             
-            const notes = roadmapData.monthlyPlanner?.notes || [];
-            
+            const notes = getValues(roadmapData.monthlyPlanner?.notes);
+
             if (notes.length === 0) {
                 container.innerHTML = '';
                 if (noNotesMsg) noNotesMsg.style.display = 'block';
                 return;
             }
-            
+
             if (noNotesMsg) noNotesMsg.style.display = 'none';
-            
-            container.innerHTML = notes.map(note => {
+
+            // Sort by createdAt descending (newest first)
+            const sortedNotes = notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            container.innerHTML = sortedNotes.map(note => {
                 const date = new Date(note.createdAt);
                 const dateStr = date.toLocaleDateString('en-US', { 
                     month: 'short', 
@@ -15091,21 +15095,20 @@ CHAIR: 9F
             mpNoteSaving = true;
             
             const newText = textarea.value.trim();
-            const notes = roadmapData.monthlyPlanner?.notes || [];
-            const note = notes.find(n => n.id === noteId);
-            
+            const note = roadmapData.monthlyPlanner?.notes?.[noteId];
+
             if (!note) {
                 mpNoteSaving = false;
                 return;
             }
-            
+
             if (newText === '') {
                 mpNoteSaving = false;
                 mpDeleteNote(noteId);
                 return;
             }
-            
-            note.text = newText;
+
+            roadmapData.monthlyPlanner.notes[noteId].text = newText;
             saveData();
             mpRenderNotes();
             showToast('Note updated');
@@ -15115,12 +15118,10 @@ CHAIR: 9F
         
         function mpDeleteNote(noteId) {
             if (!confirm('Delete this note?')) return;
-            
-            const notes = roadmapData.monthlyPlanner?.notes || [];
-            const noteIndex = notes.findIndex(n => n.id === noteId);
-            if (noteIndex === -1) return;
-            
-            notes.splice(noteIndex, 1);
+
+            if (!roadmapData.monthlyPlanner?.notes?.[noteId]) return;
+
+            delete roadmapData.monthlyPlanner.notes[noteId];
             saveData();
             mpRenderNotes();
             showToast('Note deleted');
