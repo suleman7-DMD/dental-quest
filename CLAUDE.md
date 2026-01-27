@@ -168,6 +168,120 @@ visible → refresh from Firebase
 
 ---
 
+## SYNC PROTECTION SYSTEM (CRITICAL)
+
+### The Data Wipe Bug (FIXED Jan 2026)
+Opening any app on a fresh browser/device would wipe all cloud data because:
+- Default state had `_version: Date.now()` (NEWER than cloud)
+- App thought local was newer → overwrote cloud with empty data
+
+### 9 Firebase Bulletproof Fixes (All 4 Apps)
+```javascript
+// Fix 1: Default _version = 0 (not Date.now())
+_version: 0,
+_dataLoaded: false
+
+// Fix 2: isEmptyState() function - app-specific validation
+function isEmptyState(data) {
+    // Returns true if data has no real user content
+}
+
+// Fix 3: Sync protection flags
+let isInitialLoad = true;
+let hasLoadedFromCloud = false;
+let pinValidated = false;
+
+// Fix 4: Guards in saveData()/saveState()
+if (!pinValidated) return false;
+if (isInitialLoad) return false;
+if (!hasLoadedFromCloud) return false;
+if (isEmptyState(state)) return false;
+if (!state._dataLoaded) return false;
+
+// Fix 5: Protected loadFromFirebase()
+// Sets hasLoadedFromCloud = true and isInitialLoad = false AFTER loading
+
+// Fix 6: Protected realtime listener
+// Only processes updates AFTER initial load complete
+
+// Fix 7: Protected visibility handlers
+// Only syncs if !isInitialLoad && hasLoadedFromCloud
+
+// Fix 8: Version comparison on load
+// Cloud wins if local _version === 0 or local is empty
+
+// Fix 9: Merge strategy preserves cloud data
+// Never overwrites cloud with empty local state
+```
+
+### App-Specific isEmptyState() Checks
+| App | Empty If Missing ALL Of |
+|-----|------------------------|
+| index.html | tasks, calendarNotes, calendarEvents, notebook.entries, stats.totalXPGained, focusModeData |
+| d3-roadmap | customDeadlines, grades, clinicalData, monthlyPlanner, exams |
+| stim-calc | medications, caffeine, history, sleepHistory |
+| body-comp | weighIns, dailyLogs, today.meals, frequentFoods |
+
+---
+
+## CHECKPOINT SYSTEM (All 4 Apps)
+
+### Storage Keys
+| App | localStorage Key |
+|-----|-----------------|
+| d3-roadmap | `d3RoadmapCheckpoints` |
+| body-comp-tracker | `bodyCompCheckpoints` |
+| stim-calc | `stimCalcCheckpoints` |
+| index.html | File-based (.dent files) |
+
+### Checkpoint Functions
+```javascript
+createCheckpoint(name)           // Save current state to localStorage
+showCheckpointManager()          // Modal with list of checkpoints
+restoreCheckpoint(index)         // Restore from localStorage checkpoint
+deleteCheckpoint(index)          // Remove checkpoint
+exportCheckpoint(index)          // Download single checkpoint as JSON
+exportAllCheckpoints()           // Download full backup with metadata
+importCheckpoint(event)          // Import from file (flexible format)
+importAndRestoreDirectly()       // Direct file → state restore
+```
+
+### Force Sync Functions
+```javascript
+forceUploadToCloud()   // Local → Cloud (overwrites cloud)
+forcePullFromCloud()   // Cloud → Local (overwrites local)
+```
+
+### Export Format (checkpoint_backup_v1)
+```javascript
+{
+    _format: 'checkpoint_backup_v1',
+    _app: 'app-name',
+    _exportDate: 'ISO timestamp',
+    currentState: { /* full state object */ },
+    checkpoints: [ /* array of saved checkpoints */ ]
+}
+```
+
+### Flexible Import (Accepts 6 Formats)
+1. **Full backup** - `{ checkpoints: [...], currentState: {...} }`
+2. **Single checkpoint** - `{ name: "...", state: {...} }`
+3. **Raw data** - Direct state object with app keys
+4. **Nested data** - `{ state: {...} }` or `{ data: {...} }`
+5. **currentState wrapper** - `{ currentState: {...} }`
+6. **App-specific wrapper** - `{ roadmapData/bodyCompData/etc: {...} }`
+
+### UI Controls (Header)
+```html
+<!-- All apps have these buttons in header -->
+💾 Checkpoint     - createCheckpoint()
+📂 Restore        - showCheckpointManager()
+☁️⬆️ Force Upload - forceUploadToCloud()
+☁️⬇️ Force Pull   - forcePullFromCloud()
+```
+
+---
+
 ## BODY COMP TRACKER v3
 
 ### Cross-App Integration (READ-ONLY pulls)
@@ -387,6 +501,9 @@ financials = {
 3. Verify Firebase config matches exactly
 4. Check for orphan function calls (function called but not defined)
 5. Check visibility change handlers
+6. **Verify sync protection flags exist** (`isInitialLoad`, `hasLoadedFromCloud`, `pinValidated`)
+7. **Verify guards in saveData/saveState** (all 5 guards must be present)
+8. **Verify `_version: 0` in default state** (NOT `Date.now()`)
 
 ### Things NOT to Change Without Testing
 - Firebase config
@@ -395,6 +512,9 @@ financials = {
 - Grade calculator math
 - XR pharmacokinetic model (50/50 split at T+0/T+4)
 - Date parsing (MUST use local timezone)
+- **Sync protection guards** (prevents data wipe)
+- **isEmptyState() logic** (app-specific validation)
+- **Checkpoint system functions**
 
 ### Common Bugs to Avoid
 1. **Double loadData() calls** - causes race conditions
@@ -402,3 +522,28 @@ financials = {
 3. **Missing Firebase field checks** - always use defaults
 4. **Empty array truthy** - `[]` is truthy, check `.length`
 5. **Orphan function calls** - verify function exists before calling
+6. **_version: Date.now() in defaults** - causes data wipe on fresh device
+7. **Saving before pinValidated** - causes race condition data wipe
+8. **Saving before hasLoadedFromCloud** - overwrites cloud with empty data
+
+### Cross-App Data Reads (Body Comp → Other Apps)
+Body Comp reads FROM Firebase directly (READ-ONLY):
+- If source app gets wiped, Body Comp reads empty ecosystem data
+- Body Comp's core data (meals, workouts, weight) is NEVER affected
+- Worst case: empty ecosystem context, not data loss
+
+---
+
+## COMMIT HISTORY (Jan 2026 Sync Fixes)
+
+| Commit | Description |
+|--------|-------------|
+| `62f1ba4` | Firebase Bulletproof Fix: index.html - All 9 fixes |
+| `8940b3d` | Firebase Bulletproof Fix: body-comp-tracker.html - All 9 fixes |
+| `9f14ed9` | Firebase Bulletproof Fix: d3-roadmap.html - All 9 fixes |
+| `a3b7731` | Critical Sync Fix: Prevent data wipe on fresh device/browser |
+| `b9c894a` | Add Checkpoint System + PIN Guards to d3-roadmap.html |
+| `4d74819` | Add Checkpoint System + PIN Guards to body-comp-tracker.html |
+| `7ff8328` | Add Checkpoint System + PIN Guards to stimulant-elimination-calculator.html |
+| `d05d689` | Add PIN Guards + Force Upload/Pull to index.html |
+| `d896952` | Flexible import: accept raw data, nested formats, and backups |
