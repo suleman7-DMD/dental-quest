@@ -7702,7 +7702,10 @@ CHAIR: 9F
             },
             // Exams array for cross-app integration (Body Comp Tracker pulls this)
             exams: {},  // Object with ID keys for Firebase safety
-            lastSaved: null
+            lastSaved: null,
+            // Version control for conflict detection
+            _version: Date.now(),
+            _lastModified: new Date().toISOString()
         };
         
         // ==================== DAILY PLANNER STATE ====================
@@ -8315,12 +8318,236 @@ CHAIR: 9F
             return result;
         }
 
+        // ==================== FIX 7: CONNECTION MONITOR ====================
+        let isFirebaseConnected = false;
+        let connectionMonitorRef = null;
+
+        function setupConnectionMonitor() {
+            if (!database) return;
+
+            connectionMonitorRef = database.ref('.info/connected');
+            connectionMonitorRef.on('value', snapshot => {
+                const wasConnected = isFirebaseConnected;
+                isFirebaseConnected = snapshot.val() === true;
+
+                if (isFirebaseConnected) {
+                    console.log('🟢 Firebase connected');
+                    updateSyncStatus('connected', 'Connected');
+
+                    // If we just reconnected, sync data
+                    if (!wasConnected && firebaseSyncEnabled && userPath) {
+                        console.log('🔄 Reconnected - syncing data...');
+                        forceCloudSync();
+                    }
+                } else {
+                    console.log('🔴 Firebase disconnected');
+                    updateSyncStatus('offline', 'Offline');
+                }
+            });
+        }
+
+        // ==================== FIX 6: BACKUP SYSTEM ====================
+        const BACKUP_STORAGE_KEY = 'd3RoadmapBackup';
+        const MAX_BACKUPS = 5;
+
+        function createBackup(reason = 'manual') {
+            const backup = {
+                id: generateId('backup'),
+                timestamp: Date.now(),
+                reason: reason,
+                data: JSON.parse(JSON.stringify(roadmapData)),
+                version: roadmapData._version || 1
+            };
+
+            // Get existing backups
+            let backups = [];
+            try {
+                const stored = localStorage.getItem(BACKUP_STORAGE_KEY);
+                if (stored) {
+                    backups = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.warn('Could not load existing backups:', e);
+            }
+
+            // Add new backup and keep only last MAX_BACKUPS
+            backups.unshift(backup);
+            if (backups.length > MAX_BACKUPS) {
+                backups = backups.slice(0, MAX_BACKUPS);
+            }
+
+            try {
+                localStorage.setItem(BACKUP_STORAGE_KEY, JSON.stringify(backups));
+                console.log('📦 Backup created:', reason, backup.id);
+                return backup.id;
+            } catch (e) {
+                console.error('Failed to save backup:', e);
+                // If localStorage is full, remove oldest backups
+                if (e.name === 'QuotaExceededError') {
+                    backups = backups.slice(0, 2);
+                    try {
+                        localStorage.setItem(BACKUP_STORAGE_KEY, JSON.stringify(backups));
+                        return backup.id;
+                    } catch (e2) {
+                        console.error('Still cannot save backup:', e2);
+                    }
+                }
+                return null;
+            }
+        }
+
+        function getBackups() {
+            try {
+                const stored = localStorage.getItem(BACKUP_STORAGE_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error('Failed to load backups:', e);
+                return [];
+            }
+        }
+
+        function restoreBackup(backupId) {
+            const backups = getBackups();
+            const backup = backups.find(b => b.id === backupId);
+
+            if (!backup) {
+                showToast('❌ Backup not found');
+                return false;
+            }
+
+            // Create a backup of current state before restoring
+            createBackup('pre-restore');
+
+            // Restore the data
+            roadmapData = backup.data;
+
+            // Save to localStorage and Firebase
+            saveData();
+
+            // Re-initialize UI
+            initUI();
+
+            showToast('✅ Backup restored from ' + new Date(backup.timestamp).toLocaleString());
+            return true;
+        }
+
+        function exportBackup() {
+            const exportData = {
+                exportedAt: new Date().toISOString(),
+                appVersion: 'd3-roadmap-v3',
+                data: roadmapData
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `d3-roadmap-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📥 Backup exported');
+        }
+
+        function importBackup(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+
+                    // Validate the import
+                    if (!imported.data || !imported.exportedAt) {
+                        showToast('❌ Invalid backup file');
+                        return;
+                    }
+
+                    // Create backup of current state
+                    createBackup('pre-import');
+
+                    // Import the data
+                    roadmapData = imported.data;
+
+                    // Save and refresh
+                    saveData();
+                    initUI();
+
+                    showToast('✅ Backup imported from ' + imported.exportedAt);
+                } catch (err) {
+                    console.error('Import failed:', err);
+                    showToast('❌ Failed to import backup');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showBackupManager() {
+            const backups = getBackups();
+
+            const modal = document.createElement('div');
+            modal.id = 'backupManagerModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+            let backupListHtml = backups.length === 0
+                ? '<p style="color:#8b949e;text-align:center;">No backups available</p>'
+                : backups.map(b => `
+                    <div style="background:#21262d;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="color:#e6edf3;font-size:0.9em;">${new Date(b.timestamp).toLocaleString()}</div>
+                            <div style="color:#8b949e;font-size:0.75em;">Reason: ${b.reason} | Version: ${b.version || 'N/A'}</div>
+                        </div>
+                        <button onclick="restoreBackup('${b.id}'); closeBackupManager();" style="padding:6px 12px;background:#238636;border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8em;">Restore</button>
+                    </div>
+                `).join('');
+
+            modal.innerHTML = `
+                <div style="background:#161b22;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid #30363d;">
+                    <h3 style="color:#e6edf3;margin:0 0 16px 0;font-size:1.2em;">📦 Backup Manager</h3>
+                    <div style="margin-bottom:20px;">
+                        ${backupListHtml}
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button onclick="createBackup('manual'); closeBackupManager(); showBackupManager();" style="flex:1;padding:10px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Create Backup</button>
+                        <button onclick="exportBackup();" style="flex:1;padding:10px;background:#1f6feb;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Export JSON</button>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label style="display:block;padding:10px;background:#30363d;border:1px dashed #484f58;border-radius:8px;color:#8b949e;text-align:center;cursor:pointer;">
+                            📂 Import from file
+                            <input type="file" accept=".json" onchange="importBackup(this.files[0]); closeBackupManager();" style="display:none;">
+                        </label>
+                    </div>
+                    <button onclick="closeBackupManager();" style="width:100%;margin-top:16px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Close</button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            window.closeBackupManager = function() {
+                const m = document.getElementById('backupManagerModal');
+                if (m) document.body.removeChild(m);
+            };
+        }
+
         // Track local changes for conflict detection
         let localChangesSinceLastSync = false;
         let lastSyncTimestamp = null;
 
+        // FIX 4: isLocalUpdate flag to prevent realtime callback from processing local saves
+        let isLocalUpdate = false;
+        let localUpdateTimer = null;
+
         function markLocalChange() {
             localChangesSinceLastSync = true;
+        }
+
+        function setLocalUpdateFlag() {
+            isLocalUpdate = true;
+            // Clear flag after 2 seconds (longer than debounce + network latency)
+            if (localUpdateTimer) clearTimeout(localUpdateTimer);
+            localUpdateTimer = setTimeout(() => {
+                isLocalUpdate = false;
+            }, 2000);
         }
 
         // Show conflict resolution modal
@@ -8386,7 +8613,10 @@ CHAIR: 9F
                 }
                 database = firebase.database();
                 firebaseInitialized = true;
-                
+
+                // FIX 7: Setup connection monitor
+                setupConnectionMonitor();
+
                 // Check for saved PIN (same as Dental Quest uses)
                 const savedPin = localStorage.getItem('dentalQuestPin');
                 
@@ -8489,6 +8719,112 @@ CHAIR: 9F
             return result;
         }
 
+        // Migrate competencies structure: sections array → object, items array → object
+        function migrateCompetencies(competencies) {
+            if (!competencies) return null;
+            const result = {};
+
+            for (const catKey in competencies) {
+                const cat = competencies[catKey];
+                result[catKey] = { ...cat };
+
+                // Migrate sections array to object
+                if (Array.isArray(cat.sections)) {
+                    const sectionsObj = {};
+                    cat.sections.forEach((section, idx) => {
+                        const secId = section.id || `section_${catKey}_${idx}`;
+                        sectionsObj[secId] = { ...section, id: secId };
+
+                        // Migrate items within each section
+                        if (Array.isArray(section.items)) {
+                            const itemsObj = {};
+                            section.items.forEach(item => {
+                                const itemId = item.id || generateId('item');
+                                itemsObj[itemId] = { ...item, id: itemId };
+                            });
+                            sectionsObj[secId].items = itemsObj;
+                        } else if (section.items && typeof section.items === 'object') {
+                            // Already an object - ensure all items have ids
+                            const itemsObj = {};
+                            Object.entries(section.items).forEach(([key, item]) => {
+                                if (item) {
+                                    const itemId = item.id || key;
+                                    itemsObj[itemId] = { ...item, id: itemId };
+                                }
+                            });
+                            sectionsObj[secId].items = itemsObj;
+                        }
+                    });
+                    result[catKey].sections = sectionsObj;
+                } else if (cat.sections && typeof cat.sections === 'object') {
+                    // Already an object - ensure nested items are also objects
+                    const sectionsObj = {};
+                    Object.entries(cat.sections).forEach(([secKey, section]) => {
+                        if (section) {
+                            const secId = section.id || secKey;
+                            sectionsObj[secId] = { ...section, id: secId };
+
+                            if (Array.isArray(section.items)) {
+                                const itemsObj = {};
+                                section.items.forEach(item => {
+                                    const itemId = item.id || generateId('item');
+                                    itemsObj[itemId] = { ...item, id: itemId };
+                                });
+                                sectionsObj[secId].items = itemsObj;
+                            } else if (section.items && typeof section.items === 'object') {
+                                const itemsObj = {};
+                                Object.entries(section.items).forEach(([key, item]) => {
+                                    if (item) {
+                                        const itemId = item.id || key;
+                                        itemsObj[itemId] = { ...item, id: itemId };
+                                    }
+                                });
+                                sectionsObj[secId].items = itemsObj;
+                            }
+                        }
+                    });
+                    result[catKey].sections = sectionsObj;
+                }
+            }
+            return result;
+        }
+
+        // Migrate dailyPlanner.blocks array to object
+        function migrateDailyPlannerBlocks(dailyPlanner) {
+            if (!dailyPlanner) return { date: null, focus: '', notes: '', blocks: {}, pomodorosCompleted: 0, bedtime: '23:00' };
+
+            const result = { ...dailyPlanner };
+
+            if (Array.isArray(dailyPlanner.blocks)) {
+                const blocksObj = {};
+                dailyPlanner.blocks.forEach((block, idx) => {
+                    if (block) {
+                        const blockId = block.id ? `block_${block.id}` : generateId('block');
+                        blocksObj[blockId] = { ...block, id: blockId };
+                    }
+                });
+                result.blocks = blocksObj;
+            } else if (dailyPlanner.blocks && typeof dailyPlanner.blocks === 'object') {
+                // Check if it's a Firebase-corrupted sparse array (numeric keys)
+                const keys = Object.keys(dailyPlanner.blocks);
+                if (keys.length > 0 && keys.some(k => /^\d+$/.test(k))) {
+                    const blocksObj = {};
+                    Object.values(dailyPlanner.blocks).forEach(block => {
+                        if (block) {
+                            const blockId = block.id ? `block_${block.id}` : generateId('block');
+                            blocksObj[blockId] = { ...block, id: blockId };
+                        }
+                    });
+                    result.blocks = blocksObj;
+                }
+                // Otherwise already proper object
+            } else {
+                result.blocks = {};
+            }
+
+            return result;
+        }
+
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('d3RoadmapData');
             if (saved) {
@@ -8510,8 +8846,9 @@ CHAIR: 9F
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                             appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
+                            competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                         },
+                        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam')
                     };
                 } catch (e) {
@@ -8555,9 +8892,9 @@ CHAIR: 9F
                                 patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                                 appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                                 completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                                competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
+                                competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                             },
-                            dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                            dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                             exams: migrateArrayToObject(data.exams, 'exam'),
                             lastSaved: data.lastSaved
                         };
@@ -8603,6 +8940,12 @@ CHAIR: 9F
                 const data = snapshot.val();
                 if (!data) return;
 
+                // FIX 4: Skip processing if this is a local update
+                if (isLocalUpdate) {
+                    console.log('⏭️ Skipping realtime update (local save in progress)');
+                    return;
+                }
+
                 // Only update if this is a newer save from another device
                 const remoteLastSaved = data.lastSaved || 0;
                 const localLastSaved = roadmapData.lastSaved || 0;
@@ -8634,9 +8977,9 @@ CHAIR: 9F
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                             appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
+                            competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                         },
-                        dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),
                         lastSaved: data.lastSaved
                     };
@@ -8654,6 +8997,10 @@ CHAIR: 9F
                         } else if (tabText.includes('Deadlines')) {
                             // Re-render deadlines tab when updated from another device
                             renderDeadlines();
+                        } else if (tabText.includes('Daily')) {
+                            // Re-render daily planner when updated from another device
+                            dpRenderTimeline();
+                            dpUpdateStats();
                         }
                     }
 
@@ -8855,6 +9202,9 @@ CHAIR: 9F
 
             updateSyncStatus('syncing', 'Fetching from cloud...');
 
+            // FIX 6: Create backup before syncing to prevent data loss
+            createBackup('pre-sync');
+
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     const remoteData = snapshot.val();
@@ -8920,10 +9270,10 @@ CHAIR: 9F
                     patients: data.clinicalData?.patients || {},
                     appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                    competencies: data.clinicalData?.competencies || null
+                    competencies: migrateCompetencies(data.clinicalData?.competencies) || null
                 },
                 exams: migrateArrayToObject(data.exams, 'exam'),
-                dailyPlanner: data.dailyPlanner,
+                dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner),
                 lastSaved: data.lastSaved
             });
 
@@ -8940,6 +9290,10 @@ CHAIR: 9F
 
             const now = Date.now();
             roadmapData.lastSaved = now;
+
+            // Version control for conflict detection (FIX 2)
+            roadmapData._version = (roadmapData._version || 0) + 1;
+            roadmapData._lastModified = new Date().toISOString();
 
             // Always save to localStorage IMMEDIATELY
             try {
@@ -8958,7 +9312,10 @@ CHAIR: 9F
             
             if (firebaseSyncEnabled && database && userPath) {
                 updateSyncStatus('syncing', 'Saving...');
-                
+
+                // FIX 4: Set flag to prevent realtime listener from processing this save
+                setLocalUpdateFlag();
+
                 saveDebounceTimer = setTimeout(() => {
                     lastSaveTime = Date.now();
                     database.ref(userPath).set(roadmapData)
@@ -11703,7 +12060,7 @@ CHAIR: 9F
         }
 
         function editAppointment(aptId) {
-            const apt = roadmapData.clinicalData?.appointments?.find(a => a.id === aptId);
+            const apt = roadmapData.clinicalData?.appointments?.[aptId];
             if (!apt) return;
 
             // Populate patient dropdown
@@ -12101,7 +12458,21 @@ CHAIR: 9F
             // Initialize if not exists
             if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
             if (!roadmapData.clinicalData.competencies) {
-                roadmapData.clinicalData.competencies = JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES));
+                // Initialize from defaults and migrate to object-based storage
+                roadmapData.clinicalData.competencies = migrateCompetencies(
+                    JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
+                );
+            } else {
+                // Ensure existing competencies are migrated (in case loaded as arrays)
+                const comp = roadmapData.clinicalData.competencies;
+                for (const catKey in comp) {
+                    const cat = comp[catKey];
+                    if (Array.isArray(cat.sections)) {
+                        // Needs migration
+                        roadmapData.clinicalData.competencies = migrateCompetencies(comp);
+                        break;
+                    }
+                }
             }
             return roadmapData.clinicalData.competencies;
         }
@@ -12115,13 +12486,13 @@ CHAIR: 9F
             return 'pending';
         }
 
-        // Calculate stats for a single category - DYNAMIC
+        // Calculate stats for a single category - DYNAMIC (uses getValues for object-based storage)
         function calculateCategoryStats(cat) {
             let completed = 0, inProgress = 0, planned = 0, pending = 0;
             let totalUnits = 0, completedUnits = 0;
 
-            cat.sections.forEach(sec => {
-                sec.items.forEach(item => {
+            getValues(cat.sections).forEach(sec => {
+                getValues(sec.items).forEach(item => {
                     const status = getItemStatus(item);
                     totalUnits += item.required;
                     completedUnits += Math.min(item.completed, item.required);
@@ -12166,13 +12537,13 @@ CHAIR: 9F
             };
         }
 
-        // Get "What's Next" recommendations
+        // Get "What's Next" recommendations (uses getValues for object-based storage)
         function getWhatsNextItems(competencies) {
             const nextItems = [];
 
             Object.entries(competencies).forEach(([catKey, cat]) => {
-                cat.sections.forEach(sec => {
-                    sec.items.forEach(item => {
+                getValues(cat.sections).forEach(sec => {
+                    getValues(sec.items).forEach(item => {
                         const status = getItemStatus(item);
                         // Prioritize: in_progress first, then planned
                         if (status === 'in_progress') {
@@ -12297,10 +12668,10 @@ CHAIR: 9F
                                 </div>
                             </div>
                             ${cat.notes ? `<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 6px; font-size: 0.85em; color: #fde68a;">${escapeHtml(cat.notes)}</div>` : ''}
-                            ${cat.sections.map((sec, secIndex) => `
-                                <div class="comp-requirements-section" data-section-index="${secIndex}">
+                            ${getValues(cat.sections).map(sec => `
+                                <div class="comp-requirements-section" data-section-id="${sec.id}">
                                     <div class="comp-requirements-title">${sec.title}</div>
-                                    ${sec.items.map(item => {
+                                    ${getValues(sec.items).map(item => {
                                         const status = getItemStatus(item);
                                         const isCustom = item.custom === true;
                                         return `
@@ -12332,7 +12703,7 @@ CHAIR: 9F
                                             </div>
                                         `;
                                     }).join('')}
-                                    <button class="comp-add-req-btn" onclick="openAddCompItemModal('${key}', ${secIndex}); event.stopPropagation();">
+                                    <button class="comp-add-req-btn" onclick="openAddCompItemModal('${key}', '${sec.id}'); event.stopPropagation();">
                                         ➕ Add Requirement
                                     </button>
                                 </div>
@@ -12378,9 +12749,10 @@ CHAIR: 9F
             let isNowCompleted = false;
             let itemText = '';
 
-            for (const sec of cat.sections) {
-                const item = sec.items.find(i => i.id === itemId);
-                if (item) {
+            // Use object-based storage
+            for (const sec of getValues(cat.sections)) {
+                if (sec.items && sec.items[itemId]) {
+                    const item = sec.items[itemId];
                     wasCompleted = item.completed >= item.required;
                     itemText = item.text;
 
@@ -12425,9 +12797,10 @@ CHAIR: 9F
             let isNowCompleted = false;
             let itemText = '';
 
-            for (const sec of cat.sections) {
-                const item = sec.items.find(i => i.id === itemId);
-                if (item) {
+            // Use object-based storage
+            for (const sec of getValues(cat.sections)) {
+                if (sec.items && sec.items[itemId]) {
+                    const item = sec.items[itemId];
                     wasCompleted = item.completed >= item.required;
                     itemText = item.text;
 
@@ -12488,7 +12861,10 @@ CHAIR: 9F
 
         function resetCompetencies() {
             if (!confirm('Reset ALL competencies to default values? This cannot be undone.')) return;
-            roadmapData.clinicalData.competencies = JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES));
+            // Reset and migrate to object-based storage
+            roadmapData.clinicalData.competencies = migrateCompetencies(
+                JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
+            );
             expandedCompCategories.clear();
             saveData();
             renderCompetencies();
@@ -12501,15 +12877,15 @@ CHAIR: 9F
         let compItemModalState = {
             mode: 'add', // 'add' or 'edit'
             catKey: null,
-            sectionIndex: null,
+            sectionId: null, // Changed from sectionIndex for object-based storage
             itemId: null
         };
 
-        function openAddCompItemModal(catKey, sectionIndex) {
+        function openAddCompItemModal(catKey, sectionId) {
             compItemModalState = {
                 mode: 'add',
                 catKey: catKey,
-                sectionIndex: sectionIndex,
+                sectionId: sectionId,
                 itemId: null
             };
 
@@ -12527,14 +12903,14 @@ CHAIR: 9F
             const cat = competencies[catKey];
             if (!cat) return;
 
-            // Find the item and its section
+            // Find the item and its section (using object-based storage)
             let foundItem = null;
-            let foundSecIndex = -1;
-            for (let i = 0; i < cat.sections.length; i++) {
-                const item = cat.sections[i].items.find(it => it.id === itemId);
+            let foundSectionId = null;
+            for (const [secId, sec] of Object.entries(cat.sections)) {
+                const item = getValues(sec.items).find(it => it.id === itemId);
                 if (item) {
                     foundItem = item;
-                    foundSecIndex = i;
+                    foundSectionId = secId;
                     break;
                 }
             }
@@ -12547,7 +12923,7 @@ CHAIR: 9F
             compItemModalState = {
                 mode: 'edit',
                 catKey: catKey,
-                sectionIndex: foundSecIndex,
+                sectionId: foundSectionId,
                 itemId: itemId
             };
 
@@ -12562,7 +12938,7 @@ CHAIR: 9F
 
         function closeCompItemModal() {
             document.getElementById('compItemModal').style.display = 'none';
-            compItemModalState = { mode: 'add', catKey: null, sectionIndex: null, itemId: null };
+            compItemModalState = { mode: 'add', catKey: null, sectionId: null, itemId: null };
         }
 
         function saveCompItem() {
@@ -12589,15 +12965,21 @@ CHAIR: 9F
             }
 
             if (compItemModalState.mode === 'add') {
-                // Add new item to the section
-                const section = cat.sections[compItemModalState.sectionIndex];
+                // Add new item to the section (using object-based storage)
+                const section = cat.sections[compItemModalState.sectionId];
                 if (!section) {
                     showToast('Section not found', 'error');
                     return;
                 }
 
+                // Ensure section.items is an object
+                if (!section.items || Array.isArray(section.items)) {
+                    section.items = migrateArrayToObject(section.items, 'item');
+                }
+
+                const newItemId = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
                 const newItem = {
-                    id: `custom_${Date.now()}`,
+                    id: newItemId,
                     text: name,
                     required: required,
                     completed: Math.max(0, Math.min(completed, required)), // FIXED: Clamp to 0-required range
@@ -12612,13 +12994,14 @@ CHAIR: 9F
                     newItem.status = 'in_progress';
                 }
 
-                section.items.push(newItem);
+                // Use object assignment instead of push
+                section.items[newItemId] = newItem;
                 showToast(`Added: ${name}`);
             } else {
-                // Edit existing item
-                for (const sec of cat.sections) {
-                    const item = sec.items.find(it => it.id === compItemModalState.itemId);
-                    if (item) {
+                // Edit existing item (using object-based storage)
+                for (const sec of getValues(cat.sections)) {
+                    if (sec.items && sec.items[compItemModalState.itemId]) {
+                        const item = sec.items[compItemModalState.itemId];
                         item.text = name;
                         item.required = required;
                         item.completed = Math.max(0, Math.min(completed, required)); // FIXED: Clamp to 0-required range
@@ -12649,30 +13032,31 @@ CHAIR: 9F
             const cat = competencies[catKey];
             if (!cat) return;
 
-            // Find the item
+            // Find the item (using object-based storage)
             let itemText = '';
-            for (const sec of cat.sections) {
-                const item = sec.items.find(it => it.id === itemId);
-                if (item) {
+            let foundSectionId = null;
+            for (const [secId, sec] of Object.entries(cat.sections)) {
+                if (sec.items && sec.items[itemId]) {
+                    const item = sec.items[itemId];
                     if (!item.custom) {
                         showToast('Cannot delete default requirements', 'error');
                         return;
                     }
                     itemText = item.text;
+                    foundSectionId = secId;
                     break;
                 }
+            }
+
+            if (!foundSectionId) {
+                showToast('Item not found', 'error');
+                return;
             }
 
             if (!confirm(`Delete "${itemText}"? This cannot be undone.`)) return;
 
-            // Remove the item
-            for (const sec of cat.sections) {
-                const idx = sec.items.findIndex(it => it.id === itemId);
-                if (idx !== -1) {
-                    sec.items.splice(idx, 1);
-                    break;
-                }
-            }
+            // Remove the item using delete operator (object-based storage)
+            delete cat.sections[foundSectionId].items[itemId];
 
             saveData();
             renderCompetencies();
@@ -13428,9 +13812,9 @@ CHAIR: 9F
                                         patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                                         appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                                         completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                                        competencies: data.clinicalData?.competencies || roadmapData.clinicalData?.competencies || null
+                                        competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                                     },
-                                    dailyPlanner: data.dailyPlanner || roadmapData.dailyPlanner,
+                                    dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                                     exams: migrateArrayToObject(data.exams, 'exam'),
                                     lastSaved: data.lastSaved
                                 };
@@ -13486,7 +13870,7 @@ CHAIR: 9F
                     date: today,
                     focus: '',
                     notes: '',
-                    blocks: [],
+                    blocks: {},  // Object-based storage for Firebase safety
                     pomodorosCompleted: 0,
                     bedtime: '23:00'
                 };
@@ -13815,17 +14199,18 @@ CHAIR: 9F
                 return;
             }
             
-            if (!roadmapData.dailyPlanner.blocks) {
-                roadmapData.dailyPlanner.blocks = [];
+            if (!roadmapData.dailyPlanner.blocks || Array.isArray(roadmapData.dailyPlanner.blocks)) {
+                roadmapData.dailyPlanner.blocks = migrateArrayToObject(roadmapData.dailyPlanner.blocks, 'block');
             }
-            
-            roadmapData.dailyPlanner.blocks.push({
-                id: Date.now(),
+
+            const blockId = generateId('block');
+            roadmapData.dailyPlanner.blocks[blockId] = {
+                id: blockId,
                 startTime: time,
                 duration: duration,
                 task: task,
                 completed: false
-            });
+            };
             
             // Clear input
             if (taskInput) taskInput.value = '';
@@ -13872,50 +14257,52 @@ CHAIR: 9F
             
             // Add current time line
             html += '<div class="planner-current-time-line" id="dpCurrentTimeLine"></div>';
-            
-            // Add events (sorted by time)
-            const blocks = roadmapData.dailyPlanner?.blocks || [];
-            if (blocks.length > 0) {
-                const sortedBlocks = [...blocks].sort((a, b) => {
+
+            // Add events (sorted by time) - use getValues() for object-based storage
+            const blocksObj = roadmapData.dailyPlanner?.blocks || {};
+            const blocksArray = getValues(blocksObj);
+            if (blocksArray.length > 0) {
+                const sortedBlocks = blocksArray.sort((a, b) => {
                     return (a.startTime || '').localeCompare(b.startTime || '');
                 });
-                
-                sortedBlocks.forEach((block, index) => {
-                    const originalIndex = blocks.indexOf(block);
-                    if (block.startTime && block.task) {
-                        html += dpRenderEvent(block, originalIndex);
+
+                sortedBlocks.forEach(block => {
+                    if (block.startTime && block.task && block.id) {
+                        html += dpRenderEvent(block);
                     }
                 });
             }
-            
+
             timeline.innerHTML = html;
             dpUpdateCurrentTimeLine();
         }
-        
-        function dpRenderEvent(block, index) {
+
+        function dpRenderEvent(block) {
             const [startH, startM] = block.startTime.split(':').map(Number);
             const duration = block.duration || 30;
-            
+
             // Adjust for 5 AM start
             let adjustedStartH = startH;
             if (startH < 5) adjustedStartH = startH + 24;
-            
+
             const top = (adjustedStartH - 5) * 60 + startM;
             const height = Math.max(24, duration);
-            
+
             // Calculate end time for display
             const endMinutes = startH * 60 + startM + duration;
             const endH = Math.floor(endMinutes / 60) % 24;
             const endM = endMinutes % 60;
             const endTimeStr = dpFormatTime(`${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`);
-            
+
+            // Use block.id for toggle/delete operations (object-based storage)
+            const blockIdEscaped = escapeHtml(block.id);
             return `
-                <div class="planner-event ${block.completed ? 'completed' : ''}" 
+                <div class="planner-event ${block.completed ? 'completed' : ''}"
                      style="top: ${top}px; height: ${height}px;"
-                     onclick="dpToggleEvent(${index})"
+                     onclick="dpToggleEvent('${blockIdEscaped}')"
                      title="Click to mark ${block.completed ? 'incomplete' : 'complete'}">
                     <div class="planner-event-actions">
-                        <button class="planner-event-btn" onclick="event.stopPropagation(); dpDeleteEvent(${index})" title="Delete">×</button>
+                        <button class="planner-event-btn" onclick="event.stopPropagation(); dpDeleteEvent('${blockIdEscaped}')" title="Delete">×</button>
                     </div>
                     <div class="planner-event-title">${escapeHtml(block.task)}</div>
                     ${height >= 40 ? `<div class="planner-event-time">${dpFormatTime(block.startTime)} - ${endTimeStr}</div>` : ''}
@@ -13943,40 +14330,40 @@ CHAIR: 9F
             }
         }
         
-        function dpToggleEvent(index) {
+        function dpToggleEvent(blockId) {
             const blocks = roadmapData.dailyPlanner?.blocks;
-            if (blocks && blocks[index]) {
-                blocks[index].completed = !blocks[index].completed;
+            if (blocks && blocks[blockId]) {
+                blocks[blockId].completed = !blocks[blockId].completed;
                 saveDailyPlannerData();
                 dpRenderTimeline();
                 dpUpdateStats();
             }
         }
-        
-        function dpDeleteEvent(index) {
+
+        function dpDeleteEvent(blockId) {
             const blocks = roadmapData.dailyPlanner?.blocks;
-            if (blocks) {
-                blocks.splice(index, 1);
+            if (blocks && blocks[blockId]) {
+                delete blocks[blockId];
                 saveDailyPlannerData();
                 dpRenderTimeline();
                 dpUpdateStats();
             }
         }
-        
+
         function dpUpdateStats() {
-            const blocks = roadmapData.dailyPlanner?.blocks || [];
-            const total = blocks.length;
-            const completed = blocks.filter(b => b.completed).length;
-            const totalMinutes = blocks.reduce((sum, b) => sum + (b.duration || 30), 0);
+            const blocksArray = getValues(roadmapData.dailyPlanner?.blocks);
+            const total = blocksArray.length;
+            const completed = blocksArray.filter(b => b.completed).length;
+            const totalMinutes = blocksArray.reduce((sum, b) => sum + (b.duration || 30), 0);
             const hours = (totalMinutes / 60).toFixed(1);
             const pomodoros = roadmapData.dailyPlanner?.pomodorosCompleted || 0;
-            
+
             const statTasks = document.getElementById('dpStatTasks');
             const statPlanned = document.getElementById('dpStatPlanned');
             const statCompleted = document.getElementById('dpStatCompleted');
             const statPomodoros = document.getElementById('dpStatPomodoros');
             const summary = document.getElementById('dpTaskSummary');
-            
+
             if (statTasks) statTasks.textContent = total;
             if (statPlanned) statPlanned.textContent = hours + 'h';
             if (statCompleted) statCompleted.textContent = completed;
@@ -14006,7 +14393,7 @@ CHAIR: 9F
                 date: getLocalDateString(),
                 focus: '',
                 notes: '',
-                blocks: [],
+                blocks: {},  // Object-based storage for Firebase safety
                 pomodorosCompleted: 0,
                 bedtime: '23:00'
             };
