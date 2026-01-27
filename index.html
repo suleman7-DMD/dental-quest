@@ -6021,15 +6021,15 @@
             // Generate timestamp FIRST so we can track it
             const saveTimestamp = Date.now();
             
-            const data = { 
-                tasks: tasks || [], 
+            const data = {
+                tasks: tasks || {},  // Object for Firebase safety
                 stats,
                 medications,
                 calendarNotes: calendarNotes || {},
                 notebook,
                 financials,
                 pillAssignments,
-                calendarEvents: calendarEvents || [],
+                calendarEvents: calendarEvents || {},  // Object for Firebase safety
                 dailyPlanner,
                 focusModeData: {
                     oneThingId: focusModeData.oneThingId,
@@ -9114,8 +9114,8 @@
             modal.id = 'syncConflictModal';
             modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
 
-            const localTasks = (localData.tasks || []).filter(t => !t.completed).length;
-            const remoteTasks = (remoteData.tasks || []).filter(t => !t.completed).length;
+            const localTasks = getValues(localData.tasks).filter(t => !t.completed).length;
+            const remoteTasks = getValues(remoteData.tasks).filter(t => !t.completed).length;
             const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
             const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
 
@@ -9215,7 +9215,7 @@
             if (effectiveLastReset !== todayStr && hours >= 5) {
                 
                 let resetCount = 0;
-                (tasks || []).forEach(task => {
+                getValues(tasks).forEach(task => {
                     // ONLY reset mustComplete (EOD) flag
                     // doToday flag is NOT touched - it persists until user removes it
                     if (task.mustComplete) {
@@ -11491,7 +11491,7 @@
             if (!container) return;
             
             const oneThingTask = focusModeData.oneThingId ? 
-                (tasks || []).find(t => t.id === focusModeData.oneThingId && !t.completed) : null;
+                getValues(tasks).find(t => t.id === focusModeData.oneThingId && !t.completed) : null;
             
             if (!oneThingTask) {
                 container.innerHTML = `
@@ -11630,7 +11630,7 @@
         
         function completeOneThing() {
             if (!focusModeData.oneThingId) return;
-            const task = (tasks || []).find(t => t.id === focusModeData.oneThingId);
+            const task = getValues(tasks).find(t => t.id === focusModeData.oneThingId);
             if (task) {
                 toggleTask(task.id);
                 focusModeData.oneThingId = null;
@@ -11655,7 +11655,7 @@
             
             if (title) title.textContent = '🎯 Select Your ONE THING for Today';
             
-            const incompleteTasks = (tasks || []).filter(t => !t.completed);
+            const incompleteTasks = getValues(tasks).filter(t => !t.completed);
             const sortedTasks = incompleteTasks.sort((a, b) => {
                 if (a.highLeverage && !b.highLeverage) return -1;
                 if (!a.highLeverage && b.highLeverage) return 1;
@@ -11689,7 +11689,7 @@
             const sizeLabels = { big: '🔴 Big Tasks', medium: '🟡 Medium Tasks', small: '🟢 Small Tasks' };
             if (title) title.textContent = `Add ${sizeLabels[size]} to Today`;
             
-            const sizeTasks = (tasks || []).filter(t => 
+            const sizeTasks = getValues(tasks).filter(t => 
                 !t.completed && 
                 (t.size === size || (!t.size && size === 'medium')) &&
                 !(focusModeData.todaysTasks[size] || []).includes(t.id)
@@ -11754,7 +11754,7 @@
         function confirmPlanningSelection() {
             if (!selectedPlanningTaskId) { showToast('Please select a task first', '⚠️'); return; }
             
-            const task = (tasks || []).find(t => t.id === selectedPlanningTaskId);
+            const task = getValues(tasks).find(t => t.id === selectedPlanningTaskId);
             
             if (planningMode === 'onething') {
                 focusModeData.oneThingId = selectedPlanningTaskId;
@@ -11791,14 +11791,14 @@
             // Filter out ONE thing from size lists to avoid double counting
             const oneThingId = focusModeData.oneThingId;
             const counts = {
-                big: (focusModeData.todaysTasks.big || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length,
-                medium: (focusModeData.todaysTasks.medium || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length,
-                small: (focusModeData.todaysTasks.small || []).filter(id => id !== oneThingId && (tasks || []).find(t => t.id === id && !t.completed)).length
+                big: (focusModeData.todaysTasks.big || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
+                medium: (focusModeData.todaysTasks.medium || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length,
+                small: (focusModeData.todaysTasks.small || []).filter(id => id !== oneThingId && getValues(tasks).find(t => t.id === id && !t.completed)).length
             };
             
             // ONE thing always counts as the BIG task (slot 1)
             if (oneThingId) {
-                const oneThingTask = (tasks || []).find(t => t.id === oneThingId);
+                const oneThingTask = getValues(tasks).find(t => t.id === oneThingId);
                 if (oneThingTask && !oneThingTask.completed) {
                     counts.big = 1; // ONE thing fills the big slot
                 }
@@ -11910,7 +11910,7 @@
             // Filter out the ONE thing from medium/small lists to avoid duplication
             const taskIds = (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) || [];
             const filteredIds = taskIds.filter(id => id !== focusModeData.oneThingId);
-            const todaysTasks = filteredIds.map(id => (tasks || []).find(t => t.id === id)).filter(t => t && !t.completed);
+            const todaysTasks = filteredIds.map(id => getValues(tasks).find(t => t.id === id)).filter(t => t && !t.completed);
             
             if (todaysTasks.length === 0) {
                 container.innerHTML = `
@@ -11940,7 +11940,7 @@
         
         // Add task to Focus Mode from Full View
         function addTaskToFocusMode(taskId) {
-            const task = (tasks || []).find(t => t.id === taskId);
+            const task = getValues(tasks).find(t => t.id === taskId);
             if (!task) return;
             
             // Determine size
@@ -12025,7 +12025,7 @@
                 ...(focusModeData.todaysTasks.small || [])
             ].filter(Boolean);
             
-            const backlogTasks = (tasks || []).filter(t => !t.completed && !todaysTaskIds.includes(t.id));
+            const backlogTasks = getValues(tasks).filter(t => !t.completed && !todaysTaskIds.includes(t.id));
             const categories = new Set(backlogTasks.map(t => t.category));
             
             const countEl = document.getElementById('backlogCount');
@@ -12054,7 +12054,7 @@
         }
         
         function doRandomSmallTask() {
-            const smallTasks = (tasks || []).filter(t => !t.completed && (t.size === 'small' || (!t.size && t.text && t.text.length < 50)));
+            const smallTasks = getValues(tasks).filter(t => !t.completed && (t.size === 'small' || (!t.size && t.text && t.text.length < 50)));
             if (smallTasks.length === 0) { showToast('No small tasks found!', '⚠️'); return; }
             const randomTask = smallTasks[Math.floor(Math.random() * smallTasks.length)];
             showToast(`🎲 Try: "${randomTask.text.substring(0, 40)}..."`, '⚡');
@@ -12072,7 +12072,7 @@
         // Task Edit Modal
         function openTaskEditModal(taskId) {
             editingTaskId = taskId;
-            const task = (tasks || []).find(t => t.id === taskId);
+            const task = getValues(tasks).find(t => t.id === taskId);
             if (!task) return;
             
             editingTaskSize = task.size || 'medium';
@@ -12117,7 +12117,7 @@
         
         function saveTaskEdit() {
             if (!editingTaskId) return;
-            const task = (tasks || []).find(t => t.id === editingTaskId);
+            const task = getValues(tasks).find(t => t.id === editingTaskId);
             if (!task) return;
             
             task.text = document.getElementById('editTaskText').value.trim();
