@@ -10935,12 +10935,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     <h2>📦 Checkpoint Manager</h2>
 
                     <div class="checkpoint-actions-bar">
-                        <button onclick="createCheckpoint()" class="action-btn">💾 Create Checkpoint</button>
+                        <button onclick="createCheckpoint()" class="action-btn">💾 Create</button>
                         <button onclick="exportAllCheckpoints()" class="action-btn">📤 Export All</button>
                         <label class="action-btn" style="cursor: pointer;">
                             📥 Import
                             <input type="file" accept=".json" onchange="importCheckpoint(event)" style="display: none;">
                         </label>
+                        <button onclick="importAndRestoreDirectly()" class="action-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">🔄 Restore File</button>
                     </div>
 
                     <div class="checkpoint-list">
@@ -11040,8 +11041,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             const exportData = {
-                app: 'body-comp-tracker',
-                exportDate: new Date().toISOString(),
+                _format: 'checkpoint_backup_v1',
+                _app: 'body-comp-tracker',
+                _exportDate: new Date().toISOString(),
                 currentState: JSON.parse(JSON.stringify(state)),
                 checkpoints: checkpoints
             };
@@ -11059,6 +11061,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             showToast('📤 Full backup exported');
         }
 
+        // Validate body-comp-tracker data structure
+        function isValidAppData(data) {
+            if (!data || typeof data !== 'object') return false;
+            // Valid if has ANY of these body-comp structures
+            return !!(
+                data.weighIns ||
+                data.bodyCompHistory ||
+                data.today ||
+                data.dailyLogs ||
+                data.profile ||
+                data.frequentFoods ||
+                data.gamification ||
+                data.refeedTracker
+            );
+        }
+
         function importCheckpoint(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -11066,35 +11084,156 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const data = JSON.parse(e.target.result);
+                    const imported = JSON.parse(e.target.result);
+                    let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
 
-                    // Check if it's a full backup or single checkpoint
-                    if (data.checkpoints && Array.isArray(data.checkpoints)) {
-                        // Full backup - import all checkpoints
-                        let existing = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-                        existing = [...data.checkpoints, ...existing].slice(0, 20);
-                        localStorage.setItem('bodyCompCheckpoints', JSON.stringify(existing));
-                        showToast(`📥 Imported ${data.checkpoints.length} checkpoints`);
-                    } else if (data.state) {
-                        // Single checkpoint
-                        let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-                        checkpoints.unshift(data);
-                        localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints.slice(0, 10)));
-                        showToast('📥 Checkpoint imported');
-                    } else {
-                        showToast('❌ Invalid checkpoint file');
-                        return;
+                    // ============================================
+                    // FLEXIBLE FORMAT DETECTION
+                    // ============================================
+
+                    // Format 1: Full backup with checkpoints array
+                    if (imported.checkpoints && Array.isArray(imported.checkpoints)) {
+                        imported.checkpoints.forEach(cp => {
+                            if (cp.state || cp.data) checkpoints.unshift(cp);
+                        });
+                        showToast(`📥 Imported ${imported.checkpoints.length} checkpoints`);
                     }
+                    // Format 2: Single checkpoint with proper structure
+                    else if (imported.name && (imported.state || imported.data)) {
+                        checkpoints.unshift(imported);
+                        showToast(`📥 Imported checkpoint: ${imported.name}`);
+                    }
+                    // Format 3: Raw state/data export (most common user case)
+                    else if (isValidAppData(imported)) {
+                        const newCheckpoint = {
+                            name: `Imported: ${file.name}`,
+                            timestamp: new Date().toISOString(),
+                            state: imported,
+                            source: 'import'
+                        };
+                        checkpoints.unshift(newCheckpoint);
+                        showToast(`📥 Imported raw data as checkpoint`);
+                    }
+                    // Format 4: Data nested under common keys
+                    else if (imported.bodyCompData || imported.state || imported.data || imported.appState) {
+                        const data = imported.bodyCompData || imported.state || imported.data || imported.appState;
+                        if (isValidAppData(data)) {
+                            const newCheckpoint = {
+                                name: `Imported: ${file.name}`,
+                                timestamp: new Date().toISOString(),
+                                state: data,
+                                source: 'import'
+                            };
+                            checkpoints.unshift(newCheckpoint);
+                            showToast(`📥 Imported nested data as checkpoint`);
+                        } else {
+                            throw new Error('Data structure not recognized');
+                        }
+                    }
+                    // Format 5: currentState from full backup export
+                    else if (imported.currentState && isValidAppData(imported.currentState)) {
+                        const newCheckpoint = {
+                            name: `Imported: ${file.name}`,
+                            timestamp: new Date().toISOString(),
+                            state: imported.currentState,
+                            source: 'import'
+                        };
+                        checkpoints.unshift(newCheckpoint);
+                        showToast(`📥 Imported backup as checkpoint`);
+                    }
+                    else {
+                        console.error('Unrecognized format. Keys found:', Object.keys(imported));
+                        throw new Error('Unrecognized file format. Check console for details.');
+                    }
+
+                    // Keep max 20 checkpoints
+                    checkpoints = checkpoints.slice(0, 20);
+                    localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
 
                     document.getElementById('checkpoint-modal')?.remove();
                     showCheckpointManager();
+
                 } catch (err) {
                     console.error('Import error:', err);
-                    showToast('❌ Failed to import: ' + err.message);
+                    console.error('File contents preview:', e.target.result.substring(0, 500));
+                    showToast('❌ Import failed: ' + err.message);
                 }
             };
             reader.readAsText(file);
             event.target.value = '';
+        }
+
+        function importAndRestoreDirectly() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const imported = JSON.parse(text);
+
+                    // Find the actual data
+                    let data = imported;
+                    if (imported.currentState) data = imported.currentState;
+                    if (imported.state) data = imported.state;
+                    if (imported.data) data = imported.data;
+                    if (imported.bodyCompData) data = imported.bodyCompData;
+                    if (imported.appState) data = imported.appState;
+
+                    if (!isValidAppData(data)) {
+                        showToast('❌ No valid data found in file');
+                        return;
+                    }
+
+                    const meals = data.today?.meals ? Object.keys(data.today.meals).length : 0;
+                    const logs = data.dailyLogs ? Object.keys(data.dailyLogs).length : 0;
+                    const confirmMsg = `Restore data from "${file.name}"?\n\n` +
+                        `Found: ${meals} meals today, ${logs} daily logs\n\n` +
+                        `This will OVERWRITE your current data.\n` +
+                        `A backup will be created first.`;
+
+                    if (!confirm(confirmMsg)) return;
+
+                    // Create backup first
+                    createCheckpoint('Auto-backup before direct restore');
+
+                    // Restore
+                    state = {
+                        ...getDefaultState(),
+                        ...data,
+                        _version: Date.now(),
+                        _lastModified: new Date().toISOString(),
+                        _dataLoaded: true
+                    };
+
+                    // Migrate arrays to objects
+                    if (state.today?.meals) state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                    if (state.today?.workouts) state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                    state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
+                    state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                    state.bodyCompHistory = migrateArrayToObject(state.bodyCompHistory, 'bodycomp');
+
+                    // Save
+                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                    saveToFirebase();
+
+                    showToast('✅ Data restored from file');
+
+                    // Close modal and refresh UI
+                    document.getElementById('checkpoint-modal')?.remove();
+                    initializeUI();
+
+                } catch (err) {
+                    console.error('Direct restore error:', err);
+                    showToast('❌ Restore failed: ' + err.message);
+                }
+            };
+
+            input.click();
         }
 
         function forceUploadToCloud() {

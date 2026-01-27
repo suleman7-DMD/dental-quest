@@ -9646,6 +9646,7 @@ CHAIR: 9F
                     <div class="checkpoint-modal-footer">
                         <button class="import-btn" onclick="importCheckpoint()">📥 Import</button>
                         <button class="export-all-btn" onclick="exportAllCheckpoints()">📤 Export All</button>
+                        <button class="restore-direct-btn" onclick="importAndRestoreDirectly()" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">🔄 Restore from File</button>
                     </div>
                 </div>
             `;
@@ -9765,15 +9766,40 @@ CHAIR: 9F
                 return;
             }
 
-            const blob = new Blob([JSON.stringify(checkpoints, null, 2)], { type: 'application/json' });
+            const exportData = {
+                _format: 'checkpoint_backup_v1',
+                _app: 'd3-roadmap',
+                _exportDate: new Date().toISOString(),
+                currentState: JSON.parse(JSON.stringify(roadmapData)),
+                checkpoints: checkpoints
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `d3-roadmap-all-checkpoints-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `d3-roadmap-full-backup-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
 
-            showToast(`Exported ${checkpoints.length} checkpoints`);
+            showToast(`📤 Full backup exported (${checkpoints.length} checkpoints)`);
+        }
+
+        // Validate d3-roadmap data structure
+        function isValidAppData(data) {
+            if (!data || typeof data !== 'object') return false;
+            // Valid if has ANY of these d3-roadmap structures
+            return !!(
+                data.customDeadlines ||
+                data.monthlyPlanner ||
+                data.clinicalData ||
+                data.dailyPlanner ||
+                data.exams ||
+                data.courses ||
+                data.grades ||
+                data.editedDeadlines ||
+                data.mandatoryItems
+            );
         }
 
         function importCheckpoint() {
@@ -9789,20 +9815,41 @@ CHAIR: 9F
                 reader.onload = (event) => {
                     try {
                         const imported = JSON.parse(event.target.result);
-                        const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+                        let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
 
+                        // ============================================
+                        // FLEXIBLE FORMAT DETECTION
+                        // ============================================
+
+                        // Format 1: Array of checkpoints
                         if (Array.isArray(imported)) {
-                            // Multiple checkpoints
                             imported.forEach(cp => {
                                 if (cp.id && cp.data) checkpoints.unshift(cp);
+                                else if (cp.state) checkpoints.unshift({ ...cp, data: cp.state });
                             });
-                            showToast(`Imported ${imported.length} checkpoints`);
-                        } else if (imported.id && imported.data) {
-                            // Single checkpoint
+                            showToast(`📥 Imported ${imported.length} checkpoints`);
+                        }
+                        // Format 2: Full backup with checkpoints array
+                        else if (imported.checkpoints && Array.isArray(imported.checkpoints)) {
+                            imported.checkpoints.forEach(cp => {
+                                if (cp.data || cp.state) {
+                                    checkpoints.unshift(cp.data ? cp : { ...cp, data: cp.state });
+                                }
+                            });
+                            showToast(`📥 Imported ${imported.checkpoints.length} checkpoints`);
+                        }
+                        // Format 3: Single checkpoint with proper structure (id + data)
+                        else if (imported.id && imported.data) {
                             checkpoints.unshift(imported);
-                            showToast(`Imported: ${imported.name}`);
-                        } else if (imported.monthlyPlanner || imported.clinicalData || imported.customDeadlines) {
-                            // Raw data - convert to checkpoint
+                            showToast(`📥 Imported: ${imported.name || 'checkpoint'}`);
+                        }
+                        // Format 4: Single checkpoint with state key
+                        else if (imported.name && imported.state) {
+                            checkpoints.unshift({ ...imported, data: imported.state });
+                            showToast(`📥 Imported: ${imported.name}`);
+                        }
+                        // Format 5: Raw d3-roadmap data (direct export)
+                        else if (isValidAppData(imported)) {
                             const newCheckpoint = {
                                 id: `checkpoint_${Date.now()}_imported`,
                                 name: `Imported: ${file.name}`,
@@ -9812,21 +9859,121 @@ CHAIR: 9F
                                 data: imported
                             };
                             checkpoints.unshift(newCheckpoint);
-                            showToast(`Imported raw data as checkpoint`);
-                        } else {
-                            throw new Error('Unrecognized file format');
+                            showToast(`📥 Imported raw data as checkpoint`);
+                        }
+                        // Format 6: Data nested under common keys
+                        else if (imported.roadmapData || imported.state || imported.data || imported.appState) {
+                            const data = imported.roadmapData || imported.state || imported.data || imported.appState;
+                            if (isValidAppData(data)) {
+                                const newCheckpoint = {
+                                    id: `checkpoint_${Date.now()}_imported`,
+                                    name: `Imported: ${file.name}`,
+                                    timestamp: Date.now(),
+                                    date: new Date().toISOString(),
+                                    dataCount: getDataCountForCheckpoint(data),
+                                    data: data
+                                };
+                                checkpoints.unshift(newCheckpoint);
+                                showToast(`📥 Imported nested data as checkpoint`);
+                            } else {
+                                throw new Error('Data structure not recognized');
+                            }
+                        }
+                        // Format 7: currentState from full backup
+                        else if (imported.currentState && isValidAppData(imported.currentState)) {
+                            const newCheckpoint = {
+                                id: `checkpoint_${Date.now()}_imported`,
+                                name: `Imported: ${file.name}`,
+                                timestamp: Date.now(),
+                                date: new Date().toISOString(),
+                                dataCount: getDataCountForCheckpoint(imported.currentState),
+                                data: imported.currentState
+                            };
+                            checkpoints.unshift(newCheckpoint);
+                            showToast(`📥 Imported backup as checkpoint`);
+                        }
+                        else {
+                            console.error('Unrecognized format. Keys found:', Object.keys(imported));
+                            throw new Error('Unrecognized file format. Check console for details.');
                         }
 
+                        // Keep max 20 checkpoints
+                        checkpoints = checkpoints.slice(0, 20);
                         localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
 
                         document.querySelector('.checkpoint-modal-overlay')?.remove();
                         showCheckpointManager();
 
                     } catch (err) {
-                        showToast('Import failed: ' + err.message);
+                        console.error('Import error:', err);
+                        showToast('❌ Import failed: ' + err.message);
                     }
                 };
                 reader.readAsText(file);
+            };
+
+            input.click();
+        }
+
+        function importAndRestoreDirectly() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const imported = JSON.parse(text);
+
+                    // Find the actual data
+                    let data = imported;
+                    if (imported.currentState) data = imported.currentState;
+                    if (imported.state) data = imported.state;
+                    if (imported.data) data = imported.data;
+                    if (imported.roadmapData) data = imported.roadmapData;
+                    if (imported.appState) data = imported.appState;
+
+                    if (!isValidAppData(data)) {
+                        showToast('❌ No valid data found in file');
+                        return;
+                    }
+
+                    const dataCount = getDataCountForCheckpoint(data);
+                    const confirmMsg = `Restore data from "${file.name}"?\n\n` +
+                        `Data found: ${dataCount}\n\n` +
+                        `This will OVERWRITE your current data.\n` +
+                        `A backup will be created first.`;
+
+                    if (!confirm(confirmMsg)) return;
+
+                    // Create backup first
+                    createCheckpoint('Auto-backup before direct restore');
+
+                    // Restore
+                    roadmapData = {
+                        ...getDefaultRoadmapData(),
+                        ...data,
+                        _version: Date.now(),
+                        _lastModified: new Date().toISOString(),
+                        _dataLoaded: true
+                    };
+
+                    // Save
+                    saveData();
+
+                    showToast('✅ Data restored from file');
+
+                    // Close modal and refresh UI
+                    document.querySelector('.checkpoint-modal-overlay')?.remove();
+                    initializeUI();
+
+                } catch (err) {
+                    console.error('Direct restore error:', err);
+                    showToast('❌ Restore failed: ' + err.message);
+                }
             };
 
             input.click();

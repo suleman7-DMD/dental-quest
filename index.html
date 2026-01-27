@@ -6397,7 +6397,59 @@
 
         // VERSION COMPATIBILITY SYSTEM
         const APP_VERSION = '1.0.0';
-        
+
+        // Validate dental-quest data structure
+        function isValidAppData(data) {
+            if (!data || typeof data !== 'object') return false;
+            // Valid if has ANY of these dental-quest structures
+            return !!(
+                data.tasks ||
+                data.calendarEvents ||
+                data.calendarNotes ||
+                data.notebook ||
+                data.financials ||
+                data.focusModeData ||
+                data.medications ||
+                data.stats
+            );
+        }
+
+        // Extract data from various wrapper formats
+        function extractDataFromImport(imported) {
+            // Direct data - return as-is
+            if (isValidAppData(imported)) {
+                return imported;
+            }
+
+            // Nested under common keys
+            if (imported.currentState && isValidAppData(imported.currentState)) {
+                return imported.currentState;
+            }
+            if (imported.state && isValidAppData(imported.state)) {
+                return imported.state;
+            }
+            if (imported.data && isValidAppData(imported.data)) {
+                return imported.data;
+            }
+            if (imported.appState && isValidAppData(imported.appState)) {
+                return imported.appState;
+            }
+            if (imported.dentalData && isValidAppData(imported.dentalData)) {
+                return imported.dentalData;
+            }
+
+            // From a checkpoint with nested structure
+            if (imported.checkpoints && Array.isArray(imported.checkpoints) && imported.checkpoints.length > 0) {
+                // Use the most recent checkpoint's data
+                const latest = imported.checkpoints[0];
+                if (latest.state && isValidAppData(latest.state)) return latest.state;
+                if (latest.data && isValidAppData(latest.data)) return latest.data;
+                if (isValidAppData(latest)) return latest;
+            }
+
+            return null;
+        }
+
         // Create Checkpoint (user-friendly backup)
         function createCheckpoint() {
             const checkpoint = {
@@ -6440,42 +6492,63 @@
             showToast('Checkpoint created successfully!', '💾');
         }
 
-        // Restore Checkpoint (with version compatibility)
+        // Restore Checkpoint (with version compatibility and flexible format detection)
         function restoreCheckpoint(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const checkpoint = JSON.parse(e.target.result);
-                    
-                    // Version compatibility check
-                    const checkpointVersion = checkpoint.appVersion || checkpoint.version || '0.0.0';
-                    
-                    // Validate checkpoint structure
-                    if (!checkpoint.tasks && !checkpoint.stats && !checkpoint.medications) {
-                        showToast('Invalid checkpoint file', '❌');
+                    const imported = JSON.parse(e.target.result);
+
+                    // ============================================
+                    // FLEXIBLE FORMAT DETECTION
+                    // ============================================
+                    let checkpoint = extractDataFromImport(imported);
+
+                    // If extraction failed, try the imported data directly
+                    // (for backward compatibility with strict format)
+                    if (!checkpoint) {
+                        checkpoint = imported;
+                    }
+
+                    // Final validation
+                    if (!isValidAppData(checkpoint)) {
+                        console.error('Unrecognized format. Keys found:', Object.keys(imported));
+                        showToast('Invalid checkpoint file. Check console for details.', '❌');
                         return;
                     }
-                    
+
+                    // Version compatibility check
+                    const checkpointVersion = checkpoint.appVersion || imported.appVersion || checkpoint.version || imported.version || '0.0.0';
+
                     // Show checkpoint info
-                    const checkpointDate = checkpoint.checkpointDate || checkpoint.exportDate || 'Unknown';
-                    const displayDate = new Date(checkpointDate).toLocaleString();
+                    const checkpointDate = checkpoint.checkpointDate || imported.checkpointDate || imported._exportDate || checkpoint.exportDate || imported.exportDate || 'Unknown';
+                    const displayDate = checkpointDate !== 'Unknown' ? new Date(checkpointDate).toLocaleString() : file.name;
                     const meta = checkpoint.metadata || {};
-                    
-                    let confirmMessage = `Restore checkpoint from ${displayDate}?\n\n`;
-                    
+
+                    // Build info from data if metadata not present
+                    const taskCount = checkpoint.tasks ? Object.keys(checkpoint.tasks).length : 0;
+                    const completedCount = checkpoint.tasks ? Object.values(checkpoint.tasks).filter(t => t && t.completed).length : 0;
+
+                    let confirmMessage = `Restore data from ${displayDate}?\n\n`;
+
                     if (meta.totalTasks !== undefined) {
                         confirmMessage += `Tasks: ${meta.totalTasks} total, ${meta.completedTasks} completed\n`;
+                    } else if (taskCount > 0) {
+                        confirmMessage += `Tasks: ${taskCount} total, ${completedCount} completed\n`;
                     }
                     if (meta.medicationTracking) {
                         confirmMessage += `30mg pills: ${meta.medicationTracking['30mg']}\n`;
                         confirmMessage += `20mg pills: ${meta.medicationTracking['20mg']}\n`;
+                    } else if (checkpoint.medications) {
+                        confirmMessage += `30mg pills: ${checkpoint.medications['30mg']?.pills || 'N/A'}\n`;
+                        confirmMessage += `20mg pills: ${checkpoint.medications['20mg']?.pills || 'N/A'}\n`;
                     }
-                    
+
                     confirmMessage += `\nThis will replace your current data. Continue?`;
-                    
+
                     if (!confirm(confirmMessage)) return;
 
                     // Restore tasks
