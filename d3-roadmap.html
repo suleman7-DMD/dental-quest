@@ -24,6 +24,28 @@
             color: #e2e8f0;
         }
 
+        /* Global zoom for tablet/mobile - reduces scrolling by scaling entire app */
+        @media (max-width: 1024px) {
+            body {
+                zoom: 0.92;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                zoom: 0.88;
+            }
+        }
+        @media (max-width: 600px) {
+            body {
+                zoom: 0.82;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                zoom: 0.78;
+            }
+        }
+
         /* Cross-App Navigation */
         .cross-app-nav {
             display: flex;
@@ -2891,17 +2913,23 @@
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            
+
             .mp-sidebar {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 15px;
             }
-            
+
             .mp-sidebar .card {
                 margin-top: 0 !important;
             }
-            
+
+            /* Scale calendar to fit mobile viewport - no scrolling needed */
+            .mp-cal-header-row,
+            .mp-cal-grid {
+                min-width: 650px;
+            }
+
             .mp-cal-grid {
                 grid-template-columns: 35px repeat(7, 1fr);
             }
@@ -2983,6 +3011,38 @@
             
             .mp-sidebar {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scale calendar to fit mobile screens without scrolling */
+        /* Note: These compound with body zoom, so values are adjusted accordingly */
+        @media (max-width: 700px) {
+            .mp-calendar-wrapper {
+                zoom: 1.0; /* Body zoom handles most scaling */
+            }
+        }
+
+        @media (max-width: 600px) {
+            .mp-calendar-wrapper {
+                zoom: 0.95;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .mp-calendar-wrapper {
+                zoom: 0.88;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .mp-calendar-wrapper {
+                zoom: 0.82;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .mp-calendar-wrapper {
+                zoom: 0.78;
             }
         }
 
