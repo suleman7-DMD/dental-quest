@@ -5700,7 +5700,7 @@
         // ============================================
 
         function getTodayTotals() {
-            const meals = state.today.meals || [];
+            const meals = getValues(state.today.meals);
             return {
                 calories: meals.reduce((sum, m) => sum + (m.calories || 0), 0),
                 protein: meals.reduce((sum, m) => sum + (m.protein || 0), 0),
@@ -6754,7 +6754,7 @@
         // ============================================
 
         function analyzeProteinDistribution() {
-            const meals = state.today.meals || [];
+            const meals = getValues(state.today.meals);
             if (meals.length === 0) return null;
 
             let proteinBefore6pm = 0;
@@ -6995,7 +6995,7 @@
             const workoutDates = [];
 
             // First check today - multiple ways to detect workout
-            const todayWorkouts = state.today.workouts || [];
+            const todayWorkouts = getValues(state.today.workouts);
             const didWorkoutToday = (
                 state.today.workedOut === true ||
                 todayWorkouts.length > 0
@@ -7128,14 +7128,14 @@
 
         function renderMealsList() {
             const mealsList = document.getElementById('mealsList');
-            const meals = state.today.meals || [];
+            const meals = getValues(state.today.meals);
 
             if (meals.length === 0) {
                 mealsList.innerHTML = '<div class="no-meals">No meals logged yet. Tap + Add Meal to start.</div>';
                 return;
             }
 
-            mealsList.innerHTML = meals.map((meal, index) => `
+            mealsList.innerHTML = meals.map((meal) => `
                 <div class="meal-item">
                     <div class="meal-info">
                         <div class="meal-name">${escapeHtml(meal.name)}</div>
@@ -7161,7 +7161,7 @@
             const workoutsList = document.getElementById('workoutsList');
             if (!workoutsList) return;
 
-            const workouts = state.today.workouts || [];
+            const workouts = getValues(state.today.workouts);
             const todayStr = getLocalDateString();
 
             // Filter to only today's workouts (in case of stale data)
@@ -7172,9 +7172,8 @@
                 return;
             }
 
-            // Use original index in state.today.workouts for edit/delete
+            // Use workout.id for edit/delete operations
             workoutsList.innerHTML = todayWorkouts.map((workout) => {
-                const originalIndex = workouts.indexOf(workout);
                 return `
                 <div class="meal-item">
                     <div class="meal-info">
@@ -7555,7 +7554,7 @@
                 .sort((a, b) => (b.uses || 0) - (a.uses || 0));
 
             // Get recent meals from today (last 3)
-            const recentMeals = (state.today.meals || [])
+            const recentMeals = getValues(state.today.meals)
                 .slice(-3)
                 .reverse();
 
@@ -8027,8 +8026,8 @@
                 mealCount: totals.mealCount,
                 workedOut: today.workedOut || false,
                 // Detailed data for history
-                meals: [...(today.meals || [])],
-                workouts: [...(today.workouts || [])],
+                meals: [...getValues(today.meals)],
+                workouts: [...getValues(today.workouts)],
                 // Ecosystem context snapshot
                 ecosystemSnapshot: {
                     stimulant: { ...state.ecosystemContext?.stimulant },
@@ -8290,14 +8289,16 @@
 
         function renderWeightTrend() {
             const trendEl = document.getElementById('weightTrend');
-            const weighIns = state.weighIns || [];
+            const weighIns = getValues(state.weighIns);
 
             if (weighIns.length === 0) {
                 trendEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; font-size: 0.9em;">No weigh-ins yet. Start tracking your progress!</p>';
                 return;
             }
 
-            const latest = weighIns[weighIns.length - 1];
+            // Sort by date to get first and latest
+            const sortedWeighIns = [...weighIns].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const latest = sortedWeighIns[sortedWeighIns.length - 1];
             const start = state.profile.startingWeight_lbs;
             const goal = state.profile.goalWeight_lbs;
             const current = latest.weight;  // FIX: was weight_lbs
@@ -8307,8 +8308,8 @@
 
             // Calculate rate
             let weeklyRate = 0;
-            if (weighIns.length >= 2) {
-                const first = weighIns[0];
+            if (sortedWeighIns.length >= 2) {
+                const first = sortedWeighIns[0];
                 const daysDiff = Math.max(1, (new Date(latest.date) - new Date(first.date)) / (1000 * 60 * 60 * 24));
                 const weeksDiff = daysDiff / 7;
                 const totalLost = first.weight - current;  // FIX: was weight_lbs
@@ -8735,7 +8736,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     dayData.deficit = getCurrentDeficit();
                     dayData.sleepHours = state.today.sleepHours;
                     dayData.mode = state.today.mode;
-                    dayData.workouts = state.today.workouts || [];
+                    dayData.workouts = getValues(state.today.workouts);
                     dayData.isPerfect = totals.protein >= (state.today.targets?.protein || 150) * 0.8 &&
                                         dayData.deficit >= 0;
                 } else if (log) {
@@ -8745,7 +8746,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     dayData.deficit = log.deficit || 0;
                     dayData.sleepHours = log.sleepHours;
                     dayData.mode = log.mode;
-                    dayData.workouts = log.workouts || [];
+                    dayData.workouts = getValues(log.workouts);
                     dayData.isPerfect = log.perfect || false;
                 }
 
@@ -11266,7 +11267,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         function calculateWeeklyRate() {
-            const weighIns = state.weighIns || [];
+            const weighIns = getValues(state.weighIns).sort((a, b) => new Date(a.date) - new Date(b.date));
             if (weighIns.length < 2) return null;
 
             // Get weigh-ins from last 2 weeks
@@ -11289,7 +11290,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const chartContainer = document.getElementById('weightChart');
             if (!chartContainer) return;
 
-            const weighIns = state.weighIns || [];
+            const weighIns = getValues(state.weighIns).sort((a, b) => new Date(a.date) - new Date(b.date));
             if (weighIns.length === 0) {
                 chartContainer.innerHTML = '<div class="empty-chart-state">No weigh-ins yet. Tap "Weigh In" to start tracking.</div>';
                 return;
@@ -12158,8 +12159,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 mealCount: totals.mealCount,
                 workedOut: today.workedOut || false,
                 // Detailed data
-                meals: [...(today.meals || [])],
-                workouts: [...(today.workouts || [])],
+                meals: [...getValues(today.meals)],
+                workouts: [...getValues(today.workouts)],
                 // Full logic log snapshot
                 logicLog: logicSnapshot,
                 // Timestamp
