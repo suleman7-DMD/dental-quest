@@ -9602,7 +9602,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             }
                         }
 
-                        // Reset for new day
+                        // Reset for new day - MUST include ALL today fields
                         state.today = {
                             date: today,
                             sleepHours: null,
@@ -9615,6 +9615,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             magnesiumTaken: false,
                             waterGoalMet: false,
                             cnsProtectionAwarded: false,
+                            // Workout tracking (FIX: was missing)
+                            workedOut: false,
+                            workouts: [],
+                            lastMealTime: null,
+                            // Gamification flags (FIX: was missing)
+                            calTargetAwarded: false,
+                            proteinTargetAwarded: false,
+                            perfectDayAwarded: false,
                             alerts: {
                                 undereatingShown: false,
                                 lowProteinShown: false
@@ -9719,17 +9727,29 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             if (state.today.setupComplete) {
                                 state.dailyLogs[state.today.date] = { ...state.today };
                             }
+                            // Reset for new day - MUST include ALL today fields
                             state.today = {
                                 date: today,
                                 sleepHours: null,
                                 activeCalories: 0,
                                 isBrainDay: false,
                                 mode: null,
-                                targets: { calories: 2000, protein: 172, floor: 1900 },
+                                targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
                                 meals: [],
-                                workouts: [],
+                                setupComplete: false,
+                                magnesiumTaken: false,
+                                waterGoalMet: false,
+                                cnsProtectionAwarded: false,
                                 workedOut: false,
-                                setupComplete: false
+                                workouts: [],
+                                lastMealTime: null,
+                                calTargetAwarded: false,
+                                proteinTargetAwarded: false,
+                                perfectDayAwarded: false,
+                                alerts: {
+                                    undereatingShown: false,
+                                    lowProteinShown: false
+                                }
                             };
                         }
 
@@ -11247,22 +11267,29 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 saveDayLog();
                 updateStreak();
 
-                // Reset for new day
+                // Reset for new day - MUST include ALL today fields
                 state.today = {
                     date: todayStr,
                     sleepHours: null,
                     activeCalories: 0,
                     isBrainDay: false,
                     mode: null,
-                    targets: { calories: 2000, protein: 172, floor: 1900 },
+                    targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
                     meals: [],
                     setupComplete: false,
+                    magnesiumTaken: false,
+                    waterGoalMet: false,
+                    cnsProtectionAwarded: false,
                     workedOut: false,
                     workouts: [],
                     lastMealTime: null,
                     calTargetAwarded: false,
                     proteinTargetAwarded: false,
-                    perfectDayAwarded: false
+                    perfectDayAwarded: false,
+                    alerts: {
+                        undereatingShown: false,
+                        lowProteinShown: false
+                    }
                 };
                 saveState();
             }
@@ -11365,13 +11392,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
         });
 
-        // Close modals on escape
+        // Close modals on escape (FIX: added all modals)
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeAddMealModal();
                 closeWeighInModal();
                 closeExportModal();
                 closeSettingsModal();
+                closeQuickMealModal();
+                closeWorkoutModal();
+                closeWeeklyExportModal();
+                closeBodyCompModal();
+                closeLogicModal();
+                closeMetabolicModal();
             }
         });
 
