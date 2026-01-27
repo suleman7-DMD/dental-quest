@@ -748,8 +748,10 @@
         }
 
         .task-checkbox {
-            width: 28px;
-            height: 28px;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
             cursor: pointer;
             accent-color: #667eea;
             transition: transform 0.2s ease;
@@ -781,7 +783,8 @@
         }
 
         .task-timer-btn {
-            padding: 8px 15px;
+            padding: 10px 16px;
+            min-height: 44px;
             background: #667eea;
             color: white;
             border: none;
@@ -796,7 +799,8 @@
         }
 
         .task-delete-btn {
-            padding: 8px 15px;
+            padding: 10px 16px;
+            min-height: 44px;
             background: #ff4757;
             color: white;
             border: none;
@@ -1180,7 +1184,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
-            z-index: 1000;
+            z-index: 10100;  /* Above modals (10000) and saving toast (10050) */
             transition: transform 0.3s ease;
         }
 
@@ -1210,7 +1214,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            z-index: 1000;
+            z-index: 10100;  /* Above modals and saving toast */
             transform: translateX(400px);
             transition: transform 0.3s ease;
         }
@@ -1438,8 +1442,10 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
             background: #f3f4f6;
             border: none;
             border-radius: 50%;
@@ -3623,7 +3629,7 @@
             transform: scale(1.02);
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 768px) {
             .planner-modal {
                 max-width: 100%;
                 max-height: 100vh;
@@ -3669,7 +3675,7 @@
             color: #6b7280;
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 480px) {
             .planner-modal {
                 max-width: 100%;
                 max-height: 100vh;
@@ -5069,7 +5075,7 @@
     </div> <!-- Close fullViewContainer -->
 
     <!-- Planning Modal for Focus Mode -->
-    <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20000; padding: 20px;">
+    <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
         <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; color: #e6edf3;">
             <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
                 <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">🎯 Select Your ONE THING for Today</div>
@@ -5086,7 +5092,7 @@
     </div>
 
     <!-- Task Edit Modal for Focus Mode -->
-    <div id="taskEditModal" onclick="closeTaskEditModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20000; padding: 20px;">
+    <div id="taskEditModal" onclick="closeTaskEditModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
         <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 500px; width: 100%; color: #e6edf3;">
             <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">✏️ Edit Task</div>
@@ -5907,7 +5913,7 @@
                     // Show saving indicator
                     const savingToast = document.createElement('div');
                     savingToast.id = 'savingIndicator';
-                    savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                    savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
                     savingToast.textContent = '☁️ Syncing...';
                     document.body.appendChild(savingToast);
                     
@@ -6017,7 +6023,7 @@
             if (firebaseInitialized && currentUser && database) {
                 const savingToast = document.createElement('div');
                 savingToast.id = 'savingIndicator';
-                savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
                 savingToast.textContent = '☁️ Saving...';
                 document.body.appendChild(savingToast);
                 
@@ -7141,9 +7147,9 @@
                 }
             });
 
-            // Days until May 14
+            // Days until May 14 - use parseLocalDate to avoid timezone off-by-one errors
             const today = new Date();
-            const semesterEnd = new Date(financials.masterLiquidity.semesterEndDate);
+            const semesterEnd = parseLocalDate(financials.masterLiquidity.semesterEndDate);
             const daysRemaining = Math.ceil((semesterEnd - today) / (1000 * 60 * 60 * 24));
 
             // Projected May 14 balance = Available after bills - Unpaid months' recurring
@@ -7387,7 +7393,8 @@
                     ${unpaid.length === 0 ? '<p style="text-align: center; padding: 40px; color: #4ade80; font-size: 1.3em;">🎉 All bills paid!</p>' : ''}
                     
                     ${[...unpaid, ...paid].map(bill => {
-                        const dueDate = new Date(bill.dueDate);
+                        // Use parseLocalDate to avoid timezone off-by-one errors
+                        const dueDate = parseLocalDate(bill.dueDate);
                         const today = new Date();
                         today.setHours(0,0,0,0);
                         const daysUntil = Math.ceil((dueDate - today) / (1000*60*60*24));
@@ -9044,18 +9051,27 @@
                     }
                     checkPlannerReset();
                     renderPlannerBlocks();
+                }).catch(err => {
+                    console.error('❌ Failed to load daily planner from Firebase:', err);
+                    // Fallback to localStorage on error
+                    checkPlannerReset();
                 });
             } else {
                 const saved = localStorage.getItem('dailyPlanner');
                 if (saved) {
-                    const data = JSON.parse(saved);
-                    dailyPlanner = {
-                        date: data.date || null,
-                        goal: data.goal || '',
-                        bedtime: data.bedtime || '23:00',
-                        blocks: data.blocks || [],
-                        lastReset: data.lastReset || null
-                    };
+                    try {
+                        const data = JSON.parse(saved);
+                        dailyPlanner = {
+                            date: data.date || null,
+                            goal: data.goal || '',
+                            bedtime: data.bedtime || '23:00',
+                            blocks: data.blocks || [],
+                            lastReset: data.lastReset || null
+                        };
+                    } catch (e) {
+                        console.error('❌ Corrupted daily planner data:', e);
+                        localStorage.removeItem('dailyPlanner');
+                    }
                 }
                 checkPlannerReset();
             }
@@ -9063,15 +9079,22 @@
 
         // Global planner state
         let plannerSelectedDuration = 30;
-        
+        let plannerSaveTimer = null;  // Debounce timer for daily planner saves
+
         function saveDailyPlanner() {
+            // Save to localStorage immediately for responsiveness
             localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
-            
-            // Save to main Firebase data (under user's path)
-            if (firebaseInitialized && database && currentUser) {
-                database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').set(dailyPlanner)
-                    .catch(err => console.error('Firebase save error:', err));
+
+            // Debounce Firebase save (200ms) to prevent rapid successive writes
+            if (plannerSaveTimer) {
+                clearTimeout(plannerSaveTimer);
             }
+            plannerSaveTimer = setTimeout(() => {
+                if (firebaseInitialized && database && currentUser) {
+                    database.ref('users/' + currentUser.uid + '/appData/dailyPlanner').set(dailyPlanner)
+                        .catch(err => console.error('Firebase save error:', err));
+                }
+            }, 200);
         }
 
         function openDailyPlanner() {
@@ -9869,9 +9892,10 @@
                             medium: data.focusModeData.todaysTasks?.medium || [],
                             small: data.focusModeData.todaysTasks?.small || []
                         },
-                        focusTimerSeconds: focusModeData.focusTimerSeconds || 0,
-                        focusTimerRunning: focusModeData.focusTimerRunning || false,
-                        focusTimerInterval: focusModeData.focusTimerInterval || null,
+                        // Timer fields: use incoming data (sync across devices), but keep interval null (local only)
+                        focusTimerSeconds: data.focusModeData.focusTimerSeconds || 0,
+                        focusTimerRunning: data.focusModeData.focusTimerRunning || false,
+                        focusTimerInterval: null,  // Local state only - never sync intervals
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                     };
                 }
@@ -10039,7 +10063,9 @@
             
             // Add keyboard shortcuts
             const editor = document.getElementById('notebookEditor');
-            editor.addEventListener('keydown', handleKeyboardShortcuts);
+            if (editor) {
+                editor.addEventListener('keydown', handleKeyboardShortcuts);
+            }
         }
 
         function handleEditorInput() {
@@ -10071,6 +10097,7 @@
 
         function formatText(command, value = null) {
             const editor = document.getElementById('notebookEditor');
+            if (!editor) return;
             editor.focus();
             document.execCommand(command, false, value);
             scheduleNotebookSave();
@@ -10079,12 +10106,12 @@
         function updateCharCount() {
             const editor = document.getElementById('notebookEditor');
             const charCountDisplay = document.getElementById('charCount');
-            
-            if (!editor) return;
-            
+
+            if (!editor || !charCountDisplay) return;
+
             const text = editor.innerText || '';
             const count = text.length;
-            
+
             charCountDisplay.textContent = `${count} / 10,000 characters`;
             charCountDisplay.style.color = count > 10000 ? '#ff4757' : '#999';
             
@@ -10100,8 +10127,10 @@
 
         function scheduleNotebookSave() {
             const indicator = document.getElementById('saveIndicator');
-            indicator.textContent = 'Saving...';
-            indicator.classList.add('saving');
+            if (indicator) {
+                indicator.textContent = 'Saving...';
+                indicator.classList.add('saving');
+            }
             
             clearTimeout(notebookSaveTimeout);
             notebookSaveTimeout = setTimeout(() => {
@@ -10540,9 +10569,12 @@
         }
 
         // Enter key to add task
-        document.getElementById('taskInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTask();
-        });
+        const taskInputElement = document.getElementById('taskInput');
+        if (taskInputElement) {
+            taskInputElement.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+        }
 
         // Update category XP display
         function updateCategoryXPDisplay() {
