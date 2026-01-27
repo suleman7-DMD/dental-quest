@@ -1922,6 +1922,249 @@
         }
 
         /* ============================================
+           QUANTITY SELECTOR (Serving Size)
+           ============================================ */
+
+        .qty-selector-modal {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .qty-food-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .qty-food-serving {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .qty-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-green);
+            background: var(--bg-secondary);
+            color: var(--accent-green);
+            font-size: 1.5em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.95);
+        }
+
+        .qty-display {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--text-primary);
+            min-width: 80px;
+        }
+
+        .qty-display-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .qty-preview {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .qty-preview-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.95em;
+        }
+
+        .qty-preview-row .label {
+            color: var(--text-secondary);
+        }
+
+        .qty-preview-row .value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .qty-preview-row.total {
+            border-top: 1px solid var(--border-color);
+            margin-top: 8px;
+            padding-top: 12px;
+        }
+
+        .qty-preview-row.total .value {
+            color: var(--accent-green);
+            font-size: 1.1em;
+        }
+
+        /* ============================================
+           WORKOUT HISTORY MANAGER
+           ============================================ */
+
+        .workout-history-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .workout-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .workout-history-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workout-history-period {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .workout-history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .workout-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.15s;
+        }
+
+        .workout-history-item:hover {
+            border-color: var(--accent-green);
+        }
+
+        .workout-history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .workout-history-info {
+            flex: 1;
+        }
+
+        .workout-history-type {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .workout-history-meta {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .workout-history-stats {
+            text-align: right;
+            margin-right: 12px;
+        }
+
+        .workout-history-duration {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workout-history-cals {
+            font-size: 0.8em;
+            color: var(--accent-green);
+        }
+
+        .workout-history-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .workout-history-actions button {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.15s;
+        }
+
+        .workout-history-actions button:hover {
+            background: var(--accent-green-dim);
+        }
+
+        .workout-history-actions button.delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .workout-history-empty {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .workout-history-summary {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .workout-summary-stat {
+            text-align: center;
+        }
+
+        .workout-summary-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .workout-summary-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* ============================================
            WEEKLY EXPORT MODAL (Phase 7)
            ============================================ */
 
@@ -4983,11 +5226,16 @@
             <!-- Workouts Section (v35) -->
             <div class="meals-section" id="workoutsSection">
                 <div class="section-header">
-                    <span class="section-title">🏋️ Workouts</span>
+                    <span class="section-title">🏋️ Today's Workouts</span>
                     <button class="add-btn" onclick="openWorkoutModal()">+ Log Workout</button>
                 </div>
                 <div class="meals-list" id="workoutsList">
                     <div class="empty-state">No workouts logged today.</div>
+                </div>
+
+                <!-- Workout History Manager (Past 30 days) -->
+                <div id="workoutHistoryManager">
+                    <!-- Rendered by renderWorkoutHistoryManager() -->
                 </div>
             </div>
 
@@ -7746,6 +7994,7 @@
             renderDashboard();
             renderMealsList();
             renderWorkoutsList();
+            renderWorkoutHistoryManager();
         }
 
         function showSimpleView() {
@@ -7820,11 +8069,31 @@
             `}).join('');
         }
 
-        let editingWorkoutIndex = null;
+        let editingWorkoutId = null;
 
-        function editWorkout(index) {
-            const workout = state.today.workouts[index];
-            if (!workout) return;
+        function editWorkout(workoutId) {
+            // Support both today's workouts and historical workouts from dailyLogs
+            let workout = state.today.workouts?.[workoutId];
+            let isHistorical = false;
+            let historicalDate = null;
+
+            // If not found in today's workouts, search dailyLogs
+            if (!workout) {
+                for (const [date, log] of Object.entries(state.dailyLogs || {})) {
+                    const workouts = log.workouts || {};
+                    if (workouts[workoutId]) {
+                        workout = workouts[workoutId];
+                        isHistorical = true;
+                        historicalDate = date;
+                        break;
+                    }
+                }
+            }
+
+            if (!workout) {
+                showToast('Workout not found');
+                return;
+            }
 
             // Show a prompt dialog for editing (simple approach)
             const newType = prompt('Workout type:', workout.type);
@@ -7837,7 +8106,7 @@
             if (newCalories === null) return;
 
             // Calculate the difference for active calories adjustment
-            const oldCalories = workout.calories;
+            const oldCalories = workout.calories || 0;
             const calDiff = (parseInt(newCalories) || 0) - oldCalories;
 
             // Update the workout
@@ -7845,11 +8114,86 @@
             workout.duration = parseInt(newDuration) || workout.duration;
             workout.calories = parseInt(newCalories) || workout.calories;
 
-            // Adjust active calories
-            state.today.activeCalories = (state.today.activeCalories || 0) + calDiff;
+            if (isHistorical) {
+                // Update in dailyLogs
+                if (state.dailyLogs[historicalDate]) {
+                    if (!state.dailyLogs[historicalDate].workouts) {
+                        state.dailyLogs[historicalDate].workouts = {};
+                    }
+                    state.dailyLogs[historicalDate].workouts[workoutId] = workout;
+                }
+            } else {
+                // Update today's workout and adjust active calories
+                state.today.workouts[workoutId] = workout;
+                state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
 
-            // Recalculate targets if calories changed
-            if (calDiff !== 0) {
+                // Recalculate targets if calories changed
+                if (calDiff !== 0) {
+                    const tdee = calculateTDEE(
+                        state.profile.currentWeight_lbs,
+                        state.profile.height_cm,
+                        state.profile.age,
+                        state.today.activeCalories
+                    );
+                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                }
+            }
+
+            saveState();
+            saveDayLog();
+            renderWorkoutsList();
+            renderWorkoutHistoryManager();
+            renderDashboard();
+            showToast('Workout updated');
+        }
+
+        function deleteWorkout(workoutId) {
+            if (!confirm('Delete this workout?')) return;
+
+            // Check if workout is in today's data
+            let workout = state.today.workouts?.[workoutId];
+            let isHistorical = false;
+            let historicalDate = null;
+
+            // If not found in today's workouts, search dailyLogs
+            if (!workout) {
+                for (const [date, log] of Object.entries(state.dailyLogs || {})) {
+                    const workouts = log.workouts || {};
+                    if (workouts[workoutId]) {
+                        workout = workouts[workoutId];
+                        isHistorical = true;
+                        historicalDate = date;
+                        break;
+                    }
+                }
+            }
+
+            if (!workout) {
+                showToast('Workout not found');
+                return;
+            }
+
+            if (isHistorical) {
+                // Delete from dailyLogs
+                if (state.dailyLogs[historicalDate]?.workouts?.[workoutId]) {
+                    delete state.dailyLogs[historicalDate].workouts[workoutId];
+                    // Update workedOut flag for that day
+                    state.dailyLogs[historicalDate].workedOut = getCount(state.dailyLogs[historicalDate].workouts) > 0;
+                }
+            } else {
+                // Delete from today
+                // Subtract calories from active calories
+                state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (workout.calories || 0));
+
+                // Remove workout
+                if (state.today.workouts?.[workoutId]) {
+                    delete state.today.workouts[workoutId];
+                }
+
+                // Update workedOut flag
+                state.today.workedOut = getCount(state.today.workouts) > 0;
+
+                // Recalculate targets
                 const tdee = calculateTDEE(
                     state.profile.currentWeight_lbs,
                     state.profile.height_cm,
@@ -7862,40 +8206,7 @@
             saveState();
             saveDayLog();
             renderWorkoutsList();
-            renderDashboard();
-            showToast('Workout updated');
-        }
-
-        function deleteWorkout(workoutId) {
-            if (!confirm('Delete this workout?')) return;
-
-            const workout = state.today.workouts[workoutId];
-            if (!workout) return;
-
-            // Subtract calories from active calories
-            state.today.activeCalories = (state.today.activeCalories || 0) - workout.calories;
-            if (state.today.activeCalories < 0) state.today.activeCalories = 0;
-
-            // Remove workout
-            if (state.today.workouts && state.today.workouts[workoutId]) {
-                delete state.today.workouts[workoutId];
-            }
-
-            // Update workedOut flag
-            state.today.workedOut = getCount(state.today.workouts) > 0;
-
-            // Recalculate targets
-            const tdee = calculateTDEE(
-                state.profile.currentWeight_lbs,
-                state.profile.height_cm,
-                state.profile.age,
-                state.today.activeCalories
-            );
-            state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
-
-            saveState();
-            saveDayLog();
-            renderWorkoutsList();
+            renderWorkoutHistoryManager();
             renderDashboard();
             showToast('Workout deleted');
         }
@@ -7906,7 +8217,7 @@
             const sorted = getValues(state.frequentFoods).sort((a, b) => (b.uses || 0) - (a.uses || 0)).slice(0, 8);
 
             grid.innerHTML = sorted.map(food => `
-                <button class="frequent-food-btn" onclick="addFrequentFood('${food.id}')">
+                <button class="frequent-food-btn" onclick="openQtySelector('${food.id}')">
                     <div class="ff-name">${escapeHtml(food.name)}</div>
                     <div class="ff-macros">${food.calories} cal • ${food.protein}g</div>
                 </button>
@@ -7984,41 +8295,9 @@
         }
 
         function addFrequentFood(foodId) {
-            const food = getValues(state.frequentFoods).find(f => f.id === foodId);
-            if (!food) return;
-
-            // Add meal
-            const meal = {
-                id: 'meal_' + Date.now(),
-                name: food.name,
-                calories: food.calories,
-                protein: food.protein,
-                carbs: food.carbs || 0,
-                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                fromLibrary: true,
-                libraryId: foodId
-            };
-
-            if (!state.today.meals || Array.isArray(state.today.meals)) {
-                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
-            }
-            state.today.meals[meal.id] = meal;
-
-            // Increment usage
-            food.uses = (food.uses || 0) + 1;
-
-            // Award XP for logging meal
-            awardXP(XP_REWARDS.logMeal, 'Meal logged');
-
-            saveState();
-            saveDayLog();  // Update dailyLogs for calendar
-            renderMealsList();
-            renderDashboard();
+            // Redirect to quantity selector for serving size selection
             closeAddMealModal();
-            showToast(`✓ Added ${food.name}`);
-
-            // Check if targets are hit
-            setTimeout(() => checkDayCompletion(), 500);
+            openQtySelector(foodId);
         }
 
         function addCustomMeal() {
@@ -8196,11 +8475,11 @@
                         <button class="modal-close" onclick="closeQuickMealModal()">×</button>
                     </div>
                     <div class="modal-body" style="overflow-y: auto; flex: 1;">
-                        <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9em;">Tap to add instantly:</p>
+                        <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9em;">Tap to select serving size:</p>
 
                         <div class="quick-meal-grid" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
                             ${topFoods.length > 0 ? topFoods.map(food => `
-                                <button class="quick-meal-btn" onclick="quickAddMeal('${food.id}')">
+                                <button class="quick-meal-btn" onclick="openQtySelector('${food.id}')">
                                     <div class="quick-meal-name">${escapeHtml(food.name)}</div>
                                     <div class="quick-meal-macros">${food.calories} cal • ${food.protein}g P • ${food.carbs || 0}g C</div>
                                 </button>
@@ -8210,8 +8489,8 @@
                         ${recentMeals.length > 0 ? `
                             <div class="quick-meal-recent">
                                 <div class="quick-meal-recent-label">Today's Meals (tap to repeat)</div>
-                                ${recentMeals.map((meal, idx) => `
-                                    <div class="recent-meal-item" onclick="repeatMeal(${getCount(state.today.meals) - 1 - idx})">
+                                ${recentMeals.map((meal) => `
+                                    <div class="recent-meal-item" onclick="repeatMeal('${meal.id}')">
                                         <span class="recent-meal-name">${escapeHtml(meal.name)}</span>
                                         <span class="recent-meal-macros">${meal.calories} cal</span>
                                     </div>
@@ -8252,39 +8531,8 @@
         }
 
         function quickAddMeal(foodId) {
-            const food = getValues(state.frequentFoods).find(f => f.id === foodId);
-            if (!food) return;
-
-            // Add meal with unique ID
-            const meal = {
-                id: 'meal_' + Date.now(),
-                name: food.name,
-                calories: food.calories,
-                protein: food.protein,
-                carbs: food.carbs || 0,
-                fat: food.fat || 0,
-                time: new Date().toTimeString().slice(0, 5)
-            };
-
-            if (!state.today.meals || Array.isArray(state.today.meals)) {
-                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
-            }
-            state.today.meals[meal.id] = meal;
-
-            // Increment usage counter for frequent foods sorting
-            food.uses = (food.uses || 0) + 1;
-
-            // Note: totals are calculated via getTodayTotals() from meals array
-            // No need to track separate totalCalories/totalProtein fields
-
-            saveState();
-            saveDayLog();  // Update dailyLogs for calendar
-            closeQuickMealModal();
-            renderSimpleView();
-            showToast(`✓ ${food.name} logged`);
-
-            // Award XP
-            awardXP(10, 'Logged meal');
+            // Redirect to quantity selector for serving size selection
+            openQtySelector(foodId);
         }
 
         function repeatMeal(mealId) {
@@ -8373,6 +8621,299 @@
             } else {
                 showToast('No valid MEAL| lines found', '⚠️');
             }
+        }
+
+        // ============================================
+        // QUANTITY SELECTOR FOR FREQUENT FOODS
+        // ============================================
+
+        let selectedFoodForQty = null;
+        let currentQty = 1;
+
+        function openQtySelector(foodId) {
+            const food = getValues(state.frequentFoods).find(f => f.id === foodId);
+            if (!food) return;
+
+            selectedFoodForQty = food;
+            currentQty = 1;
+
+            let modal = document.getElementById('qtySelectorModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'qtySelectorModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
+
+            renderQtySelectorContent();
+            modal.classList.add('active');
+
+            modal.onclick = function(e) {
+                if (e.target === modal) closeQtySelector();
+            };
+        }
+
+        function renderQtySelectorContent() {
+            const modal = document.getElementById('qtySelectorModal');
+            if (!modal || !selectedFoodForQty) return;
+
+            const food = selectedFoodForQty;
+            const totalCals = Math.round(food.calories * currentQty);
+            const totalProtein = Math.round(food.protein * currentQty);
+            const totalCarbs = Math.round((food.carbs || 0) * currentQty);
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 350px;">
+                    <div class="modal-header">
+                        <span class="modal-title">🍽️ Add Serving</span>
+                        <button class="modal-close" onclick="closeQtySelector()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="qty-selector-modal">
+                            <div class="qty-food-name">${escapeHtml(food.name)}</div>
+                            <div class="qty-food-serving">1 serving = ${food.calories} cal • ${food.protein}g protein</div>
+
+                            <div class="qty-controls">
+                                <button class="qty-btn" onclick="adjustQty(-0.5)" ${currentQty <= 0.5 ? 'disabled style="opacity: 0.4;"' : ''}>−</button>
+                                <div>
+                                    <div class="qty-display">${currentQty}</div>
+                                    <div class="qty-display-label">serving${currentQty !== 1 ? 's' : ''}</div>
+                                </div>
+                                <button class="qty-btn" onclick="adjustQty(0.5)">+</button>
+                            </div>
+
+                            <div class="qty-preview">
+                                <div class="qty-preview-row">
+                                    <span class="label">Calories</span>
+                                    <span class="value">${totalCals}</span>
+                                </div>
+                                <div class="qty-preview-row">
+                                    <span class="label">Protein</span>
+                                    <span class="value">${totalProtein}g</span>
+                                </div>
+                                <div class="qty-preview-row">
+                                    <span class="label">Carbs</span>
+                                    <span class="value">${totalCarbs}g</span>
+                                </div>
+                            </div>
+
+                            <button class="submit-btn" onclick="confirmQtyAdd()">
+                                Add ${currentQty} serving${currentQty !== 1 ? 's' : ''} (${totalCals} cal)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function adjustQty(delta) {
+            currentQty = Math.max(0.5, currentQty + delta);
+            renderQtySelectorContent();
+        }
+
+        function confirmQtyAdd() {
+            if (!selectedFoodForQty) return;
+
+            const food = selectedFoodForQty;
+            const mealId = generateId('meal');
+            const meal = {
+                id: mealId,
+                name: currentQty === 1 ? food.name : `${food.name} (×${currentQty})`,
+                calories: Math.round(food.calories * currentQty),
+                protein: Math.round(food.protein * currentQty),
+                carbs: Math.round((food.carbs || 0) * currentQty),
+                fat: Math.round((food.fat || 0) * currentQty),
+                time: new Date().toTimeString().slice(0, 5),
+                fromLibrary: true,
+                libraryId: food.id,
+                servings: currentQty
+            };
+
+            if (!state.today.meals || Array.isArray(state.today.meals)) {
+                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+            }
+            state.today.meals[mealId] = meal;
+
+            // Increment usage counter
+            food.uses = (food.uses || 0) + 1;
+
+            saveState();
+            saveDayLog();
+            closeQtySelector();
+            closeQuickMealModal();
+            renderSimpleView();
+            renderMealsList();
+            renderDashboard();
+            showToast(`✓ ${meal.name} logged (${meal.calories} cal)`);
+            awardXP(10, 'Logged meal');
+
+            setTimeout(() => checkDayCompletion(), 500);
+        }
+
+        function closeQtySelector() {
+            const modal = document.getElementById('qtySelectorModal');
+            if (modal) modal.classList.remove('active');
+            selectedFoodForQty = null;
+            currentQty = 1;
+        }
+
+        // ============================================
+        // WORKOUT HISTORY MANAGER (Detailed View)
+        // ============================================
+
+        function getWorkoutHistory(days = 30) {
+            const history = [];
+            const todayStr = getLocalDateString();
+
+            // Add today's workouts first
+            const todayWorkouts = getValues(state.today.workouts);
+            todayWorkouts.forEach(w => {
+                history.push({
+                    ...w,
+                    date: w.date || todayStr,
+                    isToday: true
+                });
+            });
+
+            // Add workouts from dailyLogs (past 30 days)
+            for (let i = 1; i <= days; i++) {
+                const date = new Date(Date.now() - i * 86400000);
+                const dateStr = getLocalDateString(date);
+                const log = state.dailyLogs?.[dateStr];
+
+                if (log?.workouts) {
+                    const dayWorkouts = getValues(log.workouts);
+                    dayWorkouts.forEach(w => {
+                        history.push({
+                            ...w,
+                            date: dateStr,
+                            isToday: false
+                        });
+                    });
+                }
+            }
+
+            // Sort by date (newest first), then by time
+            history.sort((a, b) => {
+                if (a.date !== b.date) {
+                    return b.date.localeCompare(a.date);
+                }
+                return (b.time || '').localeCompare(a.time || '');
+            });
+
+            return history;
+        }
+
+        function getWorkoutHistoryStats(days = 30) {
+            const history = getWorkoutHistory(days);
+            const uniqueDays = new Set(history.map(w => w.date));
+            const totalDuration = history.reduce((sum, w) => sum + (w.duration || 0), 0);
+            const totalCalories = history.reduce((sum, w) => sum + (w.calories || 0), 0);
+
+            return {
+                totalWorkouts: history.length,
+                daysWorkedOut: uniqueDays.size,
+                totalDuration,
+                totalCalories,
+                avgPerWorkout: history.length > 0 ? Math.round(totalDuration / history.length) : 0
+            };
+        }
+
+        function renderWorkoutHistoryManager() {
+            const container = document.getElementById('workoutHistoryManager');
+            if (!container) return;
+
+            const history = getWorkoutHistory(30);
+            const stats = getWorkoutHistoryStats(30);
+
+            // Group by date for display
+            const grouped = {};
+            history.forEach(w => {
+                if (!grouped[w.date]) grouped[w.date] = [];
+                grouped[w.date].push(w);
+            });
+
+            const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+            container.innerHTML = `
+                <div class="workout-history-section">
+                    <div class="workout-history-header">
+                        <span class="workout-history-title">📊 Workout History</span>
+                        <span class="workout-history-period">Last 30 days</span>
+                    </div>
+
+                    <div class="workout-history-summary">
+                        <div class="workout-summary-stat">
+                            <div class="workout-summary-value">${stats.totalWorkouts}</div>
+                            <div class="workout-summary-label">Workouts</div>
+                        </div>
+                        <div class="workout-summary-stat">
+                            <div class="workout-summary-value">${stats.daysWorkedOut}</div>
+                            <div class="workout-summary-label">Days</div>
+                        </div>
+                        <div class="workout-summary-stat">
+                            <div class="workout-summary-value">${Math.round(stats.totalDuration / 60)}h</div>
+                            <div class="workout-summary-label">Total Time</div>
+                        </div>
+                        <div class="workout-summary-stat">
+                            <div class="workout-summary-value">${stats.avgPerWorkout}m</div>
+                            <div class="workout-summary-label">Avg/Session</div>
+                        </div>
+                    </div>
+
+                    <div class="workout-history-list">
+                        ${dates.length === 0 ? `
+                            <div class="workout-history-empty">
+                                No workouts logged in the past 30 days.<br>
+                                Tap "+ Log Workout" to get started.
+                            </div>
+                        ` : dates.map(date => {
+                            const dayWorkouts = grouped[date];
+                            const dateObj = parseLocalDate(date);
+                            const isToday = date === getLocalDateString();
+                            const displayDate = isToday ? 'Today' : dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                            return `
+                                <div style="margin-bottom: 15px;">
+                                    <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ${displayDate}
+                                    </div>
+                                    ${dayWorkouts.map(w => `
+                                        <div class="workout-history-item">
+                                            <div class="workout-history-info">
+                                                <div class="workout-history-type">${getWorkoutIcon(w.type)} ${escapeHtml(w.type || 'Workout')}</div>
+                                                <div class="workout-history-meta">${w.time || ''}</div>
+                                            </div>
+                                            <div class="workout-history-stats">
+                                                <div class="workout-history-duration">${w.duration || 0} min</div>
+                                                <div class="workout-history-cals">+${w.calories || 0} cal</div>
+                                            </div>
+                                            <div class="workout-history-actions">
+                                                <button onclick="editWorkout('${w.id}')" title="Edit">✏️</button>
+                                                <button class="delete" onclick="deleteWorkout('${w.id}')" title="Delete">🗑️</button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getWorkoutIcon(type) {
+            const icons = {
+                'Lift': '🏋️',
+                'Run': '🏃',
+                'Cardio': '💪',
+                'Walk': '🚶',
+                'HIIT': '🔥',
+                'Swim': '🏊',
+                'Bike': '🚴',
+                'Yoga': '🧘'
+            };
+            return icons[type] || '🏃';
         }
 
         // ============================================
@@ -13189,13 +13730,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     isBrainDay: false,
                     mode: null,
                     targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
-                    meals: [],
+                    meals: {},  // Object with ID keys for Firebase safety
                     setupComplete: false,
                     magnesiumTaken: false,
                     waterGoalMet: false,
                     cnsProtectionAwarded: false,
                     workedOut: false,
-                    workouts: [],
+                    workouts: {},  // Object with ID keys for Firebase safety
                     lastMealTime: null,
                     calTargetAwarded: false,
                     proteinTargetAwarded: false,
