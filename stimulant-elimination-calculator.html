@@ -4016,8 +4016,10 @@
                 // Skip future doses (daysDiff < 0)
                 if (daysDiff < 0) return;
 
-                // Skip doses from non-today in normal mode (only allow today)
-                if (daysDiff > 0 && !state.allNighterMode) return;
+                // GHOST LOAD FIX: Always include yesterday's residual (daysDiff === 1)
+                // With 11h half-life, yesterday's 60mg still has ~15mg active at 8 AM
+                // Only skip doses older than yesterday in normal mode
+                if (daysDiff > 1 && !state.allNighterMode) return;
 
                 // Skip very old doses (>72 hours = ~6 half-lives, essentially zero)
                 if (daysDiff > 3) return;
@@ -4130,8 +4132,10 @@
                 // Skip future caffeine (daysDiff < 0)
                 if (daysDiff < 0) return;
 
-                // In normal mode, only process today's caffeine
-                if (daysDiff > 0 && !state.allNighterMode) return;
+                // GHOST LOAD FIX: Include yesterday's caffeine residual
+                // With 5h half-life, late afternoon coffee still has ~15mg active next morning
+                // Only skip doses older than yesterday in normal mode
+                if (daysDiff > 1 && !state.allNighterMode) return;
 
                 // Skip very old caffeine (>48 hours = ~10 half-lives at 5hr, essentially zero)
                 if (daysDiff > 2) return;
