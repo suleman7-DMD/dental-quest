@@ -8719,8 +8719,8 @@
 
                     // Check for conflicts
                     if (localChangesSinceLastSync && lastSyncTimestamp && remoteTimestamp > lastSyncTimestamp) {
-                        const localData = { doses: state.medications || [], lastSaved: lastSyncTimestamp };
-                        const remoteData = { doses: remoteState.medications || [], lastSaved: remoteTimestamp };
+                        const localData = { doses: ensureArray(state.medications, []), lastSaved: lastSyncTimestamp };
+                        const remoteData = { doses: ensureArray(remoteState.medications, []), lastSaved: remoteTimestamp };
 
                         showSyncConflictModal(localData, remoteData, (choice) => {
                             if (choice === 'local') {
@@ -8759,9 +8759,9 @@
             state = deepMerge(state, {
                 wakeTime: firebaseState.wakeTime,
                 hoursSleptLastNight: firebaseState.hoursSleptLastNight,
-                medications: firebaseState.medications,
-                caffeine: firebaseState.caffeine,
-                history: firebaseState.history,
+                medications: ensureArray(firebaseState.medications, []),
+                caffeine: ensureArray(firebaseState.caffeine, []),
+                history: ensureArray(firebaseState.history, []),
                 modifiers: firebaseState.modifiers || {},
                 settings: firebaseState.settings || {},
                 sleepHistory: firebaseState.sleepHistory || {},
@@ -8769,7 +8769,7 @@
                 nicotine: firebaseState.nicotine || {}
             });
 
-            // Ensure arrays are actually arrays
+            // Double-check arrays are valid (belt + suspenders)
             if (!Array.isArray(state.medications)) state.medications = [];
             if (!Array.isArray(state.caffeine)) state.caffeine = [];
             if (!Array.isArray(state.history)) state.history = [];
@@ -8928,7 +8928,12 @@
                     workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) },
                     nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) }
                 };
-                
+
+                // Ensure arrays are valid after localStorage merge (Firebase may have corrupted them)
+                state.medications = ensureArray(state.medications, []);
+                state.caffeine = ensureArray(state.caffeine, []);
+                state.history = ensureArray(state.history, []);
+
                 // Clear today's entries (fresh start each day)
                 const today = getLocalDateString();
                 const lastDate = state.history[0]?.date;

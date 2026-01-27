@@ -8653,7 +8653,7 @@ CHAIR: 9F
             // Set up real-time listener
             mainAppTasksRef.on('value', snapshot => {
                 const tasks = snapshot.val();
-                mainAppTasks = tasks || [];
+                mainAppTasks = ensureArray(tasks, []);
                 updateDoTodaySyncStatus('connected', 'Live sync active');
                 renderDoTodayTasks();
             }, error => {
@@ -8860,20 +8860,22 @@ CHAIR: 9F
                 grades: data.grades || {},
                 editedDeadlines: data.editedDeadlines || {},
                 completedDeadlines: data.completedDeadlines || {},
-                customDeadlines: data.customDeadlines || [],
+                customDeadlines: ensureArray(data.customDeadlines, []),
+                deletedDeadlines: ensureArray(data.deletedDeadlines, []),
                 examStudyProgress: data.examStudyProgress || {},
                 monthlyPlanner: {
-                    notes: data.monthlyPlanner?.notes || [],
-                    customTasks: data.monthlyPlanner?.customTasks || [],
-                    overriddenStatic: data.monthlyPlanner?.overriddenStatic || [],
-                    completedTasks: data.monthlyPlanner?.completedTasks || []
+                    notes: ensureArray(data.monthlyPlanner?.notes, []),
+                    customTasks: ensureArray(data.monthlyPlanner?.customTasks, []),
+                    overriddenStatic: ensureArray(data.monthlyPlanner?.overriddenStatic, []),
+                    completedTasks: ensureArray(data.monthlyPlanner?.completedTasks, [])
                 },
                 clinicalData: {
                     patients: data.clinicalData?.patients || {},
-                    appointments: data.clinicalData?.appointments || [],
-                    completedProcedures: data.clinicalData?.completedProcedures || [],
+                    appointments: ensureArray(data.clinicalData?.appointments, []),
+                    completedProcedures: ensureArray(data.clinicalData?.completedProcedures, []),
                     competencies: data.clinicalData?.competencies || null
                 },
+                exams: ensureArray(data.exams, []),
                 dailyPlanner: data.dailyPlanner,
                 lastSaved: data.lastSaved
             });

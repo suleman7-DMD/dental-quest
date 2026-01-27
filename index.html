@@ -6323,9 +6323,9 @@
                     confirmMessage += `\nThis will replace your current data. Continue?`;
                     
                     if (!confirm(confirmMessage)) return;
-                    
+
                     // Restore tasks
-                    tasks = checkpoint.tasks || [];
+                    tasks = ensureArray(checkpoint.tasks, []);
                     
                     // Restore stats with migration
                     if (checkpoint.stats) {
@@ -9236,7 +9236,7 @@
                             date: data.date || null,
                             goal: data.goal || '',
                             bedtime: data.bedtime || '23:00',
-                            blocks: data.blocks || [],
+                            blocks: ensureArray(data.blocks, []),
                             lastReset: data.lastReset || null
                         };
                     } catch (e) {
@@ -9877,7 +9877,7 @@
         function applyRemoteData(data) {
             lastKnownSaveTime = data.lastSaved || Date.now();
 
-            tasks = data.tasks || [];
+            tasks = ensureArray(data.tasks, []);
 
             if (data.stats) {
                 stats = deepMerge(stats, {

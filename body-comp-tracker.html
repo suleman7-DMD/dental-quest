@@ -9874,8 +9874,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         profile: { ...state.profile, ...(loaded.profile || {}) },
                         today: { ...state.today, ...(loaded.today || {}) },
                         frequentFoods: hasLoadedFoods ? loadedFoods : state.frequentFoods,
-                        weighIns: loaded.weighIns || [],
-                        bodyCompHistory: loaded.bodyCompHistory || [],
+                        weighIns: ensureArray(loaded.weighIns, []),
+                        bodyCompHistory: ensureArray(loaded.bodyCompHistory, []),
                         dailyLogs: loaded.dailyLogs || {},
                         refeedTracker: { ...state.refeedTracker, ...(loaded.refeedTracker || {}) },
                         gamification: { ...state.gamification, ...(loaded.gamification || {}) },
@@ -10379,12 +10379,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (stimData) {
                     // Get today's medications (filter by today's date)
                     const today = getLocalDateString();
-                    const todayMeds = (stimData.medications || []).filter(m => m.date === today);
+                    const todayMeds = ensureArray(stimData.medications, []).filter(m => m.date === today);
                     const totalDose = todayMeds.reduce((sum, m) => sum + (m.dose || 0), 0);
                     const lastMed = todayMeds.length > 0 ? todayMeds[todayMeds.length - 1] : null;
 
                     // Get today's caffeine
-                    const todayCaffeine = (stimData.caffeine || []).filter(c => c.date === today);
+                    const todayCaffeine = ensureArray(stimData.caffeine, []).filter(c => c.date === today);
                     const totalCaffeine = todayCaffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
                     const lastCaff = todayCaffeine.length > 0 ? todayCaffeine[todayCaffeine.length - 1] : null;
 
