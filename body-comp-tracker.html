@@ -1143,6 +1143,43 @@
             background: linear-gradient(90deg, var(--accent-purple), #ec4899);
         }
 
+        /* Calories Burned Summary (Simple View) */
+        .simple-burn-summary {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .burn-summary-row {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .burn-summary-row strong {
+            color: var(--text-primary);
+        }
+
+        .burn-separator {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .burn-summary-row .deficit-positive {
+            color: var(--accent-green);
+        }
+
+        .burn-summary-row .deficit-negative {
+            color: var(--accent-red);
+        }
+
         /* Context Cards */
         .context-card {
             background: var(--bg-secondary);
@@ -1360,6 +1397,29 @@
             background: rgba(239, 68, 68, 0.15);
             border: 1px solid var(--accent-red);
             border-radius: 6px;
+        }
+
+        /* Minimal Sleep Debt Indicator (at bottom of simple view) */
+        .sleep-debt-minimal {
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            padding: 12px;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        .sleep-debt-minimal.moderate {
+            color: var(--accent-yellow);
+        }
+
+        .sleep-debt-minimal.high {
+            color: var(--accent-orange);
+        }
+
+        .sleep-debt-minimal.severe {
+            color: var(--accent-red);
+            font-weight: 600;
             font-size: 0.85em;
             color: var(--accent-red);
         }
@@ -4271,6 +4331,87 @@
             margin-bottom: 16px;
         }
 
+        /* Calories Burned Section */
+        .calories-burned-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .calories-burned-header {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .calories-burned-grid {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .burn-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .burn-item.total {
+            background: linear-gradient(135deg, var(--accent-green-dim), var(--accent-blue-dim));
+        }
+
+        .burn-label {
+            display: block;
+            font-size: 0.7em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .burn-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .deficit-breakdown {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+
+        .deficit-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            padding: 4px 0;
+        }
+
+        .deficit-row.result {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--text-primary);
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
+            margin-top: 4px;
+        }
+
+        .deficit-row.result.surplus span:last-child {
+            color: var(--accent-red);
+        }
+
+        .deficit-row.result.deficit span:last-child {
+            color: var(--accent-green);
+        }
+
         /* Meal Actions */
         .meal-item {
             display: flex;
@@ -4493,6 +4634,17 @@
                 </div>
             </div>
 
+            <!-- Calories Burned Summary (Compact for Simple View) -->
+            <div class="simple-burn-summary" id="simpleBurnSummary">
+                <div class="burn-summary-row">
+                    <span>🔥 TDEE: <strong id="simpleTDEE">2,150</strong> cal</span>
+                    <span class="burn-separator">|</span>
+                    <span>Eaten: <strong id="simpleEaten">0</strong> cal</span>
+                    <span class="burn-separator">|</span>
+                    <span id="simpleDeficitLabel">Deficit:</span> <strong id="simpleDeficit" class="deficit-positive">+2,150</strong>
+                </div>
+            </div>
+
             <!-- Schedule Card (God Mode 8A.1) -->
             <div class="context-card schedule-card" id="scheduleCard" style="display: none;">
                 <div class="card-header">
@@ -4513,13 +4665,6 @@
                 </div>
                 <div class="exam-caffeine" id="examCaffeine"></div>
                 <div class="exam-meal" id="examMeal"></div>
-            </div>
-
-            <!-- Sleep Debt Indicator (God Mode 8A.4) -->
-            <div class="context-card sleep-debt-card" id="sleepDebtCard" style="display: none;">
-                <div class="debt-header" id="debtHeader">😴 Sleep Debt</div>
-                <div class="debt-details" id="debtDetails"></div>
-                <div class="debt-warning" id="debtWarning" style="display: none;"></div>
             </div>
 
             <!-- Eating Nudge (Dynamic) -->
@@ -4607,6 +4752,11 @@
             <button class="details-btn" onclick="openBodyCompModal()" style="margin-top: 10px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15)); border-color: rgba(236, 72, 153, 0.3);">
                 <span>📏</span> Monthly Body Comp Check-In
             </button>
+
+            <!-- Sleep Debt Indicator (Compact - at bottom) -->
+            <div class="sleep-debt-minimal" id="sleepDebtMinimal" style="display: none;">
+                <span id="sleepDebtText">😴 Sleep debt: +4hr this week (avg 5hr/night)</span>
+            </div>
 
         </div>
 
@@ -4739,8 +4889,38 @@
                 </div>
             </div>
 
-            <!-- TDEE Breakdown -->
-            <div id="tdeeBreakdown" class="tdee-breakdown"></div>
+            <!-- TDEE / Calories Burned Breakdown -->
+            <div id="caloriesBurnedSection" class="calories-burned-section">
+                <div class="calories-burned-header">Calories Burned Today</div>
+                <div class="calories-burned-grid">
+                    <div class="burn-item">
+                        <span class="burn-label">BMR (Base)</span>
+                        <span class="burn-value" id="burnBMR">1,850</span>
+                    </div>
+                    <div class="burn-item">
+                        <span class="burn-label">+ Active</span>
+                        <span class="burn-value" id="burnActive">+300</span>
+                    </div>
+                    <div class="burn-item total">
+                        <span class="burn-label">= TDEE</span>
+                        <span class="burn-value" id="burnTDEE">2,150</span>
+                    </div>
+                </div>
+                <div class="deficit-breakdown" id="deficitBreakdown">
+                    <div class="deficit-row">
+                        <span>Eaten:</span>
+                        <span id="deficitEaten">0 cal</span>
+                    </div>
+                    <div class="deficit-row">
+                        <span>Burned:</span>
+                        <span id="deficitBurned">2,150 cal</span>
+                    </div>
+                    <div class="deficit-row result" id="deficitResultRow">
+                        <span>Deficit:</span>
+                        <span id="deficitResult">+2,150 cal</span>
+                    </div>
+                </div>
+            </div>
 
             <!-- Progress Section -->
             <div class="progress-section">
@@ -5528,15 +5708,8 @@
                 'ff_016': { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, carbs: 20, uses: 0 },
                 'ff_017': { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, carbs: 30, uses: 0 },
                 'ff_018': { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, carbs: 38, uses: 0 },
-                'ff_019': { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, carbs: 42, uses: 0 },
                 'ff_020': { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, carbs: 3, uses: 0 },
-                'ff_021': { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 },
-                // Clinic Fuel options for Brain Days
-                'ff_022': { id: 'ff_022', name: '🧠 Gatorade + Banana', calories: 230, protein: 1, carbs: 58, uses: 0, clinicFuel: true },
-                'ff_023': { id: 'ff_023', name: '🧠 Clif Bar', calories: 250, protein: 10, carbs: 44, uses: 0, clinicFuel: true },
-                'ff_024': { id: 'ff_024', name: '🧠 Apple + PB (2 tbsp)', calories: 285, protein: 7, carbs: 36, uses: 0, clinicFuel: true },
-                'ff_025': { id: 'ff_025', name: '🧠 Orange Juice (12oz)', calories: 165, protein: 2, carbs: 39, uses: 0, clinicFuel: true },
-                'ff_026': { id: 'ff_026', name: '🧠 Honey Stinger Waffle', calories: 160, protein: 1, carbs: 29, uses: 0, clinicFuel: true }
+                'ff_021': { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 }
             },
 
             // Weekly weigh-ins
@@ -6098,13 +6271,38 @@
             // TDEE Breakdown display
             const bmr = calculateBMR(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age);
             const activeInfo = get7DayAvgActiveCalories();
+            const tdee = bmr + activeInfo.avg;
             const tdeeBreakdown = document.getElementById('tdeeBreakdown');
             if (tdeeBreakdown) {
                 tdeeBreakdown.innerHTML = `
                     BMR: ${formatNumber(bmr)} + Active: ${activeInfo.avg}
                     ${activeInfo.days >= 3 ? `<span style="color: var(--text-muted)">(${activeInfo.days}-day avg)</span>` : ''}
-                    = TDEE: ${formatNumber(bmr + activeInfo.avg)}
+                    = TDEE: ${formatNumber(tdee)}
                 `;
+            }
+
+            // Calories Burned Section - detailed breakdown
+            const burnBMR = document.getElementById('burnBMR');
+            const burnActive = document.getElementById('burnActive');
+            const burnTDEE = document.getElementById('burnTDEE');
+            const deficitEaten = document.getElementById('deficitEaten');
+            const deficitBurned = document.getElementById('deficitBurned');
+            const deficitResult = document.getElementById('deficitResult');
+            const deficitResultRow = document.getElementById('deficitResultRow');
+
+            if (burnBMR) burnBMR.textContent = formatNumber(bmr);
+            if (burnActive) burnActive.textContent = '+' + formatNumber(activeInfo.avg);
+            if (burnTDEE) burnTDEE.textContent = formatNumber(tdee);
+            if (deficitEaten) deficitEaten.textContent = formatNumber(totals.calories) + ' cal';
+            if (deficitBurned) deficitBurned.textContent = formatNumber(tdee) + ' cal';
+            if (deficitResult) {
+                if (currentDeficit >= 0) {
+                    deficitResult.textContent = '+' + formatNumber(currentDeficit) + ' cal';
+                    if (deficitResultRow) deficitResultRow.className = 'deficit-row result deficit';
+                } else {
+                    deficitResult.textContent = formatNumber(currentDeficit) + ' cal';
+                    if (deficitResultRow) deficitResultRow.className = 'deficit-row result surplus';
+                }
             }
 
             // Progress bars
@@ -6188,6 +6386,31 @@
             document.getElementById('carbTarget').textContent = carbTarget;
             document.getElementById('carbProgressFill').style.width = `${carbPercent}%`;
 
+            // Update burn summary (TDEE / Deficit)
+            const bmr = calculateBMR(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age);
+            const activeInfo = get7DayAvgActiveCalories();
+            const tdee = bmr + activeInfo.avg;
+            const deficit = tdee - totals.calories;
+
+            const simpleTDEE = document.getElementById('simpleTDEE');
+            const simpleEaten = document.getElementById('simpleEaten');
+            const simpleDeficit = document.getElementById('simpleDeficit');
+            const simpleDeficitLabel = document.getElementById('simpleDeficitLabel');
+
+            if (simpleTDEE) simpleTDEE.textContent = formatNumber(tdee);
+            if (simpleEaten) simpleEaten.textContent = formatNumber(totals.calories);
+            if (simpleDeficit) {
+                if (deficit >= 0) {
+                    simpleDeficit.textContent = '+' + formatNumber(deficit);
+                    simpleDeficit.className = 'deficit-positive';
+                    if (simpleDeficitLabel) simpleDeficitLabel.textContent = 'Deficit:';
+                } else {
+                    simpleDeficit.textContent = formatNumber(deficit);
+                    simpleDeficit.className = 'deficit-negative';
+                    if (simpleDeficitLabel) simpleDeficitLabel.textContent = 'Surplus:';
+                }
+            }
+
             // Update eating nudge
             const nudge = getEatingNudge();
             const nudgeEl = document.getElementById('eatingNudge');
@@ -6196,7 +6419,12 @@
                 nudgeEl.className = `context-card nudge ${nudge.type === 'danger' ? 'danger' : nudge.type === 'info' ? 'info' : ''}`;
                 document.getElementById('nudgeIcon').textContent = nudge.icon;
                 document.getElementById('nudgeTitle').textContent = nudge.title;
-                document.getElementById('nudgeDetail').textContent = '→ ' + nudge.message;
+                // Include verification info if present (smaller, muted text)
+                let nudgeHtml = '→ ' + escapeHtml(nudge.message);
+                if (nudge.verify) {
+                    nudgeHtml += '<br><span style="font-size: 0.75em; color: var(--text-muted); opacity: 0.8;">' + escapeHtml(nudge.verify) + '</span>';
+                }
+                document.getElementById('nudgeDetail').innerHTML = nudgeHtml;
             } else {
                 nudgeEl.style.display = 'none';
             }
@@ -6680,42 +6908,41 @@
 
         function renderSleepDebtIndicator() {
             const sleepDebt = state.ecosystemContext?.sleepDebt;
-            const debtCard = document.getElementById('sleepDebtCard');
+            const debtMinimal = document.getElementById('sleepDebtMinimal');
+            const debtText = document.getElementById('sleepDebtText');
 
             if (!sleepDebt || sleepDebt.severity === 'LOW') {
-                if (debtCard) debtCard.style.display = 'none';
+                if (debtMinimal) debtMinimal.style.display = 'none';
                 return;
             }
 
-            // Show the card
-            debtCard.style.display = 'block';
-            debtCard.className = `context-card sleep-debt-card ${sleepDebt.severity.toLowerCase()}`;
-
-            // Update header
-            const debtSign = sleepDebt.weeklyDebt > 0 ? '+' : '';
-            document.getElementById('debtHeader').textContent =
-                `😴 Sleep Debt: ${debtSign}${sleepDebt.weeklyDebt}hr this week`;
-
-            // Update details
-            let details = `Avg: ${sleepDebt.avgSleep}hr/night (target: 7hr)`;
-            if (sleepDebt.consecutiveBadNights >= 2) {
-                details += `<br>${sleepDebt.consecutiveBadNights} bad nights in a row`;
+            // Show the minimal indicator
+            if (debtMinimal) {
+                debtMinimal.style.display = 'block';
+                debtMinimal.className = `sleep-debt-minimal ${sleepDebt.severity.toLowerCase()}`;
             }
-            document.getElementById('debtDetails').innerHTML = details;
 
-            // Update warning for severe
-            const warningEl = document.getElementById('debtWarning');
-            if (sleepDebt.severity === 'SEVERE') {
-                warningEl.style.display = 'block';
-                warningEl.textContent = 'Forced maintenance mode. Your body needs recovery, not deficit.';
-            } else {
-                warningEl.style.display = 'none';
+            // Update text - single sentence format
+            if (debtText) {
+                const debtSign = sleepDebt.weeklyDebt > 0 ? '+' : '';
+                let text = `😴 Sleep debt: ${debtSign}${sleepDebt.weeklyDebt}hr this week (avg ${sleepDebt.avgSleep}hr/night)`;
+
+                // Add severe warning
+                if (sleepDebt.severity === 'SEVERE') {
+                    text = `⚠️ Severe sleep debt (${sleepDebt.avgSleep}hr avg) — forced maintenance mode`;
+                } else if (sleepDebt.severity === 'HIGH') {
+                    text += ' — consider lighter deficit';
+                }
+
+                debtText.textContent = text;
             }
         }
 
         function applySleepDebtModeOverride() {
             const sleepDebt = state.ecosystemContext?.sleepDebt;
             if (!sleepDebt) return;
+
+            const originalMode = state.today.mode;
 
             // SEVERE sleep debt forces ORANGE mode
             if (sleepDebt.severity === 'SEVERE' && state.today.mode !== 'ORANGE') {
@@ -6728,6 +6955,32 @@
                 state.today.mode = 'YELLOW';
                 state.today.modeReason = 'Sleep debt adjustment';
                 console.log('🟡 Mode bumped to YELLOW due to high sleep debt');
+            }
+
+            // If mode changed, recalculate targets and refresh UI
+            if (state.today.mode !== originalMode && state.today.setupComplete) {
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories || 0
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                refreshCurrentView();
+            }
+        }
+
+        // Refresh whichever view is currently active
+        function refreshCurrentView() {
+            const simpleView = document.getElementById('simpleView');
+            const dashboardScreen = document.getElementById('dashboardScreen');
+
+            if (simpleView && simpleView.classList.contains('active')) {
+                renderSimpleView();
+            } else if (dashboardScreen && dashboardScreen.classList.contains('active')) {
+                renderDashboard();
+                renderMealsList();
+                renderWorkoutsList();
             }
         }
 
@@ -6883,7 +7136,16 @@
             if (!stimEffect) return null;
 
             const totals = getTodayTotals();
-            const { suppressionLevel, suppressionEnd, crashRiskWindow } = stimEffect;
+            const stim = state.ecosystemContext?.stimulant;
+            const { suppressionLevel, suppressionEnd, crashRiskWindow, adderallEffect, caffeineEffect } = stimEffect;
+
+            // Build verification string showing inputs
+            const verifyParts = [];
+            if (stim?.lastAdderallTime) verifyParts.push(`Adderall@${stim.lastAdderallTime}`);
+            if (stim?.lastAdderallDose) verifyParts.push(`${stim.lastAdderallDose}mg`);
+            if (stim?.caffeineMg > 0) verifyParts.push(`Caffeine:${stim.caffeineMg}mg`);
+            verifyParts.push(`Eaten:${totals.calories}cal`);
+            const verifyStr = verifyParts.join(', ');
 
             // NUDGE: Severe suppression active
             if (suppressionLevel === 'SEVERE' && totals.calories < 400) {
@@ -6891,7 +7153,8 @@
                     type: 'warning',
                     icon: '💊☕',
                     title: 'Double stimulant load active',
-                    message: `Appetite GONE until ~${suppressionEnd}. Force an Orgain shake NOW.`
+                    message: `Appetite GONE until ~${suppressionEnd}. Force an Orgain shake NOW.`,
+                    verify: `[${verifyStr}]`
                 };
             }
 
@@ -6911,7 +7174,8 @@
                             type: 'danger',
                             icon: '⚠️',
                             title: 'Stimulant crash window NOW',
-                            message: `${intensityMsg} Eat immediately or risk binge later.`
+                            message: `${intensityMsg} Eat immediately or risk binge later.`,
+                            verify: `[Crash ${crashRiskWindow.start}-${crashRiskWindow.end}, ${verifyStr}]`
                         };
                     }
                 }
@@ -7239,6 +7503,11 @@
                 hoursSinceMeal = (nowMinutes - mealMinutes) / 60;
             }
 
+            // Build verification string for stimulant nudges
+            const stimVerify = stim?.lastAdderallTime
+                ? `[Adderall@${stim.lastAdderallTime}, ${hoursSinceAdderall?.toFixed(1) || '?'}hr ago, Eaten:${totals.calories}cal]`
+                : `[No Adderall synced, Eaten:${totals.calories}cal]`;
+
             // NUDGE 1: Peak suppression + no recent food
             if (hoursSinceAdderall !== null && hoursSinceAdderall < 4 && hoursSinceAdderall >= 0) {
                 if ((hoursSinceMeal === null || hoursSinceMeal >= 3) && totals.calories < 400) {
@@ -7248,7 +7517,8 @@
                         type: 'info',
                         icon: '💊',
                         title: `Adderall active until ~${wearOffTime}`,
-                        message: 'Eat now while you can override the suppression'
+                        message: 'Eat now while you can override the suppression',
+                        verify: stimVerify
                     };
                 }
             }
@@ -7259,7 +7529,8 @@
                     type: 'warning',
                     icon: '⚠️',
                     title: `Only ${totals.calories} cal so far`,
-                    message: 'Adderall wearing off — eat before the crash'
+                    message: 'Adderall wearing off — eat before the crash',
+                    verify: stimVerify
                 };
             }
 
@@ -7269,7 +7540,8 @@
                     type: 'danger',
                     icon: '🚨',
                     title: `${totals.calories} cal by ${hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'pm' : 'am'}`,
-                    message: 'Eat a real meal now'
+                    message: 'Eat a real meal now',
+                    verify: stimVerify
                 };
             }
 
@@ -7361,13 +7633,21 @@
             for (const date of sortedDates) {
                 if (date === todayStr) continue; // Already checked today
                 const log = state.dailyLogs[date];
-                if (log && log.workedOut) {
+
+                // Check multiple ways to detect workout: workedOut flag OR workouts array has entries
+                const logWorkouts = log?.workouts;
+                const hasWorkouts = Array.isArray(logWorkouts) ? logWorkouts.length > 0 : (logWorkouts && Object.keys(logWorkouts).length > 0);
+                const didWorkout = log?.workedOut === true || hasWorkouts;
+
+                if (didWorkout) {
                     workoutDates.push(date);
 
                     // Track last workout if not found yet
                     if (lastWorkoutDate === null) {
                         lastWorkoutDate = date;
-                        lastWorkoutType = log.workouts?.[0]?.type || 'Workout';
+                        // Handle both array and object workout formats
+                        const workoutsList = Array.isArray(logWorkouts) ? logWorkouts : getValues(logWorkouts);
+                        lastWorkoutType = workoutsList[0]?.type || 'Workout';
                         const logDate = parseLocalDate(date);
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
@@ -7494,8 +7774,8 @@
                         <div class="meal-protein">${meal.protein}g protein</div>
                     </div>
                     <div class="meal-actions">
-                        <button class="meal-action-btn" onclick="editMeal(${index})" title="Edit">✏️</button>
-                        <button class="meal-action-btn delete" onclick="deleteMeal(${index})" title="Delete">🗑️</button>
+                        <button class="meal-action-btn" onclick="editMeal('${meal.id}')" title="Edit">✏️</button>
+                        <button class="meal-action-btn delete" onclick="deleteMeal('${meal.id}')" title="Delete">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -7525,16 +7805,16 @@
                 return `
                 <div class="meal-item">
                     <div class="meal-info">
-                        <div class="meal-name">${escapeHtml(workout.type)}</div>
+                        <div class="meal-name">${escapeHtml(workout.type || 'Workout')}</div>
                         <div class="meal-time">${escapeHtml(workout.time) || ''}</div>
                     </div>
                     <div class="meal-macros">
-                        <div class="meal-calories">${workout.duration} min</div>
-                        <div class="meal-protein">+${workout.calories} cal ceiling</div>
+                        <div class="meal-calories">${workout.duration || 0} min</div>
+                        <div class="meal-protein">+${workout.calories || 0} cal ceiling</div>
                     </div>
                     <div class="meal-actions">
-                        <button class="meal-action-btn" onclick="editWorkout(${originalIndex})" title="Edit">✏️</button>
-                        <button class="meal-action-btn delete" onclick="deleteWorkout(${originalIndex})" title="Delete">🗑️</button>
+                        <button class="meal-action-btn" onclick="editWorkout('${workout.id}')" title="Edit">✏️</button>
+                        <button class="meal-action-btn delete" onclick="deleteWorkout('${workout.id}')" title="Delete">🗑️</button>
                     </div>
                 </div>
             `}).join('');
@@ -7731,6 +8011,7 @@
             awardXP(XP_REWARDS.logMeal, 'Meal logged');
 
             saveState();
+            saveDayLog();  // Update dailyLogs for calendar
             renderMealsList();
             renderDashboard();
             closeAddMealModal();
@@ -7808,6 +8089,7 @@
             }
 
             saveState();
+            saveDayLog();  // Update dailyLogs for calendar
             renderMealsList();
             renderDashboard();
             closeAddMealModal();
@@ -7822,6 +8104,7 @@
                     delete state.today.meals[mealId];
                 }
                 saveState();
+                saveDayLog();  // Update dailyLogs for calendar
                 renderMealsList();
                 renderDashboard();
                 showToast('Meal deleted');
@@ -7995,6 +8278,7 @@
             // No need to track separate totalCalories/totalProtein fields
 
             saveState();
+            saveDayLog();  // Update dailyLogs for calendar
             closeQuickMealModal();
             renderSimpleView();
             showToast(`✓ ${food.name} logged`);
@@ -8028,6 +8312,7 @@
             // No need to track separate totalCalories/totalProtein fields
 
             saveState();
+            saveDayLog();  // Update dailyLogs for calendar
             closeQuickMealModal();
             renderSimpleView();
             showToast(`✓ ${meal.name} repeated`);
@@ -8080,6 +8365,7 @@
 
             if (addedCount > 0) {
                 saveState();
+                saveDayLog();  // Update dailyLogs for calendar
                 closeQuickMealModal();
                 renderSimpleView();
                 showToast(`✓ Added ${addedCount} meal${addedCount > 1 ? 's' : ''}`);
@@ -8325,7 +8611,7 @@
         function saveDayLog() {
             // Save current day's data to daily logs for historical tracking
             const today = state.today;
-            if (!today.date || !today.setupComplete) return;
+            if (!today.date) return;  // Only skip if no date set (setupComplete no longer required)
 
             const totals = getTodayTotals();
             const targets = today.targets;
@@ -8408,17 +8694,28 @@
                     activeCalories: 0,
                     isBrainDay: false,
                     mode: null,
-                    targets: { calories: 2000, protein: 172, floor: 1900 },
-                    meals: [],
+                    targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
+                    meals: {},  // Object for Firebase safety
+                    workouts: {},  // Object for Firebase safety
                     setupComplete: false,
+                    magnesiumTaken: false,
+                    waterGoalMet: false,
+                    cnsProtectionAwarded: false,
+                    workedOut: false,
+                    lastMealTime: null,
                     calTargetAwarded: false,
                     proteinTargetAwarded: false,
-                    perfectDayAwarded: false
+                    perfectDayAwarded: false,
+                    alerts: {
+                        undereatingShown: false,
+                        lowProteinShown: false
+                    }
                 };
 
                 saveState();
 
                 // Switch back to setup
+                document.getElementById('simpleView').classList.remove('active');
                 document.getElementById('dashboardScreen').classList.remove('active');
                 document.getElementById('setupScreen').classList.add('active');
 
@@ -10242,14 +10539,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 'ff_016': { id: 'ff_016', name: 'Trail Mix (handful)', calories: 220, protein: 7, carbs: 20, uses: 0 },
                 'ff_017': { id: 'ff_017', name: 'Trail Mix (big handful)', calories: 330, protein: 10, carbs: 30, uses: 0 },
                 'ff_018': { id: 'ff_018', name: '365 Flax Cereal (1 cup)', calories: 210, protein: 8, carbs: 38, uses: 0 },
-                'ff_019': { id: 'ff_019', name: 'Yogurt + Cereal Combo', calories: 300, protein: 23, carbs: 42, uses: 0 },
                 'ff_020': { id: 'ff_020', name: 'Kirkland Turkey Burger', calories: 200, protein: 22, carbs: 3, uses: 0 },
-                'ff_021': { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 },
-                'ff_022': { id: 'ff_022', name: '🧠 Gatorade + Banana', calories: 230, protein: 1, carbs: 58, uses: 0, clinicFuel: true },
-                'ff_023': { id: 'ff_023', name: '🧠 Clif Bar', calories: 250, protein: 10, carbs: 44, uses: 0, clinicFuel: true },
-                'ff_024': { id: 'ff_024', name: '🧠 Apple + PB (2 tbsp)', calories: 285, protein: 7, carbs: 36, uses: 0, clinicFuel: true },
-                'ff_025': { id: 'ff_025', name: '🧠 Orange Juice (12oz)', calories: 165, protein: 2, carbs: 39, uses: 0, clinicFuel: true },
-                'ff_026': { id: 'ff_026', name: '🧠 Honey Stinger Waffle', calories: 160, protein: 1, carbs: 29, uses: 0, clinicFuel: true }
+                'ff_021': { id: 'ff_021', name: 'Rotisserie Chicken (6oz)', calories: 280, protein: 38, carbs: 0, uses: 0 }
             };
         }
 
@@ -11877,7 +12168,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function checkDayCompletion() {
             const meals = state.today.meals;
-            if (!meals || meals.length === 0) return;
+            if (!meals || getCount(meals) === 0) return;  // FIX: use getCount() not .length
 
             const totals = getTodayTotals();
             const targets = state.today.targets;
@@ -11885,15 +12176,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const calHit = totals.calories >= targets.floor && totals.calories <= targets.calories;
             const proteinHit = totals.protein >= targets.protein * 0.9;
 
+            let stateChanged = false;
+
             // Award XP for hitting targets
             if (calHit && !state.today.calTargetAwarded) {
                 awardXP(XP_REWARDS.hitCalorieTarget, 'Hit calorie target!');
                 state.today.calTargetAwarded = true;
+                stateChanged = true;
             }
 
             if (proteinHit && !state.today.proteinTargetAwarded) {
                 awardXP(XP_REWARDS.hitProteinTarget, 'Hit protein target!');
                 state.today.proteinTargetAwarded = true;
+                stateChanged = true;
             }
 
             // Check for perfect day
@@ -11902,6 +12197,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 state.today.perfectDayAwarded = true;
                 state.gamification.perfectDays++;
                 triggerConfetti();
+                stateChanged = true;
+            }
+
+            // Save state if any awards were given
+            if (stateChanged) {
+                saveState();
             }
         }
 
@@ -12638,13 +12939,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             const status = log.status || (log.perfect ? 'perfect' : log.deficit > 0 ? 'partial' : 'missed');
 
+            // Handle both array and object formats for meals
+            const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
             let mealsHtml = '';
-            if (log.meals && log.meals.length > 0) {
+            if (mealsArr.length > 0) {
                 mealsHtml = `
                     <div style="margin-top: 12px;">
-                        <strong>Meals:</strong>
+                        <strong>Meals (${mealsArr.length}):</strong>
                         <div style="font-size: 0.85em; margin-top: 6px;">
-                            ${log.meals.map(m => `<div style="padding: 4px 0; border-bottom: 1px solid var(--bg-tertiary);">
+                            ${mealsArr.map(m => `<div style="padding: 4px 0; border-bottom: 1px solid var(--bg-tertiary);">
                                 ${escapeHtml(m.name)} - ${m.calories} cal, ${m.protein}g P, ${m.carbs || 0}g C
                             </div>`).join('')}
                         </div>
@@ -12652,14 +12955,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 `;
             }
 
+            // Handle both array and object formats for workouts
+            const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
             let workoutsHtml = '';
-            if (log.workouts && log.workouts.length > 0) {
+            if (workoutsArr.length > 0) {
                 workoutsHtml = `
                     <div style="margin-top: 12px;">
-                        <strong>Workouts:</strong>
+                        <strong>Workouts (${workoutsArr.length}):</strong>
                         <div style="font-size: 0.85em; margin-top: 6px;">
-                            ${log.workouts.map(w => `<div style="padding: 4px 0;">
-                                💪 ${escapeHtml(w.type)} - ${w.duration}min, +${w.calories}cal @ ${w.time || '--'}
+                            ${workoutsArr.map(w => `<div style="padding: 4px 0;">
+                                💪 ${escapeHtml(w.type || 'Workout')} - ${w.duration || 0}min, +${w.calories || 0}cal @ ${w.time || '--'}
                             </div>`).join('')}
                         </div>
                     </div>
@@ -12761,18 +13066,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             text += `Active Calories: ${log.activeCalories || 0}\n`;
             text += `Worked Out: ${log.workedOut ? 'Yes' : 'No'}\n\n`;
 
-            if (log.meals && log.meals.length > 0) {
-                text += `─── MEALS (${log.meals.length}) ───\n`;
-                log.meals.forEach(m => {
+            // Handle both array and object formats for meals
+            const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+            if (mealsArr.length > 0) {
+                text += `─── MEALS (${mealsArr.length}) ───\n`;
+                mealsArr.forEach(m => {
                     text += `• ${m.name}: ${m.calories}cal, ${m.protein}g P, ${m.carbs || 0}g C\n`;
                 });
                 text += '\n';
             }
 
-            if (log.workouts && log.workouts.length > 0) {
-                text += `─── WORKOUTS ───\n`;
-                log.workouts.forEach(w => {
-                    text += `• ${w.type}: ${w.duration}min, +${w.calories}cal @ ${w.time || '--'}\n`;
+            // Handle both array and object formats for workouts
+            const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
+            if (workoutsArr.length > 0) {
+                text += `─── WORKOUTS (${workoutsArr.length}) ───\n`;
+                workoutsArr.forEach(w => {
+                    text += `• ${w.type || 'Workout'}: ${w.duration || 0}min, +${w.calories || 0}cal @ ${w.time || '--'}\n`;
                 });
             }
 
@@ -12995,6 +13304,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 // saveStateImmediate already has guards
                 saveStateImmediate();
             } else {
+                // Check for day change first (handles midnight crossing while app was hidden)
+                if (!isInitialLoad && hasLoadedFromCloud) {
+                    const dayChanged = checkAndResetDayIfNeeded();
+                    if (dayChanged) {
+                        console.log('📅 Day changed while app was hidden - reset complete');
+                    }
+                }
                 // Only refresh if we've completed initial load
                 if (firebaseSyncEnabled && !isInitialLoad) {
                     forceCloudSync();
@@ -13069,9 +13385,78 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 saveDayLogWithSnapshot();
                 showToast('✓ Day summary saved to calendar');
 
-                // Schedule next day's save
-                setTimeout(scheduleEndOfDaySave, 60000); // Check again after 1 minute
+                // Schedule midnight reset (60 seconds after 11:59pm)
+                setTimeout(() => {
+                    autoResetForNewDay();
+                    // Then schedule next day's save
+                    scheduleEndOfDaySave();
+                }, 70000); // 70 seconds to ensure we're past midnight
             }, msUntilEndOfDay);
+        }
+
+        // Auto reset for new day - called at midnight
+        function autoResetForNewDay() {
+            const todayStr = getLocalDateString();
+
+            // Only reset if date has actually changed
+            if (state.today.date && state.today.date !== todayStr) {
+                console.log('🌅 Midnight detected - auto-resetting for new day');
+
+                // Reset today's data for new day
+                state.today = {
+                    date: todayStr,
+                    sleepHours: null,
+                    activeCalories: 0,
+                    isBrainDay: false,
+                    mode: null,
+                    targets: { calories: 2000, protein: 172, carbs: 150, floor: 1900 },
+                    meals: {},
+                    setupComplete: false,
+                    magnesiumTaken: false,
+                    waterGoalMet: false,
+                    cnsProtectionAwarded: false,
+                    workedOut: false,
+                    workouts: {},
+                    lastMealTime: null,
+                    calTargetAwarded: false,
+                    proteinTargetAwarded: false,
+                    perfectDayAwarded: false,
+                    alerts: {
+                        undereatingShown: false,
+                        lowProteinShown: false
+                    }
+                };
+
+                saveState();
+
+                // Refresh UI if visible
+                if (document.visibilityState === 'visible') {
+                    // Switch to setup screen
+                    document.getElementById('simpleView').classList.remove('active');
+                    document.getElementById('dashboardScreen').classList.remove('active');
+                    document.getElementById('setupScreen').classList.add('active');
+                    showToast('🌅 New day started!');
+                }
+            }
+        }
+
+        // Check for day change - called on visibility change and load
+        function checkAndResetDayIfNeeded() {
+            const todayStr = getLocalDateString();
+
+            if (state.today.date && state.today.date !== todayStr) {
+                console.log('📅 Date mismatch detected:', state.today.date, '→', todayStr);
+
+                // Save yesterday's data if setup was complete
+                if (state.today.setupComplete && getCount(state.today.meals) > 0) {
+                    saveDayLogWithSnapshot();
+                }
+
+                // Reset for new day
+                autoResetForNewDay();
+                return true;
+            }
+            return false;
         }
 
         function saveDayLogWithSnapshot() {
