@@ -4522,8 +4522,8 @@
                         </div>
                     </div>
                     <div style="color: #c9d1d9; line-height: 1.5;">
-                        <strong>The Math:</strong> Adding a second dose doesn't just raise the peak – it <em>widens the base</em> of the elimination curve. 
-                        That ${state.medications[1]?.dose || 20}mg "booster" often adds <strong>4-6+ hours</strong> of wakefulness, not just more focus.
+                        <strong>The Math:</strong> Adding a second dose doesn't just raise the peak – it <em>widens the base</em> of the elimination curve.
+                        That ${meds[1]?.dose || 20}mg "booster" often adds <strong>4-6+ hours</strong> of wakefulness, not just more focus.
                     </div>
                     ${sleepDebt < 2 ? `
                         <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; color: #fca5a5;">
@@ -7168,8 +7168,8 @@
                 } else {
                     // Keep the one with more data or higher ID (more recent)
                     const existing = byDate[date];
-                    const existingHasMeds = existing.medications && existing.medications.length > 0;
-                    const newHasMeds = entry.medications && entry.medications.length > 0;
+                    const existingHasMeds = existing.medications && getCount(existing.medications) > 0;
+                    const newHasMeds = entry.medications && getCount(entry.medications) > 0;
 
                     if (newHasMeds && !existingHasMeds) {
                         idsToRemove.push(existing.id);
@@ -8400,8 +8400,8 @@
 
             const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
             const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
-            const localDoses = (localData.doses || []).length;
-            const remoteDoses = (remoteData.doses || []).length;
+            const localDoses = getCount(localData.doses);
+            const remoteDoses = getCount(remoteData.doses);
 
             modal.innerHTML = `
                 <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
@@ -10117,8 +10117,8 @@ Current status at ${currentTime}:
                             <span class="caff-name">${caff.name}</span>
                             <span class="caff-amount">${caff.amount}mg</span>
                         </div>
-                        <input type="time" value="${caff.time}" onchange="focusUpdateCaffeineTime(${caff.index}, this.value)">
-                        <button class="caff-remove" onclick="focusRemoveCaffeine(${caff.index})">×</button>
+                        <input type="time" value="${caff.time}" onchange="focusUpdateCaffeineTime('${caff.id}', this.value)">
+                        <button class="caff-remove" onclick="focusRemoveCaffeine('${caff.id}')">×</button>
                     </div>
                 `;
             });
@@ -10245,9 +10245,9 @@ Current status at ${currentTime}:
         }
         
         // Update caffeine time from Focus View
-        function focusUpdateCaffeineTime(index, newTime) {
-            if (state.caffeine[index]) {
-                state.caffeine[index].time = newTime;
+        function focusUpdateCaffeineTime(id, newTime) {
+            if (state.caffeine && state.caffeine[id]) {
+                state.caffeine[id].time = newTime;
 
                 // DON'T re-render - it destroys the active input!
                 // Just recalculate and save
