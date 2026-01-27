@@ -5396,9 +5396,37 @@
             },
 
             // Version control for conflict detection
-            _version: Date.now(),
-            _lastModified: new Date().toISOString()
+            // CRITICAL: _version MUST be 0 for default state so cloud ALWAYS wins on fresh device
+            _version: 0,
+            _lastModified: null,
+            _dataLoaded: false  // Flag to track if real data was loaded
         };
+
+        // ============================================
+        // SYNC PROTECTION FLAGS - PREVENTS DATA WIPE
+        // ============================================
+        let isInitialLoad = true;      // Block ALL saves until data loaded
+        let hasLoadedFromCloud = false; // Track if we've checked Firebase
+
+        // Check if state has real user data (not just defaults)
+        function isEmptyState(data) {
+            if (!data) return true;
+
+            // Body Comp specific checks - must have at least ONE of these
+            const hasWeighIns = getCount(data.weighIns) > 0;
+            const hasMeals = getCount(data.today?.meals) > 0;
+            const hasWorkouts = getCount(data.today?.workouts) > 0;
+            const hasDailyLogs = getCount(data.dailyLogs) > 0;
+            const hasBodyCompHistory = getCount(data.bodyCompHistory) > 0;
+            const setupComplete = data.today?.setupComplete === true;
+
+            // Empty if NONE of these exist
+            return !hasWeighIns && !hasMeals && !hasWorkouts && !hasDailyLogs && !hasBodyCompHistory && !setupComplete;
+        }
+
+        function hasRealData(data) {
+            return !isEmptyState(data);
+        }
 
         // ============================================
         // DATA INTEGRITY UTILITIES
@@ -10039,7 +10067,35 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         function saveState() {
-            // Update version control on every save
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+
+            // GUARD A: Never save during initial load
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Save attempted during initial load');
+                return false;
+            }
+
+            // GUARD B: Never save if we haven't loaded cloud data yet
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Save attempted before cloud load');
+                return false;
+            }
+
+            // GUARD C: Never save empty state
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to save empty state');
+                return false;
+            }
+
+            // GUARD D: Verify we have real data loaded
+            if (!state._dataLoaded) {
+                console.warn('⚠️ BLOCKED: Data not properly loaded yet');
+                return false;
+            }
+
+            // All guards passed — safe to save
             state._version = Date.now();
             state._lastModified = new Date().toISOString();
 
@@ -10054,10 +10110,40 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             firebaseSaveTimeout = setTimeout(() => {
                 saveToFirebase();
             }, 2000);
+
+            return true;
         }
 
         function saveStateImmediate() {
-            // Update version control on every save
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+
+            // GUARD A: Never save during initial load
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted during initial load');
+                return false;
+            }
+
+            // GUARD B: Never save if we haven't loaded cloud data yet
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted before cloud load');
+                return false;
+            }
+
+            // GUARD C: Never save empty state
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to immediate-save empty state');
+                return false;
+            }
+
+            // GUARD D: Verify we have real data loaded
+            if (!state._dataLoaded) {
+                console.warn('⚠️ BLOCKED: Data not properly loaded yet');
+                return false;
+            }
+
+            // All guards passed — safe to save
             state._version = Date.now();
             state._lastModified = new Date().toISOString();
 
@@ -10069,6 +10155,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             saveToFirebase();
+            return true;
         }
 
         function loadState() {
@@ -10193,6 +10280,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 return;
             }
 
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Firebase save attempted during initial load');
+                return;
+            }
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Firebase save attempted before cloud load');
+                return;
+            }
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to save empty state to Firebase');
+                return;
+            }
+
             const saveTime = new Date().toISOString();
             lastKnownTimestamp = saveTime;
 
@@ -10206,7 +10309,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 dailyLogs: state.dailyLogs,
                 refeedTracker: state.refeedTracker,
                 gamification: state.gamification,
-                achievements: state.achievements
+                achievements: state.achievements,
+                _version: state._version,
+                _lastModified: state._lastModified
                 // NOTE: ecosystemContext is NOT saved - it's pulled from other apps
             };
 
@@ -10216,6 +10321,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             })
             .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
+                console.log('✅ Saved to Firebase, version:', state._version);
             })
             .catch(error => {
                 console.error('Firebase save error:', error);
@@ -10318,22 +10424,55 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             };
                         }
 
+                        // Mark that we have real data loaded
+                        state._dataLoaded = true;
+
                         localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
+                        console.log('✅ Loaded real data from Firebase');
                     } else {
-                        updateSyncStatus('connected', 'Connected');
-                        saveToFirebase();
+                        // No Firebase data - check if we have local data
+                        const hasLocalData = hasRealData(state);
+                        if (hasLocalData) {
+                            // We have local data but no cloud data - push to cloud
+                            state._dataLoaded = true;
+                            console.log('✅ Have local data, pushing to cloud');
+                            updateSyncStatus('connected', 'Connected');
+                            // Don't call saveToFirebase here - let user actions trigger it
+                        } else {
+                            // Fresh start - no data anywhere
+                            console.log('ℹ️ Fresh start - no data anywhere');
+                            state._dataLoaded = true;  // Allow saves after user starts entering data
+                            updateSyncStatus('connected', 'Connected');
+                        }
                     }
+
+                    // Mark that we've loaded from cloud (even if empty)
+                    hasLoadedFromCloud = true;
 
                     // Initialize UI
                     initializeUI();
                     setupRealtimeSync();
+
+                    // NOW we can allow saves
+                    isInitialLoad = false;
+                    console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
                     console.error('Firebase load error:', error);
                     updateSyncStatus('error', 'Load failed');
+
+                    // If we have local data, use it
+                    const hasLocalData = hasRealData(state);
+                    if (hasLocalData) {
+                        state._dataLoaded = true;
+                        hasLoadedFromCloud = true;  // Allow saves with local data
+                        isInitialLoad = false;
+                        console.log('⚠️ Firebase failed but have local data - allowing saves');
+                    }
+
                     initializeUI();
                 });
         }
@@ -10354,7 +10493,20 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     return;
                 }
 
+                // Skip during initial load (we handle this separately)
+                if (isInitialLoad) {
+                    console.log('⏭️ Realtime: Skipping during initial load');
+                    return;
+                }
+
                 const data = snapshot.val();
+
+                // Skip if cloud data is empty
+                if (!data || !data.state || isEmptyState(data.state)) {
+                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
+                    return;
+                }
+
                 if (data && data.state && data.lastUpdated) {
                     if (data.lastUpdated === lastKnownTimestamp) {
                         return;
@@ -12171,17 +12323,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // EVENT LISTENERS
         // ============================================
 
-        // Save on page unload
+        // Save on page unload - WITH GUARDS
         window.addEventListener('beforeunload', function() {
-            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            // Only save if we have real data and passed initial load
+            if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
+                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            }
         });
 
-        // Save when tab becomes hidden, refresh when visible
+        // Save when tab becomes hidden, refresh when visible - WITH GUARDS
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
+                // saveStateImmediate already has guards
                 saveStateImmediate();
             } else {
-                if (firebaseSyncEnabled) {
+                // Only refresh if we've completed initial load
+                if (firebaseSyncEnabled && !isInitialLoad) {
                     forceCloudSync();
                 }
             }

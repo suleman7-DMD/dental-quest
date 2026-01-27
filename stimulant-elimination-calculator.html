@@ -3362,8 +3362,47 @@
             _version: 0,  // Incremented on every save for conflict detection
             // Enhanced sleep history: stores hours slept AND wake time for each day
             // { 'YYYY-MM-DD': { hoursSlept: number, wakeTime: 'HH:MM' } }
-            sleepHistory: {}
+            sleepHistory: {},
+            _dataLoaded: false  // Flag to track if real data was loaded
         };
+
+        // ============================================
+        // SYNC PROTECTION FLAGS - PREVENTS DATA WIPE
+        // ============================================
+        let isInitialLoad = true;      // Block ALL saves until data loaded
+        let hasLoadedFromCloud = false; // Track if we've checked Firebase
+
+        // Check if state has real user data (not just defaults)
+        function isEmptyState(data) {
+            if (!data) return true;
+
+            // Stimulant Calculator specific checks - must have at least ONE of these
+            const hasMedications = getCount(data.medications) > 0;
+            const hasCaffeine = getCount(data.caffeine) > 0;
+            const hasHistory = getCount(data.history) > 0;
+            const hasSleepHistory = getCount(data.sleepHistory) > 0;
+
+            // Empty if NONE of these exist
+            return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory;
+        }
+
+        function hasRealData(data) {
+            return !isEmptyState(data);
+        }
+
+        // Helper to get count of items in object or array
+        function getCount(obj) {
+            if (!obj) return 0;
+            if (Array.isArray(obj)) return obj.length;
+            return Object.keys(obj).length;
+        }
+
+        // Helper to get values from object as array
+        function getValues(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;
+            return Object.values(obj).filter(v => v !== null && v !== undefined);
+        }
 
         // ============================================
         // DATA INTEGRITY UTILITIES
@@ -8659,10 +8698,26 @@
             if (!firebaseSyncEnabled || !database || !userPath) {
                 return;
             }
-            
+
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Firebase save attempted during initial load');
+                return;
+            }
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Firebase save attempted before cloud load');
+                return;
+            }
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to save empty state to Firebase');
+                return;
+            }
+
             const saveTime = new Date().toISOString();
             lastKnownTimestamp = saveTime; // Track our own save to ignore in real-time listener
-            
+
             // Save to Firebase
             database.ref(userPath).set({
                 state: state,
@@ -8670,6 +8725,7 @@
             })
             .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
+                console.log('✅ Saved to Firebase, version:', state._version);
             })
             .catch(error => {
                 console.error('❌ Firebase save error:', error);
@@ -8755,23 +8811,48 @@
                             renderFocusMode();
                         }
 
+                        // Mark that we have real data loaded
+                        state._dataLoaded = true;
+
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
+                        console.log('✅ Loaded real data from Firebase');
                     } else {
-                        // No Firebase data yet - save current local state to Firebase
+                        // No Firebase data - check if we have local data
+                        const hasLocalData = hasRealData(state);
+                        if (hasLocalData) {
+                            state._dataLoaded = true;
+                            console.log('✅ Have local data, using it');
+                        } else {
+                            // Fresh start - no data anywhere
+                            state._dataLoaded = true;  // Allow saves after user starts entering data
+                            console.log('ℹ️ Fresh start - no data anywhere');
+                        }
                         updateSyncStatus('connected', 'Connected');
-                        saveToFirebase();
                     }
-                    
+
+                    // Mark that we've loaded from cloud (even if empty)
+                    hasLoadedFromCloud = true;
+
                     // Set up real-time listener for changes from other devices
                     setupRealtimeSync();
+
+                    // NOW we can allow saves
+                    isInitialLoad = false;
+                    console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
-                    // Still show as connected if we have a valid path, just couldn't load
-                    updateSyncStatus('connected', 'Local + Cloud');
-                    // Try to save anyway
-                    saveToFirebase();
+                    updateSyncStatus('error', 'Load failed');
+
+                    // If we have local data, use it
+                    const hasLocalData = hasRealData(state);
+                    if (hasLocalData) {
+                        state._dataLoaded = true;
+                        hasLoadedFromCloud = true;  // Allow saves with local data
+                        isInitialLoad = false;
+                        console.log('⚠️ Firebase failed but have local data - allowing saves');
+                    }
                 });
         }
         
@@ -8832,16 +8913,29 @@
                     }
                     return;
                 }
-                
+
+                // Skip during initial load (we handle this separately)
+                if (isInitialLoad) {
+                    console.log('⏭️ Realtime: Skipping during initial load');
+                    return;
+                }
+
                 const data = snapshot.val();
+
+                // Skip if cloud data is empty
+                if (!data || !data.state || isEmptyState(data.state)) {
+                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
+                    return;
+                }
+
                 if (data && data.state && data.lastUpdated) {
                     // Only process if this is a NEW update (different timestamp)
                     if (data.lastUpdated === lastKnownTimestamp) {
                         return;
                     }
-                    
+
                     lastKnownTimestamp = data.lastUpdated;
-                    
+
                     // Merge in the new data - MIGRATE arrays to objects
                     const firebaseState = data.state;
                     state = {
@@ -9016,23 +9110,34 @@
             }
         }
         
-        // Handle tab visibility changes - save on hide, refresh on show
+        // Handle tab visibility changes - save on hide, refresh on show - WITH GUARDS
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 // Tab is being hidden - ensure data is saved immediately
-                safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
-                if (firebaseSyncEnabled && database && userPath) {
-                    database.ref(userPath).set({
-                        state: state,
-                        lastUpdated: new Date().toISOString()
-                    }).catch(err => console.error('Save on hide failed:', err));
+                // GUARD: Only save if we have real data and passed initial load
+                if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
+                    safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+                    if (firebaseSyncEnabled && database && userPath) {
+                        database.ref(userPath).set({
+                            state: state,
+                            lastUpdated: new Date().toISOString()
+                        }).catch(err => console.error('Save on hide failed:', err));
+                    }
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase and MIGRATE to objects
-                if (firebaseSyncEnabled && database && userPath) {
+                // GUARD: Only refresh if we've completed initial load
+                if (firebaseSyncEnabled && database && userPath && !isInitialLoad) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
                             const data = snapshot.val();
+
+                            // GUARD: Skip empty cloud data
+                            if (!data || !data.state || isEmptyState(data.state)) {
+                                console.warn('⚠️ Visibility refresh: Ignoring empty cloud data');
+                                return;
+                            }
+
                             if (data && data.state && data.lastUpdated > lastKnownTimestamp) {
                                 lastKnownTimestamp = data.lastUpdated;
                                 const fs = data.state;
@@ -9050,6 +9155,7 @@
                                     nicotine: { ...state.nicotine, ...(fs.nicotine || {}) },
                                     _version: (fs._version || state._version || 0) + 1
                                 };
+                                state._dataLoaded = true;
 
                                 renderMedEntries();
                                 renderCaffeineEntries();
@@ -9062,9 +9168,12 @@
             }
         });
 
-        // Save on page unload to prevent data loss during debounce window
+        // Save on page unload to prevent data loss during debounce window - WITH GUARDS
         window.addEventListener('beforeunload', function() {
-            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+            // Only save if we have real data and passed initial load
+            if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
+                safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+            }
         });
 
         // ============================================
@@ -9076,6 +9185,35 @@
         let lastLocalSave = 0;
         
         function saveState() {
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+
+            // GUARD A: Never save during initial load
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Save attempted during initial load');
+                return false;
+            }
+
+            // GUARD B: Never save if we haven't loaded cloud data yet
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Save attempted before cloud load');
+                return false;
+            }
+
+            // GUARD C: Never save empty state
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to save empty state');
+                return false;
+            }
+
+            // GUARD D: Verify we have real data loaded
+            if (!state._dataLoaded) {
+                console.warn('⚠️ BLOCKED: Data not properly loaded yet');
+                return false;
+            }
+
+            // All guards passed — safe to save
             // Mark that local changes exist (for conflict detection)
             markLocalChange();
 
@@ -9094,10 +9232,41 @@
             firebaseSaveTimeout = setTimeout(() => {
                 saveToFirebase();
             }, 2000); // Wait 2 seconds before saving to Firebase
+
+            return true;
         }
 
         // Force immediate save (for important actions like Save & Log)
         function saveStateImmediate() {
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+
+            // GUARD A: Never save during initial load
+            if (isInitialLoad) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted during initial load');
+                return false;
+            }
+
+            // GUARD B: Never save if we haven't loaded cloud data yet
+            if (!hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted before cloud load');
+                return false;
+            }
+
+            // GUARD C: Never save empty state
+            if (isEmptyState(state)) {
+                console.warn('⚠️ BLOCKED: Refusing to immediate-save empty state');
+                return false;
+            }
+
+            // GUARD D: Verify we have real data loaded
+            if (!state._dataLoaded) {
+                console.warn('⚠️ BLOCKED: Data not properly loaded yet');
+                return false;
+            }
+
+            // All guards passed — safe to save
             // Mark that local changes exist (for conflict detection)
             markLocalChange();
 
@@ -9111,6 +9280,7 @@
 
             // Save to Firebase immediately
             saveToFirebase();
+            return true;
         }
 
         function loadState() {

@@ -5173,10 +5173,33 @@
         let database = null;
         let currentUser = null;
         let initialLoadComplete = false; // CRITICAL: Prevents saving empty data before Firebase loads
+        let hasLoadedFromCloud = false;  // Track if we've checked Firebase
         let userPassword = null; // Simple password for privacy
         let saveDebounceTimer = null; // Debounce timer for Firebase saves
         let pendingSaveData = null; // Store pending save data
         let offlineSyncPending = false; // Flag for pending offline sync
+
+        // Check if data has real user content (not just defaults)
+        function isEmptyState(data) {
+            if (!data) return true;
+
+            // Index.html (Dental Quest) specific checks - must have at least ONE of these
+            const hasTasks = data.tasks && Object.keys(data.tasks).length > 0;
+            const hasCalendarNotes = data.calendarNotes && Object.keys(data.calendarNotes).length > 0;
+            const hasCalendarEvents = data.calendarEvents && Object.keys(data.calendarEvents).length > 0;
+            const hasNotebookEntries = data.notebook?.entries && Object.keys(data.notebook.entries).length > 0;
+            const hasXP = data.stats?.totalXPGained > 0;
+            const hasFocusData = data.focusModeData?.oneThingId ||
+                (data.focusModeData?.microSteps && Object.keys(data.focusModeData.microSteps).length > 0);
+
+            // Empty if NONE of these exist
+            return !hasTasks && !hasCalendarNotes && !hasCalendarEvents &&
+                   !hasNotebookEntries && !hasXP && !hasFocusData;
+        }
+
+        function hasRealData(data) {
+            return !isEmptyState(data);
+        }
         
         // Hide loading overlay and mark initial load complete
         function markInitialLoadComplete() {
@@ -6080,18 +6103,26 @@
 
         // Save data to Firebase (or localStorage as fallback)
         function saveData() {
-            // CRITICAL: Don't save to Firebase until initial load completes
+            // ============================================
+            // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
+            // ============================================
+
+            // GUARD A: Don't save to Firebase until initial load completes
             // This prevents empty data from overwriting Firebase when a new session starts
             if (firebaseInitialized && !initialLoadComplete) {
+                console.warn('⚠️ BLOCKED: Save attempted before initial load complete');
                 return; // Don't save anything yet!
             }
 
-            // Mark that local changes exist (for conflict detection)
-            markLocalChange();
+            // GUARD B: Never save if we haven't loaded cloud data yet
+            if (firebaseInitialized && !hasLoadedFromCloud) {
+                console.warn('⚠️ BLOCKED: Save attempted before cloud load');
+                return;
+            }
 
-            // Generate timestamp FIRST so we can track it
+            // Build data object first to check if empty
             const saveTimestamp = Date.now();
-            
+
             const data = {
                 tasks: tasks || {},  // Object for Firebase safety
                 stats,
@@ -6112,6 +6143,22 @@
                 lastCriticalEODReset, // Sync reset date across devices
                 lastSaved: saveTimestamp // Timestamp for sync tracking
             };
+
+            // GUARD C: Never save empty state to Firebase
+            if (firebaseInitialized && isEmptyState(data)) {
+                console.warn('⚠️ BLOCKED: Refusing to save empty state to Firebase');
+                // Still save to localStorage as it might be a legitimate clear
+                try {
+                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                } catch (e) {
+                    console.error('❌ localStorage save failed:', e);
+                }
+                return;
+            }
+
+            // All guards passed — safe to save
+            // Mark that local changes exist (for conflict detection)
+            markLocalChange();
             
             // Update our known save time BEFORE saving to ignore our own updates
             lastKnownSaveTime = saveTimestamp;
@@ -6848,24 +6895,44 @@
                         
                         // Setup real-time sync for ALL data (includes planner)
                         setupMainDataRealtimeSync();
-                        
+
+                        // Mark that we've loaded from cloud
+                        hasLoadedFromCloud = true;
+
                         // CRITICAL: Mark initial load as complete - now saves are allowed
                         markInitialLoadComplete();
-                        
+                        console.log('✅ Initial load complete - saves now allowed');
+
                         showToast('Data loaded from cloud ☁️', '✅');
                         updateSyncStatus('connected', `Synced (${getCount(tasks)} tasks)`);
                     } else {
                         // No cloud data, check localStorage
                         loadData();
+
+                        // Mark that we've loaded from cloud (even though empty)
+                        hasLoadedFromCloud = true;
+
                         updateSyncStatus('connected', 'No cloud data yet');
                         // Mark load complete after localStorage load
                         markInitialLoadComplete();
+                        console.log('✅ Initial load complete (no cloud data) - saves now allowed');
                     }
                 })
                 .catch((error) => {
                     console.error('Firebase load error:', error);
                     updateSyncStatus('error', 'Load failed: ' + error.message);
                     loadData(); // Fallback
+
+                    // If we have local data, allow saves
+                    const localData = {
+                        tasks, stats, medications, calendarNotes, notebook, financials,
+                        pillAssignments, calendarEvents, dailyPlanner, focusModeData
+                    };
+                    if (hasRealData(localData)) {
+                        hasLoadedFromCloud = true;  // Allow saves with local data
+                        console.log('⚠️ Firebase failed but have local data - allowing saves');
+                    }
+
                     // Mark load complete even on error
                     markInitialLoadComplete();
                 });
@@ -6891,42 +6958,57 @@
         // Only set up category display
         updateCategoryDisplay();
         
-        // Save data before user leaves the page
+        // Save data before user leaves the page - WITH GUARDS
         window.addEventListener('beforeunload', function(e) {
-            if (pendingSaveData && firebaseInitialized && currentUser && database) {
+            // GUARD: Only save if we have real data and passed initial load
+            if (pendingSaveData && firebaseInitialized && currentUser && database && initialLoadComplete && hasLoadedFromCloud) {
                 // Force a synchronous save on exit - do a final localStorage save at minimum
                 try {
-                    const finalData = { 
+                    const finalData = {
                         tasks, stats, medications, calendarNotes, notebook, financials,
                         pillAssignments, calendarEvents, dailyPlanner, focusModeData,
                         lastCriticalEODReset, lastSaved: Date.now()
                     };
-                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(finalData));
+                    // Don't save empty data
+                    if (!isEmptyState(finalData)) {
+                        localStorage.setItem('dentalStudentQuestData', JSON.stringify(finalData));
+                    }
                 } catch (e) {}
             }
         });
-        
-        // Handle visibility changes - save when hiding, refresh when showing
+
+        // Handle visibility changes - save when hiding, refresh when showing - WITH GUARDS
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 // Tab is being hidden - force save any pending changes
+                // GUARD: Only save if we have completed initial load and have real data
                 if (saveDebounceTimer) {
                     clearTimeout(saveDebounceTimer);
                     saveDebounceTimer = null;
                 }
-                if (pendingSaveData && firebaseInitialized && currentUser && database) {
-                    database.ref('users/' + currentUser.uid + '/appData').set(pendingSaveData)
-                        .catch(err => console.error('Hidden save failed:', err));
+                if (pendingSaveData && firebaseInitialized && currentUser && database && initialLoadComplete && hasLoadedFromCloud) {
+                    // Don't save empty data
+                    if (!isEmptyState(pendingSaveData)) {
+                        database.ref('users/' + currentUser.uid + '/appData').set(pendingSaveData)
+                            .catch(err => console.error('Hidden save failed:', err));
+                    }
                     pendingSaveData = null;
                 }
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase to get any updates
+                // GUARD: Only refresh if we've completed initial load
                 if (firebaseInitialized && currentUser && database && initialLoadComplete) {
                     database.ref('users/' + currentUser.uid + '/appData').once('value')
                         .then(snapshot => {
                             const data = snapshot.val();
                             const incomingTime = data?.lastSaved || 0;
-                            
+
+                            // GUARD: Skip empty cloud data
+                            if (data && isEmptyState(data)) {
+                                console.warn('⚠️ Visibility refresh: Ignoring empty cloud data');
+                                return;
+                            }
+
                             // Only update if incoming data is NEWER
                             if (data && incomingTime > lastKnownSaveTime) {
                                 lastKnownSaveTime = incomingTime;
@@ -10123,22 +10205,34 @@
                 if (!data) {
                     return;
                 }
-                
+
                 const incomingTime = data.lastSaved || 0;
-                
+
                 // On first callback, just establish the baseline timestamp
                 if (isInitialSetup) {
                     isInitialSetup = false;
                     lastKnownSaveTime = Math.max(lastKnownSaveTime, incomingTime);
                     return;
                 }
-                
+
+                // Skip during initial load (we handle this separately)
+                if (!initialLoadComplete) {
+                    console.log('⏭️ Realtime: Skipping during initial load');
+                    return;
+                }
+
+                // Skip if cloud data is empty
+                if (isEmptyState(data)) {
+                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
+                    return;
+                }
+
                 // Only process if this is a NEW update (strictly newer timestamp)
                 // Use a small buffer (100ms) to handle near-simultaneous saves
                 if (incomingTime <= lastKnownSaveTime + 100) {
                     return;
                 }
-                
+
                 lastKnownSaveTime = incomingTime;
                 
                 // Update ALL local data with ARRAY PROTECTION (Firebase converts arrays to objects)
