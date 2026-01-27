@@ -5723,6 +5723,142 @@
 
         let currentMedModal = null;
 
+        // ==================== DATA INTEGRITY UTILITIES ====================
+        // These utilities fix Firebase's fundamental array handling issues:
+        // 1. Arrays become objects when sparse (delete middle item)
+        // 2. Empty arrays are DELETED entirely by Firebase
+        // 3. Last write wins with no conflict resolution
+
+        // Generate unique IDs for object-based storage
+        function generateId(prefix = 'item') {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            return `${prefix}_${timestamp}_${random}`;
+        }
+
+        // Get device ID for conflict detection
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // CRITICAL: Firebase converts arrays to objects - this converts them back
+        function ensureArray(val, fallback = []) {
+            if (!val) return fallback;
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'object') {
+                return Object.values(val);
+            }
+            return fallback;
+        }
+
+        // Convert array to object with unique IDs (for migration)
+        function migrateArrayToObject(data, keyPrefix) {
+            if (!data) return {};
+
+            // If it's already an object with non-numeric keys, return as-is
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const keys = Object.keys(data);
+                if (keys.length === 0) return {};
+                if (isNaN(parseInt(keys[0]))) return data;
+            }
+
+            // Convert array or sparse object to proper object
+            const result = {};
+            const items = Array.isArray(data) ? data : Object.values(data || {});
+
+            items.forEach((item, index) => {
+                if (item === null || item === undefined) return;
+                const id = item.id || generateId(keyPrefix);
+                result[id] = {
+                    ...item,
+                    id: id,
+                    createdAt: item.createdAt || Date.now() - (items.length - index) * 1000,
+                    updatedAt: item.updatedAt || Date.now()
+                };
+            });
+
+            return result;
+        }
+
+        // Convert object back to array (for rendering)
+        function objectToArray(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj;
+            return Object.values(obj).filter(item => item && !item._placeholder);
+        }
+
+        // Ensure object is not empty (Firebase deletes empty objects)
+        function ensureNotEmpty(obj) {
+            if (!obj || Object.keys(obj).length === 0) {
+                return { _placeholder: true };
+            }
+            return obj;
+        }
+
+        // Remove placeholder before using data
+        function removeEmptyPlaceholder(obj) {
+            if (!obj) return {};
+            if (obj._placeholder) {
+                const { _placeholder, ...rest } = obj;
+                return rest;
+            }
+            return obj;
+        }
+
+        // ==================== BACKUP MANAGER ====================
+        const BackupManager = {
+            maxBackups: 5,
+
+            createBackup() {
+                try {
+                    const backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
+                    const currentData = localStorage.getItem('dentalStudentQuestData');
+                    if (!currentData) return;
+
+                    backups.unshift({
+                        timestamp: Date.now(),
+                        data: currentData
+                    });
+
+                    while (backups.length > this.maxBackups) {
+                        backups.pop();
+                    }
+
+                    localStorage.setItem('dentalquest_backups', JSON.stringify(backups));
+                    console.log('💾 Backup created');
+                } catch (e) {
+                    console.error('Backup failed:', e);
+                }
+            },
+
+            listBackups() {
+                const backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
+                return backups.map(b => ({
+                    timestamp: b.timestamp,
+                    date: new Date(b.timestamp).toLocaleString()
+                }));
+            },
+
+            restoreBackup(timestamp) {
+                const backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
+                const backup = backups.find(b => b.timestamp === timestamp);
+                if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
+                    localStorage.setItem('dentalStudentQuestData', backup.data);
+                    location.reload();
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        // Create backup every 5 minutes
+        setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
+
         // Load data from storage
         function loadData() {
             const saved = localStorage.getItem('dentalStudentQuestData');
@@ -5735,8 +5871,9 @@
                     showToast('Data corrupted - starting fresh', '⚠️');
                     return; // Don't crash - continue with defaults
                 }
-                tasks = data.tasks || [];
-                
+                // CRITICAL: Use ensureArray() to handle Firebase array→object conversion
+                tasks = ensureArray(data.tasks, []);
+
                 // Merge saved stats with default structure to handle new categories
                 if (data.stats) {
                     stats = {
@@ -5750,12 +5887,19 @@
                     };
                 }
 
-                // Load medication data
+                // Load medication data with array protection
                 if (data.medications) {
                     medications = {
                         ...medications,
                         ...data.medications
                     };
+                    // Ensure dosesLogged arrays are proper arrays
+                    if (medications['30mg']) {
+                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                    }
+                    if (medications['20mg']) {
+                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                    }
                 }
 
                 // Load calendar notes
@@ -5763,25 +5907,25 @@
                     calendarNotes = data.calendarNotes;
                 }
 
-                // Load notebook
+                // Load notebook with array protection
                 if (data.notebook) {
                     notebook = {
-                        pages: data.notebook.pages || [],
+                        pages: ensureArray(data.notebook.pages, []),
                         currentPageId: data.notebook.currentPageId || (data.notebook.pages && data.notebook.pages[0]?.id) || null
                     };
                 }
-                
-                // Load financials
+
+                // Load financials with array protection for all array fields
                 if (data.financials) {
                     financials = {
                         ...financials,
                         masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                        committedBills: data.financials.committedBills || financials.committedBills,
+                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
                         recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
                         monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                        creditCards: data.financials.creditCards || financials.creditCards,
-                        actionItems: data.financials.actionItems || financials.actionItems,
-                        customTransactions: data.financials.customTransactions || financials.customTransactions
+                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
+                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
+                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
                     };
                 }
                 
@@ -5793,9 +5937,9 @@
                     };
                 }
                 
-                // Load calendar events
+                // Load calendar events with array protection
                 if (data.calendarEvents) {
-                    calendarEvents = data.calendarEvents;
+                    calendarEvents = ensureArray(data.calendarEvents, []);
                     // Remove past events using local timezone
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
@@ -5808,17 +5952,17 @@
                         return eventDate >= today;
                     });
                 }
-                
-                // Load Focus Mode data
+
+                // Load Focus Mode data with array protection for all arrays
                 if (data.focusModeData) {
                     focusModeData = {
                         ...focusModeData,
                         oneThingId: data.focusModeData.oneThingId || null,
-                        microSteps: data.focusModeData.microSteps || [],
+                        microSteps: ensureArray(data.focusModeData.microSteps, []),
                         todaysTasks: {
-                            big: data.focusModeData.todaysTasks?.big || [],
-                            medium: data.focusModeData.todaysTasks?.medium || [],
-                            small: data.focusModeData.todaysTasks?.small || []
+                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
+                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
+                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
                         },
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                     };
@@ -6463,9 +6607,9 @@
                         // CRITICAL: Set lastKnownSaveTime FIRST to prevent realtime sync from re-processing
                         lastKnownSaveTime = data.lastSaved || Date.now();
                         
-                        // Load all data
-                        tasks = data.tasks || [];
-                        
+                        // Load all data with ARRAY PROTECTION (Firebase converts arrays to objects)
+                        tasks = ensureArray(data.tasks, []);
+
                         if (data.stats) {
                             stats = {
                                 ...stats,
@@ -6477,35 +6621,42 @@
                                 }
                             };
                         }
-                        
+
                         if (data.medications) {
                             medications = {
                                 ...medications,
                                 ...data.medications
                             };
+                            // Ensure dosesLogged arrays
+                            if (medications['30mg']) {
+                                medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                            }
+                            if (medications['20mg']) {
+                                medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                            }
                         }
-                        
+
                         if (data.calendarNotes) {
                             calendarNotes = data.calendarNotes;
                         }
-                        
+
                         if (data.notebook) {
                             notebook = {
-                                pages: data.notebook.pages || [],
+                                pages: ensureArray(data.notebook.pages, []),
                                 currentPageId: data.notebook.currentPageId || (data.notebook.pages && data.notebook.pages[0]?.id) || null
                             };
                         }
-                        
+
                         if (data.financials) {
                             financials = {
                                 ...financials,
                                 masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                                committedBills: data.financials.committedBills || financials.committedBills,
+                                committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
                                 recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
                                 monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                                creditCards: data.financials.creditCards || financials.creditCards,
-                                actionItems: data.financials.actionItems || financials.actionItems,
-                                customTransactions: data.financials.customTransactions || financials.customTransactions
+                                creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
+                                actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
+                                customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
                             };
                         }
 
@@ -6516,10 +6667,10 @@
                                 '20mg': data.pillAssignments['20mg'] || {}
                             };
                         }
-                        
-                        // Load calendar events from Firebase
+
+                        // Load calendar events from Firebase with array protection
                         if (data.calendarEvents) {
-                            calendarEvents = data.calendarEvents;
+                            calendarEvents = ensureArray(data.calendarEvents, []);
                             // Remove past events using local timezone
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
@@ -6532,28 +6683,28 @@
                                 return eventDate >= today;
                             });
                         }
-                        
-                        // Load daily planner from Firebase
+
+                        // Load daily planner from Firebase with array protection
                         if (data.dailyPlanner) {
                             dailyPlanner = {
                                 date: data.dailyPlanner.date || null,
                                 goal: data.dailyPlanner.goal || '',
                                 bedtime: data.dailyPlanner.bedtime || '23:00',
-                                blocks: data.dailyPlanner.blocks || [],
+                                blocks: ensureArray(data.dailyPlanner.blocks, []),
                                 lastReset: data.dailyPlanner.lastReset || null
                             };
                             checkPlannerReset();
                         }
-                        
-                        // Load Focus Mode data from Firebase
+
+                        // Load Focus Mode data from Firebase with array protection
                         if (data.focusModeData) {
                             focusModeData = {
                                 oneThingId: data.focusModeData.oneThingId || null,
-                                microSteps: data.focusModeData.microSteps || [],
+                                microSteps: ensureArray(data.focusModeData.microSteps, []),
                                 todaysTasks: {
-                                    big: data.focusModeData.todaysTasks?.big || [],
-                                    medium: data.focusModeData.todaysTasks?.medium || [],
-                                    small: data.focusModeData.todaysTasks?.small || []
+                                    big: ensureArray(data.focusModeData.todaysTasks?.big, []),
+                                    medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
+                                    small: ensureArray(data.focusModeData.todaysTasks?.small, [])
                                 },
                                 focusTimerSeconds: data.focusModeData.focusTimerSeconds || 0,
                                 focusTimerRunning: false,
@@ -9846,9 +9997,9 @@
                 
                 lastKnownSaveTime = incomingTime;
                 
-                // Update ALL local data - COMPLETE LIST (use !== undefined to handle empty arrays/objects)
-                if (data.tasks !== undefined) tasks = data.tasks || [];
-                
+                // Update ALL local data with ARRAY PROTECTION (Firebase converts arrays to objects)
+                if (data.tasks !== undefined) tasks = ensureArray(data.tasks, []);
+
                 if (data.stats) {
                     stats = {
                         ...stats,
@@ -9857,40 +10008,47 @@
                         categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
                     };
                 }
-                
+
                 if (data.medications) {
                     medications = { ...medications, ...data.medications };
+                    // Ensure dosesLogged arrays
+                    if (medications['30mg']) {
+                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                    }
+                    if (medications['20mg']) {
+                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                    }
                 }
-                
+
                 if (data.calendarNotes !== undefined) {
                     calendarNotes = data.calendarNotes || {};
                 }
-                
+
                 if (data.pillAssignments) {
                     pillAssignments = {
                         '30mg': data.pillAssignments['30mg'] || {},
                         '20mg': data.pillAssignments['20mg'] || {}
                     };
                 }
-                
+
                 if (data.dailyPlanner) {
                     dailyPlanner = {
                         date: data.dailyPlanner.date || null,
                         goal: data.dailyPlanner.goal || '',
                         bedtime: data.dailyPlanner.bedtime || '23:00',
-                        blocks: data.dailyPlanner.blocks || [],
+                        blocks: ensureArray(data.dailyPlanner.blocks, []),
                         lastReset: data.dailyPlanner.lastReset || null
                     };
                 }
-                
+
                 if (data.focusModeData) {
                     focusModeData = {
                         oneThingId: data.focusModeData.oneThingId || null,
-                        microSteps: data.focusModeData.microSteps || [],
+                        microSteps: ensureArray(data.focusModeData.microSteps, []),
                         todaysTasks: {
-                            big: data.focusModeData.todaysTasks?.big || [],
-                            medium: data.focusModeData.todaysTasks?.medium || [],
-                            small: data.focusModeData.todaysTasks?.small || []
+                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
+                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
+                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
                         },
                         // Timer fields: use incoming data (sync across devices), but keep interval null (local only)
                         focusTimerSeconds: data.focusModeData.focusTimerSeconds || 0,
@@ -9899,18 +10057,25 @@
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                     };
                 }
-                
-                if (data.calendarEvents !== undefined) calendarEvents = data.calendarEvents || [];
-                
+
+                if (data.calendarEvents !== undefined) calendarEvents = ensureArray(data.calendarEvents, []);
+
                 if (data.notebook) {
                     notebook = {
-                        pages: data.notebook.pages || [],
+                        pages: ensureArray(data.notebook.pages, []),
                         currentPageId: data.notebook.currentPageId || null
                     };
                 }
-                
+
                 if (data.financials) {
-                    financials = { ...financials, ...data.financials };
+                    financials = {
+                        ...financials,
+                        ...data.financials,
+                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
+                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
+                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
+                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                    };
                 }
                 
                 // Sync lastCriticalEODReset to prevent duplicate resets

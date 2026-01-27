@@ -3356,6 +3356,48 @@
         };
 
         // ============================================
+        // DATA INTEGRITY UTILITIES
+        // ============================================
+        // Firebase converts arrays to objects - this converts them back
+        function ensureArray(val, fallback = []) {
+            if (!val) return fallback;
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'object') {
+                return Object.values(val);
+            }
+            return fallback;
+        }
+
+        // Generate unique IDs
+        function generateId(prefix = 'item') {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        }
+
+        // Backup Manager
+        const BackupManager = {
+            maxBackups: 5,
+            createBackup() {
+                try {
+                    const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
+                    const currentData = localStorage.getItem('stimulantCalculatorState');
+                    if (!currentData) return;
+                    backups.unshift({ timestamp: Date.now(), data: currentData });
+                    while (backups.length > this.maxBackups) backups.pop();
+                    localStorage.setItem('stimcalc_backups', JSON.stringify(backups));
+                } catch (e) { console.error('Backup failed:', e); }
+            },
+            restoreBackup(timestamp) {
+                const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
+                const backup = backups.find(b => b.timestamp === timestamp);
+                if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
+                    localStorage.setItem('stimulantCalculatorState', backup.data);
+                    location.reload();
+                }
+            }
+        };
+        setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
+
+        // ============================================
         // CIRCADIAN PHASE DETECTION
         // ============================================
         
@@ -8440,27 +8482,21 @@
                         const firebaseState = data.state;
                         
                         // Prefer Firebase data over local (Firebase is source of truth when available)
-                        // Only fallback to local if Firebase field is explicitly undefined/null
+                        // CRITICAL: Use ensureArray() for all arrays - Firebase converts arrays to objects
                         state = {
                             wakeTime: firebaseState.wakeTime || state.wakeTime,
                             hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                            // FIX: Include allNighterMode in Firebase sync
                             allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
-                            // For arrays: use Firebase data if it exists (even if empty), otherwise keep local
-                            medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
-                            caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
-                            history: firebaseState.history !== undefined ? firebaseState.history : state.history,
+                            // Arrays with ensureArray protection
+                            medications: ensureArray(firebaseState.medications, state.medications),
+                            caffeine: ensureArray(firebaseState.caffeine, state.caffeine),
+                            history: ensureArray(firebaseState.history, state.history),
                             modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                             settings: { ...state.settings, ...(firebaseState.settings || {}) },
                             sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
                             workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
                             nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
                         };
-                        
-                        // Ensure arrays are actually arrays (Firebase can turn empty arrays into null)
-                        if (!Array.isArray(state.medications)) state.medications = [];
-                        if (!Array.isArray(state.caffeine)) state.caffeine = [];
-                        if (!Array.isArray(state.history)) state.history = [];
                         
                         // Save merged state to localStorage
                         localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
@@ -8595,27 +8631,22 @@
                     
                     lastKnownTimestamp = data.lastUpdated;
                     
-                    // Merge in the new data
+                    // Merge in the new data with ARRAY PROTECTION
                     const firebaseState = data.state;
                     state = {
                         wakeTime: firebaseState.wakeTime || state.wakeTime,
                         hoursSleptLastNight: firebaseState.hoursSleptLastNight !== undefined ? firebaseState.hoursSleptLastNight : state.hoursSleptLastNight,
-                        // FIX: Include allNighterMode in Firebase sync
                         allNighterMode: firebaseState.allNighterMode !== undefined ? firebaseState.allNighterMode : state.allNighterMode,
-                        medications: firebaseState.medications !== undefined ? firebaseState.medications : state.medications,
-                        caffeine: firebaseState.caffeine !== undefined ? firebaseState.caffeine : state.caffeine,
-                        history: firebaseState.history !== undefined ? firebaseState.history : state.history,
+                        // Arrays with ensureArray protection (Firebase converts arrays to objects)
+                        medications: ensureArray(firebaseState.medications, state.medications),
+                        caffeine: ensureArray(firebaseState.caffeine, state.caffeine),
+                        history: ensureArray(firebaseState.history, state.history),
                         modifiers: { ...state.modifiers, ...(firebaseState.modifiers || {}) },
                         settings: { ...state.settings, ...(firebaseState.settings || {}) },
                         sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
                         workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
                         nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) }
                     };
-                    
-                    // Ensure arrays are actually arrays
-                    if (!Array.isArray(state.medications)) state.medications = [];
-                    if (!Array.isArray(state.caffeine)) state.caffeine = [];
-                    if (!Array.isArray(state.history)) state.history = [];
                     
                     // Update localStorage
                     localStorage.setItem('stimulantCalculatorState', JSON.stringify(state));
@@ -8783,7 +8814,7 @@
                     }).catch(err => console.error('Save on hide failed:', err));
                 }
             } else if (document.visibilityState === 'visible') {
-                // Tab is visible again - refresh from Firebase
+                // Tab is visible again - refresh from Firebase with ARRAY PROTECTION
                 if (firebaseSyncEnabled && database && userPath) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
@@ -8794,16 +8825,17 @@
                                 state = {
                                     ...state,
                                     ...fs,
+                                    // Arrays with ensureArray protection
+                                    medications: ensureArray(fs.medications, state.medications),
+                                    caffeine: ensureArray(fs.caffeine, state.caffeine),
+                                    history: ensureArray(fs.history, state.history),
                                     modifiers: { ...state.modifiers, ...(fs.modifiers || {}) },
                                     settings: { ...state.settings, ...(fs.settings || {}) },
                                     sleepHistory: { ...state.sleepHistory, ...(fs.sleepHistory || {}) },
                                     workoutPlan: { ...state.workoutPlan, ...(fs.workoutPlan || {}) },
                                     nicotine: { ...state.nicotine, ...(fs.nicotine || {}) }
                                 };
-                                if (!Array.isArray(state.medications)) state.medications = [];
-                                if (!Array.isArray(state.caffeine)) state.caffeine = [];
-                                if (!Array.isArray(state.history)) state.history = [];
-                                
+
                                 renderMedEntries();
                                 renderCaffeineEntries();
                                 recalculate();

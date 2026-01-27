@@ -5384,6 +5384,48 @@
         };
 
         // ============================================
+        // DATA INTEGRITY UTILITIES
+        // ============================================
+        // Firebase converts arrays to objects - this converts them back
+        function ensureArray(val, fallback = []) {
+            if (!val) return fallback;
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'object') {
+                return Object.values(val);
+            }
+            return fallback;
+        }
+
+        // Generate unique IDs
+        function generateId(prefix = 'item') {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        }
+
+        // Backup Manager
+        const BackupManager = {
+            maxBackups: 5,
+            createBackup() {
+                try {
+                    const backups = JSON.parse(localStorage.getItem('bodycomp_backups') || '[]');
+                    const currentData = localStorage.getItem('bodyCompTrackerState');
+                    if (!currentData) return;
+                    backups.unshift({ timestamp: Date.now(), data: currentData });
+                    while (backups.length > this.maxBackups) backups.pop();
+                    localStorage.setItem('bodycomp_backups', JSON.stringify(backups));
+                } catch (e) { console.error('Backup failed:', e); }
+            },
+            restoreBackup(timestamp) {
+                const backups = JSON.parse(localStorage.getItem('bodycomp_backups') || '[]');
+                const backup = backups.find(b => b.timestamp === timestamp);
+                if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
+                    localStorage.setItem('bodyCompTrackerState', backup.data);
+                    location.reload();
+                }
+            }
+        };
+        setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
+
+        // ============================================
         // FIREBASE CONFIGURATION (Same as other apps)
         // ============================================
 
@@ -9974,28 +10016,40 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             firebaseState.frequentFoods
                         );
 
-                        // Merge Firebase data
+                        // Merge Firebase data with ARRAY PROTECTION (Firebase converts arrays to objects)
                         state = {
                             ...state,
                             profile: { ...state.profile, ...(firebaseState.profile || {}) },
-                            today: { ...state.today, ...(firebaseState.today || {}) },
-                            frequentFoods: mergedFrequentFoods,
-                            weighIns: firebaseState.weighIns || state.weighIns,
-                            bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
+                            today: {
+                                ...state.today,
+                                ...(firebaseState.today || {}),
+                                // Arrays with ensureArray protection
+                                meals: ensureArray(firebaseState.today?.meals, state.today.meals),
+                                workouts: ensureArray(firebaseState.today?.workouts, state.today.workouts)
+                            },
+                            frequentFoods: ensureArray(mergedFrequentFoods, state.frequentFoods),
+                            weighIns: ensureArray(firebaseState.weighIns, state.weighIns),
+                            bodyCompHistory: ensureArray(firebaseState.bodyCompHistory, state.bodyCompHistory),
                             dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                             refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                            gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
+                            gamification: {
+                                ...state.gamification,
+                                ...(firebaseState.gamification || {}),
+                                badges: ensureArray(firebaseState.gamification?.badges, state.gamification.badges)
+                            },
                             achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                         };
 
                         // Restore ecosystemContext (it's loaded separately via loadEcosystemData)
                         state.ecosystemContext = preservedEcosystem;
 
-                        // Ensure arrays
-                        if (!Array.isArray(state.today.meals)) state.today.meals = [];
-                        if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
-                        if (!Array.isArray(state.weighIns)) state.weighIns = [];
-                        if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
+                        // Sanitize dailyLogs arrays (each log may have meals/workouts)
+                        Object.keys(state.dailyLogs).forEach(date => {
+                            if (state.dailyLogs[date]) {
+                                state.dailyLogs[date].meals = ensureArray(state.dailyLogs[date].meals, []);
+                                state.dailyLogs[date].workouts = ensureArray(state.dailyLogs[date].workouts, []);
+                            }
+                        });
 
                         // FIX: If frequentFoods is empty after merge, populate with defaults
                         if (state.frequentFoods.length === 0) {
@@ -10087,26 +10141,36 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         firebaseState.frequentFoods
                     );
 
+                    // Merge with ARRAY PROTECTION (Firebase converts arrays to objects)
                     state = {
                         ...state,
                         profile: { ...state.profile, ...(firebaseState.profile || {}) },
-                        today: { ...state.today, ...(firebaseState.today || {}) },
-                        frequentFoods: mergedFrequentFoods,
-                        weighIns: firebaseState.weighIns || state.weighIns,
-                        bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
+                        today: {
+                            ...state.today,
+                            ...(firebaseState.today || {}),
+                            meals: ensureArray(firebaseState.today?.meals, state.today.meals),
+                            workouts: ensureArray(firebaseState.today?.workouts, state.today.workouts)
+                        },
+                        frequentFoods: ensureArray(mergedFrequentFoods, state.frequentFoods),
+                        weighIns: ensureArray(firebaseState.weighIns, state.weighIns),
+                        bodyCompHistory: ensureArray(firebaseState.bodyCompHistory, state.bodyCompHistory),
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                        gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
+                        gamification: {
+                            ...state.gamification,
+                            ...(firebaseState.gamification || {}),
+                            badges: ensureArray(firebaseState.gamification?.badges, state.gamification.badges)
+                        },
                         achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                     };
 
-                    // Ensure arrays are properly set
-                    if (!Array.isArray(state.today.meals)) state.today.meals = [];
-                    if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
-                    if (!Array.isArray(state.weighIns)) state.weighIns = [];
-                    if (!Array.isArray(state.frequentFoods)) state.frequentFoods = [];
-                    if (!Array.isArray(state.gamification.badges)) state.gamification.badges = [];
-                    if (!Array.isArray(state.bodyCompHistory)) state.bodyCompHistory = [];
+                    // Sanitize dailyLogs arrays
+                    Object.keys(state.dailyLogs).forEach(date => {
+                        if (state.dailyLogs[date]) {
+                            state.dailyLogs[date].meals = ensureArray(state.dailyLogs[date].meals, []);
+                            state.dailyLogs[date].workouts = ensureArray(state.dailyLogs[date].workouts, []);
+                        }
+                    });
 
                     localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
@@ -10144,20 +10208,36 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         firebaseState.frequentFoods
                     );
 
+                    // Merge with ARRAY PROTECTION
                     state = {
                         ...state,
                         profile: { ...state.profile, ...(firebaseState.profile || {}) },
-                        today: { ...state.today, ...(firebaseState.today || {}) },
-                        frequentFoods: mergedFrequentFoods,
-                        weighIns: firebaseState.weighIns || state.weighIns,
-                        bodyCompHistory: firebaseState.bodyCompHistory || state.bodyCompHistory,
+                        today: {
+                            ...state.today,
+                            ...(firebaseState.today || {}),
+                            meals: ensureArray(firebaseState.today?.meals, state.today.meals),
+                            workouts: ensureArray(firebaseState.today?.workouts, state.today.workouts)
+                        },
+                        frequentFoods: ensureArray(mergedFrequentFoods, state.frequentFoods),
+                        weighIns: ensureArray(firebaseState.weighIns, state.weighIns),
+                        bodyCompHistory: ensureArray(firebaseState.bodyCompHistory, state.bodyCompHistory),
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                        gamification: { ...state.gamification, ...(firebaseState.gamification || {}) },
+                        gamification: {
+                            ...state.gamification,
+                            ...(firebaseState.gamification || {}),
+                            badges: ensureArray(firebaseState.gamification?.badges, state.gamification.badges)
+                        },
                         achievements: { ...state.achievements, ...(firebaseState.achievements || {}) }
                     };
 
-                    // Ensure arrays are properly set
+                    // Sanitize dailyLogs arrays
+                    Object.keys(state.dailyLogs).forEach(date => {
+                        if (state.dailyLogs[date]) {
+                            state.dailyLogs[date].meals = ensureArray(state.dailyLogs[date].meals, []);
+                            state.dailyLogs[date].workouts = ensureArray(state.dailyLogs[date].workouts, []);
+                        }
+                    });
                     if (!Array.isArray(state.today.meals)) state.today.meals = [];
                     if (!Array.isArray(state.today.workouts)) state.today.workouts = [];
                     if (!Array.isArray(state.weighIns)) state.weighIns = [];
