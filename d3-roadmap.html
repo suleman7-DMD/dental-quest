@@ -12864,9 +12864,9 @@ CHAIR: 9F
 
             // Initialize data structures
             if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
-            if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = [];
+            if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = {};
 
-            const existingTasks = roadmapData.monthlyPlanner.customTasks;
+            const existingTasks = getValues(roadmapData.monthlyPlanner.customTasks);
             let imported = 0;
             let skipped = 0;
 
