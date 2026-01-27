@@ -145,6 +145,185 @@
             color: var(--text-primary);
         }
 
+        /* ============================================
+           CHECKPOINT SYSTEM STYLES
+           ============================================ */
+        .checkpoint-controls {
+            display: flex;
+            gap: 6px;
+            padding: 8px 0;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkpoint-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .checkpoint-btn.create { background: #22c55e; color: white; }
+        .checkpoint-btn.restore { background: #3b82f6; color: white; }
+        .checkpoint-btn.force-upload { background: #f59e0b; color: black; }
+        .checkpoint-btn.force-pull { background: #8b5cf6; color: white; }
+
+        .checkpoint-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .checkpoint-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Checkpoint Modal */
+        .checkpoint-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .checkpoint-modal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+        }
+
+        .checkpoint-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #252538;
+        }
+
+        .checkpoint-modal-header h2 {
+            margin: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .checkpoint-modal .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .checkpoint-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .checkpoint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkpoint-item {
+            background: #2a2a3e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkpoint-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .checkpoint-info strong {
+            color: white;
+            font-size: 14px;
+        }
+
+        .checkpoint-date {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .checkpoint-data {
+            color: #22c55e;
+            font-size: 11px;
+        }
+
+        .checkpoint-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .checkpoint-actions button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .checkpoint-actions .restore-btn { background: #22c55e; color: white; }
+        .checkpoint-actions .export-btn { background: #3b82f6; color: white; }
+        .checkpoint-actions .delete-btn { background: #ef4444; color: white; }
+
+        .checkpoint-modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background: #252538;
+        }
+
+        .checkpoint-modal-footer button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .export-all-btn { background: #6366f1; color: white; }
+        .import-btn { background: #14b8a6; color: white; }
+
+        @media (max-width: 600px) {
+            .checkpoint-controls {
+                gap: 4px;
+            }
+            .checkpoint-btn {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+        }
+
         /* Mode Badge */
         .mode-banner {
             text-align: center;
@@ -4262,6 +4441,13 @@
                 <button class="header-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
                 <button class="header-btn" onclick="openExportModal()" title="Export">📤</button>
             </div>
+            <!-- Checkpoint Controls -->
+            <div class="checkpoint-controls" id="checkpoint-controls">
+                <button onclick="createCheckpoint()" class="checkpoint-btn create" title="Save a named checkpoint">💾 Checkpoint</button>
+                <button onclick="showCheckpointManager()" class="checkpoint-btn restore" title="View and restore checkpoints">📂 Restore</button>
+                <button onclick="forceUploadToCloud()" class="checkpoint-btn force-upload" title="Make this device's data the master">☁️⬆️ Force Upload</button>
+                <button onclick="forcePullFromCloud()" class="checkpoint-btn force-pull" title="Overwrite local with cloud data">☁️⬇️ Force Pull</button>
+            </div>
         </div>
 
         <!-- ============================================ -->
@@ -5407,6 +5593,7 @@
         // ============================================
         let isInitialLoad = true;      // Block ALL saves until data loaded
         let hasLoadedFromCloud = false; // Track if we've checked Firebase
+        let pinValidated = false;       // Track if PIN has been validated (prevents race condition)
 
         // Check if state has real user data (not just defaults)
         function isEmptyState(data) {
@@ -10071,6 +10258,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
 
+            // GUARD 0: Never save before PIN is validated
+            if (!pinValidated) {
+                console.warn('⚠️ BLOCKED: Save attempted before PIN validation');
+                return false;
+            }
+
             // GUARD A: Never save during initial load
             if (isInitialLoad) {
                 console.warn('⚠️ BLOCKED: Save attempted during initial load');
@@ -10674,6 +10867,331 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // CHECKPOINT SYSTEM - MANUAL BACKUP/RESTORE
+        // ============================================
+
+        function createCheckpoint(name = null) {
+            const timestamp = new Date().toISOString();
+            const checkpointName = name || `Checkpoint ${new Date().toLocaleString()}`;
+
+            const checkpoint = {
+                name: checkpointName,
+                timestamp: timestamp,
+                state: JSON.parse(JSON.stringify(state)),
+                source: 'manual'
+            };
+
+            // Get existing checkpoints
+            let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+
+            // Add new checkpoint at the beginning
+            checkpoints.unshift(checkpoint);
+
+            // Keep only last 10 checkpoints
+            if (checkpoints.length > 10) {
+                checkpoints = checkpoints.slice(0, 10);
+            }
+
+            localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+            showToast('✅ Checkpoint created: ' + checkpointName);
+            return checkpoint;
+        }
+
+        function showCheckpointManager() {
+            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+
+            let checkpointListHTML = '';
+            if (checkpoints.length === 0) {
+                checkpointListHTML = '<p style="color: #888; text-align: center;">No checkpoints saved yet</p>';
+            } else {
+                checkpointListHTML = checkpoints.map((cp, index) => {
+                    const date = new Date(cp.timestamp);
+                    const meals = cp.state?.today?.meals ? Object.keys(cp.state.today.meals).length : 0;
+                    const weight = cp.state?.profile?.currentWeight_lbs || 'N/A';
+                    return `
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-info">
+                                <div class="checkpoint-name">${cp.name}</div>
+                                <div class="checkpoint-meta">
+                                    ${date.toLocaleDateString()} ${date.toLocaleTimeString()} ·
+                                    ${meals} meals · ${weight} lbs
+                                </div>
+                            </div>
+                            <div class="checkpoint-actions">
+                                <button onclick="restoreCheckpoint(${index})" class="checkpoint-btn restore">Restore</button>
+                                <button onclick="exportCheckpoint(${index})" class="checkpoint-btn export">Export</button>
+                                <button onclick="deleteCheckpoint(${index})" class="checkpoint-btn delete">×</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'checkpoint-modal';
+            modal.innerHTML = `
+                <div class="modal-content checkpoint-modal">
+                    <h2>📦 Checkpoint Manager</h2>
+
+                    <div class="checkpoint-actions-bar">
+                        <button onclick="createCheckpoint()" class="action-btn">💾 Create Checkpoint</button>
+                        <button onclick="exportAllCheckpoints()" class="action-btn">📤 Export All</button>
+                        <label class="action-btn" style="cursor: pointer;">
+                            📥 Import
+                            <input type="file" accept=".json" onchange="importCheckpoint(event)" style="display: none;">
+                        </label>
+                    </div>
+
+                    <div class="checkpoint-list">
+                        ${checkpointListHTML}
+                    </div>
+
+                    <div class="force-sync-section">
+                        <h3>⚠️ Force Sync (Use with caution)</h3>
+                        <div class="force-sync-buttons">
+                            <button onclick="forceUploadToCloud()" class="force-btn upload">
+                                ⬆️ Force Upload (Local → Cloud)
+                            </button>
+                            <button onclick="forcePullFromCloud()" class="force-btn download">
+                                ⬇️ Force Pull (Cloud → Local)
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="document.getElementById('checkpoint-modal').remove()" class="close-btn">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function restoreCheckpoint(index) {
+            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) {
+                showToast('❌ Checkpoint not found');
+                return;
+            }
+
+            if (!confirm(`Restore checkpoint "${checkpoint.name}"?\n\nThis will replace your current data.`)) {
+                return;
+            }
+
+            // Create auto-backup before restore
+            createCheckpoint('Auto-backup before restore');
+
+            // Restore state
+            state = JSON.parse(JSON.stringify(checkpoint.state));
+            state._version = Date.now();
+            state._dataLoaded = true;
+
+            // Save to localStorage and Firebase
+            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            saveToFirebase();
+
+            // Refresh UI
+            initializeUI();
+
+            showToast('✅ Restored: ' + checkpoint.name);
+            document.getElementById('checkpoint-modal')?.remove();
+        }
+
+        function deleteCheckpoint(index) {
+            if (!confirm('Delete this checkpoint?')) return;
+
+            let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+            checkpoints.splice(index, 1);
+            localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+
+            showToast('🗑️ Checkpoint deleted');
+            document.getElementById('checkpoint-modal')?.remove();
+            showCheckpointManager();
+        }
+
+        function exportCheckpoint(index) {
+            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) {
+                showToast('❌ Checkpoint not found');
+                return;
+            }
+
+            const blob = new Blob([JSON.stringify(checkpoint, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bodycomp-checkpoint-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📤 Checkpoint exported');
+        }
+
+        function exportAllCheckpoints() {
+            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+
+            if (checkpoints.length === 0) {
+                showToast('No checkpoints to export');
+                return;
+            }
+
+            const exportData = {
+                app: 'body-comp-tracker',
+                exportDate: new Date().toISOString(),
+                currentState: JSON.parse(JSON.stringify(state)),
+                checkpoints: checkpoints
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bodycomp-full-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📤 Full backup exported');
+        }
+
+        function importCheckpoint(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // Check if it's a full backup or single checkpoint
+                    if (data.checkpoints && Array.isArray(data.checkpoints)) {
+                        // Full backup - import all checkpoints
+                        let existing = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+                        existing = [...data.checkpoints, ...existing].slice(0, 20);
+                        localStorage.setItem('bodyCompCheckpoints', JSON.stringify(existing));
+                        showToast(`📥 Imported ${data.checkpoints.length} checkpoints`);
+                    } else if (data.state) {
+                        // Single checkpoint
+                        let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+                        checkpoints.unshift(data);
+                        localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints.slice(0, 10)));
+                        showToast('📥 Checkpoint imported');
+                    } else {
+                        showToast('❌ Invalid checkpoint file');
+                        return;
+                    }
+
+                    document.getElementById('checkpoint-modal')?.remove();
+                    showCheckpointManager();
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showToast('❌ Failed to import: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function forceUploadToCloud() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Upload\n\nThis will OVERWRITE all cloud data with your local data.\n\nAre you sure?')) {
+                return;
+            }
+
+            // Create checkpoint first
+            createCheckpoint('Auto-backup before force upload');
+
+            updateSyncStatus('syncing', 'Uploading...');
+
+            state._version = Date.now();
+            state._lastModified = new Date().toISOString();
+
+            database.ref(userPath).set({
+                state: state,
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+            })
+            .then(() => {
+                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                updateSyncStatus('connected', 'Force uploaded ✓');
+                showToast('⬆️ Force uploaded to cloud');
+                document.getElementById('checkpoint-modal')?.remove();
+            })
+            .catch(err => {
+                console.error('Force upload failed:', err);
+                updateSyncStatus('error', 'Upload failed');
+                showToast('❌ Upload failed: ' + err.message);
+            });
+        }
+
+        function forcePullFromCloud() {
+            if (!firebaseSyncEnabled || !database || !userPath) {
+                showToast('❌ Not connected to cloud');
+                return;
+            }
+
+            if (!confirm('⚠️ Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?')) {
+                return;
+            }
+
+            // Create checkpoint first
+            createCheckpoint('Auto-backup before force pull');
+
+            updateSyncStatus('syncing', 'Pulling...');
+
+            database.ref(userPath).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+
+                    if (!data || !data.state) {
+                        showToast('⚠️ No cloud data found');
+                        updateSyncStatus('connected', 'No cloud data');
+                        return;
+                    }
+
+                    const firebaseState = data.state;
+
+                    // Full overwrite - no merging
+                    state = {
+                        ...getDefaultState(),
+                        ...firebaseState,
+                        _dataLoaded: true
+                    };
+
+                    // Migrate any arrays to objects
+                    if (state.today?.meals) {
+                        state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                    }
+                    if (state.today?.workouts) {
+                        state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                    }
+                    state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
+                    state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                    state.bodyCompHistory = migrateArrayToObject(state.bodyCompHistory, 'bodycomp');
+
+                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+
+                    initializeUI();
+                    updateSyncStatus('connected', 'Force pulled ✓');
+                    showToast('⬇️ Pulled from cloud');
+                    document.getElementById('checkpoint-modal')?.remove();
+                })
+                .catch(err => {
+                    console.error('Force pull failed:', err);
+                    updateSyncStatus('error', 'Pull failed');
+                    showToast('❌ Pull failed: ' + err.message);
+                });
+        }
+
+        // ============================================
         // FIREBASE INITIALIZATION
         // ============================================
 
@@ -10743,6 +11261,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             currentUser = { uid: hashedPin };
             userPath = 'users/' + hashedPin + '/bodyCompTracker';
             firebaseSyncEnabled = true;
+            pinValidated = true;  // CRITICAL: Mark PIN as validated before any saves
 
             // Setup connection monitor for offline detection
             setupConnectionMonitor();
