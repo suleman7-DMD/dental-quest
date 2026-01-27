@@ -6268,6 +6268,75 @@
             return `${year}-${month}-${day}`;
         }
 
+        // ============================================
+        // EASTERN TIMEZONE UTILITIES
+        // ============================================
+
+        /**
+         * Convert any date/time to Eastern Time (America/New_York)
+         * @param {Date|string} input - Date object or ISO string
+         * @returns {Date} Date object in Eastern Time
+         */
+        function toEasternTime(input) {
+            const date = input instanceof Date ? input : new Date(input);
+            return new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        }
+
+        /**
+         * Format time in Eastern timezone as HH:MM AM/PM
+         * @param {Date|string} input - Date object, ISO string, or HH:MM time string
+         * @returns {string} Formatted time string in ET
+         */
+        function formatTimeET(input) {
+            if (!input) return '--';
+
+            let date;
+            if (typeof input === 'string' && input.match(/^\d{1,2}:\d{2}$/)) {
+                // Time string like "14:30" - convert to date
+                const [h, m] = input.split(':').map(Number);
+                date = new Date();
+                date.setHours(h, m, 0, 0);
+            } else {
+                date = input instanceof Date ? input : new Date(input);
+            }
+
+            return date.toLocaleTimeString('en-US', {
+                timeZone: 'America/New_York',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        /**
+         * Get current time in Eastern timezone as HH:MM (24h) for input fields
+         * @returns {string} Current time in ET as HH:MM
+         */
+        function getCurrentTimeET() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', {
+                timeZone: 'America/New_York',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        /**
+         * Format date + time for display in Eastern timezone
+         * @param {string} dateStr - Date string YYYY-MM-DD
+         * @param {string} timeStr - Time string HH:MM
+         * @returns {string} Formatted as "Jan 15 at 2:30 PM ET"
+         */
+        function formatDateTimeET(dateStr, timeStr) {
+            if (!dateStr) return '--';
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            const dateDisplay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const timeDisplay = timeStr ? formatTimeET(timeStr) : '';
+            return timeDisplay ? `${dateDisplay} at ${timeDisplay} ET` : dateDisplay;
+        }
+
         function formatNumber(num) {
             return num.toLocaleString();
         }
@@ -8186,11 +8255,13 @@
                 return;
             }
 
-            mealsList.innerHTML = meals.map((meal) => `
+            mealsList.innerHTML = meals.map((meal) => {
+                const timeDisplay = meal.time ? formatTimeET(meal.time) + ' ET' : '';
+                return `
                 <div class="meal-item">
                     <div class="meal-info">
                         <div class="meal-name">${escapeHtml(meal.name)}</div>
-                        <div class="meal-time">${escapeHtml(meal.time) || ''}</div>
+                        <div class="meal-time">${timeDisplay}</div>
                     </div>
                     <div class="meal-macros">
                         <div class="meal-calories">${meal.calories} cal</div>
@@ -8201,7 +8272,7 @@
                         <button class="meal-action-btn delete" onclick="deleteMeal('${meal.id}')" title="Delete">🗑️</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // ============================================
@@ -8225,11 +8296,12 @@
 
             // Use workout.id for edit/delete operations
             workoutsList.innerHTML = todayWorkouts.map((workout) => {
+                const timeDisplay = workout.time ? formatTimeET(workout.time) + ' ET' : '';
                 return `
                 <div class="meal-item">
                     <div class="meal-info">
                         <div class="meal-name">${escapeHtml(workout.type || 'Workout')}</div>
-                        <div class="meal-time">${escapeHtml(workout.time) || ''}</div>
+                        <div class="meal-time">${timeDisplay}</div>
                     </div>
                     <div class="meal-macros">
                         <div class="meal-calories">${workout.duration || 0} min</div>
@@ -8246,79 +8318,23 @@
         let editingWorkoutId = null;
 
         function editWorkout(workoutId) {
-            // Support both today's workouts and historical workouts from dailyLogs
+            // Find workout in today or historical data
             let workout = state.today.workouts?.[workoutId];
-            let isHistorical = false;
-            let historicalDate = null;
+            let dateStr = getLocalDateString();
 
             // If not found in today's workouts, search dailyLogs
             if (!workout) {
                 for (const [date, log] of Object.entries(state.dailyLogs || {})) {
                     const workouts = log.workouts || {};
                     if (workouts[workoutId]) {
-                        workout = workouts[workoutId];
-                        isHistorical = true;
-                        historicalDate = date;
+                        dateStr = date;
                         break;
                     }
                 }
             }
 
-            if (!workout) {
-                showToast('Workout not found');
-                return;
-            }
-
-            // Show a prompt dialog for editing (simple approach)
-            const newType = prompt('Workout type:', workout.type);
-            if (newType === null) return; // Cancelled
-
-            const newDuration = prompt('Duration (minutes):', workout.duration);
-            if (newDuration === null) return;
-
-            const newCalories = prompt('Calories burned:', workout.calories);
-            if (newCalories === null) return;
-
-            // Calculate the difference for active calories adjustment
-            const oldCalories = workout.calories || 0;
-            const calDiff = (parseInt(newCalories) || 0) - oldCalories;
-
-            // Update the workout
-            workout.type = newType || workout.type;
-            workout.duration = parseInt(newDuration) || workout.duration;
-            workout.calories = parseInt(newCalories) || workout.calories;
-
-            if (isHistorical) {
-                // Update in dailyLogs
-                if (state.dailyLogs[historicalDate]) {
-                    if (!state.dailyLogs[historicalDate].workouts) {
-                        state.dailyLogs[historicalDate].workouts = {};
-                    }
-                    state.dailyLogs[historicalDate].workouts[workoutId] = workout;
-                }
-            } else {
-                // Update today's workout and adjust active calories
-                state.today.workouts[workoutId] = workout;
-                state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
-
-                // Recalculate targets if calories changed
-                if (calDiff !== 0) {
-                    const tdee = calculateTDEE(
-                        state.profile.currentWeight_lbs,
-                        state.profile.height_cm,
-                        state.profile.age,
-                        state.today.activeCalories
-                    );
-                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
-                }
-            }
-
-            saveState();
-            saveDayLog();
-            renderWorkoutsList();
-            renderWorkoutHistoryManager();
-            renderDashboard();
-            showToast('Workout updated');
+            // Use the unified modal-based edit function
+            editHistoricalWorkout(dateStr, workoutId);
         }
 
         function deleteWorkout(workoutId) {
@@ -8500,7 +8516,7 @@
                 calories: calories,
                 protein: protein,
                 carbs: carbs,
-                time: existingMeal ? existingMeal.time : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                time: existingMeal ? existingMeal.time : formatTimeET(new Date()),
                 fromLibrary: false
             };
 
@@ -8565,35 +8581,35 @@
         }
 
         // ============================================
-        // HISTORICAL MEAL/WORKOUT EDITING
+        // HISTORICAL MEAL/WORKOUT EDITING (Modal-Based)
         // ============================================
 
+        // Store current editing context
+        let editingHistoricalMeal = null;
+        let editingHistoricalWorkout = null;
+
         /**
-         * Edit a meal from any date (today or historical)
+         * Open modal to edit a meal from any date (today or historical)
          * @param {string} dateStr - Date in 'YYYY-MM-DD' format
          * @param {string} mealId - The meal ID to edit
          */
         function editHistoricalMeal(dateStr, mealId) {
             const todayStr = getLocalDateString();
             let meal;
-            let sourceCollection;
 
             if (dateStr === todayStr) {
                 meal = state.today.meals?.[mealId];
-                sourceCollection = state.today.meals;
             } else {
                 const log = state.dailyLogs?.[dateStr];
                 if (!log?.meals) {
                     showToast('No meal data for this date');
                     return;
                 }
-                // Handle both array and object formats
                 if (Array.isArray(log.meals)) {
                     meal = log.meals.find(m => m.id === mealId);
                 } else {
                     meal = log.meals[mealId];
                 }
-                sourceCollection = log.meals;
             }
 
             if (!meal) {
@@ -8601,54 +8617,238 @@
                 return;
             }
 
-            // Prompt for edits
-            const newName = prompt('Food name:', meal.name);
-            if (newName === null) return;
+            // Store editing context
+            editingHistoricalMeal = { dateStr, mealId, originalDate: dateStr };
 
-            const newCalories = prompt('Calories:', meal.calories);
-            if (newCalories === null) return;
+            // Extract time from meal.time (could be "2:30 PM" or "14:30")
+            let timeValue = '';
+            if (meal.time) {
+                // Try to parse existing time to 24h format for input
+                const timeMatch = meal.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+                if (timeMatch) {
+                    let h = parseInt(timeMatch[1]);
+                    const m = timeMatch[2];
+                    const period = timeMatch[3];
+                    if (period) {
+                        if (period.toUpperCase() === 'PM' && h !== 12) h += 12;
+                        if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+                    }
+                    timeValue = String(h).padStart(2, '0') + ':' + m;
+                }
+            }
+            if (!timeValue) timeValue = getCurrentTimeET();
 
-            const newProtein = prompt('Protein (g):', meal.protein);
-            if (newProtein === null) return;
+            // Create modal
+            let modal = document.getElementById('editMealModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'editMealModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
 
-            const newCarbs = prompt('Carbs (g):', meal.carbs || 0);
-            if (newCarbs === null) return;
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 380px;">
+                    <div class="modal-header">
+                        <span class="modal-title">Edit Meal</span>
+                        <button class="modal-close" onclick="closeEditMealModal()">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Food Name</label>
+                            <input type="text" id="editMealName" class="form-input" value="${escapeHtml(meal.name)}" placeholder="Food name">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Calories</label>
+                                <input type="number" id="editMealCalories" class="form-input" value="${meal.calories || 0}" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Protein (g)</label>
+                                <input type="number" id="editMealProtein" class="form-input" value="${meal.protein || 0}" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Carbs (g)</label>
+                            <input type="number" id="editMealCarbs" class="form-input" value="${meal.carbs || 0}" min="0">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="editMealDate" class="form-input" value="${dateStr}" max="${todayStr}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Time (ET)</label>
+                                <input type="time" id="editMealTime" class="form-input" value="${timeValue}">
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 15px; text-align: center;">
+                            All times displayed in Eastern Time
+                        </div>
+                        <button onclick="saveEditedMeal()" class="submit-btn" style="width: 100%;">Save Changes</button>
+                    </div>
+                </div>
+            `;
 
-            // Update the meal
+            modal.classList.add('active');
+            modal.onclick = function(e) {
+                if (e.target === modal) closeEditMealModal();
+            };
+        }
+
+        function closeEditMealModal() {
+            const modal = document.getElementById('editMealModal');
+            if (modal) modal.classList.remove('active');
+            editingHistoricalMeal = null;
+        }
+
+        function saveEditedMeal() {
+            if (!editingHistoricalMeal) return;
+
+            const { dateStr: originalDateStr, mealId, originalDate } = editingHistoricalMeal;
+            const todayStr = getLocalDateString();
+
+            // Get values from form
+            const newName = document.getElementById('editMealName').value.trim();
+            const newCalories = parseInt(document.getElementById('editMealCalories').value) || 0;
+            const newProtein = parseInt(document.getElementById('editMealProtein').value) || 0;
+            const newCarbs = parseInt(document.getElementById('editMealCarbs').value) || 0;
+            const newDate = document.getElementById('editMealDate').value;
+            const newTime = document.getElementById('editMealTime').value;
+
+            if (!newName) {
+                showToast('Please enter a food name');
+                return;
+            }
+
+            // Get original meal
+            let originalMeal;
+            if (originalDateStr === todayStr) {
+                originalMeal = state.today.meals?.[mealId];
+            } else {
+                const log = state.dailyLogs?.[originalDateStr];
+                if (log?.meals) {
+                    originalMeal = Array.isArray(log.meals)
+                        ? log.meals.find(m => m.id === mealId)
+                        : log.meals[mealId];
+                }
+            }
+
+            if (!originalMeal) {
+                showToast('Original meal not found');
+                closeEditMealModal();
+                return;
+            }
+
+            // Format time for display
+            const formattedTime = newTime ? formatTimeET(newTime) : originalMeal.time;
+
+            // Create updated meal
             const updatedMeal = {
-                ...meal,
-                name: newName || meal.name,
-                calories: parseInt(newCalories) || meal.calories,
-                protein: parseInt(newProtein) || meal.protein,
-                carbs: parseInt(newCarbs) || 0,
+                ...originalMeal,
+                name: newName,
+                calories: newCalories,
+                protein: newProtein,
+                carbs: newCarbs,
+                time: formattedTime,
+                date: newDate,
                 _editedAt: new Date().toISOString()
             };
 
-            if (dateStr === todayStr) {
-                state.today.meals[mealId] = updatedMeal;
-                saveDayLog();
-                renderMealsList();
-                renderDashboard();
-            } else {
-                // Update historical entry
-                if (Array.isArray(state.dailyLogs[dateStr].meals)) {
-                    // Convert array to object first
-                    const mealsObj = {};
-                    state.dailyLogs[dateStr].meals.forEach(m => {
-                        mealsObj[m.id || generateId('meal')] = m;
-                    });
-                    state.dailyLogs[dateStr].meals = mealsObj;
+            // Check if date changed - need to move meal between days
+            const dateChanged = newDate !== originalDateStr;
+
+            if (dateChanged) {
+                // Remove from original location
+                if (originalDateStr === todayStr) {
+                    delete state.today.meals[mealId];
+                    saveDayLog();
+                } else {
+                    ensureMealsObject(originalDateStr);
+                    delete state.dailyLogs[originalDateStr].meals[mealId];
+                    recalculateDayLog(originalDateStr);
                 }
-                state.dailyLogs[dateStr].meals[mealId] = updatedMeal;
-                recalculateDayLog(dateStr);
+
+                // Add to new location
+                if (newDate === todayStr) {
+                    if (!state.today.meals || Array.isArray(state.today.meals)) {
+                        state.today.meals = {};
+                    }
+                    state.today.meals[mealId] = updatedMeal;
+                    saveDayLog();
+                    renderMealsList();
+                    renderDashboard();
+                } else {
+                    // Initialize dailyLog for new date if needed
+                    if (!state.dailyLogs[newDate]) {
+                        state.dailyLogs[newDate] = {
+                            date: newDate,
+                            meals: {},
+                            workouts: {},
+                            calories: 0,
+                            protein: 0
+                        };
+                    }
+                    ensureMealsObject(newDate);
+                    state.dailyLogs[newDate].meals[mealId] = updatedMeal;
+                    recalculateDayLog(newDate);
+                }
+
+                showToast(`Meal moved to ${newDate}`);
+            } else {
+                // Same date - just update in place
+                if (originalDateStr === todayStr) {
+                    state.today.meals[mealId] = updatedMeal;
+                    saveDayLog();
+                    renderMealsList();
+                    renderDashboard();
+                } else {
+                    ensureMealsObject(originalDateStr);
+                    state.dailyLogs[originalDateStr].meals[mealId] = updatedMeal;
+                    recalculateDayLog(originalDateStr);
+                }
+                showToast('Meal updated');
             }
 
             saveState();
-            showToast('Meal updated');
+            closeEditMealModal();
 
             // Refresh any open day detail modal
-            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
-                showDayDetails(dateStr);
+            const dayDetailModal = document.getElementById('dayDetailModal');
+            if (dayDetailModal) {
+                // Show the date that makes sense (new date if moved, original if not)
+                const displayDate = dateChanged ? newDate : originalDateStr;
+                showDayDetails(displayDate);
+            }
+        }
+
+        // Helper to ensure meals is an object (not array)
+        function ensureMealsObject(dateStr) {
+            if (!state.dailyLogs[dateStr]) return;
+            if (Array.isArray(state.dailyLogs[dateStr].meals)) {
+                const mealsObj = {};
+                state.dailyLogs[dateStr].meals.forEach(m => {
+                    mealsObj[m.id || generateId('meal')] = m;
+                });
+                state.dailyLogs[dateStr].meals = mealsObj;
+            }
+            if (!state.dailyLogs[dateStr].meals) {
+                state.dailyLogs[dateStr].meals = {};
+            }
+        }
+
+        // Helper to ensure workouts is an object (not array)
+        function ensureWorkoutsObject(dateStr) {
+            if (!state.dailyLogs[dateStr]) return;
+            if (Array.isArray(state.dailyLogs[dateStr].workouts)) {
+                const workoutsObj = {};
+                state.dailyLogs[dateStr].workouts.forEach(w => {
+                    workoutsObj[w.id || generateId('workout')] = w;
+                });
+                state.dailyLogs[dateStr].workouts = workoutsObj;
+            }
+            if (!state.dailyLogs[dateStr].workouts) {
+                state.dailyLogs[dateStr].workouts = {};
             }
         }
 
@@ -8702,6 +8902,11 @@
          * @param {string} dateStr - Date in 'YYYY-MM-DD' format
          * @param {string} workoutId - The workout ID to edit
          */
+        /**
+         * Open modal to edit a workout from any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @param {string} workoutId - The workout ID to edit
+         */
         function editHistoricalWorkout(dateStr, workoutId) {
             const todayStr = getLocalDateString();
             let workout;
@@ -8726,63 +8931,244 @@
                 return;
             }
 
-            // Prompt for edits
-            const newType = prompt('Workout type:', workout.type);
-            if (newType === null) return;
+            // Store editing context
+            editingHistoricalWorkout = { dateStr, workoutId, originalDate: dateStr };
 
-            const newDuration = prompt('Duration (minutes):', workout.duration);
-            if (newDuration === null) return;
+            // Extract time from workout.time
+            let timeValue = '';
+            if (workout.time) {
+                const timeMatch = workout.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+                if (timeMatch) {
+                    let h = parseInt(timeMatch[1]);
+                    const m = timeMatch[2];
+                    const period = timeMatch[3];
+                    if (period) {
+                        if (period.toUpperCase() === 'PM' && h !== 12) h += 12;
+                        if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+                    }
+                    timeValue = String(h).padStart(2, '0') + ':' + m;
+                }
+            }
+            if (!timeValue) timeValue = getCurrentTimeET();
 
-            const newCalories = prompt('Calories burned:', workout.calories);
-            if (newCalories === null) return;
+            // Common workout types for quick selection
+            const workoutTypes = ['Lift', 'Run', 'Cardio', 'Walk', 'HIIT', 'Bike', 'Swim', 'Other'];
 
-            // Update the workout
+            // Create modal
+            let modal = document.getElementById('editWorkoutModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'editWorkoutModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 380px;">
+                    <div class="modal-header">
+                        <span class="modal-title">Edit Workout</span>
+                        <button class="modal-close" onclick="closeEditWorkoutModal()">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Workout Type</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                ${workoutTypes.map(type => `
+                                    <button type="button" onclick="document.getElementById('editWorkoutType').value='${type}'"
+                                            class="action-btn secondary" style="padding: 6px 12px; font-size: 0.85em;">
+                                        ${type}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <input type="text" id="editWorkoutType" class="form-input" value="${escapeHtml(workout.type || '')}" placeholder="Or type custom...">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Duration (min)</label>
+                                <input type="number" id="editWorkoutDuration" class="form-input" value="${workout.duration || 0}" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Calories Burned</label>
+                                <input type="number" id="editWorkoutCalories" class="form-input" value="${workout.calories || 0}" min="0">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="editWorkoutDate" class="form-input" value="${dateStr}" max="${todayStr}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Time (ET)</label>
+                                <input type="time" id="editWorkoutTime" class="form-input" value="${timeValue}">
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 15px; text-align: center;">
+                            All times displayed in Eastern Time
+                        </div>
+                        <button onclick="saveEditedWorkout()" class="submit-btn" style="width: 100%;">Save Changes</button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            modal.onclick = function(e) {
+                if (e.target === modal) closeEditWorkoutModal();
+            };
+        }
+
+        function closeEditWorkoutModal() {
+            const modal = document.getElementById('editWorkoutModal');
+            if (modal) modal.classList.remove('active');
+            editingHistoricalWorkout = null;
+        }
+
+        function saveEditedWorkout() {
+            if (!editingHistoricalWorkout) return;
+
+            const { dateStr: originalDateStr, workoutId } = editingHistoricalWorkout;
+            const todayStr = getLocalDateString();
+
+            // Get values from form
+            const newType = document.getElementById('editWorkoutType').value.trim();
+            const newDuration = parseInt(document.getElementById('editWorkoutDuration').value) || 0;
+            const newCalories = parseInt(document.getElementById('editWorkoutCalories').value) || 0;
+            const newDate = document.getElementById('editWorkoutDate').value;
+            const newTime = document.getElementById('editWorkoutTime').value;
+
+            if (!newType) {
+                showToast('Please enter a workout type');
+                return;
+            }
+
+            // Get original workout
+            let originalWorkout;
+            if (originalDateStr === todayStr) {
+                originalWorkout = state.today.workouts?.[workoutId];
+            } else {
+                const log = state.dailyLogs?.[originalDateStr];
+                if (log?.workouts) {
+                    originalWorkout = Array.isArray(log.workouts)
+                        ? log.workouts.find(w => w.id === workoutId)
+                        : log.workouts[workoutId];
+                }
+            }
+
+            if (!originalWorkout) {
+                showToast('Original workout not found');
+                closeEditWorkoutModal();
+                return;
+            }
+
+            // Format time for display
+            const formattedTime = newTime ? formatTimeET(newTime) : originalWorkout.time;
+
+            // Create updated workout
             const updatedWorkout = {
-                ...workout,
-                type: newType || workout.type,
-                duration: parseInt(newDuration) || workout.duration,
-                calories: parseInt(newCalories) || workout.calories,
+                ...originalWorkout,
+                type: newType,
+                duration: newDuration,
+                calories: newCalories,
+                time: formattedTime,
+                date: newDate,
                 _editedAt: new Date().toISOString()
             };
 
-            if (dateStr === todayStr) {
-                // Calculate calorie diff for active calories adjustment
-                const calDiff = updatedWorkout.calories - (workout.calories || 0);
-                state.today.workouts[workoutId] = updatedWorkout;
-                state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
+            const dateChanged = newDate !== originalDateStr;
+            const calDiff = newCalories - (originalWorkout.calories || 0);
 
-                // Recalculate TDEE and targets
-                const tdee = calculateTDEE(
-                    state.profile.currentWeight_lbs,
-                    state.profile.height_cm,
-                    state.profile.age,
-                    state.today.activeCalories
-                );
-                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+            if (dateChanged) {
+                // Remove from original location
+                if (originalDateStr === todayStr) {
+                    // Subtract old calories from today's active calories
+                    state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (originalWorkout.calories || 0));
+                    delete state.today.workouts[workoutId];
+                    state.today.workedOut = getCount(state.today.workouts) > 0;
 
-                saveDayLog();
-                renderWorkoutsList();
-                renderWorkoutHistoryManager();
-                renderDashboard();
-            } else {
-                // Update historical entry
-                if (Array.isArray(state.dailyLogs[dateStr].workouts)) {
-                    const workoutsObj = {};
-                    state.dailyLogs[dateStr].workouts.forEach(w => {
-                        workoutsObj[w.id || generateId('workout')] = w;
-                    });
-                    state.dailyLogs[dateStr].workouts = workoutsObj;
+                    // Recalculate today's TDEE
+                    const tdee = calculateTDEE(
+                        state.profile.currentWeight_lbs,
+                        state.profile.height_cm,
+                        state.profile.age,
+                        state.today.activeCalories
+                    );
+                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    saveDayLog();
+                } else {
+                    ensureWorkoutsObject(originalDateStr);
+                    delete state.dailyLogs[originalDateStr].workouts[workoutId];
+                    state.dailyLogs[originalDateStr].workedOut = getCount(state.dailyLogs[originalDateStr].workouts) > 0;
+                    recalculateDayLog(originalDateStr);
                 }
-                state.dailyLogs[dateStr].workouts[workoutId] = updatedWorkout;
-                recalculateDayLog(dateStr);
-                renderWorkoutHistoryManager();
+
+                // Add to new location
+                if (newDate === todayStr) {
+                    if (!state.today.workouts || Array.isArray(state.today.workouts)) {
+                        state.today.workouts = {};
+                    }
+                    state.today.workouts[workoutId] = updatedWorkout;
+                    state.today.workedOut = true;
+                    state.today.activeCalories = (state.today.activeCalories || 0) + newCalories;
+
+                    const tdee = calculateTDEE(
+                        state.profile.currentWeight_lbs,
+                        state.profile.height_cm,
+                        state.profile.age,
+                        state.today.activeCalories
+                    );
+                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    saveDayLog();
+                    renderWorkoutsList();
+                    renderDashboard();
+                } else {
+                    if (!state.dailyLogs[newDate]) {
+                        state.dailyLogs[newDate] = {
+                            date: newDate,
+                            meals: {},
+                            workouts: {},
+                            workedOut: false
+                        };
+                    }
+                    ensureWorkoutsObject(newDate);
+                    state.dailyLogs[newDate].workouts[workoutId] = updatedWorkout;
+                    state.dailyLogs[newDate].workedOut = true;
+                    recalculateDayLog(newDate);
+                }
+
+                showToast(`Workout moved to ${newDate}`);
+            } else {
+                // Same date - just update in place
+                if (originalDateStr === todayStr) {
+                    state.today.workouts[workoutId] = updatedWorkout;
+                    state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
+
+                    const tdee = calculateTDEE(
+                        state.profile.currentWeight_lbs,
+                        state.profile.height_cm,
+                        state.profile.age,
+                        state.today.activeCalories
+                    );
+                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+                    saveDayLog();
+                    renderWorkoutsList();
+                    renderDashboard();
+                } else {
+                    ensureWorkoutsObject(originalDateStr);
+                    state.dailyLogs[originalDateStr].workouts[workoutId] = updatedWorkout;
+                    recalculateDayLog(originalDateStr);
+                }
+                showToast('Workout updated');
             }
 
             saveState();
-            showToast('Workout updated');
+            renderWorkoutHistoryManager();
+            closeEditWorkoutModal();
 
-            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
-                showDayDetails(dateStr);
+            // Refresh any open day detail modal
+            const dayDetailModal = document.getElementById('dayDetailModal');
+            if (dayDetailModal) {
+                const displayDate = dateChanged ? newDate : originalDateStr;
+                showDayDetails(displayDate);
             }
         }
 
@@ -8840,6 +9226,294 @@
 
             if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
                 showDayDetails(dateStr);
+            }
+        }
+
+        // ============================================
+        // IMPORT FROM CLAUDE TEXT (Day Detail Modal)
+        // ============================================
+
+        let importTargetDate = null;
+
+        /**
+         * Open modal to import meals from Claude text format
+         * @param {string} dateStr - Target date for imported meals
+         */
+        function openImportMealModal(dateStr) {
+            importTargetDate = dateStr;
+            const todayStr = getLocalDateString();
+
+            let modal = document.getElementById('importMealModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'importMealModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 420px;">
+                    <div class="modal-header">
+                        <span class="modal-title">Import Meals from Claude</span>
+                        <button class="modal-close" onclick="closeImportMealModal()">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">Target Date: ${dateStr}</div>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">Meals will be added to this day</div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Paste meal data from Claude:</label>
+                            <textarea id="importMealText" class="form-input" rows="6" placeholder="MEAL|Chicken Breast|350|45|0|8
+MEAL|Rice Bowl|280|6|52|2
+MEAL|Protein Shake|160|30|5|2"></textarea>
+                        </div>
+
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8em;">
+                            <div style="font-weight: 600; color: var(--accent-blue); margin-bottom: 4px;">Format:</div>
+                            <code style="color: var(--text-secondary);">MEAL|Name|Calories|Protein|Carbs|Fat</code>
+                            <div style="color: var(--text-muted); margin-top: 4px;">One meal per line. Fat is optional.</div>
+                        </div>
+
+                        <button onclick="processImportedMeals()" class="submit-btn" style="width: 100%;">Import Meals</button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            modal.onclick = function(e) {
+                if (e.target === modal) closeImportMealModal();
+            };
+        }
+
+        function closeImportMealModal() {
+            const modal = document.getElementById('importMealModal');
+            if (modal) modal.classList.remove('active');
+            importTargetDate = null;
+        }
+
+        function processImportedMeals() {
+            if (!importTargetDate) return;
+
+            const text = document.getElementById('importMealText').value.trim();
+            if (!text) {
+                showToast('Please paste meal data');
+                return;
+            }
+
+            const todayStr = getLocalDateString();
+            const lines = text.split('\n').filter(line => line.trim());
+            let imported = 0;
+
+            for (const line of lines) {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts[0]?.toUpperCase() !== 'MEAL' || parts.length < 4) continue;
+
+                const meal = {
+                    id: generateId('meal'),
+                    name: parts[1] || 'Unknown',
+                    calories: parseInt(parts[2]) || 0,
+                    protein: parseInt(parts[3]) || 0,
+                    carbs: parseInt(parts[4]) || 0,
+                    fat: parseInt(parts[5]) || 0,
+                    time: formatTimeET(new Date()),
+                    date: importTargetDate,
+                    _importedAt: new Date().toISOString()
+                };
+
+                // Add to appropriate location
+                if (importTargetDate === todayStr) {
+                    if (!state.today.meals || Array.isArray(state.today.meals)) {
+                        state.today.meals = {};
+                    }
+                    state.today.meals[meal.id] = meal;
+                } else {
+                    if (!state.dailyLogs[importTargetDate]) {
+                        state.dailyLogs[importTargetDate] = {
+                            date: importTargetDate,
+                            meals: {},
+                            workouts: {}
+                        };
+                    }
+                    ensureMealsObject(importTargetDate);
+                    state.dailyLogs[importTargetDate].meals[meal.id] = meal;
+                }
+
+                imported++;
+            }
+
+            if (imported === 0) {
+                showToast('No valid meals found. Check format.');
+                return;
+            }
+
+            // Recalculate and save
+            if (importTargetDate === todayStr) {
+                saveDayLog();
+                renderMealsList();
+                renderDashboard();
+            } else {
+                recalculateDayLog(importTargetDate);
+            }
+
+            saveState();
+            closeImportMealModal();
+            showToast(`Imported ${imported} meal${imported > 1 ? 's' : ''}`);
+
+            // Refresh day detail modal
+            if (document.getElementById('dayDetailModal')) {
+                showDayDetails(importTargetDate);
+            }
+        }
+
+        /**
+         * Open modal to import workouts from Claude text format
+         * @param {string} dateStr - Target date for imported workouts
+         */
+        function openImportWorkoutModal(dateStr) {
+            importTargetDate = dateStr;
+            const todayStr = getLocalDateString();
+
+            let modal = document.getElementById('importWorkoutModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'importWorkoutModal';
+                modal.className = 'modal-overlay';
+                document.body.appendChild(modal);
+            }
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 420px;">
+                    <div class="modal-header">
+                        <span class="modal-title">Import Workouts from Claude</span>
+                        <button class="modal-close" onclick="closeImportWorkoutModal()">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">Target Date: ${dateStr}</div>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">Workouts will be added to this day</div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label">Paste workout data from Claude:</label>
+                            <textarea id="importWorkoutText" class="form-input" rows="5" placeholder="WORKOUT|Lift|45|280|17:00
+WORKOUT|Run|30|320|18:30
+WORKOUT|Walk|20|80|07:00"></textarea>
+                        </div>
+
+                        <div style="background: rgba(34, 197, 94, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8em;">
+                            <div style="font-weight: 600; color: var(--accent-green); margin-bottom: 4px;">Format:</div>
+                            <code style="color: var(--text-secondary);">WORKOUT|Type|Duration|Calories|Time</code>
+                            <div style="color: var(--text-muted); margin-top: 4px;">One workout per line. Time is optional (HH:MM).</div>
+                        </div>
+
+                        <button onclick="processImportedWorkouts()" class="submit-btn" style="width: 100%;">Import Workouts</button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            modal.onclick = function(e) {
+                if (e.target === modal) closeImportWorkoutModal();
+            };
+        }
+
+        function closeImportWorkoutModal() {
+            const modal = document.getElementById('importWorkoutModal');
+            if (modal) modal.classList.remove('active');
+            importTargetDate = null;
+        }
+
+        function processImportedWorkouts() {
+            if (!importTargetDate) return;
+
+            const text = document.getElementById('importWorkoutText').value.trim();
+            if (!text) {
+                showToast('Please paste workout data');
+                return;
+            }
+
+            const todayStr = getLocalDateString();
+            const lines = text.split('\n').filter(line => line.trim());
+            let imported = 0;
+            let totalCalories = 0;
+
+            for (const line of lines) {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts[0]?.toUpperCase() !== 'WORKOUT' || parts.length < 4) continue;
+
+                const timeStr = parts[5] || parts[4];
+                const hasTime = timeStr && timeStr.match(/^\d{1,2}:\d{2}$/);
+
+                const workout = {
+                    id: generateId('workout'),
+                    type: parts[1] || 'Workout',
+                    duration: parseInt(parts[2]) || 0,
+                    calories: parseInt(parts[3]) || 0,
+                    time: hasTime ? formatTimeET(timeStr) : formatTimeET(new Date()),
+                    date: importTargetDate,
+                    _importedAt: new Date().toISOString()
+                };
+
+                // Add to appropriate location
+                if (importTargetDate === todayStr) {
+                    if (!state.today.workouts || Array.isArray(state.today.workouts)) {
+                        state.today.workouts = {};
+                    }
+                    state.today.workouts[workout.id] = workout;
+                    totalCalories += workout.calories;
+                } else {
+                    if (!state.dailyLogs[importTargetDate]) {
+                        state.dailyLogs[importTargetDate] = {
+                            date: importTargetDate,
+                            meals: {},
+                            workouts: {},
+                            workedOut: false
+                        };
+                    }
+                    ensureWorkoutsObject(importTargetDate);
+                    state.dailyLogs[importTargetDate].workouts[workout.id] = workout;
+                    state.dailyLogs[importTargetDate].workedOut = true;
+                }
+
+                imported++;
+            }
+
+            if (imported === 0) {
+                showToast('No valid workouts found. Check format.');
+                return;
+            }
+
+            // Update today's active calories and recalculate
+            if (importTargetDate === todayStr) {
+                state.today.workedOut = true;
+                state.today.activeCalories = (state.today.activeCalories || 0) + totalCalories;
+
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+                saveDayLog();
+                renderWorkoutsList();
+                renderWorkoutHistoryManager();
+                renderDashboard();
+            } else {
+                recalculateDayLog(importTargetDate);
+                renderWorkoutHistoryManager();
+            }
+
+            saveState();
+            closeImportWorkoutModal();
+            showToast(`Imported ${imported} workout${imported > 1 ? 's' : ''}`);
+
+            // Refresh day detail modal
+            if (document.getElementById('dayDetailModal')) {
+                showDayDetails(importTargetDate);
             }
         }
 
@@ -9001,7 +9675,7 @@
                 protein: originalMeal.protein,
                 carbs: originalMeal.carbs || 0,
                 fat: originalMeal.fat || 0,
-                time: new Date().toTimeString().slice(0, 5)
+                time: formatTimeET(new Date())
             };
 
             if (!state.today.meals || Array.isArray(state.today.meals)) {
@@ -9048,7 +9722,7 @@
                             protein: parseInt(parts[3]) || 0,
                             carbs: parseInt(parts[4]) || 0,
                             fat: parseInt(parts[5]) || 0,
-                            time: new Date().toTimeString().slice(0, 5)
+                            time: formatTimeET(new Date())
                         };
 
                         if (!state.today.meals || Array.isArray(state.today.meals)) {
@@ -9176,7 +9850,7 @@
                 protein: Math.round(food.protein * currentQty),
                 carbs: Math.round((food.carbs || 0) * currentQty),
                 fat: Math.round((food.fat || 0) * currentQty),
-                time: new Date().toTimeString().slice(0, 5),
+                time: formatTimeET(new Date()),
                 fromLibrary: true,
                 libraryId: food.id,
                 servings: currentQty
@@ -9331,11 +10005,13 @@
                                     <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
                                         ${displayDate}
                                     </div>
-                                    ${dayWorkouts.map(w => `
+                                    ${dayWorkouts.map(w => {
+                                        const timeDisplay = w.time ? formatTimeET(w.time) + ' ET' : '';
+                                        return `
                                         <div class="workout-history-item">
                                             <div class="workout-history-info">
                                                 <div class="workout-history-type">${getWorkoutIcon(w.type)} ${escapeHtml(w.type || 'Workout')}</div>
-                                                <div class="workout-history-meta">${w.time || ''}</div>
+                                                <div class="workout-history-meta">${timeDisplay}</div>
                                             </div>
                                             <div class="workout-history-stats">
                                                 <div class="workout-history-duration">${w.duration || 0} min</div>
@@ -9346,7 +10022,7 @@
                                                 <button class="delete" onclick="deleteWorkout('${w.id}')" title="Delete">🗑️</button>
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `}).join('')}
                                 </div>
                             `;
                         }).join('')}
@@ -9465,9 +10141,6 @@
         }
 
         function logQuickWorkout(type) {
-            const now = new Date();
-            const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
             // Default durations and calories by type
             const defaults = {
                 'Lift': { duration: 45, calories: 250 },
@@ -9482,7 +10155,7 @@
                 type: type,
                 duration: defaults[type]?.duration || 30,
                 calories: defaults[type]?.calories || 200,
-                time: time,
+                time: formatTimeET(new Date()),
                 date: getLocalDateString()  // Store local date for proper day tracking
             };
 
@@ -9537,12 +10210,13 @@
                     // Format: WORKOUT|Type|Duration|Calories|Time|Date(optional)
                     const workoutDate = parts[5] || dateInput || today;
                     const workoutId = generateId('workout');
+                    const timeStr = parts[4] ? formatTimeET(parts[4]) : formatTimeET(new Date());
                     const workout = {
                         id: workoutId,
                         type: parts[1] || 'Workout',
                         duration: parseInt(parts[2]) || 30,
                         calories: parseInt(parts[3]) || 200,
-                        time: parts[4] || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`,
+                        time: timeStr,
                         date: workoutDate
                     };
 
@@ -14047,21 +14721,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
 
-            // Build meals HTML with edit/delete buttons
-            let mealsHtml = '';
-            if (mealsArr.length > 0) {
-                mealsHtml = `
-                    <div style="margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <strong>🍽️ Meals (${mealsArr.length})</strong>
-                        </div>
+            // Build meals HTML with edit/delete buttons and import
+            let mealsHtml = `
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong>🍽️ Meals (${mealsArr.length})</strong>
+                        <button onclick="openImportMealModal('${dateStr}')" style="padding: 4px 10px; border: none; background: var(--accent-blue); color: white; border-radius: 6px; cursor: pointer; font-size: 0.75em;">+ Import from Claude</button>
+                    </div>
+                    ${mealsArr.length > 0 ? `
                         <div style="font-size: 0.85em;">
                             ${mealsArr.map(m => {
                                 const mealId = m.id || 'unknown';
+                                const timeDisplay = m.time ? formatTimeET(m.time) : '--';
                                 return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 500;">${escapeHtml(m.name)}</div>
-                                        <div style="font-size: 0.85em; color: var(--text-muted);">${m.calories} cal • ${m.protein}g P • ${m.carbs || 0}g C</div>
+                                        <div style="font-size: 0.85em; color: var(--text-muted);">${m.calories} cal • ${m.protein}g P • ${m.carbs || 0}g C • ${timeDisplay} ET</div>
                                     </div>
                                     <div style="display: flex; gap: 4px;">
                                         <button onclick="editHistoricalMeal('${dateStr}', '${mealId}')" style="padding: 4px 8px; border: none; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 0.8em;">✏️</button>
@@ -14070,26 +14745,27 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                                 </div>`;
                             }).join('')}
                         </div>
-                    </div>
-                `;
-            }
+                    ` : '<div style="text-align: center; color: var(--text-muted); font-size: 0.85em; padding: 10px;">No meals logged</div>'}
+                </div>
+            `;
 
             // Handle both array and object formats for workouts
             const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
-            let workoutsHtml = '';
-            if (workoutsArr.length > 0) {
-                workoutsHtml = `
-                    <div style="margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <strong>💪 Workouts (${workoutsArr.length})</strong>
-                        </div>
+            let workoutsHtml = `
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong>💪 Workouts (${workoutsArr.length})</strong>
+                        <button onclick="openImportWorkoutModal('${dateStr}')" style="padding: 4px 10px; border: none; background: var(--accent-green); color: white; border-radius: 6px; cursor: pointer; font-size: 0.75em;">+ Import from Claude</button>
+                    </div>
+                    ${workoutsArr.length > 0 ? `
                         <div style="font-size: 0.85em;">
                             ${workoutsArr.map(w => {
                                 const workoutId = w.id || 'unknown';
+                                const timeDisplay = w.time ? formatTimeET(w.time) : '--';
                                 return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 500;">${escapeHtml(w.type || 'Workout')}</div>
-                                        <div style="font-size: 0.85em; color: var(--text-muted);">${w.duration || 0} min • +${w.calories || 0} cal • ${w.time || '--'}</div>
+                                        <div style="font-size: 0.85em; color: var(--text-muted);">${w.duration || 0} min • +${w.calories || 0} cal • ${timeDisplay} ET</div>
                                     </div>
                                     <div style="display: flex; gap: 4px;">
                                         <button onclick="editHistoricalWorkout('${dateStr}', '${workoutId}')" style="padding: 4px 8px; border: none; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 0.8em;">✏️</button>
@@ -14098,9 +14774,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                                 </div>`;
                             }).join('')}
                         </div>
-                    </div>
-                `;
-            }
+                    ` : '<div style="text-align: center; color: var(--text-muted); font-size: 0.85em; padding: 10px;">No workouts logged</div>'}
+                </div>
+            `;
 
             // Show TDEE info
             const displayTdee = tdee || log.tdee || getTDEEForDate(dateStr);
