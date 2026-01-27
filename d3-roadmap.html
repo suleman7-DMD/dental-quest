@@ -8452,6 +8452,7 @@ CHAIR: 9F
                         ...roadmapData,
                         ...data,
                         customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
+                        deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
                         monthlyPlanner: {
                             notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
                             customTasks: ensureArray(data.monthlyPlanner?.customTasks, roadmapData.monthlyPlanner?.customTasks || []),
@@ -8495,6 +8496,7 @@ CHAIR: 9F
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
                             customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
+                            deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                             monthlyPlanner: {
                                 notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
@@ -8573,6 +8575,7 @@ CHAIR: 9F
                         editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                         completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
                         customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
+                        deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
                         examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                         monthlyPlanner: {
                             notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),
@@ -13320,6 +13323,7 @@ CHAIR: 9F
                                     editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                                     completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
                                     customDeadlines: ensureArray(data.customDeadlines, roadmapData.customDeadlines || []),
+                                    deletedDeadlines: ensureArray(data.deletedDeadlines, roadmapData.deletedDeadlines || []),
                                     examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                                     monthlyPlanner: {
                                         notes: ensureArray(data.monthlyPlanner?.notes, roadmapData.monthlyPlanner?.notes || []),

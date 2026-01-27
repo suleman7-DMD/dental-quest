@@ -6816,9 +6816,9 @@
                                 lastKnownSaveTime = incomingTime;
                                 
                                 // Update ALL local data - COMPLETE LIST
-                                // CRITICAL: Use !== undefined to handle empty arrays/objects properly
-                                if (data.tasks !== undefined) tasks = data.tasks || [];
-                                
+                                // CRITICAL: Use ensureArray() for all arrays - Firebase converts arrays to objects
+                                if (data.tasks !== undefined) tasks = ensureArray(data.tasks, []);
+
                                 if (data.stats) {
                                     stats = {
                                         ...stats,
@@ -6827,53 +6827,73 @@
                                         categoryXPGained: { ...stats.categoryXPGained, ...(data.stats.categoryXPGained || {}) }
                                     };
                                 }
-                                
+
                                 if (data.medications) {
                                     medications = { ...medications, ...data.medications };
+                                    // Ensure dosesLogged arrays
+                                    if (medications['30mg']) {
+                                        medications['30mg'].dosesLogged = ensureArray(medications['30mg'].dosesLogged, []);
+                                    }
+                                    if (medications['20mg']) {
+                                        medications['20mg'].dosesLogged = ensureArray(medications['20mg'].dosesLogged, []);
+                                    }
                                 }
-                                
+
                                 if (data.calendarNotes !== undefined) {
                                     calendarNotes = data.calendarNotes || {};
                                 }
-                                
+
                                 if (data.notebook) {
                                     notebook = {
-                                        pages: data.notebook.pages || [],
+                                        pages: ensureArray(data.notebook.pages, []),
                                         currentPageId: data.notebook.currentPageId || null
                                     };
                                 }
-                                
+
                                 if (data.financials) {
-                                    financials = { ...financials, ...data.financials };
+                                    financials = {
+                                        ...financials,
+                                        masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
+                                        committedBills: ensureArray(data.financials.committedBills, financials.committedBills),
+                                        recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
+                                        monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
+                                        creditCards: ensureArray(data.financials.creditCards, financials.creditCards),
+                                        actionItems: ensureArray(data.financials.actionItems, financials.actionItems),
+                                        customTransactions: ensureArray(data.financials.customTransactions, financials.customTransactions)
+                                    };
                                 }
-                                
+
                                 if (data.pillAssignments) {
                                     pillAssignments = {
                                         '30mg': data.pillAssignments['30mg'] || {},
                                         '20mg': data.pillAssignments['20mg'] || {}
                                     };
                                 }
-                                
+
                                 if (data.calendarEvents !== undefined) {
-                                    calendarEvents = data.calendarEvents || [];
+                                    calendarEvents = ensureArray(data.calendarEvents, []);
                                 }
-                                
+
                                 if (data.dailyPlanner) {
                                     dailyPlanner = {
                                         date: data.dailyPlanner.date || null,
                                         goal: data.dailyPlanner.goal || '',
                                         bedtime: data.dailyPlanner.bedtime || '23:00',
-                                        blocks: data.dailyPlanner.blocks || [],
+                                        blocks: ensureArray(data.dailyPlanner.blocks, []),
                                         lastReset: data.dailyPlanner.lastReset || null
                                     };
                                 }
-                                
+
                                 if (data.focusModeData) {
                                     focusModeData = {
                                         ...focusModeData,
                                         oneThingId: data.focusModeData.oneThingId || null,
-                                        microSteps: data.focusModeData.microSteps || [],
-                                        todaysTasks: data.focusModeData.todaysTasks || { big: [], medium: [], small: [] },
+                                        microSteps: ensureArray(data.focusModeData.microSteps, []),
+                                        todaysTasks: {
+                                            big: ensureArray(data.focusModeData.todaysTasks?.big, []),
+                                            medium: ensureArray(data.focusModeData.todaysTasks?.medium, []),
+                                            small: ensureArray(data.focusModeData.todaysTasks?.small, [])
+                                        },
                                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
                                     };
                                 }
