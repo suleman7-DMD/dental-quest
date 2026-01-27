@@ -6490,6 +6490,180 @@
         }
 
         // ============================================
+        // GENERIC DATE-BASED CALCULATIONS (for historical data)
+        // ============================================
+
+        /**
+         * Get meal totals for any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @returns {Object} {calories, protein, carbs, mealCount}
+         */
+        function getTotalsForDate(dateStr) {
+            const todayStr = getLocalDateString();
+            let meals;
+
+            if (dateStr === todayStr) {
+                // Today: use live state.today.meals
+                meals = getValues(state.today.meals);
+            } else {
+                // Historical: read from dailyLogs
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.meals) return { calories: 0, protein: 0, carbs: 0, mealCount: 0 };
+
+                // Handle both array and object formats
+                meals = Array.isArray(log.meals) ? log.meals : getValues(log.meals);
+            }
+
+            return {
+                calories: meals.reduce((sum, m) => sum + (m.calories || 0), 0),
+                protein: meals.reduce((sum, m) => sum + (m.protein || 0), 0),
+                carbs: meals.reduce((sum, m) => sum + (m.carbs || 0), 0),
+                mealCount: meals.length
+            };
+        }
+
+        /**
+         * Get workout totals for any date
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @returns {Object} {totalCalories, totalDuration, workoutCount, workouts}
+         */
+        function getWorkoutTotalsForDate(dateStr) {
+            const todayStr = getLocalDateString();
+            let workouts;
+
+            if (dateStr === todayStr) {
+                workouts = getValues(state.today.workouts);
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.workouts) return { totalCalories: 0, totalDuration: 0, workoutCount: 0, workouts: [] };
+                workouts = Array.isArray(log.workouts) ? log.workouts : getValues(log.workouts);
+            }
+
+            return {
+                totalCalories: workouts.reduce((sum, w) => sum + (w.calories || 0), 0),
+                totalDuration: workouts.reduce((sum, w) => sum + (w.duration || 0), 0),
+                workoutCount: workouts.length,
+                workouts: workouts
+            };
+        }
+
+        /**
+         * Calculate TDEE for any date using stored activeCalories or defaults
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @returns {number} TDEE for that date
+         */
+        function getTDEEForDate(dateStr) {
+            const todayStr = getLocalDateString();
+            let activeCalories;
+
+            if (dateStr === todayStr) {
+                activeCalories = state.today.activeCalories || 0;
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                activeCalories = log?.activeCalories || log?.tdee ? 0 : 300; // Default 300 if no workout data
+            }
+
+            return calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                activeCalories
+            );
+        }
+
+        /**
+         * Calculate deficit for any date
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @returns {number} Deficit (positive = under TDEE, negative = over)
+         */
+        function getDeficitForDate(dateStr) {
+            const totals = getTotalsForDate(dateStr);
+            const tdee = getTDEEForDate(dateStr);
+            return tdee - totals.calories;
+        }
+
+        /**
+         * Recalculate and update a dailyLog entry with fresh totals
+         * Use this after editing/deleting historical meals or workouts
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         */
+        function recalculateDayLog(dateStr) {
+            const todayStr = getLocalDateString();
+
+            if (dateStr === todayStr) {
+                // For today, just save normally
+                saveDayLog();
+                return;
+            }
+
+            const log = state.dailyLogs?.[dateStr];
+            if (!log) return;
+
+            // Recalculate totals from stored meals
+            const totals = getTotalsForDate(dateStr);
+            const workoutTotals = getWorkoutTotalsForDate(dateStr);
+            const tdee = getTDEEForDate(dateStr);
+            const deficit = tdee - totals.calories;
+
+            // Determine status
+            let status = 'missed';
+            const targetCalories = log.target || 1900;
+            const targetProtein = log.targetProtein || 150;
+            const proteinHit = totals.protein >= targetProtein * 0.8;
+            const deficitOk = deficit >= 0;
+
+            if (proteinHit && deficitOk) {
+                status = 'perfect';
+            } else if (proteinHit || deficitOk) {
+                status = 'good';
+            }
+
+            // Update the log with recalculated values
+            state.dailyLogs[dateStr] = {
+                ...log,
+                calories: totals.calories,
+                protein: totals.protein,
+                carbs: totals.carbs,
+                deficit: deficit,
+                tdee: tdee,
+                status: status,
+                perfect: status === 'perfect',
+                workedOut: workoutTotals.workoutCount > 0,
+                activeCalories: workoutTotals.totalCalories,
+                _recalculatedAt: new Date().toISOString()
+            };
+
+            saveState();
+        }
+
+        /**
+         * Migrate old dailyLogs entries that are missing calorie/protein fields
+         * Recalculates from stored meals array
+         */
+        function migrateOldDailyLogs() {
+            let migratedCount = 0;
+            const todayStr = getLocalDateString();
+
+            for (const [dateStr, log] of Object.entries(state.dailyLogs || {})) {
+                if (dateStr === todayStr) continue; // Skip today
+
+                // Check if this entry needs migration (missing calories or has 0 but has meals)
+                const hasMeals = log.meals && (Array.isArray(log.meals) ? log.meals.length > 0 : Object.keys(log.meals).length > 0);
+                const needsMigration = hasMeals && (log.calories === undefined || log.calories === 0);
+
+                if (needsMigration) {
+                    recalculateDayLog(dateStr);
+                    migratedCount++;
+                }
+            }
+
+            if (migratedCount > 0) {
+                console.log(`✅ Migrated ${migratedCount} dailyLog entries with recalculated totals`);
+            }
+            return migratedCount;
+        }
+
+        // ============================================
         // UI RENDERING
         // ============================================
 
@@ -8391,6 +8565,285 @@
         }
 
         // ============================================
+        // HISTORICAL MEAL/WORKOUT EDITING
+        // ============================================
+
+        /**
+         * Edit a meal from any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @param {string} mealId - The meal ID to edit
+         */
+        function editHistoricalMeal(dateStr, mealId) {
+            const todayStr = getLocalDateString();
+            let meal;
+            let sourceCollection;
+
+            if (dateStr === todayStr) {
+                meal = state.today.meals?.[mealId];
+                sourceCollection = state.today.meals;
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.meals) {
+                    showToast('No meal data for this date');
+                    return;
+                }
+                // Handle both array and object formats
+                if (Array.isArray(log.meals)) {
+                    meal = log.meals.find(m => m.id === mealId);
+                } else {
+                    meal = log.meals[mealId];
+                }
+                sourceCollection = log.meals;
+            }
+
+            if (!meal) {
+                showToast('Meal not found');
+                return;
+            }
+
+            // Prompt for edits
+            const newName = prompt('Food name:', meal.name);
+            if (newName === null) return;
+
+            const newCalories = prompt('Calories:', meal.calories);
+            if (newCalories === null) return;
+
+            const newProtein = prompt('Protein (g):', meal.protein);
+            if (newProtein === null) return;
+
+            const newCarbs = prompt('Carbs (g):', meal.carbs || 0);
+            if (newCarbs === null) return;
+
+            // Update the meal
+            const updatedMeal = {
+                ...meal,
+                name: newName || meal.name,
+                calories: parseInt(newCalories) || meal.calories,
+                protein: parseInt(newProtein) || meal.protein,
+                carbs: parseInt(newCarbs) || 0,
+                _editedAt: new Date().toISOString()
+            };
+
+            if (dateStr === todayStr) {
+                state.today.meals[mealId] = updatedMeal;
+                saveDayLog();
+                renderMealsList();
+                renderDashboard();
+            } else {
+                // Update historical entry
+                if (Array.isArray(state.dailyLogs[dateStr].meals)) {
+                    // Convert array to object first
+                    const mealsObj = {};
+                    state.dailyLogs[dateStr].meals.forEach(m => {
+                        mealsObj[m.id || generateId('meal')] = m;
+                    });
+                    state.dailyLogs[dateStr].meals = mealsObj;
+                }
+                state.dailyLogs[dateStr].meals[mealId] = updatedMeal;
+                recalculateDayLog(dateStr);
+            }
+
+            saveState();
+            showToast('Meal updated');
+
+            // Refresh any open day detail modal
+            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
+                showDayDetails(dateStr);
+            }
+        }
+
+        /**
+         * Delete a meal from any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @param {string} mealId - The meal ID to delete
+         */
+        function deleteHistoricalMeal(dateStr, mealId) {
+            if (!confirm('Delete this meal?')) return;
+
+            const todayStr = getLocalDateString();
+
+            if (dateStr === todayStr) {
+                if (state.today.meals?.[mealId]) {
+                    delete state.today.meals[mealId];
+                }
+                saveDayLog();
+                renderMealsList();
+                renderDashboard();
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.meals) return;
+
+                if (Array.isArray(log.meals)) {
+                    // Convert array to object, then delete
+                    const mealsObj = {};
+                    log.meals.forEach(m => {
+                        if (m.id !== mealId) {
+                            mealsObj[m.id || generateId('meal')] = m;
+                        }
+                    });
+                    state.dailyLogs[dateStr].meals = mealsObj;
+                } else {
+                    delete state.dailyLogs[dateStr].meals[mealId];
+                }
+                recalculateDayLog(dateStr);
+            }
+
+            saveState();
+            showToast('Meal deleted');
+
+            // Refresh any open day detail modal
+            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
+                showDayDetails(dateStr);
+            }
+        }
+
+        /**
+         * Edit a workout from any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @param {string} workoutId - The workout ID to edit
+         */
+        function editHistoricalWorkout(dateStr, workoutId) {
+            const todayStr = getLocalDateString();
+            let workout;
+
+            if (dateStr === todayStr) {
+                workout = state.today.workouts?.[workoutId];
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.workouts) {
+                    showToast('No workout data for this date');
+                    return;
+                }
+                if (Array.isArray(log.workouts)) {
+                    workout = log.workouts.find(w => w.id === workoutId);
+                } else {
+                    workout = log.workouts[workoutId];
+                }
+            }
+
+            if (!workout) {
+                showToast('Workout not found');
+                return;
+            }
+
+            // Prompt for edits
+            const newType = prompt('Workout type:', workout.type);
+            if (newType === null) return;
+
+            const newDuration = prompt('Duration (minutes):', workout.duration);
+            if (newDuration === null) return;
+
+            const newCalories = prompt('Calories burned:', workout.calories);
+            if (newCalories === null) return;
+
+            // Update the workout
+            const updatedWorkout = {
+                ...workout,
+                type: newType || workout.type,
+                duration: parseInt(newDuration) || workout.duration,
+                calories: parseInt(newCalories) || workout.calories,
+                _editedAt: new Date().toISOString()
+            };
+
+            if (dateStr === todayStr) {
+                // Calculate calorie diff for active calories adjustment
+                const calDiff = updatedWorkout.calories - (workout.calories || 0);
+                state.today.workouts[workoutId] = updatedWorkout;
+                state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
+
+                // Recalculate TDEE and targets
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+
+                saveDayLog();
+                renderWorkoutsList();
+                renderWorkoutHistoryManager();
+                renderDashboard();
+            } else {
+                // Update historical entry
+                if (Array.isArray(state.dailyLogs[dateStr].workouts)) {
+                    const workoutsObj = {};
+                    state.dailyLogs[dateStr].workouts.forEach(w => {
+                        workoutsObj[w.id || generateId('workout')] = w;
+                    });
+                    state.dailyLogs[dateStr].workouts = workoutsObj;
+                }
+                state.dailyLogs[dateStr].workouts[workoutId] = updatedWorkout;
+                recalculateDayLog(dateStr);
+                renderWorkoutHistoryManager();
+            }
+
+            saveState();
+            showToast('Workout updated');
+
+            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
+                showDayDetails(dateStr);
+            }
+        }
+
+        /**
+         * Delete a workout from any date (today or historical)
+         * @param {string} dateStr - Date in 'YYYY-MM-DD' format
+         * @param {string} workoutId - The workout ID to delete
+         */
+        function deleteHistoricalWorkout(dateStr, workoutId) {
+            if (!confirm('Delete this workout?')) return;
+
+            const todayStr = getLocalDateString();
+
+            if (dateStr === todayStr) {
+                const workout = state.today.workouts?.[workoutId];
+                if (workout) {
+                    state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (workout.calories || 0));
+                    delete state.today.workouts[workoutId];
+                    state.today.workedOut = getCount(state.today.workouts) > 0;
+
+                    // Recalculate TDEE and targets
+                    const tdee = calculateTDEE(
+                        state.profile.currentWeight_lbs,
+                        state.profile.height_cm,
+                        state.profile.age,
+                        state.today.activeCalories
+                    );
+                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                }
+                saveDayLog();
+                renderWorkoutsList();
+                renderWorkoutHistoryManager();
+                renderDashboard();
+            } else {
+                const log = state.dailyLogs?.[dateStr];
+                if (!log?.workouts) return;
+
+                if (Array.isArray(log.workouts)) {
+                    const workoutsObj = {};
+                    log.workouts.forEach(w => {
+                        if (w.id !== workoutId) {
+                            workoutsObj[w.id || generateId('workout')] = w;
+                        }
+                    });
+                    state.dailyLogs[dateStr].workouts = workoutsObj;
+                } else {
+                    delete state.dailyLogs[dateStr].workouts[workoutId];
+                }
+                recalculateDayLog(dateStr);
+                renderWorkoutHistoryManager();
+            }
+
+            saveState();
+            showToast('Workout deleted');
+
+            if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
+                showDayDetails(dateStr);
+            }
+        }
+
+        // ============================================
         // MORNING SETUP
         // ============================================
 
@@ -9176,6 +9629,14 @@
                 status = 'over';
             }
 
+            // Calculate TDEE for the day (needed for future recalculations)
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                today.activeCalories
+            );
+
             state.dailyLogs[today.date] = {
                 date: today.date,
                 // Macros
@@ -9188,6 +9649,7 @@
                 targetCarbs: targets.carbs || 150,
                 floor: targets.floor,
                 // Performance
+                tdee: tdee,  // Save TDEE for historical recalculations
                 deficit: deficit,
                 perfect: perfect,
                 status: status,
@@ -9199,10 +9661,10 @@
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories,
                 mealCount: totals.mealCount,
-                workedOut: today.workedOut || false,
-                // Detailed data for history
-                meals: [...getValues(today.meals)],
-                workouts: [...getValues(today.workouts)],
+                workedOut: today.workedOut || getCount(today.workouts) > 0,
+                // Detailed data for history (store as objects with IDs for editing)
+                meals: { ...today.meals },
+                workouts: { ...today.workouts },
                 // Ecosystem context snapshot
                 ecosystemSnapshot: {
                     stimulant: { ...state.ecosystemContext?.stimulant },
@@ -11294,6 +11756,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         state.frequentFoods = getDefaultFrequentFoods();
                     }
 
+                    // MIGRATION: Fix old dailyLogs entries missing calorie/protein totals
+                    // This recalculates totals from stored meals array
+                    setTimeout(() => {
+                        const migrated = migrateOldDailyLogs();
+                        if (migrated > 0) {
+                            console.log(`✅ Auto-migrated ${migrated} old dailyLog entries`);
+                        }
+                    }, 1000); // Delay to not block initial render
+
                 } catch (e) {
                     console.error('Failed to parse localStorage:', e);
                 }
@@ -13198,9 +13669,23 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const dateStr = getLocalDateString(date);
                 const log = state.dailyLogs[dateStr];
 
-                if (log && log.deficit !== undefined) {
-                    weeklyDeficit += log.deficit;
+                if (log) {
                     daysWithData++;
+                    let dayDeficit = log.deficit;
+
+                    // If deficit is missing, recalculate from meals
+                    if (dayDeficit === undefined) {
+                        const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+                        if (mealsArr.length > 0) {
+                            const calories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
+                            const tdee = log.tdee || getTDEEForDate(dateStr);
+                            dayDeficit = tdee - calories;
+                        }
+                    }
+
+                    if (dayDeficit !== undefined) {
+                        weeklyDeficit += dayDeficit;
+                    }
                 }
             }
 
@@ -13247,9 +13732,27 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 if (log) {
                     daysWithData++;
-                    if (log.deficit !== undefined) totalDeficit += log.deficit;
-                    if (log.protein !== undefined) totalProtein += log.protein;
-                    if (log.perfect || (log.deficit > 0 && log.protein >= log.targetProtein * 0.9)) {
+
+                    // Get values from log, or recalculate from meals if missing
+                    let dayDeficit = log.deficit;
+                    let dayProtein = log.protein;
+                    const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+
+                    // Recalculate if missing but meals exist
+                    if (mealsArr.length > 0) {
+                        if (dayProtein === undefined || dayProtein === 0) {
+                            dayProtein = mealsArr.reduce((sum, m) => sum + (m.protein || 0), 0);
+                        }
+                        if (dayDeficit === undefined) {
+                            const calories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
+                            const tdee = log.tdee || getTDEEForDate(dateStr);
+                            dayDeficit = tdee - calories;
+                        }
+                    }
+
+                    if (dayDeficit !== undefined) totalDeficit += dayDeficit;
+                    if (dayProtein !== undefined) totalProtein += dayProtein;
+                    if (log.perfect || (dayDeficit > 0 && dayProtein >= (log.targetProtein || 150) * 0.9)) {
                         daysOnTrack++;
                     }
                 }
@@ -13380,9 +13883,30 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const isToday = dateStr === todayStr;
 
                 let statusClass = '';
+                let displayCalories = 0;
+                let displayProtein = 0;
+
                 if (log) {
+                    // Get calorie/protein values - recalculate if missing but meals exist
+                    displayCalories = log.calories || 0;
+                    displayProtein = log.protein || 0;
+
+                    // If values are 0 but meals exist, recalculate from meals
+                    const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+                    if ((displayCalories === 0 || displayProtein === 0) && mealsArr.length > 0) {
+                        displayCalories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
+                        displayProtein = mealsArr.reduce((sum, m) => sum + (m.protein || 0), 0);
+                    }
+
+                    // Recalculate deficit for status if needed
+                    let deficit = log.deficit;
+                    if (deficit === undefined && displayCalories > 0) {
+                        const tdee = log.tdee || getTDEEForDate(dateStr);
+                        deficit = tdee - displayCalories;
+                    }
+
                     // Use status if available, otherwise calculate from data
-                    const status = log.status || (log.perfect ? 'perfect' : log.deficit > 0 ? 'partial' : 'missed');
+                    const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
                     switch (status) {
                         case 'perfect':
                             statusClass = 'perfect';  // Green
@@ -13406,7 +13930,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 html += `<div class="calendar-day ${statusClass} ${isToday ? 'today' : ''} ${log ? 'logged' : ''}"
                               onclick="showDayDetails('${dateStr}')"
-                              title="${log ? (log.calories || 0) + ' cal, ' + (log.protein || 0) + 'g P' : 'No data'}">${day}</div>`;
+                              title="${log ? displayCalories + ' cal, ' + displayProtein + 'g P' : 'No data'}">${day}</div>`;
             }
 
             daysContainer.innerHTML = html;
@@ -13428,8 +13952,24 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (log) {
                     daysWithData++;
                     if (log.perfect) perfectDays++;
-                    if (log.deficit) totalDeficit += log.deficit;
-                    if (log.protein) totalProtein += log.protein;
+
+                    // Get values from log, or recalculate from meals if missing
+                    let logDeficit = log.deficit;
+                    let logProtein = log.protein;
+
+                    // If values are missing but meals exist, recalculate
+                    const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+                    if ((logProtein === undefined || logProtein === 0) && mealsArr.length > 0) {
+                        logProtein = mealsArr.reduce((sum, m) => sum + (m.protein || 0), 0);
+                    }
+                    if ((logDeficit === undefined) && mealsArr.length > 0) {
+                        const calories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
+                        const tdee = log.tdee || getTDEEForDate(dateStr);
+                        logDeficit = tdee - calories;
+                    }
+
+                    if (logDeficit) totalDeficit += logDeficit;
+                    if (logProtein) totalProtein += logProtein;
                 }
             }
 
@@ -13459,9 +13999,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 return;
             }
 
+            // Close any existing modal first
+            closeDayDetailModal();
+
             // Create modal to show full day details
             const date = new Date(dateStr + 'T12:00:00');
             const dateDisplay = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            const todayStr = getLocalDateString();
+            const isToday = dateStr === todayStr;
 
             const statusColors = {
                 'perfect': 'var(--accent-green)',
@@ -13478,19 +14023,52 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 'missed': '✗'
             };
 
-            const status = log.status || (log.perfect ? 'perfect' : log.deficit > 0 ? 'partial' : 'missed');
+            // Recalculate totals from meals if stored values are missing/zero
+            let calories = log.calories;
+            let protein = log.protein;
+            let carbs = log.carbs;
+            let deficit = log.deficit;
+            let tdee = log.tdee;
 
-            // Handle both array and object formats for meals
+            // If calories is 0 or undefined but meals exist, recalculate
             const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+            if ((calories === undefined || calories === 0) && mealsArr.length > 0) {
+                const totals = getTotalsForDate(dateStr);
+                calories = totals.calories;
+                protein = totals.protein;
+                carbs = totals.carbs;
+                tdee = getTDEEForDate(dateStr);
+                deficit = tdee - calories;
+
+                // Auto-fix the stored log
+                console.log(`Auto-fixing dailyLog for ${dateStr}: calories=${calories}, protein=${protein}`);
+                recalculateDayLog(dateStr);
+            }
+
+            const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
+
+            // Build meals HTML with edit/delete buttons
             let mealsHtml = '';
             if (mealsArr.length > 0) {
                 mealsHtml = `
-                    <div style="margin-top: 12px;">
-                        <strong>Meals (${mealsArr.length}):</strong>
-                        <div style="font-size: 0.85em; margin-top: 6px;">
-                            ${mealsArr.map(m => `<div style="padding: 4px 0; border-bottom: 1px solid var(--bg-tertiary);">
-                                ${escapeHtml(m.name)} - ${m.calories} cal, ${m.protein}g P, ${m.carbs || 0}g C
-                            </div>`).join('')}
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>🍽️ Meals (${mealsArr.length})</strong>
+                        </div>
+                        <div style="font-size: 0.85em;">
+                            ${mealsArr.map(m => {
+                                const mealId = m.id || 'unknown';
+                                return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 500;">${escapeHtml(m.name)}</div>
+                                        <div style="font-size: 0.85em; color: var(--text-muted);">${m.calories} cal • ${m.protein}g P • ${m.carbs || 0}g C</div>
+                                    </div>
+                                    <div style="display: flex; gap: 4px;">
+                                        <button onclick="editHistoricalMeal('${dateStr}', '${mealId}')" style="padding: 4px 8px; border: none; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 0.8em;">✏️</button>
+                                        <button onclick="deleteHistoricalMeal('${dateStr}', '${mealId}')" style="padding: 4px 8px; border: none; background: rgba(239,68,68,0.2); border-radius: 6px; cursor: pointer; font-size: 0.8em;">🗑️</button>
+                                    </div>
+                                </div>`;
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -13501,52 +14079,72 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let workoutsHtml = '';
             if (workoutsArr.length > 0) {
                 workoutsHtml = `
-                    <div style="margin-top: 12px;">
-                        <strong>Workouts (${workoutsArr.length}):</strong>
-                        <div style="font-size: 0.85em; margin-top: 6px;">
-                            ${workoutsArr.map(w => `<div style="padding: 4px 0;">
-                                💪 ${escapeHtml(w.type || 'Workout')} - ${w.duration || 0}min, +${w.calories || 0}cal @ ${w.time || '--'}
-                            </div>`).join('')}
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>💪 Workouts (${workoutsArr.length})</strong>
+                        </div>
+                        <div style="font-size: 0.85em;">
+                            ${workoutsArr.map(w => {
+                                const workoutId = w.id || 'unknown';
+                                return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 500;">${escapeHtml(w.type || 'Workout')}</div>
+                                        <div style="font-size: 0.85em; color: var(--text-muted);">${w.duration || 0} min • +${w.calories || 0} cal • ${w.time || '--'}</div>
+                                    </div>
+                                    <div style="display: flex; gap: 4px;">
+                                        <button onclick="editHistoricalWorkout('${dateStr}', '${workoutId}')" style="padding: 4px 8px; border: none; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 0.8em;">✏️</button>
+                                        <button onclick="deleteHistoricalWorkout('${dateStr}', '${workoutId}')" style="padding: 4px 8px; border: none; background: rgba(239,68,68,0.2); border-radius: 6px; cursor: pointer; font-size: 0.8em;">🗑️</button>
+                                    </div>
+                                </div>`;
+                            }).join('')}
                         </div>
                     </div>
                 `;
             }
 
+            // Show TDEE info
+            const displayTdee = tdee || log.tdee || getTDEEForDate(dateStr);
+
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
             modal.id = 'dayDetailModal';
             modal.innerHTML = `
-                <div class="modal" style="max-width: 420px;">
+                <div class="modal" style="max-width: 420px; max-height: 90vh; display: flex; flex-direction: column;">
                     <div class="modal-header">
                         <span class="modal-title">${statusEmoji[status]} ${dateDisplay}</span>
                         <button class="modal-close" onclick="closeDayDetailModal()">×</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="overflow-y: auto; flex: 1;">
                         <div style="text-align: center; margin-bottom: 15px;">
                             <span style="display: inline-block; padding: 6px 16px; border-radius: 20px; background: ${statusColors[status]}20; color: ${statusColors[status]}; font-weight: 600; text-transform: uppercase; font-size: 0.85em;">
                                 ${status.toUpperCase()} DAY
                             </span>
+                            ${isToday ? '<span style="margin-left: 8px; font-size: 0.75em; color: var(--accent-blue);">(TODAY)</span>' : ''}
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px;">
                             <div>
-                                <div style="font-size: 1.3em; font-weight: 700; color: ${log.calHit ? 'var(--accent-green)' : 'var(--text-primary)'};">${log.calories || 0}</div>
+                                <div style="font-size: 1.3em; font-weight: 700; color: ${log.calHit ? 'var(--accent-green)' : 'var(--text-primary)'};">${calories || 0}</div>
                                 <div style="font-size: 0.75em; color: var(--text-muted);">/ ${log.target || 1900} cal</div>
                             </div>
                             <div>
-                                <div style="font-size: 1.3em; font-weight: 700; color: ${log.proteinHit ? 'var(--accent-green)' : 'var(--text-primary)'};">${log.protein || 0}g</div>
+                                <div style="font-size: 1.3em; font-weight: 700; color: ${log.proteinHit ? 'var(--accent-green)' : 'var(--text-primary)'};">${protein || 0}g</div>
                                 <div style="font-size: 0.75em; color: var(--text-muted);">/ ${log.targetProtein || 172}g P</div>
                             </div>
                             <div>
-                                <div style="font-size: 1.3em; font-weight: 700; color: var(--text-primary);">${log.carbs || 0}g</div>
+                                <div style="font-size: 1.3em; font-weight: 700; color: var(--text-primary);">${carbs || 0}g</div>
                                 <div style="font-size: 0.75em; color: var(--text-muted);">/ ${log.targetCarbs || 150}g C</div>
                             </div>
                         </div>
 
                         <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+                                <span>TDEE:</span>
+                                <span style="font-weight: 600;">${displayTdee} cal</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-top: 6px;">
                                 <span>Deficit:</span>
-                                <span style="color: ${(log.deficit || 0) > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${log.deficit || 0} cal</span>
+                                <span style="color: ${(deficit || 0) > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight: 600;">${deficit > 0 ? '+' : ''}${deficit || 0} cal</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-top: 6px;">
                                 <span>Mode:</span>
@@ -13558,16 +14156,21 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-top: 6px;">
                                 <span>Workout:</span>
-                                <span>${log.workedOut ? '✓ Yes' : '✗ No'}</span>
+                                <span>${log.workedOut || workoutsArr.length > 0 ? '✓ Yes' : '✗ No'}</span>
                             </div>
                         </div>
 
                         ${mealsHtml}
                         ${workoutsHtml}
 
-                        <button onclick="copyDayLog('${dateStr}')" class="submit-btn" style="margin-top: 15px; background: var(--bg-tertiary); color: var(--text-primary);">
-                            📋 Copy Day Log
-                        </button>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button onclick="recalculateDayLog('${dateStr}'); showDayDetails('${dateStr}');" class="submit-btn" style="flex: 1; background: var(--accent-blue); color: white; font-size: 0.85em;">
+                                🔄 Recalculate
+                            </button>
+                            <button onclick="copyDayLog('${dateStr}')" class="submit-btn" style="flex: 1; background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.85em;">
+                                📋 Copy Log
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -14053,6 +14656,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 targetCarbs: targets.carbs || 150,
                 floor: targets.floor,
                 // Performance
+                tdee: tdee,  // Save TDEE for historical recalculations
                 deficit: deficit,
                 perfect: perfect,
                 status: status,
@@ -14063,10 +14667,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories || 0,
                 mealCount: totals.mealCount,
-                workedOut: today.workedOut || false,
-                // Detailed data
-                meals: [...getValues(today.meals)],
-                workouts: [...getValues(today.workouts)],
+                workedOut: today.workedOut || getCount(today.workouts) > 0,
+                // Detailed data (store as objects with IDs for editing)
+                meals: { ...today.meals },
+                workouts: { ...today.workouts },
                 // Full logic log snapshot
                 logicLog: logicSnapshot,
                 // Timestamp
