@@ -4228,12 +4228,96 @@
                 if (elapsed < 0) return; // Dose hasn't happened yet
 
                 if (daysDiff > 0 || elapsed > 12 * 60) {
-                    // Old dose - treat as fully released, simple decay
+                    // Old dose - BUT still need proper Vitamin C time-split and XR handling!
                     if (elapsed > 0 && elapsed < 72 * 60) {
-                        const halfLifeToUse = (state.modifiers.vitaminC.active && atMinutes > vitCTime)
-                            ? reducedHalfLife : baseHalfLife;
-                        const remaining = totalDose * Math.pow(0.5, elapsed / halfLifeToUse);
-                        totalLoad += remaining;
+
+                        // CRITICAL FIX: For doses within 16 hours, still use XR IR/DR split
+                        // After 16 hours, both pulses fully released, can simplify
+                        if (elapsed < 16 * 60) {
+                            // Within 16 hours - need proper XR calculation with VitC split
+                            const immediateRelease = totalDose * 0.5;
+                            const delayedRelease = totalDose * 0.5;
+                            const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
+
+                            // Calculate IR component with Vitamin C time-split
+                            if (atMinutes >= effectiveDoseTime) {
+                                let irLoad = 0;
+                                if (state.modifiers.vitaminC.active && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
+                                    // Split decay: before VitC uses base half-life, after uses reduced
+                                    const beforeVitC = vitCTime - effectiveDoseTime;
+                                    const afterVitC = atMinutes - vitCTime;
+                                    irLoad = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
+                                           * Math.pow(0.5, afterVitC / reducedHalfLife);
+                                } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                    // Dose was after VitC - use reduced for entire duration
+                                    const irElapsed = atMinutes - effectiveDoseTime;
+                                    irLoad = immediateRelease * Math.pow(0.5, irElapsed / reducedHalfLife);
+                                } else {
+                                    // No VitC or before VitC time - use base half-life
+                                    const irElapsed = atMinutes - effectiveDoseTime;
+                                    irLoad = immediateRelease * Math.pow(0.5, irElapsed / baseHalfLife);
+                                }
+                                totalLoad += irLoad;
+                            }
+
+                            // Calculate DR component with Vitamin C time-split
+                            if (atMinutes >= delayedReleaseTime) {
+                                let drLoad = 0;
+                                if (state.modifiers.vitaminC.active && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
+                                    // Split decay: before VitC uses base half-life, after uses reduced
+                                    const beforeVitC = vitCTime - delayedReleaseTime;
+                                    const afterVitC = atMinutes - vitCTime;
+                                    drLoad = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
+                                           * Math.pow(0.5, afterVitC / reducedHalfLife);
+                                } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                    // DR was after VitC - use reduced for entire duration
+                                    const drElapsed = atMinutes - delayedReleaseTime;
+                                    drLoad = delayedRelease * Math.pow(0.5, drElapsed / reducedHalfLife);
+                                } else {
+                                    // No VitC or before VitC time - use base half-life
+                                    const drElapsed = atMinutes - delayedReleaseTime;
+                                    drLoad = delayedRelease * Math.pow(0.5, drElapsed / baseHalfLife);
+                                }
+                                totalLoad += drLoad;
+                            }
+                        } else {
+                            // Very old dose (>16 hrs) - both XR pulses fully released
+                            // CRITICAL: Still need to split IR/DR because DR was released 4 hours later!
+                            // Treating as single dose underestimates remaining load
+                            const immediateRelease = totalDose * 0.5;
+                            const delayedRelease = totalDose * 0.5;
+                            const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
+
+                            // Calculate IR component with Vitamin C time-split
+                            let irLoad = 0;
+                            const irElapsed = atMinutes - effectiveDoseTime;
+                            if (state.modifiers.vitaminC.active && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
+                                const beforeVitC = vitCTime - effectiveDoseTime;
+                                const afterVitC = atMinutes - vitCTime;
+                                irLoad = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
+                                       * Math.pow(0.5, afterVitC / reducedHalfLife);
+                            } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                irLoad = immediateRelease * Math.pow(0.5, irElapsed / reducedHalfLife);
+                            } else {
+                                irLoad = immediateRelease * Math.pow(0.5, irElapsed / baseHalfLife);
+                            }
+                            totalLoad += irLoad;
+
+                            // Calculate DR component with Vitamin C time-split
+                            let drLoad = 0;
+                            const drElapsed = atMinutes - delayedReleaseTime;
+                            if (state.modifiers.vitaminC.active && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
+                                const beforeVitC = vitCTime - delayedReleaseTime;
+                                const afterVitC = atMinutes - vitCTime;
+                                drLoad = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
+                                       * Math.pow(0.5, afterVitC / reducedHalfLife);
+                            } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                drLoad = delayedRelease * Math.pow(0.5, drElapsed / reducedHalfLife);
+                            } else {
+                                drLoad = delayedRelease * Math.pow(0.5, drElapsed / baseHalfLife);
+                            }
+                            totalLoad += drLoad;
+                        }
                     }
                     return;
                 }
