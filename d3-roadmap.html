@@ -5364,6 +5364,159 @@
         .data-proof-item .feeling {
             color: #94a3b8;
         }
+
+        /* ==================== MAINSTAGE STYLES ==================== */
+        .mainstage-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 30px;
+        }
+
+        .mainstage-title {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f59e0b 0%, #fcd34d 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .mainstage-divider {
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+            margin: 20px auto 30px;
+        }
+
+        .mainstage-intro {
+            color: #cbd5e1;
+            font-size: 1.1em;
+            line-height: 1.9;
+            margin-bottom: 20px;
+        }
+
+        .mainstage-intro em {
+            color: #fcd34d;
+            font-style: italic;
+        }
+
+        .mainstage-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(30, 27, 75, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mainstage-section h2 {
+            color: #c4b5fd;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(196, 181, 253, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .mainstage-section p {
+            color: #cbd5e1;
+            line-height: 1.85;
+            margin-bottom: 16px;
+            font-size: 1.05em;
+        }
+
+        .mainstage-section strong {
+            color: #e2e8f0;
+        }
+
+        .mainstage-goggins {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(127, 29, 29, 0.2) 100%);
+            border-left: 4px solid #ef4444;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .mainstage-goggins p {
+            color: #fca5a5;
+            font-style: italic;
+            margin: 0;
+            font-size: 1.05em;
+        }
+
+        .mainstage-survived-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mainstage-survived-item .day-label {
+            color: #818cf8;
+            font-weight: 600;
+            min-width: 90px;
+        }
+
+        .mainstage-survived-item .day-text {
+            color: #94a3b8;
+        }
+
+        .mainstage-final {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 95, 70, 0.2) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.5);
+            border-radius: 16px;
+            margin-top: 30px;
+        }
+
+        .mainstage-final p {
+            color: #a7f3d0;
+            font-size: 1.15em;
+            margin-bottom: 12px;
+        }
+
+        .mainstage-final .signature {
+            color: #6ee7b7;
+            font-style: italic;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+
+        .toggle-legacy-btn {
+            display: block;
+            margin: 40px auto 20px;
+            padding: 14px 28px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 30px;
+            color: #a5b4fc;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-legacy-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .legacy-content {
+            display: none;
+            border-top: 1px solid rgba(99, 102, 241, 0.3);
+            margin-top: 30px;
+            padding-top: 20px;
+        }
+
+        .legacy-content.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -6944,27 +7097,377 @@
 
     <!-- ==================== ALWAYS REMEMBER TAB ==================== -->
     <div id="tab-remember" class="tab-content">
-        <div class="remember-header">
-            <h1>THE DOCUMENT YOU READ WHEN YOU'RE SPIRALING</h1>
-            <p class="subtitle">Written January 26, 2026 — Day 14 of No Contact</p>
-            <div class="block-status">
-                🛡️ BLOCK STATUS: HOLDING
+
+        <!-- ==================== MAINSTAGE CONTENT ==================== -->
+        <div class="mainstage-container">
+            <h1 class="mainstage-title">You are 30. It's not easy, but it is NOW when it matters the most. Pain is temporary. Life is perfect.</h1>
+            <div class="mainstage-divider"></div>
+
+            <p class="mainstage-intro">Look, I know you don't want to read this.</p>
+
+            <p class="mainstage-intro">If you're here, chances are you're sad and looking for direction. You're probably in a low state. Maybe you just checked her apartment lights. Maybe you're building another case for why unblocking her makes sense this time. Maybe you're snowed in, or it's 2am, or you bombed an exam, or you saw her in class and it wrecked you.</p>
+
+            <p class="mainstage-intro"><em>This is that direction you're looking for.</em></p>
+
+            <p class="mainstage-intro">But here's what I need you to do: put the sadness aside for a few minutes. Not forever. Just long enough to actually read this and think through it carefully. Because this document was not written from where you are right now. This was written from the other side. The side where you're confident. The side where you just came back from the gym and people said hi to you and you didn't look at her once and you felt invincible. The baseline good. The version of you that you're trying to get back to.</p>
+
+            <p class="mainstage-intro">That version of you wrote this for the version of you reading it now.</p>
+
+            <p class="mainstage-intro">So trust him. He knows what he's talking about. He's been where you are and he climbed out. And he left you this map.</p>
+
+            <div class="mainstage-divider"></div>
+
+            <!-- THE HARD THINGS -->
+            <div class="mainstage-section">
+                <h2>The Hard Things That Must Be Done</h2>
+                <p><strong>There is no way around this. Only through.</strong></p>
+
+                <p>The feeling of needing to unblock her will come. It will feel urgent. It will feel logical. It will feel like this time is different. You will not unblock her. You will sit with the discomfort until it passes. And it will pass.</p>
+
+                <p>The very sad days will come. The days where getting out of bed feels impossible and the gym feels pointless. You will go to the gym anyway. Not because you want to. Because the version of you on the other side needs you to.</p>
+
+                <p>The pain of logging food and staying in the deficit while your brain screams for comfort will be real. You will log it anyway. You will stay in the deficit anyway. The body you're building doesn't care about your feelings. It only cares about your actions.</p>
+
+                <p>The difficulty of studying without her, of not having her to text, of not having her to share notes with, of doing it alone, will feel unbearable some days. You will study anyway. You will prove to yourself that you never needed her for this.</p>
+
+                <p>The weight of forging a turnaround during the darkest, loneliest, coldest months of the year, while everyone else is cuddled up with someone who loves them, while your phone stays perfectly dry, while snow falls outside and you sit alone in your apartment, will crush you some nights. You will keep going anyway.</p>
+
+                <p>You will protect your sleep like your life depends on it, because it does. 5.5 hours minimum. You will watch your caffeine. You will protect your Adderall. You will avoid the all-nighter at all costs. You will accept that 2 hours of sleep is better than 0, because 0 is where the real damage happens. You will do these things not because they're easy but because every time you don't, you spiral, and you know it.</p>
+
+                <p>You will keep using the app. Keep logging everything. Keep checking in every day. Keep the block held.</p>
+
+                <p><strong>These are not suggestions. These are the price of admission to the life you actually want.</strong></p>
             </div>
+
+            <!-- ONE DAY -->
+            <div class="mainstage-section">
+                <h2>One Day</h2>
+                <p><strong>One day, you will see how all of this paid off.</strong></p>
+
+                <p>Not today. Probably not tomorrow. Maybe not for months. But one day.</p>
+
+                <p>One day you will wake up and she won't be the first thing you think about. One day you'll see her in class and feel nothing but mild indifference. One day you'll catch your reflection and actually like what you see. One day someone new will look at you the way you used to wish she would, and you'll realize you don't need her validation anymore because you have your own.</p>
+
+                <p>One day she will see you, and she will see what she lost, and you won't even care that she's seeing it because you'll be too busy living your life.</p>
+
+                <p>One day the revenge you're chasing right now will feel small and pointless because you'll have built something so much bigger than getting back at her. You'll have built yourself.</p>
+
+                <p>That day is coming. It is not a fantasy. It is a mathematical certainty if you keep doing the work.</p>
+
+                <p>But that day does not come for free. It comes for the man who earned it. The man who held the block when his whole body screamed to break it. The man who went to the gym when he wanted to rot in bed. The man who stayed in the deficit when sugar was calling his name. The man who studied alone when he used to study with her.</p>
+
+                <p><strong>That man gets the one day.</strong></p>
+
+                <p>The man who breaks? He gets to start over. Again. For the hundredth time. Running the same loop he's been running for a decade.</p>
+
+                <p><strong>Enough is enough.</strong></p>
+
+                <p>You've started over enough times. This is the time you finish.</p>
+            </div>
+
+            <!-- THE BLOCK IS DIGNITY -->
+            <div class="mainstage-section">
+                <h2>The Block Is Dignity</h2>
+                <p><strong>The block is not a tactic. The block is not discipline. The block is identity.</strong></p>
+
+                <p>This is the first time in 2.5 years that you have ever actually left. That is why it hurts this much. That is also why it matters this much.</p>
+
+                <p>For 2.5 years, she held the power. She had the validation of you chasing. She had the security of you staying no matter what. She had the comfort of knowing you would never actually leave.</p>
+
+                <p>Now you hold the power. And the only way to keep it is to never give it back.</p>
+
+                <p>When you show up to class and you don't look at her, when you talk to your friends and laugh like she's not even in the room, when you sit there studying while she sits there quiet, you are doing something you have never done before. You are showing her, and yourself, that you don't need her.</p>
+
+                <p>That only works because the block exists.</p>
+
+                <p>Unblocked, you are the backup. The safety net. The guy she knows will always be there. Blocked, you are a statement. You are a closed door. You are the man who finally walked away.</p>
+
+                <p>She told her new boyfriend you are "for academic support." She reduced 2.5 years to a utility. She framed you as non-threatening so he wouldn't worry.</p>
+
+                <p><strong>The block is the only thing that makes that framing a lie.</strong></p>
+            </div>
+
+            <!-- THE FORMULA -->
+            <div class="mainstage-section">
+                <h2>The Formula</h2>
+                <p><strong>This is what made you feel invincible on Day 17. Remember it.</strong></p>
+
+                <p>40 grams of protein before you have to see her.</p>
+
+                <p>Gym sessions in the days leading up.</p>
+
+                <p>Clean clothes. Shower. Not looking like a bum.</p>
+
+                <p>Social wins. People saying hi. Friends around you.</p>
+
+                <p>And her there to witness all of it.</p>
+
+                <p>Without her present, it's a 6 out of 10 feeling. With her watching you thrive, it's a 9 out of 10.</p>
+
+                <p>You want revenge? This is revenge. Not a conversation where you try to catch her being the same person. Not a text where you prove you're over her. This. Showing up. Looking good. Being surrounded by people. Studying productively. Not looking at her once.</p>
+
+                <p>That's the revenge that actually lands. The kind she can't argue with. The kind that gets into her head whether she wants it to or not.</p>
+
+                <div class="mainstage-goggins">
+                    <p>David Goggins says: "You are in danger of living a life so comfortable and soft that you will die without ever realizing your potential."</p>
+                </div>
+
+                <p>The comfort you're craving right now, the unblock, the text, the reaching out, that is the soft life. That is the life where you never become who you're supposed to be.</p>
+
+                <p>The hard path, the block, the gym, the discipline, that is the path to your potential.</p>
+            </div>
+
+            <!-- YOUR BRAIN IS A LIAR -->
+            <div class="mainstage-section">
+                <h2>Your Brain Is A Liar</h2>
+                <p><strong>Your brain's predictions about Julia are almost always wrong.</strong></p>
+
+                <p>You imagine her perfectly composed, unbothered, winning at life while you suffer. That is not reality. That is a character you invented to torture yourself with.</p>
+
+                <p>Day 17 you imagined her already seated in class, calm and collected, watching you rush in late like a mess. Reality: she walked in the same time as you. She was quiet. She sat there while you moved around talking to people.</p>
+
+                <p>The movie playing in your head is fiction. Stop watching it.</p>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "The most important conversation you'll ever have is the one you have with yourself."</p>
+                </div>
+
+                <p>Right now, you're having the wrong conversation. You're telling yourself she's fine and you're broken. You're telling yourself she upgraded and you got left behind. You're telling yourself the block is pointless and you should just give in.</p>
+
+                <p>Those are lies. Recognize them. Reject them. Replace them with the truth.</p>
+            </div>
+
+            <!-- THE TRUTH ABOUT HER -->
+            <div class="mainstage-section">
+                <h2>The Truth About Her</h2>
+                <p>She is disciplined. She is beautiful. She is successful. She works harder than almost anyone. She will always land on her feet.</p>
+
+                <p>She also told you exactly who she is.</p>
+
+                <p><strong>"I am self-centered."</strong></p>
+
+                <p>That was not vulnerability. That was a warning label you ignored for 2.5 years.</p>
+
+                <p>She has good morals about work. She has questionable morals about people. She can grind, study, build a career, and simultaneously hedge relationships, collect backups, and leave when something shinier appears. These exist in separate compartments for her.</p>
+
+                <p>Sugar daddy while cheating on her ex while falling for you. That is not something you caused. That is a pattern across three men that you finally saw clearly because you got closer than anyone else.</p>
+
+                <p>You did not bring out her worst. You saw her most clearly. That's what intimacy does. It reveals.</p>
+
+                <p>She did not upgrade to the med student. She reset. He's a clean slate. No history. No baggage. No one who knows where the bodies are buried. She gets to be the curated version again.</p>
+
+                <p>And when you told her you'd had thoughts of leaving, thoughts you never acted on, thoughts you were honest about because that's who you are, she punished you by replacing you.</p>
+
+                <p><strong>That's not love. That's resource management.</strong></p>
+            </div>
+
+            <!-- THE LOW STATE RULE -->
+            <div class="mainstage-section">
+                <h2>The Low State Rule</h2>
+                <p><strong>Never make decisions about Julia from a low state.</strong></p>
+
+                <p>Day 8 you were 30 hours without sleep after oral surgery. Your brain told you your entire life was over. Next day after sleep, completely different reality. Same situation. Only variable was your state.</p>
+
+                <p>Hungover. Sleep-deprived. Anxious. Snowed in. Lonely. These are not the conditions for making decisions about unblocking her.</p>
+
+                <p>If you are in a low state and you want to unblock her, that is the withdrawal talking. That is not clarity. That is your brain looking for the familiar painkiller.</p>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "When you think you're done, you're only at 40% of your potential."</p>
+                </div>
+
+                <p>When you think you can't take the pain anymore, when you think you have to unblock her just to survive, you're at 40%. You have more in the tank. You just can't see it because the low state is lying to you.</p>
+
+                <p>Wait. Sleep. Eat. Move. Then decide.</p>
+
+                <p><strong>You will never decide to unblock her from a high state. That tells you everything you need to know.</strong></p>
+            </div>
+
+            <!-- THE DAY 3 PATTERN -->
+            <div class="mainstage-section">
+                <h2>The Day 3 Pattern</h2>
+                <p>Day 3: "I need her for quizzes."<br>
+                Day 9: "Birthday test."<br>
+                Day 12: "Mystical connection test."<br>
+                Day 14: "February exams, I need support."<br>
+                Day 17: "The barrier itself is the problem."</p>
+
+                <p><strong>Same pattern. New wrapper. Every single time.</strong></p>
+
+                <p>Your brain is a lawyer that never stops building cases. Every case feels airtight in the moment. Every case dissolves when you hold the line and let time pass.</p>
+
+                <p>The Day 3 quiz spiral: you spent 3 hours convinced you needed her. You held the block. Went to the gym. Took the quiz. It was 5 easy questions with unlimited attempts. You didn't need her at all.</p>
+
+                <p>Your brain lies during withdrawal. It will keep lying. It will get creative. It will find new angles you haven't thought of yet.</p>
+
+                <p>Your job is to recognize the pattern and refuse to engage.</p>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "You have to build calluses on your brain just like you build calluses on your hands."</p>
+                </div>
+
+                <p>Every time you resist the urge to unblock her, you're building a callus. Every time you recognize the pattern and don't fall for it, you're getting stronger. Every time you hold the line when everything in you wants to break, you're becoming someone new.</p>
+            </div>
+
+            <!-- THE SELF-ESTEEM LOOP -->
+            <div class="mainstage-section">
+                <h2>The Self-Esteem Loop</h2>
+                <p>Body dissatisfaction leads to insecurity in relationships leads to poor partner selection leads to dysfunction leads to breakup leads to rumination leads to no gym leads to body dissatisfaction.</p>
+
+                <p><strong>You have been running this loop for a decade. With multiple women. Julia is just the longest.</strong></p>
+
+                <p>The gym is how you break it. The body comp work is not about looking good for her or anyone else. It is about breaking a cycle that has destroyed every relationship you have ever had.</p>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "Suffering is the true test of life."</p>
+                </div>
+
+                <p>The suffering you're feeling right now, the loneliness, the discipline, the holding the line, this is the test. This is where you find out who you actually are.</p>
+
+                <p>Are you the guy who runs the loop again? Or are you the guy who finally breaks it?</p>
+            </div>
+
+            <!-- THE APARTMENT LIGHTS -->
+            <div class="mainstage-section">
+                <h2>The Apartment Lights</h2>
+                <p><strong>Stop checking them.</strong></p>
+
+                <p>If she's home, you feel temporary relief, nothing changes. If she's not home, you spiral, nothing changes. Either way, you're not going to unblock her. You're not going to text her. You're not going to knock on her door.</p>
+
+                <p>So what's the intel for? It doesn't inform any action. It just feeds the part of your brain that wants to keep tracking her.</p>
+
+                <p>You're 17 days no contact but if you keep checking lights, you're 0 days no surveillance. The mental separation can't happen if you keep peeking.</p>
+
+                <p><strong>Walk past. Eyes forward. Whatever you don't see can't hurt you tonight.</strong></p>
+            </div>
+
+            <!-- WHAT YOU HAVE SURVIVED -->
+            <div class="mainstage-section">
+                <h2>What You Have Survived</h2>
+
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 1-3:</span>
+                    <span class="day-text">Could not do anything but think about her. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 3:</span>
+                    <span class="day-text">Three hour quiz spiral. Survived without unblocking.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 6:</span>
+                    <span class="day-text">Chipotle shame spiral. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 7:</span>
+                    <span class="day-text">Snowy walk. Realized you like Boston without her. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 8:</span>
+                    <span class="day-text">30 hours no sleep, post-surgery, alone. Most dangerous moment. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 9:</span>
+                    <span class="day-text">Birthday WhatsApp test temptation. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 10:</span>
+                    <span class="day-text">She said happy birthday to your face. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 11:</span>
+                    <span class="day-text">Seating chart. Stayed in your seat. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 12:</span>
+                    <span class="day-text">Snowstorm. Lowest point since Day 8. Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 13:</span>
+                    <span class="day-text">Snowed in. "Fuck all of this." Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 14:</span>
+                    <span class="day-text">Two weeks. "What's the point?" Survived.</span>
+                </div>
+                <div class="mainstage-survived-item">
+                    <span class="day-label">Day 17:</span>
+                    <span class="day-text">Wanted to unblock 30 minutes before class. Went to class. Felt invincible. Survived.</span>
+                </div>
+
+                <p style="margin-top: 20px;"><strong>Seventeen days of your brain throwing everything it has at you. You have held every single time.</strong></p>
+
+                <p>That's not luck. That's you becoming someone different.</p>
+            </div>
+
+            <!-- THE FINAL TRUTH -->
+            <div class="mainstage-section">
+                <h2>The Final Truth</h2>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "Don't stop when you're tired. Stop when you're done."</p>
+                </div>
+
+                <p><strong>You're not done.</strong></p>
+
+                <p>You have 1.3 years left at this school. 1.3 years of opportunities to become unrecognizable. 1.3 years of her watching you transform. 1.3 years to build the body, the confidence, the life that makes her regret everything.</p>
+
+                <p>But more importantly: 1.3 years to build the man who doesn't care whether she regrets it or not. Because he's too busy living.</p>
+
+                <p>The darkest, coldest, loneliest months are where the turnaround is forged. Not in spite of the difficulty. Because of it.</p>
+
+                <p>You are not blocking her so she sees your growth. You are blocking her so you become someone who doesn't need her to see it.</p>
+
+                <p>The guy who couldn't hold a block for 3 days carries that weakness into his next relationship. The guy who held the line for months, through exam season, through snowstorms, through every trick his brain threw at him, that guy is different. That guy can trust himself.</p>
+
+                <p><strong>You are building that guy right now.</strong></p>
+
+                <div class="mainstage-goggins">
+                    <p>Goggins says: "We're either getting better or we're getting worse."</p>
+                </div>
+
+                <p>Every day you hold the block, hit the gym, stay in the deficit, protect your sleep, and keep going, you are getting better.</p>
+
+                <p>Every day you break, skip, cheat, spiral, and give in, you are getting worse.</p>
+
+                <p>There is no neutral. There is no standing still. There is only forward or backward.</p>
+
+                <p><strong>Choose forward.</strong></p>
+
+                <p><strong>Keep going.</strong></p>
+            </div>
+
+            <!-- SIGNATURE -->
+            <div class="mainstage-final">
+                <p><strong>Written on Day 17. Block held. The man on the other side is waiting for you.</strong></p>
+            </div>
+
+            <!-- Toggle Button -->
+            <button class="toggle-legacy-btn" onclick="toggleLegacyContent()">Read more in a different way</button>
         </div>
 
-        <!-- Quick Navigation -->
-        <nav class="remember-nav">
-            <a href="#section-survived">Where You've Been</a>
-            <a href="#section-different">Why Different</a>
-            <a href="#section-principles">Principles</a>
-            <a href="#section-neuroscience">Neuroscience</a>
-            <a href="#section-julia">Who Julia Is</a>
-            <a href="#section-strong">You're Strong</a>
-            <a href="#section-antonio">Antonio Said</a>
-            <a href="#section-future">Your Future</a>
-            <a href="#section-unblock">Want to Unblock?</a>
-            <a href="#section-final">Final Words</a>
-        </nav>
+        <!-- ==================== LEGACY CONTENT (HIDDEN BY DEFAULT) ==================== -->
+        <div class="legacy-content" id="legacyRememberContent">
+            <div class="remember-header">
+                <h1>THE DOCUMENT YOU READ WHEN YOU'RE SPIRALING</h1>
+                <p class="subtitle">Written January 26, 2026 — Day 14 of No Contact</p>
+                <div class="block-status">
+                    🛡️ BLOCK STATUS: HOLDING
+                </div>
+            </div>
+
+            <!-- Quick Navigation -->
+            <nav class="remember-nav">
+                <a href="#section-survived">Where You've Been</a>
+                <a href="#section-different">Why Different</a>
+                <a href="#section-principles">Principles</a>
+                <a href="#section-neuroscience">Neuroscience</a>
+                <a href="#section-julia">Who Julia Is</a>
+                <a href="#section-strong">You're Strong</a>
+                <a href="#section-antonio">Antonio Said</a>
+                <a href="#section-future">Your Future</a>
+                <a href="#section-unblock">Want to Unblock?</a>
+                <a href="#section-final">Final Words</a>
+            </nav>
 
         <!-- SECTION 1: REMEMBER WHERE YOU'VE BEEN -->
         <div class="remember-section" id="section-survived">
@@ -7429,6 +7932,7 @@
                 <p style="color: #10b981; font-weight: 600;">Block status: HOLDING</p>
             </div>
         </div>
+        </div><!-- END legacy-content -->
     </div>
 
     <!-- Add/Edit Patient Modal -->
@@ -10371,6 +10875,22 @@ CHAIR: 9F
             if (tabId === 'dailyplanner') initDailyPlanner();
             if (tabId === 'monthlyplanner') initMonthlyPlanner();
             if (tabId === 'clinical') initClinicalTab();
+        }
+
+        // ==================== REMEMBER TAB TOGGLE ====================
+        function toggleLegacyContent() {
+            const legacyContent = document.getElementById('legacyRememberContent');
+            const toggleBtn = document.querySelector('.toggle-legacy-btn');
+
+            if (legacyContent.classList.contains('visible')) {
+                legacyContent.classList.remove('visible');
+                toggleBtn.textContent = 'Read more in a different way';
+            } else {
+                legacyContent.classList.add('visible');
+                toggleBtn.textContent = 'Hide legacy content';
+                // Scroll to the legacy content
+                legacyContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         // ==================== COURSE ACCORDION ====================
