@@ -8686,7 +8686,7 @@
                 endTime = new Date(endTime.getTime() + 30 * 60 * 1000); // +30 more
             }
 
-            return endTime.toTimeString().slice(0, 5);
+            return formatTimeET(endTime);
         }
 
         function calculateCrashWindow(adderallTime, caffeineMg) {
@@ -8698,8 +8698,8 @@
             const crashIntensity = caffeineMg > 200 ? 'SHARP' : caffeineMg > 100 ? 'MODERATE' : 'NORMAL';
 
             return {
-                start: baseStart.toTimeString().slice(0, 5),
-                end: baseEnd.toTimeString().slice(0, 5),
+                start: formatTimeET(baseStart),
+                end: formatTimeET(baseEnd),
                 intensity: crashIntensity
             };
         }
@@ -12522,7 +12522,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  • Last caffeine: ${stim.lastCaffeineTime ?? 'NULL'}`);
             log.push(`  • Projected sleep: ${stim.projectedSleepTime ?? 'NULL'}`);
             log.push(`  • Booster taken: ${stim.isBooster ?? false}`);
-            log.push(`  • Last synced: ${stim.lastSynced ? new Date(stim.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push(`  • Last synced: ${stim.lastSynced ? formatTimeET(new Date(stim.lastSynced)) + ' ET' : 'never'}`);
             log.push('');
 
             // Dental Quest Data
@@ -12534,7 +12534,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  • Refill date: ${inv.refillDate30mg ?? 'NULL'}`);
             log.push(`  • Days until refill: ${inv.daysUntilRefill ?? 'NULL'}`);
             log.push(`  • Will run out: ${inv.willRunOut ?? 'NULL'}`);
-            log.push(`  • Last synced: ${inv.lastSynced ? new Date(inv.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push(`  • Last synced: ${inv.lastSynced ? formatTimeET(new Date(inv.lastSynced)) + ' ET' : 'never'}`);
             log.push('');
 
             // D3 Roadmap Data
@@ -12543,7 +12543,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  • Next exam: ${academic.nextExam?.name ?? 'NULL'}`);
             log.push(`  • Exam date: ${academic.nextExam?.date ?? 'NULL'}`);
             log.push(`  • Days until exam: ${academic.daysUntilExam ?? 'NULL'}`);
-            log.push(`  • Last synced: ${academic.lastSynced ? new Date(academic.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push(`  • Last synced: ${academic.lastSynced ? formatTimeET(new Date(academic.lastSynced)) + ' ET' : 'never'}`);
             log.push('');
 
             // Schedule Data (from D3 Roadmap)
@@ -12561,7 +12561,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  • Schedule intensity: ${sched.scheduleIntensity ?? 'NULL'}`);
             log.push(`  • Front-load required: ${sched.frontLoadRequired ?? false}`);
             log.push(`  • Front-load deadline: ${sched.frontLoadDeadline ?? 'N/A'}`);
-            log.push(`  • Last synced: ${sched.lastSynced ? new Date(sched.lastSynced).toLocaleTimeString() : 'never'}`);
+            log.push(`  • Last synced: ${sched.lastSynced ? formatTimeET(new Date(sched.lastSynced)) + ' ET' : 'never'}`);
             log.push('');
 
             // Sleep Debt Data
@@ -12758,7 +12758,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const hour = now.getHours();
             const expectedPct = Math.min(100, Math.round(((hour - 7) / 15) * 100));
             log.push('TIME-BASED EXPECTATION:');
-            log.push(`  • Current time: ${now.toLocaleTimeString()}`);
+            log.push(`  • Current time: ${formatTimeET(now)} ET`);
             log.push(`  • Hours since 7am: ${Math.max(0, hour - 7)}`);
             log.push(`  • Expected progress: ~${expectedPct}%`);
             log.push(`  • Actual progress: ${calPct}%`);
@@ -14790,7 +14790,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             <div class="checkpoint-info">
                                 <div class="checkpoint-name">${cp.name}</div>
                                 <div class="checkpoint-meta">
-                                    ${date.toLocaleDateString()} ${date.toLocaleTimeString()} ·
+                                    ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${formatTimeET(date)} ET ·
                                     ${meals} meals · ${weight} lbs
                                 </div>
                             </div>
