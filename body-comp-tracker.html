@@ -6528,6 +6528,32 @@
                     </div>
                 </div>
 
+                <div class="settings-section">
+                    <div class="settings-section-title">Personal Calibration</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Sleep baseline (hrs)</label>
+                            <input type="number" id="settingsSleepBaseline" class="form-input" step="0.5" min="5" max="9">
+                            <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Hours you function well on</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Activity level</label>
+                            <select id="settingsActivityLevel" class="form-input" style="padding: 12px;">
+                                <option value="sedentary">Sedentary (desk/clinic)</option>
+                                <option value="lightlyActive">Lightly Active</option>
+                                <option value="moderatelyActive">Moderately Active</option>
+                                <option value="veryActive">Very Active</option>
+                            </select>
+                            <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Daily activity excluding gym</div>
+                        </div>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer;">
+                        <input type="checkbox" id="settingsFocusMode" style="width: 20px; height: 20px;">
+                        <span style="color: var(--text-primary);">Focus Mode</span>
+                        <span style="font-size: 0.8em; color: var(--text-muted);">(hide color badges)</span>
+                    </label>
+                </div>
+
                 <button class="submit-btn" onclick="saveSettings()">Save Settings</button>
 
                 <div class="settings-section" style="margin-top: 20px;">
@@ -6767,7 +6793,16 @@
                 tdee_original: 2500,   // Store original for reference
                 lastMilestone: 0,      // Track weight loss milestones (every 5 lbs)
                 startDate: null,
-                targetDate: '2026-06-01'
+                targetDate: '2026-06-01',
+                // Calibration settings
+                sleepBaseline: 6.5,    // User's functional sleep need (hours) - default for this user
+                activityLevel: 'sedentary'  // NEAT level excluding tracked workouts
+            },
+
+            // User settings
+            settings: {
+                focusMode: false,           // Hide color modes, show only numbers
+                hideSleepDebtWarnings: false // Dismiss sleep debt warnings
             },
 
             // Today's data
@@ -7393,7 +7428,14 @@
         function calculateTDEE(weight_lbs, height_cm, age, todayActiveCalories) {
             const bmr = calculateBMR(weight_lbs, height_cm, age);
 
-            // Get true 7-day rolling average of active calories
+            // Get activity multiplier (accounts for NEAT - daily movement excluding workouts)
+            const activityLevel = state.profile?.activityLevel || 'sedentary';
+            const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.2;
+
+            // Apply multiplier to BMR for base TDEE (includes NEAT)
+            const baseTDEE = Math.round(bmr * multiplier);
+
+            // Get true 7-day rolling average of WORKOUT calories (tracked separately)
             // FIXED: Include ALL days (including rest days with 0 cal) to avoid inflating average
             const todayStr = getLocalDateString();
             const sevenDaysAgo = new Date();
@@ -7402,63 +7444,67 @@
             let totalActive = 0;
             let daysWithLogs = 0;
 
-            // Count active calories from daily logs in last 7 days
+            // Count workout calories from daily logs in last 7 days
             Object.entries(state.dailyLogs).forEach(([dateStr, log]) => {
                 const logDate = parseLocalDate(dateStr);
                 if (logDate >= sevenDaysAgo && dateStr !== todayStr) {
-                    totalActive += (log.activeCalories || 0);
+                    // Use workout calories, not activeCalories (which may include NEAT)
+                    const workoutCals = getValues(log.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
+                    totalActive += workoutCals;
                     daysWithLogs++;
                 }
             });
 
-            // Add today's active calories if available
-            if (todayActiveCalories != null) {
-                totalActive += todayActiveCalories;
+            // Add today's workout calories
+            const todayWorkoutCals = getValues(state.today?.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
+            if (todayWorkoutCals > 0 || todayActiveCalories != null) {
+                totalActive += todayWorkoutCals || todayActiveCalories || 0;
                 daysWithLogs++;
             }
 
-            let avgActiveCalories;
+            let avgWorkoutCalories;
             if (daysWithLogs >= 3) {
                 // Use actual average across days with data
-                avgActiveCalories = Math.round(totalActive / daysWithLogs);
+                avgWorkoutCalories = Math.round(totalActive / daysWithLogs);
             } else {
                 // Fall back to today's input if not enough history
-                avgActiveCalories = todayActiveCalories || 0;
+                avgWorkoutCalories = todayActiveCalories || 0;
             }
 
-            return bmr + avgActiveCalories;
+            // TDEE = (BMR × multiplier) + workout calories
+            // This properly separates NEAT (in multiplier) from exercise (tracked)
+            return baseTDEE + avgWorkoutCalories;
         }
 
-        // Get 7-day average active calories for display
+        // Get 7-day average WORKOUT calories for display (excludes NEAT which is in multiplier)
         // FIXED: Include ALL days (including rest days with 0 cal) to avoid inflating average
         function get7DayAvgActiveCalories() {
             const todayStr = getLocalDateString();
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-            let totalActive = 0;
+            let totalWorkout = 0;
             let daysWithLogs = 0;
 
-            // Count active calories from daily logs in last 7 days (excluding today)
+            // Count WORKOUT calories from daily logs in last 7 days (excluding today)
             Object.entries(state.dailyLogs).forEach(([dateStr, log]) => {
                 const logDate = parseLocalDate(dateStr);
                 if (logDate >= sevenDaysAgo && dateStr !== todayStr) {
-                    totalActive += (log.activeCalories || 0);
+                    const workoutCals = getValues(log.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
+                    totalWorkout += workoutCals;
                     daysWithLogs++;
                 }
             });
 
-            // Add today if it has active calories data
-            const todayActive = state.today?.activeCalories;
-            if (todayActive != null) {
-                totalActive += todayActive;
-                daysWithLogs++;
-            }
+            // Add today's workout calories
+            const todayWorkoutCals = getValues(state.today?.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
+            totalWorkout += todayWorkoutCals;
+            daysWithLogs++;
 
             if (daysWithLogs >= 3) {
-                return { avg: Math.round(totalActive / daysWithLogs), days: daysWithLogs };
+                return { avg: Math.round(totalWorkout / daysWithLogs), days: daysWithLogs };
             }
-            return { avg: state.today?.activeCalories || 0, days: daysWithLogs };
+            return { avg: todayWorkoutCals || state.today?.activeCalories || 0, days: daysWithLogs };
         }
 
         function calculateMode(sleepHours, isBrainDay) {
@@ -8332,27 +8378,29 @@
                     last7Days.push({ date, hours });
                 }
 
-                // Calculate totals (target = 7 hours/night = 49 hours/week)
-                const TARGET_WEEKLY = 49;
+                // Calculate totals using USER'S baseline (not hardcoded 7-8 hours)
+                const baseline = state.profile?.sleepBaseline || 6.5;
+                const TARGET_WEEKLY = baseline * 7; // e.g., 6.5 × 7 = 45.5 hours
                 const daysWithData = last7Days.filter(d => d.hours !== null && d.hours !== undefined);
                 const totalSleep = daysWithData.reduce((sum, d) => sum + d.hours, 0);
-                const avgSleep = daysWithData.length > 0 ? totalSleep / daysWithData.length : 6;
+                const avgSleep = daysWithData.length > 0 ? totalSleep / daysWithData.length : baseline;
 
                 // Extrapolate weekly total if missing days
                 const projectedWeekly = avgSleep * 7;
-                const weeklyDebt = TARGET_WEEKLY - projectedWeekly;
+                const weeklyDebt = Math.max(0, TARGET_WEEKLY - projectedWeekly);
 
-                // Consecutive bad nights (<5.5 hours)
+                // Consecutive bad nights (< baseline - 1 hour)
+                const badNightThreshold = baseline - 1; // e.g., < 5.5 for 6.5 baseline
                 let consecutiveBadNights = 0;
                 for (const day of last7Days) {
-                    if (day.hours !== null && day.hours < 5.5) {
+                    if (day.hours !== null && day.hours < badNightThreshold) {
                         consecutiveBadNights++;
                     } else if (day.hours !== null) {
                         break; // Stop counting when we hit a good night
                     }
                 }
 
-                const severity = getSleepDebtSeverity(weeklyDebt, consecutiveBadNights);
+                const severity = getSleepDebtSeverity(weeklyDebt, consecutiveBadNights, baseline);
 
                 state.ecosystemContext.sleepDebt = {
                     last7Days,
@@ -8372,19 +8420,25 @@
             }
         }
 
-        function getSleepDebtSeverity(weeklyDebt, consecutiveBad) {
-            if (weeklyDebt > 10 || consecutiveBad >= 4) return 'SEVERE';
-            if (weeklyDebt > 7 || consecutiveBad >= 3) return 'HIGH';
-            if (weeklyDebt > 4 || consecutiveBad >= 2) return 'MODERATE';
+        function getSleepDebtSeverity(weeklyDebt, consecutiveBad, baseline = 6.5) {
+            // Severity is relative to user's baseline, not absolute hours
+            // e.g., 10hr debt for someone who needs 6.5hr/night = 1.5 nights behind
+            const nightsBehind = weeklyDebt / baseline;
+
+            if (nightsBehind > 1.5 || consecutiveBad >= 4) return 'SEVERE';  // 1.5+ nights behind
+            if (nightsBehind > 1.0 || consecutiveBad >= 3) return 'HIGH';    // 1+ night behind
+            if (nightsBehind > 0.5 || consecutiveBad >= 2) return 'MODERATE'; // Half night behind
             return 'LOW';
         }
 
         function renderSleepDebtIndicator() {
             const sleepDebt = state.ecosystemContext?.sleepDebt;
+            const warning = state.today?.sleepDebtWarning;
             const debtMinimal = document.getElementById('sleepDebtMinimal');
             const debtText = document.getElementById('sleepDebtText');
 
-            if (!sleepDebt || sleepDebt.severity === 'LOW') {
+            // Don't show if LOW severity, or if user dismissed the warning, or focus mode
+            if (!sleepDebt || sleepDebt.severity === 'LOW' || warning?.dismissed || state.settings?.focusMode) {
                 if (debtMinimal) debtMinimal.style.display = 'none';
                 return;
             }
@@ -8393,21 +8447,38 @@
             if (debtMinimal) {
                 debtMinimal.style.display = 'block';
                 debtMinimal.className = `sleep-debt-minimal ${sleepDebt.severity.toLowerCase()}`;
+                // Make it dismissible
+                debtMinimal.onclick = function(e) {
+                    if (e.target.classList.contains('dismiss-btn')) {
+                        dismissSleepDebtWarning();
+                    }
+                };
             }
 
-            // Update text - single sentence format
+            // Update text - now shows as advisory, not forced
             if (debtText) {
-                const debtSign = sleepDebt.weeklyDebt > 0 ? '+' : '';
-                let text = `😴 Sleep debt: ${debtSign}${sleepDebt.weeklyDebt}hr this week (avg ${sleepDebt.avgSleep}hr/night)`;
+                const baseline = state.profile?.sleepBaseline || 6.5;
+                const avgSleep = sleepDebt.avgSleep;
+                let text = `😴 Sleep debt: avg ${avgSleep}hr/night (your baseline: ${baseline}hr)`;
 
-                // Add severe warning
+                // Add advisory (not forced)
                 if (sleepDebt.severity === 'SEVERE') {
-                    text = `⚠️ Severe sleep debt (${sleepDebt.avgSleep}hr avg) — forced maintenance mode`;
+                    text = `⚠️ Severe sleep debt (${avgSleep}hr avg) — consider maintenance today`;
                 } else if (sleepDebt.severity === 'HIGH') {
-                    text += ' — consider lighter deficit';
+                    text += ' — listen to your body';
                 }
 
-                debtText.textContent = text;
+                // Add dismiss hint
+                text += ' <span class="dismiss-btn" style="opacity:0.6;margin-left:8px;cursor:pointer;">[dismiss]</span>';
+                debtText.innerHTML = text;
+            }
+        }
+
+        function dismissSleepDebtWarning() {
+            if (state.today.sleepDebtWarning) {
+                state.today.sleepDebtWarning.dismissed = true;
+                renderSleepDebtIndicator();
+                showToast('Sleep debt warning dismissed for today');
             }
         }
 
@@ -8415,32 +8486,30 @@
             const sleepDebt = state.ecosystemContext?.sleepDebt;
             if (!sleepDebt) return;
 
-            const originalMode = state.today.mode;
+            // CHANGED: Sleep debt creates a WARNING, not a forced mode change
+            // User decides based on how they feel — the app is a tool, not a boss
+            state.today.sleepDebtWarning = null;
 
-            // SEVERE sleep debt forces ORANGE mode
-            if (sleepDebt.severity === 'SEVERE' && state.today.mode !== 'ORANGE') {
-                state.today.mode = 'ORANGE';
-                state.today.modeReason = 'Sleep debt override';
-                console.log('🔴 Mode forced to ORANGE due to severe sleep debt');
-            }
-            // HIGH sleep debt bumps GREEN → YELLOW
-            else if (sleepDebt.severity === 'HIGH' && state.today.mode === 'GREEN') {
-                state.today.mode = 'YELLOW';
-                state.today.modeReason = 'Sleep debt adjustment';
-                console.log('🟡 Mode bumped to YELLOW due to high sleep debt');
+            if (sleepDebt.severity === 'SEVERE' || sleepDebt.severity === 'HIGH') {
+                const baseline = state.profile?.sleepBaseline || 6.5;
+                const debtHours = sleepDebt.weeklyDebt;
+                const nightsBehind = (debtHours / baseline).toFixed(1);
+
+                state.today.sleepDebtWarning = {
+                    severity: sleepDebt.severity,
+                    message: sleepDebt.severity === 'SEVERE'
+                        ? `Sleep debt is severe (${nightsBehind} nights behind). Consider eating at maintenance today.`
+                        : `Sleep debt is elevated (${nightsBehind} nights behind). Listen to your body.`,
+                    debtHours: debtHours,
+                    avgSleep: sleepDebt.avgSleep,
+                    dismissed: false
+                };
+
+                console.log(`⚠️ Sleep debt warning set (${sleepDebt.severity}):`, state.today.sleepDebtWarning.message);
             }
 
-            // If mode changed, recalculate targets and refresh UI
-            if (state.today.mode !== originalMode && state.today.setupComplete) {
-                const tdee = calculateTDEE(
-                    state.profile.currentWeight_lbs,
-                    state.profile.height_cm,
-                    state.profile.age,
-                    state.today.activeCalories || 0
-                );
-                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
-                refreshCurrentView();
-            }
+            // Note: Mode is NO LONGER forced. User's last night sleep determines mode.
+            // Warning is shown as dismissible banner in UI.
         }
 
         // Refresh whichever view is currently active
@@ -12455,10 +12524,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Sleep Debt Data
             log.push('CALCULATED - SLEEP DEBT (last 7 days):');
             const debt = state.ecosystemContext?.sleepDebt || {};
+            const sleepBaseline = state.profile?.sleepBaseline || 6.5;
+            log.push(`  • Your baseline: ${sleepBaseline} hrs/night (configurable in Settings)`);
             log.push(`  • Last 7 days: ${JSON.stringify(debt.last7Days?.map(d => d.hours) ?? [])}`);
             log.push(`  • Total sleep: ${debt.totalSleep ?? 'NULL'} hrs`);
             log.push(`  • Average sleep: ${debt.avgSleep ?? 'NULL'} hrs/night`);
-            log.push(`  • Weekly target: 49 hrs (7 hrs × 7 nights)`);
+            log.push(`  • Weekly target: ${(sleepBaseline * 7).toFixed(1)} hrs (${sleepBaseline} × 7 nights)`);
             log.push(`  • Weekly debt: ${debt.weeklyDebt ?? 'NULL'} hrs`);
             log.push(`  • Consecutive bad nights: ${debt.consecutiveBadNights ?? 'NULL'}`);
             log.push(`  • Severity: ${debt.severity ?? 'LOW'}`);
@@ -12480,14 +12551,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  Base Result: ${sleepHours >= 6 ? 'GREEN' : sleepHours >= 5 ? 'YELLOW' : 'ORANGE'}`);
             log.push('');
 
-            log.push('OVERRIDE CHECKS:');
+            log.push('SLEEP DEBT ADVISORY (warnings, not forced):');
             log.push(`  • Sleep debt severity: ${debt.severity ?? 'LOW'}`);
-            if (debt.severity === 'SEVERE') {
-                log.push('    → OVERRIDE: Forcing ORANGE mode due to severe sleep debt');
-            } else if (debt.severity === 'HIGH' && sleepHours >= 6) {
-                log.push('    → OVERRIDE: Bumping GREEN → YELLOW due to high sleep debt');
+            const warning = state.today?.sleepDebtWarning;
+            if (warning && !warning.dismissed) {
+                log.push(`    → WARNING: ${warning.message}`);
+                log.push('    → (You decide based on how you feel - not forced)');
+            } else if (debt.severity === 'SEVERE' || debt.severity === 'HIGH') {
+                log.push(`    → Advisory shown but dismissed or not active`);
             } else {
-                log.push('    → No override applied');
+                log.push('    → No warning needed');
             }
             log.push('');
 
@@ -12518,12 +12591,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push(`  = ${bmr} cal/day (BMR)`);
             log.push('');
 
-            log.push('TDEE CALCULATION:');
+            log.push('TDEE CALCULATION (BMR × Activity + Workouts):');
+            const activityLevel = profile.activityLevel || 'sedentary';
+            const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.2;
+            const baseTDEE = Math.round(bmr * multiplier);
             const activeInfo = get7DayAvgActiveCalories();
-            const tdee = bmr + activeInfo.avg;
-            log.push(`  Formula: BMR + Active Calories`);
-            log.push(`  = ${bmr} + ${activeInfo.avg} (${activeInfo.days >= 3 ? activeInfo.days + '-day avg' : 'today'})`);
-            log.push(`  = ${tdee} cal/day (TDEE)`);
+            const tdee = baseTDEE + activeInfo.avg;
+            log.push(`  Activity level: ${activityLevel} (multiplier: ${multiplier})`);
+            log.push(`  Base TDEE: ${bmr} × ${multiplier} = ${baseTDEE} cal (includes NEAT)`);
+            log.push(`  Workout calories: ${activeInfo.avg} (${activeInfo.days}-day avg)`);
+            log.push(`  TOTAL TDEE: ${baseTDEE} + ${activeInfo.avg} = ${tdee} cal/day`);
             log.push('');
 
             log.push('MODE-BASED TARGETS:');
@@ -13873,6 +13950,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             document.getElementById('settingsAge').value = state.profile.age;
             document.getElementById('settingsGoalWeight').value = state.profile.goalWeight_lbs;
             document.getElementById('settingsTDEE').value = state.profile.tdee_base;
+            // Calibration settings
+            document.getElementById('settingsSleepBaseline').value = state.profile.sleepBaseline || 6.5;
+            document.getElementById('settingsActivityLevel').value = state.profile.activityLevel || 'sedentary';
+            document.getElementById('settingsFocusMode').checked = state.settings?.focusMode || false;
             document.getElementById('settingsModal').classList.add('active');
         }
 
@@ -13887,6 +13968,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state.profile.goalWeight_lbs = parseFloat(document.getElementById('settingsGoalWeight').value) || 170;
             state.profile.tdee_base = parseInt(document.getElementById('settingsTDEE').value) || 2500;
 
+            // Calibration settings
+            state.profile.sleepBaseline = parseFloat(document.getElementById('settingsSleepBaseline').value) || 6.5;
+            state.profile.activityLevel = document.getElementById('settingsActivityLevel').value || 'sedentary';
+            state.settings = state.settings || {};
+            state.settings.focusMode = document.getElementById('settingsFocusMode').checked;
+
             saveState();
             closeSettingsModal();
 
@@ -13900,7 +13987,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 );
                 state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs);
                 saveState();
-                renderDashboard();
+                refreshCurrentView();
             }
 
             showToast('Settings saved');
@@ -15499,6 +15586,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             perfectDay: 50,
             weeklyWeighIn: 25,
             streakBonus: 5  // per day of streak
+        };
+
+        // Activity multipliers for TDEE calculation
+        // These represent NEAT (Non-Exercise Activity Thermogenesis) - daily movement EXCLUDING tracked workouts
+        const ACTIVITY_MULTIPLIERS = {
+            sedentary: 1.2,        // Desk job, minimal movement (dental student default)
+            lightlyActive: 1.375,  // Light movement 1-3 days/week
+            moderatelyActive: 1.55, // Moderate movement 3-5 days/week
+            veryActive: 1.725,     // Hard physical activity 6-7 days/week
+            extraActive: 1.9       // Very hard activity + physical job
         };
 
         function switchDashboardTab(tabName, e) {
