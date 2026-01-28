@@ -7929,9 +7929,8 @@
             document.getElementById('carbProgressFill').style.width = `${carbPercent}%`;
 
             // Update burn summary (TDEE / Deficit)
-            const bmr = calculateBMR(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age);
-            const activeInfo = get7DayAvgActiveCalories();
-            const tdee = bmr + activeInfo.avg;
+            // FIXED: Use calculateTDEE() which includes activity multiplier (was using bmr + active directly)
+            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
             const deficit = tdee - totals.calories;
 
             const simpleTDEE = document.getElementById('simpleTDEE');
@@ -9481,6 +9480,7 @@
             renderWorkoutsList();
             renderWorkoutHistoryManager();
             renderDashboard();
+            renderSimpleView();  // FIXED: Also update simple view
             showToast('Workout deleted');
         }
 
@@ -9686,6 +9686,7 @@
             saveDayLog();  // Update dailyLogs for calendar
             renderMealsList();
             renderDashboard();
+            renderSimpleView();  // FIXED: Also update simple view when meal added
             closeAddMealModal();
 
             // Check if targets are hit (only for today's meals)
@@ -9703,6 +9704,7 @@
                 saveDayLog();  // Update dailyLogs for calendar
                 renderMealsList();
                 renderDashboard();
+                renderSimpleView();  // FIXED: Also update simple view when meal deleted
                 showToast('Meal deleted');
             }
         }
@@ -9905,6 +9907,7 @@
                     saveDayLog();
                     renderMealsList();
                     renderDashboard();
+                    renderSimpleView();  // FIXED: Also update simple view
                 } else {
                     // Initialize dailyLog for new date if needed
                     if (!state.dailyLogs[newDate]) {
@@ -9929,6 +9932,7 @@
                     saveDayLog();
                     renderMealsList();
                     renderDashboard();
+                    renderSimpleView();  // FIXED: Also update simple view
                 } else {
                     ensureMealsObject(originalDateStr);
                     state.dailyLogs[originalDateStr].meals[mealId] = updatedMeal;
@@ -9996,6 +10000,7 @@
                 saveDayLog();
                 renderMealsList();
                 renderDashboard();
+                renderSimpleView();  // FIXED: Also update simple view
             } else {
                 const log = state.dailyLogs?.[dateStr];
                 if (!log?.meals) return;
@@ -10246,6 +10251,7 @@
                     saveDayLog();
                     renderWorkoutsList();
                     renderDashboard();
+                    renderSimpleView();  // FIXED: Also update simple view
                 } else {
                     if (!state.dailyLogs[newDate]) {
                         state.dailyLogs[newDate] = {
@@ -10279,6 +10285,7 @@
                     saveDayLog();
                     renderWorkoutsList();
                     renderDashboard();
+                    renderSimpleView();  // FIXED: Also update simple view
                 } else {
                     ensureWorkoutsObject(originalDateStr);
                     state.dailyLogs[originalDateStr].workouts[workoutId] = updatedWorkout;
@@ -10329,6 +10336,7 @@
                 renderWorkoutsList();
                 renderWorkoutHistoryManager();
                 renderDashboard();
+                renderSimpleView();  // FIXED: Also update simple view
             } else {
                 const log = state.dailyLogs?.[dateStr];
                 if (!log?.workouts) return;
@@ -10480,6 +10488,7 @@ MEAL|Protein Shake|160|30|5|2"></textarea>
                 saveDayLog();
                 renderMealsList();
                 renderDashboard();
+                renderSimpleView();  // FIXED: Also update simple view
             } else {
                 recalculateDayLog(importTargetDate);
             }
@@ -10629,6 +10638,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 renderWorkoutsList();
                 renderWorkoutHistoryManager();
                 renderDashboard();
+                renderSimpleView();  // FIXED: Also update simple view
             } else {
                 recalculateDayLog(importTargetDate);
                 renderWorkoutHistoryManager();
@@ -11884,6 +11894,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             saveState();
             closeWeighInModal();
             renderDashboard();
+            renderSimpleView();  // FIXED: Also update simple view (weight affects TDEE)
             renderProgressTab();
 
             const dateDisplay = weighInDate === getLocalDateString() ? '' :
