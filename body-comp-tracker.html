@@ -7225,13 +7225,27 @@
             if (!input) return '--';
 
             let date;
-            if (typeof input === 'string' && input.match(/^\d{1,2}:\d{2}$/)) {
+            if (typeof input === 'string') {
+                // Check if already formatted (e.g., "2:30 PM" or "2:30 pm")
+                if (input.match(/^\d{1,2}:\d{2}\s*(AM|PM|am|pm)$/i)) {
+                    return input;  // Already formatted, return as-is
+                }
                 // Time string like "14:30" - convert to date
-                const [h, m] = input.split(':').map(Number);
-                date = new Date();
-                date.setHours(h, m, 0, 0);
+                if (input.match(/^\d{1,2}:\d{2}$/)) {
+                    const [h, m] = input.split(':').map(Number);
+                    date = new Date();
+                    date.setHours(h, m, 0, 0);
+                } else {
+                    // Try to parse as ISO date string
+                    date = new Date(input);
+                }
             } else {
                 date = input instanceof Date ? input : new Date(input);
+            }
+
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                return input || '--';  // Return original if parsing failed
             }
 
             return date.toLocaleTimeString('en-US', {
@@ -7379,18 +7393,34 @@
         function calculateTDEE(weight_lbs, height_cm, age, todayActiveCalories) {
             const bmr = calculateBMR(weight_lbs, height_cm, age);
 
-            // Get recent active calories from daily logs for 7-day rolling average
-            const recentLogs = Object.values(state.dailyLogs)
-                .filter(log => log.activeCalories != null && log.activeCalories > 0)
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 7);
+            // Get true 7-day rolling average of active calories
+            // FIXED: Include ALL days (including rest days with 0 cal) to avoid inflating average
+            const todayStr = getLocalDateString();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            let totalActive = 0;
+            let daysWithLogs = 0;
+
+            // Count active calories from daily logs in last 7 days
+            Object.entries(state.dailyLogs).forEach(([dateStr, log]) => {
+                const logDate = parseLocalDate(dateStr);
+                if (logDate >= sevenDaysAgo && dateStr !== todayStr) {
+                    totalActive += (log.activeCalories || 0);
+                    daysWithLogs++;
+                }
+            });
+
+            // Add today's active calories if available
+            if (todayActiveCalories != null) {
+                totalActive += todayActiveCalories;
+                daysWithLogs++;
+            }
 
             let avgActiveCalories;
-
-            if (recentLogs.length >= 3) {
-                // Use 7-day average if we have enough data
-                const sum = recentLogs.reduce((total, log) => total + log.activeCalories, 0);
-                avgActiveCalories = Math.round(sum / recentLogs.length);
+            if (daysWithLogs >= 3) {
+                // Use actual average across days with data
+                avgActiveCalories = Math.round(totalActive / daysWithLogs);
             } else {
                 // Fall back to today's input if not enough history
                 avgActiveCalories = todayActiveCalories || 0;
@@ -7400,17 +7430,35 @@
         }
 
         // Get 7-day average active calories for display
+        // FIXED: Include ALL days (including rest days with 0 cal) to avoid inflating average
         function get7DayAvgActiveCalories() {
-            const recentLogs = Object.values(state.dailyLogs)
-                .filter(log => log.activeCalories != null && log.activeCalories > 0)
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 7);
+            const todayStr = getLocalDateString();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-            if (recentLogs.length >= 3) {
-                const sum = recentLogs.reduce((total, log) => total + log.activeCalories, 0);
-                return { avg: Math.round(sum / recentLogs.length), days: recentLogs.length };
+            let totalActive = 0;
+            let daysWithLogs = 0;
+
+            // Count active calories from daily logs in last 7 days (excluding today)
+            Object.entries(state.dailyLogs).forEach(([dateStr, log]) => {
+                const logDate = parseLocalDate(dateStr);
+                if (logDate >= sevenDaysAgo && dateStr !== todayStr) {
+                    totalActive += (log.activeCalories || 0);
+                    daysWithLogs++;
+                }
+            });
+
+            // Add today if it has active calories data
+            const todayActive = state.today?.activeCalories;
+            if (todayActive != null) {
+                totalActive += todayActive;
+                daysWithLogs++;
             }
-            return { avg: state.today.activeCalories || 0, days: 0 };
+
+            if (daysWithLogs >= 3) {
+                return { avg: Math.round(totalActive / daysWithLogs), days: daysWithLogs };
+            }
+            return { avg: state.today?.activeCalories || 0, days: daysWithLogs };
         }
 
         function calculateMode(sleepHours, isBrainDay) {
@@ -11327,10 +11375,8 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 lastUpdated: new Date().toISOString()
             };
 
-            // Update cumulative deficit for refeed tracking
-            if (deficit > 0) {
-                state.refeedTracker.cumulativeDeficit += deficit;
-            }
+            // Note: Cumulative deficit is now calculated from dailyLogs, not incremented
+            // This prevents double-counting from multiple saveDayLog calls
 
             saveState();
         }
@@ -11954,9 +12000,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 export_str += `\n`;
             }
 
+            const cumDeficit = calculateCumulativeDeficit();  // Use calculated value
             export_str += `GOAL:${state.profile.goalWeight_lbs}|REMAINING:${(state.profile.currentWeight_lbs - state.profile.goalWeight_lbs).toFixed(1)}\n`;
             export_str += `WEEK_DEFICIT:${weekStats.totalDeficit}|WEEK_PERFECT:${weekStats.perfectDays}/7\n`;
-            export_str += `CUMULATIVE_DEFICIT:${state.refeedTracker.cumulativeDeficit || 0}\n`;
+            export_str += `CUMULATIVE_DEFICIT:${cumDeficit}\n`;
             export_str += `STREAK:${state.gamification.streak}|XP:${state.gamification.xp}\n`;
             export_str += `---\n`;
             export_str += `MEALS:${getValues(state.today.meals).map(m => `${m.name}(${m.calories}cal/${m.protein}g)`).join('|')}\n`;
@@ -11965,7 +12012,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let flags = [];
             if (totals.calories < 1000) flags.push('UNDEREATING');
             if (totals.protein < targets.protein * 0.8) flags.push('LOW_PROTEIN');
-            if ((state.refeedTracker.cumulativeDeficit || 0) >= 7000) flags.push('NEEDS_REFEED');
+            if (cumDeficit >= 7000) flags.push('NEEDS_REFEED');
             if (state.today.sleepHours && state.today.sleepHours < 5) flags.push('SLEEP_DEPRIVED');
             if (deficit < 0) flags.push('SURPLUS');
 
@@ -13253,7 +13300,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         protein: item.protein,
                         carbs: item.carbs,
                         fat: item.fat,
-                        time: formatTimeET(item.time),
+                        time: item.time,  // Store raw time string (HH:MM), format only on display
                         date: item.date,
                         fromImport: true
                     };
@@ -13280,7 +13327,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         type: item.workoutType,
                         duration: item.duration,
                         calories: item.calories,
-                        time: formatTimeET(item.time),
+                        time: item.time,  // Store raw time string (HH:MM), format only on display
                         date: item.date
                     };
 
@@ -14095,11 +14142,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         if (state.today.setupComplete) {
                             state.dailyLogs[state.today.date] = { ...state.today };
 
-                            // Update refeed tracker
-                            const deficit = getCurrentDeficit();
-                            if (deficit > 0) {
-                                state.refeedTracker.cumulativeDeficit += deficit;
-                            }
+                            // Note: Cumulative deficit is now calculated from dailyLogs, not incremented
+                            // This prevents double-counting from day transitions
                         }
 
                         // Reset for new day - MUST include ALL today fields
@@ -15508,8 +15552,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (xpTotalEl) xpTotalEl.textContent = formatNumber(gam.xp) + ' XP';
             if (xpNext) xpNext.textContent = formatNumber(nextLevel.xpRequired - gam.xp) + ' XP to next level';
             if (xpBarFill) xpBarFill.style.width = progress + '%';
-            if (currentStreakEl) currentStreakEl.textContent = gam.streak;
-            if (totalDaysEl) totalDaysEl.textContent = gam.totalDaysTracked;
+
+            // FIX: Use gym streak from getWorkoutRecommendation() to match Simple view
+            const workoutRec = getWorkoutRecommendation();
+            if (currentStreakEl) currentStreakEl.textContent = workoutRec.gymStreak || 0;
+
+            // FIX: Calculate actual days tracked from dailyLogs + today
+            const todayStr = getLocalDateString();
+            const logsCount = Object.keys(state.dailyLogs || {}).length;
+            const todayHasData = state.today?.setupComplete || getCount(state.today?.meals) > 0;
+            const actualDaysTracked = logsCount + (todayHasData && !state.dailyLogs[todayStr] ? 1 : 0);
+            if (totalDaysEl) totalDaysEl.textContent = actualDaysTracked;
+
             if (perfectDaysEl) perfectDaysEl.textContent = gam.perfectDays;
         }
 
@@ -15845,12 +15899,42 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             `;
         }
 
+        // Calculate cumulative deficit from dailyLogs since last refeed
+        // This replaces the buggy increment approach which caused double-counting
+        function calculateCumulativeDeficit() {
+            const lastRefeedDate = state.refeedTracker.lastRefeedDate;
+            let cumulative = 0;
+
+            Object.entries(state.dailyLogs || {}).forEach(([dateStr, log]) => {
+                // Only count days after last refeed (or all days if no refeed date)
+                if (!lastRefeedDate || dateStr > lastRefeedDate) {
+                    // Use stored deficit, or calculate from calories vs target
+                    const dayDeficit = log.deficit ?? (log.tdee || 0) - (log.calories || 0);
+                    if (dayDeficit > 0) {
+                        cumulative += dayDeficit;
+                    }
+                }
+            });
+
+            // Also add today's deficit if not yet saved to dailyLogs
+            const todayStr = getLocalDateString();
+            if (!state.dailyLogs[todayStr] && state.today?.setupComplete) {
+                const todayDeficit = getCurrentDeficit();
+                if (todayDeficit > 0) {
+                    cumulative += todayDeficit;
+                }
+            }
+
+            return cumulative;
+        }
+
         // Refeed Tracker Card
         function renderRefeedTracker() {
             const container = document.getElementById('refeedTracker');
             if (!container) return;
 
-            const cumDeficit = state.refeedTracker.cumulativeDeficit || 0;
+            // FIX: Calculate from dailyLogs instead of using potentially corrupted stored value
+            const cumDeficit = calculateCumulativeDeficit();
             const threshold = 7000;
             const progress = Math.min((cumDeficit / threshold) * 100, 100);
             const remaining = Math.max(threshold - cumDeficit, 0);
@@ -16097,9 +16181,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (cumulativeEl) cumulativeEl.textContent = formatNumber(Math.round(weeklyDeficit));
             if (avgDailyEl) avgDailyEl.textContent = daysWithData > 0 ? formatNumber(Math.round(weeklyDeficit / daysWithData)) : '0';
 
-            // Check refeed threshold
+            // Check refeed threshold (use calculated value, not stored)
             if (refeedAlert) {
-                const cumulative = state.refeedTracker.cumulativeDeficit || 0;
+                const cumulative = calculateCumulativeDeficit();
                 refeedAlert.style.display = cumulative >= 7000 ? 'flex' : 'none';
             }
         }
@@ -16794,10 +16878,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const activeInfo = get7DayAvgActiveCalories();
             state.today.activeCalories = activeInfo.avg || 300; // Default 300 if no history
 
-            // Calculate mode based on sleep
+            // Calculate base mode based on last night's sleep
             state.today.mode = calculateMode(sleepHours, false);
 
-            // Calculate TDEE and targets
+            // Apply sleep debt override if needed (may change mode to ORANGE or YELLOW)
+            // This must happen AFTER base mode calculation but BEFORE target calculation
+            applySleepDebtModeOverride();
+
+            // Calculate TDEE and targets with final mode
             const tdee = calculateTDEE(
                 state.profile.currentWeight_lbs,
                 state.profile.height_cm,
