@@ -4800,6 +4800,703 @@
         .copy-btn.claude:hover {
             background: rgba(139, 92, 246, 0.3);
         }
+
+        /* ============================================ */
+        /* PHASE 2A-C: UI/UX OVERHAUL STYLES           */
+        /* ============================================ */
+
+        /* Header Dropdown Menu (Phase 2B) */
+        .header-menu-container {
+            position: relative;
+        }
+
+        .header-menu-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .header-menu-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-blue);
+        }
+
+        .header-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+            animation: dropdownSlide 0.2s ease;
+        }
+
+        @keyframes dropdownSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .dropdown-item .item-icon {
+            font-size: 1.1em;
+            width: 24px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 8px 0;
+        }
+
+        .dropdown-section-label {
+            padding: 8px 16px 4px;
+            font-size: 0.7em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Import from Claude Modal (Phase 2A) */
+        .import-modal-body {
+            padding: 0;
+        }
+
+        .import-preview-section {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .import-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .import-preview-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .import-preview-count {
+            background: var(--accent-blue-dim);
+            color: var(--accent-blue);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .import-preview-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .import-preview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+        }
+
+        .import-preview-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .import-item-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .import-item-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+
+        .import-item-icon.meal { background: var(--accent-green-dim); }
+        .import-item-icon.workout { background: var(--accent-blue-dim); }
+        .import-item-icon.weighin { background: var(--accent-purple-dim); }
+
+        .import-item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .import-item-details {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .import-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.85em;
+            color: var(--text-primary);
+            resize: vertical;
+            margin-bottom: 12px;
+        }
+
+        .import-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .import-format-help {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .import-format-help code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.95em;
+        }
+
+        .import-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .import-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .import-btn.preview {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .import-btn.preview:hover {
+            background: var(--accent-blue-dim);
+        }
+
+        .import-btn.import {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            color: white;
+        }
+
+        .import-btn.import:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .import-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Weigh-in History List (Phase 2A/2B) */
+        .weighin-history-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .weighin-history-title {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .weighin-history-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .weighin-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .weighin-history-item:hover {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .weighin-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .weighin-date {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .weighin-weight {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .weighin-bf {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .weighin-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .weighin-history-item:hover .weighin-actions {
+            opacity: 1;
+        }
+
+        .weighin-action-btn {
+            background: none;
+            border: none;
+            font-size: 1em;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .weighin-action-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .weighin-action-btn.delete:hover {
+            background: var(--accent-red-dim);
+        }
+
+        /* Body Comp History Edit (Phase 2A) */
+        .body-comp-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+
+        .body-comp-history-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .body-comp-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .body-comp-history-item:hover .body-comp-actions {
+            opacity: 1;
+        }
+
+        .bc-action-btn {
+            background: none;
+            border: none;
+            font-size: 0.9em;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .bc-action-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .bc-action-btn.delete:hover {
+            background: var(--accent-red-dim);
+        }
+
+        /* Frequent Foods Management (Phase 2B) */
+        .frequent-foods-manager {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .ff-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ff-manager-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .ff-manager-count {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .ff-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ff-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+
+        .ff-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .ff-item-info {
+            flex: 1;
+        }
+
+        .ff-item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+
+        .ff-item-macros {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .ff-item-uses {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .ff-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .ff-item:hover .ff-item-actions {
+            opacity: 1;
+        }
+
+        .ff-action-btn {
+            background: none;
+            border: none;
+            font-size: 0.9em;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .ff-action-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .ff-action-btn.delete:hover {
+            background: var(--accent-red-dim);
+        }
+
+        /* Collapsible Context Cards (Phase 2C) */
+        .context-card.collapsible {
+            cursor: pointer;
+        }
+
+        .context-card.collapsible .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapse-toggle {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .context-card.collapsed .collapse-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .context-card.collapsed .card-content {
+            display: none;
+        }
+
+        .card-content {
+            animation: expandContent 0.2s ease;
+        }
+
+        @keyframes expandContent {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 500px; }
+        }
+
+        /* Compact Status Hero Mobile (Phase 2C) */
+        @media (max-width: 480px) {
+            .status-hero.compact-mobile {
+                padding: 16px;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .status-hero.compact-mobile .status-icon {
+                font-size: 2em;
+            }
+
+            .status-hero.compact-mobile .status-info {
+                text-align: left;
+            }
+
+            .status-hero.compact-mobile .status-label {
+                font-size: 0.9em;
+            }
+
+            .status-hero.compact-mobile .status-subtitle {
+                font-size: 0.75em;
+            }
+        }
+
+        /* Desktop 2-Column Layout (Phase 2C) */
+        @media (min-width: 900px) {
+            .container {
+                max-width: 1000px;
+            }
+
+            .desktop-two-col {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+
+            .desktop-full-width {
+                grid-column: 1 / -1;
+            }
+
+            .simple-view .desktop-two-col {
+                margin-top: 20px;
+            }
+
+            .context-cards-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .action-btns-desktop {
+                display: flex;
+                gap: 12px;
+            }
+
+            .action-btns-desktop .action-btn {
+                flex: 1;
+            }
+        }
+
+        /* Date Picker Enhancement (Phase 2A) */
+        .date-picker-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .date-picker-row .form-group {
+            flex: 1;
+        }
+
+        .date-picker-row .form-group:first-child {
+            flex: 1.2;
+        }
+
+        .date-quick-btns {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .date-quick-btn {
+            flex: 1;
+            padding: 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .date-quick-btn:hover {
+            background: var(--accent-blue-dim);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .date-quick-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        /* Enhanced Add Meal Modal (Phase 2A) */
+        .meal-date-section {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .meal-date-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* Scrollbar styling for lists */
+        .weighin-history-list::-webkit-scrollbar,
+        .ff-list::-webkit-scrollbar,
+        .import-preview-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .weighin-history-list::-webkit-scrollbar-track,
+        .ff-list::-webkit-scrollbar-track,
+        .import-preview-list::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .weighin-history-list::-webkit-scrollbar-thumb,
+        .ff-list::-webkit-scrollbar-thumb,
+        .import-preview-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .weighin-history-list::-webkit-scrollbar-thumb:hover,
+        .ff-list::-webkit-scrollbar-thumb:hover,
+        .import-preview-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Empty state styling */
+        .empty-history-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Enhanced header for mobile */
+        @media (max-width: 480px) {
+            .header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.3em;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .header-menu-btn {
+                padding: 6px 10px;
+            }
+
+            .checkpoint-controls {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4813,7 +5510,7 @@
     </nav>
 
     <div class="container">
-        <!-- Header -->
+        <!-- Header (Phase 2B - Consolidated Dropdown Menu) -->
         <div class="header">
             <h1>Body Comp Tracker</h1>
             <div class="header-actions">
@@ -4822,15 +5519,40 @@
                     <span id="syncText">Connecting...</span>
                 </div>
                 <button class="header-btn" onclick="forceCloudSync()" title="Sync">🔄</button>
-                <button class="header-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
-                <button class="header-btn" onclick="openExportModal()" title="Export">📤</button>
-            </div>
-            <!-- Checkpoint Controls -->
-            <div class="checkpoint-controls" id="checkpoint-controls">
-                <button onclick="createCheckpoint()" class="checkpoint-btn create" title="Save a named checkpoint">💾 Checkpoint</button>
-                <button onclick="showCheckpointManager()" class="checkpoint-btn restore" title="View and restore checkpoints">📂 Restore</button>
-                <button onclick="forceUploadToCloud()" class="checkpoint-btn force-upload" title="Make this device's data the master">☁️⬆️ Force Upload</button>
-                <button onclick="forcePullFromCloud()" class="checkpoint-btn force-pull" title="Overwrite local with cloud data">☁️⬇️ Force Pull</button>
+                <!-- Consolidated Menu Button -->
+                <div class="header-menu-container">
+                    <button class="header-menu-btn" onclick="toggleHeaderMenu()" title="Menu">
+                        <span>☰</span>
+                    </button>
+                    <div class="header-dropdown" id="headerDropdown">
+                        <div class="dropdown-section-label">Actions</div>
+                        <button class="dropdown-item" onclick="openImportClaudeModal(); closeHeaderMenu();">
+                            <span class="item-icon">📥</span> Import from Claude
+                        </button>
+                        <button class="dropdown-item" onclick="openExportModal(); closeHeaderMenu();">
+                            <span class="item-icon">📤</span> Export Data
+                        </button>
+                        <button class="dropdown-item" onclick="openSettingsModal(); closeHeaderMenu();">
+                            <span class="item-icon">⚙️</span> Settings
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-section-label">Backups</div>
+                        <button class="dropdown-item" onclick="createCheckpoint(); closeHeaderMenu();">
+                            <span class="item-icon">💾</span> Create Checkpoint
+                        </button>
+                        <button class="dropdown-item" onclick="showCheckpointManager(); closeHeaderMenu();">
+                            <span class="item-icon">📂</span> Restore Checkpoint
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-section-label">Cloud Sync</div>
+                        <button class="dropdown-item" onclick="forceUploadToCloud(); closeHeaderMenu();">
+                            <span class="item-icon">☁️⬆️</span> Force Upload to Cloud
+                        </button>
+                        <button class="dropdown-item" onclick="forcePullFromCloud(); closeHeaderMenu();">
+                            <span class="item-icon">☁️⬇️</span> Force Pull from Cloud
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -4839,11 +5561,13 @@
         <!-- ============================================ -->
         <div id="simpleView" class="simple-view active">
 
-            <!-- Status Hero -->
-            <div class="status-hero" id="statusHero">
+            <!-- Status Hero (Phase 2C - compact mode on mobile) -->
+            <div class="status-hero compact-mobile" id="statusHero">
                 <span class="status-icon" id="statusIcon">✅</span>
-                <div class="status-label green" id="statusLabel">ON TRACK</div>
-                <div class="status-subtitle" id="statusSubtitle">Looking good so far</div>
+                <div class="status-info">
+                    <div class="status-label green" id="statusLabel">ON TRACK</div>
+                    <div class="status-subtitle" id="statusSubtitle">Looking good so far</div>
+                </div>
             </div>
 
             <!-- Progress Bars -->
@@ -4921,15 +5645,18 @@
                 </div>
             </div>
 
-            <!-- Workout Recommendation -->
-            <div class="context-card" id="workoutCard">
-                <div class="context-row">
+            <!-- Workout Recommendation (Phase 2C - collapsible) -->
+            <div class="context-card collapsible" id="workoutCard" onclick="toggleContextCard('workoutCard')">
+                <div class="context-row card-header" style="cursor: pointer;">
                     <span class="context-icon">🏋️</span>
                     <div class="context-content">
                         <div class="context-title" id="workoutTitle">Gym streak: 0 days</div>
-                        <div class="context-detail" id="workoutDetail">Last workout: Never logged</div>
-                        <div class="context-detail" id="workoutRec" style="color: var(--accent-green); margin-top: 4px;">→ Good day to start</div>
                     </div>
+                    <span class="collapse-toggle">▼</span>
+                </div>
+                <div class="card-content" style="padding-left: 36px;">
+                    <div class="context-detail" id="workoutDetail">Last workout: Never logged</div>
+                    <div class="context-detail" id="workoutRec" style="color: var(--accent-green); margin-top: 4px;">→ Good day to start</div>
                 </div>
             </div>
 
@@ -4945,33 +5672,36 @@
                 </div>
             </div>
 
-            <!-- Stimulant Context Panel -->
-            <div class="stim-context" id="stimContext">
-                <div class="stim-context-header">
-                    <span>📊</span> Stimulant Context
+            <!-- Stimulant Context Panel (Phase 2C - collapsible) -->
+            <div class="stim-context context-card collapsible" id="stimContext" onclick="toggleContextCard('stimContext')">
+                <div class="stim-context-header card-header">
+                    <span><span>📊</span> Stimulant Context</span>
+                    <span class="collapse-toggle">▼</span>
                 </div>
-                <div class="stim-context-grid">
-                    <div class="stim-item">
-                        <span class="stim-label">Adderall</span>
-                        <span class="stim-value" id="stimAdderall">Not synced</span>
+                <div class="card-content">
+                    <div class="stim-context-grid">
+                        <div class="stim-item">
+                            <span class="stim-label">Adderall</span>
+                            <span class="stim-value" id="stimAdderall">Not synced</span>
+                        </div>
+                        <div class="stim-item">
+                            <span class="stim-label">Caffeine</span>
+                            <span class="stim-value" id="stimCaffeine">Not synced</span>
+                        </div>
+                        <div class="stim-item">
+                            <span class="stim-label">Projected Sleep</span>
+                            <span class="stim-value good" id="stimSleep">--</span>
+                        </div>
+                        <div class="stim-item">
+                            <span class="stim-label">Sleep Last Night</span>
+                            <span class="stim-value" id="stimSleepHours">--</span>
+                        </div>
                     </div>
-                    <div class="stim-item">
-                        <span class="stim-label">Caffeine</span>
-                        <span class="stim-value" id="stimCaffeine">Not synced</span>
+                    <div style="text-align: center;">
+                        <span class="mode-badge green" id="modeBadge">🟢 GREEN MODE</span>
                     </div>
-                    <div class="stim-item">
-                        <span class="stim-label">Projected Sleep</span>
-                        <span class="stim-value good" id="stimSleep">--</span>
-                    </div>
-                    <div class="stim-item">
-                        <span class="stim-label">Sleep Last Night</span>
-                        <span class="stim-value" id="stimSleepHours">--</span>
-                    </div>
+                    <button onclick="event.stopPropagation(); showLogicModal();" class="logic-log-btn">📋 Show Logic</button>
                 </div>
-                <div style="text-align: center;">
-                    <span class="mode-badge green" id="modeBadge">🟢 GREEN MODE</span>
-                </div>
-                <button onclick="showLogicModal()" class="logic-log-btn">📋 Show Logic</button>
             </div>
 
             <!-- Action Buttons -->
@@ -5504,16 +6234,37 @@
     <div id="addMealModal" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">Add Meal</span>
+                <span class="modal-title">🍽️ Add Meal</span>
                 <button class="modal-close" onclick="closeAddMealModal()">×</button>
             </div>
             <div class="modal-body">
+                <!-- Date/Time Section (Phase 2A) -->
+                <div class="meal-date-section">
+                    <div class="meal-date-label">When did you eat?</div>
+                    <div class="date-picker-row">
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="mealDateInput" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" id="mealTimeInput" class="form-input">
+                        </div>
+                    </div>
+                    <div class="date-quick-btns">
+                        <button type="button" class="date-quick-btn active" onclick="setMealDate('today')">Today</button>
+                        <button type="button" class="date-quick-btn" onclick="setMealDate('yesterday')">Yesterday</button>
+                        <button type="button" class="date-quick-btn" onclick="setMealDate('custom')">Other</button>
+                    </div>
+                </div>
+
                 <!-- Frequent Foods -->
                 <div class="frequent-foods-section">
                     <div class="frequent-foods-label">Frequent Foods (tap to add)</div>
                     <div class="frequent-foods-grid" id="frequentFoodsGrid">
                         <!-- Populated by JS -->
                     </div>
+                    <button type="button" onclick="openFrequentFoodsModal()" style="width: 100%; margin-top: 10px; padding: 8px; background: var(--bg-tertiary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85em;">⚙️ Manage Frequent Foods</button>
                 </div>
 
                 <div class="divider">OR</div>
@@ -5540,6 +6291,10 @@
                         <label class="form-label">Carbs (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
                         <input type="number" id="mealCarbsInput" class="form-input" placeholder="e.g., 40">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Fat (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
+                        <input type="number" id="mealFatInput" class="form-input" placeholder="e.g., 15">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -5556,18 +6311,24 @@
 
     <!-- Weigh-in Modal -->
     <div id="weighInModal" class="modal-overlay">
-        <div class="modal">
+        <div class="modal" style="max-width: 420px;">
             <div class="modal-header">
                 <span class="modal-title">⚖️ Weekly Weigh-In</span>
                 <button class="modal-close" onclick="closeWeighInModal()">×</button>
             </div>
             <div class="modal-body">
+                <!-- Date selector for weigh-in -->
                 <div class="form-group">
-                    <label class="form-label">Today's weight (lbs)</label>
+                    <label class="form-label">Date</label>
+                    <input type="date" id="weighInDateInput" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Weight (lbs)</label>
                     <input type="number" id="weightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
                 </div>
 
-                <div class="form-group" style="margin-top: 15px;">
+                <div class="form-group">
                     <label class="form-label">Body fat % (from smart scale, optional)</label>
                     <input type="number" id="bodyFatInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
                     <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">
@@ -5575,11 +6336,19 @@
                     </div>
                 </div>
 
+                <button class="submit-btn" onclick="saveWeighIn()">Save Weigh-In</button>
+
                 <div class="weight-trend" id="weightTrend">
                     <!-- Populated by JS -->
                 </div>
 
-                <button class="submit-btn" onclick="saveWeighIn()" style="margin-top: 20px;">Save Weigh-In</button>
+                <!-- Weigh-in History Section (Phase 2B) -->
+                <div class="weighin-history-section">
+                    <div class="weighin-history-title">📊 Recent Weigh-Ins</div>
+                    <div class="weighin-history-list" id="weighInHistoryList">
+                        <!-- Populated by renderWeighInHistory() -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -5807,6 +6576,171 @@
                     New Base TDEE: <span id="newTDEE">2,450</span> kcal
                 </div>
                 <button class="submit-btn" onclick="closeMetabolicModal()">Got it! 💪</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import from Claude Modal (Phase 2A) -->
+    <div id="importClaudeModal" class="modal-overlay">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <span class="modal-title">📥 Import from Claude</span>
+                <button class="modal-close" onclick="closeImportClaudeModal()">×</button>
+            </div>
+            <div class="modal-body import-modal-body">
+                <div class="import-format-help">
+                    <strong>Paste data from Claude in these formats:</strong><br><br>
+                    <code>MEAL|Name|Calories|Protein|Carbs|Fat|Time|Date</code><br>
+                    <code>WORKOUT|Type|Duration|Calories|Time|Date</code><br>
+                    <code>WEIGHIN|Weight|BodyFat|Date</code><br><br>
+                    <em>Example:</em><br>
+                    <code>MEAL|Chicken Bowl|450|35|40|12|12:30|2026-01-27</code><br>
+                    <code>WORKOUT|Lift|45|280|17:00|2026-01-26</code>
+                </div>
+
+                <textarea id="importClaudeInput" class="import-textarea" placeholder="Paste your data here..."></textarea>
+
+                <div id="importPreviewSection" class="import-preview-section" style="display: none;">
+                    <div class="import-preview-header">
+                        <span class="import-preview-title">Preview</span>
+                        <span class="import-preview-count" id="importPreviewCount">0 items</span>
+                    </div>
+                    <div class="import-preview-list" id="importPreviewList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="import-actions">
+                    <button class="import-btn preview" onclick="previewImportData()">👁️ Preview</button>
+                    <button class="import-btn import" id="importConfirmBtn" onclick="confirmImportData()" disabled>✓ Import All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frequent Foods Manager Modal (Phase 2B) -->
+    <div id="frequentFoodsModal" class="modal-overlay">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <span class="modal-title">🍽️ Manage Frequent Foods</span>
+                <button class="modal-close" onclick="closeFrequentFoodsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="ff-manager-header">
+                    <span class="ff-manager-title">Your Foods Library</span>
+                    <span class="ff-manager-count" id="ffManagerCount">0 items</span>
+                </div>
+                <div class="ff-list" id="ffManagerList">
+                    <!-- Populated by JS -->
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="submit-btn" onclick="openAddFrequentFoodModal()" style="background: var(--accent-green);">+ Add New Food</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Frequent Food Modal (Phase 2B) -->
+    <div id="editFrequentFoodModal" class="modal-overlay">
+        <div class="modal" style="max-width: 380px;">
+            <div class="modal-header">
+                <span class="modal-title" id="editFfModalTitle">Edit Food</span>
+                <button class="modal-close" onclick="closeEditFrequentFoodModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Food Name</label>
+                    <input type="text" id="editFfName" class="form-input" placeholder="e.g., Chicken Bowl">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Calories</label>
+                        <input type="number" id="editFfCalories" class="form-input" placeholder="e.g., 450">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Protein (g)</label>
+                        <input type="number" id="editFfProtein" class="form-input" placeholder="e.g., 35">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Carbs (g)</label>
+                        <input type="number" id="editFfCarbs" class="form-input" placeholder="e.g., 40">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fat (g)</label>
+                        <input type="number" id="editFfFat" class="form-input" placeholder="e.g., 15">
+                    </div>
+                </div>
+                <button class="submit-btn" id="saveFfBtn" onclick="saveFrequentFood()">Save Food</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Weigh-in Modal (Phase 2A) -->
+    <div id="editWeighInModal" class="modal-overlay">
+        <div class="modal" style="max-width: 380px;">
+            <div class="modal-header">
+                <span class="modal-title">✏️ Edit Weigh-In</span>
+                <button class="modal-close" onclick="closeEditWeighInModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="editWeighInDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (lbs)</label>
+                    <input type="number" id="editWeighInWeight" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Body Fat % (optional)</label>
+                    <input type="number" id="editWeighInBf" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="submit-btn" style="flex: 1; background: var(--accent-red);" onclick="deleteEditingWeighIn()">🗑️ Delete</button>
+                    <button class="submit-btn" style="flex: 2;" onclick="saveEditingWeighIn()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Body Comp Modal (Phase 2A) -->
+    <div id="editBodyCompModal" class="modal-overlay">
+        <div class="modal" style="max-width: 380px;">
+            <div class="modal-header">
+                <span class="modal-title">✏️ Edit Body Comp</span>
+                <button class="modal-close" onclick="closeEditBodyCompModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="editBcDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (lbs)</label>
+                    <input type="number" id="editBcWeight" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Body Fat %</label>
+                    <input type="number" id="editBcBodyFat" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                </div>
+                <div id="editBcMeasurements" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Neck (in)</label>
+                            <input type="number" id="editBcNeck" class="form-input" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Waist (in)</label>
+                            <input type="number" id="editBcWaist" class="form-input" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="submit-btn" style="flex: 1; background: var(--accent-red);" onclick="deleteEditingBodyComp()">🗑️ Delete</button>
+                    <button class="submit-btn" style="flex: 2;" onclick="saveEditingBodyComp()">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -8427,7 +9361,26 @@
             document.getElementById('mealCalInput').value = '';
             document.getElementById('mealProteinInput').value = '';
             document.getElementById('mealCarbsInput').value = '';
+            const fatInput = document.getElementById('mealFatInput');
+            if (fatInput) fatInput.value = '';
             document.getElementById('saveToFrequent').checked = false;
+
+            // Initialize date/time pickers (Phase 2A)
+            const today = getLocalDateString();
+            const dateInput = document.getElementById('mealDateInput');
+            const timeInput = document.getElementById('mealTimeInput');
+            if (dateInput) {
+                dateInput.value = today;
+                dateInput.max = today;
+            }
+            if (timeInput) {
+                timeInput.value = getCurrentTimeET();
+            }
+            // Reset quick date buttons
+            const quickBtns = document.querySelectorAll('.date-quick-btn');
+            quickBtns.forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === 0); // "Today" is first
+            });
 
             // Highlight carbs input on Brain Days
             const carbsRow = document.getElementById('carbsInputRow');
@@ -8495,7 +9448,13 @@
             const calories = parseInt(document.getElementById('mealCalInput').value) || 0;
             const protein = parseInt(document.getElementById('mealProteinInput').value) || 0;
             const carbs = parseInt(document.getElementById('mealCarbsInput').value) || 0;
+            const fat = parseInt(document.getElementById('mealFatInput')?.value) || 0;
             const saveToFrequent = document.getElementById('saveToFrequent').checked;
+
+            // Get date and time from new pickers (Phase 2A)
+            const mealDate = document.getElementById('mealDateInput')?.value || getLocalDateString();
+            const mealTime = document.getElementById('mealTimeInput')?.value || getCurrentTimeET();
+            const today = getLocalDateString();
 
             if (!name) {
                 showToast('Please enter a food name');
@@ -8516,45 +9475,62 @@
                 calories: calories,
                 protein: protein,
                 carbs: carbs,
-                time: existingMeal ? existingMeal.time : formatTimeET(new Date()),
+                fat: fat,
+                time: existingMeal ? existingMeal.time : formatTimeET(mealTime),
+                date: mealDate,
                 fromLibrary: false
             };
 
-            if (!state.today.meals || Array.isArray(state.today.meals)) {
-                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
-            }
+            // Determine if meal is for today or a past date
+            const isForToday = mealDate === today;
 
             if (editingMealId) {
-                // Update existing meal
+                // Update existing meal (today only for now)
+                if (!state.today.meals || Array.isArray(state.today.meals)) {
+                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                }
                 state.today.meals[editingMealId] = meal;
                 editingMealId = null;
                 showToast('✓ Meal updated');
-            } else {
-                // Add new meal
-                state.today.meals[mealId] = meal;
-
-                // Save to frequent foods if checked
-                if (saveToFrequent) {
-                    const newFoodId = generateId('ff');
-                    const newFood = {
-                        id: newFoodId,
-                        name: name,
-                        calories: calories,
-                        protein: protein,
-                        carbs: carbs,
-                        uses: 1
-                    };
-                    if (!state.frequentFoods || Array.isArray(state.frequentFoods)) {
-                        state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
-                    }
-                    state.frequentFoods[newFoodId] = newFood;
-                    showToast(`✓ Added ${name} to frequent foods`);
-                } else {
-                    showToast(`✓ Added ${name}`);
+            } else if (isForToday) {
+                // Add new meal for today
+                if (!state.today.meals || Array.isArray(state.today.meals)) {
+                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
                 }
-
+                state.today.meals[mealId] = meal;
+                showToast(`✓ Added ${name}`);
                 // Award XP for logging meal (only for new meals)
                 awardXP(XP_REWARDS.logMeal, 'Meal logged');
+            } else {
+                // Add meal to historical dailyLogs (past date)
+                if (!state.dailyLogs[mealDate]) {
+                    state.dailyLogs[mealDate] = { date: mealDate, meals: {}, workouts: {} };
+                }
+                if (!state.dailyLogs[mealDate].meals || Array.isArray(state.dailyLogs[mealDate].meals)) {
+                    state.dailyLogs[mealDate].meals = migrateArrayToObject(state.dailyLogs[mealDate].meals, 'meal');
+                }
+                state.dailyLogs[mealDate].meals[mealId] = meal;
+                const dateDisplay = new Date(mealDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                showToast(`✓ Added ${name} to ${dateDisplay}`);
+            }
+
+            // Save to frequent foods if checked
+            if (saveToFrequent && !editingMealId) {
+                const newFoodId = generateId('ff');
+                const newFood = {
+                    id: newFoodId,
+                    name: name,
+                    calories: calories,
+                    protein: protein,
+                    carbs: carbs,
+                    fat: fat,
+                    uses: 1
+                };
+                if (!state.frequentFoods || Array.isArray(state.frequentFoods)) {
+                    state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
+                }
+                state.frequentFoods[newFoodId] = newFood;
+                showToast(`✓ Also saved to frequent foods`);
             }
 
             saveState();
@@ -8563,8 +9539,10 @@
             renderDashboard();
             closeAddMealModal();
 
-            // Check if targets are hit
-            setTimeout(() => checkDayCompletion(), 500);
+            // Check if targets are hit (only for today's meals)
+            if (isForToday) {
+                setTimeout(() => checkDayCompletion(), 500);
+            }
         }
 
         function deleteMeal(mealId) {
@@ -10667,6 +11645,8 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         }
 
         function saveWeighIn() {
+            // Get date from the date input (Phase 2A enhancement)
+            const weighInDate = document.getElementById('weighInDateInput')?.value || getLocalDateString();
             const weight = parseFloat(document.getElementById('weightInput').value);
             const bodyFatInput = document.getElementById('bodyFatInput');
             const bodyFatValue = bodyFatInput ? parseFloat(bodyFatInput.value) : NaN;
@@ -10684,16 +11664,15 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             }
 
             const weighIn = {
-                date: getLocalDateString(),
+                date: weighInDate,
                 weight: weight,
                 bodyFat: bodyFat,
                 leanMass: bodyFat ? Math.round((weight * (1 - bodyFat / 100)) * 10) / 10 : null,
                 fatMass: bodyFat ? Math.round((weight * (bodyFat / 100)) * 10) / 10 : null
             };
 
-            // Check if already weighed in today
-            const today = getLocalDateString();
-            const existingWeighIn = getValues(state.weighIns).find(w => w.date === today);
+            // Check if already weighed in on the selected date
+            const existingWeighIn = getValues(state.weighIns).find(w => w.date === weighInDate);
 
             const isNewWeighIn = !existingWeighIn;
             if (!state.weighIns || Array.isArray(state.weighIns)) {
@@ -10708,10 +11687,18 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 state.weighIns[weighInId] = weighIn;
             }
 
-            // Update current weight in profile
-            state.profile.currentWeight_lbs = weight;
-            if (bodyFat) {
-                state.profile.currentBodyFat = bodyFat;
+            // Update current weight in profile ONLY if this is the most recent weigh-in
+            const allWeighIns = getValues(state.weighIns);
+            const mostRecentDate = allWeighIns.length > 0
+                ? allWeighIns.sort((a, b) => b.date.localeCompare(a.date))[0].date
+                : null;
+            const isThisTheMostRecent = !mostRecentDate || weighInDate >= mostRecentDate;
+
+            if (isThisTheMostRecent) {
+                state.profile.currentWeight_lbs = weight;
+                if (bodyFat) {
+                    state.profile.currentBodyFat = bodyFat;
+                }
             }
 
             // Award XP for weekly weigh-in (only for new weigh-ins)
@@ -10719,27 +11706,29 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 awardXP(XP_REWARDS.weeklyWeighIn, 'Weigh-in logged');
             }
 
-            // Check for TDEE recalibration (every 5 lbs lost)
-            const lost = state.profile.startingWeight_lbs - weight;
-            const currentMilestone = Math.floor(lost / 5);
-            const previousMilestone = state.profile.lastMilestone || 0;
+            // Check for TDEE recalibration (every 5 lbs lost) - only for most recent
+            if (isThisTheMostRecent) {
+                const lost = state.profile.startingWeight_lbs - weight;
+                const currentMilestone = Math.floor(lost / 5);
+                const previousMilestone = state.profile.lastMilestone || 0;
 
-            if (currentMilestone > previousMilestone && currentMilestone > 0) {
-                // New milestone reached - apply TDEE adjustment
-                const newMilestones = currentMilestone - previousMilestone;
-                const adjustment = newMilestones * 50;
+                if (currentMilestone > previousMilestone && currentMilestone > 0) {
+                    // New milestone reached - apply TDEE adjustment
+                    const newMilestones = currentMilestone - previousMilestone;
+                    const adjustment = newMilestones * 50;
 
-                // Store original TDEE if not already stored
-                if (!state.profile.tdee_original) {
-                    state.profile.tdee_original = state.profile.tdee_base;
+                    // Store original TDEE if not already stored
+                    if (!state.profile.tdee_original) {
+                        state.profile.tdee_original = state.profile.tdee_base;
+                    }
+
+                    // Apply the adjustment
+                    state.profile.tdee_base -= adjustment;
+                    state.profile.lastMilestone = currentMilestone;
+
+                    // Show metabolic adaptation modal
+                    showMetabolicAdaptationModal(newMilestones * 5, adjustment, state.profile.tdee_base);
                 }
-
-                // Apply the adjustment
-                state.profile.tdee_base -= adjustment;
-                state.profile.lastMilestone = currentMilestone;
-
-                // Show metabolic adaptation modal
-                showMetabolicAdaptationModal(newMilestones * 5, adjustment, state.profile.tdee_base);
             }
 
             // Check weight loss achievements
@@ -10749,7 +11738,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             closeWeighInModal();
             renderDashboard();
             renderProgressTab();
-            showToast(`✓ Weight logged: ${weight} lbs` + (bodyFat ? ` @ ${bodyFat}% BF` : ''));
+
+            const dateDisplay = weighInDate === getLocalDateString() ? '' :
+                ` on ${new Date(weighInDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            showToast(`✓ Weight logged: ${weight} lbs${dateDisplay}` + (bodyFat ? ` @ ${bodyFat}% BF` : ''));
         }
 
         // ============================================
@@ -12088,6 +13080,740 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 <div class="body-comp-history-title">Recent Check-Ins</div>
                 ${rows}
             `;
+        }
+
+        // ============================================
+        // PHASE 2A-C: UI/UX OVERHAUL FUNCTIONS
+        // ============================================
+
+        // --- Header Dropdown Menu (Phase 2B) ---
+        function toggleHeaderMenu() {
+            const dropdown = document.getElementById('headerDropdown');
+            dropdown.classList.toggle('active');
+
+            // Close when clicking outside
+            if (dropdown.classList.contains('active')) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeHeaderMenuOnClickOutside);
+                }, 10);
+            }
+        }
+
+        function closeHeaderMenu() {
+            const dropdown = document.getElementById('headerDropdown');
+            dropdown.classList.remove('active');
+            document.removeEventListener('click', closeHeaderMenuOnClickOutside);
+        }
+
+        function closeHeaderMenuOnClickOutside(e) {
+            const container = document.querySelector('.header-menu-container');
+            if (container && !container.contains(e.target)) {
+                closeHeaderMenu();
+            }
+        }
+
+        // --- Import from Claude Modal (Phase 2A) ---
+        let parsedImportData = [];
+
+        function openImportClaudeModal() {
+            document.getElementById('importClaudeInput').value = '';
+            document.getElementById('importPreviewSection').style.display = 'none';
+            document.getElementById('importConfirmBtn').disabled = true;
+            parsedImportData = [];
+            document.getElementById('importClaudeModal').classList.add('active');
+        }
+
+        function closeImportClaudeModal() {
+            document.getElementById('importClaudeModal').classList.remove('active');
+        }
+
+        function previewImportData() {
+            const input = document.getElementById('importClaudeInput').value.trim();
+            if (!input) {
+                showToast('Please paste some data first');
+                return;
+            }
+
+            const lines = input.split('\n').filter(l => l.trim());
+            parsedImportData = [];
+
+            for (const line of lines) {
+                const parsed = parseImportLine(line.trim());
+                if (parsed) {
+                    parsedImportData.push(parsed);
+                }
+            }
+
+            if (parsedImportData.length === 0) {
+                showToast('No valid data found. Check format.');
+                return;
+            }
+
+            // Render preview
+            renderImportPreview();
+            document.getElementById('importPreviewSection').style.display = 'block';
+            document.getElementById('importConfirmBtn').disabled = false;
+        }
+
+        function parseImportLine(line) {
+            const parts = line.split('|');
+            if (parts.length < 2) return null;
+
+            const type = parts[0].toUpperCase();
+
+            if (type === 'MEAL') {
+                // MEAL|Name|Calories|Protein|Carbs|Fat|Time|Date
+                if (parts.length < 3) return null;
+                return {
+                    type: 'meal',
+                    name: parts[1] || 'Unknown',
+                    calories: parseInt(parts[2]) || 0,
+                    protein: parseInt(parts[3]) || 0,
+                    carbs: parseInt(parts[4]) || 0,
+                    fat: parseInt(parts[5]) || 0,
+                    time: parts[6] || getCurrentTimeET(),
+                    date: parts[7] || getLocalDateString()
+                };
+            } else if (type === 'WORKOUT') {
+                // WORKOUT|Type|Duration|Calories|Time|Date
+                if (parts.length < 3) return null;
+                return {
+                    type: 'workout',
+                    workoutType: parts[1] || 'Workout',
+                    duration: parseInt(parts[2]) || 30,
+                    calories: parseInt(parts[3]) || 200,
+                    time: parts[4] || getCurrentTimeET(),
+                    date: parts[5] || getLocalDateString()
+                };
+            } else if (type === 'WEIGHIN') {
+                // WEIGHIN|Weight|BodyFat|Date
+                if (parts.length < 2) return null;
+                return {
+                    type: 'weighin',
+                    weight: parseFloat(parts[1]) || 0,
+                    bodyFat: parts[2] ? parseFloat(parts[2]) : null,
+                    date: parts[3] || getLocalDateString()
+                };
+            }
+
+            return null;
+        }
+
+        function renderImportPreview() {
+            const list = document.getElementById('importPreviewList');
+            const count = document.getElementById('importPreviewCount');
+
+            count.textContent = `${parsedImportData.length} item${parsedImportData.length !== 1 ? 's' : ''}`;
+
+            list.innerHTML = parsedImportData.map(item => {
+                let icon, details;
+                if (item.type === 'meal') {
+                    icon = '🍽️';
+                    details = `${item.calories} cal • ${item.protein}g P`;
+                } else if (item.type === 'workout') {
+                    icon = '💪';
+                    details = `${item.duration}min • ${item.calories} cal`;
+                } else if (item.type === 'weighin') {
+                    icon = '⚖️';
+                    details = `${item.weight} lbs${item.bodyFat ? ` • ${item.bodyFat}% BF` : ''}`;
+                }
+
+                const name = item.name || item.workoutType || 'Weigh-in';
+                const dateDisplay = item.date === getLocalDateString() ? 'Today' :
+                    new Date(item.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                return `
+                    <div class="import-preview-item">
+                        <div class="import-item-type">
+                            <span class="import-item-icon ${item.type}">${icon}</span>
+                            <span class="import-item-name">${escapeHtml(name)}</span>
+                        </div>
+                        <div class="import-item-details">${details} • ${dateDisplay}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function confirmImportData() {
+            if (parsedImportData.length === 0) {
+                showToast('No data to import');
+                return;
+            }
+
+            const today = getLocalDateString();
+            let mealsAdded = 0, workoutsAdded = 0, weighInsAdded = 0;
+
+            for (const item of parsedImportData) {
+                if (item.type === 'meal') {
+                    const mealId = generateId('meal');
+                    const meal = {
+                        id: mealId,
+                        name: item.name,
+                        calories: item.calories,
+                        protein: item.protein,
+                        carbs: item.carbs,
+                        fat: item.fat,
+                        time: formatTimeET(item.time),
+                        date: item.date,
+                        fromImport: true
+                    };
+
+                    if (item.date === today) {
+                        if (!state.today.meals || Array.isArray(state.today.meals)) {
+                            state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                        }
+                        state.today.meals[mealId] = meal;
+                    } else {
+                        // Add to historical dailyLogs
+                        if (!state.dailyLogs[item.date]) {
+                            state.dailyLogs[item.date] = { date: item.date, meals: {}, workouts: {} };
+                        }
+                        if (!state.dailyLogs[item.date].meals) state.dailyLogs[item.date].meals = {};
+                        state.dailyLogs[item.date].meals[mealId] = meal;
+                    }
+                    mealsAdded++;
+
+                } else if (item.type === 'workout') {
+                    const workoutId = generateId('workout');
+                    const workout = {
+                        id: workoutId,
+                        type: item.workoutType,
+                        duration: item.duration,
+                        calories: item.calories,
+                        time: formatTimeET(item.time),
+                        date: item.date
+                    };
+
+                    if (item.date === today) {
+                        if (!state.today.workouts || Array.isArray(state.today.workouts)) {
+                            state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                        }
+                        state.today.workouts[workoutId] = workout;
+                        state.today.workedOut = true;
+                        state.today.activeCalories = (state.today.activeCalories || 0) + workout.calories;
+                    } else {
+                        if (!state.dailyLogs[item.date]) {
+                            state.dailyLogs[item.date] = { date: item.date, meals: {}, workouts: {} };
+                        }
+                        if (!state.dailyLogs[item.date].workouts) state.dailyLogs[item.date].workouts = {};
+                        state.dailyLogs[item.date].workouts[workoutId] = workout;
+                        state.dailyLogs[item.date].workedOut = true;
+                    }
+                    workoutsAdded++;
+
+                } else if (item.type === 'weighin') {
+                    if (item.weight < 100 || item.weight > 400) continue;
+
+                    const wiId = generateId('weighin');
+                    const weighIn = {
+                        id: wiId,
+                        date: item.date,
+                        weight: item.weight,
+                        bodyFat: item.bodyFat,
+                        leanMass: item.bodyFat ? Math.round((item.weight * (1 - item.bodyFat / 100)) * 10) / 10 : null,
+                        fatMass: item.bodyFat ? Math.round((item.weight * (item.bodyFat / 100)) * 10) / 10 : null
+                    };
+
+                    if (!state.weighIns || Array.isArray(state.weighIns)) {
+                        state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                    }
+                    state.weighIns[wiId] = weighIn;
+
+                    // Update profile if today's weigh-in
+                    if (item.date === today) {
+                        state.profile.currentWeight_lbs = item.weight;
+                        if (item.bodyFat) state.profile.currentBodyFat = item.bodyFat;
+                    }
+                    weighInsAdded++;
+                }
+            }
+
+            // Recalculate targets if workouts were added today
+            if (workoutsAdded > 0) {
+                const tdee = calculateTDEE(
+                    state.profile.currentWeight_lbs,
+                    state.profile.height_cm,
+                    state.profile.age,
+                    state.today.activeCalories
+                );
+                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+            }
+
+            saveState();
+            saveDayLog();
+            closeImportClaudeModal();
+            renderSimpleView();
+            renderMealsList();
+            renderWorkoutsList();
+
+            const parts = [];
+            if (mealsAdded > 0) parts.push(`${mealsAdded} meal${mealsAdded !== 1 ? 's' : ''}`);
+            if (workoutsAdded > 0) parts.push(`${workoutsAdded} workout${workoutsAdded !== 1 ? 's' : ''}`);
+            if (weighInsAdded > 0) parts.push(`${weighInsAdded} weigh-in${weighInsAdded !== 1 ? 's' : ''}`);
+
+            showToast(`✓ Imported: ${parts.join(', ')}`);
+        }
+
+        // --- Weigh-in Edit/Delete (Phase 2A) ---
+        let editingWeighInId = null;
+
+        function openWeighInModal() {
+            const today = getLocalDateString();
+            document.getElementById('weighInDateInput').value = today;
+            document.getElementById('weighInDateInput').max = today;
+            document.getElementById('weightInput').value = '';
+            document.getElementById('bodyFatInput').value = '';
+            renderWeightTrend();
+            renderWeighInHistory();
+            document.getElementById('weighInModal').classList.add('active');
+        }
+
+        function renderWeighInHistory() {
+            const list = document.getElementById('weighInHistoryList');
+            const weighIns = getValues(state.weighIns);
+
+            if (weighIns.length === 0) {
+                list.innerHTML = '<div class="empty-history-state">No weigh-ins yet. Start tracking!</div>';
+                return;
+            }
+
+            // Sort by date descending, take last 10
+            const sorted = [...weighIns].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+
+            list.innerHTML = sorted.map(wi => {
+                const date = new Date(wi.date + 'T12:00:00');
+                const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                return `
+                    <div class="weighin-history-item">
+                        <div class="weighin-info">
+                            <div class="weighin-date">${dateStr}</div>
+                            <div class="weighin-weight">${wi.weight} lbs</div>
+                            ${wi.bodyFat ? `<div class="weighin-bf">${wi.bodyFat}% body fat</div>` : ''}
+                        </div>
+                        <div class="weighin-actions">
+                            <button class="weighin-action-btn" onclick="openEditWeighIn('${wi.id}')" title="Edit">✏️</button>
+                            <button class="weighin-action-btn delete" onclick="deleteWeighIn('${wi.id}')" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openEditWeighIn(id) {
+            const wi = state.weighIns[id];
+            if (!wi) {
+                showToast('Weigh-in not found');
+                return;
+            }
+
+            editingWeighInId = id;
+            document.getElementById('editWeighInDate').value = wi.date;
+            document.getElementById('editWeighInDate').max = getLocalDateString();
+            document.getElementById('editWeighInWeight').value = wi.weight;
+            document.getElementById('editWeighInBf').value = wi.bodyFat || '';
+
+            document.getElementById('editWeighInModal').classList.add('active');
+        }
+
+        function closeEditWeighInModal() {
+            document.getElementById('editWeighInModal').classList.remove('active');
+            editingWeighInId = null;
+        }
+
+        function saveEditingWeighIn() {
+            if (!editingWeighInId) return;
+
+            const newDate = document.getElementById('editWeighInDate').value;
+            const newWeight = parseFloat(document.getElementById('editWeighInWeight').value);
+            const newBf = document.getElementById('editWeighInBf').value ? parseFloat(document.getElementById('editWeighInBf').value) : null;
+
+            if (!newDate || isNaN(newWeight) || newWeight < 100 || newWeight > 400) {
+                showToast('Please enter valid weight (100-400 lbs)');
+                return;
+            }
+
+            if (newBf !== null && (newBf < 5 || newBf > 50)) {
+                showToast('Body fat must be between 5% and 50%');
+                return;
+            }
+
+            state.weighIns[editingWeighInId] = {
+                ...state.weighIns[editingWeighInId],
+                date: newDate,
+                weight: newWeight,
+                bodyFat: newBf,
+                leanMass: newBf ? Math.round((newWeight * (1 - newBf / 100)) * 10) / 10 : null,
+                fatMass: newBf ? Math.round((newWeight * (newBf / 100)) * 10) / 10 : null
+            };
+
+            // Update profile if this is most recent weigh-in
+            const allWeighIns = getValues(state.weighIns);
+            const mostRecent = allWeighIns.sort((a, b) => b.date.localeCompare(a.date))[0];
+            if (mostRecent && mostRecent.id === editingWeighInId) {
+                state.profile.currentWeight_lbs = newWeight;
+                if (newBf) state.profile.currentBodyFat = newBf;
+            }
+
+            saveState();
+            closeEditWeighInModal();
+            renderWeighInHistory();
+            renderWeightTrend();
+            renderProgressTab();
+            showToast('✓ Weigh-in updated');
+        }
+
+        function deleteWeighIn(id) {
+            if (!confirm('Delete this weigh-in?')) return;
+
+            delete state.weighIns[id];
+            saveState();
+            renderWeighInHistory();
+            renderWeightTrend();
+            renderProgressTab();
+            showToast('Weigh-in deleted');
+        }
+
+        function deleteEditingWeighIn() {
+            if (!editingWeighInId) return;
+            if (!confirm('Delete this weigh-in?')) return;
+
+            delete state.weighIns[editingWeighInId];
+            saveState();
+            closeEditWeighInModal();
+            renderWeighInHistory();
+            renderWeightTrend();
+            renderProgressTab();
+            showToast('Weigh-in deleted');
+        }
+
+        // --- Body Comp Edit/Delete (Phase 2A) ---
+        let editingBodyCompId = null;
+
+        function renderBodyCompHistoryWithActions() {
+            const container = document.getElementById('bodyCompHistory');
+            const history = getValues(state.bodyCompHistory);
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="body-comp-empty">
+                        No body comp check-ins yet.<br>
+                        Take your first measurement to track progress!
+                    </div>
+                `;
+                return;
+            }
+
+            const sorted = history.sort((a, b) => a.date.localeCompare(b.date));
+            const recent = sorted.slice(-5).reverse();
+
+            const rows = recent.map((m, idx) => {
+                const date = new Date(m.date + 'T12:00:00');
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                let changeHtml = '';
+                if (idx < recent.length - 1) {
+                    const older = recent[idx + 1];
+                    const bfChange = m.bodyFat - older.bodyFat;
+                    if (bfChange !== 0) {
+                        const isGood = bfChange < 0;
+                        changeHtml = `<span class="history-change ${isGood ? 'good' : 'bad'}">${bfChange > 0 ? '+' : ''}${bfChange.toFixed(1)}%</span>`;
+                    }
+                }
+
+                const methodIcon = m.method === 'navy' ? '📏' : '⚖️';
+
+                return `
+                    <div class="body-comp-history-item">
+                        <span class="history-date">${methodIcon} ${dateStr}</span>
+                        <span class="history-stats">
+                            <span class="history-bf">${m.bodyFat}%</span>
+                            <span class="history-weight">${m.weight} lbs</span>
+                            ${changeHtml}
+                        </span>
+                        <div class="body-comp-actions">
+                            <button class="bc-action-btn" onclick="openEditBodyComp('${m.id}')" title="Edit">✏️</button>
+                            <button class="bc-action-btn delete" onclick="deleteBodyComp('${m.id}')" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="body-comp-history-title">Recent Check-Ins</div>
+                ${rows}
+            `;
+        }
+
+        // Override the original function
+        const originalRenderBodyCompHistory = renderBodyCompHistory;
+        renderBodyCompHistory = renderBodyCompHistoryWithActions;
+
+        function openEditBodyComp(id) {
+            const bc = state.bodyCompHistory[id];
+            if (!bc) {
+                showToast('Record not found');
+                return;
+            }
+
+            editingBodyCompId = id;
+            document.getElementById('editBcDate').value = bc.date;
+            document.getElementById('editBcDate').max = getLocalDateString();
+            document.getElementById('editBcWeight').value = bc.weight;
+            document.getElementById('editBcBodyFat').value = bc.bodyFat;
+
+            // Show measurements section if navy method
+            const measurementsSection = document.getElementById('editBcMeasurements');
+            if (bc.method === 'navy' && bc.measurements) {
+                measurementsSection.style.display = 'block';
+                document.getElementById('editBcNeck').value = bc.measurements.neck || '';
+                document.getElementById('editBcWaist').value = bc.measurements.waist || '';
+            } else {
+                measurementsSection.style.display = 'none';
+            }
+
+            document.getElementById('editBodyCompModal').classList.add('active');
+        }
+
+        function closeEditBodyCompModal() {
+            document.getElementById('editBodyCompModal').classList.remove('active');
+            editingBodyCompId = null;
+        }
+
+        function saveEditingBodyComp() {
+            if (!editingBodyCompId) return;
+
+            const bc = state.bodyCompHistory[editingBodyCompId];
+            const newDate = document.getElementById('editBcDate').value;
+            const newWeight = parseFloat(document.getElementById('editBcWeight').value);
+            const newBf = parseFloat(document.getElementById('editBcBodyFat').value);
+
+            if (!newDate || isNaN(newWeight) || isNaN(newBf)) {
+                showToast('Please fill in all fields');
+                return;
+            }
+
+            if (newBf < 5 || newBf > 50) {
+                showToast('Body fat must be between 5% and 50%');
+                return;
+            }
+
+            const updated = {
+                ...bc,
+                date: newDate,
+                weight: newWeight,
+                bodyFat: newBf,
+                leanMass: Math.round((newWeight * (1 - newBf / 100)) * 10) / 10,
+                fatMass: Math.round((newWeight * (newBf / 100)) * 10) / 10
+            };
+
+            // Update measurements if navy method
+            if (bc.method === 'navy') {
+                const neck = parseFloat(document.getElementById('editBcNeck').value);
+                const waist = parseFloat(document.getElementById('editBcWaist').value);
+                if (neck && waist) {
+                    updated.measurements = { neck, waist };
+                }
+            }
+
+            state.bodyCompHistory[editingBodyCompId] = updated;
+            saveState();
+            closeEditBodyCompModal();
+            renderBodyCompHistory();
+            showToast('✓ Body comp updated');
+        }
+
+        function deleteBodyComp(id) {
+            if (!confirm('Delete this body comp record?')) return;
+
+            delete state.bodyCompHistory[id];
+            saveState();
+            renderBodyCompHistory();
+            showToast('Body comp record deleted');
+        }
+
+        function deleteEditingBodyComp() {
+            if (!editingBodyCompId) return;
+            if (!confirm('Delete this body comp record?')) return;
+
+            delete state.bodyCompHistory[editingBodyCompId];
+            saveState();
+            closeEditBodyCompModal();
+            renderBodyCompHistory();
+            showToast('Body comp record deleted');
+        }
+
+        // --- Frequent Foods Management (Phase 2B) ---
+        let editingFrequentFoodId = null;
+
+        function openFrequentFoodsModal() {
+            closeAddMealModal();
+            renderFrequentFoodsList();
+            document.getElementById('frequentFoodsModal').classList.add('active');
+        }
+
+        function closeFrequentFoodsModal() {
+            document.getElementById('frequentFoodsModal').classList.remove('active');
+        }
+
+        function renderFrequentFoodsList() {
+            const list = document.getElementById('ffManagerList');
+            const count = document.getElementById('ffManagerCount');
+            const foods = getValues(state.frequentFoods);
+
+            count.textContent = `${foods.length} items`;
+
+            if (foods.length === 0) {
+                list.innerHTML = '<div class="empty-history-state">No frequent foods. Add some!</div>';
+                return;
+            }
+
+            // Sort by uses (most used first)
+            const sorted = [...foods].sort((a, b) => (b.uses || 0) - (a.uses || 0));
+
+            list.innerHTML = sorted.map(food => `
+                <div class="ff-item">
+                    <div class="ff-item-info">
+                        <div class="ff-item-name">${escapeHtml(food.name)}</div>
+                        <div class="ff-item-macros">${food.calories} cal • ${food.protein}g P${food.carbs ? ` • ${food.carbs}g C` : ''}</div>
+                    </div>
+                    <span class="ff-item-uses">${food.uses || 0} uses</span>
+                    <div class="ff-item-actions">
+                        <button class="ff-action-btn" onclick="openEditFrequentFood('${food.id}')" title="Edit">✏️</button>
+                        <button class="ff-action-btn delete" onclick="deleteFrequentFood('${food.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddFrequentFoodModal() {
+            editingFrequentFoodId = null;
+            document.getElementById('editFfModalTitle').textContent = 'Add New Food';
+            document.getElementById('editFfName').value = '';
+            document.getElementById('editFfCalories').value = '';
+            document.getElementById('editFfProtein').value = '';
+            document.getElementById('editFfCarbs').value = '';
+            document.getElementById('editFfFat').value = '';
+            document.getElementById('saveFfBtn').textContent = 'Add Food';
+            document.getElementById('editFrequentFoodModal').classList.add('active');
+        }
+
+        function openEditFrequentFood(id) {
+            const food = state.frequentFoods[id];
+            if (!food) {
+                showToast('Food not found');
+                return;
+            }
+
+            editingFrequentFoodId = id;
+            document.getElementById('editFfModalTitle').textContent = 'Edit Food';
+            document.getElementById('editFfName').value = food.name;
+            document.getElementById('editFfCalories').value = food.calories;
+            document.getElementById('editFfProtein').value = food.protein;
+            document.getElementById('editFfCarbs').value = food.carbs || '';
+            document.getElementById('editFfFat').value = food.fat || '';
+            document.getElementById('saveFfBtn').textContent = 'Save Changes';
+            document.getElementById('editFrequentFoodModal').classList.add('active');
+        }
+
+        function closeEditFrequentFoodModal() {
+            document.getElementById('editFrequentFoodModal').classList.remove('active');
+            editingFrequentFoodId = null;
+        }
+
+        function saveFrequentFood() {
+            const name = document.getElementById('editFfName').value.trim();
+            const calories = parseInt(document.getElementById('editFfCalories').value) || 0;
+            const protein = parseInt(document.getElementById('editFfProtein').value) || 0;
+            const carbs = parseInt(document.getElementById('editFfCarbs').value) || 0;
+            const fat = parseInt(document.getElementById('editFfFat').value) || 0;
+
+            if (!name) {
+                showToast('Please enter a food name');
+                return;
+            }
+
+            if (calories <= 0) {
+                showToast('Please enter calories');
+                return;
+            }
+
+            if (!state.frequentFoods || Array.isArray(state.frequentFoods)) {
+                state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
+            }
+
+            if (editingFrequentFoodId) {
+                // Update existing
+                state.frequentFoods[editingFrequentFoodId] = {
+                    ...state.frequentFoods[editingFrequentFoodId],
+                    name, calories, protein, carbs, fat
+                };
+                showToast('✓ Food updated');
+            } else {
+                // Add new
+                const id = generateId('ff');
+                state.frequentFoods[id] = {
+                    id, name, calories, protein, carbs, fat, uses: 0
+                };
+                showToast('✓ Food added');
+            }
+
+            saveState();
+            closeEditFrequentFoodModal();
+            renderFrequentFoodsList();
+        }
+
+        function deleteFrequentFood(id) {
+            if (!confirm('Delete this food from your library?')) return;
+
+            delete state.frequentFoods[id];
+            saveState();
+            renderFrequentFoodsList();
+            showToast('Food deleted');
+        }
+
+        // --- Date Picker Helpers for Add Meal (Phase 2A) ---
+        function setMealDate(option) {
+            const dateInput = document.getElementById('mealDateInput');
+            const quickBtns = document.querySelectorAll('.date-quick-btn');
+
+            quickBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const today = new Date();
+
+            if (option === 'today') {
+                dateInput.value = getLocalDateString(today);
+            } else if (option === 'yesterday') {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                dateInput.value = getLocalDateString(yesterday);
+            } else {
+                // Custom - just focus the date input
+                dateInput.focus();
+            }
+        }
+
+        // --- Collapsible Context Cards (Phase 2C) ---
+        function toggleContextCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.classList.toggle('collapsed');
+                // Save collapsed state to localStorage
+                const collapsedCards = JSON.parse(localStorage.getItem('bodyComp_collapsedCards') || '{}');
+                collapsedCards[cardId] = card.classList.contains('collapsed');
+                localStorage.setItem('bodyComp_collapsedCards', JSON.stringify(collapsedCards));
+            }
+        }
+
+        function restoreCollapsedCards() {
+            const collapsedCards = JSON.parse(localStorage.getItem('bodyComp_collapsedCards') || '{}');
+            Object.keys(collapsedCards).forEach(cardId => {
+                if (collapsedCards[cardId]) {
+                    const card = document.getElementById(cardId);
+                    if (card) card.classList.add('collapsed');
+                }
+            });
         }
 
         // ============================================
@@ -15368,6 +17094,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Schedule end-of-day auto-save
             scheduleEndOfDaySave();
+
+            // Phase 2C: Restore collapsed state of context cards
+            restoreCollapsedCards();
         });
     </script>
 </body>
