@@ -1496,6 +1496,23 @@
             color: var(--accent-orange);
         }
 
+        /* Focus Mode: Plain badges without colors */
+        .mode-badge.plain {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .intensity-badge.plain {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+        .mode-banner.plain {
+            background: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+        .mode-banner.plain .mode-value {
+            color: var(--text-primary);
+        }
+
         /* Logic Log Button (8A.9) */
         .logic-log-btn {
             background: var(--bg-tertiary);
@@ -7771,11 +7788,17 @@
             const totals = getTodayTotals();
             const currentDeficit = getCurrentDeficit();
 
-            // Mode banner
+            // Mode banner (respect focusMode)
             const modeBanner = document.getElementById('modeBanner');
-            modeBanner.className = `mode-banner ${modeDisplay.class}`;
-            document.getElementById('modeValue').textContent = `${modeDisplay.emoji} ${modeDisplay.label}`;
-            document.getElementById('modeSubtitle').textContent = modeDisplay.subtitle;
+            if (state.settings?.focusMode) {
+                modeBanner.className = 'mode-banner plain';
+                document.getElementById('modeValue').textContent = modeDisplay.label;  // No emoji
+                document.getElementById('modeSubtitle').textContent = '';  // Hide subtitle in focus mode
+            } else {
+                modeBanner.className = `mode-banner ${modeDisplay.class}`;
+                document.getElementById('modeValue').textContent = `${modeDisplay.emoji} ${modeDisplay.label}`;
+                document.getElementById('modeSubtitle').textContent = modeDisplay.subtitle;
+            }
 
             // Brain day indicator
             if (state.today.isBrainDay) {
@@ -8046,8 +8069,14 @@
                 'ORANGE': { emoji: '🟠', label: 'ORANGE MODE', class: 'orange' }
             };
             const mc = modeConfig[mode] || modeConfig['GREEN'];
-            modeBadge.textContent = `${mc.emoji} ${mc.label}`;
-            modeBadge.className = `mode-badge ${mc.class}`;
+            // Focus mode: show plain text without emoji/color
+            if (state.settings?.focusMode) {
+                modeBadge.textContent = mc.label.replace(' MODE', '');  // Just "GREEN", "YELLOW", "ORANGE"
+                modeBadge.className = 'mode-badge plain';
+            } else {
+                modeBadge.textContent = `${mc.emoji} ${mc.label}`;
+                modeBadge.className = `mode-badge ${mc.class}`;
+            }
 
             // Update schedule card (God Mode 8A.1)
             renderScheduleCard();
@@ -8076,11 +8105,14 @@
             // Show the card
             scheduleCard.style.display = 'block';
 
-            // Update intensity badge
+            // Update intensity badge (respect focusMode)
             const intensityBadge = document.getElementById('scheduleIntensity');
             const intensityClass = schedule.scheduleIntensity.toLowerCase();
             intensityBadge.textContent = schedule.scheduleIntensity;
-            intensityBadge.className = `intensity-badge ${intensityClass}`;
+            // Focus mode: plain badge without color
+            intensityBadge.className = state.settings?.focusMode
+                ? 'intensity-badge plain'
+                : `intensity-badge ${intensityClass}`;
 
             // Update summary
             document.getElementById('scheduleSummary').textContent =
