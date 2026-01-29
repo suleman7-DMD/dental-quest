@@ -5759,6 +5759,738 @@
             }
         }
 
+        /* ==================== CRASH OUT MODE - DARK THEME ==================== */
+
+        /* Setup Screen */
+        .crash-out-setup {
+            text-align: center;
+            padding: 60px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .setup-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .setup-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #e6edf3;
+            margin: 0 0 8px 0;
+        }
+
+        .setup-date {
+            font-size: 16px;
+            color: #8b949e;
+            margin: 0 0 32px 0;
+        }
+
+        .setup-question {
+            font-size: 18px;
+            color: #e6edf3;
+            margin: 0 0 24px 0;
+        }
+
+        .sleep-options {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .sleep-option {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+
+        .sleep-option:hover {
+            border-color: #f59e0b;
+            background: #334155;
+        }
+
+        .option-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .option-time {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .setup-hint {
+            font-size: 14px;
+            color: #6e7681;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .custom-time-picker {
+            margin-bottom: 25px;
+        }
+
+        .custom-time-picker input[type="time"] {
+            padding: 12px 20px;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            background: #1e293b;
+            color: #e6edf3;
+            font-size: 1.1em;
+        }
+
+        .custom-time-picker button {
+            margin-left: 10px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #f59e0b;
+            color: #0f172a;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Timeline */
+        .crash-out-timeline {
+            padding: 20px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e6edf3;
+            margin: 0;
+        }
+
+        .btn-change-sleep {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #8b949e;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-change-sleep:hover {
+            border-color: #f59e0b;
+            color: #e6edf3;
+        }
+
+        /* Time Summary */
+        .time-summary {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .time-until-sleep {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #e6edf3;
+        }
+
+        .time-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .time-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            transition: width 0.3s;
+        }
+
+        .time-progress-fill.overscheduled {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .scheduled-time-text {
+            font-size: 14px;
+            color: #8b949e;
+            white-space: nowrap;
+        }
+
+        /* Overscheduled Warning */
+        .overscheduled-warning {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .warning-icon {
+            font-size: 20px;
+        }
+
+        .warning-text {
+            flex: 1;
+            color: #f87171;
+            font-size: 14px;
+        }
+
+        .btn-dismiss {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Timeline Content */
+        .timeline-content {
+            position: relative;
+            padding-left: 100px;
+            margin-bottom: 24px;
+        }
+
+        /* NOW Marker */
+        .timeline-now {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .now-label {
+            position: absolute;
+            left: -100px;
+            background: #f59e0b;
+            color: #0f172a;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .now-time {
+            font-size: 14px;
+            color: #8b949e;
+            margin-left: 12px;
+        }
+
+        .now-line {
+            flex: 1;
+            height: 2px;
+            background: #f59e0b;
+        }
+
+        /* Timeline Task */
+        .timeline-task {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .task-time-marker {
+            position: absolute;
+            left: -100px;
+            width: 90px;
+            text-align: right;
+        }
+
+        .task-start-time {
+            font-size: 14px;
+            font-weight: 500;
+            color: #8b949e;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .task-card-timeline {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .task-card-timeline:hover {
+            border-color: #3b82f6;
+        }
+
+        .task-card-timeline.locked-in {
+            border-left: 3px solid #f59e0b;
+        }
+
+        .task-tier-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .task-tier-badge.locked-in {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .task-tier-badge.today {
+            background: #3b82f6;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-content .task-text {
+            display: block;
+            font-size: 15px;
+            color: #e6edf3;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .task-duration-info {
+            font-size: 12px;
+            color: #8b949e;
+        }
+
+        .timeline-task-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .timeline-task-actions button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timeline-task-actions .btn-start {
+            background: #22c55e;
+            color: white;
+            border: none;
+        }
+
+        .timeline-task-actions .btn-edit {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #8b949e;
+        }
+
+        .timeline-task-actions .btn-remove {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #8b949e;
+        }
+
+        .timeline-task-actions .btn-edit:hover,
+        .timeline-task-actions .btn-remove:hover {
+            border-color: #f87171;
+            color: #f87171;
+        }
+
+        .duration-select {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e6edf3;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Protected Hour */
+        .timeline-protected {
+            background: linear-gradient(135deg, rgba(100, 116, 139, 0.2), rgba(71, 85, 105, 0.2));
+            border: 2px dashed #64748b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .protected-badge {
+            font-size: 32px;
+        }
+
+        .protected-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .protected-time {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .protected-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .protected-hint {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* Sleep Marker */
+        .timeline-sleep {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .sleep-icon {
+            font-size: 24px;
+        }
+
+        .sleep-time {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e6edf3;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .sleep-label {
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        /* Unscheduled Pool */
+        .unscheduled-pool {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .pool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .pool-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6edf3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pool-count {
+            font-size: 12px;
+            color: #8b949e;
+        }
+
+        .pool-hint {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0 0 16px 0;
+        }
+
+        .pool-tasks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pool-task-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 140px;
+            max-width: 200px;
+            flex: 1;
+        }
+
+        .pool-task-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .pool-task-text {
+            font-size: 13px;
+            color: #e6edf3;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .pool-task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pool-task-duration {
+            font-size: 12px;
+            color: #8b949e;
+        }
+
+        .pool-task-tier {
+            font-size: 12px;
+        }
+
+        .btn-add-to-timeline {
+            background: #14b8a6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .btn-add-to-timeline:hover {
+            background: #0d9488;
+        }
+
+        /* Empty Timeline State */
+        .timeline-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .timeline-empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-empty-text {
+            font-size: 16px;
+            color: #8b949e;
+            margin-bottom: 8px;
+        }
+
+        .timeline-empty-hint {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Reset Button */
+        .reset-container {
+            text-align: center;
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #8b949e;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        /* Duration Modal - Dark Theme */
+        .duration-modal-dark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .duration-modal-content-dark {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .duration-modal-title {
+            font-weight: 600;
+            color: #e6edf3;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .duration-current {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #8b949e;
+        }
+
+        .duration-current strong {
+            color: #e6edf3;
+            font-size: 18px;
+        }
+
+        .duration-adjust-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .duration-adjust-row button {
+            padding: 8px 12px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #e6edf3;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .duration-adjust-row button:hover {
+            border-color: #3b82f6;
+        }
+
+        .duration-quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .duration-quick-row button {
+            padding: 10px 16px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: transparent;
+            color: #e6edf3;
+            cursor: pointer;
+        }
+
+        .duration-quick-row button:hover {
+            background: #334155;
+        }
+
+        .duration-modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .duration-modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .duration-modal-actions .btn-cancel {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #8b949e;
+        }
+
+        .duration-modal-actions .btn-apply {
+            background: #3b82f6;
+            border: none;
+            color: white;
+        }
+
+        /* Crash Out Responsive */
+        @media (max-width: 768px) {
+            .timeline-content {
+                padding-left: 0;
+            }
+            .task-time-marker {
+                position: relative;
+                left: 0;
+                width: auto;
+                text-align: left;
+                margin-bottom: 8px;
+            }
+            .now-label {
+                position: relative;
+                left: 0;
+            }
+            .sleep-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            .sleep-option {
+                width: 100%;
+                max-width: 200px;
+            }
+            .pool-tasks {
+                flex-direction: column;
+            }
+            .pool-task-card {
+                max-width: none;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -6063,112 +6795,116 @@
                 <div id="crashOutModeContent" class="cc-mode-content" style="display: none;">
 
                     <!-- Setup Screen (shown when no sleep time set) -->
-                    <div id="crashOutSetup" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 40px; text-align: center; border: 2px solid rgba(255,107,53,0.3);">
-                        <div style="font-size: 2em; margin-bottom: 15px;">🔥</div>
-                        <div style="font-size: 1.5em; font-weight: 700; color: white; margin-bottom: 10px;">CRASH OUT MODE</div>
-                        <div style="color: #9ca3af; margin-bottom: 25px;" id="crashOutSetupDate">📅 It's Wednesday, Jan 29 • 3:47 PM</div>
-                        <div style="color: white; font-size: 1.1em; margin-bottom: 25px;">When are you going to sleep?</div>
-                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
-                            <button onclick="setCrashOutSleep('tonight')" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
-                                <div style="font-size: 0.9em; opacity: 0.7;">TONIGHT</div>
-                                <div style="font-size: 1.2em; margin-top: 5px;">11:00 PM</div>
+                    <div id="crashOutSetup" class="crash-out-setup">
+                        <div class="setup-icon">🔥</div>
+                        <h2 class="setup-title">CRASH OUT MODE</h2>
+                        <p class="setup-date" id="crashOutSetupDate">📅 Thursday, Jan 29 • 5:01 PM</p>
+                        <p class="setup-question">When are you going to sleep?</p>
+
+                        <div class="sleep-options">
+                            <button class="sleep-option" onclick="setCrashOutSleep('tonight')">
+                                <span class="option-label">TONIGHT</span>
+                                <span class="option-time">11:00 PM</span>
                             </button>
-                            <button onclick="setCrashOutSleep('tomorrow')" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
-                                <div style="font-size: 0.9em; opacity: 0.7;">TOMORROW</div>
-                                <div style="font-size: 1.2em; margin-top: 5px;">4:00 AM</div>
+                            <button class="sleep-option" onclick="setCrashOutSleep('tomorrow')">
+                                <span class="option-label">TOMORROW</span>
+                                <span class="option-time">4:00 AM</span>
                             </button>
-                            <button onclick="showCustomSleepPicker()" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
-                                <div style="font-size: 0.9em; opacity: 0.7;">CUSTOM</div>
-                                <div style="font-size: 1.2em; margin-top: 5px;">⚙️</div>
+                            <button class="sleep-option" onclick="showCustomSleepPicker()">
+                                <span class="option-label">CUSTOM</span>
+                                <span class="option-time">⚙️</span>
                             </button>
                         </div>
-                        <div id="customSleepPicker" style="display: none; margin-bottom: 25px;">
-                            <input type="time" id="customSleepTime" style="padding: 12px 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; background: rgba(255,255,255,0.1); color: white; font-size: 1.1em;">
-                            <button onclick="setCustomSleepTime()" style="margin-left: 10px; padding: 12px 20px; border: none; border-radius: 10px; background: #ff6b35; color: white; font-weight: 600; cursor: pointer;">Set</button>
+
+                        <div id="customSleepPicker" class="custom-time-picker" style="display: none;">
+                            <input type="time" id="customSleepTime">
+                            <button onclick="setCustomSleepTime()">Set</button>
                         </div>
+
+                        <p class="setup-hint">
+                            ℹ️ This sets your available hours. Tasks will be scheduled between now and 1 hour before sleep.
+                        </p>
                     </div>
 
                     <!-- Timeline (shown after sleep time set) -->
-                    <div id="crashOutTimeline" style="display: none;">
-                        <!-- Time Until Sleep Header -->
-                        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid rgba(255,107,53,0.3);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <div style="color: white; font-weight: 700; font-size: 1.1em;">🔥 CRASH OUT</div>
-                                <button onclick="changeSleepTime()" style="padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: transparent; color: white; font-size: 0.85em; cursor: pointer;">Change Sleep</button>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
-                                <span style="color: white; font-size: 1.3em;">⏰</span>
-                                <span style="color: white; font-size: 1.2em; font-weight: 600;" id="timeUntilSleep">7h 13m until sleep</span>
-                                <span style="color: #9ca3af;" id="sleepTimeDisplay">(11:00 PM)</span>
-                            </div>
-                            <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden;">
-                                <div id="crashOutTimelineProgress" style="height: 100%; width: 70%; background: linear-gradient(90deg, #ff6b35, #f7931e); border-radius: 5px;"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="scheduledTimeDisplay">5.5h scheduled</span>
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="availableTimeDisplay">1.7h available</span>
-                            </div>
+                    <div id="crashOutTimeline" class="crash-out-timeline" style="display: none;">
+
+                        <!-- Header -->
+                        <div class="timeline-header">
+                            <h2>🔥 CRASH OUT</h2>
+                            <button class="btn-change-sleep" onclick="changeSleepTime()">Change Sleep</button>
                         </div>
 
-                        <!-- Overscheduled Warning -->
-                        <div id="overscheduledWarning" style="display: none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 15px; margin-bottom: 16px;">
-                            <div style="display: flex; align-items: center; gap: 10px; color: #92400e;">
-                                <span style="font-size: 1.2em;">⚠️</span>
-                                <div>
-                                    <div style="font-weight: 700;">OVERSCHEDULED</div>
-                                    <div style="font-size: 0.9em;" id="overscheduledText">9h of tasks, only 7h available</div>
+                        <!-- Time Summary -->
+                        <div class="time-summary">
+                            <div class="time-until-sleep">
+                                <span class="time-icon">⏰</span>
+                                <span id="timeUntilSleep">5h 59m until sleep (11:00 PM)</span>
+                            </div>
+                            <div class="time-progress">
+                                <div class="time-progress-bar">
+                                    <div class="time-progress-fill" id="crashOutTimelineProgress" style="width: 0%;"></div>
                                 </div>
-                                <button onclick="dismissOverscheduledWarning()" style="margin-left: auto; padding: 6px 12px; border: none; border-radius: 6px; background: rgba(146,64,14,0.2); color: #92400e; font-size: 0.85em; cursor: pointer;">Dismiss</button>
+                                <span class="scheduled-time-text" id="scheduledTimeText">0h / 5h scheduled</span>
                             </div>
                         </div>
 
-                        <!-- Timeline Container -->
-                        <div id="crashOutTimelineContainer" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                            <!-- NOW Marker -->
-                            <div id="nowMarker" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #ff6b35;">
-                                <div style="width: 12px; height: 12px; background: #ff6b35; border-radius: 50%; box-shadow: 0 0 10px rgba(255,107,53,0.5);"></div>
-                                <span style="color: #ff6b35; font-weight: 700;">NOW</span>
-                                <span style="color: #9ca3af;" id="currentTimeDisplay">3:47 PM</span>
+                        <!-- Overscheduled Warning (hidden by default) -->
+                        <div class="overscheduled-warning" id="overscheduledWarning" style="display: none;">
+                            <span class="warning-icon">⚠️</span>
+                            <span class="warning-text">You're <strong id="overByAmount">1.5h</strong> overscheduled. Consider moving tasks to tomorrow.</span>
+                            <button class="btn-dismiss" onclick="dismissOverscheduledWarning()">Dismiss</button>
+                        </div>
+
+                        <!-- The Timeline -->
+                        <div class="timeline-content" id="timelineContent">
+
+                            <!-- NOW marker -->
+                            <div class="timeline-now">
+                                <span class="now-label">NOW</span>
+                                <span class="now-time" id="currentTimeDisplay">5:01 PM</span>
+                                <div class="now-line"></div>
                             </div>
 
-                            <!-- Timeline Tasks -->
-                            <div id="crashOutTimelineTasks">
-                                <!-- Tasks will be rendered here -->
-                            </div>
+                            <!-- Timeline tasks will be rendered here -->
+                            <div id="crashOutTimelineTasks"></div>
 
-                            <!-- Protected Wind-Down Hour -->
-                            <div id="windDownHour" style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; border: 2px dashed #9ca3af;"
-                                 data-tooltip="No tasks can be scheduled here - time to wind down before sleep">
-                                <div style="display: flex; align-items: center; gap: 10px; color: #6b7280;">
-                                    <span style="font-size: 1.5em;">🛡️</span>
-                                    <div>
-                                        <div style="font-weight: 700;" id="windDownTimeRange">10:00 PM - 11:00 PM</div>
-                                        <div style="font-size: 0.85em;">PROTECTED WIND-DOWN HOUR</div>
-                                        <div style="font-size: 0.8em; opacity: 0.7;">Nothing can be scheduled here</div>
-                                    </div>
+                            <!-- Protected Wind-Down -->
+                            <div class="timeline-protected" id="windDownHour">
+                                <div class="protected-badge">🛡️</div>
+                                <div class="protected-info">
+                                    <span class="protected-time" id="windDownTimeRange">10:00 PM - 11:00 PM</span>
+                                    <span class="protected-label">PROTECTED WIND-DOWN HOUR</span>
+                                    <span class="protected-hint">Nothing can be scheduled here. Time to relax.</span>
                                 </div>
                             </div>
 
-                            <!-- Sleep Marker -->
-                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #e5e7eb;">
-                                <span style="font-size: 1.5em;">😴</span>
-                                <span style="color: #6b7280; font-weight: 700;" id="sleepMarkerTime">11:00 PM</span>
-                                <span style="color: #9ca3af;">SLEEP</span>
+                            <!-- Sleep marker -->
+                            <div class="timeline-sleep">
+                                <span class="sleep-icon">😴</span>
+                                <span class="sleep-time" id="sleepMarkerTime">11:00 PM</span>
+                                <span class="sleep-label">SLEEP</span>
                             </div>
+
                         </div>
 
-                        <!-- Unscheduled Tasks Pool -->
-                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                            <div style="font-weight: 700; color: #374151; margin-bottom: 15px;">UNSCHEDULED <span style="font-weight: 400; color: #9ca3af;">(drag onto timeline)</span></div>
-                            <div id="unscheduledTasksPool" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 60px;">
-                                <!-- Unscheduled task cards will be rendered here -->
+                        <!-- Unscheduled Pool -->
+                        <div class="unscheduled-pool">
+                            <div class="pool-header">
+                                <span class="pool-title">UNSCHEDULED TASKS</span>
+                                <span class="pool-count" id="unscheduledCount">0 tasks</span>
+                            </div>
+                            <p class="pool-hint">Click [+ Add] to schedule a task on the timeline</p>
+                            <div class="pool-tasks" id="unscheduledTasksPool">
+                                <!-- Unscheduled task cards -->
                             </div>
                         </div>
 
                         <!-- Reset Button -->
-                        <div style="text-align: center;">
-                            <button onclick="resetCrashOutDay()" data-tooltip="Clear your entire Crash Out schedule and start fresh" style="padding: 12px 24px; border: 2px solid #dc2626; border-radius: 10px; background: transparent; color: #dc2626; font-weight: 600; cursor: pointer;">🔄 Reset Day</button>
+                        <div class="reset-container">
+                            <button class="btn-reset" onclick="resetCrashOutDay()">🔄 Reset Day</button>
                         </div>
+
                     </div>
                 </div>
 
@@ -15337,24 +16073,22 @@
 
             // Update time displays
             const timeUntilEl = document.getElementById('timeUntilSleep');
-            const sleepDisplayEl = document.getElementById('sleepTimeDisplay');
             const sleepMarkerEl = document.getElementById('sleepMarkerTime');
             const currentTimeEl = document.getElementById('currentTimeDisplay');
             const windDownEl = document.getElementById('windDownTimeRange');
-
-            if (hoursUntilSleep > 0) {
-                const hours = Math.floor(hoursUntilSleep);
-                const minutes = Math.floor((hoursUntilSleep % 1) * 60);
-                if (timeUntilEl) timeUntilEl.textContent = `${hours}h ${minutes}m until sleep`;
-            } else {
-                if (timeUntilEl) timeUntilEl.textContent = 'Past sleep time';
-            }
 
             const sleepTimeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             const windDownStartStr = windDownStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             const currentTimeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            if (sleepDisplayEl) sleepDisplayEl.textContent = `(${sleepTimeStr})`;
+            if (hoursUntilSleep > 0) {
+                const hours = Math.floor(hoursUntilSleep);
+                const minutes = Math.floor((hoursUntilSleep % 1) * 60);
+                if (timeUntilEl) timeUntilEl.textContent = `${hours}h ${minutes}m until sleep (${sleepTimeStr})`;
+            } else {
+                if (timeUntilEl) timeUntilEl.textContent = `Past sleep time (${sleepTimeStr})`;
+            }
+
             if (sleepMarkerEl) sleepMarkerEl.textContent = sleepTimeStr;
             if (currentTimeEl) currentTimeEl.textContent = currentTimeStr;
             if (windDownEl) windDownEl.textContent = `${windDownStartStr} - ${sleepTimeStr}`;
@@ -15364,36 +16098,33 @@
             const totalScheduledMinutes = scheduledTasks.reduce((sum, t) => sum + (t.crashOutDuration || 30), 0);
             const availableMinutes = Math.max(0, (hoursUntilSleep - 1) * 60); // Subtract wind-down hour
 
-            const scheduledEl = document.getElementById('scheduledTimeDisplay');
-            const availableEl = document.getElementById('availableTimeDisplay');
+            const scheduledTextEl = document.getElementById('scheduledTimeText');
             const progressEl = document.getElementById('crashOutTimelineProgress');
 
-            if (scheduledEl) {
-                const h = Math.floor(totalScheduledMinutes / 60);
-                const m = totalScheduledMinutes % 60;
-                scheduledEl.textContent = h > 0 ? `${h}h ${m}m scheduled` : `${m}m scheduled`;
-            }
-            if (availableEl) {
-                const remaining = Math.max(0, availableMinutes - totalScheduledMinutes);
-                const h = Math.floor(remaining / 60);
-                const m = Math.round(remaining % 60);
-                availableEl.textContent = h > 0 ? `${h}h ${m}m available` : `${m}m available`;
+            if (scheduledTextEl) {
+                const scheduledH = (totalScheduledMinutes / 60).toFixed(1);
+                const availH = (availableMinutes / 60).toFixed(1);
+                scheduledTextEl.textContent = `${scheduledH}h / ${availH}h scheduled`;
             }
             if (progressEl) {
                 const percent = availableMinutes > 0 ? Math.min(100, (totalScheduledMinutes / availableMinutes) * 100) : 0;
                 progressEl.style.width = `${percent}%`;
+                // Add overscheduled class if over 100%
+                if (percent > 100) {
+                    progressEl.classList.add('overscheduled');
+                } else {
+                    progressEl.classList.remove('overscheduled');
+                }
             }
 
             // Show overscheduled warning
             const warningEl = document.getElementById('overscheduledWarning');
-            const warningTextEl = document.getElementById('overscheduledText');
+            const overByEl = document.getElementById('overByAmount');
             if (totalScheduledMinutes > availableMinutes && availableMinutes > 0) {
-                if (warningEl) warningEl.style.display = 'block';
-                if (warningTextEl) {
-                    const overBy = totalScheduledMinutes - availableMinutes;
-                    const h = Math.floor(overBy / 60);
-                    const m = overBy % 60;
-                    warningTextEl.textContent = `${Math.round(totalScheduledMinutes/60)}h of tasks, only ${Math.round(availableMinutes/60)}h available. Consider moving ${h > 0 ? h + 'h ' : ''}${m}m to tomorrow.`;
+                if (warningEl) warningEl.style.display = 'flex';
+                if (overByEl) {
+                    const overBy = ((totalScheduledMinutes - availableMinutes) / 60).toFixed(1);
+                    overByEl.textContent = `${overBy}h`;
                 }
             } else {
                 if (warningEl) warningEl.style.display = 'none';
@@ -15412,10 +16143,10 @@
 
             if (scheduledTasks.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 30px; color: #9ca3af;">
-                        <div style="font-size: 2em; margin-bottom: 10px;">📋</div>
-                        <div>No tasks scheduled yet</div>
-                        <div style="font-size: 0.9em; margin-top: 5px;">Send tasks from Triage or drag from below</div>
+                    <div class="timeline-empty">
+                        <div class="timeline-empty-icon">📋</div>
+                        <div class="timeline-empty-text">No tasks scheduled yet</div>
+                        <div class="timeline-empty-hint">Send tasks from Triage or add from below</div>
                     </div>
                 `;
                 return;
@@ -15424,25 +16155,101 @@
             container.innerHTML = scheduledTasks.map(task => {
                 const isLockedIn = task.triageTier === 'lockedIn';
                 const tierIcon = isLockedIn ? '🔥' : '📋';
+                const duration = task.crashOutDuration || 30;
+
+                // Calculate end time
+                const startTime = task.crashOutTime || 'TBD';
+                let endTimeStr = '';
+                if (task.crashOutTime) {
+                    const startDate = parseCrashOutTime(task.crashOutTime);
+                    if (startDate) {
+                        const endDate = new Date(startDate.getTime() + duration * 60 * 1000);
+                        endTimeStr = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    }
+                }
 
                 return `
-                    <div class="crash-out-timeline-task ${isLockedIn ? 'locked-in' : ''}" data-task-id="${task.id}">
-                        <div class="task-time">${task.crashOutTime || 'TBD'}</div>
-                        <div class="task-title">${tierIcon} ${escapeHtml(task.text)}</div>
-                        <div class="task-duration">${task.crashOutDuration || 30}m</div>
-                        <div class="task-actions">
-                            <button class="start-btn" data-tooltip="Begin a focused work session" onclick="startTaskInFocus(${task.id})">▶ Start</button>
-                            <button data-tooltip="Edit task text" onclick="openTaskEditModal(${task.id})">✏️ Edit</button>
-                            <button data-tooltip="Remove from timeline" onclick="removeFromCrashOut(${task.id})">🗑️ Remove</button>
-                            <button data-tooltip="Change how long this task will take" onclick="openDurationModal(${task.id})">⏱️ Adjust</button>
+                    <div class="timeline-task" data-task-id="${task.id}">
+                        <div class="task-time-marker">
+                            <span class="task-start-time">${startTime}</span>
+                        </div>
+                        <div class="task-card-timeline ${isLockedIn ? 'locked-in' : ''}">
+                            <div class="task-tier-badge ${isLockedIn ? 'locked-in' : 'today'}">${tierIcon}</div>
+                            <div class="task-content">
+                                <span class="task-text">${escapeHtml(task.text)}</span>
+                                <span class="task-duration-info">Duration: ${duration} min${endTimeStr ? ' • Ends: ' + endTimeStr : ''}</span>
+                            </div>
+                            <div class="timeline-task-actions">
+                                <button class="btn-start" onclick="startTaskInFocus(${task.id})">▶ Start</button>
+                                <button class="btn-edit" onclick="openTaskEditModal(${task.id})">✎</button>
+                                <button class="btn-remove" onclick="removeFromCrashOut(${task.id})">🗑️</button>
+                                <select class="duration-select" onchange="setDurationDirect(${task.id}, this.value)">
+                                    <option value="15" ${duration === 15 ? 'selected' : ''}>15m</option>
+                                    <option value="30" ${duration === 30 ? 'selected' : ''}>30m</option>
+                                    <option value="45" ${duration === 45 ? 'selected' : ''}>45m</option>
+                                    <option value="60" ${duration === 60 ? 'selected' : ''}>60m</option>
+                                    <option value="90" ${duration === 90 ? 'selected' : ''}>90m</option>
+                                    <option value="120" ${duration === 120 ? 'selected' : ''}>2h</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // Helper to parse crash out time string back to Date
+        function parseCrashOutTime(timeStr) {
+            if (!timeStr) return null;
+            const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return null;
+
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const period = match[3].toUpperCase();
+
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            return date;
+        }
+
+        // Direct duration set from dropdown (with cascade)
+        function setDurationDirect(taskId, newDuration) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            const oldDuration = task.crashOutDuration || 30;
+            const diff = parseInt(newDuration) - oldDuration;
+
+            tasks[taskId] = { ...task, crashOutDuration: parseInt(newDuration) };
+
+            // Cascade shift all tasks after this one
+            if (diff !== 0) {
+                const taskTime = parseCrashOutTime(task.crashOutTime);
+                if (taskTime) {
+                    getTasksByTier('scheduled').filter(t => !t.completed && t.id !== taskId).forEach(t => {
+                        const tTime = parseCrashOutTime(t.crashOutTime);
+                        if (tTime && tTime > taskTime) {
+                            const newTime = new Date(tTime.getTime() + diff * 60 * 1000);
+                            tasks[t.id] = {
+                                ...tasks[t.id],
+                                crashOutTime: newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                            };
+                        }
+                    });
+                }
+            }
+
+            saveData();
+            renderCrashOutTimeline();
+        }
+
         function renderUnscheduledPool() {
             const container = document.getElementById('unscheduledTasksPool');
+            const countEl = document.getElementById('unscheduledCount');
             if (!container) return;
 
             // Get tasks that are doToday but NOT scheduled
@@ -15450,19 +16257,30 @@
                 !t.completed && !t.crashOutScheduled
             );
 
+            // Update count
+            if (countEl) countEl.textContent = `${unscheduledTasks.length} task${unscheduledTasks.length !== 1 ? 's' : ''}`;
+
             if (unscheduledTasks.length === 0) {
-                container.innerHTML = `<div style="color: #9ca3af; padding: 20px; text-align: center;">All tasks scheduled or completed!</div>`;
+                container.innerHTML = `<div style="color: #64748b; padding: 20px; text-align: center; width: 100%;">All tasks scheduled or completed!</div>`;
                 return;
             }
 
-            container.innerHTML = unscheduledTasks.map(task => `
-                <div class="unscheduled-card" draggable="true" data-task-id="${task.id}"
-                     data-tooltip="Click to add to timeline"
-                     onclick="sendToCrashOut(${task.id})">
-                    <div class="card-text">${escapeHtml(task.text.substring(0, 30))}${task.text.length > 30 ? '...' : ''}</div>
-                    <div class="card-duration">${task.size === 'big' ? '60m' : task.size === 'small' ? '15m' : '30m'}</div>
-                </div>
-            `).join('');
+            container.innerHTML = unscheduledTasks.map(task => {
+                const isLockedIn = task.triageTier === 'lockedIn';
+                const tierIcon = isLockedIn ? '🔥' : '📋';
+                const defaultDuration = task.size === 'big' ? 60 : task.size === 'small' ? 15 : 30;
+
+                return `
+                    <div class="pool-task-card" data-task-id="${task.id}">
+                        <div class="pool-task-text">${escapeHtml(task.text)}</div>
+                        <div class="pool-task-meta">
+                            <span class="pool-task-duration">${defaultDuration}m</span>
+                            <span class="pool-task-tier">${tierIcon}</span>
+                        </div>
+                        <button class="btn-add-to-timeline" onclick="sendToCrashOut(${task.id})">+ Add to Timeline</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function openDurationModal(taskId) {
@@ -15470,25 +16288,25 @@
             if (!task) return;
 
             const modal = document.createElement('div');
-            modal.className = 'duration-modal';
+            modal.className = 'duration-modal-dark';
             modal.id = 'durationModal';
+            modal.onclick = (e) => { if (e.target === modal) closeDurationModal(); };
             modal.innerHTML = `
-                <div class="duration-modal-content">
-                    <div style="font-weight: 700; margin-bottom: 15px;">Adjust: ${escapeHtml(task.text.substring(0, 40))}</div>
-                    <div style="text-align: center; margin-bottom: 10px;">
-                        Current duration: <strong id="currentDuration">${task.crashOutDuration || 30}m</strong>
+                <div class="duration-modal-content-dark">
+                    <div class="duration-modal-title">⏱️ Adjust: ${escapeHtml(task.text.substring(0, 35))}${task.text.length > 35 ? '...' : ''}</div>
+                    <div class="duration-current">
+                        Current: <strong id="currentDuration">${task.crashOutDuration || 30}m</strong>
                     </div>
-                    <div class="duration-adjust-btns">
+                    <div class="duration-adjust-row">
                         <button onclick="adjustDuration(${taskId}, -30)">-30m</button>
                         <button onclick="adjustDuration(${taskId}, -15)">-15m</button>
                         <button onclick="adjustDuration(${taskId}, -5)">-5m</button>
-                        <span style="padding: 8px;">●</span>
                         <button onclick="adjustDuration(${taskId}, 5)">+5m</button>
                         <button onclick="adjustDuration(${taskId}, 15)">+15m</button>
                         <button onclick="adjustDuration(${taskId}, 30)">+30m</button>
                     </div>
-                    <div style="font-size: 0.9em; color: #6b7280; margin: 15px 0;">Quick set:</div>
-                    <div class="duration-quick-set">
+                    <div style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 12px;">Quick set:</div>
+                    <div class="duration-quick-row">
                         <button onclick="setDuration(${taskId}, 15)">15m</button>
                         <button onclick="setDuration(${taskId}, 30)">30m</button>
                         <button onclick="setDuration(${taskId}, 45)">45m</button>
@@ -15496,9 +16314,9 @@
                         <button onclick="setDuration(${taskId}, 90)">90m</button>
                         <button onclick="setDuration(${taskId}, 120)">2h</button>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button onclick="closeDurationModal()" style="flex: 1; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; cursor: pointer;">Cancel</button>
-                        <button onclick="closeDurationModal()" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer;">Apply</button>
+                    <div class="duration-modal-actions">
+                        <button class="btn-cancel" onclick="closeDurationModal()">Cancel</button>
+                        <button class="btn-apply" onclick="closeDurationModal()">Done</button>
                     </div>
                 </div>
             `;
