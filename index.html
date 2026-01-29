@@ -656,17 +656,406 @@
         .task-item.future { border-left-color: #4facfe; }
         .task-item.life { border-left-color: #f093fb; }
         .task-item.dotoday { border-left-color: #ff416c; }
-        .task-item.mustcomplete { border-left-color: #7f1d1d; background: rgba(127, 29, 29, 0.1); }
 
-        .category-tab.mustcomplete {
-            background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
-            color: white;
-            animation: urgentPulse 1.5s infinite;
+        /* ==================== COMMAND CENTER STYLES ==================== */
+
+        /* Mode Tab Styles */
+        .cc-mode-tab {
+            transition: all 0.2s ease;
         }
-        
-        @keyframes urgentPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+        .cc-mode-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .cc-mode-tab.active {
+            background: rgba(255,255,255,0.95) !important;
+            color: #667eea !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Triage Task Item Styles */
+        .cc-task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .cc-task-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .cc-task-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+        }
+        .cc-task-item.drag-over {
+            border-top: 3px solid #667eea;
+        }
+        .cc-task-item .drag-handle {
+            color: #6b7280;
+            cursor: grab;
+            font-size: 1.1em;
+        }
+        .cc-task-item .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .cc-task-item .task-text {
+            flex: 1;
+            font-size: 0.95em;
+        }
+        .cc-task-item .task-text.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .cc-task-item .task-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .cc-task-item .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cc-task-item .crash-out-btn {
+            background: rgba(255,107,53,0.15);
+            color: #ff6b35;
+        }
+        .cc-task-item .crash-out-btn:hover {
+            background: rgba(255,107,53,0.3);
+        }
+        .cc-task-item .remove-btn {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+        }
+        .cc-task-item .remove-btn:hover {
+            background: rgba(239,68,68,0.3);
+        }
+        .cc-task-item .start-btn {
+            background: rgba(16,185,129,0.15);
+            color: #10b981;
+        }
+        .cc-task-item .start-btn:hover {
+            background: rgba(16,185,129,0.3);
+        }
+
+        /* Light theme task items (for TODAY, TOMORROW sections) */
+        .cc-section.cc-today .cc-task-item,
+        .cc-section.cc-tomorrow .cc-task-item,
+        .cc-section.cc-scheduled .cc-task-item {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+        }
+        .cc-section.cc-today .cc-task-item:hover,
+        .cc-section.cc-tomorrow .cc-task-item:hover,
+        .cc-section.cc-scheduled .cc-task-item:hover {
+            background: #f1f5f9;
+            border-color: #d1d5db;
+        }
+        .cc-section.cc-today .cc-task-item .task-text,
+        .cc-section.cc-tomorrow .cc-task-item .task-text,
+        .cc-section.cc-scheduled .cc-task-item .task-text {
+            color: #1f2937;
+        }
+        .cc-section.cc-locked-in .cc-task-item .task-text {
+            color: white;
+        }
+
+        /* Rolled Over Section */
+        .cc-section.cc-rolled-over .cc-task-item {
+            background: rgba(146,64,14,0.1);
+            border: 1px solid rgba(146,64,14,0.2);
+        }
+        .cc-section.cc-rolled-over .cc-task-item .task-text {
+            color: #78350f;
+        }
+        .cc-section.cc-rolled-over .cc-task-item .rollover-badge {
+            font-size: 0.75em;
+            color: #92400e;
+            opacity: 0.8;
+        }
+
+        /* Scheduled time display */
+        .cc-task-item .scheduled-time {
+            font-size: 0.85em;
+            color: #14b8a6;
+            font-weight: 600;
+            font-family: Monaco, monospace;
+        }
+
+        /* Crash Out Timeline Styles */
+        .crash-out-timeline-task {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .crash-out-timeline-task.locked-in {
+            border-left-color: #ff6b35;
+            background: linear-gradient(90deg, rgba(255,107,53,0.05) 0%, #f8fafc 100%);
+        }
+        .crash-out-timeline-task .task-time {
+            font-size: 0.9em;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: Monaco, monospace;
+        }
+        .crash-out-timeline-task .task-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        .crash-out-timeline-task .task-duration {
+            font-size: 0.85em;
+            color: #9ca3af;
+        }
+        .crash-out-timeline-task .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .crash-out-timeline-task .task-actions button {
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .crash-out-timeline-task .task-actions button:hover {
+            background: #f1f5f9;
+        }
+        .crash-out-timeline-task .task-actions .start-btn {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .crash-out-timeline-task .task-actions .start-btn:hover {
+            background: #059669;
+        }
+
+        /* Unscheduled Pool Card */
+        .unscheduled-card {
+            padding: 12px 16px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            border: 2px dashed #d1d5db;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .unscheduled-card:hover {
+            background: #e2e8f0;
+            border-color: #667eea;
+        }
+        .unscheduled-card .card-text {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .unscheduled-card .card-duration {
+            font-size: 0.8em;
+            color: #9ca3af;
+        }
+
+        /* Focus Timer Circle Animation */
+        @keyframes focusPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 0 20px rgba(102, 126, 234, 0); }
+        }
+        .focus-timer-active {
+            animation: focusPulse 2s infinite;
+        }
+
+        /* Focus Checklist Item */
+        .focus-checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .focus-checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .focus-checklist-item .item-text {
+            flex: 1;
+            font-size: 0.9em;
+            color: #374151;
+        }
+        .focus-checklist-item .item-text.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .focus-checklist-item .delete-item {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .focus-checklist-item .delete-item:hover {
+            color: #ef4444;
+        }
+
+        /* Celebration Animation */
+        @keyframes celebrationBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .celebration-active {
+            animation: celebrationBounce 0.5s ease;
+        }
+
+        /* Confetti Container */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Empty State */
+        .cc-empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #9ca3af;
+            font-size: 0.9em;
+        }
+
+        /* Time Prompt Modal */
+        .time-prompt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .time-prompt-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+        }
+        .time-prompt-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .time-prompt-buttons button {
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-prompt-buttons button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Duration Adjustment Modal */
+        .duration-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .duration-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 350px;
+            width: 90%;
+        }
+        .duration-adjust-btns {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .duration-adjust-btns button {
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        .duration-adjust-btns button:hover {
+            background: #f1f5f9;
+        }
+        .duration-quick-set {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .duration-quick-set button {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .duration-quick-set button:hover {
+            background: #667eea;
+            color: white;
         }
 
         /* Drag and Drop Styles */
@@ -4345,131 +4734,360 @@
             <div class="expansion-content" id="contentCompleted"></div>
         </div>
 
-        <!-- ==================== FOCUS MODE CONTAINER ==================== -->
+        <!-- ==================== COMMAND CENTER (Focus View) ==================== -->
         <div id="focusModeContainer">
-            <div class="focus-mode-wrapper" style="max-width: 900px; margin: 0 auto;">
-                <div class="focus-greeting" id="focusGreeting" style="text-align: center; color: white; margin-bottom: 25px; font-size: 1.3em; opacity: 0.95;">
-                    ☀️ Good morning, Sully
+            <div class="command-center-wrapper" style="max-width: 900px; margin: 0 auto;">
+
+                <!-- Greeting & Date -->
+                <div class="cc-greeting" id="ccGreeting" style="text-align: center; color: white; margin-bottom: 20px;">
+                    <div style="font-size: 1.4em; font-weight: 600; margin-bottom: 5px;">Good afternoon, Sully</div>
+                    <div style="font-size: 0.95em; opacity: 0.8;" id="ccDateDisplay">Jan 29 • 3:47 PM</div>
                 </div>
 
-                <!-- The One Thing Card -->
-                <div class="one-thing-card" id="oneThingCard" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 30px; margin-bottom: 25px; border: 2px solid #667eea; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);">
-                    <div id="oneThingContent">
-                        <!-- Will be populated by JS -->
+                <!-- Mode Tabs -->
+                <div class="cc-mode-tabs" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">📋 TRIAGE</button>
+                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">🔥 CRASH OUT</button>
+                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">🎯 FOCUS</button>
+                </div>
+
+                <!-- Overall Progress Bar -->
+                <div class="cc-overall-progress" style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="color: white; font-weight: 600;">📊 Today's Progress</span>
+                        <span style="color: white; font-weight: 600;" id="ccOverallProgressText">0/0 tasks • 0%</span>
+                    </div>
+                    <div style="height: 12px; background: rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden;">
+                        <div id="ccOverallProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 6px; transition: width 0.5s ease;"></div>
                     </div>
                 </div>
 
-                <!-- Task Budget Card -->
-                <div class="task-budget-card" style="background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div style="font-size: 1.2em; font-weight: 700; color: #333;">📋 TODAY'S TASK BUDGET</div>
-                        <div style="background: #f3f4f6; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; color: #6b7280; font-weight: 600; display: flex; align-items: center;">
-                            1-3-5 Rule
-                            <span class="help-icon" style="margin-left: 6px;">?
-                                <span class="tooltip-content" style="width: 250px;">
-                                    <strong>The 1-3-5 Rule</strong><br><br>
-                                    Each day, aim to complete:<br>
-                                    • <strong>1 Big</strong> task (1+ hour)<br>
-                                    • <strong>3 Medium</strong> tasks (15-45 min)<br>
-                                    • <strong>5 Small</strong> tasks (2-15 min)<br><br>
-                                    This keeps your workload realistic and prevents overwhelm.
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div id="taskBudgetBars" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #dc2626;">🔴 BIG</div>
-                            <div id="budgetBarBig" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
-                            <div id="budgetCountBig" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/1</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #f59e0b;">🟡 MEDIUM</div>
-                            <div id="budgetBarMedium" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
-                            <div id="budgetCountMedium" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/3</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 100px; font-weight: 600; font-size: 0.9em; color: #10b981;">🟢 SMALL</div>
-                            <div id="budgetBarSmall" style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; display: flex; gap: 4px; padding: 4px;"></div>
-                            <div id="budgetCountSmall" style="width: 60px; text-align: right; font-family: Monaco, monospace; font-weight: 600; color: #6b7280;">0/5</div>
-                        </div>
-                        <!-- Time Estimate -->
-                        <div style="margin-top: 10px; padding-top: 12px; border-top: 2px dashed #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-size: 0.9em; color: #6b7280;">
-                                ⏱️ <strong>Estimated time:</strong> <span id="totalTimeEstimate" style="color: #667eea; font-weight: 700;">0 min</span>
+                <!-- ==================== TRIAGE MODE ==================== -->
+                <div id="triageModeContent" class="cc-mode-content">
+
+                    <!-- LOCKED IN Section (Max 3) -->
+                    <div class="cc-section cc-locked-in" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid rgba(255, 107, 53, 0.5);">
+                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.1em; font-weight: 700; color: #ff6b35;">🔥 LOCKED IN</span>
+                                <span style="background: rgba(255,107,53,0.2); color: #ff6b35; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="lockedInCount">(0/3)</span>
                             </div>
-                            <div id="timeContext" style="font-size: 0.8em; color: #9ca3af;"></div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="lockedInProgressText">0%</span>
+                                <div style="width: 80px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div id="lockedInProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b35, #f7931e); transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="lockedInTasks" class="cc-task-list" style="min-height: 60px;">
+                            <!-- Tasks will be rendered here -->
+                        </div>
+                        <div id="lockedInFull" style="display: none; text-align: center; padding: 10px; color: #6b7280; font-size: 0.85em; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 10px;">
+                            ── ── ── FULL ── ── ──
                         </div>
                     </div>
 
-                    <!-- Quick Add Task -->
-                    <div style="margin-bottom: 20px; padding: 15px; background: #f0fdf4; border: 2px dashed #86efac; border-radius: 12px;">
-                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <input type="text" id="focusQuickAdd" placeholder="Quick add a task..." 
-                                   onkeypress="if(event.key==='Enter')quickAddFromFocus()"
-                                   style="flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95em;">
-                            <select id="focusQuickAddSize" style="padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9em; background: white;">
-                                <option value="small">🟢 Small (~5 min)</option>
-                                <option value="medium" selected>🟡 Medium (~25 min)</option>
-                                <option value="big">🔴 Big (~60 min)</option>
-                            </select>
-                            <select id="focusQuickAddCategory" style="padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9em; background: white;">
-                                <option value="health">❤️ Health</option>
-                                <option value="school">📋 School</option>
-                                <option value="academic">📚 Academic</option>
-                                <option value="clinic">🦷 Clinic</option>
-                                <option value="financial">💰 Financial</option>
-                                <option value="future">🚀 Future</option>
-                                <option value="life">🏡 Life</option>
-                            </select>
-                            <button onclick="quickAddFromFocus()" style="padding: 10px 18px; border: none; border-radius: 8px; background: #10b981; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
+                    <!-- TODAY Section -->
+                    <div class="cc-section cc-today" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.1em; font-weight: 700; color: #667eea;">📋 TODAY</span>
+                                <span style="background: rgba(102,126,234,0.1); color: #667eea; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="todayCount">(0)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="todayProgressText">0%</span>
+                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div id="todayProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="todayTasks" class="cc-task-list" style="min-height: 40px;">
+                            <!-- Tasks will be rendered here -->
                         </div>
                     </div>
 
-                    <!-- Medium Tasks -->
-                    <div id="mediumTasksSection" style="margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;">
-                            <span style="font-weight: 700; font-size: 0.95em; color: #f59e0b;">🟡 MEDIUM TASKS</span>
-                            <span style="font-size: 0.8em; color: #9ca3af; margin-left: auto;">Do after The One Thing</span>
+                    <!-- SCHEDULED Section (Mirror of Crash Out) -->
+                    <div class="cc-section cc-scheduled" id="scheduledSection" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: none;">
+                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.1em; font-weight: 700; color: #14b8a6;">⏰ SCHEDULED</span>
+                                <span style="background: rgba(20,184,166,0.1); color: #14b8a6; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="scheduledCount">(0)</span>
+                                <span style="font-size: 0.8em; color: #9ca3af;">(in Crash Out)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="scheduledProgressText">0%</span>
+                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div id="scheduledProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #14b8a6, #2dd4bf); transition: width 0.3s;"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="mediumTasksList"></div>
+                        <div id="scheduledTasks" class="cc-task-list" style="min-height: 40px;">
+                            <!-- Tasks will be rendered here -->
+                        </div>
                     </div>
 
-                    <!-- Small Tasks -->
-                    <div id="smallTasksSection">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb;">
-                            <span style="font-weight: 700; font-size: 0.95em; color: #10b981;">🟢 SMALL TASKS</span>
-                            <span style="font-size: 0.8em; color: #9ca3af; margin-left: auto;">Quick wins - build momentum</span>
+                    <!-- TOMORROW Section -->
+                    <div class="cc-section cc-tomorrow" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.1em; font-weight: 700; color: #6b7280;">📅 TOMORROW</span>
+                                <span style="background: rgba(107,114,128,0.1); color: #6b7280; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="tomorrowCount">(0)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="tomorrowProgressText">0%</span>
+                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div id="tomorrowProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #6b7280, #9ca3af); transition: width 0.3s;"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="smallTasksList"></div>
+                        <div id="tomorrowTasks" class="cc-task-list" style="min-height: 40px;">
+                            <!-- Tasks will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- ROLLED OVER Section -->
+                    <div class="cc-section cc-rolled-over" id="rolledOverSection" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; display: none;">
+                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.1em; font-weight: 700; color: #92400e;">🔁 ROLLED OVER</span>
+                                <span style="background: rgba(146,64,14,0.15); color: #92400e; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="rolledOverCount">(0)</span>
+                                <span style="font-size: 0.75em; color: #78350f;">(was LOCKED IN yesterday)</span>
+                            </div>
+                        </div>
+                        <div id="rolledOverTasks" class="cc-task-list" style="min-height: 40px;">
+                            <!-- Tasks will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Add & Actions -->
+                    <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                            <input type="text" id="triageQuickAdd" placeholder="Quick add a task to TODAY..."
+                                   onkeypress="if(event.key==='Enter')triageQuickAddTask()"
+                                   style="flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95em;">
+                            <button onclick="triageQuickAddTask()" style="padding: 12px 20px; border: none; border-radius: 10px; background: #667eea; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="switchToFullView()" style="padding: 10px 18px; border: 2px solid #e5e7eb; border-radius: 10px; background: white; color: #374151; font-weight: 600; cursor: pointer;">📋 Full Task View</button>
+                            <button onclick="switchCommandCenterMode('crashout')" style="padding: 10px 18px; border: 2px solid #ff6b35; border-radius: 10px; background: rgba(255,107,53,0.1); color: #ff6b35; font-weight: 600; cursor: pointer;">🔥 Plan in Crash Out</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Momentum Starter -->
-                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 25px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: #92400e; font-weight: 700;">
-                        ⚡ MOMENTUM STARTER
+                <!-- ==================== CRASH OUT MODE ==================== -->
+                <div id="crashOutModeContent" class="cc-mode-content" style="display: none;">
+
+                    <!-- Setup Screen (shown when no sleep time set) -->
+                    <div id="crashOutSetup" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 40px; text-align: center; border: 2px solid rgba(255,107,53,0.3);">
+                        <div style="font-size: 2em; margin-bottom: 15px;">🔥</div>
+                        <div style="font-size: 1.5em; font-weight: 700; color: white; margin-bottom: 10px;">CRASH OUT MODE</div>
+                        <div style="color: #9ca3af; margin-bottom: 25px;" id="crashOutSetupDate">📅 It's Wednesday, Jan 29 • 3:47 PM</div>
+                        <div style="color: white; font-size: 1.1em; margin-bottom: 25px;">When are you going to sleep?</div>
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+                            <button onclick="setCrashOutSleep('tonight')" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
+                                <div style="font-size: 0.9em; opacity: 0.7;">TONIGHT</div>
+                                <div style="font-size: 1.2em; margin-top: 5px;">11:00 PM</div>
+                            </button>
+                            <button onclick="setCrashOutSleep('tomorrow')" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
+                                <div style="font-size: 0.9em; opacity: 0.7;">TOMORROW</div>
+                                <div style="font-size: 1.2em; margin-top: 5px;">4:00 AM</div>
+                            </button>
+                            <button onclick="showCustomSleepPicker()" class="crash-out-sleep-btn" style="padding: 20px 30px; border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; min-width: 120px;">
+                                <div style="font-size: 0.9em; opacity: 0.7;">CUSTOM</div>
+                                <div style="font-size: 1.2em; margin-top: 5px;">⚙️</div>
+                            </button>
+                        </div>
+                        <div id="customSleepPicker" style="display: none; margin-bottom: 25px;">
+                            <input type="time" id="customSleepTime" style="padding: 12px 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; background: rgba(255,255,255,0.1); color: white; font-size: 1.1em;">
+                            <button onclick="setCustomSleepTime()" style="margin-left: 10px; padding: 12px 20px; border: none; border-radius: 10px; background: #ff6b35; color: white; font-weight: 600; cursor: pointer;">Set</button>
+                        </div>
                     </div>
-                    <div style="color: #78350f; font-size: 0.9em; margin-bottom: 15px;">
-                        Feeling stuck? Start with a tiny win to build activation energy:
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="doRandomSmallTask()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">🎲 Random 2-min Task</button>
-                        <button onclick="start5MinSprint()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">⏱️ 5-min Sprint</button>
-                        <button onclick="switchToFullView()" style="padding: 10px 18px; border: 2px solid #d97706; border-radius: 10px; background: rgba(255,255,255,0.5); color: #92400e; font-weight: 600; cursor: pointer;">📋 Manage Tasks</button>
+
+                    <!-- Timeline (shown after sleep time set) -->
+                    <div id="crashOutTimeline" style="display: none;">
+                        <!-- Time Until Sleep Header -->
+                        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid rgba(255,107,53,0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="color: white; font-weight: 700; font-size: 1.1em;">🔥 CRASH OUT</div>
+                                <button onclick="changeSleepTime()" style="padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: transparent; color: white; font-size: 0.85em; cursor: pointer;">Change Sleep</button>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                                <span style="color: white; font-size: 1.3em;">⏰</span>
+                                <span style="color: white; font-size: 1.2em; font-weight: 600;" id="timeUntilSleep">7h 13m until sleep</span>
+                                <span style="color: #9ca3af;" id="sleepTimeDisplay">(11:00 PM)</span>
+                            </div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden;">
+                                <div id="crashOutTimelineProgress" style="height: 100%; width: 70%; background: linear-gradient(90deg, #ff6b35, #f7931e); border-radius: 5px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="scheduledTimeDisplay">5.5h scheduled</span>
+                                <span style="color: #9ca3af; font-size: 0.85em;" id="availableTimeDisplay">1.7h available</span>
+                            </div>
+                        </div>
+
+                        <!-- Overscheduled Warning -->
+                        <div id="overscheduledWarning" style="display: none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 15px; margin-bottom: 16px;">
+                            <div style="display: flex; align-items: center; gap: 10px; color: #92400e;">
+                                <span style="font-size: 1.2em;">⚠️</span>
+                                <div>
+                                    <div style="font-weight: 700;">OVERSCHEDULED</div>
+                                    <div style="font-size: 0.9em;" id="overscheduledText">9h of tasks, only 7h available</div>
+                                </div>
+                                <button onclick="dismissOverscheduledWarning()" style="margin-left: auto; padding: 6px 12px; border: none; border-radius: 6px; background: rgba(146,64,14,0.2); color: #92400e; font-size: 0.85em; cursor: pointer;">Dismiss</button>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Container -->
+                        <div id="crashOutTimelineContainer" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <!-- NOW Marker -->
+                            <div id="nowMarker" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #ff6b35;">
+                                <div style="width: 12px; height: 12px; background: #ff6b35; border-radius: 50%; box-shadow: 0 0 10px rgba(255,107,53,0.5);"></div>
+                                <span style="color: #ff6b35; font-weight: 700;">NOW</span>
+                                <span style="color: #9ca3af;" id="currentTimeDisplay">3:47 PM</span>
+                            </div>
+
+                            <!-- Timeline Tasks -->
+                            <div id="crashOutTimelineTasks">
+                                <!-- Tasks will be rendered here -->
+                            </div>
+
+                            <!-- Protected Wind-Down Hour -->
+                            <div id="windDownHour" style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; border: 2px dashed #9ca3af;">
+                                <div style="display: flex; align-items: center; gap: 10px; color: #6b7280;">
+                                    <span style="font-size: 1.5em;">🛡️</span>
+                                    <div>
+                                        <div style="font-weight: 700;" id="windDownTimeRange">10:00 PM - 11:00 PM</div>
+                                        <div style="font-size: 0.85em;">PROTECTED WIND-DOWN HOUR</div>
+                                        <div style="font-size: 0.8em; opacity: 0.7;">Nothing can be scheduled here</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sleep Marker -->
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #e5e7eb;">
+                                <span style="font-size: 1.5em;">😴</span>
+                                <span style="color: #6b7280; font-weight: 700;" id="sleepMarkerTime">11:00 PM</span>
+                                <span style="color: #9ca3af;">SLEEP</span>
+                            </div>
+                        </div>
+
+                        <!-- Unscheduled Tasks Pool -->
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: #374151; margin-bottom: 15px;">UNSCHEDULED <span style="font-weight: 400; color: #9ca3af;">(drag onto timeline)</span></div>
+                            <div id="unscheduledTasksPool" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 60px;">
+                                <!-- Unscheduled task cards will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <div style="text-align: center;">
+                            <button onclick="resetCrashOutDay()" style="padding: 12px 24px; border: 2px solid #dc2626; border-radius: 10px; background: transparent; color: #dc2626; font-weight: 600; cursor: pointer;">Reset Day</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Backlog Summary -->
-                <div style="background: #f1f5f9; border-radius: 16px; padding: 20px; text-align: center;">
-                    <div style="font-size: 1.1em; color: #64748b; margin-bottom: 15px;">
-                        📦 <strong id="backlogCount">0</strong> more tasks across <strong id="backlogCategories">0</strong> categories
+                <!-- ==================== FOCUS (POMODORO) MODE ==================== -->
+                <div id="focusPomodoroContent" class="cc-mode-content" style="display: none;">
+
+                    <!-- No Task Selected State -->
+                    <div id="focusNoTask" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 50px; text-align: center; border: 2px solid rgba(102,126,234,0.3);">
+                        <div style="font-size: 4em; margin-bottom: 20px;">🎯</div>
+                        <div style="font-size: 1.3em; font-weight: 700; color: white; margin-bottom: 15px;">FOCUS MODE</div>
+                        <div style="color: #9ca3af; margin-bottom: 25px;">Select a task from Triage or Crash Out to start a focus session</div>
+                        <button onclick="switchCommandCenterMode('triage')" style="padding: 14px 28px; border: none; border-radius: 12px; background: #667eea; color: white; font-weight: 600; font-size: 1em; cursor: pointer;">Go to Triage</button>
                     </div>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button onclick="switchToFullView()" style="padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; background: #667eea; color: white;">View Full Task List</button>
+
+                    <!-- Active Focus Session -->
+                    <div id="focusActiveSession" style="display: none;">
+                        <!-- Timer Card -->
+                        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 20px; border: 2px solid rgba(102,126,234,0.3);">
+                            <div style="font-size: 1.2em; font-weight: 600; color: white; margin-bottom: 20px;">🎯 FOCUS MODE</div>
+
+                            <!-- Timer Circle -->
+                            <div style="position: relative; width: 200px; height: 200px; margin: 0 auto 25px;">
+                                <svg width="200" height="200" style="transform: rotate(-90deg);">
+                                    <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="12"/>
+                                    <circle id="focusTimerCircle" cx="100" cy="100" r="90" fill="none" stroke="#667eea" stroke-width="12" stroke-linecap="round" stroke-dasharray="565.48" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"/>
+                                </svg>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 3em; font-weight: 700; font-family: Monaco, monospace;" id="focusTimerDisplay">25:00</div>
+                            </div>
+
+                            <!-- Timer Controls -->
+                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                                <button id="focusStartBtn" onclick="startFocusTimer()" style="padding: 14px 32px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ START</button>
+                                <button id="focusPauseBtn" onclick="pauseFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #f59e0b; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">⏸ PAUSE</button>
+                                <button id="focusResumeBtn" onclick="resumeFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ RESUME</button>
+                            </div>
+
+                            <!-- Duration Toggle -->
+                            <div style="display: flex; justify-content: center; gap: 10px;">
+                                <button onclick="setFocusDuration(25)" id="focus25Btn" class="focus-duration-btn active" style="padding: 8px 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; background: rgba(255,255,255,0.2); color: white; font-size: 0.9em; cursor: pointer;">25 min</button>
+                                <button onclick="setFocusDuration(50)" id="focus50Btn" class="focus-duration-btn" style="padding: 8px 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; background: transparent; color: white; font-size: 0.9em; cursor: pointer;">50 min</button>
+                            </div>
+                        </div>
+
+                        <!-- Current Task Card -->
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.9em; color: #9ca3af; margin-bottom: 8px;">Currently working on:</div>
+                            <div style="font-size: 1.2em; font-weight: 700; color: #1f2937;" id="focusCurrentTaskText">Study Peds Chapter 12</div>
+                            <div style="font-size: 0.85em; color: #667eea; margin-top: 5px;" id="focusCurrentTaskTier">from: LOCKED IN</div>
+                        </div>
+
+                        <!-- Session Checklist -->
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: #374151; margin-bottom: 15px;">This session's checklist:</div>
+                            <div id="focusSessionChecklist" style="margin-bottom: 15px;">
+                                <!-- Checklist items will be rendered here -->
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="focusAddChecklistItem" placeholder="+ Add item..."
+                                       onkeypress="if(event.key==='Enter')addFocusChecklistItem()"
+                                       style="flex: 1; padding: 10px 14px; border: 2px dashed #e5e7eb; border-radius: 8px; font-size: 0.9em;">
+                                <button onclick="addFocusChecklistItem()" style="padding: 10px 16px; border: none; border-radius: 8px; background: #667eea; color: white; font-weight: 600; cursor: pointer;">Add</button>
+                            </div>
+                            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div id="focusChecklistProgress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: #9ca3af;">
+                                    <span id="focusChecklistCount">0/0 items</span>
+                                    <span id="focusChecklistPercent">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complete Task Button -->
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 16px; cursor: pointer;" onclick="completeFocusTask()">
+                            <div style="color: white; font-weight: 700; font-size: 1.1em;">✓ COMPLETE TASK</div>
+                        </div>
+
+                        <!-- Exit Button -->
+                        <div style="text-align: center;">
+                            <button onclick="exitFocusMode()" style="padding: 10px 20px; border: 2px solid #dc2626; border-radius: 10px; background: transparent; color: #dc2626; font-weight: 600; cursor: pointer;">✕ Exit Focus</button>
+                        </div>
+                    </div>
+
+                    <!-- Timer Complete Modal (hidden by default) -->
+                    <div id="focusTimerCompleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center;">
+                        <div style="background: white; border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; margin: 20px;">
+                            <div style="font-size: 4em; margin-bottom: 15px;">🎉</div>
+                            <div style="font-size: 1.5em; font-weight: 700; color: #1f2937; margin-bottom: 20px;">CRUSHED IT!</div>
+                            <div style="background: #f0fdf4; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                <div style="color: #10b981; font-weight: 700; font-size: 1.2em;" id="focusXpEarned">+75 XP</div>
+                                <div style="color: #6b7280; font-size: 0.9em; margin-top: 5px;" id="focusStreakDisplay">🔥 Focus streak: 4 sessions</div>
+                                <div style="color: #6b7280; font-size: 0.9em;" id="focusTodayProgress">📊 Today: 3/12 tasks done</div>
+                            </div>
+                            <div style="color: #6b7280; margin-bottom: 20px;" id="focusChecklistSummary">Session checklist: 3/4 completed</div>
+                            <button onclick="completeFocusTaskFromModal()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 10px;">✓ TASK DONE</button>
+                            <button onclick="startNextFocusTask()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #667eea; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 15px;">→ NEXT TASK</button>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button onclick="takeBreak()" style="padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; font-size: 0.9em; cursor: pointer;">Take a break</button>
+                                <button onclick="backToTriageFromModal()" style="padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; font-size: 0.9em; cursor: pointer;">Back to Triage</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -4479,7 +5097,6 @@
             <div class="tasks-section">
                 <div class="category-tabs">
                     <button class="category-tab dotoday active" data-category="dotoday">🔴 Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
-                    <button class="category-tab mustcomplete" data-category="mustcomplete" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 MUST Complete by EOD <span class="task-count" id="count-mustcomplete">(0)</span></button>
                     <button class="category-tab financial" data-category="financial">💰 Financial <span class="task-count" id="count-financial">(0)</span></button>
                     <button class="category-tab clinic" data-category="clinic">🦷 Clinic Requirements <span class="task-count" id="count-clinic">(0)</span></button>
                     <button class="category-tab health" data-category="health">❤️ Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
@@ -5198,10 +5815,14 @@
             const hasXP = data.stats?.totalXPGained > 0;
             const hasFocusData = data.focusModeData?.oneThingId ||
                 (data.focusModeData?.microSteps && Object.keys(data.focusModeData.microSteps).length > 0);
+            // Command Center data checks
+            const hasCommandCenterData = data.commandCenterData?.crashOut?.sleepTime ||
+                data.commandCenterData?.focusStats?.totalXP > 0 ||
+                data.commandCenterData?.currentSession?.taskId;
 
             // Empty if NONE of these exist
             return !hasTasks && !hasCalendarNotes && !hasCalendarEvents &&
-                   !hasNotebookEntries && !hasXP && !hasFocusData;
+                   !hasNotebookEntries && !hasXP && !hasFocusData && !hasCommandCenterData;
         }
 
         function hasRealData(data) {
@@ -5262,6 +5883,26 @@
             lastPlanningDate: null
         };
         let lastCriticalEODReset = null; // Synced across devices to prevent duplicate resets
+
+        // Command Center variables (new Focus View)
+        let commandCenterData = {
+            crashOut: {
+                sleepTime: null,
+                lastReset: null
+            },
+            focusStats: {
+                totalXP: 0,
+                focusStreak: 0,
+                dailyStreak: 0,
+                lockedInStreak: 0
+            },
+            currentSession: {
+                taskId: null,
+                checklist: {},
+                timerMinutes: 25,
+                timerRemaining: null
+            }
+        };
         let editingTaskId = null;
         let editingTaskSize = 'medium';
         let editingTaskLeverage = false;
@@ -6092,6 +6733,28 @@
                     };
                 }
 
+                // Load Command Center data
+                if (data.commandCenterData) {
+                    commandCenterData = {
+                        crashOut: {
+                            sleepTime: data.commandCenterData.crashOut?.sleepTime || null,
+                            lastReset: data.commandCenterData.crashOut?.lastReset || null
+                        },
+                        focusStats: {
+                            totalXP: data.commandCenterData.focusStats?.totalXP || 0,
+                            focusStreak: data.commandCenterData.focusStats?.focusStreak || 0,
+                            dailyStreak: data.commandCenterData.focusStats?.dailyStreak || 0,
+                            lockedInStreak: data.commandCenterData.focusStats?.lockedInStreak || 0
+                        },
+                        currentSession: {
+                            taskId: data.commandCenterData.currentSession?.taskId || null,
+                            checklist: data.commandCenterData.currentSession?.checklist || {},
+                            timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
+                            timerRemaining: null
+                        }
+                    };
+                }
+
                 // Load last critical EOD reset date
                 if (data.lastCriticalEODReset) {
                     lastCriticalEODReset = data.lastCriticalEODReset;
@@ -6152,6 +6815,16 @@
                     todaysTasks: focusModeData.todaysTasks,
                     lastPlanningDate: focusModeData.lastPlanningDate
                     // Don't save timer state - it's local only
+                },
+                commandCenterData: {
+                    crashOut: commandCenterData.crashOut,
+                    focusStats: commandCenterData.focusStats,
+                    currentSession: {
+                        taskId: commandCenterData.currentSession.taskId,
+                        checklist: commandCenterData.currentSession.checklist,
+                        timerMinutes: commandCenterData.currentSession.timerMinutes
+                        // Don't save timerRemaining - it's ephemeral
+                    }
                 },
                 lastCriticalEODReset, // Sync reset date across devices
                 lastSaved: saveTimestamp // Timestamp for sync tracking
@@ -6961,7 +7634,29 @@
                                 lastPlanningDate: data.focusModeData.lastPlanningDate || null
                             };
                         }
-                        
+
+                        // Load Command Center data
+                        if (data.commandCenterData) {
+                            commandCenterData = {
+                                crashOut: {
+                                    sleepTime: data.commandCenterData.crashOut?.sleepTime || null,
+                                    lastReset: data.commandCenterData.crashOut?.lastReset || null
+                                },
+                                focusStats: {
+                                    totalXP: data.commandCenterData.focusStats?.totalXP || 0,
+                                    focusStreak: data.commandCenterData.focusStats?.focusStreak || 0,
+                                    dailyStreak: data.commandCenterData.focusStats?.dailyStreak || 0,
+                                    lockedInStreak: data.commandCenterData.focusStats?.lockedInStreak || 0
+                                },
+                                currentSession: {
+                                    taskId: data.commandCenterData.currentSession?.taskId || null,
+                                    checklist: data.commandCenterData.currentSession?.checklist || {},
+                                    timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
+                                    timerRemaining: null
+                                }
+                            };
+                        }
+
                         // Load last reset date from Firebase (prevents duplicate resets across devices)
                         if (data.lastCriticalEODReset) {
                             lastCriticalEODReset = data.lastCriticalEODReset;
@@ -7184,10 +7879,32 @@
                                     };
                                 }
 
+                                // Load Command Center data
+                                if (data.commandCenterData) {
+                                    commandCenterData = {
+                                        crashOut: {
+                                            sleepTime: data.commandCenterData.crashOut?.sleepTime || null,
+                                            lastReset: data.commandCenterData.crashOut?.lastReset || null
+                                        },
+                                        focusStats: {
+                                            totalXP: data.commandCenterData.focusStats?.totalXP || 0,
+                                            focusStreak: data.commandCenterData.focusStats?.focusStreak || 0,
+                                            dailyStreak: data.commandCenterData.focusStats?.dailyStreak || 0,
+                                            lockedInStreak: data.commandCenterData.focusStats?.lockedInStreak || 0
+                                        },
+                                        currentSession: {
+                                            taskId: data.commandCenterData.currentSession?.taskId || null,
+                                            checklist: data.commandCenterData.currentSession?.checklist || {},
+                                            timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
+                                            timerRemaining: null
+                                        }
+                                    };
+                                }
+
                                 if (data.lastCriticalEODReset) {
                                     lastCriticalEODReset = data.lastCriticalEODReset;
                                 }
-                                
+
                                 // Save to localStorage as backup
                                 localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
                                 
@@ -10217,6 +10934,28 @@
                 focusModeData = deepMerge(focusModeData, data.focusModeData);
             }
 
+            // Load Command Center data
+            if (data.commandCenterData) {
+                commandCenterData = {
+                    crashOut: {
+                        sleepTime: data.commandCenterData.crashOut?.sleepTime || null,
+                        lastReset: data.commandCenterData.crashOut?.lastReset || null
+                    },
+                    focusStats: {
+                        totalXP: data.commandCenterData.focusStats?.totalXP || 0,
+                        focusStreak: data.commandCenterData.focusStats?.focusStreak || 0,
+                        dailyStreak: data.commandCenterData.focusStats?.dailyStreak || 0,
+                        lockedInStreak: data.commandCenterData.focusStats?.lockedInStreak || 0
+                    },
+                    currentSession: {
+                        taskId: data.commandCenterData.currentSession?.taskId || null,
+                        checklist: data.commandCenterData.currentSession?.checklist || {},
+                        timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
+                        timerRemaining: null
+                    }
+                };
+            }
+
             if (data.lastCriticalEODReset) {
                 lastCriticalEODReset = data.lastCriticalEODReset;
             }
@@ -10464,6 +11203,28 @@
                         focusTimerRunning: data.focusModeData.focusTimerRunning || false,
                         focusTimerInterval: null,  // Local state only - never sync intervals
                         lastPlanningDate: data.focusModeData.lastPlanningDate || null
+                    };
+                }
+
+                // Load Command Center data
+                if (data.commandCenterData) {
+                    commandCenterData = {
+                        crashOut: {
+                            sleepTime: data.commandCenterData.crashOut?.sleepTime || null,
+                            lastReset: data.commandCenterData.crashOut?.lastReset || null
+                        },
+                        focusStats: {
+                            totalXP: data.commandCenterData.focusStats?.totalXP || 0,
+                            focusStreak: data.commandCenterData.focusStats?.focusStreak || 0,
+                            dailyStreak: data.commandCenterData.focusStats?.dailyStreak || 0,
+                            lockedInStreak: data.commandCenterData.focusStats?.lockedInStreak || 0
+                        },
+                        currentSession: {
+                            taskId: data.commandCenterData.currentSession?.taskId || null,
+                            checklist: data.commandCenterData.currentSession?.checklist || {},
+                            timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
+                            timerRemaining: null
+                        }
                     };
                 }
 
@@ -11114,18 +11875,13 @@
             const text = input.value.trim();
             if (!text) return;
             
-            // If adding from dotoday or mustcomplete view, default to health category
+            // If adding from dotoday view, default to health category
             let taskCategory = currentCategory;
             let markDoToday = false;
-            let markMustComplete = false;
-            
+
             if (currentCategory === 'dotoday') {
                 taskCategory = 'health'; // Default category
                 markDoToday = true;
-            } else if (currentCategory === 'mustcomplete') {
-                taskCategory = 'health'; // Default category
-                markDoToday = true;
-                markMustComplete = true;
             }
 
             const id = generateId('task');
@@ -11135,7 +11891,6 @@
                 category: taskCategory,
                 completed: false,
                 doToday: markDoToday,
-                mustComplete: markMustComplete,
                 createdAt: new Date().toISOString(),
                 size: 'medium',
                 highLeverage: false,
@@ -11192,13 +11947,10 @@
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             let filteredTasks;
-            
+
             if (currentCategory === 'dotoday') {
                 // Show all tasks marked as "Do Today" across all categories
                 filteredTasks = getValues(tasks).filter(t => t.doToday && !t.completed);
-            } else if (currentCategory === 'mustcomplete') {
-                // Show tasks marked as must complete by EOD
-                filteredTasks = getValues(tasks).filter(t => t.mustComplete && !t.completed);
             } else {
                 // Show only incomplete tasks for the current category
                 filteredTasks = getValues(tasks).filter(t => t.category === currentCategory && !t.completed);
@@ -11223,20 +11975,11 @@
             if (doTodayCountElement) {
                 doTodayCountElement.textContent = `(${doTodayCount})`;
             }
-            
-            // Update "Must Complete" count
-            const mustCompleteCount = getValues(tasks).filter(t => t.mustComplete && !t.completed).length;
-            const mustCompleteCountElement = document.getElementById('count-mustcomplete');
-            if (mustCompleteCountElement) {
-                mustCompleteCountElement.textContent = `(${mustCompleteCount})`;
-            }
 
             if (filteredTasks.length === 0) {
                 let emptyMessage = 'No tasks yet. Add one above to get started!';
                 if (currentCategory === 'dotoday') {
-                    emptyMessage = 'No critical tasks for today. Mark tasks with "🔴 Do Today" to see them here!';
-                } else if (currentCategory === 'mustcomplete') {
-                    emptyMessage = 'No urgent EOD tasks. Mark tasks with "🚨 Must Complete" for absolute deadlines!';
+                    emptyMessage = 'No critical tasks for today. Mark tasks with "🔴 Today" to see them here!';
                 }
                     
                 taskList.innerHTML = `
@@ -11252,7 +11995,6 @@
 
             taskList.innerHTML = filteredTasks.map((task, index) => {
                 const isDoTodayView = currentCategory === 'dotoday';
-                const isMustCompleteView = currentCategory === 'mustcomplete';
                 const categoryIcons = {
                     financial: '💰',
                     clinic: '🦷',
@@ -11276,7 +12018,7 @@
                 const leverageIcon = task.highLeverage ? '📊' : '';
                 
                 return `
-                    <div class="task-item ${isMustCompleteView ? 'mustcomplete' : isDoTodayView ? 'dotoday' : task.category}" 
+                    <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}" 
                          draggable="true" 
                          data-task-id="${task.id}"
                          data-index="${index}"
@@ -11290,25 +12032,15 @@
                                class="task-checkbox" 
                                ${task.completed ? 'checked' : ''} 
                                onchange="toggleTask(${task.id})">
-                        ${(isDoTodayView || isMustCompleteView) ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
+                        ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
                         <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
                         <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
-                        ${task.mustComplete ? '<span class="today-badge" style="background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);">🚨 EOD</span>' : ''}
-                        ${task.doToday && !isDoTodayView && !task.mustComplete ? '<span class="today-badge">🔴 TODAY</span>' : ''}
-                        ${!task.completed && !isDoTodayView && !isMustCompleteView ? `
+                        ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
+                        ${!task.completed && !isDoTodayView ? `
                             <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday(${task.id})" style="margin-right: 5px;">
                                 ${task.doToday ? '✓ Today' : '🔴 Today'}
                             </button>
-                            <button class="do-today-btn ${task.mustComplete ? 'active' : ''}" onclick="toggleMustComplete(${task.id})" style="background: ${task.mustComplete ? '#7f1d1d' : 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)'};">
-                                ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
-                            </button>
                         ` : ''}
-                        ${(isDoTodayView || isMustCompleteView) && !task.completed ? `
-                            <button class="do-today-btn" onclick="toggleMustComplete(${task.id})" style="background: ${task.mustComplete ? '#7f1d1d' : 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)'}; margin-right: 5px;">
-                                ${task.mustComplete ? '✓ EOD' : '🚨 EOD'}
-                            </button>
-                        ` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="addTaskToFocusMode(${task.id})" style="background: #667eea;" title="Add to Focus Mode">🎯</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️</button>` : ''}
                         ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal(${task.id})" style="background: #6366f1;">✏️</button>` : ''}
                         <button class="task-delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
@@ -11361,8 +12093,6 @@
             let filteredTasks;
             if (currentCategory === 'dotoday') {
                 filteredTasks = getValues(tasks).filter(t => t.doToday && !t.completed);
-            } else if (currentCategory === 'mustcomplete') {
-                filteredTasks = getValues(tasks).filter(t => t.mustComplete && !t.completed);
             } else {
                 filteredTasks = getValues(tasks).filter(t => t.category === currentCategory && !t.completed);
             }
@@ -11391,29 +12121,6 @@
                 item.classList.remove('drag-over');
             });
             draggedTaskId = null;
-        }
-        
-        // Toggle Must Complete
-        function toggleMustComplete(id) {
-            const task = tasks[id];
-            if (!task) return;
-            
-            task.mustComplete = !task.mustComplete;
-            
-            // If marking as must complete, also mark as do today
-            if (task.mustComplete && !task.doToday) {
-                task.doToday = true;
-            }
-            
-            renderTasks();
-            if (currentView === 'focus') renderFocusMode();
-            saveData();
-            
-            if (task.mustComplete) {
-                showToast('🚨 Marked as MUST complete by EOD!', '⚠️');
-            } else {
-                showToast('Removed EOD deadline', '👍');
-            }
         }
 
         // Toggle task completion
@@ -11822,11 +12529,19 @@
         }
         
         function renderFocusMode() {
-            updateFocusGreeting();
-            renderOneThingCard();
-            renderTaskBudget();
-            renderTodaysTasks();
-            updateBacklogCount();
+            // Render the new Command Center
+            updateCommandCenterGreeting();
+            updateOverallProgress();
+
+            // Render based on current mode
+            const currentMode = getCurrentCommandCenterMode();
+            if (currentMode === 'triage') {
+                renderTriageMode();
+            } else if (currentMode === 'crashout') {
+                renderCrashOutMode();
+            } else if (currentMode === 'focus') {
+                renderFocusPomodoroMode();
+            }
         }
         
         function updateFocusGreeting() {
@@ -12293,55 +13008,7 @@
                 `;
             }).join('');
         }
-        
-        // Add task to Focus Mode from Full View
-        function addTaskToFocusMode(taskId) {
-            const task = getValues(tasks).find(t => t.id === taskId);
-            if (!task) return;
-            
-            // Determine size
-            const size = task.size || 'medium';
-            
-            // Initialize todaysTasks if needed
-            if (!focusModeData.todaysTasks) {
-                focusModeData.todaysTasks = { big: {}, medium: {}, small: {} };
-            }
-            if (!focusModeData.todaysTasks[size]) {
-                focusModeData.todaysTasks[size] = {};
-            }
 
-            // Check if already added
-            if (hasTaskId(focusModeData.todaysTasks[size], taskId)) {
-                showToast('Task already in Focus Mode!', '⚠️');
-                return;
-            }
-
-            // Check size limits (1-3-5 rule)
-            const limits = { big: 1, medium: 3, small: 5 };
-            const currentCount = getTaskIds(focusModeData.todaysTasks[size]).length;
-            
-            // For big tasks, check if ONE thing is set
-            if (size === 'big' && focusModeData.oneThingId) {
-                showToast('You already have your ONE thing set!', '⚠️');
-                return;
-            }
-            
-            if (currentCount >= limits[size]) {
-                showToast(`Max ${limits[size]} ${size} tasks per day!`, '⚠️');
-                return;
-            }
-            
-            // Add to focus mode (object key = taskId, value = true)
-            focusModeData.todaysTasks[size][taskId] = true;
-
-            saveData();
-            renderTasks();
-            if (currentView === 'focus') renderFocusMode();
-            
-            const sizeEmoji = size === 'big' ? '🔴' : size === 'small' ? '🟢' : '🟡';
-            showToast(`Added ${sizeEmoji} ${size} task to Focus Mode!`, '🎯');
-        }
-        
         function removeFromToday(taskId, size) {
             // Remove task from today's list (doesn't delete the task, just removes from focus)
             if (focusModeData.todaysTasks && focusModeData.todaysTasks[size]) {
@@ -12425,7 +13092,1227 @@
         function start5MinSprint() {
             showToast('⏱️ 5-minute sprint! GO GO GO!', '🏃');
         }
-        
+
+        // ============================================
+        // COMMAND CENTER FUNCTIONS
+        // ============================================
+
+        // Current Command Center mode ('triage', 'crashout', 'focus')
+        let commandCenterMode = 'triage';
+
+        // Focus timer state (ephemeral - not persisted to Firebase)
+        let focusTimerInterval = null;
+        let focusTimerRunning = false;
+        let focusTimerSecondsRemaining = 25 * 60;
+        let focusTimerDuration = 25; // minutes
+
+        function getCurrentCommandCenterMode() {
+            return commandCenterMode || 'triage';
+        }
+
+        function switchCommandCenterMode(mode) {
+            commandCenterMode = mode;
+
+            // Update tab styling
+            document.querySelectorAll('.cc-mode-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.background = 'rgba(255,255,255,0.15)';
+                tab.style.color = 'white';
+            });
+
+            const activeTab = document.getElementById(mode === 'triage' ? 'triageModeTab' :
+                mode === 'crashout' ? 'crashOutModeTab' : 'focusPomodoroTab');
+            if (activeTab) {
+                activeTab.classList.add('active');
+                activeTab.style.background = 'rgba(255,255,255,0.95)';
+                activeTab.style.color = '#667eea';
+            }
+
+            // Show/hide content
+            document.getElementById('triageModeContent').style.display = mode === 'triage' ? 'block' : 'none';
+            document.getElementById('crashOutModeContent').style.display = mode === 'crashout' ? 'block' : 'none';
+            document.getElementById('focusPomodoroContent').style.display = mode === 'focus' ? 'block' : 'none';
+
+            // Render the mode
+            renderFocusMode();
+        }
+
+        function updateCommandCenterGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Good morning';
+            if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+            if (hour >= 17 && hour < 21) greeting = 'Good evening';
+            if (hour >= 21 || hour < 5) greeting = 'Good night';
+
+            const greetingEl = document.querySelector('.cc-greeting > div:first-child');
+            if (greetingEl) greetingEl.textContent = `${greeting}, Sully`;
+
+            const dateEl = document.getElementById('ccDateDisplay');
+            if (dateEl) {
+                const now = new Date();
+                const options = { weekday: 'short', month: 'short', day: 'numeric' };
+                const dateStr = now.toLocaleDateString('en-US', options);
+                const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                dateEl.textContent = `${dateStr} • ${timeStr}`;
+            }
+        }
+
+        function updateOverallProgress() {
+            const todayTasks = getTodayTriageTasks();
+            const total = todayTasks.length;
+            const completed = todayTasks.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            const textEl = document.getElementById('ccOverallProgressText');
+            const barEl = document.getElementById('ccOverallProgressBar');
+
+            if (textEl) textEl.textContent = `${completed}/${total} tasks • ${percent}%`;
+            if (barEl) barEl.style.width = `${percent}%`;
+        }
+
+        // Get all tasks that should appear in Focus View (doToday = true)
+        function getTodayTriageTasks() {
+            return getValues(tasks).filter(t => t.doToday);
+        }
+
+        // Get tasks by triage tier
+        function getTasksByTier(tier) {
+            return getTodayTriageTasks().filter(t => {
+                if (tier === 'lockedIn') return t.triageTier === 'lockedIn' && !t.crashOutScheduled;
+                if (tier === 'today') return (t.triageTier === 'today' || !t.triageTier) && !t.crashOutScheduled && t.triageTier !== 'lockedIn' && t.triageTier !== 'tomorrow';
+                if (tier === 'scheduled') return t.crashOutScheduled === true;
+                if (tier === 'tomorrow') return t.triageTier === 'tomorrow' && !t.crashOutScheduled;
+                if (tier === 'rolledOver') return t.rolledOver && t.rolledOver.fromDate;
+                return false;
+            }).sort((a, b) => (a.triageOrder || 999) - (b.triageOrder || 999));
+        }
+
+        // ==================== TRIAGE MODE ====================
+
+        function renderTriageMode() {
+            renderTriageSection('lockedIn', 'lockedInTasks', 3);
+            renderTriageSection('today', 'todayTasks', null);
+            renderTriageSection('scheduled', 'scheduledTasks', null);
+            renderTriageSection('tomorrow', 'tomorrowTasks', null);
+            renderRolledOverSection();
+            updateTriageSectionCounts();
+        }
+
+        function renderTriageSection(tier, containerId, maxCount) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const tierTasks = getTasksByTier(tier);
+            const incompleteTasks = tierTasks.filter(t => !t.completed);
+
+            if (incompleteTasks.length === 0) {
+                container.innerHTML = `<div class="cc-empty-state">${getEmptyStateMessage(tier)}</div>`;
+
+                // Show/hide section for scheduled
+                if (tier === 'scheduled') {
+                    document.getElementById('scheduledSection').style.display = 'none';
+                }
+            } else {
+                container.innerHTML = incompleteTasks.map(task => renderTriageTaskItem(task, tier)).join('');
+
+                // Show scheduled section if has items
+                if (tier === 'scheduled') {
+                    document.getElementById('scheduledSection').style.display = 'block';
+                }
+            }
+
+            // Show/hide locked in "FULL" indicator
+            if (tier === 'lockedIn') {
+                const fullEl = document.getElementById('lockedInFull');
+                if (fullEl) fullEl.style.display = incompleteTasks.length >= 3 ? 'block' : 'none';
+            }
+        }
+
+        function getEmptyStateMessage(tier) {
+            const messages = {
+                lockedIn: 'Drag tasks here for your top 3 non-negotiables',
+                today: 'Drag tasks here from Critical Must Do Today',
+                scheduled: 'No tasks scheduled in Crash Out',
+                tomorrow: 'Tasks that can wait until tomorrow'
+            };
+            return messages[tier] || 'No tasks';
+        }
+
+        function renderTriageTaskItem(task, tier) {
+            const catInfo = getCategoryInfo(task.category);
+            const isScheduled = tier === 'scheduled';
+            const isLockedIn = tier === 'lockedIn';
+
+            let actionBtn = '';
+            if (isScheduled) {
+                actionBtn = `<button class="action-btn remove-btn" onclick="removeFromCrashOut(${task.id})">← Remove</button>`;
+            } else {
+                actionBtn = `<button class="action-btn crash-out-btn" onclick="sendToCrashOut(${task.id})">→ Crash Out</button>`;
+            }
+
+            const scheduledTime = isScheduled && task.crashOutTime ?
+                `<span class="scheduled-time">${task.crashOutTime}</span>` : '';
+
+            const rolloverBadge = task.rolledOver && task.rolledOver.fromDate ?
+                `<span class="rollover-badge">from ${task.rolledOver.fromDate}</span>` : '';
+
+            return `
+                <div class="cc-task-item" data-task-id="${task.id}" data-tier="${tier}"
+                     draggable="true"
+                     ondragstart="handleTriageDragStart(event, ${task.id})"
+                     ondragover="handleTriageDragOver(event)"
+                     ondragleave="handleTriageDragLeave(event)"
+                     ondrop="handleTriageDrop(event, ${task.id}, '${tier}')"
+                     ondragend="handleTriageDragEnd(event)">
+                    <span class="drag-handle">⋮⋮</span>
+                    <input type="checkbox" class="task-checkbox"
+                           ${task.completed ? 'checked' : ''}
+                           onchange="completeTriageTask(${task.id})">
+                    <span class="task-text ${task.completed ? 'completed' : ''}" onclick="editTriageTaskText(${task.id})">${escapeHtml(task.text)}</span>
+                    ${rolloverBadge}
+                    ${scheduledTime}
+                    <div class="task-actions">
+                        <button class="action-btn start-btn" onclick="startTaskInFocus(${task.id})">▶ Start</button>
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRolledOverSection() {
+            const rolledOverTasks = getValues(tasks).filter(t =>
+                t.doToday && t.rolledOver && t.rolledOver.fromDate && !t.completed
+            );
+
+            const section = document.getElementById('rolledOverSection');
+            const container = document.getElementById('rolledOverTasks');
+            const countEl = document.getElementById('rolledOverCount');
+
+            if (rolledOverTasks.length === 0) {
+                if (section) section.style.display = 'none';
+                return;
+            }
+
+            if (section) section.style.display = 'block';
+            if (countEl) countEl.textContent = `(${rolledOverTasks.length})`;
+            if (container) {
+                container.innerHTML = rolledOverTasks.map(task => `
+                    <div class="cc-task-item" data-task-id="${task.id}">
+                        <span style="margin-right: 8px;">⚠️</span>
+                        <span class="drag-handle">⋮⋮</span>
+                        <input type="checkbox" class="task-checkbox" onchange="completeTriageTask(${task.id})">
+                        <span class="task-text">${escapeHtml(task.text)}</span>
+                        <span class="rollover-badge">from ${task.rolledOver.fromDate} • was ${task.rolledOver.wasTier || 'LOCKED IN'}</span>
+                        <div class="task-actions">
+                            <button class="action-btn crash-out-btn" onclick="sendToCrashOut(${task.id})">→ Crash Out</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateTriageSectionCounts() {
+            const sections = [
+                { tier: 'lockedIn', countId: 'lockedInCount', progressId: 'lockedInProgressBar', textId: 'lockedInProgressText', max: 3 },
+                { tier: 'today', countId: 'todayCount', progressId: 'todayProgressBar', textId: 'todayProgressText', max: null },
+                { tier: 'scheduled', countId: 'scheduledCount', progressId: 'scheduledProgressBar', textId: 'scheduledProgressText', max: null },
+                { tier: 'tomorrow', countId: 'tomorrowCount', progressId: 'tomorrowProgressBar', textId: 'tomorrowProgressText', max: null }
+            ];
+
+            sections.forEach(({ tier, countId, progressId, textId, max }) => {
+                const tierTasks = getTasksByTier(tier);
+                const total = tierTasks.length;
+                const completed = tierTasks.filter(t => t.completed).length;
+                const incomplete = total - completed;
+                const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                const countEl = document.getElementById(countId);
+                const progressEl = document.getElementById(progressId);
+                const textEl = document.getElementById(textId);
+
+                if (countEl) {
+                    if (max) {
+                        countEl.textContent = `(${incomplete}/${max})`;
+                    } else {
+                        countEl.textContent = `(${incomplete})`;
+                    }
+                }
+                if (progressEl) progressEl.style.width = `${percent}%`;
+                if (textEl) textEl.textContent = `${percent}%`;
+            });
+        }
+
+        // Triage task actions
+        function completeTriageTask(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            task.completed = !task.completed;
+
+            if (task.completed) {
+                // Award XP based on tier
+                const xp = task.triageTier === 'lockedIn' ? 50 :
+                           task.crashOutScheduled ? 75 :
+                           task.rolledOver ? 40 : 25;
+                awardCommandCenterXP(xp, task.triageTier === 'lockedIn' ? 'LOCKED IN task' : 'task');
+
+                // Check if all locked in tasks done
+                const lockedInTasks = getTasksByTier('lockedIn');
+                if (lockedInTasks.length > 0 && lockedInTasks.every(t => t.completed)) {
+                    awardCommandCenterXP(100, 'All LOCKED IN cleared');
+                    showCelebration('big');
+                } else {
+                    showCelebration(task.triageTier === 'lockedIn' ? 'medium' : 'small');
+                }
+            }
+
+            renderFocusMode();
+            renderTasks(); // Also update Full View
+            saveData();
+        }
+
+        function setTaskTier(taskId, tier) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            // Check locked in limit
+            if (tier === 'lockedIn') {
+                const currentLockedIn = getTasksByTier('lockedIn').filter(t => !t.completed && t.id !== taskId);
+                if (currentLockedIn.length >= 3) {
+                    showToast('LOCKED IN is full (max 3)', '⚠️');
+                    return;
+                }
+            }
+
+            // Use spread operator to preserve existing properties
+            tasks[taskId] = {
+                ...task,
+                triageTier: tier,
+                triageOrder: getTasksByTier(tier).length + 1
+            };
+
+            // Remove from crash out if moving to different tier
+            if (tier !== 'scheduled' && task.crashOutScheduled) {
+                tasks[taskId].crashOutScheduled = false;
+                delete tasks[taskId].crashOutTime;
+                delete tasks[taskId].crashOutDuration;
+            }
+
+            renderFocusMode();
+            saveData();
+            showToast(`Moved to ${tier.toUpperCase()}`, '✓');
+        }
+
+        function sendToCrashOut(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            // If no sleep time set, switch to Crash Out mode for setup
+            if (!commandCenterData.crashOut.sleepTime) {
+                switchCommandCenterMode('crashout');
+                showToast('Set your sleep time first', '⏰');
+                return;
+            }
+
+            // Calculate next available time slot
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            let nextTime = new Date();
+
+            if (scheduledTasks.length > 0) {
+                // Find the last scheduled task's end time
+                const lastTask = scheduledTasks[scheduledTasks.length - 1];
+                if (lastTask.crashOutTime && lastTask.crashOutDuration) {
+                    const [time, period] = lastTask.crashOutTime.split(' ');
+                    const [hours, minutes] = time.split(':').map(Number);
+                    let hour24 = hours;
+                    if (period === 'PM' && hours !== 12) hour24 += 12;
+                    if (period === 'AM' && hours === 12) hour24 = 0;
+
+                    nextTime = new Date();
+                    nextTime.setHours(hour24, minutes + (lastTask.crashOutDuration || 30), 0, 0);
+                }
+            }
+
+            const timeStr = nextTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            // Use spread operator to preserve existing properties
+            tasks[taskId] = {
+                ...task,
+                crashOutScheduled: true,
+                crashOutTime: timeStr,
+                crashOutDuration: task.size === 'big' ? 60 : task.size === 'small' ? 15 : 30
+            };
+
+            renderFocusMode();
+            saveData();
+            showToast(`Scheduled for ${timeStr}`, '⏰');
+        }
+
+        function removeFromCrashOut(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            // Use spread operator, remove crash out properties
+            tasks[taskId] = {
+                ...task,
+                crashOutScheduled: false
+            };
+            delete tasks[taskId].crashOutTime;
+            delete tasks[taskId].crashOutDuration;
+
+            renderFocusMode();
+            saveData();
+            showToast('Removed from schedule', '✓');
+        }
+
+        function editTriageTaskText(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            const newText = prompt('Edit task:', task.text);
+            if (newText && newText.trim() && newText.trim() !== task.text) {
+                tasks[taskId] = { ...task, text: newText.trim() };
+                renderFocusMode();
+                renderTasks();
+                saveData();
+            }
+        }
+
+        function triageQuickAddTask() {
+            const input = document.getElementById('triageQuickAdd');
+            if (!input || !input.value.trim()) {
+                showToast('Please enter a task', '⚠️');
+                return;
+            }
+
+            const id = generateId('task');
+            tasks[id] = {
+                id: id,
+                text: input.value.trim(),
+                category: 'health',
+                completed: false,
+                doToday: true,
+                triageTier: 'today',
+                triageOrder: getTasksByTier('today').length + 1,
+                createdAt: new Date().toISOString(),
+                size: 'medium',
+                highLeverage: false
+            };
+
+            input.value = '';
+            renderFocusMode();
+            renderTasks();
+            saveData();
+            showToast('Task added to TODAY', '✓');
+        }
+
+        // Triage Drag & Drop
+        let triageDraggedTaskId = null;
+
+        function handleTriageDragStart(event, taskId) {
+            triageDraggedTaskId = taskId;
+            event.target.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleTriageDragOver(event) {
+            event.preventDefault();
+            const taskItem = event.target.closest('.cc-task-item');
+            if (taskItem && !taskItem.classList.contains('dragging')) {
+                taskItem.classList.add('drag-over');
+            }
+        }
+
+        function handleTriageDragLeave(event) {
+            const taskItem = event.target.closest('.cc-task-item');
+            if (taskItem) taskItem.classList.remove('drag-over');
+        }
+
+        function handleTriageDrop(event, targetTaskId, targetTier) {
+            event.preventDefault();
+            const taskItem = event.target.closest('.cc-task-item');
+            if (taskItem) taskItem.classList.remove('drag-over');
+
+            if (triageDraggedTaskId === targetTaskId) return;
+
+            // If dropping on a different tier, change the tier
+            const draggedTask = tasks[triageDraggedTaskId];
+            if (draggedTask && draggedTask.triageTier !== targetTier) {
+                setTaskTier(triageDraggedTaskId, targetTier);
+            } else {
+                // Reorder within same tier
+                reorderTriageTasks(triageDraggedTaskId, targetTaskId, targetTier);
+            }
+
+            triageDraggedTaskId = null;
+        }
+
+        function handleTriageDragEnd(event) {
+            event.target.classList.remove('dragging');
+            document.querySelectorAll('.cc-task-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+            triageDraggedTaskId = null;
+        }
+
+        function reorderTriageTasks(draggedId, targetId, tier) {
+            const tierTasks = getTasksByTier(tier);
+            const draggedIndex = tierTasks.findIndex(t => t.id === draggedId);
+            const targetIndex = tierTasks.findIndex(t => t.id === targetId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Reorder
+            tierTasks.forEach((task, i) => {
+                let newOrder = i;
+                if (i === draggedIndex) {
+                    newOrder = targetIndex;
+                } else if (draggedIndex < targetIndex && i > draggedIndex && i <= targetIndex) {
+                    newOrder = i - 1;
+                } else if (draggedIndex > targetIndex && i >= targetIndex && i < draggedIndex) {
+                    newOrder = i + 1;
+                }
+                tasks[task.id] = { ...tasks[task.id], triageOrder: newOrder };
+            });
+
+            renderFocusMode();
+            saveData();
+        }
+
+        // ==================== CRASH OUT MODE ====================
+
+        function renderCrashOutMode() {
+            const setupEl = document.getElementById('crashOutSetup');
+            const timelineEl = document.getElementById('crashOutTimeline');
+
+            if (!commandCenterData.crashOut.sleepTime) {
+                // Show setup screen
+                if (setupEl) setupEl.style.display = 'block';
+                if (timelineEl) timelineEl.style.display = 'none';
+                updateCrashOutSetupDate();
+            } else {
+                // Show timeline
+                if (setupEl) setupEl.style.display = 'none';
+                if (timelineEl) timelineEl.style.display = 'block';
+                renderCrashOutTimeline();
+            }
+        }
+
+        function updateCrashOutSetupDate() {
+            const el = document.getElementById('crashOutSetupDate');
+            if (el) {
+                const now = new Date();
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const dayName = dayNames[now.getDay()];
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const monthName = monthNames[now.getMonth()];
+                const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                el.textContent = `📅 It's ${dayName}, ${monthName} ${now.getDate()} • ${timeStr}`;
+            }
+        }
+
+        function setCrashOutSleep(option) {
+            let sleepTime;
+            const now = new Date();
+
+            if (option === 'tonight') {
+                sleepTime = new Date(now);
+                sleepTime.setHours(23, 0, 0, 0);
+                if (sleepTime <= now) {
+                    sleepTime.setDate(sleepTime.getDate() + 1);
+                }
+            } else if (option === 'tomorrow') {
+                sleepTime = new Date(now);
+                sleepTime.setDate(sleepTime.getDate() + 1);
+                sleepTime.setHours(4, 0, 0, 0);
+            }
+
+            if (sleepTime) {
+                commandCenterData.crashOut.sleepTime = sleepTime.toISOString();
+                saveData();
+                renderCrashOutMode();
+            }
+        }
+
+        function showCustomSleepPicker() {
+            document.getElementById('customSleepPicker').style.display = 'block';
+        }
+
+        function setCustomSleepTime() {
+            const input = document.getElementById('customSleepTime');
+            if (!input || !input.value) return;
+
+            const [hours, minutes] = input.value.split(':').map(Number);
+            const sleepTime = new Date();
+            sleepTime.setHours(hours, minutes, 0, 0);
+
+            // If time is in the past, assume tomorrow
+            if (sleepTime <= new Date()) {
+                sleepTime.setDate(sleepTime.getDate() + 1);
+            }
+
+            commandCenterData.crashOut.sleepTime = sleepTime.toISOString();
+            document.getElementById('customSleepPicker').style.display = 'none';
+            saveData();
+            renderCrashOutMode();
+        }
+
+        function changeSleepTime() {
+            commandCenterData.crashOut.sleepTime = null;
+            saveData();
+            renderCrashOutMode();
+        }
+
+        function renderCrashOutTimeline() {
+            if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
+
+            const sleepTime = new Date(commandCenterData.crashOut.sleepTime);
+            const now = new Date();
+            const msUntilSleep = sleepTime - now;
+            const hoursUntilSleep = msUntilSleep / (1000 * 60 * 60);
+            const windDownStart = new Date(sleepTime.getTime() - 60 * 60 * 1000); // 1 hour before
+
+            // Update time displays
+            const timeUntilEl = document.getElementById('timeUntilSleep');
+            const sleepDisplayEl = document.getElementById('sleepTimeDisplay');
+            const sleepMarkerEl = document.getElementById('sleepMarkerTime');
+            const currentTimeEl = document.getElementById('currentTimeDisplay');
+            const windDownEl = document.getElementById('windDownTimeRange');
+
+            if (hoursUntilSleep > 0) {
+                const hours = Math.floor(hoursUntilSleep);
+                const minutes = Math.floor((hoursUntilSleep % 1) * 60);
+                if (timeUntilEl) timeUntilEl.textContent = `${hours}h ${minutes}m until sleep`;
+            } else {
+                if (timeUntilEl) timeUntilEl.textContent = 'Past sleep time';
+            }
+
+            const sleepTimeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const windDownStartStr = windDownStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const currentTimeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            if (sleepDisplayEl) sleepDisplayEl.textContent = `(${sleepTimeStr})`;
+            if (sleepMarkerEl) sleepMarkerEl.textContent = sleepTimeStr;
+            if (currentTimeEl) currentTimeEl.textContent = currentTimeStr;
+            if (windDownEl) windDownEl.textContent = `${windDownStartStr} - ${sleepTimeStr}`;
+
+            // Calculate scheduled time
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const totalScheduledMinutes = scheduledTasks.reduce((sum, t) => sum + (t.crashOutDuration || 30), 0);
+            const availableMinutes = Math.max(0, (hoursUntilSleep - 1) * 60); // Subtract wind-down hour
+
+            const scheduledEl = document.getElementById('scheduledTimeDisplay');
+            const availableEl = document.getElementById('availableTimeDisplay');
+            const progressEl = document.getElementById('crashOutTimelineProgress');
+
+            if (scheduledEl) {
+                const h = Math.floor(totalScheduledMinutes / 60);
+                const m = totalScheduledMinutes % 60;
+                scheduledEl.textContent = h > 0 ? `${h}h ${m}m scheduled` : `${m}m scheduled`;
+            }
+            if (availableEl) {
+                const remaining = Math.max(0, availableMinutes - totalScheduledMinutes);
+                const h = Math.floor(remaining / 60);
+                const m = Math.round(remaining % 60);
+                availableEl.textContent = h > 0 ? `${h}h ${m}m available` : `${m}m available`;
+            }
+            if (progressEl) {
+                const percent = availableMinutes > 0 ? Math.min(100, (totalScheduledMinutes / availableMinutes) * 100) : 0;
+                progressEl.style.width = `${percent}%`;
+            }
+
+            // Show overscheduled warning
+            const warningEl = document.getElementById('overscheduledWarning');
+            const warningTextEl = document.getElementById('overscheduledText');
+            if (totalScheduledMinutes > availableMinutes && availableMinutes > 0) {
+                if (warningEl) warningEl.style.display = 'block';
+                if (warningTextEl) {
+                    const overBy = totalScheduledMinutes - availableMinutes;
+                    const h = Math.floor(overBy / 60);
+                    const m = overBy % 60;
+                    warningTextEl.textContent = `${Math.round(totalScheduledMinutes/60)}h of tasks, only ${Math.round(availableMinutes/60)}h available. Consider moving ${h > 0 ? h + 'h ' : ''}${m}m to tomorrow.`;
+                }
+            } else {
+                if (warningEl) warningEl.style.display = 'none';
+            }
+
+            // Render timeline tasks
+            renderCrashOutTimelineTasks(scheduledTasks, now);
+
+            // Render unscheduled pool
+            renderUnscheduledPool();
+        }
+
+        function renderCrashOutTimelineTasks(scheduledTasks, now) {
+            const container = document.getElementById('crashOutTimelineTasks');
+            if (!container) return;
+
+            if (scheduledTasks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #9ca3af;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">📋</div>
+                        <div>No tasks scheduled yet</div>
+                        <div style="font-size: 0.9em; margin-top: 5px;">Send tasks from Triage or drag from below</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = scheduledTasks.map(task => {
+                const isLockedIn = task.triageTier === 'lockedIn';
+                const tierIcon = isLockedIn ? '🔥' : '📋';
+
+                return `
+                    <div class="crash-out-timeline-task ${isLockedIn ? 'locked-in' : ''}" data-task-id="${task.id}">
+                        <div class="task-time">${task.crashOutTime || 'TBD'}</div>
+                        <div class="task-title">${tierIcon} ${escapeHtml(task.text)}</div>
+                        <div class="task-duration">${task.crashOutDuration || 30}m</div>
+                        <div class="task-actions">
+                            <button class="start-btn" onclick="startTaskInFocus(${task.id})">▶ Start</button>
+                            <button onclick="openTaskEditModal(${task.id})">✏️ Edit</button>
+                            <button onclick="removeFromCrashOut(${task.id})">🗑️ Remove</button>
+                            <button onclick="openDurationModal(${task.id})">⏱️ Adjust Time</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderUnscheduledPool() {
+            const container = document.getElementById('unscheduledTasksPool');
+            if (!container) return;
+
+            // Get tasks that are doToday but NOT scheduled
+            const unscheduledTasks = getTodayTriageTasks().filter(t =>
+                !t.completed && !t.crashOutScheduled
+            );
+
+            if (unscheduledTasks.length === 0) {
+                container.innerHTML = `<div style="color: #9ca3af; padding: 20px; text-align: center;">All tasks scheduled or completed!</div>`;
+                return;
+            }
+
+            container.innerHTML = unscheduledTasks.map(task => `
+                <div class="unscheduled-card" draggable="true" data-task-id="${task.id}"
+                     onclick="sendToCrashOut(${task.id})">
+                    <div class="card-text">${escapeHtml(task.text.substring(0, 30))}${task.text.length > 30 ? '...' : ''}</div>
+                    <div class="card-duration">${task.size === 'big' ? '60m' : task.size === 'small' ? '15m' : '30m'}</div>
+                </div>
+            `).join('');
+        }
+
+        function openDurationModal(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'duration-modal';
+            modal.id = 'durationModal';
+            modal.innerHTML = `
+                <div class="duration-modal-content">
+                    <div style="font-weight: 700; margin-bottom: 15px;">Adjust: ${escapeHtml(task.text.substring(0, 40))}</div>
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        Current duration: <strong id="currentDuration">${task.crashOutDuration || 30}m</strong>
+                    </div>
+                    <div class="duration-adjust-btns">
+                        <button onclick="adjustDuration(${taskId}, -30)">-30m</button>
+                        <button onclick="adjustDuration(${taskId}, -15)">-15m</button>
+                        <button onclick="adjustDuration(${taskId}, -5)">-5m</button>
+                        <span style="padding: 8px;">●</span>
+                        <button onclick="adjustDuration(${taskId}, 5)">+5m</button>
+                        <button onclick="adjustDuration(${taskId}, 15)">+15m</button>
+                        <button onclick="adjustDuration(${taskId}, 30)">+30m</button>
+                    </div>
+                    <div style="font-size: 0.9em; color: #6b7280; margin: 15px 0;">Quick set:</div>
+                    <div class="duration-quick-set">
+                        <button onclick="setDuration(${taskId}, 15)">15m</button>
+                        <button onclick="setDuration(${taskId}, 30)">30m</button>
+                        <button onclick="setDuration(${taskId}, 45)">45m</button>
+                        <button onclick="setDuration(${taskId}, 60)">60m</button>
+                        <button onclick="setDuration(${taskId}, 90)">90m</button>
+                        <button onclick="setDuration(${taskId}, 120)">2h</button>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button onclick="closeDurationModal()" style="flex: 1; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; cursor: pointer;">Cancel</button>
+                        <button onclick="closeDurationModal()" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer;">Apply</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function adjustDuration(taskId, delta) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            const newDuration = Math.max(5, (task.crashOutDuration || 30) + delta);
+            tasks[taskId] = { ...task, crashOutDuration: newDuration };
+
+            const el = document.getElementById('currentDuration');
+            if (el) el.textContent = `${newDuration}m`;
+
+            recalculateCrashOutTimes();
+            saveData();
+        }
+
+        function setDuration(taskId, duration) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            tasks[taskId] = { ...task, crashOutDuration: duration };
+
+            const el = document.getElementById('currentDuration');
+            if (el) el.textContent = `${duration}m`;
+
+            recalculateCrashOutTimes();
+            saveData();
+        }
+
+        function closeDurationModal() {
+            const modal = document.getElementById('durationModal');
+            if (modal) modal.remove();
+            renderCrashOutMode();
+        }
+
+        function recalculateCrashOutTimes() {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            let currentTime = new Date();
+
+            scheduledTasks.forEach(task => {
+                const timeStr = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                tasks[task.id] = { ...tasks[task.id], crashOutTime: timeStr };
+                currentTime = new Date(currentTime.getTime() + (task.crashOutDuration || 30) * 60 * 1000);
+            });
+        }
+
+        function dismissOverscheduledWarning() {
+            document.getElementById('overscheduledWarning').style.display = 'none';
+        }
+
+        function resetCrashOutDay() {
+            if (!confirm('Reset Crash Out? This will clear all scheduled times but keep your tasks.')) return;
+
+            // Clear crash out data from all tasks
+            getValues(tasks).forEach(task => {
+                if (task.crashOutScheduled) {
+                    tasks[task.id] = {
+                        ...task,
+                        crashOutScheduled: false
+                    };
+                    delete tasks[task.id].crashOutTime;
+                    delete tasks[task.id].crashOutDuration;
+                }
+            });
+
+            // Reset sleep time to prompt for new one
+            if (commandCenterData.crashOut) {
+                commandCenterData.crashOut.sleepTime = null;
+                commandCenterData.crashOut.lastReset = new Date().toISOString();
+            }
+
+            renderCrashOutMode();
+            saveData();
+            showToast('Crash Out reset', '🔄');
+        }
+
+        // ==================== FOCUS (POMODORO) MODE ====================
+
+        // Current focus session state (lazy initialized)
+        let currentFocusTaskId = null;
+
+        function renderFocusPomodoroMode() {
+            const noTaskEl = document.getElementById('focusNoTask');
+            const activeEl = document.getElementById('focusActiveSession');
+
+            currentFocusTaskId = commandCenterData.currentSession.taskId;
+
+            if (!currentFocusTaskId || !tasks[currentFocusTaskId]) {
+                // No task selected
+                if (noTaskEl) noTaskEl.style.display = 'block';
+                if (activeEl) activeEl.style.display = 'none';
+            } else {
+                // Active session
+                if (noTaskEl) noTaskEl.style.display = 'none';
+                if (activeEl) activeEl.style.display = 'block';
+                renderActiveSession();
+            }
+        }
+
+        function startTaskInFocus(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            // Set up session
+            commandCenterData.currentSession.taskId = taskId;
+            commandCenterData.currentSession.checklist = {};
+            commandCenterData.currentSession.timerRemaining = null;
+            currentFocusTaskId = taskId;
+
+            // Reset timer
+            focusTimerSecondsRemaining = (commandCenterData.currentSession.timerMinutes || 25) * 60;
+            focusTimerRunning = false;
+            if (focusTimerInterval) {
+                clearInterval(focusTimerInterval);
+                focusTimerInterval = null;
+            }
+
+            // Switch to focus mode
+            switchCommandCenterMode('focus');
+            saveData();
+        }
+
+        function renderActiveSession() {
+            const task = tasks[currentFocusTaskId];
+            if (!task) return;
+
+            // Update task info
+            const taskTextEl = document.getElementById('focusCurrentTaskText');
+            const taskTierEl = document.getElementById('focusCurrentTaskTier');
+
+            if (taskTextEl) taskTextEl.textContent = task.text;
+            if (taskTierEl) {
+                const tierLabel = task.triageTier === 'lockedIn' ? 'LOCKED IN' :
+                                  task.crashOutScheduled ? 'SCHEDULED' :
+                                  task.triageTier === 'tomorrow' ? 'TOMORROW' : 'TODAY';
+                taskTierEl.textContent = `from: ${tierLabel}`;
+            }
+
+            // Update timer display
+            updateFocusTimerDisplay();
+
+            // Render checklist
+            renderFocusChecklist();
+        }
+
+        function updateFocusTimerDisplay() {
+            const minutes = Math.floor(focusTimerSecondsRemaining / 60);
+            const seconds = focusTimerSecondsRemaining % 60;
+            const displayEl = document.getElementById('focusTimerDisplay');
+            if (displayEl) {
+                displayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            // Update circle progress
+            const circleEl = document.getElementById('focusTimerCircle');
+            if (circleEl) {
+                const totalSeconds = focusTimerDuration * 60;
+                const progress = 1 - (focusTimerSecondsRemaining / totalSeconds);
+                const circumference = 2 * Math.PI * 90; // r=90
+                circleEl.style.strokeDashoffset = circumference * progress;
+            }
+
+            // Update button visibility
+            const startBtn = document.getElementById('focusStartBtn');
+            const pauseBtn = document.getElementById('focusPauseBtn');
+            const resumeBtn = document.getElementById('focusResumeBtn');
+
+            if (focusTimerRunning) {
+                if (startBtn) startBtn.style.display = 'none';
+                if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                if (resumeBtn) resumeBtn.style.display = 'none';
+            } else if (focusTimerSecondsRemaining < focusTimerDuration * 60) {
+                if (startBtn) startBtn.style.display = 'none';
+                if (pauseBtn) pauseBtn.style.display = 'none';
+                if (resumeBtn) resumeBtn.style.display = 'inline-block';
+            } else {
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (pauseBtn) pauseBtn.style.display = 'none';
+                if (resumeBtn) resumeBtn.style.display = 'none';
+            }
+        }
+
+        function startFocusTimer() {
+            if (focusTimerRunning) return;
+
+            focusTimerRunning = true;
+            focusTimerInterval = setInterval(() => {
+                focusTimerSecondsRemaining--;
+                updateFocusTimerDisplay();
+
+                if (focusTimerSecondsRemaining <= 0) {
+                    clearInterval(focusTimerInterval);
+                    focusTimerInterval = null;
+                    focusTimerRunning = false;
+                    onFocusTimerComplete();
+                }
+            }, 1000);
+
+            updateFocusTimerDisplay();
+        }
+
+        function pauseFocusTimer() {
+            if (!focusTimerRunning) return;
+
+            focusTimerRunning = false;
+            if (focusTimerInterval) {
+                clearInterval(focusTimerInterval);
+                focusTimerInterval = null;
+            }
+            updateFocusTimerDisplay();
+        }
+
+        function resumeFocusTimer() {
+            startFocusTimer();
+        }
+
+        function setFocusDuration(minutes) {
+            focusTimerDuration = minutes;
+            focusTimerSecondsRemaining = minutes * 60;
+
+            // Update button styling
+            document.getElementById('focus25Btn').style.background = minutes === 25 ? 'rgba(255,255,255,0.2)' : 'transparent';
+            document.getElementById('focus50Btn').style.background = minutes === 50 ? 'rgba(255,255,255,0.2)' : 'transparent';
+
+            if (commandCenterData.currentSession) {
+                commandCenterData.currentSession.timerMinutes = minutes;
+            }
+
+            updateFocusTimerDisplay();
+        }
+
+        function onFocusTimerComplete() {
+            // Award XP for completing a focus session
+            awardCommandCenterXP(20, 'focus session');
+
+            // Increment focus streak
+            commandCenterData.focusStats.focusStreak = (commandCenterData.focusStats.focusStreak || 0) + 1;
+
+            // Show completion modal
+            showFocusCompleteModal();
+
+            // Play sound/vibration if available
+            try {
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            } catch (e) {}
+
+            saveData();
+        }
+
+        function showFocusCompleteModal() {
+            const modal = document.getElementById('focusTimerCompleteModal');
+            if (modal) {
+                modal.style.display = 'flex';
+
+                // Update modal content
+                const xpEl = document.getElementById('focusXpEarned');
+                const streakEl = document.getElementById('focusStreakDisplay');
+                const progressEl = document.getElementById('focusTodayProgress');
+                const checklistEl = document.getElementById('focusChecklistSummary');
+
+                if (xpEl) xpEl.textContent = '+20 XP';
+                if (streakEl) streakEl.textContent = `🔥 Focus streak: ${commandCenterData.focusStats?.focusStreak || 1} sessions`;
+
+                const todayTasks = getTodayTriageTasks();
+                const completed = todayTasks.filter(t => t.completed).length;
+                if (progressEl) progressEl.textContent = `📊 Today: ${completed}/${todayTasks.length} tasks done`;
+
+                // Checklist summary
+                if (commandCenterData.currentSession && commandCenterData.currentSession.checklist) {
+                    const items = Object.values(commandCenterData.currentSession.checklist);
+                    const completedItems = items.filter(i => i.completed).length;
+                    if (checklistEl) checklistEl.textContent = `Session checklist: ${completedItems}/${items.length} completed`;
+                }
+            }
+        }
+
+        function completeFocusTask() {
+            if (!currentFocusTaskId) return;
+            completeTriageTask(currentFocusTaskId);
+            exitFocusMode();
+        }
+
+        function completeFocusTaskFromModal() {
+            hideFocusCompleteModal();
+            completeFocusTask();
+        }
+
+        function startNextFocusTask() {
+            hideFocusCompleteModal();
+
+            // Find next task in queue
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed && t.id !== currentFocusTaskId);
+            const lockedInTasks = getTasksByTier('lockedIn').filter(t => !t.completed && t.id !== currentFocusTaskId);
+            const todayTasks = getTasksByTier('today').filter(t => !t.completed && t.id !== currentFocusTaskId);
+
+            const nextTask = scheduledTasks[0] || lockedInTasks[0] || todayTasks[0];
+
+            if (nextTask) {
+                startTaskInFocus(nextTask.id);
+            } else {
+                showToast('No more tasks! Great work!', '🎉');
+                exitFocusMode();
+            }
+        }
+
+        function takeBreak() {
+            hideFocusCompleteModal();
+            showToast('Take a 5 minute break!', '☕');
+            // Reset timer for break
+            focusTimerSecondsRemaining = 5 * 60;
+            focusTimerDuration = 5;
+            updateFocusTimerDisplay();
+        }
+
+        function backToTriageFromModal() {
+            hideFocusCompleteModal();
+            switchCommandCenterMode('triage');
+        }
+
+        function hideFocusCompleteModal() {
+            const modal = document.getElementById('focusTimerCompleteModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function exitFocusMode() {
+            // Stop timer
+            if (focusTimerInterval) {
+                clearInterval(focusTimerInterval);
+                focusTimerInterval = null;
+            }
+            focusTimerRunning = false;
+
+            // Clear session
+            if (commandCenterData.currentSession) {
+                commandCenterData.currentSession.taskId = null;
+                commandCenterData.currentSession.checklist = {};
+            }
+            currentFocusTaskId = null;
+
+            switchCommandCenterMode('triage');
+            saveData();
+        }
+
+        // Focus Checklist
+        function renderFocusChecklist() {
+            const container = document.getElementById('focusSessionChecklist');
+            if (!container) return;
+
+            // Ensure checklist exists
+            if (!commandCenterData.currentSession.checklist) {
+                commandCenterData.currentSession.checklist = {};
+            }
+
+            const items = Object.values(commandCenterData.currentSession.checklist);
+
+            if (items.length === 0) {
+                container.innerHTML = `<div style="color: #9ca3af; font-size: 0.9em; padding: 10px;">Add micro-tasks for this session</div>`;
+            } else {
+                container.innerHTML = items.map(item => `
+                    <div class="focus-checklist-item">
+                        <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleFocusChecklistItem('${item.id}')">
+                        <span class="item-text ${item.completed ? 'completed' : ''}">${escapeHtml(item.text)}</span>
+                        <button class="delete-item" onclick="deleteFocusChecklistItem('${item.id}')">✕</button>
+                    </div>
+                `).join('');
+            }
+
+            // Update progress
+            const completed = items.filter(i => i.completed).length;
+            const total = items.length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            const progressEl = document.getElementById('focusChecklistProgress');
+            const countEl = document.getElementById('focusChecklistCount');
+            const percentEl = document.getElementById('focusChecklistPercent');
+
+            if (progressEl) progressEl.style.width = `${percent}%`;
+            if (countEl) countEl.textContent = `${completed}/${total} items`;
+            if (percentEl) percentEl.textContent = `${percent}%`;
+        }
+
+        function addFocusChecklistItem() {
+            const input = document.getElementById('focusAddChecklistItem');
+            if (!input || !input.value.trim()) return;
+
+            // Ensure checklist exists
+            if (!commandCenterData.currentSession.checklist) commandCenterData.currentSession.checklist = {};
+
+            const id = generateId('chk');
+            commandCenterData.currentSession.checklist[id] = {
+                id: id,
+                text: input.value.trim(),
+                completed: false
+            };
+
+            input.value = '';
+            renderFocusChecklist();
+            saveData();
+        }
+
+        function toggleFocusChecklistItem(itemId) {
+            if (commandCenterData.currentSession && commandCenterData.currentSession.checklist && commandCenterData.currentSession.checklist[itemId]) {
+                commandCenterData.currentSession.checklist[itemId].completed = !commandCenterData.currentSession.checklist[itemId].completed;
+                renderFocusChecklist();
+                saveData();
+            }
+        }
+
+        function deleteFocusChecklistItem(itemId) {
+            if (commandCenterData.currentSession && commandCenterData.currentSession.checklist && commandCenterData.currentSession.checklist[itemId]) {
+                delete commandCenterData.currentSession.checklist[itemId];
+                renderFocusChecklist();
+                saveData();
+            }
+        }
+
+        // ==================== GAMIFICATION ====================
+
+        function awardCommandCenterXP(amount, reason) {
+            commandCenterData.focusStats.totalXP = (commandCenterData.focusStats.totalXP || 0) + amount;
+
+            // Also add to main stats
+            if (typeof stats !== 'undefined' && stats) {
+                stats.totalXPGained = (stats.totalXPGained || 0) + amount;
+            }
+
+            showToast(`+${amount} XP (${reason})`, '⭐');
+            saveData();
+        }
+
+        function showCelebration(size) {
+            const container = document.createElement('div');
+            container.className = 'confetti-container';
+            document.body.appendChild(container);
+
+            const colors = ['#ff6b35', '#f7931e', '#ffd700', '#667eea', '#10b981', '#ec4899'];
+            const count = size === 'big' ? 100 : size === 'medium' ? 50 : 20;
+
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confettiFall ${1 + Math.random() * 2}s ease-out forwards`;
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                container.appendChild(confetti);
+            }
+
+            setTimeout(() => container.remove(), 3000);
+        }
+
+        // ==================== ROLLOVER LOGIC ====================
+
+        function checkAndProcessRollovers() {
+            const today = getTodayDateString();
+
+            // Find tasks that were LOCKED IN yesterday and not completed
+            getValues(tasks).forEach(task => {
+                if (task.triageTier === 'lockedIn' && !task.completed && task.doToday) {
+                    // Check if this was set yesterday (needs tracking)
+                    // For now, we'll mark based on existence of triageTier without completion
+                    if (!task.rolledOver) {
+                        // This logic would need a "lastTriageDate" field to be accurate
+                        // For now, skip auto-rollover detection
+                    }
+                }
+            });
+        }
+
+        // ==================== STATE PERSISTENCE ====================
+
+        // Note: commandCenterData is initialized at app start
+        // The saveData() function handles persistence to Firebase
+        // We're using spread operators to add new properties to tasks
+        // commandCenterData.crashOut, commandCenterData.focusStats, commandCenterData.currentSession are saved/loaded with the app
+
         // Task Edit Modal
         function openTaskEditModal(taskId) {
             editingTaskId = taskId;
