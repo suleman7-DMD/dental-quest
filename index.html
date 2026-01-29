@@ -6491,554 +6491,6 @@
             }
         }
 
-        /* ==================== FOCUS MODE - DARK THEME ==================== */
-
-        /* Empty State */
-        .focus-empty {
-            text-align: center;
-            padding: 80px 20px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .focus-empty-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-
-        .focus-empty-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #e6edf3;
-            margin: 0 0 12px 0;
-        }
-
-        .focus-empty-message {
-            font-size: 16px;
-            color: #8b949e;
-            margin: 0 0 24px 0;
-        }
-
-        .btn-go-triage {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-go-triage:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
-
-        .focus-empty-tip {
-            font-size: 14px;
-            color: #6e7681;
-            margin-top: 24px;
-        }
-
-        /* Active Session */
-        .focus-session {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        /* Timer Container */
-        .timer-container {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .timer-ring {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 0 auto 24px;
-        }
-
-        .timer-svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-
-        .timer-bg {
-            fill: none;
-            stroke: #1e293b;
-            stroke-width: 10;
-        }
-
-        .timer-progress {
-            fill: none;
-            stroke: #667eea;
-            stroke-width: 10;
-            stroke-linecap: round;
-            stroke-dasharray: 565.48;
-            stroke-dashoffset: 0;
-            transition: stroke-dashoffset 1s linear;
-        }
-
-        .timer-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 52px;
-            font-weight: 700;
-            color: #e6edf3;
-            font-variant-numeric: tabular-nums;
-            font-family: 'SF Mono', Monaco, monospace;
-        }
-
-        .timer-controls {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .btn-timer-start, .btn-timer-resume {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 14px 36px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-timer-start:hover, .btn-timer-resume:hover {
-            background: #16a34a;
-            transform: translateY(-2px);
-        }
-
-        .btn-timer-pause {
-            background: #f59e0b;
-            color: white;
-            border: none;
-            padding: 14px 36px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-timer-pause:hover {
-            background: #d97706;
-        }
-
-        .timer-duration-toggle {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 20px;
-        }
-
-        .duration-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .duration-option input {
-            accent-color: #667eea;
-        }
-
-        .duration-option input:checked + span {
-            color: #e6edf3;
-            font-weight: 500;
-        }
-
-        .timer-progress-bar {
-            height: 6px;
-            background: #1e293b;
-            border-radius: 3px;
-            overflow: hidden;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        .timer-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transition: width 1s linear;
-            width: 0%;
-        }
-
-        /* Current Task */
-        .current-task {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-
-        .current-label {
-            display: block;
-            font-size: 12px;
-            color: #8b949e;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .current-task-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 4px;
-        }
-
-        .task-tier-icon {
-            font-size: 20px;
-        }
-
-        .current-task .task-text {
-            font-size: 18px;
-            font-weight: 600;
-            color: #e6edf3;
-        }
-
-        .task-tier-label {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        /* Session Checklist */
-        .session-checklist {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-        }
-
-        .checklist-header {
-            margin-bottom: 12px;
-        }
-
-        .checklist-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e6edf3;
-        }
-
-        .checklist-items {
-            margin-bottom: 12px;
-            min-height: 20px;
-        }
-
-        .checklist-empty {
-            color: #64748b;
-            font-size: 14px;
-            padding: 12px 0;
-            text-align: center;
-            font-style: italic;
-        }
-
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .checklist-item:last-child {
-            border-bottom: none;
-        }
-
-        .checklist-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #667eea;
-        }
-
-        .checklist-item span {
-            font-size: 14px;
-            color: #e6edf3;
-        }
-
-        .checklist-item.completed span {
-            text-decoration: line-through;
-            color: #64748b;
-        }
-
-        .checklist-item .delete-item {
-            margin-left: auto;
-            background: transparent;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px;
-        }
-
-        .checklist-item .delete-item:hover {
-            color: #ef4444;
-        }
-
-        .checklist-add input {
-            width: 100%;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 14px;
-            color: #e6edf3;
-            margin-bottom: 12px;
-        }
-
-        .checklist-add input::placeholder {
-            color: #64748b;
-        }
-
-        .checklist-add input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .checklist-progress {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .checklist-progress-bar {
-            flex: 1;
-            height: 6px;
-            background: #0f172a;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .checklist-progress-fill {
-            height: 100%;
-            background: #667eea;
-            transition: width 0.3s;
-            width: 0%;
-        }
-
-        .checklist-progress-text {
-            font-size: 12px;
-            color: #8b949e;
-            white-space: nowrap;
-        }
-
-        /* Focus Actions */
-        .focus-actions {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-
-        .btn-complete-task {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 16px 48px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-complete-task:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-exit-focus {
-            display: block;
-            margin: 0 auto 16px;
-            background: transparent;
-            border: 1px solid #334155;
-            color: #8b949e;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .btn-exit-focus:hover {
-            border-color: #ef4444;
-            color: #ef4444;
-        }
-
-        .focus-hint {
-            text-align: center;
-            font-size: 13px;
-            color: #64748b;
-        }
-
-        /* Timer Complete */
-        .focus-complete {
-            text-align: center;
-            padding: 60px 20px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .complete-celebration {
-            font-size: 72px;
-            margin-bottom: 16px;
-            animation: celebrateBounce 0.6s ease;
-        }
-
-        @keyframes celebrateBounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        .complete-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #e6edf3;
-            margin: 0 0 24px 0;
-        }
-
-        .complete-stats {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-
-        .stat-item.xp {
-            justify-content: center;
-            padding: 12px 0;
-        }
-
-        .stat-item.xp .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fbbf24;
-        }
-
-        .stat-label {
-            color: #8b949e;
-            font-size: 14px;
-        }
-
-        .stat-value {
-            color: #e6edf3;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .checklist-summary {
-            font-size: 14px;
-            color: #8b949e;
-            margin-bottom: 24px;
-        }
-
-        .complete-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .btn-task-done {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-task-done:hover {
-            background: #16a34a;
-        }
-
-        .btn-next-task {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-next-task:hover {
-            background: #5a67d8;
-        }
-
-        .complete-secondary {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-        }
-
-        .complete-secondary button {
-            background: transparent;
-            border: 1px solid #334155;
-            color: #8b949e;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .complete-secondary button:hover {
-            border-color: #667eea;
-            color: #e6edf3;
-        }
-
-        /* Focus Mode Responsive */
-        @media (max-width: 480px) {
-            .timer-ring {
-                width: 180px;
-                height: 180px;
-            }
-            .timer-display {
-                font-size: 42px;
-            }
-            .btn-timer-start, .btn-timer-pause, .btn-timer-resume {
-                padding: 12px 28px;
-                font-size: 14px;
-            }
-            .focus-session {
-                padding: 20px 15px;
-            }
-        }
-
     </style>
 </head>
 <body>
@@ -7460,122 +6912,102 @@
                 <div id="focusPomodoroContent" class="cc-mode-content" style="display: none;">
 
                     <!-- No Task Selected State -->
-                    <div id="focusNoTask" class="focus-empty">
-                        <div class="focus-empty-icon">🎯</div>
-                        <h2 class="focus-empty-title">FOCUS MODE</h2>
-                        <p class="focus-empty-message">Select a task from Triage or Crash Out to start a focus session.</p>
-                        <button class="btn-go-triage" onclick="switchCommandCenterMode('triage')">Go to Triage</button>
-                        <p class="focus-empty-tip">💡 Tip: Click [▶ Start] on any task to begin</p>
+                    <div id="focusNoTask" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 50px; text-align: center; border: 2px solid rgba(102,126,234,0.3);">
+                        <div style="font-size: 4em; margin-bottom: 20px;">🎯</div>
+                        <div style="font-size: 1.3em; font-weight: 700; color: white; margin-bottom: 15px;">FOCUS MODE</div>
+                        <div style="color: #9ca3af; margin-bottom: 25px;">Select a task from Triage or Crash Out to start a focus session</div>
+                        <button onclick="switchCommandCenterMode('triage')" style="padding: 14px 28px; border: none; border-radius: 12px; background: #667eea; color: white; font-weight: 600; font-size: 1em; cursor: pointer;">Go to Triage</button>
                     </div>
 
                     <!-- Active Focus Session -->
-                    <div id="focusActiveSession" class="focus-session" style="display: none;">
+                    <div id="focusActiveSession" style="display: none;">
+                        <!-- Timer Card -->
+                        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 20px; border: 2px solid rgba(102,126,234,0.3);">
+                            <div style="font-size: 1.2em; font-weight: 600; color: white; margin-bottom: 20px;">🎯 FOCUS MODE</div>
 
-                        <!-- Timer Section -->
-                        <div class="timer-container">
-                            <div class="timer-ring">
-                                <svg class="timer-svg" viewBox="0 0 200 200">
-                                    <circle class="timer-bg" cx="100" cy="100" r="90"/>
-                                    <circle class="timer-progress" id="focusTimerCircle" cx="100" cy="100" r="90"/>
+                            <!-- Timer Circle -->
+                            <div style="position: relative; width: 200px; height: 200px; margin: 0 auto 25px;">
+                                <svg width="200" height="200" style="transform: rotate(-90deg);">
+                                    <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="12"/>
+                                    <circle id="focusTimerCircle" cx="100" cy="100" r="90" fill="none" stroke="#667eea" stroke-width="12" stroke-linecap="round" stroke-dasharray="565.48" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"/>
                                 </svg>
-                                <div class="timer-display" id="focusTimerDisplay">25:00</div>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 3em; font-weight: 700; font-family: Monaco, monospace;" id="focusTimerDisplay">25:00</div>
                             </div>
 
-                            <div class="timer-controls">
-                                <button class="btn-timer-start" id="focusStartBtn" onclick="startFocusTimer()">▶ START</button>
-                                <button class="btn-timer-pause" id="focusPauseBtn" onclick="pauseFocusTimer()" style="display:none;">⏸ PAUSE</button>
-                                <button class="btn-timer-resume" id="focusResumeBtn" onclick="resumeFocusTimer()" style="display:none;">▶ RESUME</button>
+                            <!-- Timer Controls -->
+                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                                <button id="focusStartBtn" onclick="startFocusTimer()" style="padding: 14px 32px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ START</button>
+                                <button id="focusPauseBtn" onclick="pauseFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #f59e0b; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">⏸ PAUSE</button>
+                                <button id="focusResumeBtn" onclick="resumeFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ RESUME</button>
                             </div>
 
-                            <div class="timer-duration-toggle">
-                                <label class="duration-option">
-                                    <input type="radio" name="focusDuration" value="25" checked onchange="setFocusDuration(25)">
-                                    <span>25 min</span>
-                                </label>
-                                <label class="duration-option">
-                                    <input type="radio" name="focusDuration" value="50" onchange="setFocusDuration(50)">
-                                    <span>50 min</span>
-                                </label>
-                            </div>
-
-                            <div class="timer-progress-bar">
-                                <div class="timer-progress-fill" id="focusTimerProgressBar"></div>
+                            <!-- Duration Toggle -->
+                            <div style="display: flex; justify-content: center; gap: 10px;">
+                                <button onclick="setFocusDuration(25)" id="focus25Btn" class="focus-duration-btn active" style="padding: 8px 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; background: rgba(255,255,255,0.2); color: white; font-size: 0.9em; cursor: pointer;">25 min</button>
+                                <button onclick="setFocusDuration(50)" id="focus50Btn" class="focus-duration-btn" style="padding: 8px 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; background: transparent; color: white; font-size: 0.9em; cursor: pointer;">50 min</button>
                             </div>
                         </div>
 
-                        <!-- Current Task -->
-                        <div class="current-task">
-                            <span class="current-label">Currently working on:</span>
-                            <div class="current-task-info">
-                                <span class="task-tier-icon" id="focusCurrentTaskIcon">🔥</span>
-                                <span class="task-text" id="focusCurrentTaskText">Study Peds Chapter 12</span>
-                            </div>
-                            <span class="task-tier-label" id="focusCurrentTaskTier">from: LOCKED IN</span>
+                        <!-- Current Task Card -->
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.9em; color: #9ca3af; margin-bottom: 8px;">Currently working on:</div>
+                            <div style="font-size: 1.2em; font-weight: 700; color: #1f2937;" id="focusCurrentTaskText">Study Peds Chapter 12</div>
+                            <div style="font-size: 0.85em; color: #667eea; margin-top: 5px;" id="focusCurrentTaskTier">from: LOCKED IN</div>
                         </div>
 
                         <!-- Session Checklist -->
-                        <div class="session-checklist">
-                            <div class="checklist-header">
-                                <span class="checklist-title">📝 Session Checklist</span>
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: #374151; margin-bottom: 15px;">This session's checklist:</div>
+                            <div id="focusSessionChecklist" style="margin-bottom: 15px;">
+                                <!-- Checklist items will be rendered here -->
                             </div>
-                            <div class="checklist-items" id="focusSessionChecklist">
-                                <!-- Checklist items rendered here -->
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="focusAddChecklistItem" placeholder="+ Add item..."
+                                       onkeypress="if(event.key==='Enter')addFocusChecklistItem()"
+                                       style="flex: 1; padding: 10px 14px; border: 2px dashed #e5e7eb; border-radius: 8px; font-size: 0.9em;">
+                                <button onclick="addFocusChecklistItem()" style="padding: 10px 16px; border: none; border-radius: 8px; background: #667eea; color: white; font-weight: 600; cursor: pointer;">Add</button>
                             </div>
-                            <div class="checklist-add">
-                                <input type="text" id="focusAddChecklistItem" placeholder="+ Add checklist item..."
-                                       onkeypress="if(event.key==='Enter') addFocusChecklistItem()">
-                            </div>
-                            <div class="checklist-progress">
-                                <div class="checklist-progress-bar">
-                                    <div class="checklist-progress-fill" id="focusChecklistProgress"></div>
+                            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div id="focusChecklistProgress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
                                 </div>
-                                <span class="checklist-progress-text" id="focusChecklistProgressText">0/0 items • 0%</span>
+                                <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: #9ca3af;">
+                                    <span id="focusChecklistCount">0/0 items</span>
+                                    <span id="focusChecklistPercent">0%</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="focus-actions">
-                            <button class="btn-complete-task" onclick="completeFocusTask()">✓ COMPLETE TASK</button>
+                        <!-- Complete Task Button -->
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 16px; cursor: pointer;" onclick="completeFocusTask()">
+                            <div style="color: white; font-weight: 700; font-size: 1.1em;">✓ COMPLETE TASK</div>
                         </div>
 
-                        <button class="btn-exit-focus" onclick="exitFocusMode()">✕ Exit Focus</button>
-
-                        <p class="focus-hint">ℹ️ Complete the task when done, or exit to return later</p>
-
-                    </div>
-
-                    <!-- Timer Complete Screen -->
-                    <div id="focusComplete" class="focus-complete" style="display: none;">
-                        <div class="complete-celebration">🎉</div>
-                        <h2 class="complete-title">CRUSHED IT!</h2>
-
-                        <div class="complete-stats">
-                            <div class="stat-item xp">
-                                <span class="stat-value" id="focusXpEarned">+25 XP</span>
-                            </div>
-                            <div class="stat-item streak">
-                                <span class="stat-label">🔥 Focus streak:</span>
-                                <span class="stat-value" id="focusStreakDisplay">1 session</span>
-                            </div>
-                            <div class="stat-item progress">
-                                <span class="stat-label">📊 Today:</span>
-                                <span class="stat-value" id="focusTodayProgress">0/0 tasks done</span>
-                            </div>
-                        </div>
-
-                        <p class="checklist-summary" id="focusChecklistSummary">Session checklist: 0/0 completed</p>
-
-                        <div class="complete-actions">
-                            <button class="btn-task-done" onclick="completeFocusTaskFromComplete()">✓ TASK DONE</button>
-                            <button class="btn-next-task" onclick="startNextFocusTask()">→ NEXT TASK</button>
-                        </div>
-
-                        <div class="complete-secondary">
-                            <button onclick="takeBreak()">Take a break</button>
-                            <button onclick="backToTriageFromComplete()">Back to Triage</button>
+                        <!-- Exit Button -->
+                        <div style="text-align: center;">
+                            <button onclick="exitFocusMode()" style="padding: 10px 20px; border: 2px solid #dc2626; border-radius: 10px; background: transparent; color: #dc2626; font-weight: 600; cursor: pointer;">✕ Exit Focus</button>
                         </div>
                     </div>
 
+                    <!-- Timer Complete Modal (hidden by default) -->
+                    <div id="focusTimerCompleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center;">
+                        <div style="background: white; border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; margin: 20px;">
+                            <div style="font-size: 4em; margin-bottom: 15px;">🎉</div>
+                            <div style="font-size: 1.5em; font-weight: 700; color: #1f2937; margin-bottom: 20px;">CRUSHED IT!</div>
+                            <div style="background: #f0fdf4; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                <div style="color: #10b981; font-weight: 700; font-size: 1.2em;" id="focusXpEarned">+75 XP</div>
+                                <div style="color: #6b7280; font-size: 0.9em; margin-top: 5px;" id="focusStreakDisplay">🔥 Focus streak: 4 sessions</div>
+                                <div style="color: #6b7280; font-size: 0.9em;" id="focusTodayProgress">📊 Today: 3/12 tasks done</div>
+                            </div>
+                            <div style="color: #6b7280; margin-bottom: 20px;" id="focusChecklistSummary">Session checklist: 3/4 completed</div>
+                            <button onclick="completeFocusTaskFromModal()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 10px;">✓ TASK DONE</button>
+                            <button onclick="startNextFocusTask()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #667eea; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 15px;">→ NEXT TASK</button>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button onclick="takeBreak()" style="padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; font-size: 0.9em; cursor: pointer;">Take a break</button>
+                                <button onclick="backToTriageFromModal()" style="padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; font-size: 0.9em; cursor: pointer;">Back to Triage</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -16973,20 +16405,17 @@
         function renderFocusPomodoroMode() {
             const noTaskEl = document.getElementById('focusNoTask');
             const activeEl = document.getElementById('focusActiveSession');
-            const completeEl = document.getElementById('focusComplete');
 
             currentFocusTaskId = commandCenterData.currentSession.taskId;
 
             if (!currentFocusTaskId || !tasks[currentFocusTaskId]) {
-                // No task selected - show empty state (flex for centering)
-                if (noTaskEl) noTaskEl.style.display = 'flex';
+                // No task selected
+                if (noTaskEl) noTaskEl.style.display = 'block';
                 if (activeEl) activeEl.style.display = 'none';
-                if (completeEl) completeEl.style.display = 'none';
             } else {
-                // Active session (block layout with margin auto)
+                // Active session
                 if (noTaskEl) noTaskEl.style.display = 'none';
                 if (activeEl) activeEl.style.display = 'block';
-                if (completeEl) completeEl.style.display = 'none';
                 renderActiveSession();
             }
         }
@@ -17019,15 +16448,9 @@
             if (!task) return;
 
             // Update task info
-            const taskIconEl = document.getElementById('focusCurrentTaskIcon');
             const taskTextEl = document.getElementById('focusCurrentTaskText');
             const taskTierEl = document.getElementById('focusCurrentTaskTier');
 
-            // Determine icon based on tier/status
-            const icon = task.triageTier === 'lockedIn' ? '🔒' :
-                        task.crashOutScheduled ? '📅' :
-                        task.triageTier === 'tomorrow' ? '📆' : '📋';
-            if (taskIconEl) taskIconEl.textContent = icon;
             if (taskTextEl) taskTextEl.textContent = task.text;
             if (taskTierEl) {
                 const tierLabel = task.triageTier === 'lockedIn' ? 'LOCKED IN' :
@@ -17051,21 +16474,13 @@
                 displayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
 
-            // Update circle progress (SVG ring)
+            // Update circle progress
             const circleEl = document.getElementById('focusTimerCircle');
             if (circleEl) {
                 const totalSeconds = focusTimerDuration * 60;
                 const progress = 1 - (focusTimerSecondsRemaining / totalSeconds);
                 const circumference = 2 * Math.PI * 90; // r=90
-                circleEl.style.strokeDashoffset = circumference * (1 - progress);
-            }
-
-            // Update linear progress bar
-            const progressBarEl = document.getElementById('focusTimerProgressBar');
-            if (progressBarEl) {
-                const totalSeconds = focusTimerDuration * 60;
-                const percent = ((totalSeconds - focusTimerSecondsRemaining) / totalSeconds) * 100;
-                progressBarEl.style.width = `${percent}%`;
+                circleEl.style.strokeDashoffset = circumference * progress;
             }
 
             // Update button visibility
@@ -17126,11 +16541,9 @@
             focusTimerDuration = minutes;
             focusTimerSecondsRemaining = minutes * 60;
 
-            // Update radio button state (the HTML already handles checked state via onchange)
-            const radios = document.querySelectorAll('input[name="focusDuration"]');
-            radios.forEach(radio => {
-                radio.checked = parseInt(radio.value) === minutes;
-            });
+            // Update button styling
+            document.getElementById('focus25Btn').style.background = minutes === 25 ? 'rgba(255,255,255,0.2)' : 'transparent';
+            document.getElementById('focus50Btn').style.background = minutes === 50 ? 'rgba(255,255,255,0.2)' : 'transparent';
 
             if (commandCenterData.currentSession) {
                 commandCenterData.currentSession.timerMinutes = minutes;
@@ -17158,37 +16571,30 @@
         }
 
         function showFocusCompleteModal() {
-            // Hide active session, show completion screen
-            const activeEl = document.getElementById('focusActiveSession');
-            const noTaskEl = document.getElementById('focusNoTask');
-            const completeEl = document.getElementById('focusComplete');
+            const modal = document.getElementById('focusTimerCompleteModal');
+            if (modal) {
+                modal.style.display = 'flex';
 
-            if (activeEl) activeEl.style.display = 'none';
-            if (noTaskEl) noTaskEl.style.display = 'none';
-            if (completeEl) completeEl.style.display = 'flex';
+                // Update modal content
+                const xpEl = document.getElementById('focusXpEarned');
+                const streakEl = document.getElementById('focusStreakDisplay');
+                const progressEl = document.getElementById('focusTodayProgress');
+                const checklistEl = document.getElementById('focusChecklistSummary');
 
-            // Update completion screen content (match HTML element IDs)
-            const xpEl = document.getElementById('focusXpEarned');
-            const streakEl = document.getElementById('focusStreakDisplay');
-            const progressEl = document.getElementById('focusTodayProgress');
-            const checklistEl = document.getElementById('focusChecklistSummary');
+                if (xpEl) xpEl.textContent = '+20 XP';
+                if (streakEl) streakEl.textContent = `🔥 Focus streak: ${commandCenterData.focusStats?.focusStreak || 1} sessions`;
 
-            if (xpEl) xpEl.textContent = '+20 XP';
-            if (streakEl) streakEl.textContent = `${commandCenterData.focusStats?.focusStreak || 1} sessions`;
+                const todayTasks = getTodayTriageTasks();
+                const completed = todayTasks.filter(t => t.completed).length;
+                if (progressEl) progressEl.textContent = `📊 Today: ${completed}/${todayTasks.length} tasks done`;
 
-            const todayTasks = getTodayTriageTasks();
-            const completed = todayTasks.filter(t => t.completed).length;
-            if (progressEl) progressEl.textContent = `${completed}/${todayTasks.length} tasks done`;
-
-            // Checklist summary
-            if (commandCenterData.currentSession && commandCenterData.currentSession.checklist) {
-                const items = Object.values(commandCenterData.currentSession.checklist);
-                const completedItems = items.filter(i => i.completed).length;
-                if (checklistEl) checklistEl.textContent = `Session checklist: ${completedItems}/${items.length} completed`;
+                // Checklist summary
+                if (commandCenterData.currentSession && commandCenterData.currentSession.checklist) {
+                    const items = Object.values(commandCenterData.currentSession.checklist);
+                    const completedItems = items.filter(i => i.completed).length;
+                    if (checklistEl) checklistEl.textContent = `Session checklist: ${completedItems}/${items.length} completed`;
+                }
             }
-
-            // Show confetti celebration
-            showCelebration('medium');
         }
 
         function completeFocusTask() {
@@ -17202,21 +16608,8 @@
             completeFocusTask();
         }
 
-        function completeFocusTaskFromComplete() {
-            // Mark task complete and exit
-            if (currentFocusTaskId) {
-                completeTriageTask(currentFocusTaskId);
-            }
-            exitFocusMode();
-        }
-
-        function backToTriageFromComplete() {
-            // Exit without completing task
-            exitFocusMode();
-        }
-
         function startNextFocusTask() {
-            hideFocusCompleteScreen();
+            hideFocusCompleteModal();
 
             // Find next task in queue
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed && t.id !== currentFocusTaskId);
@@ -17234,30 +16627,22 @@
         }
 
         function takeBreak() {
-            hideFocusCompleteScreen();
+            hideFocusCompleteModal();
             showToast('Take a 5 minute break!', '☕');
             // Reset timer for break
             focusTimerSecondsRemaining = 5 * 60;
             focusTimerDuration = 5;
-            // Show active session again
-            const activeEl = document.getElementById('focusActiveSession');
-            if (activeEl) activeEl.style.display = 'block';
             updateFocusTimerDisplay();
         }
 
         function backToTriageFromModal() {
-            hideFocusCompleteScreen();
+            hideFocusCompleteModal();
             switchCommandCenterMode('triage');
         }
 
         function hideFocusCompleteModal() {
-            // Legacy function - redirect to new
-            hideFocusCompleteScreen();
-        }
-
-        function hideFocusCompleteScreen() {
-            const completeEl = document.getElementById('focusComplete');
-            if (completeEl) completeEl.style.display = 'none';
+            const modal = document.getElementById('focusTimerCompleteModal');
+            if (modal) modal.style.display = 'none';
         }
 
         function exitFocusMode() {
@@ -17292,28 +16677,22 @@
             const items = Object.values(commandCenterData.currentSession.checklist);
 
             if (items.length === 0) {
-                container.innerHTML = `<div class="checklist-empty">Add micro-tasks for this session</div>`;
+                container.innerHTML = `<div style="color: #9ca3af; font-size: 0.9em; padding: 10px;">Add micro-tasks for this session</div>`;
             } else {
                 container.innerHTML = items.map(item => `
-                    <div class="checklist-item ${item.completed ? 'completed' : ''}">
+                    <div class="focus-checklist-item">
                         <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleFocusChecklistItem('${item.id}')">
-                        <span class="item-text">${escapeHtml(item.text)}</span>
+                        <span class="item-text ${item.completed ? 'completed' : ''}">${escapeHtml(item.text)}</span>
                         <button class="delete-item" onclick="deleteFocusChecklistItem('${item.id}')">✕</button>
                     </div>
                 `).join('');
             }
 
-            // Update progress text
+            // Update progress
             const completed = items.filter(i => i.completed).length;
             const total = items.length;
             const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-            const progressTextEl = document.getElementById('focusChecklistProgressText');
-            if (progressTextEl) {
-                progressTextEl.textContent = total > 0 ? `${completed}/${total} items • ${percent}%` : '0 items';
-            }
-
-            // Also update old elements if they exist (backward compat)
             const progressEl = document.getElementById('focusChecklistProgress');
             const countEl = document.getElementById('focusChecklistCount');
             const percentEl = document.getElementById('focusChecklistPercent');
