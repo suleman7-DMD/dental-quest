@@ -5427,6 +5427,338 @@
         .expand-icon.expanded {
             transform: rotate(180deg);
         }
+
+        /* ==================== FOCUS VIEW - MATCHING D3 ROADMAP AESTHETIC ==================== */
+
+        /* Page background - dark navy like D3 Roadmap */
+        #focusModeContent,
+        #triageModeContent,
+        .command-center-content {
+            background: #0f172a !important;
+        }
+
+        /* Hide the ugly stat boxes and big greeting */
+        .stats-container,
+        .greeting-section,
+        .stats-row,
+        [class*="stat-box"],
+        .xp-earned,
+        .xp-available {
+            display: none !important;
+        }
+
+        /* Tab bar - minimal */
+        .cc-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 0;
+            margin-bottom: 16px;
+        }
+
+        .cc-tab,
+        .cc-mode-tab {
+            background: transparent !important;
+            border: 1px solid #334155 !important;
+            color: #94a3b8 !important;
+            padding: 10px 20px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+        }
+
+        .cc-tab.active,
+        .cc-mode-tab.active,
+        .cc-tab[style*="background"],
+        .cc-mode-tab[style*="background"] {
+            background: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* Progress bar - single line, subtle */
+        .triage-overall-progress,
+        .triage-progress,
+        [class*="progress-container"],
+        .today-progress {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            margin-bottom: 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+
+        .progress-bar-container,
+        [class*="progress-bar"]:not(.mini-progress-bar) {
+            background: #0f172a !important;
+            height: 8px !important;
+            border-radius: 4px !important;
+        }
+
+        .progress-bar-fill,
+        [class*="progress-fill"],
+        [class*="progress-bar"] > div {
+            background: #3b82f6 !important;
+            border-radius: 4px !important;
+        }
+
+        /* THREE COLUMNS - breathing room */
+        .triage-columns {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 20px !important;
+            margin-bottom: 24px !important;
+        }
+
+        /* Each column - dark cards */
+        .triage-column,
+        .cc-section[data-tier],
+        .cc-locked-in,
+        .cc-today,
+        .cc-tomorrow {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            min-height: 350px !important;
+            max-height: 500px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-shadow: none !important;
+        }
+
+        /* LOCKED IN subtle amber accent */
+        .triage-column.locked-in,
+        .cc-locked-in {
+            border-left: 3px solid #f59e0b !important;
+            background: #1e293b !important;
+        }
+
+        /* Column headers - small, uppercase */
+        .column-header,
+        .cc-section-header {
+            padding-bottom: 12px !important;
+            margin-bottom: 12px !important;
+            border-bottom: 1px solid #334155 !important;
+        }
+
+        .column-name,
+        .cc-section-header span:first-child {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            color: #94a3b8 !important;
+            background: none !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+
+        .triage-column.locked-in .column-name,
+        .cc-locked-in .cc-section-header span:first-child {
+            color: #f59e0b !important;
+            -webkit-text-fill-color: #f59e0b !important;
+        }
+
+        /* Task list scrollable */
+        .column-tasks,
+        .cc-task-list {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+
+        /* TASK CARDS - dark, clean */
+        .task-card,
+        .cc-task-item,
+        [class*="task-card"],
+        [class*="task-item"]:not(.crash-out-timeline-task) {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px !important;
+            padding: 14px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .task-card:hover,
+        .cc-task-item:hover,
+        [class*="task-card"]:hover {
+            border-color: #3b82f6 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Task text - readable, truncated */
+        .task-card .task-text,
+        .cc-task-item span,
+        [class*="task-text"] {
+            font-size: 14px !important;
+            color: #f1f5f9 !important;
+            line-height: 1.5 !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 3 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+        /* Checkboxes */
+        .task-card input[type="checkbox"],
+        .cc-task-item input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            accent-color: #3b82f6 !important;
+        }
+
+        /* BUTTONS - readable size */
+        .task-card button,
+        .task-card-actions button,
+        .cc-task-item button,
+        [class*="btn-start"],
+        button[onclick*="startFocus"] {
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+        }
+
+        /* Start button - green */
+        .btn-start,
+        button[onclick*="startFocus"],
+        [class*="start"]:not(.cc-task-item) {
+            background: #22c55e !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        /* Crash Out button - teal outline */
+        .btn-crash-out,
+        button[onclick*="sendToCrashOut"],
+        [class*="crash"]:not(.crash-out-timeline-task) {
+            background: transparent !important;
+            color: #14b8a6 !important;
+            border: 1px solid #14b8a6 !important;
+        }
+
+        /* Scheduled section */
+        .triage-section.scheduled,
+        #scheduledSection {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-left: 3px solid #14b8a6 !important;
+            border-radius: 8px !important;
+            padding: 16px !important;
+            margin-bottom: 16px !important;
+        }
+
+        /* Rolled over section */
+        .triage-section.rolled-over,
+        #rolledOverSection {
+            background: #1e293b !important;
+            border: 1px solid #f59e0b !important;
+            border-radius: 8px !important;
+            padding: 16px !important;
+        }
+
+        /* Quick add bar */
+        .triage-quick-add,
+        [class*="quick-add"],
+        .add-task-container {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+        }
+
+        .triage-quick-add input,
+        [class*="quick-add"] input,
+        .add-task-container input {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+            color: #f1f5f9 !important;
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+        }
+
+        /* Scrollbar styling */
+        .column-tasks::-webkit-scrollbar,
+        .cc-task-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .column-tasks::-webkit-scrollbar-track,
+        .cc-task-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .column-tasks::-webkit-scrollbar-thumb,
+        .cc-task-list::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        /* Empty state */
+        .column-empty-state {
+            color: #64748b !important;
+            background: transparent !important;
+        }
+
+        /* Mini progress bars in column headers */
+        .mini-progress-bar {
+            background: #0f172a !important;
+        }
+
+        .mini-progress-fill {
+            background: #3b82f6 !important;
+        }
+
+        .triage-column.locked-in .mini-progress-fill {
+            background: #f59e0b !important;
+        }
+
+        /* Section header text */
+        .section-title,
+        .section-subtitle,
+        .section-count,
+        .progress-label,
+        .progress-text {
+            color: #94a3b8 !important;
+        }
+
+        /* Greeting */
+        .triage-greeting h2 {
+            color: #f1f5f9 !important;
+            font-size: 20px !important;
+        }
+
+        .triage-date {
+            color: #64748b !important;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .triage-columns {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            .triage-column.tomorrow {
+                grid-column: span 2 !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .triage-columns {
+                grid-template-columns: 1fr !important;
+            }
+            .triage-column.tomorrow {
+                grid-column: span 1 !important;
+            }
+            .triage-column,
+            .cc-section {
+                min-height: 200px !important;
+                max-height: 350px !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -5556,7 +5888,7 @@
         </div>
 
         <!-- ==================== COMMAND CENTER (Focus View) ==================== -->
-        <div id="focusModeContainer">
+        <div id="focusModeContainer" style="background: #0f172a;">
             <!-- Welcome Overlay for First-Time Users -->
             <div id="focusViewWelcomeOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 20000; align-items: center; justify-content: center; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 24px; padding: 40px; max-width: 520px; text-align: center; border: 2px solid rgba(102,126,234,0.3); animation: slideUp 0.4s ease;">
@@ -5598,28 +5930,11 @@
 
             <div class="command-center-wrapper" style="max-width: 900px; margin: 0 auto;">
 
-                <!-- Greeting & Date -->
-                <div class="cc-greeting" id="ccGreeting" style="text-align: center; color: white; margin-bottom: 20px;">
-                    <div style="font-size: 1.4em; font-weight: 600; margin-bottom: 5px;">Good afternoon, Sully</div>
-                    <div style="font-size: 0.95em; opacity: 0.8;" id="ccDateDisplay">Jan 29 • 3:47 PM</div>
-                </div>
-
-                <!-- Mode Tabs -->
-                <div class="cc-mode-tabs" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
-                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">📋 TRIAGE</button>
-                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">🔥 CRASH OUT</button>
-                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 12px 24px; border: none; border-radius: 25px; background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.95em; cursor: pointer; transition: all 0.2s;">🎯 FOCUS</button>
-                </div>
-
-                <!-- Overall Progress Bar -->
-                <div class="cc-overall-progress" style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: white; font-weight: 600;">📊 Today's Progress</span>
-                        <span style="color: white; font-weight: 600;" id="ccOverallProgressText">0/0 tasks • 0%</span>
-                    </div>
-                    <div style="height: 12px; background: rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden;">
-                        <div id="ccOverallProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 6px; transition: width 0.5s ease;"></div>
-                    </div>
+                <!-- Mode Tabs - Dark Theme -->
+                <div class="cc-mode-tabs" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; padding-top: 16px;">
+                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 10px 20px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; color: #f1f5f9; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">📋 TRIAGE</button>
+                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">🔥 CRASH OUT</button>
+                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">🎯 FOCUS</button>
                 </div>
 
                 <!-- ==================== TRIAGE MODE ==================== -->
@@ -14008,19 +14323,21 @@
         function switchCommandCenterMode(mode) {
             commandCenterMode = mode;
 
-            // Update tab styling
+            // Update tab styling - dark theme
             document.querySelectorAll('.cc-mode-tab').forEach(tab => {
                 tab.classList.remove('active');
-                tab.style.background = 'rgba(255,255,255,0.15)';
-                tab.style.color = 'white';
+                tab.style.background = 'transparent';
+                tab.style.borderColor = '#334155';
+                tab.style.color = '#94a3b8';
             });
 
             const activeTab = document.getElementById(mode === 'triage' ? 'triageModeTab' :
                 mode === 'crashout' ? 'crashOutModeTab' : 'focusPomodoroTab');
             if (activeTab) {
                 activeTab.classList.add('active');
-                activeTab.style.background = 'rgba(255,255,255,0.95)';
-                activeTab.style.color = '#667eea';
+                activeTab.style.background = '#1e293b';
+                activeTab.style.borderColor = '#475569';
+                activeTab.style.color = '#f1f5f9';
             }
 
             // Show/hide content
