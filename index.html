@@ -958,6 +958,363 @@
             font-size: 0.9em;
         }
 
+        /* ==================== TRIAGE HORIZONTAL COLUMNS (DESKTOP) ==================== */
+
+        /* Desktop: 4 columns side-by-side */
+        @media (min-width: 1200px) {
+            .triage-columns-container {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .triage-columns-container .cc-section {
+                margin-bottom: 0 !important;
+                min-height: 300px;
+            }
+        }
+
+        /* iPad/Tablet: 2 columns */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .triage-columns-container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .triage-columns-container .cc-section {
+                margin-bottom: 0 !important;
+                min-height: 250px;
+            }
+        }
+
+        /* Mobile: Stacked (default behavior) */
+        @media (max-width: 767px) {
+            .triage-columns-container {
+                display: block;
+            }
+            .triage-columns-container .cc-section {
+                margin-bottom: 16px;
+            }
+        }
+
+        /* Section styling for grid */
+        .triage-columns-container .cc-section {
+            display: flex;
+            flex-direction: column;
+        }
+        .triage-columns-container .cc-section .cc-task-list {
+            flex: 1;
+            min-height: 100px;
+        }
+
+        /* Drop zone highlighting for drag between columns */
+        .cc-section.drop-target {
+            box-shadow: 0 0 0 3px #667eea, 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        .cc-section.cc-locked-in.drop-target {
+            box-shadow: 0 0 0 3px #ff6b35, 0 4px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        /* Time Prompt Modal */
+        .time-prompt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .time-prompt-content {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+            animation: slideUp 0.3s ease;
+        }
+        .time-prompt-task {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 15px 0;
+        }
+        .time-prompt-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .time-prompt-buttons button {
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-prompt-buttons button:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+        }
+        .time-prompt-buttons .primary-btn {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+            padding: 14px 32px;
+            font-size: 1.1em;
+        }
+        .time-prompt-buttons .primary-btn:hover {
+            background: #059669;
+        }
+
+        /* Cascade Shift Animation */
+        @keyframes cascadeShift {
+            0% { transform: translateY(0); opacity: 1; }
+            50% { transform: translateY(10px); opacity: 0.7; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .cascade-shift {
+            animation: cascadeShift 0.5s ease;
+        }
+
+        /* Undo Toast */
+        .undo-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+        .undo-toast button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .undo-toast .countdown {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+
+        /* Duration Modal */
+        .duration-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .duration-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .duration-adjust-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .duration-adjust-btns button {
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .duration-adjust-btns button:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+        }
+        .duration-quick-set {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .duration-quick-set button {
+            padding: 8px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .duration-quick-set button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Swipe to unflag (mobile) */
+        .cc-task-item.swiping {
+            transform: translateX(var(--swipe-x, 0));
+            transition: none;
+        }
+        .cc-task-item.swiped-left {
+            background: linear-gradient(90deg, rgba(239,68,68,0.2) 0%, transparent 30%);
+        }
+
+        /* Long press visual feedback */
+        .cc-task-item.long-pressing {
+            transform: scale(0.98);
+            background: rgba(102, 126, 234, 0.15) !important;
+        }
+
+        /* Task details modal */
+        .task-details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .task-details-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+        }
+        .task-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .task-details-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .task-details-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #f1f5f9;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        .task-details-info {
+            margin-bottom: 20px;
+        }
+        .task-details-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .task-details-label {
+            color: #6b7280;
+        }
+        .task-details-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .task-details-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .task-details-actions button {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .task-details-actions button:hover {
+            background: #f1f5f9;
+        }
+        .task-details-actions .danger-btn {
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+        .task-details-actions .danger-btn:hover {
+            background: #fef2f2;
+        }
+
+        /* Perfect Day Badge */
+        .perfect-day-badge {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.8);
+            animation: perfectDayPop 2s ease forwards;
+        }
+        @keyframes perfectDayPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            30% { transform: translate(-50%, -50%) scale(1.2); }
+            50% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+        .perfect-day-badge .trophy {
+            font-size: 4em;
+        }
+        .perfect-day-badge .text {
+            font-weight: 800;
+            font-size: 1em;
+            color: #92400e;
+            margin-top: 10px;
+        }
+
         /* Time Prompt Modal */
         .time-prompt-modal {
             position: fixed;
@@ -4765,88 +5122,109 @@
                 <!-- ==================== TRIAGE MODE ==================== -->
                 <div id="triageModeContent" class="cc-mode-content">
 
-                    <!-- LOCKED IN Section (Max 3) -->
-                    <div class="cc-section cc-locked-in" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid rgba(255, 107, 53, 0.5);">
-                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.1em; font-weight: 700; color: #ff6b35;">🔥 LOCKED IN</span>
-                                <span style="background: rgba(255,107,53,0.2); color: #ff6b35; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="lockedInCount">(0/3)</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="lockedInProgressText">0%</span>
-                                <div style="width: 80px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
-                                    <div id="lockedInProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b35, #f7931e); transition: width 0.3s;"></div>
+                    <!-- HORIZONTAL COLUMNS CONTAINER (Desktop: 4 cols, iPad: 2 cols, Mobile: stacked) -->
+                    <div class="triage-columns-container">
+
+                        <!-- LOCKED IN Section (Max 3) -->
+                        <div class="cc-section cc-locked-in" data-tier="lockedIn"
+                             ondragover="handleSectionDragOver(event, 'lockedIn')"
+                             ondragleave="handleSectionDragLeave(event)"
+                             ondrop="handleSectionDrop(event, 'lockedIn')"
+                             style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid rgba(255, 107, 53, 0.5);">
+                            <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="font-size: 1.1em; font-weight: 700; color: #ff6b35;">🔥 LOCKED IN</span>
+                                    <span style="background: rgba(255,107,53,0.2); color: #ff6b35; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="lockedInCount">(0/3)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #9ca3af; font-size: 0.85em;" id="lockedInProgressText">0%</span>
+                                    <div style="width: 60px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                        <div id="lockedInProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b35, #f7931e); transition: width 0.3s;"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div id="lockedInTasks" class="cc-task-list" style="min-height: 60px;">
-                            <!-- Tasks will be rendered here -->
-                        </div>
-                        <div id="lockedInFull" style="display: none; text-align: center; padding: 10px; color: #6b7280; font-size: 0.85em; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 10px;">
-                            ── ── ── FULL ── ── ──
-                        </div>
-                    </div>
-
-                    <!-- TODAY Section -->
-                    <div class="cc-section cc-today" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.1em; font-weight: 700; color: #667eea;">📋 TODAY</span>
-                                <span style="background: rgba(102,126,234,0.1); color: #667eea; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="todayCount">(0)</span>
+                            <div id="lockedInTasks" class="cc-task-list" style="min-height: 60px;">
+                                <!-- Tasks will be rendered here -->
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="todayProgressText">0%</span>
-                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                                    <div id="todayProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                            <div id="lockedInFull" style="display: none; text-align: center; padding: 10px; color: #6b7280; font-size: 0.85em; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 10px;">
+                                ── FULL ──
+                            </div>
+                        </div>
+
+                        <!-- TODAY Section -->
+                        <div class="cc-section cc-today" data-tier="today"
+                             ondragover="handleSectionDragOver(event, 'today')"
+                             ondragleave="handleSectionDragLeave(event)"
+                             ondrop="handleSectionDrop(event, 'today')"
+                             style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="font-size: 1.1em; font-weight: 700; color: #667eea;">📋 TODAY</span>
+                                    <span style="background: rgba(102,126,234,0.1); color: #667eea; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="todayCount">(0)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #9ca3af; font-size: 0.85em;" id="todayProgressText">0%</span>
+                                    <div style="width: 60px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                        <div id="todayProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div id="todayTasks" class="cc-task-list" style="min-height: 40px;">
-                            <!-- Tasks will be rendered here -->
-                        </div>
-                    </div>
-
-                    <!-- SCHEDULED Section (Mirror of Crash Out) -->
-                    <div class="cc-section cc-scheduled" id="scheduledSection" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: none;">
-                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.1em; font-weight: 700; color: #14b8a6;">⏰ SCHEDULED</span>
-                                <span style="background: rgba(20,184,166,0.1); color: #14b8a6; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="scheduledCount">(0)</span>
-                                <span style="font-size: 0.8em; color: #9ca3af;">(in Crash Out)</span>
+                            <div id="todayTasks" class="cc-task-list" style="min-height: 40px;">
+                                <!-- Tasks will be rendered here -->
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="scheduledProgressText">0%</span>
-                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                                    <div id="scheduledProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #14b8a6, #2dd4bf); transition: width 0.3s;"></div>
+                        </div>
+
+                        <!-- SCHEDULED Section (Mirror of Crash Out) -->
+                        <div class="cc-section cc-scheduled" id="scheduledSection" data-tier="scheduled"
+                             ondragover="handleSectionDragOver(event, 'scheduled')"
+                             ondragleave="handleSectionDragLeave(event)"
+                             ondrop="handleSectionDrop(event, 'scheduled')"
+                             style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="font-size: 1.1em; font-weight: 700; color: #14b8a6;">⏰ SCHEDULED</span>
+                                    <span style="background: rgba(20,184,166,0.1); color: #14b8a6; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="scheduledCount">(0)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #9ca3af; font-size: 0.85em;" id="scheduledProgressText">0%</span>
+                                    <div style="width: 60px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                        <div id="scheduledProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #14b8a6, #2dd4bf); transition: width 0.3s;"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div id="scheduledTasks" class="cc-task-list" style="min-height: 40px;">
-                            <!-- Tasks will be rendered here -->
-                        </div>
-                    </div>
-
-                    <!-- TOMORROW Section -->
-                    <div class="cc-section cc-tomorrow" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                        <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.1em; font-weight: 700; color: #6b7280;">📅 TOMORROW</span>
-                                <span style="background: rgba(107,114,128,0.1); color: #6b7280; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="tomorrowCount">(0)</span>
+                            <div id="scheduledTasks" class="cc-task-list" style="min-height: 40px;">
+                                <!-- Tasks will be rendered here -->
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #9ca3af; font-size: 0.85em;" id="tomorrowProgressText">0%</span>
-                                <div style="width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                                    <div id="tomorrowProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #6b7280, #9ca3af); transition: width 0.3s;"></div>
+                        </div>
+
+                        <!-- TOMORROW Section -->
+                        <div class="cc-section cc-tomorrow" data-tier="tomorrow"
+                             ondragover="handleSectionDragOver(event, 'tomorrow')"
+                             ondragleave="handleSectionDragLeave(event)"
+                             ondrop="handleSectionDrop(event, 'tomorrow')"
+                             style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="font-size: 1.1em; font-weight: 700; color: #6b7280;">📅 TOMORROW</span>
+                                    <span style="background: rgba(107,114,128,0.1); color: #6b7280; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;" id="tomorrowCount">(0)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #9ca3af; font-size: 0.85em;" id="tomorrowProgressText">0%</span>
+                                    <div style="width: 60px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                        <div id="tomorrowProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #6b7280, #9ca3af); transition: width 0.3s;"></div>
+                                    </div>
                                 </div>
                             </div>
+                            <div id="tomorrowTasks" class="cc-task-list" style="min-height: 40px;">
+                                <!-- Tasks will be rendered here -->
+                            </div>
                         </div>
-                        <div id="tomorrowTasks" class="cc-task-list" style="min-height: 40px;">
-                            <!-- Tasks will be rendered here -->
-                        </div>
-                    </div>
 
-                    <!-- ROLLED OVER Section -->
-                    <div class="cc-section cc-rolled-over" id="rolledOverSection" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; display: none;">
+                    </div><!-- End triage-columns-container -->
+
+                    <!-- ROLLED OVER Section (outside columns, always full width) -->
+                    <div class="cc-section cc-rolled-over" id="rolledOverSection" data-tier="rolledOver"
+                         style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; display: none;">
                         <div class="cc-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="font-size: 1.1em; font-weight: 700; color: #92400e;">🔁 ROLLED OVER</span>
@@ -13207,17 +13585,18 @@
 
             if (incompleteTasks.length === 0) {
                 container.innerHTML = `<div class="cc-empty-state">${getEmptyStateMessage(tier)}</div>`;
-
-                // Show/hide section for scheduled
-                if (tier === 'scheduled') {
-                    document.getElementById('scheduledSection').style.display = 'none';
-                }
             } else {
                 container.innerHTML = incompleteTasks.map(task => renderTriageTaskItem(task, tier)).join('');
+            }
 
-                // Show scheduled section if has items
-                if (tier === 'scheduled') {
-                    document.getElementById('scheduledSection').style.display = 'block';
+            // SCHEDULED section: always show in grid layout, hide on mobile only if empty
+            if (tier === 'scheduled') {
+                const section = document.getElementById('scheduledSection');
+                if (section) {
+                    // On desktop (grid layout), always show for drag targets
+                    // On mobile, hide if empty
+                    const isDesktop = window.innerWidth >= 768;
+                    section.style.display = isDesktop || incompleteTasks.length > 0 ? 'block' : 'none';
                 }
             }
 
@@ -13263,7 +13642,10 @@
                      ondragover="handleTriageDragOver(event)"
                      ondragleave="handleTriageDragLeave(event)"
                      ondrop="handleTriageDrop(event, ${task.id}, '${tier}')"
-                     ondragend="handleTriageDragEnd(event)">
+                     ondragend="handleTriageDragEnd(event)"
+                     ontouchstart="startLongPress(event, ${task.id})"
+                     ontouchend="endLongPress(event)"
+                     ontouchcancel="endLongPress(event)">
                     <span class="drag-handle">⋮⋮</span>
                     <input type="checkbox" class="task-checkbox"
                            ${task.completed ? 'checked' : ''}
@@ -13364,6 +13746,10 @@
                 } else {
                     showCelebration(task.triageTier === 'lockedIn' ? 'medium' : 'small');
                 }
+
+                // Check for perfect day and update streaks
+                checkForPerfectDay();
+                updateStreaks();
             }
 
             renderFocusMode();
@@ -13575,6 +13961,346 @@
 
             renderFocusMode();
             saveData();
+        }
+
+        // Section drag handlers for moving between columns
+        function handleSectionDragOver(event, tier) {
+            event.preventDefault();
+            const section = event.target.closest('.cc-section');
+            if (section && triageDraggedTaskId) {
+                section.classList.add('drop-target');
+            }
+        }
+
+        function handleSectionDragLeave(event) {
+            const section = event.target.closest('.cc-section');
+            if (section) section.classList.remove('drop-target');
+        }
+
+        function handleSectionDrop(event, targetTier) {
+            event.preventDefault();
+            const section = event.target.closest('.cc-section');
+            if (section) section.classList.remove('drop-target');
+
+            if (!triageDraggedTaskId) return;
+
+            const draggedTask = tasks[triageDraggedTaskId];
+            if (!draggedTask) return;
+
+            // If dropping on scheduled section, send to crash out
+            if (targetTier === 'scheduled') {
+                sendToCrashOut(triageDraggedTaskId);
+            } else {
+                // Move to new tier
+                setTaskTier(triageDraggedTaskId, targetTier);
+            }
+
+            triageDraggedTaskId = null;
+        }
+
+        // Long press for task details modal
+        let longPressTimer = null;
+        let longPressTaskId = null;
+
+        function startLongPress(event, taskId) {
+            longPressTaskId = taskId;
+            const taskItem = event.target.closest('.cc-task-item');
+            longPressTimer = setTimeout(() => {
+                if (taskItem) taskItem.classList.add('long-pressing');
+                showTaskDetailsModal(taskId);
+            }, 500);
+        }
+
+        function endLongPress(event) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            const taskItem = event.target.closest('.cc-task-item');
+            if (taskItem) taskItem.classList.remove('long-pressing');
+        }
+
+        function showTaskDetailsModal(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            const tierLabels = {
+                lockedIn: '🔥 LOCKED IN',
+                today: '📋 TODAY',
+                scheduled: '⏰ SCHEDULED',
+                tomorrow: '📅 TOMORROW'
+            };
+            const tierLabel = tierLabels[task.triageTier] || tierLabels.today;
+            const catInfo = getCategoryInfo(task.category);
+
+            const modal = document.createElement('div');
+            modal.className = 'task-details-modal';
+            modal.id = 'taskDetailsModal';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.innerHTML = `
+                <div class="task-details-content">
+                    <div class="task-details-header">
+                        <div class="task-details-title">${escapeHtml(task.text)}</div>
+                        <button class="task-details-close" onclick="closeTaskDetailsModal()">×</button>
+                    </div>
+                    <div class="task-details-info">
+                        <div class="task-details-row">
+                            <span class="task-details-label">Tier</span>
+                            <span class="task-details-value">${tierLabel}</span>
+                        </div>
+                        <div class="task-details-row">
+                            <span class="task-details-label">Category</span>
+                            <span class="task-details-value">${catInfo.icon} ${catInfo.label}</span>
+                        </div>
+                        ${task.crashOutScheduled ? `
+                        <div class="task-details-row">
+                            <span class="task-details-label">Scheduled</span>
+                            <span class="task-details-value">${task.crashOutTime || 'TBD'} (${task.crashOutDuration || 30}m)</span>
+                        </div>
+                        ` : ''}
+                        ${task.rolledOver ? `
+                        <div class="task-details-row">
+                            <span class="task-details-label">Rolled Over</span>
+                            <span class="task-details-value">From ${task.rolledOver.fromDate}</span>
+                        </div>
+                        ` : ''}
+                        <div class="task-details-row">
+                            <span class="task-details-label">Created</span>
+                            <span class="task-details-value">${task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                        </div>
+                    </div>
+                    <div class="task-details-actions">
+                        <button onclick="startTaskInFocus(${taskId}); closeTaskDetailsModal();">
+                            <span>▶</span> Start Focus Session
+                        </button>
+                        <button onclick="sendToCrashOut(${taskId}); closeTaskDetailsModal();">
+                            <span>🔥</span> Send to Crash Out
+                        </button>
+                        <button onclick="editTriageTaskText(${taskId}); closeTaskDetailsModal();">
+                            <span>✏️</span> Edit Task Text
+                        </button>
+                        <button class="danger-btn" onclick="unflagFromToday(${taskId}); closeTaskDetailsModal();">
+                            <span>🚫</span> Remove from Today (unflag)
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeTaskDetailsModal() {
+            const modal = document.getElementById('taskDetailsModal');
+            if (modal) modal.remove();
+        }
+
+        // Unflag task from today (remove from Focus View)
+        function unflagFromToday(taskId) {
+            const task = tasks[taskId];
+            if (!task) return;
+
+            tasks[taskId] = {
+                ...task,
+                doToday: false,
+                triageTier: null,
+                crashOutScheduled: false
+            };
+            delete tasks[taskId].crashOutTime;
+            delete tasks[taskId].crashOutDuration;
+
+            renderFocusMode();
+            renderTasks();
+            saveData();
+            showToast('Removed from today', '✓');
+        }
+
+        // Time-aware prompts
+        let timePromptInterval = null;
+        let lastPromptedTaskId = null;
+
+        function startTimePromptChecker() {
+            if (timePromptInterval) clearInterval(timePromptInterval);
+            timePromptInterval = setInterval(checkForTimePrompts, 60000); // Check every minute
+        }
+
+        function checkForTimePrompts() {
+            if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
+            if (commandCenterMode !== 'crashout') return;
+
+            const now = new Date();
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+
+            // Find task that should be starting now
+            for (const task of scheduledTasks) {
+                if (!task.crashOutTime || task.id === lastPromptedTaskId) continue;
+
+                const [time, period] = task.crashOutTime.split(' ');
+                const [hours, minutes] = time.split(':').map(Number);
+                let hour24 = hours;
+                if (period === 'PM' && hours !== 12) hour24 += 12;
+                if (period === 'AM' && hours === 12) hour24 = 0;
+
+                const taskTime = new Date(now);
+                taskTime.setHours(hour24, minutes, 0, 0);
+
+                // If within 2 minutes of start time
+                const diff = now - taskTime;
+                if (diff >= 0 && diff <= 120000) {
+                    lastPromptedTaskId = task.id;
+                    showTimePrompt(task);
+                    break;
+                }
+            }
+        }
+
+        function showTimePrompt(task) {
+            const modal = document.createElement('div');
+            modal.className = 'time-prompt-modal';
+            modal.id = 'timePromptModal';
+            modal.innerHTML = `
+                <div class="time-prompt-content">
+                    <div style="font-size: 2em; margin-bottom: 10px;">⏰</div>
+                    <div style="color: #6b7280;">It's ${task.crashOutTime}</div>
+                    <div style="color: #374151; margin-bottom: 5px;">Time to start:</div>
+                    <div class="time-prompt-task">${task.triageTier === 'lockedIn' ? '🔥' : '📋'} ${escapeHtml(task.text)}</div>
+
+                    <div class="time-prompt-buttons">
+                        <button class="primary-btn" onclick="startTaskFromPrompt(${task.id})">▶ START</button>
+                    </div>
+
+                    <div style="color: #6b7280; margin: 15px 0;">Not ready? Push everything:</div>
+
+                    <div class="time-prompt-buttons">
+                        <button onclick="pushAllTasks(5)">+5m</button>
+                        <button onclick="pushAllTasks(10)">+10m</button>
+                        <button onclick="pushAllTasks(15)">+15m</button>
+                        <button onclick="pushAllTasks(20)">+20m</button>
+                        <button onclick="pushAllTasks(30)">+30m</button>
+                        <button onclick="pushAllTasks(45)">+45m</button>
+                        <button onclick="pushAllTasks(60)">+60m</button>
+                    </div>
+
+                    <div style="margin-top: 15px;">
+                        <button onclick="skipTask(${task.id})" style="color: #dc2626; border-color: #fecaca;">Skip</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function startTaskFromPrompt(taskId) {
+            closeTimePrompt();
+            startTaskInFocus(taskId);
+        }
+
+        function closeTimePrompt() {
+            const modal = document.getElementById('timePromptModal');
+            if (modal) modal.remove();
+        }
+
+        // Push all tasks forward by X minutes with cascade animation
+        let undoState = null;
+        let undoTimeout = null;
+
+        function pushAllTasks(minutes) {
+            closeTimePrompt();
+
+            // Save state for undo
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            undoState = scheduledTasks.map(t => ({ id: t.id, time: t.crashOutTime }));
+
+            // Add minutes to all scheduled tasks
+            scheduledTasks.forEach(task => {
+                if (task.crashOutTime) {
+                    const [time, period] = task.crashOutTime.split(' ');
+                    const [hours, mins] = time.split(':').map(Number);
+                    let hour24 = hours;
+                    if (period === 'PM' && hours !== 12) hour24 += 12;
+                    if (period === 'AM' && hours === 12) hour24 = 0;
+
+                    const newTime = new Date();
+                    newTime.setHours(hour24, mins + minutes, 0, 0);
+                    const newTimeStr = newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                    tasks[task.id] = { ...tasks[task.id], crashOutTime: newTimeStr };
+                }
+            });
+
+            // Show cascade animation
+            showCascadeAnimation();
+
+            renderCrashOutMode();
+            saveData();
+
+            // Show undo toast
+            showUndoToast(minutes);
+        }
+
+        function showCascadeAnimation() {
+            const taskElements = document.querySelectorAll('.crash-out-timeline-task');
+            taskElements.forEach((el, i) => {
+                setTimeout(() => {
+                    el.classList.add('cascade-shift');
+                    setTimeout(() => el.classList.remove('cascade-shift'), 500);
+                }, i * 100);
+            });
+        }
+
+        function showUndoToast(minutes) {
+            // Remove existing toast
+            const existing = document.querySelector('.undo-toast');
+            if (existing) existing.remove();
+
+            let countdown = 10;
+            const toast = document.createElement('div');
+            toast.className = 'undo-toast';
+            toast.innerHTML = `
+                <span>Pushed all tasks +${minutes}m</span>
+                <button onclick="undoPush()">Undo</button>
+                <div class="countdown">${countdown}</div>
+            `;
+            document.body.appendChild(toast);
+
+            const countdownEl = toast.querySelector('.countdown');
+            const interval = setInterval(() => {
+                countdown--;
+                if (countdownEl) countdownEl.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    toast.remove();
+                    undoState = null;
+                }
+            }, 1000);
+
+            if (undoTimeout) clearTimeout(undoTimeout);
+            undoTimeout = setTimeout(() => {
+                toast.remove();
+                undoState = null;
+            }, 10000);
+        }
+
+        function undoPush() {
+            if (!undoState) return;
+
+            undoState.forEach(({ id, time }) => {
+                if (tasks[id]) {
+                    tasks[id] = { ...tasks[id], crashOutTime: time };
+                }
+            });
+
+            undoState = null;
+            const toast = document.querySelector('.undo-toast');
+            if (toast) toast.remove();
+            if (undoTimeout) clearTimeout(undoTimeout);
+
+            renderCrashOutMode();
+            saveData();
+            showToast('Undone!', '↩️');
+        }
+
+        function skipTask(taskId) {
+            closeTimePrompt();
+            removeFromCrashOut(taskId);
+            showToast('Task skipped', '⏭️');
         }
 
         // ==================== CRASH OUT MODE ====================
@@ -14292,18 +15018,108 @@
 
         function checkAndProcessRollovers() {
             const today = getTodayDateString();
+            const lastRolloverCheck = localStorage.getItem('lastRolloverCheck');
 
-            // Find tasks that were LOCKED IN yesterday and not completed
+            // Only process once per day
+            if (lastRolloverCheck === today) return;
+
+            // Find tasks that were LOCKED IN and not completed from previous day
             getValues(tasks).forEach(task => {
                 if (task.triageTier === 'lockedIn' && !task.completed && task.doToday) {
-                    // Check if this was set yesterday (needs tracking)
-                    // For now, we'll mark based on existence of triageTier without completion
-                    if (!task.rolledOver) {
-                        // This logic would need a "lastTriageDate" field to be accurate
-                        // For now, skip auto-rollover detection
+                    // Check if task has a triageDate that's before today
+                    if (task.triageDate && task.triageDate !== today) {
+                        // Mark as rolled over
+                        tasks[task.id] = {
+                            ...task,
+                            rolledOver: {
+                                fromDate: task.triageDate,
+                                wasTier: 'lockedIn'
+                            },
+                            triageTier: 'today' // Move out of locked in
+                        };
                     }
                 }
             });
+
+            // Update triage date for current LOCKED IN tasks
+            getValues(tasks).forEach(task => {
+                if (task.triageTier === 'lockedIn' && !task.completed && task.doToday) {
+                    tasks[task.id] = { ...task, triageDate: today };
+                }
+            });
+
+            localStorage.setItem('lastRolloverCheck', today);
+            saveData();
+        }
+
+        // Check for perfect day (all tasks completed)
+        function checkForPerfectDay() {
+            const todayTasks = getTodayTriageTasks();
+            if (todayTasks.length === 0) return;
+
+            const allCompleted = todayTasks.every(t => t.completed);
+            if (allCompleted && todayTasks.length >= 3) {
+                // Perfect day!
+                const today = getTodayDateString();
+                const lastPerfectDay = localStorage.getItem('lastPerfectDayAward');
+                if (lastPerfectDay !== today) {
+                    localStorage.setItem('lastPerfectDayAward', today);
+                    awardCommandCenterXP(200, 'Perfect Day');
+                    showPerfectDayBadge();
+                }
+            }
+        }
+
+        function showPerfectDayBadge() {
+            const badge = document.createElement('div');
+            badge.className = 'perfect-day-badge';
+            badge.innerHTML = `
+                <div class="trophy">🏆</div>
+                <div class="text">PERFECT DAY!</div>
+            `;
+            document.body.appendChild(badge);
+            setTimeout(() => badge.remove(), 2500);
+        }
+
+        // Update streaks
+        function updateStreaks() {
+            const today = getTodayDateString();
+            const lastActiveDay = localStorage.getItem('lastActiveDay');
+
+            // Daily streak - any task completed today
+            const todayTasks = getTodayTriageTasks();
+            const completedToday = todayTasks.some(t => t.completed);
+
+            if (completedToday) {
+                if (lastActiveDay) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+                    if (lastActiveDay === yesterdayStr) {
+                        // Consecutive day
+                        commandCenterData.focusStats.dailyStreak = (commandCenterData.focusStats.dailyStreak || 0) + 1;
+                    } else if (lastActiveDay !== today) {
+                        // Streak broken
+                        commandCenterData.focusStats.dailyStreak = 1;
+                    }
+                } else {
+                    commandCenterData.focusStats.dailyStreak = 1;
+                }
+                localStorage.setItem('lastActiveDay', today);
+            }
+
+            // LOCKED IN streak - all LOCKED IN tasks done today
+            const lockedInTasks = getTasksByTier('lockedIn');
+            if (lockedInTasks.length > 0 && lockedInTasks.every(t => t.completed)) {
+                const lastLockedInComplete = localStorage.getItem('lastLockedInComplete');
+                if (lastLockedInComplete !== today) {
+                    commandCenterData.focusStats.lockedInStreak = (commandCenterData.focusStats.lockedInStreak || 0) + 1;
+                    localStorage.setItem('lastLockedInComplete', today);
+                }
+            }
+
+            saveData();
         }
 
         // ==================== STATE PERSISTENCE ====================
@@ -14376,24 +15192,43 @@
         }
         
         function initFocusMode() {
-            
+
             // Make sure containers exist and are properly set
             const focusContainer = document.getElementById('focusModeContainer');
             const fullContainer = document.getElementById('fullViewContainer');
-            
+
             if (currentView === 'focus') {
                 if (focusContainer) focusContainer.style.display = 'block';
                 if (fullContainer) fullContainer.style.display = 'none';
-                
+
                 // Ensure focusModeData is properly initialized
                 if (!focusModeData.todaysTasks) {
                     focusModeData.todaysTasks = { big: {}, medium: {}, small: {} };
                 }
-                
+
+                // Check for rolled over tasks from previous day
+                checkAndProcessRollovers();
+
+                // Start the time prompt checker for Crash Out
+                startTimePromptChecker();
+
+                // Handle responsive layout on resize
+                window.addEventListener('resize', handleResponsiveLayout);
+
                 renderFocusMode();
             } else {
                 if (focusContainer) focusContainer.style.display = 'none';
                 if (fullContainer) fullContainer.style.display = 'block';
+            }
+        }
+
+        // Handle responsive layout changes
+        function handleResponsiveLayout() {
+            const scheduledSection = document.getElementById('scheduledSection');
+            if (scheduledSection) {
+                const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+                const isDesktop = window.innerWidth >= 768;
+                scheduledSection.style.display = isDesktop || scheduledTasks.length > 0 ? 'block' : 'none';
             }
         }
 
