@@ -17314,7 +17314,6 @@
             }
 
             // Also update old elements if they exist (backward compat)
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
             const progressEl = document.getElementById('focusChecklistProgress');
             const countEl = document.getElementById('focusChecklistCount');
             const percentEl = document.getElementById('focusChecklistPercent');
