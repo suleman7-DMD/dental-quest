@@ -7403,7 +7403,7 @@
                         <!-- Overscheduled Warning (hidden by default) -->
                         <div class="overscheduled-warning" id="overscheduledWarning" style="display: none;">
                             <span class="warning-icon">⚠️</span>
-                            <span class="warning-text">You're <strong id="overByAmount">1.5h</strong> overscheduled. Consider moving tasks to tomorrow.</span>
+                            <span class="warning-text">Tasks end <strong id="overByAmount">1.5h</strong> into wind-down hour! Consider shortening or moving tasks.</span>
                             <button class="btn-dismiss" onclick="dismissOverscheduledWarning()">Dismiss</button>
                         </div>
 
@@ -14692,15 +14692,24 @@
 
         // Start timer for specific task
         function startTaskTimer(id) {
-            const task = tasks[id];
-            if (!task) return;
+            // Ensure id is a string for consistent lookup
+            const taskId = String(id);
+            const task = tasks[taskId];
+            if (!task) {
+                console.warn('startTaskTimer: Task not found with id:', taskId);
+                return;
+            }
 
             currentTask = task;
-            document.getElementById('currentTaskDisplay').style.display = 'block';
-            document.getElementById('currentTaskName').textContent = task.text;
-            
+            const displayEl = document.getElementById('currentTaskDisplay');
+            const nameEl = document.getElementById('currentTaskName');
+
+            if (displayEl) displayEl.style.display = 'block';
+            if (nameEl) nameEl.textContent = task.text;
+
             resetTimer();
             startTimer();
+            showToast('Timer started!', '⏱️');
         }
 
         // Pomodoro selection
@@ -16662,40 +16671,80 @@
             if (currentTimeEl) currentTimeEl.textContent = currentTimeStr;
             if (windDownEl) windDownEl.textContent = `${windDownStartStr} - ${sleepTimeStr}`;
 
-            // Calculate scheduled time
+            // Calculate scheduled time based on LAST TASK'S END TIME vs WIND-DOWN START
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const totalScheduledMinutes = scheduledTasks.reduce((sum, t) => sum + (t.crashOutDuration || 30), 0);
-            const availableMinutes = Math.max(0, (hoursUntilSleep - 1) * 60); // Subtract wind-down hour
 
+            // Find the last task's end time by looking at tasks with crashOutTime
+            let lastTaskEndTime = null;
+            scheduledTasks.forEach(task => {
+                if (task.crashOutTime) {
+                    const startDate = parseCrashOutTime(task.crashOutTime);
+                    if (startDate) {
+                        const endDate = new Date(startDate.getTime() + (task.crashOutDuration || 30) * 60 * 1000);
+                        if (!lastTaskEndTime || endDate > lastTaskEndTime) {
+                            lastTaskEndTime = endDate;
+                        }
+                    }
+                }
+            });
+
+            // Calculate scheduling status based on last task end vs wind-down start
             const scheduledTextEl = document.getElementById('scheduledTimeText');
             const progressEl = document.getElementById('crashOutTimelineProgress');
-
-            if (scheduledTextEl) {
-                const scheduledH = (totalScheduledMinutes / 60).toFixed(1);
-                const availH = (availableMinutes / 60).toFixed(1);
-                scheduledTextEl.textContent = `${scheduledH}h / ${availH}h scheduled`;
-            }
-            if (progressEl) {
-                const percent = availableMinutes > 0 ? Math.min(100, (totalScheduledMinutes / availableMinutes) * 100) : 0;
-                progressEl.style.width = `${percent}%`;
-                // Add overscheduled class if over 100%
-                if (percent > 100) {
-                    progressEl.classList.add('overscheduled');
-                } else {
-                    progressEl.classList.remove('overscheduled');
-                }
-            }
-
-            // Show overscheduled warning
             const warningEl = document.getElementById('overscheduledWarning');
             const overByEl = document.getElementById('overByAmount');
-            if (totalScheduledMinutes > availableMinutes && availableMinutes > 0) {
-                if (warningEl) warningEl.style.display = 'flex';
-                if (overByEl) {
-                    const overBy = ((totalScheduledMinutes - availableMinutes) / 60).toFixed(1);
-                    overByEl.textContent = `${overBy}h`;
+
+            if (lastTaskEndTime && windDownStart) {
+                const gapMinutes = (windDownStart - lastTaskEndTime) / (1000 * 60);
+                const gapHours = Math.abs(gapMinutes / 60).toFixed(1);
+
+                if (scheduledTextEl) {
+                    const totalH = (totalScheduledMinutes / 60).toFixed(1);
+                    if (gapMinutes < 0) {
+                        // Overscheduled: last task ends AFTER wind-down starts
+                        scheduledTextEl.textContent = `${totalH}h scheduled • ${gapHours}h over wind-down`;
+                    } else if (gapMinutes < 30) {
+                        // Tight but OK
+                        scheduledTextEl.textContent = `${totalH}h scheduled • ${Math.round(gapMinutes)}m buffer`;
+                    } else {
+                        // Good buffer
+                        scheduledTextEl.textContent = `${totalH}h scheduled • ${gapHours}h buffer until wind-down`;
+                    }
+                }
+
+                // Progress bar: show how much of time until wind-down is used
+                if (progressEl) {
+                    const timeUntilWindDown = Math.max(0, (windDownStart - now) / (1000 * 60)); // minutes until wind-down
+                    const percent = timeUntilWindDown > 0 ? Math.min(150, (totalScheduledMinutes / timeUntilWindDown) * 100) : 0;
+                    progressEl.style.width = `${Math.min(100, percent)}%`;
+                    if (gapMinutes < 0) {
+                        progressEl.classList.add('overscheduled');
+                    } else {
+                        progressEl.classList.remove('overscheduled');
+                    }
+                }
+
+                // Show warning only if tasks end AFTER wind-down starts
+                if (gapMinutes < 0) {
+                    if (warningEl) warningEl.style.display = 'flex';
+                    if (overByEl) overByEl.textContent = `${gapHours}h`;
+                } else {
+                    if (warningEl) warningEl.style.display = 'none';
                 }
             } else {
+                // No scheduled tasks with times, or no wind-down set
+                const availableMinutes = Math.max(0, (hoursUntilSleep - 1) * 60);
+                if (scheduledTextEl) {
+                    const scheduledH = (totalScheduledMinutes / 60).toFixed(1);
+                    const availH = (availableMinutes / 60).toFixed(1);
+                    scheduledTextEl.textContent = `${scheduledH}h / ${availH}h scheduled`;
+                }
+                if (progressEl) {
+                    const percent = availableMinutes > 0 ? Math.min(100, (totalScheduledMinutes / availableMinutes) * 100) : 0;
+                    progressEl.style.width = `${percent}%`;
+                    progressEl.classList.remove('overscheduled');
+                }
                 if (warningEl) warningEl.style.display = 'none';
             }
 
@@ -17466,13 +17515,20 @@
 
         // Task Edit Modal
         function openTaskEditModal(taskId) {
-            editingTaskId = taskId;
-            const task = getValues(tasks).find(t => t.id === taskId);
-            if (!task) return;
-            
+            // Ensure taskId is a string for consistent lookup
+            const id = String(taskId);
+            editingTaskId = id;
+
+            // Use direct object access like other working functions (toggleDoToday, deleteTask)
+            const task = tasks[id];
+            if (!task) {
+                console.warn('openTaskEditModal: Task not found with id:', id);
+                return;
+            }
+
             editingTaskSize = task.size || 'medium';
             editingTaskLeverage = task.highLeverage || false;
-            
+
             document.getElementById('editTaskText').value = task.text;
             updateSizeSelection();
             updateLeverageToggle();
@@ -17512,13 +17568,19 @@
         
         function saveTaskEdit() {
             if (!editingTaskId) return;
-            const task = getValues(tasks).find(t => t.id === editingTaskId);
-            if (!task) return;
-            
+
+            // Use direct object access like other working functions
+            const id = String(editingTaskId);
+            const task = tasks[id];
+            if (!task) {
+                console.warn('saveTaskEdit: Task not found with id:', id);
+                return;
+            }
+
             task.text = document.getElementById('editTaskText').value.trim();
             task.size = editingTaskSize;
             task.highLeverage = editingTaskLeverage;
-            
+
             closeTaskEditModal();
             renderTasks();
             if (currentView === 'focus') renderFocusMode();
