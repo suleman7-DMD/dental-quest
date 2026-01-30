@@ -487,13 +487,14 @@
         }
 
         .timer-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             position: sticky;
-            top: 20px;
+            top: 12px;
             height: fit-content;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .category-tabs {
@@ -2082,60 +2083,68 @@
 
         .pomodoro-options {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .pomodoro-option {
             flex: 1;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.3s ease;
-            background: white;
+            transition: all 0.2s ease;
+            background: rgba(255,255,255,0.05);
+            color: #94a3b8;
         }
 
         .pomodoro-option:hover {
-            border-color: #667eea;
+            border-color: #3b82f6;
+            background: rgba(59,130,246,0.1);
         }
 
         .pomodoro-option.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             color: white;
         }
 
         .pomodoro-option .time {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 2px;
         }
 
         .pomodoro-option .label {
-            font-size: 0.85em;
-            opacity: 0.8;
+            font-size: 0.7em;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .current-task {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(59,130,246,0.15);
+            border: 1px solid rgba(59,130,246,0.3);
             color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-top: 12px;
             text-align: center;
         }
 
         .current-task .label {
-            font-size: 0.9em;
-            opacity: 0.9;
-            margin-bottom: 5px;
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .current-task .task-name {
-            font-size: 1.1em;
+            font-size: 0.95em;
             font-weight: 600;
+            color: #60a5fa;
         }
 
         .empty-state {
@@ -7056,71 +7065,73 @@
     </nav>
 
     <div class="container">
-        <div class="header">
-            <h1>🦷 Dental Student Quest</h1>
-            <p>Level up your life, one task at a time</p>
-            
-            <!-- Sync Status Indicator -->
-            <div id="syncStatusBar" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 10px 0; padding: 8px 16px; background: rgba(0,0,0,0.2); border-radius: 20px; font-size: 0.85em;">
-                <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="header" style="padding: 12px 0;">
+            <!-- Compact Header Row -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <h1 style="margin: 0; font-size: 1.4em;">🦷 Dental Student Quest</h1>
+
+                <!-- Compact Sync Status -->
+                <div id="syncStatusBar" style="display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: rgba(0,0,0,0.3); border-radius: 20px; font-size: 0.8em;">
                     <span id="syncStatusIcon">⏳</span>
-                    <span id="syncStatusText">Connecting...</span>
-                    <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync Now</button>
+                    <span id="syncStatusText" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Connecting...</span>
+                    <button onclick="forceCloudSync()" style="padding: 2px 8px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 0.85em; cursor: pointer;" title="Sync Now">🔄</button>
+                    <button onclick="forceUploadToCloud()" style="padding: 2px 6px; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 8px; color: #fcd34d; font-size: 0.8em; cursor: pointer;" title="Force Upload to Cloud">⬆️</button>
+                    <button onclick="forcePullFromCloud()" style="padding: 2px 6px; background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; color: #c4b5fd; font-size: 0.8em; cursor: pointer;" title="Force Pull from Cloud">⬇️</button>
                 </div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
-                    <button onclick="forceUploadToCloud()" style="padding: 3px 10px; background: rgba(245,158,11,0.3); border: 1px solid #f59e0b; border-radius: 10px; color: #fcd34d; font-size: 0.75em; cursor: pointer;" title="Overwrite cloud with local data">☁️⬆️ Force Upload</button>
-                    <button onclick="forcePullFromCloud()" style="padding: 3px 10px; background: rgba(139,92,246,0.3); border: 1px solid #8b5cf6; border-radius: 10px; color: #c4b5fd; font-size: 0.75em; cursor: pointer;" title="Overwrite local with cloud data">☁️⬇️ Force Pull</button>
+
+                <!-- Compact View Toggle -->
+                <div style="display: flex; gap: 4px;">
+                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.85em; cursor: pointer;" aria-label="Focus Mode">🎯 Focus</button>
+                    <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.85em; cursor: pointer;" aria-label="Full View">📋 Tasks</button>
                 </div>
             </div>
-            
-            <div class="data-controls">
-                <button class="data-btn export-btn" onclick="createCheckpoint()" title="Save all your data to a file you can restore later">💾 Create Checkpoint</button>
-                <button class="data-btn import-btn" onclick="document.getElementById('checkpointFile').click()" title="Restore your data from a checkpoint file">📂 Restore Checkpoint</button>
-                <button class="data-btn clear-btn" onclick="clearAllData()" title="Delete all data and start fresh">🗑️ Clear All Data</button>
-                <button class="data-btn" onclick="openNotebook()" title="Open your personal notebook">📓 Notebook</button>
-                <button class="data-btn" onclick="openDailyPlanner()" title="Plan your day hour by hour" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%); font-weight: 600;">📋 Daily Planner</button>
-                <button class="data-btn" onclick="openCalendar()" title="Master Calendar & Countdowns" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); font-weight: 600;">📅 Calendar</button>
-                <button class="data-btn" onclick="openFinancials()" title="Financial Command Center" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); font-weight: 600;">💰 Financials</button>
-                <a href="stimulant-elimination-calculator.html" class="data-btn" title="Sleep Prediction Calculator" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); font-weight: 600; text-decoration: none;">💊 Sleep Tracker</a>
-                <button class="data-btn" onclick="showHelp()" title="Quick reference guide">❓ Help</button>
-                <a href="d3-roadmap.html" class="data-btn" title="D3 Spring Semester Academic Roadmap" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); font-weight: 600; border: 2px solid #fca5a5; text-decoration: none;">📚 D3 Roadmap</a>
+
+            <!-- Slim Toolbar -->
+            <div class="data-controls" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+                <button onclick="createCheckpoint()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Create Checkpoint">💾</button>
+                <button onclick="document.getElementById('checkpointFile').click()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Restore Checkpoint">📂</button>
+                <button onclick="clearAllData()" style="padding: 4px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Clear All Data">🗑️</button>
+                <span style="color: rgba(255,255,255,0.2); font-size: 0.8em;">│</span>
+                <button onclick="openNotebook()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Notebook">📓</button>
+                <button onclick="openDailyPlanner()" style="padding: 4px 10px; background: rgba(220,38,38,0.3); border: 1px solid rgba(220,38,38,0.5); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Daily Planner">📋</button>
+                <button onclick="openCalendar()" style="padding: 4px 10px; background: rgba(16,185,129,0.3); border: 1px solid rgba(16,185,129,0.5); border-radius: 12px; color: #6ee7b7; font-size: 0.75em; cursor: pointer;" title="Calendar">📅</button>
+                <button onclick="openFinancials()" style="padding: 4px 10px; background: rgba(59,130,246,0.3); border: 1px solid rgba(59,130,246,0.5); border-radius: 12px; color: #93c5fd; font-size: 0.75em; cursor: pointer;" title="Financials">💰</button>
+                <a href="stimulant-elimination-calculator.html" style="padding: 4px 10px; background: rgba(168,85,247,0.3); border: 1px solid rgba(168,85,247,0.5); border-radius: 12px; color: #d8b4fe; font-size: 0.75em; cursor: pointer; text-decoration: none;" title="Sleep Tracker">💊</a>
+                <button onclick="showHelp()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Help">❓</button>
+                <a href="d3-roadmap.html" style="padding: 4px 10px; background: rgba(220,38,38,0.4); border: 1px solid #fca5a5; border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer; text-decoration: none; font-weight: 600;" title="D3 Roadmap">📚</a>
                 <input type="file" id="checkpointFile" accept=".dent,.json" style="display: none;" onchange="restoreCheckpoint(event)">
-            </div>
-            <div class="view-toggle-container" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.95); color: #667eea; font-weight: 600; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" aria-label="Switch to Focus Mode view">🎯 Focus Mode</button>
-                <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 12px 24px; border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 1em; cursor: pointer;" aria-label="Switch to Full Task View">📋 Full Task View</button>
             </div>
         </div>
 
-        <div class="stats-container">
-            <div class="stat-card">
-                <h3>XP Earned</h3>
-                <div class="level-display" id="totalXPGained">0</div>
-                <div class="xp-text">Completed tasks</div>
+        <!-- Slim Stats Bar -->
+        <div class="stats-container" style="display: flex; justify-content: center; gap: 8px; padding: 8px 0; margin: 0; flex-wrap: wrap;">
+            <div class="stat-card" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
+                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">XP Earned</span>
+                <span id="totalXPGained" style="font-size: 1.1em; font-weight: 700; color: white; margin-left: 6px;">0</span>
             </div>
 
-            <div class="stat-card">
-                <h3>XP Available</h3>
-                <div class="level-display" id="totalXPAvailable">0</div>
-                <div class="xp-text">Incomplete 💎</div>
+            <div class="stat-card" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
+                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Available</span>
+                <span id="totalXPAvailable" style="font-size: 1.1em; font-weight: 700; color: #60a5fa; margin-left: 6px;">0</span>
+                <span style="font-size: 0.7em; margin-left: 2px;">💎</span>
             </div>
 
-            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('doToday')">
-                <h3>Do Today</h3>
-                <div class="level-display" id="tasksToDoToday">0</div>
-                <div class="xp-text">Critical 🔴</div>
+            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('doToday')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
+                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Do Today</span>
+                <span id="tasksToDoToday" style="font-size: 1.1em; font-weight: 700; color: #f87171; margin-left: 6px;">0</span>
+                <span style="font-size: 0.7em; margin-left: 2px;">🔴</span>
             </div>
 
-            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('remaining')">
-                <h3>Remaining</h3>
-                <div class="level-display" id="tasksRemaining">0</div>
-                <div class="xp-text">Let's go 💪</div>
+            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('remaining')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
+                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Remaining</span>
+                <span id="tasksRemaining" style="font-size: 1.1em; font-weight: 700; color: #fbbf24; margin-left: 6px;">0</span>
+                <span style="font-size: 0.7em; margin-left: 2px;">💪</span>
             </div>
 
-            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('completed')">
-                <h3>Completed</h3>
-                <div class="level-display" id="totalTasks">0</div>
-                <div class="xp-text">All-time 🏆</div>
+            <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('completed')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
+                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Completed</span>
+                <span id="totalTasks" style="font-size: 1.1em; font-weight: 700; color: #4ade80; margin-left: 6px;">0</span>
+                <span style="font-size: 0.7em; margin-left: 2px;">🏆</span>
             </div>
         </div>
 
@@ -7880,7 +7891,7 @@
             </div>
 
             <div class="timer-section">
-                <h3 style="text-align: center; margin-bottom: 20px; color: #667eea;">⏱️ Pomodoro Timer</h3>
+                <h3 style="text-align: center; margin-bottom: 12px; color: #60a5fa; font-size: 1em; font-weight: 600;">⏱️ Pomodoro Timer</h3>
                 
                 <div class="pomodoro-options">
                     <div class="pomodoro-option active" onclick="selectPomodoro(25, 5)">
