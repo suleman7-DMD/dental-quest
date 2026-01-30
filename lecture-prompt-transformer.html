@@ -194,10 +194,6 @@
             color: #000;
         }
 
-        .mode-tab.active.quick-edit {
-            background-color: #f97316; /* Orange */
-        }
-
         /* Markdown Preview Styles - White background for Word copy-paste */
         .markdown-preview {
             background-color: #ffffff;
@@ -784,7 +780,6 @@
             <button class="mode-tab build" data-mode="build">Build New</button>
             <button class="mode-tab export" data-mode="export">📥 Export Notes</button>
             <button class="mode-tab template" data-mode="template">⚙️ Template</button>
-            <button class="mode-tab quick-edit" data-mode="quick-edit">✏️ Quick Editor</button>
         </div>
 
         <!-- ==================== TRANSFORM MODE ==================== -->
@@ -815,6 +810,13 @@
                     <div class="input-group">
                         <label>Lecture Topic</label>
                         <input type="text" id="t-lecture-topic" placeholder="e.g., early treatment, child abuse">
+                    </div>
+                    <div class="input-group">
+                        <label>Output Template</label>
+                        <select id="t-template-choice" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="new">New (Optimized) - Detailed structure</option>
+                            <option value="legacy">Original (Legacy) - Simple format</option>
+                        </select>
                     </div>
                 </div>
 
@@ -982,12 +984,27 @@
                 </div>
                 <div class="workflow-step" data-step="2">
                     <span class="step-num">2</span>
-                    <span>Copy New Prompt</span>
+                    <span>Preview & Copy</span>
+                </div>
+                <div class="workflow-step" data-step="3">
+                    <span class="step-num">3</span>
+                    <span>All Prompts</span>
                 </div>
             </div>
 
             <!-- Step 1: Input -->
             <div id="build-step-1" class="build-step">
+                <!-- Portion Indicator -->
+                <div style="background: linear-gradient(135deg, var(--accent-green), #059669); border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="color: white; margin: 0; font-size: 18px;" id="portion-indicator">Portion 1 (First)</h3>
+                        <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0 0; font-size: 13px;" id="portion-prompts-count">0 prompts collected</p>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="resetPortionWorkflow()" style="background: rgba(255,255,255,0.2); border: none; color: white;">
+                        Reset All
+                    </button>
+                </div>
+
                 <div class="input-row">
                     <div class="input-group">
                         <label>Course Name</label>
@@ -1003,45 +1020,6 @@
                             <option value="new">New (Optimized) - Detailed structure</option>
                             <option value="legacy">Original (Legacy) - Simple format</option>
                         </select>
-                    </div>
-                </div>
-
-                <!-- Portion Type Selector (for multi-portion workflow) -->
-                <div class="input-row" style="margin-top: 12px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
-                    <div class="input-group">
-                        <label style="display: flex; align-items: center; gap: 6px;">
-                            Portion Type
-                            <span class="help-icon" style="cursor: help; font-size: 12px; background: var(--bg-tertiary); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;" title="First Portion: Full prompt for starting a lecture&#10;Continuation: Lighter reinforcement block for portions 2-4, 6-8&#10;Checkpoint: Full prompt reset at portion 5+ for long lectures&#10;Correction: When you notice drift and need to fix it">?</span>
-                        </label>
-                        <select id="b-portion-type" onchange="updatePortionTypeUI()" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                            <option value="first">First Portion (Full v3.3 prompt)</option>
-                            <option value="continuation">Continuation (Reinforcement Block)</option>
-                            <option value="checkpoint">Checkpoint (Full prompt reset)</option>
-                            <option value="correction">Correction (Fix drift + continue)</option>
-                        </select>
-                    </div>
-                    <div class="input-group" id="portion-num-group" style="display: none;">
-                        <label>Portion #</label>
-                        <input type="number" id="b-portion-num" min="2" value="2" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; width: 80px;">
-                    </div>
-                </div>
-
-                <!-- Correction Fields (shown only for Correction type) -->
-                <div id="correction-fields" style="display: none; margin-top: 12px; padding: 16px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                    <div class="input-row">
-                        <div class="input-group" style="flex: 3;">
-                            <label style="color: #ef4444;">Correction Text (what needs fixing)</label>
-                            <input type="text" id="b-correction-text" placeholder="e.g., Emphasize clinical applications more" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                        </div>
-                        <div class="input-group" style="flex: 1;">
-                            <label style="color: #ef4444;">Priority Level</label>
-                            <select id="b-correction-priority" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                                <option value="2">2 (HIGH - after synthesis rule)</option>
-                                <option value="2.5" selected>2.5 (MID-HIGH)</option>
-                                <option value="3">3 (MEDIUM - after HIGH YIELD)</option>
-                                <option value="4">4 (LOW - sacrifice last)</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 
@@ -1075,48 +1053,26 @@
                     </div>
                 </div>
 
-                <button class="btn btn-success" onclick="generateBuildPrompt()">
-                    Create Prompt →
+                <button class="btn btn-success" onclick="generateBuildPrompt()" style="font-size: 16px; padding: 16px 32px;">
+                    Build Prompt →
                 </button>
             </div>
 
-            <!-- Step 2: Output -->
+            <!-- Step 2: Output / Preview -->
             <div id="build-step-2" class="build-step" style="display: none;">
-                <!-- Verification Panel -->
-                <div class="verification-panel">
-                    <h3>Verification Check</h3>
-                    <div class="verification-grid">
-                        <div class="verification-item" id="b-verify-slides">
-                            <span class="icon">📄</span>
-                            <span class="label">Slide Text</span>
-                            <span class="value">-</span>
-                        </div>
-                        <div class="verification-item" id="b-verify-audio">
-                            <span class="icon">🎤</span>
-                            <span class="label">Audio Transcript</span>
-                            <span class="value">-</span>
-                        </div>
-                        <div class="verification-item" id="b-verify-course">
-                            <span class="icon">📚</span>
-                            <span class="label">Course Name</span>
-                            <span class="value">-</span>
-                        </div>
-                        <div class="verification-item" id="b-verify-topic">
-                            <span class="icon">📝</span>
-                            <span class="label">Lecture Topic</span>
-                            <span class="value">-</span>
-                        </div>
+                <!-- Current Portion Header -->
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="color: var(--accent-green); margin: 0;" id="preview-portion-label">Portion 1 Prompt</h3>
+                        <p style="color: var(--text-muted); margin: 4px 0 0 0; font-size: 13px;" id="preview-template-used">Using: Optimized v3.3</p>
                     </div>
+                    <button class="btn btn-success btn-small" onclick="copyToClipboard('b-new-prompt', 'Prompt')" style="font-size: 14px; padding: 10px 20px;">
+                        📋 Copy Prompt
+                    </button>
                 </div>
 
                 <div class="textarea-container">
-                    <div class="textarea-header">
-                        <span class="section-label green">New Prompt (Ready for Model 2)</span>
-                        <button class="btn btn-success btn-small" onclick="copyToClipboard('b-new-prompt', 'Prompt')">
-                            Copy Full Prompt
-                        </button>
-                    </div>
-                    <textarea id="b-new-prompt" class="output" readonly></textarea>
+                    <textarea id="b-new-prompt" class="output" readonly style="height: 400px;"></textarea>
                     <div class="textarea-stats">
                         <span class="stat" id="b-output-chars">0 characters</span>
                         <span class="stat" id="b-output-words">0 words</span>
@@ -1124,20 +1080,64 @@
                     </div>
                 </div>
 
-                <div class="next-steps">
-                    <h3>Next Steps:</h3>
+                <div class="next-steps" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <h3 style="color: var(--accent-green);">Next Steps:</h3>
                     <ol>
-                        <li>Click "Copy Full Prompt" above</li>
-                        <li>Open Model 2 (Gemini)</li>
-                        <li>Paste the prompt</li>
-                        <li>Copy the markdown response</li>
-                        <li>Convert to Word doc for studying</li>
+                        <li>Copy the prompt above</li>
+                        <li>Paste into Gemini and get response</li>
+                        <li>Click "Next Portion" to continue, or "View All Prompts" when done</li>
                     </ol>
                 </div>
 
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="goToBuildStep(1)">← Back</button>
-                    <button class="btn btn-secondary" onclick="resetBuild()">Start Over</button>
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-success" onclick="nextPortion()" style="font-size: 15px; padding: 14px 28px;">
+                        Next Portion →
+                    </button>
+                    <button class="btn btn-primary" onclick="viewAllPrompts()" style="background: var(--accent-purple);">
+                        View All Prompts
+                    </button>
+                    <button class="btn btn-secondary" onclick="goToBuildStep(1)">
+                        ← Edit This Portion
+                    </button>
+                </div>
+
+                <!-- Final Prompt Toggle -->
+                <div style="margin-top: 16px; padding: 12px 16px; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="final-prompt-toggle" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="color: #f97316; font-weight: 600;">This is the final portion</span>
+                    </label>
+                    <span style="color: var(--text-muted); font-size: 12px;">(Check before clicking "Next Portion" to go to final view)</span>
+                </div>
+            </div>
+
+            <!-- Step 3: Final View - All Prompts -->
+            <div id="build-step-3" class="build-step" style="display: none;">
+                <div style="background: linear-gradient(135deg, var(--accent-purple), #7c3aed); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+                    <h2 style="color: white; margin: 0 0 8px 0;">All Lecture Prompts</h2>
+                    <p style="color: rgba(255,255,255,0.8); margin: 0;" id="final-view-summary">0 portions collected</p>
+                </div>
+
+                <!-- Copy All Button -->
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="copyAllPrompts()" style="font-size: 15px;">
+                        📋 Copy All Prompts
+                    </button>
+                    <button class="btn btn-secondary" onclick="collapseAllPrompts()">
+                        ▲ Collapse All
+                    </button>
+                    <button class="btn btn-secondary" onclick="expandAllPrompts()">
+                        ▼ Expand All
+                    </button>
+                    <button class="btn btn-primary" onclick="startNewLecture()" style="margin-left: auto; background: var(--accent-green);">
+                        Start New Lecture
+                    </button>
+                </div>
+
+                <!-- Prompts Container -->
+                <div id="all-prompts-container">
+                    <!-- Prompts will be rendered here dynamically -->
                 </div>
             </div>
         </div>
@@ -1255,152 +1255,108 @@
         <!-- ==================== TEMPLATE EDITOR MODE ==================== -->
         <div id="template-panel" class="mode-panel">
             <div class="template-info">
-                <h2 style="margin-bottom: 12px; color: var(--accent-purple);">⚙️ Output Template Editor</h2>
+                <h2 style="margin-bottom: 12px; color: var(--accent-purple);">⚙️ Template Creator & Editor</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                    Customize the prompt template that gets generated. Edit freely and save your changes.
+                    Create custom prompt templates. Saved templates appear in Build New and Transform Existing tabs.
                 </p>
-                <div class="placeholder-info" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                    <h4 style="color: var(--accent-yellow); margin-bottom: 8px;">⚠️ Required Placeholders (must keep these):</h4>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-family: monospace; font-size: 13px;">
-                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[COURSE_NAME]</code>
-                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[LECTURE_TOPIC]</code>
-                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[SLIDE_TEXT]</code>
-                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--accent-blue);">[AUDIO_TEXT]</code>
+            </div>
+
+            <!-- Required Placeholders with Insert Buttons -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <h4 style="color: var(--accent-yellow); margin-bottom: 12px;">📌 Required Placeholders (click to insert at cursor)</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-small" onclick="insertPlaceholder('[COURSE_NAME]')" style="font-family: monospace;">+ [COURSE_NAME]</button>
+                    <button class="btn btn-secondary btn-small" onclick="insertPlaceholder('[LECTURE_TOPIC]')" style="font-family: monospace;">+ [LECTURE_TOPIC]</button>
+                    <button class="btn btn-secondary btn-small" onclick="insertPlaceholder('[SLIDE_TEXT]')" style="font-family: monospace;">+ [SLIDE_TEXT]</button>
+                    <button class="btn btn-secondary btn-small" onclick="insertPlaceholder('[AUDIO_TEXT]')" style="font-family: monospace;">+ [AUDIO_TEXT]</button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">
+                    All four placeholders must be present for a template to be valid.
+                </p>
+            </div>
+
+            <!-- Load Existing or Start Fresh -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Start From Base Template</label>
+                        <select id="template-base-select" onchange="loadBaseTemplate()" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                            <option value="optimized">New (Optimized v3.3)</option>
+                            <option value="legacy">Original (Legacy)</option>
+                            <option value="blank">Blank Template</option>
+                        </select>
                     </div>
-                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">
-                        These placeholders get replaced with your actual content when generating prompts.
-                    </p>
+                    <button class="btn btn-secondary" onclick="loadBaseTemplate()">
+                        Load Base
+                    </button>
+                    <button class="btn btn-secondary" onclick="validateTemplate()">
+                        ✓ Validate Placeholders
+                    </button>
                 </div>
             </div>
 
+            <!-- Template Editor -->
             <div class="textarea-container">
                 <div class="textarea-header">
                     <span class="section-label purple">Template Content</span>
-                    <div style="display: flex; gap: 8px;">
-                        <span id="template-status" style="font-size: 12px; color: var(--text-muted); align-self: center;"></span>
-                    </div>
+                    <span id="template-status" style="font-size: 12px; color: var(--text-muted);"></span>
                 </div>
-                <textarea id="template-editor" style="height: 500px; font-size: 12px;"></textarea>
+                <textarea id="template-editor" style="height: 400px; font-size: 12px;" placeholder="Write your custom template here. Use the placeholder buttons above to insert required placeholders."></textarea>
                 <div class="textarea-stats">
                     <span class="stat" id="template-chars">0 characters</span>
                     <span class="stat" id="template-lines">0 lines</span>
                 </div>
             </div>
 
-            <div class="btn-group" style="margin-top: 20px;">
-                <button class="btn btn-success" onclick="saveTemplate()">
-                    💾 Save Template
-                </button>
-                <button class="btn btn-secondary" onclick="resetTemplate()">
-                    ↺ Reset to Default
-                </button>
-                <button class="btn btn-secondary" onclick="validateTemplate()">
-                    ✓ Validate Placeholders
-                </button>
-            </div>
-
-            <div id="template-validation" style="margin-top: 16px; display: none;"></div>
-        </div>
-
-        <!-- ==================== QUICK EDITOR MODE ==================== -->
-        <div id="quick-edit-panel" class="mode-panel">
-            <div class="quick-edit-info">
-                <h2 style="margin-bottom: 12px; color: #f97316;">✏️ Quick Template Editor</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                    Form-based template editing. Fill in the fields, preview your template, and save as a custom version.
-                </p>
-            </div>
-
-            <!-- Base Template Selection -->
-            <div class="quick-edit-section" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                    <div class="input-group" style="flex: 1; min-width: 200px;">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Base Template</label>
-                        <select id="qe-base-template" onchange="loadQuickEditTemplate()" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                            <option value="legacy">Original (Legacy)</option>
-                            <option value="optimized">New (Optimized)</option>
-                        </select>
-                    </div>
-                    <div class="input-group" style="flex: 1; min-width: 200px;">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Load Saved Template</label>
-                        <select id="qe-saved-templates" onchange="loadSavedQuickTemplate()" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                            <option value="">-- Select Saved Template --</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Edit Fields -->
-            <div class="quick-edit-fields" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="color: var(--accent-blue); margin-bottom: 16px; font-size: 16px;">📝 Standard Fields</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div class="input-group">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Course Name</label>
-                        <input type="text" id="qe-course-name" placeholder="e.g., periodontics, endodontics" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                    </div>
-                    <div class="input-group">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Lecture Topic</label>
-                        <input type="text" id="qe-lecture-topic" placeholder="e.g., regenerative procedures" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                    </div>
-                </div>
-
-                <h3 style="color: var(--accent-green); margin-top: 24px; margin-bottom: 16px; font-size: 16px;">🎯 Focus & Priority Fields</h3>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
-                    <div class="input-group">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
-                            Focus Area <span style="color: var(--text-muted);">(high-level subject focus)</span>
-                        </label>
-                        <input type="text" id="qe-focus-area" placeholder="e.g., periodontal tissue architecture, pulp pathology, bone grafting" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                    </div>
-                    <div class="input-group">
-                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
-                            Clinical Priority <span style="color: var(--text-muted);">(specific concepts to emphasize)</span>
-                        </label>
-                        <input type="text" id="qe-clinical-priority" placeholder="e.g., GTR vs open flap debridement, vital vs non-vital pulp" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                    </div>
-                </div>
-
-                <h3 style="color: var(--accent-purple); margin-top: 24px; margin-bottom: 16px; font-size: 16px;">💬 Custom Instructions</h3>
-                <div class="input-group">
-                    <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">
-                        Additional Instructions <span style="color: var(--text-muted);">(e.g., "make more tables", "focus on procedures")</span>
+            <!-- Continuation Variant Toggle -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-top: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="continuation-variant-toggle" onchange="toggleContinuationVariant()" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="color: var(--accent-blue); font-weight: 600;">Add Continuation Variant</span>
                     </label>
-                    <textarea id="qe-custom-instructions" rows="3" placeholder="Add any custom instructions here...&#10;e.g., 'Use more comparison tables for treatment options'&#10;e.g., 'Focus heavily on step-by-step clinical procedures'" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>
+                    <span style="color: var(--text-muted); font-size: 12px;">(Optional: shorter template for portions 2+)</span>
+                </div>
+                <div id="continuation-template-container" style="display: none;">
+                    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 10px;">
+                        This shorter template will be used for portions 2, 3, 4... while the main template above is used for portion 1.
+                    </p>
+                    <textarea id="continuation-template-editor" style="width: 100%; height: 200px; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 12px; resize: vertical;" placeholder="Write a shorter continuation template here. Must include all 4 required placeholders."></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-small" onclick="insertPlaceholderContinuation('[COURSE_NAME]')" style="font-family: monospace; font-size: 11px;">+ [COURSE_NAME]</button>
+                        <button class="btn btn-secondary btn-small" onclick="insertPlaceholderContinuation('[LECTURE_TOPIC]')" style="font-family: monospace; font-size: 11px;">+ [LECTURE_TOPIC]</button>
+                        <button class="btn btn-secondary btn-small" onclick="insertPlaceholderContinuation('[SLIDE_TEXT]')" style="font-family: monospace; font-size: 11px;">+ [SLIDE_TEXT]</button>
+                        <button class="btn btn-secondary btn-small" onclick="insertPlaceholderContinuation('[AUDIO_TEXT]')" style="font-family: monospace; font-size: 11px;">+ [AUDIO_TEXT]</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Live Preview -->
-            <div class="quick-edit-preview" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 style="color: var(--accent-yellow); font-size: 16px;">👁️ Live Template Preview</h3>
-                    <button class="btn btn-secondary btn-small" onclick="updateQuickEditPreview()">
-                        🔄 Refresh Preview
-                    </button>
-                </div>
-                <div id="qe-preview" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.6; max-height: 300px; overflow-y: auto; white-space: pre-wrap; color: var(--text-primary);">
-                    Select a base template to see preview...
-                </div>
-            </div>
-
-            <!-- Save Section -->
-            <div class="quick-edit-save" style="background: var(--bg-secondary); border: 1px solid #f97316; border-radius: 10px; padding: 20px;">
-                <h3 style="color: #f97316; margin-bottom: 16px; font-size: 16px;">💾 Save Custom Template</h3>
+            <!-- Save as New Template Section -->
+            <div style="background: var(--bg-secondary); border: 2px solid var(--accent-purple); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="color: var(--accent-purple); margin-bottom: 16px; font-size: 16px;">💾 Save as New Template</h3>
                 <div style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
                     <div class="input-group" style="flex: 1; min-width: 250px;">
                         <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block;">Template Name</label>
-                        <input type="text" id="qe-template-name" placeholder="e.g., Perio-Focused, Peds-Specific" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        <input type="text" id="save-template-name" placeholder="e.g., Perio-Focused, Peds-Clinical" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
                     </div>
-                    <button class="btn btn-success" onclick="saveQuickEditTemplate()" style="background-color: #f97316;">
+                    <button class="btn btn-success" onclick="saveNewTemplate()">
                         💾 Save Template
-                    </button>
-                    <button class="btn btn-secondary" onclick="deleteSelectedTemplate()">
-                        🗑️ Delete Selected
                     </button>
                 </div>
                 <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
-                    Saved templates will appear in the "Build New" tab's template dropdown.
+                    Saved templates will appear in Build New and Transform Existing dropdowns.
                 </p>
             </div>
+
+            <!-- Saved Templates List -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                <h3 style="color: var(--accent-green); margin-bottom: 12px; font-size: 16px;">📂 Saved Templates</h3>
+                <div id="saved-templates-list">
+                    <div style="color: var(--text-muted); text-align: center; padding: 12px;">No saved templates yet</div>
+                </div>
+            </div>
+
+            <div id="template-validation" style="margin-top: 16px; display: none;"></div>
         </div>
     </div>
 
@@ -1751,8 +1707,8 @@ Continue notes with correction applied.`;
             updateTemplateStatus();
         }
 
-        // ==================== QUICK EDITOR FUNCTIONS ====================
-        const QUICK_EDIT_STORAGE_KEY = 'lectureQuickEditTemplates';
+        // ==================== SAVED TEMPLATES SYSTEM ====================
+        const SAVED_TEMPLATES_KEY = 'lectureSavedTemplates';
         const MAX_INPUT_SIZE = 500000; // 500KB max input
         const MAX_COLLECTED_NOTES = 100; // Max portions to prevent memory issues
 
@@ -1767,129 +1723,210 @@ Continue notes with correction applied.`;
             return md.replace(/[\uFEFF\u200B\u200C\u200D]/g, '').replace(/\r\n/g, '\n');
         }
 
-        function getQuickEditTemplates() {
+        // Get saved templates from localStorage
+        // Format: { "Template Name": { fullTemplate, hasContinuationVariant, continuationTemplate, createdAt } }
+        function getSavedTemplates() {
             try {
-                const saved = localStorage.getItem(QUICK_EDIT_STORAGE_KEY);
-                return saved ? JSON.parse(saved) : {};
+                const saved = localStorage.getItem(SAVED_TEMPLATES_KEY);
+                if (!saved) return {};
+
+                const templates = JSON.parse(saved);
+
+                // Migrate old format if needed (from Quick Editor)
+                const migrated = {};
+                for (const [name, data] of Object.entries(templates)) {
+                    if (data.fullTemplate) {
+                        // Already new format
+                        migrated[name] = data;
+                    } else if (data.base || data.focusArea) {
+                        // Old Quick Editor format - migrate
+                        migrated[name] = {
+                            fullTemplate: data.fullTemplate || buildMigratedTemplate(data),
+                            hasContinuationVariant: false,
+                            continuationTemplate: null,
+                            createdAt: data.createdAt || new Date().toISOString()
+                        };
+                    }
+                }
+                return migrated;
             } catch (e) {
-                console.error('Failed to parse templates, resetting:', e);
-                localStorage.removeItem(QUICK_EDIT_STORAGE_KEY);
+                console.error('Failed to parse saved templates:', e);
                 return {};
             }
         }
 
-        function saveQuickEditTemplates(templates) {
+        // Helper to migrate old Quick Editor templates
+        function buildMigratedTemplate(oldData) {
+            const baseTemplate = oldData.base === 'legacy' ? LEGACY_TEMPLATE : DEFAULT_TEMPLATE;
+            let template = baseTemplate;
+
+            // Add custom focus instructions if they existed
+            let additionalSection = '';
+            if (oldData.focusArea || oldData.clinicalPriority || oldData.customInstructions) {
+                additionalSection = '\n\n---\n\n## CUSTOM FOCUS INSTRUCTIONS\n\n';
+                if (oldData.focusArea) {
+                    additionalSection += `**Focus Area:** Pay special attention to concepts related to ${oldData.focusArea}.\n\n`;
+                }
+                if (oldData.clinicalPriority) {
+                    additionalSection += `**Clinical Priority:** Emphasize ${oldData.clinicalPriority} in your explanations.\n\n`;
+                }
+                if (oldData.customInstructions) {
+                    additionalSection += `**Additional Instructions:**\n${oldData.customInstructions}\n`;
+                }
+            }
+
+            if (additionalSection) {
+                const idx = template.indexOf('## INPUT');
+                if (idx !== -1) {
+                    template = template.slice(0, idx) + additionalSection + '\n' + template.slice(idx);
+                } else {
+                    template += additionalSection;
+                }
+            }
+
+            return template;
+        }
+
+        // Save templates to localStorage
+        function saveSavedTemplates(templates) {
             try {
-                localStorage.setItem(QUICK_EDIT_STORAGE_KEY, JSON.stringify(templates));
+                localStorage.setItem(SAVED_TEMPLATES_KEY, JSON.stringify(templates));
             } catch (e) {
                 console.error('Failed to save templates:', e);
                 showToast('Failed to save template - storage full?', 'error');
             }
         }
 
-        function loadQuickEditTemplate() {
-            const baseTemplate = document.getElementById('qe-base-template').value;
-            // Clear saved template selection when switching base
-            document.getElementById('qe-saved-templates').value = '';
-            updateQuickEditPreview();
-        }
+        // Refresh Build New and Transform template dropdowns with saved templates
+        function refreshTemplateDropdowns() {
+            const templates = getSavedTemplates();
+            const templateNames = Object.keys(templates).sort();
 
-        function loadSavedQuickTemplate() {
-            const templateName = document.getElementById('qe-saved-templates').value;
-            if (!templateName) return;
-
-            const templates = getQuickEditTemplates();
-            const template = templates[templateName];
-
-            if (template) {
-                document.getElementById('qe-base-template').value = template.base || 'legacy';
-                document.getElementById('qe-course-name').value = template.courseName || '';
-                document.getElementById('qe-lecture-topic').value = template.lectureTopic || '';
-                document.getElementById('qe-focus-area').value = template.focusArea || '';
-                document.getElementById('qe-clinical-priority').value = template.clinicalPriority || '';
-                document.getElementById('qe-custom-instructions').value = template.customInstructions || '';
-                document.getElementById('qe-template-name').value = templateName;
-                updateQuickEditPreview();
-                showToast(`Loaded "${templateName}"`);
-            }
-        }
-
-        function buildQuickEditTemplate() {
-            const baseTemplate = document.getElementById('qe-base-template').value;
-            const focusArea = document.getElementById('qe-focus-area').value.trim();
-            const clinicalPriority = document.getElementById('qe-clinical-priority').value.trim();
-            const customInstructions = document.getElementById('qe-custom-instructions').value.trim();
-
-            // Get the base template text
-            let templateText = baseTemplate === 'legacy' ? LEGACY_TEMPLATE : DEFAULT_TEMPLATE;
-
-            // Build additional instructions section if any custom fields are filled
-            let additionalSection = '';
-
-            if (focusArea || clinicalPriority || customInstructions) {
-                additionalSection = '\n\n---\n\n## CUSTOM FOCUS INSTRUCTIONS\n\n';
-
-                if (focusArea) {
-                    additionalSection += `**Focus Area:** Pay special attention to concepts related to ${focusArea}.\n\n`;
+            // Update Build New dropdown
+            const buildSelect = document.getElementById('b-template-choice');
+            if (buildSelect) {
+                // Remove old custom options (keep first two: new and legacy)
+                while (buildSelect.options.length > 2) {
+                    buildSelect.remove(2);
                 }
 
-                if (clinicalPriority) {
-                    additionalSection += `**Clinical Priority:** Emphasize ${clinicalPriority} in your explanations.\n\n`;
-                }
+                // Add saved custom templates
+                if (templateNames.length > 0) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = '── Saved Templates ──';
 
-                if (customInstructions) {
-                    additionalSection += `**Additional Instructions:**\n${customInstructions}\n`;
+                    templateNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = 'custom:' + name;
+                        option.textContent = '★ ' + name;
+                        optgroup.appendChild(option);
+                    });
+
+                    buildSelect.appendChild(optgroup);
                 }
             }
 
-            // Insert additional section before the INPUT section
-            if (additionalSection) {
-                // Find where to insert (before ## INPUT or before "Here is the text")
-                const inputMarkers = ['## INPUT', 'Here is the text from lecture slides'];
-                let inserted = false;
-                for (const marker of inputMarkers) {
-                    const idx = templateText.indexOf(marker);
-                    if (idx !== -1) {
-                        templateText = templateText.slice(0, idx) + additionalSection + '\n' + templateText.slice(idx);
-                        inserted = true;
-                        break;
-                    }
+            // Update Transform Existing dropdown
+            const transformSelect = document.getElementById('t-template-choice');
+            if (transformSelect) {
+                // Remove old custom options (keep first two: new and legacy)
+                while (transformSelect.options.length > 2) {
+                    transformSelect.remove(2);
                 }
-                // Fallback: append at end if no marker found
-                if (!inserted) {
-                    templateText = templateText + '\n' + additionalSection;
+
+                // Add saved custom templates
+                if (templateNames.length > 0) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = '── Saved Templates ──';
+
+                    templateNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = 'custom:' + name;
+                        option.textContent = '★ ' + name;
+                        optgroup.appendChild(option);
+                    });
+
+                    transformSelect.appendChild(optgroup);
                 }
             }
 
-            return templateText;
+            // Update Template tab saved templates list
+            refreshTemplateSavedList();
         }
 
-        function updateQuickEditPreview() {
-            const previewEl = document.getElementById('qe-preview');
-            const courseName = escapeHtml(document.getElementById('qe-course-name').value || '[COURSE_NAME]');
-            const lectureTopic = escapeHtml(document.getElementById('qe-lecture-topic').value || '[LECTURE_TOPIC]');
+        // Refresh the saved templates list in Template tab
+        function refreshTemplateSavedList() {
+            const listEl = document.getElementById('saved-templates-list');
+            if (!listEl) return;
 
-            let template = buildQuickEditTemplate();
+            const templates = getSavedTemplates();
+            const templateNames = Object.keys(templates).sort();
 
-            // Escape the template content first to prevent XSS
-            template = escapeHtml(template);
+            if (templateNames.length === 0) {
+                listEl.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 12px;">No saved templates yet</div>';
+                return;
+            }
 
-            // Replace placeholders with actual values for preview
-            template = template
-                .replace(/\[COURSE_NAME\]/g, courseName)
-                .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
-                .replace(/\[SLIDE_TEXT\]/g, '[Your slide text will appear here...]')
-                .replace(/\[AUDIO_TEXT\]/g, '[Your audio transcript will appear here...]');
-
-            // Highlight the custom sections (safe because we escaped above)
-            template = template.replace(/(## CUSTOM FOCUS INSTRUCTIONS[\s\S]*?)(?=\n---|## INPUT|Here is the text|$)/g,
-                '<span style="background: rgba(249, 115, 22, 0.2); border-left: 3px solid #f97316; padding-left: 8px; display: block;">$1</span>');
-
-            previewEl.innerHTML = template.replace(/\n/g, '<br>');
+            listEl.innerHTML = templateNames.map(name => {
+                const template = templates[name];
+                const hasVariant = template.hasContinuationVariant ? '📝' : '';
+                return `
+                    <div class="saved-template-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; margin-bottom: 8px;">
+                        <span style="color: var(--text-primary);">★ ${escapeHtml(name)} ${hasVariant}</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-small" onclick="loadTemplateForEdit('${escapeHtml(name)}')" style="padding: 4px 8px;">Edit</button>
+                            <button class="btn btn-secondary btn-small" onclick="deleteSavedTemplate('${escapeHtml(name)}')" style="padding: 4px 8px; color: var(--accent-red);">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function saveQuickEditTemplate() {
-            const templateName = document.getElementById('qe-template-name').value.trim();
+        // Load a saved template into the Template editor for editing
+        function loadTemplateForEdit(name) {
+            const templates = getSavedTemplates();
+            const template = templates[name];
+            if (!template) {
+                showToast('Template not found', 'error');
+                return;
+            }
+
+            document.getElementById('template-editor').value = template.fullTemplate;
+            document.getElementById('save-template-name').value = name;
+
+            // Handle continuation variant
+            const toggleEl = document.getElementById('continuation-variant-toggle');
+            const contTextareaEl = document.getElementById('continuation-template-container');
+
+            if (template.hasContinuationVariant && template.continuationTemplate) {
+                toggleEl.checked = true;
+                contTextareaEl.style.display = 'block';
+                document.getElementById('continuation-template-editor').value = template.continuationTemplate;
+            } else {
+                toggleEl.checked = false;
+                contTextareaEl.style.display = 'none';
+                document.getElementById('continuation-template-editor').value = '';
+            }
+
+            updateTemplateStats();
+            showToast(`Loaded "${name}" for editing`);
+        }
+
+        // Delete a saved template
+        function deleteSavedTemplate(name) {
+            if (!confirm(`Delete template "${name}"?`)) return;
+
+            const templates = getSavedTemplates();
+            delete templates[name];
+            saveSavedTemplates(templates);
+            refreshTemplateDropdowns();
+            showToast(`Template "${name}" deleted`);
+        }
+
+        // Save template from Template tab (new function for redesigned tab)
+        function saveNewTemplate() {
+            const templateText = document.getElementById('template-editor').value;
+            const templateName = document.getElementById('save-template-name').value.trim();
 
             if (!templateName) {
                 showToast('Please enter a template name', 'error');
@@ -1907,7 +1944,14 @@ Continue notes with correction applied.`;
                 return;
             }
 
-            const templates = getQuickEditTemplates();
+            // Validate placeholders
+            const missing = REQUIRED_PLACEHOLDERS.filter(p => !templateText.includes(p));
+            if (missing.length > 0) {
+                showToast(`Missing required placeholders: ${missing.join(', ')}`, 'error');
+                return;
+            }
+
+            const templates = getSavedTemplates();
 
             // Check for overwrite
             if (templates[templateName]) {
@@ -1916,104 +1960,116 @@ Continue notes with correction applied.`;
                 }
             }
 
+            // Check continuation variant
+            const hasVariant = document.getElementById('continuation-variant-toggle').checked;
+            let continuationTemplate = null;
+
+            if (hasVariant) {
+                continuationTemplate = document.getElementById('continuation-template-editor').value;
+                // Validate continuation template has required placeholders
+                const contMissing = REQUIRED_PLACEHOLDERS.filter(p => !continuationTemplate.includes(p));
+                if (contMissing.length > 0) {
+                    showToast(`Continuation template missing: ${contMissing.join(', ')}`, 'error');
+                    return;
+                }
+            }
+
             templates[templateName] = {
-                base: document.getElementById('qe-base-template').value,
-                courseName: document.getElementById('qe-course-name').value.trim(),
-                lectureTopic: document.getElementById('qe-lecture-topic').value.trim(),
-                focusArea: document.getElementById('qe-focus-area').value.trim(),
-                clinicalPriority: document.getElementById('qe-clinical-priority').value.trim(),
-                customInstructions: document.getElementById('qe-custom-instructions').value.trim(),
-                fullTemplate: buildQuickEditTemplate(),
+                fullTemplate: templateText,
+                hasContinuationVariant: hasVariant,
+                continuationTemplate: continuationTemplate,
                 createdAt: new Date().toISOString()
             };
 
-            saveQuickEditTemplates(templates);
-            refreshSavedTemplatesList();
-            refreshBuildNewTemplateDropdown();
+            saveSavedTemplates(templates);
+            refreshTemplateDropdowns();
             showToast(`Template "${templateName}" saved!`);
         }
 
-        function deleteSelectedTemplate() {
-            const templateName = document.getElementById('qe-saved-templates').value;
-            if (!templateName) {
-                showToast('Select a template to delete', 'error');
-                return;
-            }
+        // Insert placeholder at cursor position in template editor
+        function insertPlaceholder(placeholder) {
+            const editor = document.getElementById('template-editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
 
-            if (!confirm(`Delete template "${templateName}"?`)) {
-                return;
-            }
-
-            const templates = getQuickEditTemplates();
-            delete templates[templateName];
-            saveQuickEditTemplates(templates);
-            refreshSavedTemplatesList();
-            refreshBuildNewTemplateDropdown();
-
-            // Clear form
-            document.getElementById('qe-saved-templates').value = '';
-            document.getElementById('qe-template-name').value = '';
-            showToast(`Template "${templateName}" deleted`);
+            editor.value = text.substring(0, start) + placeholder + text.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + placeholder.length;
+            editor.focus();
+            updateTemplateStats();
         }
 
-        function refreshSavedTemplatesList() {
-            const select = document.getElementById('qe-saved-templates');
-            const templates = getQuickEditTemplates();
-
-            // Clear existing options except first
-            select.innerHTML = '<option value="">-- Select Saved Template --</option>';
-
-            // Add saved templates
-            Object.keys(templates).sort().forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                select.appendChild(option);
-            });
+        // Toggle continuation variant textarea visibility
+        function toggleContinuationVariant() {
+            const toggle = document.getElementById('continuation-variant-toggle');
+            const container = document.getElementById('continuation-template-container');
+            container.style.display = toggle.checked ? 'block' : 'none';
         }
 
-        function refreshBuildNewTemplateDropdown() {
-            const select = document.getElementById('b-template-choice');
-            if (!select) return;
+        // Insert placeholder at cursor in continuation template editor
+        function insertPlaceholderContinuation(placeholder) {
+            const editor = document.getElementById('continuation-template-editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
 
-            const templates = getQuickEditTemplates();
-
-            // Remove old custom options (keep first two: new and legacy)
-            while (select.options.length > 2) {
-                select.remove(2);
-            }
-
-            // Add saved custom templates
-            if (Object.keys(templates).length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '── Saved Templates ──';
-
-                Object.keys(templates).sort().forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = 'custom:' + name;
-                    option.textContent = '★ ' + name;
-                    optgroup.appendChild(option);
-                });
-
-                select.appendChild(optgroup);
-            }
+            editor.value = text.substring(0, start) + placeholder + text.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + placeholder.length;
+            editor.focus();
         }
 
-        function initQuickEditor() {
-            refreshSavedTemplatesList();
-            refreshBuildNewTemplateDropdown();
-            updateQuickEditPreview();
+        // Load a base template into the editor
+        function loadBaseTemplate() {
+            const baseSelect = document.getElementById('template-base-select');
+            const editor = document.getElementById('template-editor');
+            const selection = baseSelect.value;
 
-            // Debounced preview update for better performance
-            const debouncedPreview = debounce(updateQuickEditPreview, 150);
+            let templateText = '';
+            if (selection === 'optimized') {
+                templateText = DEFAULT_TEMPLATE;
+            } else if (selection === 'legacy') {
+                templateText = LEGACY_TEMPLATE;
+            } else if (selection === 'blank') {
+                templateText = `# My Custom Template
 
-            // Add input listeners for live preview with debounce
-            ['qe-course-name', 'qe-lecture-topic', 'qe-focus-area', 'qe-clinical-priority', 'qe-custom-instructions'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', debouncedPreview);
-                }
-            });
+**Course:** [COURSE_NAME]
+**Lecture:** [LECTURE_TOPIC]
+
+---
+
+## Instructions
+
+[Your custom instructions here]
+
+---
+
+## Input
+
+**Lecture slides:**
+[SLIDE_TEXT]
+
+---
+
+**Audio transcript:**
+[AUDIO_TEXT]
+
+---
+
+[Your output instructions here]`;
+            }
+
+            editor.value = templateText;
+            updateTemplateStats();
+
+            // Clear continuation variant
+            document.getElementById('continuation-variant-toggle').checked = false;
+            document.getElementById('continuation-template-container').style.display = 'none';
+            document.getElementById('continuation-template-editor').value = '';
+
+            // Clear template name
+            document.getElementById('save-template-name').value = '';
+
+            showToast(`Loaded ${selection === 'optimized' ? 'Optimized v3.3' : selection === 'legacy' ? 'Legacy' : 'Blank'} template`);
         }
 
         // ==================== UTILITY FUNCTIONS ====================
@@ -2309,6 +2365,7 @@ Continue notes with correction applied.`;
             const audioText = document.getElementById('t-extracted-audio').value || '[AUDIO TEXT NOT FOUND - PASTE MANUALLY]';
             const courseName = document.getElementById('t-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('t-lecture-topic').value || '[LECTURE_TOPIC]';
+            const templateChoice = document.getElementById('t-template-choice').value;
             const portionType = document.getElementById('t-portion-type').value;
             const portionNum = document.getElementById('t-portion-num').value || '2';
             const correctionText = document.getElementById('t-correction-text').value || '[SPECIFY CORRECTION]';
@@ -2320,7 +2377,7 @@ Continue notes with correction applied.`;
                 return;
             }
 
-            // Choose template based on portion type
+            // Choose template based on portion type and template choice
             let template;
             let templateLabel = 'v3.3';
 
@@ -2331,9 +2388,30 @@ Continue notes with correction applied.`;
                 template = CORRECTION_TEMPLATE;
                 templateLabel = 'Correction Block';
             } else {
-                // First or Checkpoint - use full template
-                template = getCurrentTemplate();
-                templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
+                // First or Checkpoint - use selected template
+                if (templateChoice === 'legacy') {
+                    template = LEGACY_TEMPLATE;
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (Legacy)' : 'First Portion (Legacy)';
+                } else if (templateChoice === 'new') {
+                    template = getCurrentTemplate();
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
+                } else if (templateChoice.startsWith('custom:')) {
+                    const customName = templateChoice.replace('custom:', '');
+                    const savedTemplates = getSavedTemplates();
+                    const savedTemplate = savedTemplates[customName];
+
+                    if (savedTemplate && savedTemplate.fullTemplate) {
+                        template = savedTemplate.fullTemplate;
+                        templateLabel = portionType === 'checkpoint' ? `Checkpoint (${customName})` : `First Portion (${customName})`;
+                    } else {
+                        showToast('Custom template not found, using default', 'error');
+                        template = getCurrentTemplate();
+                        templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
+                    }
+                } else {
+                    template = getCurrentTemplate();
+                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
+                }
             }
 
             // Replace placeholders
@@ -2454,16 +2532,79 @@ Continue notes with correction applied.`;
             });
         }
 
+        // ==================== MULTI-PORTION WORKFLOW ====================
+
+        // State for multi-portion workflow
+        let portionWorkflow = {
+            currentPortion: 1,
+            collectedPrompts: [], // Array of { portionNum, label, promptText, templateUsed }
+            selectedTemplate: null,
+            selectedTemplateName: '',
+            courseName: '',
+            lectureTopic: ''
+        };
+
+        // Initialize portion workflow
+        function initPortionWorkflow() {
+            updatePortionIndicator();
+        }
+
+        // Update the portion indicator display
+        function updatePortionIndicator() {
+            const indicator = document.getElementById('portion-indicator');
+            const countEl = document.getElementById('portion-prompts-count');
+
+            const portionLabel = portionWorkflow.currentPortion === 1 ? 'Portion 1 (First)' : `Portion ${portionWorkflow.currentPortion}`;
+            indicator.textContent = portionLabel;
+
+            const count = portionWorkflow.collectedPrompts.length;
+            countEl.textContent = count === 0 ? '0 prompts collected' : `${count} prompt${count > 1 ? 's' : ''} collected`;
+        }
+
+        // Get template for current portion based on selection and portion number
+        function getTemplateForPortion(templateChoice, portionNum) {
+            let template;
+            let templateLabel;
+
+            if (templateChoice === 'legacy') {
+                template = LEGACY_TEMPLATE;
+                templateLabel = 'Legacy';
+            } else if (templateChoice === 'new') {
+                template = getCurrentTemplate();
+                templateLabel = 'Optimized v3.3';
+            } else if (templateChoice.startsWith('custom:')) {
+                const customName = templateChoice.replace('custom:', '');
+                const savedTemplates = getSavedTemplates();
+                const savedTemplate = savedTemplates[customName];
+
+                if (savedTemplate) {
+                    // Check if we should use continuation variant
+                    if (portionNum > 1 && savedTemplate.hasContinuationVariant && savedTemplate.continuationTemplate) {
+                        template = savedTemplate.continuationTemplate;
+                        templateLabel = `${customName} (Continuation)`;
+                    } else {
+                        template = savedTemplate.fullTemplate;
+                        templateLabel = customName;
+                    }
+                } else {
+                    showToast('Custom template not found, using default', 'error');
+                    template = getCurrentTemplate();
+                    templateLabel = 'Optimized v3.3';
+                }
+            } else {
+                template = getCurrentTemplate();
+                templateLabel = 'Optimized v3.3';
+            }
+
+            return { template, templateLabel };
+        }
+
         function generateBuildPrompt() {
             const slideText = document.getElementById('b-slide-text').value;
             const audioText = document.getElementById('b-audio-text').value;
             const courseName = document.getElementById('b-course-name').value || '[COURSE_NAME]';
             const lectureTopic = document.getElementById('b-lecture-topic').value || '[LECTURE_TOPIC]';
             const templateChoice = document.getElementById('b-template-choice').value;
-            const portionType = document.getElementById('b-portion-type').value;
-            const portionNum = document.getElementById('b-portion-num').value || '2';
-            const correctionText = document.getElementById('b-correction-text').value || '[SPECIFY CORRECTION]';
-            const correctionPriority = document.getElementById('b-correction-priority').value || '2.5';
 
             // Validation
             if (!slideText.trim() && !audioText.trim()) {
@@ -2471,50 +2612,16 @@ Continue notes with correction applied.`;
                 return;
             }
 
-            // Validate correction type has correction text
-            if (portionType === 'correction' && !document.getElementById('b-correction-text').value.trim()) {
-                showToast('Please enter correction text', 'error');
-                return;
-            }
-
             const finalSlideText = slideText.trim() || '[SLIDE TEXT NOT PROVIDED]';
             const finalAudioText = audioText.trim() || '[AUDIO TEXT NOT PROVIDED]';
 
-            // Choose template based on PORTION TYPE first, then output template
-            let template;
-            let templateLabel = 'Optimized';
+            // Store values in workflow state
+            portionWorkflow.courseName = courseName;
+            portionWorkflow.lectureTopic = lectureTopic;
+            portionWorkflow.selectedTemplateName = templateChoice;
 
-            // Portion type determines which template structure to use
-            if (portionType === 'continuation') {
-                template = STANDARD_REINFORCEMENT_TEMPLATE;
-                templateLabel = 'Continuation (Reinforcement)';
-            } else if (portionType === 'correction') {
-                template = CORRECTION_TEMPLATE;
-                templateLabel = 'Correction Block';
-            } else if (portionType === 'checkpoint' || portionType === 'first') {
-                // Checkpoint and First both use full prompt
-                if (templateChoice === 'legacy') {
-                    template = LEGACY_TEMPLATE;
-                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (Legacy)' : 'First Portion (Legacy)';
-                } else if (templateChoice === 'new') {
-                    template = getCurrentTemplate();
-                    templateLabel = portionType === 'checkpoint' ? 'Checkpoint (v3.3)' : 'First Portion (v3.3)';
-                } else if (templateChoice.startsWith('custom:')) {
-                    const customName = templateChoice.replace('custom:', '');
-                    const savedTemplates = getQuickEditTemplates();
-                    if (savedTemplates[customName] && savedTemplates[customName].fullTemplate) {
-                        template = savedTemplates[customName].fullTemplate;
-                        templateLabel = portionType === 'checkpoint' ? `Checkpoint (${customName})` : `First Portion (${customName})`;
-                    } else {
-                        showToast('Custom template not found, using default', 'error');
-                        template = getCurrentTemplate();
-                    }
-                } else {
-                    template = getCurrentTemplate();
-                }
-            } else {
-                template = getCurrentTemplate();
-            }
+            // Get appropriate template for this portion
+            const { template, templateLabel } = getTemplateForPortion(templateChoice, portionWorkflow.currentPortion);
 
             // Replace placeholders
             let newPrompt = template
@@ -2522,69 +2629,207 @@ Continue notes with correction applied.`;
                 .replace(/\[LECTURE_TOPIC\]/g, lectureTopic)
                 .replace(/\[SLIDE_TEXT\]/g, finalSlideText)
                 .replace(/\[AUDIO_TEXT\]/g, finalAudioText)
-                .replace(/\[PORTION_NUM\]/g, portionNum)
-                .replace(/\[CORRECTION_TEXT\]/g, correctionText)
-                .replace(/\[CORRECTION_PRIORITY\]/g, correctionPriority);
+                .replace(/\[PORTION_NUM\]/g, String(portionWorkflow.currentPortion));
 
+            // Store the generated prompt
+            const portionData = {
+                portionNum: portionWorkflow.currentPortion,
+                label: portionWorkflow.currentPortion === 1 ? 'Portion 1 (First)' : `Portion ${portionWorkflow.currentPortion}`,
+                promptText: newPrompt,
+                templateUsed: templateLabel,
+                slideChars: finalSlideText.length,
+                audioChars: finalAudioText.length
+            };
+
+            // Check if we're editing an existing portion
+            const existingIndex = portionWorkflow.collectedPrompts.findIndex(p => p.portionNum === portionWorkflow.currentPortion);
+            if (existingIndex >= 0) {
+                portionWorkflow.collectedPrompts[existingIndex] = portionData;
+            } else {
+                portionWorkflow.collectedPrompts.push(portionData);
+            }
+
+            // Update preview
             document.getElementById('b-new-prompt').value = newPrompt;
             updateStats('b-new-prompt');
 
-            // Update verification panel
-            updateVerification('b', finalSlideText, finalAudioText, courseName, lectureTopic);
-
-            // Update label to show which template was used
-            const labelEl = document.querySelector('#build-step-2 .section-label.green');
-            if (labelEl) {
-                labelEl.textContent = `New Prompt (${templateLabel})`;
-            }
+            // Update preview labels
+            document.getElementById('preview-portion-label').textContent = portionData.label + ' Prompt';
+            document.getElementById('preview-template-used').textContent = `Using: ${templateLabel}`;
 
             goToBuildStep(2);
-            showToast(`Prompt created with ${templateLabel} template!`);
+            showToast(`${portionData.label} prompt created!`);
         }
 
-        // Update UI based on portion type selection
-        function updatePortionTypeUI() {
-            const portionType = document.getElementById('b-portion-type').value;
-            const portionNumGroup = document.getElementById('portion-num-group');
-            const correctionFields = document.getElementById('correction-fields');
+        // Move to next portion
+        function nextPortion() {
+            const isFinal = document.getElementById('final-prompt-toggle').checked;
 
-            // Show portion number for continuation, checkpoint, correction
-            if (portionType === 'first') {
-                portionNumGroup.style.display = 'none';
-                correctionFields.style.display = 'none';
-            } else if (portionType === 'correction') {
-                portionNumGroup.style.display = 'block';
-                correctionFields.style.display = 'block';
+            if (isFinal) {
+                // Go to final view
+                viewAllPrompts();
             } else {
-                portionNumGroup.style.display = 'block';
-                correctionFields.style.display = 'none';
-            }
+                // Increment portion and go back to step 1
+                portionWorkflow.currentPortion++;
+                updatePortionIndicator();
 
-            // Update portion number defaults
-            const portionNumInput = document.getElementById('b-portion-num');
-            if (portionType === 'checkpoint') {
-                portionNumInput.value = Math.max(portionNumInput.value, 5);
-                portionNumInput.min = 5;
-            } else {
-                portionNumInput.min = 2;
+                // Clear slide/audio text but keep course/topic
+                document.getElementById('b-slide-text').value = '';
+                document.getElementById('b-audio-text').value = '';
+                updateStats('b-slide-text');
+                updateStats('b-audio-text');
+
+                // Uncheck final toggle
+                document.getElementById('final-prompt-toggle').checked = false;
+
+                goToBuildStep(1);
+                showToast(`Ready for Portion ${portionWorkflow.currentPortion}`);
             }
         }
 
-        function resetBuild() {
+        // View all collected prompts
+        function viewAllPrompts() {
+            if (portionWorkflow.collectedPrompts.length === 0) {
+                showToast('No prompts collected yet', 'error');
+                return;
+            }
+
+            renderAllPrompts();
+            goToBuildStep(3);
+        }
+
+        // Render all prompts in the final view
+        function renderAllPrompts() {
+            const container = document.getElementById('all-prompts-container');
+            const summaryEl = document.getElementById('final-view-summary');
+
+            const prompts = portionWorkflow.collectedPrompts;
+            summaryEl.textContent = `${prompts.length} portion${prompts.length > 1 ? 's' : ''} • ${portionWorkflow.courseName} - ${portionWorkflow.lectureTopic}`;
+
+            container.innerHTML = prompts.map((p, index) => `
+                <div class="prompt-section" id="prompt-section-${p.portionNum}" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 16px; overflow: hidden;">
+                    <div class="prompt-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--bg-tertiary); cursor: pointer;" onclick="togglePromptSection(${p.portionNum})">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="collapse-icon" id="collapse-icon-${p.portionNum}" style="color: var(--accent-green); font-size: 14px;">▼</span>
+                            <h4 style="margin: 0; color: var(--text-primary);">${escapeHtml(p.label)}</h4>
+                            <span style="color: var(--text-muted); font-size: 12px;">${escapeHtml(p.templateUsed)}</span>
+                        </div>
+                        <button class="btn btn-success btn-small" onclick="event.stopPropagation(); copyPromptByIndex(${index})">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div class="prompt-content" id="prompt-content-${p.portionNum}" style="padding: 16px;">
+                        <textarea readonly style="width: 100%; height: 300px; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 12px; resize: vertical;">${escapeHtml(p.promptText)}</textarea>
+                        <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+                            ${formatNumber(p.promptText.length)} chars • ~${formatNumber(estimateTokens(p.promptText))} tokens
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle collapse/expand for a prompt section
+        function togglePromptSection(portionNum) {
+            const content = document.getElementById(`prompt-content-${portionNum}`);
+            const icon = document.getElementById(`collapse-icon-${portionNum}`);
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        // Collapse all prompt sections
+        function collapseAllPrompts() {
+            portionWorkflow.collectedPrompts.forEach(p => {
+                const content = document.getElementById(`prompt-content-${p.portionNum}`);
+                const icon = document.getElementById(`collapse-icon-${p.portionNum}`);
+                if (content) {
+                    content.style.display = 'none';
+                    icon.textContent = '▶';
+                }
+            });
+        }
+
+        // Expand all prompt sections
+        function expandAllPrompts() {
+            portionWorkflow.collectedPrompts.forEach(p => {
+                const content = document.getElementById(`prompt-content-${p.portionNum}`);
+                const icon = document.getElementById(`collapse-icon-${p.portionNum}`);
+                if (content) {
+                    content.style.display = 'block';
+                    icon.textContent = '▼';
+                }
+            });
+        }
+
+        // Copy a single prompt by index
+        function copyPromptByIndex(index) {
+            const prompt = portionWorkflow.collectedPrompts[index];
+            if (prompt) {
+                navigator.clipboard.writeText(prompt.promptText).then(() => {
+                    showToast(`${prompt.label} copied!`);
+                }).catch(() => {
+                    showToast('Copy failed', 'error');
+                });
+            }
+        }
+
+        // Copy all prompts with separators
+        function copyAllPrompts() {
+            if (portionWorkflow.collectedPrompts.length === 0) {
+                showToast('No prompts to copy', 'error');
+                return;
+            }
+
+            const allText = portionWorkflow.collectedPrompts.map(p =>
+                `=== ${p.label} (${p.templateUsed}) ===\n\n${p.promptText}`
+            ).join('\n\n' + '='.repeat(50) + '\n\n');
+
+            navigator.clipboard.writeText(allText).then(() => {
+                showToast(`All ${portionWorkflow.collectedPrompts.length} prompts copied!`);
+            }).catch(() => {
+                showToast('Copy failed', 'error');
+            });
+        }
+
+        // Start a new lecture (reset everything)
+        function startNewLecture() {
+            if (portionWorkflow.collectedPrompts.length > 0) {
+                if (!confirm('Start a new lecture? This will clear all collected prompts.')) {
+                    return;
+                }
+            }
+            resetPortionWorkflow();
+        }
+
+        // Reset the portion workflow
+        function resetPortionWorkflow() {
+            portionWorkflow = {
+                currentPortion: 1,
+                collectedPrompts: [],
+                selectedTemplate: null,
+                selectedTemplateName: '',
+                courseName: '',
+                lectureTopic: ''
+            };
+
+            // Clear form fields
             document.getElementById('b-slide-text').value = '';
             document.getElementById('b-audio-text').value = '';
             document.getElementById('b-new-prompt').value = '';
             document.getElementById('b-course-name').value = '';
             document.getElementById('b-lecture-topic').value = '';
-            document.getElementById('b-portion-type').value = 'first';
-            document.getElementById('b-portion-num').value = '2';
-            document.getElementById('b-correction-text').value = '';
-            updatePortionTypeUI();
+            document.getElementById('final-prompt-toggle').checked = false;
 
             ['b-slide-text', 'b-audio-text', 'b-new-prompt'].forEach(updateStats);
 
+            updatePortionIndicator();
             goToBuildStep(1);
-            showToast('Reset complete');
+            showToast('Workflow reset');
         }
 
         // ==================== EVENT LISTENERS ====================
@@ -2604,8 +2849,11 @@ Continue notes with correction applied.`;
             // Initialize template editor
             initTemplateEditor();
 
-            // Initialize quick editor
-            initQuickEditor();
+            // Initialize saved templates dropdowns
+            refreshTemplateDropdowns();
+
+            // Initialize portion workflow for Build New
+            initPortionWorkflow();
 
             // Initialize export input stats
             const exportInput = document.getElementById('export-markdown-input');
