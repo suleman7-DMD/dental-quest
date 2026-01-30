@@ -6146,9 +6146,12 @@
             border-radius: 8px !important;
             padding: 12px 16px !important;
             margin-bottom: 16px !important;
-            display: flex !important;
+            display: flex;
             align-items: center !important;
             gap: 12px !important;
+        }
+        .overscheduled-warning.hidden {
+            display: none !important;
         }
 
         .warning-icon { font-size: 20px !important; }
@@ -6319,6 +6322,57 @@
             border-radius: 6px !important;
             font-size: 12px !important;
             cursor: pointer !important;
+        }
+
+        /* Timeline Task Drag-Drop */
+        .timeline-task {
+            cursor: grab !important;
+            transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s !important;
+        }
+        .timeline-task:active {
+            cursor: grabbing !important;
+        }
+        .timeline-task.timeline-dragging {
+            opacity: 0.5 !important;
+            transform: scale(1.02) !important;
+        }
+        .timeline-task.timeline-drag-over {
+            border-top: 3px solid #667eea !important;
+            margin-top: -3px !important;
+        }
+        .timeline-task.cascade-shift {
+            animation: cascadeShift 0.5s ease-out !important;
+        }
+        @keyframes cascadeShift {
+            0% { transform: translateX(-10px); opacity: 0.7; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Reorder Buttons */
+        .reorder-buttons {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            margin-right: 8px !important;
+        }
+        .btn-reorder {
+            background: var(--bg-page) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-muted) !important;
+            padding: 2px 8px !important;
+            font-size: 10px !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+        }
+        .btn-reorder:hover:not(:disabled) {
+            background: var(--accent-blue) !important;
+            color: white !important;
+            border-color: var(--accent-blue) !important;
+        }
+        .btn-reorder:disabled {
+            opacity: 0.3 !important;
+            cursor: not-allowed !important;
         }
 
         /* Protected Hour */
@@ -15685,14 +15739,21 @@
 
         // Get tasks by triage tier
         function getTasksByTier(tier) {
-            return getTodayTriageTasks().filter(t => {
+            const filtered = getTodayTriageTasks().filter(t => {
                 if (tier === 'lockedIn') return t.triageTier === 'lockedIn' && !t.crashOutScheduled;
                 if (tier === 'today') return (t.triageTier === 'today' || !t.triageTier) && !t.crashOutScheduled && t.triageTier !== 'lockedIn' && t.triageTier !== 'tomorrow';
                 if (tier === 'scheduled') return t.crashOutScheduled === true;
                 if (tier === 'tomorrow') return t.triageTier === 'tomorrow' && !t.crashOutScheduled;
                 if (tier === 'rolledOver') return t.rolledOver && t.rolledOver.fromDate;
                 return false;
-            }).sort((a, b) => (a.triageOrder || 999) - (b.triageOrder || 999));
+            });
+
+            // For scheduled tasks, sort by crashOutOrder (timeline sequence)
+            // For other tiers, sort by triageOrder
+            if (tier === 'scheduled') {
+                return filtered.sort((a, b) => (a.crashOutOrder || 999) - (b.crashOutOrder || 999));
+            }
+            return filtered.sort((a, b) => (a.triageOrder || 999) - (b.triageOrder || 999));
         }
 
         // ==================== TRIAGE MODE ====================
@@ -16033,22 +16094,33 @@
                 return;
             }
 
-            // Calculate next available time slot
+            // Reset warning dismissed flag when tasks change
+            if (commandCenterData.crashOut) {
+                commandCenterData.crashOut.warningDismissed = false;
+            }
+
+            // Get existing scheduled tasks sorted by crashOutOrder
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+
+            // Calculate next order number (add to end of list)
+            const maxOrder = scheduledTasks.length > 0
+                ? Math.max(...scheduledTasks.map(t => t.crashOutOrder || 0))
+                : -1;
+            const newOrder = maxOrder + 1;
+
+            // Calculate the duration for this task
+            const duration = task.size === 'big' ? 60 : task.size === 'small' ? 15 : 30;
+
+            // Calculate start time: if there are existing tasks, start after the last one ends
             let nextTime = new Date();
-
             if (scheduledTasks.length > 0) {
-                // Find the last scheduled task's end time
                 const lastTask = scheduledTasks[scheduledTasks.length - 1];
-                if (lastTask.crashOutTime && lastTask.crashOutDuration) {
-                    const [time, period] = lastTask.crashOutTime.split(' ');
-                    const [hours, minutes] = time.split(':').map(Number);
-                    let hour24 = hours;
-                    if (period === 'PM' && hours !== 12) hour24 += 12;
-                    if (period === 'AM' && hours === 12) hour24 = 0;
-
-                    nextTime = new Date();
-                    nextTime.setHours(hour24, minutes + (lastTask.crashOutDuration || 30), 0, 0);
+                if (lastTask.crashOutTime) {
+                    const lastStartDate = parseCrashOutTime(lastTask.crashOutTime);
+                    if (lastStartDate) {
+                        const lastDuration = lastTask.crashOutDuration || 30;
+                        nextTime = new Date(lastStartDate.getTime() + lastDuration * 60 * 1000);
+                    }
                 }
             }
 
@@ -16059,7 +16131,8 @@
                 ...task,
                 crashOutScheduled: true,
                 crashOutTime: timeStr,
-                crashOutDuration: task.size === 'big' ? 60 : task.size === 'small' ? 15 : 30
+                crashOutDuration: duration,
+                crashOutOrder: newOrder
             };
 
             renderFocusMode();
@@ -16067,9 +16140,35 @@
             showToast(`Scheduled for ${timeStr}`, '⏰');
         }
 
+        // Recalculate all scheduled task times based on their order
+        function recalculateScheduledTimes() {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            if (scheduledTasks.length === 0) return;
+
+            let currentTime = new Date();
+
+            scheduledTasks.forEach((task, index) => {
+                // Update crashOutOrder to ensure it's sequential
+                tasks[task.id] = {
+                    ...tasks[task.id],
+                    crashOutOrder: index,
+                    crashOutTime: currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                };
+
+                // Calculate next task's start time (current task's end time)
+                const duration = task.crashOutDuration || 30;
+                currentTime = new Date(currentTime.getTime() + duration * 60 * 1000);
+            });
+        }
+
         function removeFromCrashOut(taskId) {
             const task = tasks[taskId];
             if (!task) return;
+
+            // Reset warning dismissed flag when tasks change
+            if (commandCenterData.crashOut) {
+                commandCenterData.crashOut.warningDismissed = false;
+            }
 
             // Use spread operator, remove crash out properties
             tasks[taskId] = {
@@ -16078,6 +16177,10 @@
             };
             delete tasks[taskId].crashOutTime;
             delete tasks[taskId].crashOutDuration;
+            delete tasks[taskId].crashOutOrder;
+
+            // Recalculate times for remaining tasks (they shift up)
+            recalculateScheduledTimes();
 
             renderFocusMode();
             saveData();
@@ -16354,7 +16457,7 @@
 
         function startTimePromptChecker() {
             if (timePromptInterval) clearInterval(timePromptInterval);
-            timePromptInterval = setInterval(checkForTimePrompts, 60000); // Check every minute
+            timePromptInterval = setInterval(checkForTimePrompts, 15000); // Check every 15 seconds for responsive prompts
         }
 
         function checkForTimePrompts() {
@@ -16430,6 +16533,8 @@
         function closeTimePrompt() {
             const modal = document.getElementById('timePromptModal');
             if (modal) modal.remove();
+            // Note: Don't reset lastPromptedTaskId here - only reset when pushing
+            // This prevents the same task from re-prompting immediately after close
         }
 
         // Push all tasks forward by X minutes with cascade animation
@@ -16438,6 +16543,9 @@
 
         function pushAllTasks(minutes) {
             closeTimePrompt();
+
+            // CRITICAL: Reset lastPromptedTaskId so popup can re-appear after delay
+            lastPromptedTaskId = null;
 
             // Save state for undo
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
@@ -16468,10 +16576,18 @@
 
             // Show undo toast
             showUndoToast(minutes);
+
+            // Schedule a re-check after the delay so popup re-appears when new time arrives
+            setTimeout(() => {
+                if (commandCenterMode === 'crashout') {
+                    checkForTimePrompts();
+                }
+            }, minutes * 60 * 1000 + 5000); // Re-check 5 seconds after the pushed time arrives
         }
 
         function showCascadeAnimation() {
-            const taskElements = document.querySelectorAll('.crash-out-timeline-task');
+            // Use correct selector - timeline tasks have class .timeline-task
+            const taskElements = document.querySelectorAll('.timeline-task');
             taskElements.forEach((el, i) => {
                 setTimeout(() => {
                     el.classList.add('cascade-shift');
@@ -16725,12 +16841,13 @@
                     }
                 }
 
-                // Show warning only if tasks end AFTER wind-down starts
-                if (gapMinutes < 0) {
-                    if (warningEl) warningEl.style.display = 'flex';
+                // Show warning only if tasks end AFTER wind-down starts AND not dismissed
+                const warningDismissed = commandCenterData.crashOut && commandCenterData.crashOut.warningDismissed;
+                if (gapMinutes < 0 && !warningDismissed) {
+                    if (warningEl) warningEl.classList.remove('hidden');
                     if (overByEl) overByEl.textContent = `${gapHours}h`;
                 } else {
-                    if (warningEl) warningEl.style.display = 'none';
+                    if (warningEl) warningEl.classList.add('hidden');
                 }
             } else {
                 // No scheduled tasks with times, or no wind-down set
@@ -16745,7 +16862,7 @@
                     progressEl.style.width = `${percent}%`;
                     progressEl.classList.remove('overscheduled');
                 }
-                if (warningEl) warningEl.style.display = 'none';
+                if (warningEl) warningEl.classList.add('hidden');
             }
 
             // Render timeline tasks
@@ -16770,10 +16887,12 @@
                 return;
             }
 
-            container.innerHTML = scheduledTasks.map(task => {
+            container.innerHTML = scheduledTasks.map((task, index) => {
                 const isLockedIn = task.triageTier === 'lockedIn';
                 const tierIcon = isLockedIn ? '🔥' : '📋';
                 const duration = task.crashOutDuration || 30;
+                const isFirst = index === 0;
+                const isLast = index === scheduledTasks.length - 1;
 
                 // Calculate end time
                 const startTime = task.crashOutTime || 'TBD';
@@ -16787,7 +16906,13 @@
                 }
 
                 return `
-                    <div class="timeline-task" data-task-id="${task.id}">
+                    <div class="timeline-task" data-task-id="${task.id}" data-order="${task.crashOutOrder || index}"
+                         draggable="true"
+                         ondragstart="handleTimelineDragStart(event, '${task.id}')"
+                         ondragover="handleTimelineDragOver(event)"
+                         ondragleave="handleTimelineDragLeave(event)"
+                         ondrop="handleTimelineDrop(event, '${task.id}')"
+                         ondragend="handleTimelineDragEnd(event)">
                         <div class="task-time-marker">
                             <span class="task-start-time">${startTime}</span>
                         </div>
@@ -16798,6 +16923,10 @@
                                 <span class="task-duration-info">Duration: ${duration} min${endTimeStr ? ' • Ends: ' + endTimeStr : ''}</span>
                             </div>
                             <div class="timeline-task-actions">
+                                <div class="reorder-buttons">
+                                    <button class="btn-reorder" onclick="moveTaskUp('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+                                    <button class="btn-reorder" onclick="moveTaskDown('${task.id}')" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+                                </div>
                                 <button class="btn-start" onclick="startTaskInFocus('${task.id}')">▶ Start</button>
                                 <button class="btn-edit" onclick="openTaskEditModal('${task.id}')">✎</button>
                                 <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">🗑️</button>
@@ -16814,6 +16943,96 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // ==================== TIMELINE DRAG-DROP REORDERING ====================
+        let timelineDraggedTaskId = null;
+
+        function handleTimelineDragStart(event, taskId) {
+            timelineDraggedTaskId = taskId;
+            event.target.classList.add('timeline-dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleTimelineDragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            const taskEl = event.target.closest('.timeline-task');
+            if (taskEl && !taskEl.classList.contains('timeline-dragging')) {
+                taskEl.classList.add('timeline-drag-over');
+            }
+        }
+
+        function handleTimelineDragLeave(event) {
+            const taskEl = event.target.closest('.timeline-task');
+            if (taskEl) {
+                taskEl.classList.remove('timeline-drag-over');
+            }
+        }
+
+        function handleTimelineDrop(event, targetTaskId) {
+            event.preventDefault();
+            const taskEl = event.target.closest('.timeline-task');
+            if (taskEl) {
+                taskEl.classList.remove('timeline-drag-over');
+            }
+
+            if (!timelineDraggedTaskId || timelineDraggedTaskId === targetTaskId) return;
+
+            // Swap the order of the two tasks
+            reorderTimelineTasks(timelineDraggedTaskId, targetTaskId);
+        }
+
+        function handleTimelineDragEnd(event) {
+            event.target.classList.remove('timeline-dragging');
+            document.querySelectorAll('.timeline-task').forEach(el => {
+                el.classList.remove('timeline-drag-over');
+            });
+            timelineDraggedTaskId = null;
+        }
+
+        function reorderTimelineTasks(draggedId, targetId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const draggedIndex = scheduledTasks.findIndex(t => t.id === draggedId);
+            const targetIndex = scheduledTasks.findIndex(t => t.id === targetId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Remove dragged task and insert at target position
+            const [draggedTask] = scheduledTasks.splice(draggedIndex, 1);
+            scheduledTasks.splice(targetIndex, 0, draggedTask);
+
+            // Update crashOutOrder for all tasks
+            scheduledTasks.forEach((task, index) => {
+                tasks[task.id] = { ...tasks[task.id], crashOutOrder: index };
+            });
+
+            // Recalculate times based on new order
+            recalculateScheduledTimes();
+
+            renderCrashOutMode();
+            saveData();
+            showToast('Tasks reordered!', '↕️');
+        }
+
+        function moveTaskUp(taskId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const index = scheduledTasks.findIndex(t => t.id === taskId);
+            if (index <= 0) return; // Already at top
+
+            // Swap with previous task
+            const targetTaskId = scheduledTasks[index - 1].id;
+            reorderTimelineTasks(taskId, targetTaskId);
+        }
+
+        function moveTaskDown(taskId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const index = scheduledTasks.findIndex(t => t.id === taskId);
+            if (index === -1 || index >= scheduledTasks.length - 1) return; // Already at bottom
+
+            // Swap with next task
+            const targetTaskId = scheduledTasks[index + 1].id;
+            reorderTimelineTasks(targetTaskId, taskId);
         }
 
         // Helper to parse crash out time string back to Date
@@ -16839,27 +17058,11 @@
             const task = tasks[taskId];
             if (!task) return;
 
-            const oldDuration = task.crashOutDuration || 30;
-            const diff = parseInt(newDuration) - oldDuration;
-
+            // Update the task's duration
             tasks[taskId] = { ...task, crashOutDuration: parseInt(newDuration) };
 
-            // Cascade shift all tasks after this one
-            if (diff !== 0) {
-                const taskTime = parseCrashOutTime(task.crashOutTime);
-                if (taskTime) {
-                    getTasksByTier('scheduled').filter(t => !t.completed && t.id !== taskId).forEach(t => {
-                        const tTime = parseCrashOutTime(t.crashOutTime);
-                        if (tTime && tTime > taskTime) {
-                            const newTime = new Date(tTime.getTime() + diff * 60 * 1000);
-                            tasks[t.id] = {
-                                ...tasks[t.id],
-                                crashOutTime: newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-                            };
-                        }
-                    });
-                }
-            }
+            // Recalculate all times based on new durations (maintains order, fixes cascading)
+            recalculateScheduledTimes();
 
             saveData();
             renderCrashOutTimeline();
@@ -16986,7 +17189,14 @@
         }
 
         function dismissOverscheduledWarning() {
-            document.getElementById('overscheduledWarning').style.display = 'none';
+            const warningEl = document.getElementById('overscheduledWarning');
+            if (warningEl) {
+                warningEl.classList.add('hidden');
+            }
+            // Set dismissed flag so it stays hidden until conditions change
+            if (!commandCenterData.crashOut) commandCenterData.crashOut = {};
+            commandCenterData.crashOut.warningDismissed = true;
+            saveData();
         }
 
         function resetCrashOutDay() {
