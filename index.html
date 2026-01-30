@@ -7338,9 +7338,9 @@
                                 <span class="option-label">TONIGHT</span>
                                 <span class="option-time">11:00 PM</span>
                             </button>
-                            <button class="sleep-option" onclick="setCrashOutSleep('tomorrow')">
-                                <span class="option-label">TOMORROW</span>
-                                <span class="option-time">4:00 AM</span>
+                            <button class="sleep-option" onclick="setCrashOutSleep('latenight')">
+                                <span class="option-label">LATE NIGHT</span>
+                                <span class="option-time">2:00 AM</span>
                             </button>
                             <button class="sleep-option" onclick="showCustomSleepPicker()">
                                 <span class="option-label">CUSTOM</span>
@@ -7348,9 +7348,13 @@
                             </button>
                         </div>
 
-                        <div id="customSleepPicker" class="custom-time-picker" style="display: none;">
-                            <input type="time" id="customSleepTime">
-                            <button onclick="setCustomSleepTime()">Set</button>
+                        <div id="customSleepPicker" style="display: none; margin-top: 24px; text-align: center;">
+                            <div style="display: inline-flex; align-items: center; gap: 12px; background: #1e293b; padding: 16px 24px; border-radius: 12px; border: 1px solid #334155;">
+                                <label style="color: #94a3b8; font-size: 14px;">Sleep at:</label>
+                                <input type="time" id="customSleepTime" value="06:30" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #f1f5f9; font-size: 16px; font-family: 'SF Mono', Monaco, monospace;">
+                                <button onclick="setCustomSleepTime()" style="padding: 10px 20px; border: none; border-radius: 8px; background: #22c55e; color: white; font-weight: 600; cursor: pointer; font-size: 14px;">✓ Set</button>
+                                <button onclick="hideCustomSleepPicker()" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; font-size: 14px;">Cancel</button>
+                            </div>
                         </div>
 
                         <p class="setup-hint">
@@ -16552,10 +16556,11 @@
                 if (sleepTime <= now) {
                     sleepTime.setDate(sleepTime.getDate() + 1);
                 }
-            } else if (option === 'tomorrow') {
+            } else if (option === 'latenight') {
+                // 2:00 AM - for late night work sessions
                 sleepTime = new Date(now);
                 sleepTime.setDate(sleepTime.getDate() + 1);
-                sleepTime.setHours(4, 0, 0, 0);
+                sleepTime.setHours(2, 0, 0, 0);
             }
 
             if (sleepTime) {
@@ -16566,14 +16571,28 @@
         }
 
         function showCustomSleepPicker() {
-            document.getElementById('customSleepPicker').style.display = 'block';
+            const picker = document.getElementById('customSleepPicker');
+            if (picker) picker.style.display = 'block';
+        }
+
+        function hideCustomSleepPicker() {
+            const picker = document.getElementById('customSleepPicker');
+            if (picker) picker.style.display = 'none';
         }
 
         function setCustomSleepTime() {
             const input = document.getElementById('customSleepTime');
-            if (!input || !input.value) return;
+            if (!input || !input.value) {
+                showToast('Please select a time', '⚠️');
+                return;
+            }
 
             const [hours, minutes] = input.value.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) {
+                showToast('Invalid time format', '⚠️');
+                return;
+            }
+
             const sleepTime = new Date();
             sleepTime.setHours(hours, minutes, 0, 0);
 
@@ -16583,9 +16602,12 @@
             }
 
             commandCenterData.crashOut.sleepTime = sleepTime.toISOString();
-            document.getElementById('customSleepPicker').style.display = 'none';
+            hideCustomSleepPicker();
             saveData();
             renderCrashOutMode();
+
+            const timeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            showToast(`Sleep time set: ${timeStr}`, '✓');
         }
 
         function changeSleepTime() {
