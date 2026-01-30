@@ -2027,58 +2027,62 @@
 
         .timer-display {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 12px;
         }
 
         .timer-clock {
-            font-size: 4em;
-            font-weight: bold;
-            color: #667eea;
-            margin: 20px 0;
+            font-size: 2em;
+            font-weight: 700;
+            color: #60a5fa;
+            margin: 8px 0;
             font-variant-numeric: tabular-nums;
         }
 
         .timer-mode {
-            font-size: 1.2em;
-            color: #666;
-            margin-bottom: 15px;
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .timer-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .timer-btn {
-            padding: 12px 25px;
+            padding: 8px 18px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1em;
-            transition: transform 0.2s ease;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
         }
 
         .timer-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
+            filter: brightness(1.1);
         }
 
         .timer-btn.start {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: white;
         }
 
         .timer-btn.pause {
-            background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
         }
 
         .timer-btn.reset {
-            background: #e0e0e0;
-            color: #666;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #94a3b8;
         }
 
         .pomodoro-options {
@@ -2310,7 +2314,7 @@
             }
 
             .timer-clock {
-                font-size: 3em;
+                font-size: 1.8em;
             }
 
             .category-tabs {
@@ -14487,32 +14491,32 @@
                 const leverageIcon = task.highLeverage ? '📊' : '';
                 
                 return `
-                    <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}" 
-                         draggable="true" 
+                    <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}"
+                         draggable="true"
                          data-task-id="${task.id}"
                          data-index="${index}"
-                         ondragstart="handleDragStart(event, ${task.id})"
+                         ondragstart="handleDragStart(event, '${task.id}')"
                          ondragover="handleDragOver(event)"
                          ondragleave="handleDragLeave(event)"
-                         ondrop="handleDrop(event, ${task.id})"
+                         ondrop="handleDrop(event, '${task.id}')"
                          ondragend="handleDragEnd(event)">
                         <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-                        <input type="checkbox" 
-                               class="task-checkbox" 
-                               ${task.completed ? 'checked' : ''} 
-                               onchange="toggleTask(${task.id})">
+                        <input type="checkbox"
+                               class="task-checkbox"
+                               ${task.completed ? 'checked' : ''}
+                               onchange="toggleTask('${task.id}')">
                         ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
                         <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
                         <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
                         ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
                         ${!task.completed && !isDoTodayView ? `
-                            <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday(${task.id})" style="margin-right: 5px;">
+                            <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')" style="margin-right: 5px;">
                                 ${task.doToday ? '✓ Today' : '🔴 Today'}
                             </button>
                         ` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer(${task.id})">⏱️</button>` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal(${task.id})" style="background: #6366f1;">✏️</button>` : ''}
-                        <button class="task-delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">⏱️</button>` : ''}
+                        ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">✏️</button>` : ''}
+                        <button class="task-delete-btn" onclick="deleteTask('${task.id}')">🗑️</button>
                     </div>
                 `;
             }).join('');
