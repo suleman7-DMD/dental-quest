@@ -6647,11 +6647,11 @@
 
         .timer-display,
         #focusTimerDisplay {
-            font-size: 72px !important;
+            font-size: 42px !important;
             font-weight: 700 !important;
             color: var(--text-primary) !important;
             font-family: 'SF Mono', 'Consolas', monospace !important;
-            margin-bottom: 24px !important;
+            margin-bottom: 16px !important;
         }
 
         .timer-controls {
@@ -6819,7 +6819,7 @@
             }
             .timer-display,
             #focusTimerDisplay {
-                font-size: 56px !important;
+                font-size: 36px !important;
             }
             .timeline-content {
                 padding-left: 0 !important;
@@ -14890,10 +14890,10 @@
                 // Completed tasks - show with uncomplete option
                 content.innerHTML = tasksToShow.map(task => `
                     <div class="expansion-task" style="border-left-color: #10b981;">
-                        <input type="checkbox" 
-                               class="expansion-task-check" 
+                        <input type="checkbox"
+                               class="expansion-task-check"
                                checked
-                               onchange="uncompleteTaskFromDashboard(${task.id})"
+                               onchange="uncompleteTaskFromDashboard('${task.id}')"
                                title="Click to mark as incomplete">
                         <span class="expansion-task-text" style="text-decoration: line-through; opacity: 0.7;">
                             ${escapeHtml(task.text)}
@@ -15470,13 +15470,13 @@
                 const borderColor = size === 'small' ? '#10b981' : '#f59e0b';
                 return `
                     <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
-                        <div onclick="toggleFocusTask(${task.id})" style="width: 24px; height: 24px; border: 2px solid #10b981; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
+                        <div onclick="toggleFocusTask('${task.id}')" style="width: 24px; height: 24px; border: 2px solid #10b981; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
                             <span style="color: #10b981; font-size: 14px;">✓</span>
                         </div>
                         <div style="flex: 1; color: #374151; font-size: 0.95em;">${escapeHtml(task.text)}</div>
                         ${task.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">📊</div>' : ''}
                         <div style="color: #9ca3af; font-size: 0.85em; white-space: nowrap;">${size === 'small' ? '~5 min' : '~20 min'}</div>
-                        <button onclick="removeFromToday(${task.id}, '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">✕</button>
+                        <button onclick="removeFromToday('${task.id}', '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">✕</button>
                     </div>
                 `;
             }).join('');
@@ -15747,9 +15747,9 @@
 
             let actionBtn = '';
             if (isScheduled) {
-                actionBtn = `<button class="btn-remove" onclick="removeFromCrashOut(${task.id})">← Remove</button>`;
+                actionBtn = `<button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">← Remove</button>`;
             } else {
-                actionBtn = `<button class="btn-crash-out" onclick="sendToCrashOut(${task.id})">→ Crash Out</button>`;
+                actionBtn = `<button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>`;
             }
 
             const scheduledTime = isScheduled && task.crashOutTime ?
@@ -15757,18 +15757,18 @@
 
             return `
                 <div class="task-card" data-task-id="${task.id}" data-tier="${tier}" draggable="true"
-                     ondragstart="handleTriageDragStart(event, ${task.id})"
+                     ondragstart="handleTriageDragStart(event, '${task.id}')"
                      ondragend="handleTriageDragEnd(event)">
                     <div class="task-card-main">
                         <span class="drag-handle">⋮⋮</span>
                         <input type="checkbox" class="task-checkbox"
                                ${task.completed ? 'checked' : ''}
-                               onchange="toggleTaskComplete(${task.id})">
+                               onchange="toggleTaskComplete('${task.id}')">
                         <span class="task-text">${escapeHtml(task.text)}</span>
                         ${scheduledTime}
                     </div>
                     <div class="task-card-actions">
-                        <button class="btn-start" onclick="startFocusSession(${task.id})">▶ Start</button>
+                        <button class="btn-start" onclick="startFocusSession('${task.id}')">▶ Start</button>
                         ${actionBtn}
                     </div>
                 </div>
@@ -15794,11 +15794,11 @@
                 container.innerHTML = scheduledTasks.map(task => `
                     <div class="scheduled-task-card" data-task-id="${task.id}">
                         <span class="scheduled-time">${task.crashOutTime || 'TBD'}</span>
-                        <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete(${task.id})">
+                        <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                         <span class="task-text" style="flex: 1;">${escapeHtml(task.text)}</span>
                         <span style="color: #8b949e; font-size: 12px;">${task.crashOutDuration || 30}m</span>
-                        <button class="btn-start" onclick="startFocusSession(${task.id})">▶</button>
-                        <button class="btn-remove" onclick="removeFromCrashOut(${task.id})">✕</button>
+                        <button class="btn-start" onclick="startFocusSession('${task.id}')">▶</button>
+                        <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">✕</button>
                     </div>
                 `).join('');
             }
@@ -15826,13 +15826,13 @@
                     <div class="task-card" data-task-id="${task.id}" style="border-left: 3px solid #f59e0b;">
                         <div class="task-card-main">
                             <span style="color: #f59e0b;">⚠️</span>
-                            <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete(${task.id})">
+                            <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                             <span class="task-text">${escapeHtml(task.text)}</span>
                             <span style="font-size: 11px; color: #8b949e;">from ${task.rolledOver.fromDate}</span>
                         </div>
                         <div class="task-card-actions">
-                            <button class="btn-start" onclick="startFocusSession(${task.id})">▶ Start</button>
-                            <button class="btn-crash-out" onclick="sendToCrashOut(${task.id})">→ Crash Out</button>
+                            <button class="btn-start" onclick="startFocusSession('${task.id}')">▶ Start</button>
+                            <button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>
                         </div>
                     </div>
                 `).join('');
@@ -15941,7 +15941,7 @@
                 const newTier = column.dataset.tier;
                 const taskId = e.dataTransfer.getData('text/plain');
                 if (taskId && newTier) {
-                    setTaskTier(parseInt(taskId), newTier);
+                    setTaskTier(taskId, newTier);
                 }
             }
         }
@@ -16390,7 +16390,7 @@
                     <div class="time-prompt-task">${task.triageTier === 'lockedIn' ? '🔥' : '📋'} ${escapeHtml(task.text)}</div>
 
                     <div class="time-prompt-buttons">
-                        <button class="primary-btn" onclick="startTaskFromPrompt(${task.id})">▶ START</button>
+                        <button class="primary-btn" onclick="startTaskFromPrompt('${task.id}')">▶ START</button>
                     </div>
 
                     <div style="color: #6b7280; margin: 15px 0;">Not ready? Push everything:</div>
@@ -16406,7 +16406,7 @@
                     </div>
 
                     <div style="margin-top: 15px;">
-                        <button onclick="skipTask(${task.id})" style="color: #dc2626; border-color: #fecaca;">Skip</button>
+                        <button onclick="skipTask('${task.id}')" style="color: #dc2626; border-color: #fecaca;">Skip</button>
                     </div>
                 </div>
             `;
@@ -16749,10 +16749,10 @@
                                 <span class="task-duration-info">Duration: ${duration} min${endTimeStr ? ' • Ends: ' + endTimeStr : ''}</span>
                             </div>
                             <div class="timeline-task-actions">
-                                <button class="btn-start" onclick="startTaskInFocus(${task.id})">▶ Start</button>
-                                <button class="btn-edit" onclick="openTaskEditModal(${task.id})">✎</button>
-                                <button class="btn-remove" onclick="removeFromCrashOut(${task.id})">🗑️</button>
-                                <select class="duration-select" onchange="setDurationDirect(${task.id}, this.value)">
+                                <button class="btn-start" onclick="startTaskInFocus('${task.id}')">▶ Start</button>
+                                <button class="btn-edit" onclick="openTaskEditModal('${task.id}')">✎</button>
+                                <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">🗑️</button>
+                                <select class="duration-select" onchange="setDurationDirect('${task.id}', this.value)">
                                     <option value="15" ${duration === 15 ? 'selected' : ''}>15m</option>
                                     <option value="30" ${duration === 30 ? 'selected' : ''}>30m</option>
                                     <option value="45" ${duration === 45 ? 'selected' : ''}>45m</option>
@@ -16846,7 +16846,7 @@
                             <span class="pool-task-duration">${defaultDuration}m</span>
                             <span class="pool-task-tier">${tierIcon}</span>
                         </div>
-                        <button class="btn-add-to-timeline" onclick="sendToCrashOut(${task.id})">+ Add to Timeline</button>
+                        <button class="btn-add-to-timeline" onclick="sendToCrashOut('${task.id}')">+ Add to Timeline</button>
                     </div>
                 `;
             }).join('');
