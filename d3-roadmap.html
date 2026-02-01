@@ -9624,7 +9624,10 @@ CHAIR: 9F
             return result;
         }
 
-        function loadFromLocalStorage() {
+        // Load data from localStorage
+        // @param finalize - if true, also set flags and call initUI (for standalone use)
+        //                   if false, just load data (caller handles flags/initUI)
+        function loadFromLocalStorage(finalize = true) {
             const saved = localStorage.getItem('d3RoadmapData');
             if (saved) {
                 try {
@@ -9655,7 +9658,19 @@ CHAIR: 9F
                     // Don't crash - continue with defaults
                 }
             }
-            initUI();
+
+            // CRITICAL FIX: Always set _dataLoaded = true after loading from localStorage
+            // This was causing saves to be blocked when Firebase was disabled or failed
+            roadmapData._dataLoaded = true;
+
+            // If finalize=true, we're the terminal loading function (no Firebase)
+            // Set all flags and call initUI
+            if (finalize) {
+                hasLoadedFromCloud = true;  // We've "checked" cloud (or decided not to use it)
+                isInitialLoad = false;      // Initial load is complete
+                console.log('✅ Loaded from localStorage (finalized) - saves now allowed');
+                initUI();
+            }
         }
 
         function loadFromFirebase() {
@@ -9707,16 +9722,9 @@ CHAIR: 9F
                         console.log('✅ Loaded real data from Firebase');
                     } else {
                         // No Firebase data - check if we have local data
-                        loadFromLocalStorage();
-                        const hasLocalData = hasRealData(roadmapData);
-                        if (hasLocalData) {
-                            roadmapData._dataLoaded = true;
-                            console.log('✅ Have local data, using it');
-                        } else {
-                            // Fresh start - no data anywhere
-                            roadmapData._dataLoaded = true;  // Allow saves after user starts entering data
-                            console.log('ℹ️ Fresh start - no data anywhere');
-                        }
+                        // Pass false to skip finalize - we handle flags/initUI below
+                        loadFromLocalStorage(false);
+                        console.log('ℹ️ No Firebase data, using localStorage (if any)');
                         updateSyncStatus('connected', 'Synced');
                     }
 
@@ -9738,18 +9746,8 @@ CHAIR: 9F
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
                     updateSyncStatus('error', 'Load failed');
+                    // loadFromLocalStorage() now sets all flags and calls initUI()
                     loadFromLocalStorage();
-
-                    // If we have local data, use it
-                    const hasLocalData = hasRealData(roadmapData);
-                    if (hasLocalData) {
-                        roadmapData._dataLoaded = true;
-                        hasLoadedFromCloud = true;  // Allow saves with local data
-                        isInitialLoad = false;
-                        console.log('⚠️ Firebase failed but have local data - allowing saves');
-                    }
-
-                    initUI();
                 });
         }
         
@@ -9826,6 +9824,10 @@ CHAIR: 9F
                         exams: migrateArrayToObject(data.exams, 'exam'),
                         lastSaved: data.lastSaved
                     };
+
+                    // CRITICAL FIX: Preserve _dataLoaded after realtime sync merge
+                    // The spread operator above may have wiped it with undefined from cloud data
+                    roadmapData._dataLoaded = true;
 
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
 
@@ -10575,9 +10577,13 @@ CHAIR: 9F
 
             if (!confirmed) return;
 
-            const typed = prompt('Type UPLOAD to confirm:');
-            if (typed !== 'UPLOAD') {
+            const typed = prompt('Type UPLOAD (in capital letters) to confirm:');
+            if (typed === null) {
                 showToast('Cancelled');
+                return;
+            }
+            if (typed !== 'UPLOAD') {
+                showToast('Cancelled - you must type UPLOAD exactly');
                 return;
             }
 
@@ -10695,6 +10701,16 @@ CHAIR: 9F
             // ============================================
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
+
+            // Diagnostic logging for debugging save issues
+            console.log('💾 saveData() called - Guard status:', {
+                isInitialLoad,
+                hasLoadedFromCloud,
+                _dataLoaded: roadmapData._dataLoaded,
+                firebaseSyncEnabled,
+                pinValidated,
+                isEmpty: isEmptyState(roadmapData)
+            });
 
             // GUARD A: Never save during initial load
             if (isInitialLoad) {

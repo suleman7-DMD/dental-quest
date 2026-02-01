@@ -3774,6 +3774,10 @@
             background: rgba(245, 158, 11, 0.3);
         }
 
+        .legend-box.good {
+            background: rgba(59, 130, 246, 0.35);
+        }
+
         .legend-box.perfect {
             background: rgba(16, 185, 129, 0.4);
         }
@@ -6186,6 +6190,10 @@
                         <span>Close</span>
                     </div>
                     <div class="legend-item">
+                        <div class="legend-box good"></div>
+                        <span>Deficit hit</span>
+                    </div>
+                    <div class="legend-item">
                         <div class="legend-box perfect"></div>
                         <span>Perfect</span>
                     </div>
@@ -6796,6 +6804,119 @@
         // STATE MANAGEMENT
         // ============================================
 
+        // DEFAULT STATE FACTORY (for restore/reset operations)
+        function getDefaultState() {
+            return {
+                profile: {
+                    currentWeight_lbs: 190,
+                    height_cm: 174,
+                    height_inches: 68.5,
+                    age: 30,
+                    startingWeight_lbs: 190,
+                    startingBodyFat: 27,
+                    goalWeight_lbs: 170,
+                    tdee_base: 2500,
+                    tdee_original: 2500,
+                    lastMilestone: 0,
+                    startDate: null,
+                    targetDate: '2026-06-01',
+                    sleepBaseline: 6.5,
+                    activityLevel: 'sedentary'
+                },
+                settings: {
+                    focusMode: false,
+                    hideSleepDebtWarnings: false
+                },
+                today: {
+                    date: null,
+                    sleepHours: null,
+                    activeCalories: 0,
+                    isBrainDay: false,
+                    mode: null,
+                    targets: {
+                        calories: 2000,
+                        protein: 172,
+                        carbs: 150,
+                        floor: 1900
+                    },
+                    meals: {},
+                    setupComplete: false,
+                    magnesiumTaken: false,
+                    waterGoalMet: false,
+                    cnsProtectionAwarded: false,
+                    workedOut: false,
+                    workouts: {},
+                    lastMealTime: null
+                },
+                ecosystemContext: {
+                    stimulant: {
+                        sleepHours: null, wakeTime: null, lastAdderallTime: null,
+                        lastAdderallDose: null, totalAdderallToday: 0, isBooster: false,
+                        lastCaffeineTime: null, caffeineMg: 0, projectedSleepTime: null,
+                        allNighterMode: false,  // FIX: Track stim calc all-nighter mode
+                        lastSynced: null
+                    },
+                    inventory: {
+                        pills30mg: null, pills20mg: null, refillDate30mg: null,
+                        refillDate20mg: null, daysUntilRefill: null, willRunOut: false,
+                        lastSynced: null
+                    },
+                    academic: {
+                        nextExam: null, daysUntilExam: null, upcomingExams: [],
+                        lastSynced: null
+                    },
+                    schedule: {
+                        todayTasks: [], tomorrowTasks: [], blockedWindows: [],
+                        eatingWindows: [], totalEatingHours: 0, frontLoadRequired: false,
+                        frontLoadDeadline: null, scheduleIntensity: 'EASY', lastSynced: null
+                    },
+                    examDay: {
+                        isExamDay: false, examName: null, examTime: null,
+                        minutesUntilExam: null, phase: null
+                    },
+                    sleepDebt: {
+                        last7Days: [], totalSleep: 0, avgSleep: 0, weeklyDebt: 0,
+                        consecutiveBadNights: 0, severity: 'LOW'
+                    },
+                    stimulantEffect: {
+                        adderallEffect: 0, caffeineEffect: 0, combinedEffect: 0,
+                        suppressionLevel: 'LOW', suppressionEnd: null,
+                        crashRiskWindow: { start: null, end: null, intensity: 'NORMAL' }
+                    }
+                },
+                dailyLogs: {},
+                frequentFoods: {},
+                weighIns: {},
+                bodyCompHistory: {},
+                refeedTracker: {
+                    cumulativeDeficit: 0, lastRefeedDate: null,
+                    weeksInDeficit: 0, lastDietBreak: null
+                },
+                gamification: {
+                    xp: 0, level: 1, streak: 0, longestStreak: 0,
+                    totalDaysTracked: 0, perfectDays: 0, badges: {},
+                    lastCompletedDate: null
+                },
+                achievements: {
+                    first_day: { id: 'first_day', name: 'First Steps', desc: 'Complete your first day', icon: '🚀', xp: 50, unlocked: false },
+                    week_streak: { id: 'week_streak', name: 'Week Warrior', desc: '7 day streak', icon: '🔥', xp: 200, unlocked: false },
+                    two_week_streak: { id: 'two_week_streak', name: 'Consistency King', desc: '14 day streak', icon: '👑', xp: 500, unlocked: false },
+                    month_streak: { id: 'month_streak', name: 'Iron Will', desc: '30 day streak', icon: '💎', xp: 1000, unlocked: false },
+                    first_lb: { id: 'first_lb', name: 'First Pound', desc: 'Lose your first pound', icon: '⬇️', xp: 100, unlocked: false },
+                    five_lbs: { id: 'five_lbs', name: 'Milestone 5', desc: 'Lose 5 pounds', icon: '🎯', xp: 300, unlocked: false },
+                    ten_lbs: { id: 'ten_lbs', name: 'Double Digits', desc: 'Lose 10 pounds', icon: '🏆', xp: 500, unlocked: false },
+                    halfway: { id: 'halfway', name: 'Halfway Hero', desc: 'Reach halfway to goal', icon: '⭐', xp: 750, unlocked: false },
+                    protein_king: { id: 'protein_king', name: 'Protein King', desc: 'Hit protein target 7 days in a row', icon: '🥩', xp: 250, unlocked: false },
+                    deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '7 days hitting deficit target', icon: '📉', xp: 250, unlocked: false },
+                    early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast before 9am 5 times', icon: '🌅', xp: 150, unlocked: false },
+                    perfect_week: { id: 'perfect_week', name: 'Perfect Week', desc: 'Hit all targets for 7 days', icon: '✨', xp: 400, unlocked: false }
+                },
+                _version: 0,
+                _lastModified: null,
+                _dataLoaded: false
+            };
+        }
+
         let state = {
             // Profile (set once, adjust as needed)
             profile: {
@@ -6860,6 +6981,7 @@
                     lastCaffeineTime: null,
                     caffeineMg: 0,
                     projectedSleepTime: null,
+                    allNighterMode: false,     // Track if stim calc is in all-nighter mode
                     lastSynced: null
                 },
                 // From Dental Quest (medications)
@@ -9691,6 +9813,9 @@
 
             // Check if targets are hit (only for today's meals)
             if (isForToday) {
+                // FIX: Update streak when meal is logged for today
+                // This ensures streak is tracked even without workout
+                updateStreak();
                 setTimeout(() => checkDayCompletion(), 500);
             }
         }
@@ -10698,6 +10823,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
             saveState();
 
+            // FIX: Update streak when day setup is completed
+            // This ensures streak is tracked for daily app usage
+            updateStreak();
+
             // Switch to Simple View (v3)
             document.getElementById('setupScreen').classList.remove('active');
             document.getElementById('dashboardScreen').classList.remove('active');
@@ -11474,8 +11603,9 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 mealCount: totals.mealCount,
                 workedOut: today.workedOut || getCount(today.workouts) > 0,
                 // Detailed data for history (store as objects with IDs for editing)
-                meals: { ...today.meals },
-                workouts: { ...today.workouts },
+                // FIX: Defensive fallback to empty object if meals/workouts are undefined
+                meals: today.meals ? { ...today.meals } : {},
+                workouts: today.workouts ? { ...today.workouts } : {},
                 // Ecosystem context snapshot
                 ecosystemSnapshot: {
                     stimulant: { ...state.ecosystemContext?.stimulant },
@@ -15325,13 +15455,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // Get projected sleep time - check multiple possible field locations
                     let projectedSleep = stimData.projectedSleepTime || null;
 
+                    // FIX: Check if all-nighter mode is active
+                    const isAllNighterMode = stimData.allNighterMode === true;
+
                     // Log for debugging
                     console.log('📊 Stimulant data loaded:', {
                         sleepHours: stimData.hoursSleptLastNight,
                         wakeTime: stimData.wakeTime,
                         projectedSleepTime: projectedSleep,
                         totalDose: totalDose,
-                        totalCaffeine: totalCaffeine
+                        totalCaffeine: totalCaffeine,
+                        allNighterMode: isAllNighterMode
                     });
 
                     state.ecosystemContext.stimulant = {
@@ -15345,6 +15479,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         caffeineMg: totalCaffeine,
                         projectedSleepTime: projectedSleep,
                         projectedSleepMinutes: stimData.projectedSleepMinutes || null,
+                        allNighterMode: isAllNighterMode,  // FIX: Track all-nighter mode
                         lastSynced: now
                     };
 
@@ -15363,6 +15498,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     const pills20 = questMeds['20mg']?.pills || 0;
                     const refill30 = questMeds['30mg']?.refillDate || null;
                     const refill20 = questMeds['20mg']?.refillDate || null;
+
+                    // Log for debugging
+                    console.log('💊 Dental Quest medications loaded:', {
+                        pills30mg: pills30,
+                        pills20mg: pills20,
+                        refill30mg: refill30,
+                        refill20mg: refill20,
+                        rawData: questMeds
+                    });
 
                     // Use whichever refill date is set (usually the same)
                     const refillDate = refill30 || refill20;
@@ -15693,9 +15837,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (xpNext) xpNext.textContent = formatNumber(nextLevel.xpRequired - gam.xp) + ' XP to next level';
             if (xpBarFill) xpBarFill.style.width = progress + '%';
 
-            // FIX: Use gym streak from getWorkoutRecommendation() to match Simple view
-            const workoutRec = getWorkoutRecommendation();
-            if (currentStreakEl) currentStreakEl.textContent = workoutRec.gymStreak || 0;
+            // FIX: Show daily completion streak (how many days user has logged)
+            // NOT gym streak - that's already shown in workout card as "Gym streak: X days"
+            if (currentStreakEl) currentStreakEl.textContent = gam.streak || 0;
 
             // FIX: Calculate actual days tracked from dailyLogs + today
             const todayStr = getLocalDateString();

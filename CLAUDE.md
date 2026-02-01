@@ -616,3 +616,113 @@ Body Comp reads FROM Firebase directly (READ-ONLY):
 | `7ff8328` | Add Checkpoint System + PIN Guards to stimulant-elimination-calculator.html |
 | `d05d689` | Add PIN Guards + Force Upload/Pull to index.html |
 | `d896952` | Flexible import: accept raw data, nested formats, and backups |
+
+---
+
+## D3 ROADMAP SAVE FIX (Jan 31, 2026)
+
+### Root Cause: _dataLoaded Flag Being Wiped
+**Problem**: Saves blocked permanently because `_dataLoaded`, `hasLoadedFromCloud`, `isInitialLoad` flags weren't properly set in all code paths
+
+### Fix 1: loadFromLocalStorage() Parameter
+```javascript
+// Added finalize parameter (default=true)
+function loadFromLocalStorage(finalize = true) {
+    // ... load data ...
+    roadmapData._dataLoaded = true;  // ALWAYS set
+
+    if (finalize) {
+        hasLoadedFromCloud = true;
+        isInitialLoad = false;
+        initUI();
+    }
+}
+```
+- `finalize=true`: Terminal path (no Firebase) - sets all flags
+- `finalize=false`: Called from loadFromFirebase, caller handles flags
+
+### Fix 2: Realtime Sync Preserves _dataLoaded
+```javascript
+// After realtime merge, explicitly preserve flag:
+roadmapData._dataLoaded = true;
+```
+
+### Fix 3: Force Upload Prompt Clarity
+- Changed prompt to: "Type UPLOAD (in capital letters) to confirm:"
+- Separate handling for Cancel vs wrong text
+- Shows specific error: "Cancelled - you must type UPLOAD exactly"
+
+### Fix 4: Diagnostic Logging in saveData()
+```javascript
+console.log('💾 saveData() called - Guard status:', {
+    isInitialLoad,
+    hasLoadedFromCloud,
+    _dataLoaded: roadmapData._dataLoaded,
+    firebaseSyncEnabled,
+    pinValidated,
+    isEmpty: isEmptyState(roadmapData)
+});
+```
+
+---
+
+## STIMULANT CALCULATOR FIXES (Jan 31, 2026)
+
+### All-Nighter Mode Save Fix
+**Problem**: `getDefaultState()` was undefined; `isEmptyState()` blocked saves when only allNighterMode was set
+
+**Fix**:
+- Added `getDefaultState()` function returning proper default state
+- Modified `isEmptyState()` to return false when `allNighterMode=true` or `_dataLoaded=true`
+
+---
+
+## BODY COMP TRACKER FIXES (Jan 31, 2026)
+
+### Missing getDefaultState()
+- Added `getDefaultState()` function at line 6808
+
+### Calendar Legend
+- Added blue "good" (Deficit hit) status to legend
+
+### Streak Display Fix
+- Changed from showing gym streak to showing daily completion streak (`gam.streak`)
+
+### Streak Updates
+- Added `updateStreak()` calls after meal logging and day setup
+
+### All-Nighter Mode Tracking
+- Added `allNighterMode` to ecosystem context for cross-app awareness
+
+---
+
+## CRASH OUT TASK ORDERING FIXES (Jan 31, 2026)
+
+### New Positioning Buttons
+- **⬆⬆ Move to Top** - `moveTaskToTop(taskId)`
+- **⬇⬇ Move to Bottom** - `moveTaskToBottom(taskId)`
+- **# Set Position** - `promptTaskPosition(taskId)` - user enters 1-N
+
+### Insert Index Bug Fix
+```javascript
+// BEFORE (broken):
+const insertIndex = draggedIndex < targetIndex ? targetIndex : targetIndex;
+
+// AFTER (fixed):
+const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+```
+
+### Reordering Lock
+- Added `isReorderingLocked` flag to `moveTaskToPosition()`
+- 200ms cooldown prevents rapid double-moves
+- Proper unlock on early returns
+
+### Functions Added
+```javascript
+moveTaskToTop(taskId)      // Move to position 0
+moveTaskToBottom(taskId)   // Move to last position
+setTaskPosition(taskId, n) // Set exact 1-indexed position
+promptTaskPosition(taskId) // Prompt user for position
+swapAdjacentTasks(a, b)    // For ▲/▼ buttons (SWAP logic)
+moveTaskToPosition(a, b)   // For drag-drop (INSERT logic)
+```

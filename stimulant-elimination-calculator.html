@@ -3471,6 +3471,54 @@
         // ============================================
         // STATE MANAGEMENT
         // ============================================
+        // ============================================
+        // DEFAULT STATE FACTORY (for restore/reset operations)
+        // ============================================
+        function getDefaultState() {
+            return {
+                wakeTime: '06:45',
+                hoursSleptLastNight: 8,
+                medications: {},
+                caffeine: {},
+                allNighterMode: false,
+                modifiers: {
+                    vitaminC: { active: false, time: '17:00', date: null },
+                    heavyLift: { active: false },
+                    sauna: { active: false, time: '18:00' }
+                },
+                nicotine: {
+                    active: false,
+                    type: 'vape',
+                    lastHitTime: null
+                },
+                workoutPlan: {
+                    active: false,
+                    time: null,
+                    duration: 45,
+                    type: 'lifting',
+                    intensity: 'medium',
+                    fasted: false,
+                    coldShower: false,
+                    applied: false,
+                    adenosineBonus: 0,
+                    cortisolDelay: 0,
+                    thermalDelay: 0,
+                    cooldownComplete: null
+                },
+                settings: {
+                    ampHalfLife: 11,
+                    sleepThreshold: 14,
+                    caffHalfLife: 5,
+                    caffThreshold: 25,
+                    weight: 190
+                },
+                history: {},
+                _version: 0,
+                sleepHistory: {},
+                _dataLoaded: false
+            };
+        }
+
         let state = {
             wakeTime: '06:45',
             hoursSleptLastNight: 8,
@@ -3539,8 +3587,13 @@
             const hasHistory = getCount(data.history) > 0;
             const hasSleepHistory = getCount(data.sleepHistory) > 0;
 
+            // FIX: Allow saving when allNighterMode is ON or when data has been loaded
+            // This fixes the bug where toggling allNighterMode wouldn't persist
+            const hasAllNighterMode = data.allNighterMode === true;
+            const dataWasLoaded = data._dataLoaded === true;
+
             // Empty if NONE of these exist
-            return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory;
+            return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory && !hasAllNighterMode && !dataWasLoaded;
         }
 
         function hasRealData(data) {

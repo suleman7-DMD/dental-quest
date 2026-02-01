@@ -6374,6 +6374,19 @@
             opacity: 0.3 !important;
             cursor: not-allowed !important;
         }
+        .btn-reorder.btn-top:hover:not(:disabled),
+        .btn-reorder.btn-bottom:hover:not(:disabled) {
+            background: var(--accent-green) !important;
+            border-color: var(--accent-green) !important;
+        }
+        .btn-reorder.btn-position {
+            font-weight: bold !important;
+            min-width: 24px !important;
+        }
+        .btn-reorder.btn-position:hover {
+            background: var(--accent-purple) !important;
+            border-color: var(--accent-purple) !important;
+        }
 
         /* Protected Hour */
         .timeline-protected {
@@ -17062,8 +17075,11 @@
                             </div>
                             <div class="timeline-task-actions">
                                 <div class="reorder-buttons">
-                                    <button class="btn-reorder" onclick="moveTaskUp('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
-                                    <button class="btn-reorder" onclick="moveTaskDown('${task.id}')" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+                                    <button class="btn-reorder btn-top" onclick="event.stopPropagation(); moveTaskToTop('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move to top">⬆⬆</button>
+                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown('${task.id}')" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+                                    <button class="btn-reorder btn-bottom" onclick="event.stopPropagation(); moveTaskToBottom('${task.id}')" ${isLast ? 'disabled' : ''} title="Move to bottom">⬇⬇</button>
+                                    <button class="btn-reorder btn-position" onclick="event.stopPropagation(); promptTaskPosition('${task.id}')" title="Set position">#</button>
                                 </div>
                                 <button class="btn-start" onclick="startTaskInFocus('${task.id}')">▶ Start</button>
                                 <button class="btn-edit" onclick="openTaskEditModal('${task.id}')">✎</button>
@@ -17085,15 +17101,22 @@
 
         // ==================== TIMELINE DRAG-DROP REORDERING ====================
         let timelineDraggedTaskId = null;
+        let isReorderingLocked = false;  // Prevent multiple rapid reorders
 
         function handleTimelineDragStart(event, taskId) {
+            if (isReorderingLocked) {
+                event.preventDefault();
+                return;
+            }
             timelineDraggedTaskId = taskId;
             event.target.classList.add('timeline-dragging');
             event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', taskId);  // Required for Firefox
         }
 
         function handleTimelineDragOver(event) {
             event.preventDefault();
+            event.stopPropagation();
             event.dataTransfer.dropEffect = 'move';
             const taskEl = event.target.closest('.timeline-task');
             if (taskEl && !taskEl.classList.contains('timeline-dragging')) {
@@ -17102,6 +17125,7 @@
         }
 
         function handleTimelineDragLeave(event) {
+            event.stopPropagation();
             const taskEl = event.target.closest('.timeline-task');
             if (taskEl) {
                 taskEl.classList.remove('timeline-drag-over');
@@ -17110,15 +17134,27 @@
 
         function handleTimelineDrop(event, targetTaskId) {
             event.preventDefault();
+            event.stopPropagation();
+
             const taskEl = event.target.closest('.timeline-task');
             if (taskEl) {
                 taskEl.classList.remove('timeline-drag-over');
             }
 
+            // Prevent if locked or invalid
+            if (isReorderingLocked) return;
             if (!timelineDraggedTaskId || timelineDraggedTaskId === targetTaskId) return;
 
-            // Swap the order of the two tasks
-            reorderTimelineTasks(timelineDraggedTaskId, targetTaskId);
+            // Lock to prevent rapid multiple reorders
+            isReorderingLocked = true;
+
+            // Move dragged task to target position
+            moveTaskToPosition(timelineDraggedTaskId, targetTaskId);
+
+            // Unlock after a short delay
+            setTimeout(() => {
+                isReorderingLocked = false;
+            }, 300);
         }
 
         function handleTimelineDragEnd(event) {
@@ -17129,21 +17165,39 @@
             timelineDraggedTaskId = null;
         }
 
-        function reorderTimelineTasks(draggedId, targetId) {
+        // BULLETPROOF REORDER: Move a task to a specific position (replaces the target position)
+        function moveTaskToPosition(draggedId, targetId) {
+            if (isReorderingLocked) return;
+            isReorderingLocked = true;
+
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const draggedIndex = scheduledTasks.findIndex(t => t.id === draggedId);
             const targetIndex = scheduledTasks.findIndex(t => t.id === targetId);
 
-            if (draggedIndex === -1 || targetIndex === -1) return;
-            if (draggedIndex === targetIndex) return;
+            if (draggedIndex === -1 || targetIndex === -1) {
+                console.warn('moveTaskToPosition: Invalid task IDs', { draggedId, targetId });
+                isReorderingLocked = false;
+                return;
+            }
+            if (draggedIndex === targetIndex) {
+                isReorderingLocked = false;
+                return;
+            }
 
-            // Remove dragged task and insert at target position
-            const [draggedTask] = scheduledTasks.splice(draggedIndex, 1);
-            scheduledTasks.splice(targetIndex, 0, draggedTask);
+            console.log(`Moving task from position ${draggedIndex} to position ${targetIndex}`);
 
-            // Update crashOutOrder for all tasks
-            scheduledTasks.forEach((task, index) => {
-                tasks[task.id] = { ...tasks[task.id], crashOutOrder: index };
+            // Create new order array by removing dragged and inserting at target
+            const taskIds = scheduledTasks.map(t => t.id);
+            const [draggedTaskId] = taskIds.splice(draggedIndex, 1);
+
+            // Insert at target position (adjusted for removal if dragging down)
+            // When dragging down, target shifts by -1 after removal
+            const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+            taskIds.splice(insertIndex, 0, draggedTaskId);
+
+            // Update crashOutOrder for ALL tasks based on new array order
+            taskIds.forEach((id, newIndex) => {
+                tasks[id] = { ...tasks[id], crashOutOrder: newIndex };
             });
 
             // Recalculate times based on new order
@@ -17151,16 +17205,31 @@
 
             renderCrashOutMode();
             saveData();
-            showToast('Tasks reordered!', '↕️');
+            showToast('Task moved!', '↕️');
+
+            setTimeout(() => {
+                isReorderingLocked = false;
+            }, 200);
+        }
+
+        // Legacy function for backwards compatibility
+        function reorderTimelineTasks(draggedId, targetId) {
+            moveTaskToPosition(draggedId, targetId);
         }
 
         // SWAP two adjacent tasks (for up/down buttons)
         function swapAdjacentTasks(taskId1, taskId2) {
+            if (isReorderingLocked) return;
+            isReorderingLocked = true;
+
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const index1 = scheduledTasks.findIndex(t => t.id === taskId1);
             const index2 = scheduledTasks.findIndex(t => t.id === taskId2);
 
-            if (index1 === -1 || index2 === -1) return;
+            if (index1 === -1 || index2 === -1) {
+                isReorderingLocked = false;
+                return;
+            }
 
             // Swap the crashOutOrder values
             const order1 = tasks[taskId1].crashOutOrder;
@@ -17173,7 +17242,11 @@
 
             renderCrashOutMode();
             saveData();
-            showToast('Tasks reordered!', '↕️');
+            showToast('Tasks swapped!', '↕️');
+
+            setTimeout(() => {
+                isReorderingLocked = false;
+            }, 200);
         }
 
         function moveTaskUp(taskId) {
@@ -17194,6 +17267,69 @@
             // Swap with next task
             const targetTaskId = scheduledTasks[index + 1].id;
             swapAdjacentTasks(taskId, targetTaskId);
+        }
+
+        // Move task to top of schedule (first position)
+        function moveTaskToTop(taskId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            if (scheduledTasks.length < 2) return;
+
+            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            if (currentIndex <= 0) return; // Already at top
+
+            const firstTaskId = scheduledTasks[0].id;
+            moveTaskToPosition(taskId, firstTaskId);
+        }
+
+        // Move task to bottom of schedule (last position)
+        function moveTaskToBottom(taskId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            if (scheduledTasks.length < 2) return;
+
+            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            if (currentIndex === scheduledTasks.length - 1) return; // Already at bottom
+
+            const lastTaskId = scheduledTasks[scheduledTasks.length - 1].id;
+            moveTaskToPosition(taskId, lastTaskId);
+        }
+
+        // Set exact position (1-indexed for user-friendliness)
+        function setTaskPosition(taskId, newPosition) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const totalTasks = scheduledTasks.length;
+
+            // Validate position
+            if (newPosition < 1 || newPosition > totalTasks) {
+                showToast(`Position must be between 1 and ${totalTasks}`, '⚠️');
+                return;
+            }
+
+            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const targetIndex = newPosition - 1; // Convert to 0-indexed
+
+            if (currentIndex === targetIndex) return; // Already in position
+
+            // Get the task currently at target position
+            const targetTaskId = scheduledTasks[targetIndex].id;
+            moveTaskToPosition(taskId, targetTaskId);
+        }
+
+        // Prompt user for position
+        function promptTaskPosition(taskId) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const totalTasks = scheduledTasks.length;
+
+            const input = prompt(`Move task to position (1-${totalTasks}):`, currentIndex + 1);
+            if (input === null) return; // Cancelled
+
+            const newPosition = parseInt(input, 10);
+            if (isNaN(newPosition)) {
+                showToast('Please enter a valid number', '⚠️');
+                return;
+            }
+
+            setTaskPosition(taskId, newPosition);
         }
 
         // Helper to parse crash out time string back to Date
