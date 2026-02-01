@@ -7668,6 +7668,10 @@
                                 <span class="med-label">Next Refill:</span>
                                 <span class="med-value" id="refill30mg">Not set</span>
                             </div>
+                            <div class="med-stat">
+                                <span class="med-label">Last Manual Change:</span>
+                                <span class="med-value" id="lastChange30mg" style="font-size: 0.85em; color: #94a3b8;">Never</span>
+                            </div>
                         </div>
 
                         <div class="med-progress">
@@ -7707,6 +7711,10 @@
                             <div class="med-stat">
                                 <span class="med-label">Next Refill:</span>
                                 <span class="med-value" id="refill20mg">Not set</span>
+                            </div>
+                            <div class="med-stat">
+                                <span class="med-label">Last Manual Change:</span>
+                                <span class="med-value" id="lastChange20mg" style="font-size: 0.85em; color: #94a3b8;">Never</span>
                             </div>
                         </div>
 
@@ -8454,12 +8462,18 @@
             '30mg': {
                 pills: 30,
                 refillDate: null,
-                dosesLogged: {}  // Object: { 'YYYY-MM-DD': { date, count } } for Firebase safety
+                dosesLogged: {},  // Object: { 'YYYY-MM-DD': { date, count } } for Firebase safety
+                lastAutoReduceDate: null,  // YYYY-MM-DD when auto-reduce last ran
+                lastManualChange: null,    // ISO timestamp of last manual pill adjustment
+                lastManualChangeType: null // 'up' or 'down' for last manual change
             },
             '20mg': {
                 pills: 30,
                 refillDate: null,
-                dosesLogged: {}
+                dosesLogged: {},
+                lastAutoReduceDate: null,
+                lastManualChange: null,
+                lastManualChangeType: null
             }
         };
 
@@ -9290,6 +9304,8 @@
                 updateStats();
                 renderTasks();
                 updateMedicationDisplay();
+                // Check and apply daily pill auto-reduce
+                checkAndApplyDailyPillReduce();
             }
             // Check for daily reset of Critical/EOD flags
             checkCriticalEODReset();
@@ -10519,6 +10535,26 @@
             }
         });
 
+        // Helper: Get human-readable time ago string
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSecs = Math.floor(diffMs / 1000);
+            const diffMins = Math.floor(diffSecs / 60);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffDays > 0) {
+                return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
+            } else if (diffHours > 0) {
+                return `${diffHours}h ago`;
+            } else if (diffMins > 0) {
+                return `${diffMins}m ago`;
+            } else {
+                return 'Just now';
+            }
+        }
+
         // Medication Tracking Functions
         function updateMedicationDisplay() {
             updateMedCard('30mg');
@@ -10531,9 +10567,23 @@
             const refillElement = document.getElementById(`refill${medType}`);
             const progressElement = document.getElementById(`progress${medType}`);
             const statusElement = document.getElementById(`status${medType}`);
+            const lastChangeElement = document.getElementById(`lastChange${medType}`);
 
             // Update pills count
             if (pillsElement) pillsElement.textContent = med.pills;
+
+            // Update last manual change display
+            if (lastChangeElement) {
+                if (med.lastManualChange) {
+                    const changeDate = new Date(med.lastManualChange);
+                    const direction = med.lastManualChangeType === 'up' ? '↑' : '↓';
+                    const timeAgo = getTimeAgo(changeDate);
+                    lastChangeElement.textContent = `${direction} ${timeAgo}`;
+                    lastChangeElement.title = changeDate.toLocaleString();
+                } else {
+                    lastChangeElement.textContent = 'Never';
+                }
+            }
 
             // Update refill date
             if (refillElement) {
@@ -10711,14 +10761,62 @@
         function adjustMed(medType, amount) {
             const med = medications[medType];
             const newAmount = med.pills + amount;
-            
+
             if (newAmount >= 0 && newAmount <= 60) {
                 med.pills = newAmount;
+                // Track manual change
+                med.lastManualChange = new Date().toISOString();
+                med.lastManualChangeType = amount > 0 ? 'up' : 'down';
                 updateMedicationDisplay();
                 saveData();
                 showToast(amount > 0 ? 'Pill added' : 'Pill removed', '💊');
             } else {
                 showToast('Invalid pill count', '⚠️');
+            }
+        }
+
+        // Auto-reduce pills daily (called on app load)
+        function checkAndApplyDailyPillReduce() {
+            const today = getLocalDateString(); // YYYY-MM-DD
+            let changed = false;
+
+            ['30mg', '20mg'].forEach(medType => {
+                const med = medications[medType];
+                if (!med) return;
+
+                // Check if we've already reduced today
+                if (med.lastAutoReduceDate === today) return;
+
+                // Check if this is the first day (no lastAutoReduceDate) - don't reduce on first load
+                if (!med.lastAutoReduceDate) {
+                    med.lastAutoReduceDate = today;
+                    changed = true;
+                    return;
+                }
+
+                // Calculate days since last auto-reduce
+                const [lastYear, lastMonth, lastDay] = med.lastAutoReduceDate.split('-').map(Number);
+                const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+                const [todayYear, todayMonth, todayDay] = today.split('-').map(Number);
+                const todayDate = new Date(todayYear, todayMonth - 1, todayDay);
+                const daysDiff = Math.floor((todayDate - lastDate) / (24 * 60 * 60 * 1000));
+
+                // Reduce pills for each day missed (catch-up if app wasn't opened for multiple days)
+                if (daysDiff > 0 && med.pills > 0) {
+                    const reduceAmount = Math.min(daysDiff, med.pills); // Don't go below 0
+                    med.pills -= reduceAmount;
+                    med.lastAutoReduceDate = today;
+                    changed = true;
+                    console.log(`Auto-reduced ${medType} by ${reduceAmount} pills (${daysDiff} days)`);
+                } else if (daysDiff > 0) {
+                    med.lastAutoReduceDate = today;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                updateMedicationDisplay();
+                saveData();
             }
         }
 
@@ -16030,9 +16128,18 @@
             const task = tasks[taskId];
             if (!task) return;
 
-            task.completed = !task.completed;
+            const wasCompleted = task.completed;
+            const nowCompleted = !wasCompleted;
 
-            if (task.completed) {
+            // Use spread pattern for Firebase safety
+            tasks[taskId] = {
+                ...task,
+                completed: nowCompleted,
+                completedAt: nowCompleted ? Date.now() : null,
+                doToday: true  // Ensure it stays counted in progress
+            };
+
+            if (nowCompleted) {
                 // Award XP based on tier
                 const xp = task.triageTier === 'lockedIn' ? 50 :
                            task.crashOutScheduled ? 75 :
@@ -16127,12 +16234,14 @@
             const timeStr = nextTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
             // Use spread operator to preserve existing properties
+            // Also set doToday: true so task counts in progress
             tasks[taskId] = {
                 ...task,
                 crashOutScheduled: true,
                 crashOutTime: timeStr,
                 crashOutDuration: duration,
-                crashOutOrder: newOrder
+                crashOutOrder: newOrder,
+                doToday: true  // Ensures task counts in dashboard progress
             };
 
             renderFocusMode();
@@ -16454,6 +16563,7 @@
         // Time-aware prompts
         let timePromptInterval = null;
         let lastPromptedTaskId = null;
+        let skippedTasks = {}; // { taskId: 'time string when skipped' } - prevents re-prompting until time changes
 
         function startTimePromptChecker() {
             if (timePromptInterval) clearInterval(timePromptInterval);
@@ -16464,12 +16574,22 @@
             if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
             if (commandCenterMode !== 'crashout') return;
 
+            // Don't show prompts if a task is actively being worked on
+            if (currentFocusTaskId) return;
+            if (commandCenterData.currentSession && commandCenterData.currentSession.confirmedStarted) return;
+
             const now = new Date();
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
 
             // Find task that should be starting now
             for (const task of scheduledTasks) {
-                if (!task.crashOutTime || task.id === lastPromptedTaskId) continue;
+                if (!task.crashOutTime) continue;
+
+                // Skip if already prompted for this task at this time
+                if (task.id === lastPromptedTaskId) continue;
+
+                // Skip if user dismissed this task at its current time
+                if (skippedTasks[task.id] === task.crashOutTime) continue;
 
                 const [time, period] = task.crashOutTime.split(' ');
                 const [hours, minutes] = time.split(':').map(Number);
@@ -16502,10 +16622,10 @@
                     <div class="time-prompt-task">${task.triageTier === 'lockedIn' ? '🔥' : '📋'} ${escapeHtml(task.text)}</div>
 
                     <div class="time-prompt-buttons">
-                        <button class="primary-btn" onclick="startTaskFromPrompt('${task.id}')">▶ START</button>
+                        <button class="primary-btn" onclick="startTaskFromPrompt('${task.id}')">▶ START NOW</button>
                     </div>
 
-                    <div style="color: #6b7280; margin: 15px 0;">Not ready? Push everything:</div>
+                    <div style="color: #6b7280; margin: 15px 0;">Not ready? Push all tasks:</div>
 
                     <div class="time-prompt-buttons">
                         <button onclick="pushAllTasks(5)">+5m</button>
@@ -16517,8 +16637,9 @@
                         <button onclick="pushAllTasks(60)">+60m</button>
                     </div>
 
-                    <div style="margin-top: 15px;">
-                        <button onclick="skipTask('${task.id}')" style="color: #dc2626; border-color: #fecaca;">Skip</button>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="skipTask('${task.id}')" style="color: #94a3b8; border-color: #475569;" title="Dismiss this prompt (task stays in schedule)">Dismiss</button>
+                        <button onclick="removeTaskFromSchedule('${task.id}')" style="color: #dc2626; border-color: #fecaca;" title="Remove task from crash out schedule">Remove</button>
                     </div>
                 </div>
             `;
@@ -16527,7 +16648,9 @@
 
         function startTaskFromPrompt(taskId) {
             closeTimePrompt();
-            startTaskInFocus(taskId);
+            // Auto-start timer when task is confirmed from crash out prompt
+            startTaskInFocus(taskId, true);
+            showToast('Task started! Timer running.', '▶️');
         }
 
         function closeTimePrompt() {
@@ -16544,8 +16667,9 @@
         function pushAllTasks(minutes) {
             closeTimePrompt();
 
-            // CRITICAL: Reset lastPromptedTaskId so popup can re-appear after delay
+            // CRITICAL: Reset tracking so popups re-appear at new times
             lastPromptedTaskId = null;
+            skippedTasks = {}; // Clear skipped tracking since all times are changing
 
             // Save state for undo
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
@@ -16639,6 +16763,8 @@
             });
 
             undoState = null;
+            skippedTasks = {}; // Clear since times changed back
+            lastPromptedTaskId = null;
             const toast = document.querySelector('.undo-toast');
             if (toast) toast.remove();
             if (undoTimeout) clearTimeout(undoTimeout);
@@ -16649,9 +16775,21 @@
         }
 
         function skipTask(taskId) {
+            const task = tasks[taskId];
+            closeTimePrompt();
+            // Track that this task was skipped at its current time (won't prompt again until time changes)
+            if (task && task.crashOutTime) {
+                skippedTasks[taskId] = task.crashOutTime;
+            }
+            lastPromptedTaskId = taskId; // Also prevent immediate re-prompt
+            showToast('Prompt dismissed - task stays in schedule', '⏭️');
+        }
+
+        function removeTaskFromSchedule(taskId) {
+            // Use this to actually remove from crash out (renamed from old skipTask behavior)
             closeTimePrompt();
             removeFromCrashOut(taskId);
-            showToast('Task skipped', '⏭️');
+            showToast('Task removed from schedule', '🗑️');
         }
 
         // ==================== CRASH OUT MODE ====================
@@ -16997,6 +17135,7 @@
             const targetIndex = scheduledTasks.findIndex(t => t.id === targetId);
 
             if (draggedIndex === -1 || targetIndex === -1) return;
+            if (draggedIndex === targetIndex) return;
 
             // Remove dragged task and insert at target position
             const [draggedTask] = scheduledTasks.splice(draggedIndex, 1);
@@ -17015,6 +17154,28 @@
             showToast('Tasks reordered!', '↕️');
         }
 
+        // SWAP two adjacent tasks (for up/down buttons)
+        function swapAdjacentTasks(taskId1, taskId2) {
+            const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            const index1 = scheduledTasks.findIndex(t => t.id === taskId1);
+            const index2 = scheduledTasks.findIndex(t => t.id === taskId2);
+
+            if (index1 === -1 || index2 === -1) return;
+
+            // Swap the crashOutOrder values
+            const order1 = tasks[taskId1].crashOutOrder;
+            const order2 = tasks[taskId2].crashOutOrder;
+            tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
+            tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
+
+            // Recalculate times based on new order
+            recalculateScheduledTimes();
+
+            renderCrashOutMode();
+            saveData();
+            showToast('Tasks reordered!', '↕️');
+        }
+
         function moveTaskUp(taskId) {
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const index = scheduledTasks.findIndex(t => t.id === taskId);
@@ -17022,7 +17183,7 @@
 
             // Swap with previous task
             const targetTaskId = scheduledTasks[index - 1].id;
-            reorderTimelineTasks(taskId, targetTaskId);
+            swapAdjacentTasks(taskId, targetTaskId);
         }
 
         function moveTaskDown(taskId) {
@@ -17032,7 +17193,7 @@
 
             // Swap with next task
             const targetTaskId = scheduledTasks[index + 1].id;
-            reorderTimelineTasks(targetTaskId, taskId);
+            swapAdjacentTasks(taskId, targetTaskId);
         }
 
         // Helper to parse crash out time string back to Date
@@ -17248,7 +17409,7 @@
             }
         }
 
-        function startTaskInFocus(taskId) {
+        function startTaskInFocus(taskId, autoStartTimer = false) {
             const task = tasks[taskId];
             if (!task) return;
 
@@ -17256,7 +17417,15 @@
             commandCenterData.currentSession.taskId = taskId;
             commandCenterData.currentSession.checklist = {};
             commandCenterData.currentSession.timerRemaining = null;
+            commandCenterData.currentSession.confirmedStarted = true; // Mark as actively started
+            commandCenterData.currentSession.startedAt = new Date().toISOString();
             currentFocusTaskId = taskId;
+
+            // Clear skip tracking - we're now working on this task
+            if (skippedTasks[taskId]) {
+                delete skippedTasks[taskId];
+            }
+            lastPromptedTaskId = taskId; // Prevent prompt for this task
 
             // Reset timer
             focusTimerSecondsRemaining = (commandCenterData.currentSession.timerMinutes || 25) * 60;
@@ -17268,6 +17437,11 @@
 
             // Switch to focus mode
             switchCommandCenterMode('focus');
+
+            // Auto-start timer if requested (from crash out prompt)
+            if (autoStartTimer) {
+                setTimeout(() => startFocusTimer(), 100); // Small delay to ensure UI is ready
+            }
             saveData();
         }
 
@@ -17493,6 +17667,8 @@
             if (commandCenterData.currentSession) {
                 commandCenterData.currentSession.taskId = null;
                 commandCenterData.currentSession.checklist = {};
+                commandCenterData.currentSession.confirmedStarted = false;
+                commandCenterData.currentSession.startedAt = null;
             }
             currentFocusTaskId = null;
 

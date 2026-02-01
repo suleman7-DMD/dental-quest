@@ -534,6 +534,75 @@ Body Comp reads FROM Firebase directly (READ-ONLY):
 
 ---
 
+## CRASH OUT MODE FIXES (Jan 31, 2026)
+
+### Task Rearranging Fix
+**Problem**: Drag-drop and up/down buttons used same INSERT logic, causing confusion
+**Fix**:
+- Created `swapAdjacentTasks()` for up/down buttons (SWAP logic)
+- Kept `reorderTimelineTasks()` for drag-drop (INSERT logic)
+- Location: index.html lines 17000-17060
+
+### Push Dialog & Skip Behavior Fix
+**Problem**: Skip removed tasks entirely; prompts reappeared every 30 seconds
+**Fix**:
+- `skippedTasks` object tracks dismissed prompts by task ID + time
+- `skipTask()` now just dismisses (task stays in schedule)
+- Added `removeTaskFromSchedule()` for actual removal
+- Renamed button "Skip" → "Dismiss", added separate "Remove" button
+- Clear `skippedTasks` when pushing (new times = fresh prompts)
+- Location: index.html lines 16455-16670
+
+### Confirm Begin Task Toggle
+**Problem**: No explicit confirmation task was started; timer didn't auto-start
+**Fix**:
+- Added `confirmedStarted` flag to session data
+- `startTaskFromPrompt()` auto-starts timer
+- Prompts won't appear while task is confirmed started
+- Location: index.html lines 17300-17330
+
+### Task Completion Counting Fix
+**Problem**: Crash out tasks didn't count in dashboard progress
+**Fix**:
+- `sendToCrashOut()` now sets `doToday: true`
+- `completeTriageTask()` preserves `doToday: true` and adds `completedAt` timestamp
+- Uses proper spread pattern for Firebase safety
+- Location: index.html lines 16030-16145
+
+### Pill Counter Auto-Reduce
+**Problem**: Pills only reduced on manual click, not daily
+**Fix**:
+- Added `lastAutoReduceDate`, `lastManualChange`, `lastManualChangeType` to medication structure
+- `checkAndApplyDailyPillReduce()` runs on app load
+- Auto-reduces for each day missed (catch-up for multi-day gaps)
+- Added "Last Manual Change" display with `getTimeAgo()` helper
+- Location: index.html lines 8453-8470, 10538-10790
+
+---
+
+## D3 ROADMAP DEADLINE SYNC FIX (Jan 31, 2026)
+
+### Deadline Sync Bug Fix
+**Problem**: `completedDeadlines` used array INDEX as key; indices shift when custom deadlines added
+**Fix**:
+- Created `getDeadlineId()` for stable IDs based on deadline properties
+- `submitDeadlineGrade()` stores by stable ID, not index
+- `toggleDeadlineDone()` deletes by stable ID
+- `initUI()` matches by stable ID first, falls back to property matching for legacy data
+- Custom deadlines preserve their `id` property during array push
+- Location: d3-roadmap.html lines 9480-9490, 11994-12100, 15140-15170
+
+### Force Upload Diagnostics
+**Problem**: Generic "sync failure" error with no debugging info
+**Fix**:
+- Added console diagnostics for `firebaseSyncEnabled`, `database`, `userPath`, `pinValidated`
+- Specific error messages for each failure case
+- Alert dialog with troubleshooting steps
+- Same improvements to `forcePullFromCloud()`
+- Location: d3-roadmap.html lines 10594-10680
+
+---
+
 ## COMMIT HISTORY (Jan 2026 Sync Fixes)
 
 | Commit | Description |

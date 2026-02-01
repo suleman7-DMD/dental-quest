@@ -9477,6 +9477,15 @@ CHAIR: 9F
             return Object.values(obj).filter(v => v !== null && v !== undefined);
         }
 
+        // Generate stable deadline ID based on properties (for static deadlines)
+        // Custom deadlines use their own 'id' property
+        function getDeadlineId(deadline) {
+            if (deadline.id) return deadline.id; // Custom deadlines have their own ID
+            // For static deadlines, create a stable hash from key properties
+            const key = `${deadline.date}_${deadline.course}_${deadline.what}`.toLowerCase().replace(/\s+/g, '_');
+            return 'dl_' + key;
+        }
+
         // Get count of items in object or array
         function getCount(obj) {
             if (!obj) return 0;
@@ -10585,10 +10594,25 @@ CHAIR: 9F
             updateSyncStatus('syncing', 'Uploading...');
 
             try {
-                if (!firebaseSyncEnabled || !database || !userPath) {
-                    throw new Error('Not connected to Firebase');
+                // Enhanced connection diagnostics
+                console.log('Force upload diagnostics:', {
+                    firebaseSyncEnabled,
+                    hasDatabase: !!database,
+                    userPath,
+                    pinValidated
+                });
+
+                if (!firebaseSyncEnabled) {
+                    throw new Error('Firebase sync not enabled. Try refreshing the page.');
+                }
+                if (!database) {
+                    throw new Error('Database not initialized. Try refreshing the page.');
+                }
+                if (!userPath) {
+                    throw new Error('User path not set. Please enter your PIN again.');
                 }
 
+                // Attempt the upload
                 await database.ref(userPath).set(roadmapData);
                 localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                 updateSyncStatus('connected', 'Force uploaded ✓');
@@ -10597,7 +10621,10 @@ CHAIR: 9F
             } catch (err) {
                 console.error('Force upload failed:', err);
                 updateSyncStatus('error', 'Upload failed');
-                showToast('Force upload failed: ' + err.message);
+                // More specific error message
+                const errorMsg = err.message || 'Unknown error';
+                showToast('Force upload failed: ' + errorMsg);
+                alert(`Force upload failed:\n\n${errorMsg}\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted`);
             }
         }
 
@@ -10619,8 +10646,22 @@ CHAIR: 9F
             updateSyncStatus('syncing', 'Pulling...');
 
             try {
-                if (!firebaseSyncEnabled || !database || !userPath) {
-                    throw new Error('Not connected to Firebase');
+                // Enhanced connection diagnostics
+                console.log('Force pull diagnostics:', {
+                    firebaseSyncEnabled,
+                    hasDatabase: !!database,
+                    userPath,
+                    pinValidated
+                });
+
+                if (!firebaseSyncEnabled) {
+                    throw new Error('Firebase sync not enabled. Try refreshing the page.');
+                }
+                if (!database) {
+                    throw new Error('Database not initialized. Try refreshing the page.');
+                }
+                if (!userPath) {
+                    throw new Error('User path not set. Please enter your PIN again.');
                 }
 
                 const snapshot = await database.ref(userPath).once('value');
@@ -10641,7 +10682,9 @@ CHAIR: 9F
             } catch (err) {
                 console.error('Force pull failed:', err);
                 updateSyncStatus('error', 'Pull failed');
-                showToast('Force pull failed: ' + err.message);
+                const errorMsg = err.message || 'Unknown error';
+                showToast('Force pull failed: ' + errorMsg);
+                alert(`Force pull failed:\n\n${errorMsg}\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted`);
             }
         }
 
@@ -11987,27 +12030,36 @@ CHAIR: 9F
                 console.error('Invalid deadline index:', index);
                 return;
             }
-            
+
             const deadline = deadlines[index];
-            
+            const deadlineId = getDeadlineId(deadline);
+
             if (deadline.done) {
                 // Unchecking - mark as incomplete
                 deadline.done = false;
                 deadline.grade = null;
-                
-                // Remove from completedDeadlines
+
+                // Remove from completedDeadlines using stable ID
                 if (roadmapData.completedDeadlines) {
+                    delete roadmapData.completedDeadlines[deadlineId];
+                    // Also try to clean up any old index-based entries
                     delete roadmapData.completedDeadlines[index];
                 }
-                
+
+                // Also update customDeadlines if this is a custom deadline
+                if (deadline.custom && deadline.id && roadmapData.customDeadlines[deadline.id]) {
+                    roadmapData.customDeadlines[deadline.id].done = false;
+                    roadmapData.customDeadlines[deadline.id].grade = null;
+                }
+
                 // Update grades if this was synced
                 syncDeadlineToGrades(deadline, false);
-                
+
                 saveData();
                 renderDeadlines();
                 renderDashboard();
                 loadCourseGrades();
-                
+
                 showToast('Marked incomplete');
             } else {
                 // Checking - show grade input modal
@@ -12055,19 +12107,23 @@ CHAIR: 9F
         function submitDeadlineGrade(index) {
             const gradeInput = document.getElementById('gradeInput').value;
             const grade = gradeInput ? parseFloat(gradeInput) : null;
-            
+
             if (grade !== null && (grade < 0 || grade > 100)) {
                 alert('Grade must be between 0 and 100');
                 return;
             }
-            
+
             const deadline = deadlines[index];
             deadline.done = true;
             deadline.grade = grade;
-            
-            // Store in completedDeadlines
+
+            // Get stable ID for this deadline (survives reloads and reordering)
+            const deadlineId = getDeadlineId(deadline);
+
+            // Store in completedDeadlines using stable ID (not array index!)
             if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
-            roadmapData.completedDeadlines[index] = {
+            roadmapData.completedDeadlines[deadlineId] = {
+                id: deadlineId,
                 date: deadline.date,
                 what: deadline.what,
                 course: deadline.course,
@@ -12075,18 +12131,24 @@ CHAIR: 9F
                 grade: grade,
                 completedAt: new Date().toISOString()
             };
-            
+
+            // Also update customDeadlines if this is a custom deadline
+            if (deadline.custom && deadline.id && roadmapData.customDeadlines[deadline.id]) {
+                roadmapData.customDeadlines[deadline.id].done = true;
+                roadmapData.customDeadlines[deadline.id].grade = grade;
+            }
+
             // Sync to grades tab
             syncDeadlineToGrades(deadline, true, grade);
-            
+
             // Close modal
             document.getElementById('gradeInputModal').remove();
-            
+
             saveData();
             renderDeadlines();
             renderDashboard();
             loadCourseGrades();
-            
+
             showToast(grade !== null ? `✓ Completed with ${grade}%` : '✓ Completed');
         }
         
@@ -15088,7 +15150,7 @@ CHAIR: 9F
             } catch(e) { console.error('Error restoring edited deadlines:', e); }
             
             try {
-                // Add any custom deadlines
+                // Add any custom deadlines (preserving their ID!)
                 const customDeadlineValues = getValues(roadmapData.customDeadlines);
                 if (customDeadlineValues.length > 0) {
                     customDeadlineValues.forEach(d => {
@@ -15103,22 +15165,41 @@ CHAIR: 9F
                             type: d.type || 'Other',
                             month: month,
                             custom: true,
-                            done: d.done || false,    // FIXED: Preserve completion status
-                            grade: d.grade || null    // FIXED: Preserve grade
+                            id: d.id,  // CRITICAL: Preserve the custom deadline ID!
+                            done: d.done || false,
+                            grade: d.grade || null
                         });
                     });
                 }
             } catch(e) { console.error('Error adding custom deadlines:', e); }
 
-            // CRITICAL FIX: Restore completed deadlines from saved data
+            // Sort deadlines by date to ensure consistent order
+            try {
+                deadlines.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+            } catch(e) { console.error('Error sorting deadlines:', e); }
+
+            // CRITICAL FIX: Restore completed deadlines using stable ID matching
             try {
                 if (roadmapData.completedDeadlines) {
-                    Object.keys(roadmapData.completedDeadlines).forEach(indexStr => {
-                        const index = parseInt(indexStr, 10);
-                        const completed = roadmapData.completedDeadlines[indexStr];
-                        if (deadlines[index] && completed) {
-                            deadlines[index].done = true;
-                            deadlines[index].grade = completed.grade !== undefined ? completed.grade : null;
+                    Object.entries(roadmapData.completedDeadlines).forEach(([key, completed]) => {
+                        if (!completed) return;
+
+                        // Try to find deadline by stable ID first
+                        let deadlineIdx = deadlines.findIndex(d => getDeadlineId(d) === key);
+
+                        // Fallback: If key looks like an old numeric index, try matching by properties
+                        if (deadlineIdx === -1 && /^\d+$/.test(key)) {
+                            // Try to match by date + course + what for legacy index-based data
+                            deadlineIdx = deadlines.findIndex(d =>
+                                d.date === completed.date &&
+                                d.course === completed.course &&
+                                d.what === completed.what
+                            );
+                        }
+
+                        if (deadlineIdx !== -1) {
+                            deadlines[deadlineIdx].done = true;
+                            deadlines[deadlineIdx].grade = completed.grade !== undefined ? completed.grade : null;
                         }
                     });
                 }
