@@ -17171,24 +17171,32 @@
 
         // BULLETPROOF REORDER: Move a task to a specific position (replaces the target position)
         function moveTaskToPosition(draggedId, targetId) {
-            if (isReorderingLocked) return;
+            console.log('📦 moveTaskToPosition called:', { draggedId, targetId, isReorderingLocked });
+            if (isReorderingLocked) {
+                console.log('⚠️ moveTaskToPosition: Reordering is locked!');
+                return;
+            }
             isReorderingLocked = true;
 
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const draggedIndex = scheduledTasks.findIndex(t => t.id === draggedId);
             const targetIndex = scheduledTasks.findIndex(t => t.id === targetId);
+            console.log('📍 Indices:', { draggedIndex, targetIndex });
 
             if (draggedIndex === -1 || targetIndex === -1) {
                 console.warn('moveTaskToPosition: Invalid task IDs', { draggedId, targetId });
+                showToast('Error: Task not found', '❌');
                 isReorderingLocked = false;
                 return;
             }
             if (draggedIndex === targetIndex) {
+                console.log('⚠️ Same position - no action needed');
                 isReorderingLocked = false;
                 return;
             }
 
-            console.log(`Moving task from position ${draggedIndex} to position ${targetIndex}`);
+            console.log(`✅ Moving task from position ${draggedIndex} to position ${targetIndex}`);
 
             // Create new order array by removing dragged and inserting at target
             const taskIds = scheduledTasks.map(t => t.id);
@@ -17381,6 +17389,7 @@
 
         // Prompt user for position
         function promptTaskPosition(taskId) {
+            console.log('# promptTaskPosition called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
             const totalTasks = scheduledTasks.length;
@@ -17396,6 +17405,28 @@
 
             setTaskPosition(taskId, newPosition);
         }
+
+        // EXPLICIT GLOBAL BINDINGS - Ensure reorder functions are accessible from inline onclick handlers
+        window.moveTaskUp = moveTaskUp;
+        window.moveTaskDown = moveTaskDown;
+        window.moveTaskToTop = moveTaskToTop;
+        window.moveTaskToBottom = moveTaskToBottom;
+        window.promptTaskPosition = promptTaskPosition;
+        window.swapAdjacentTasks = swapAdjacentTasks;
+        window.moveTaskToPosition = moveTaskToPosition;
+        window.setTaskPosition = setTaskPosition;
+        window.handleTimelineDragStart = handleTimelineDragStart;
+        window.handleTimelineDragOver = handleTimelineDragOver;
+        window.handleTimelineDragLeave = handleTimelineDragLeave;
+        window.handleTimelineDrop = handleTimelineDrop;
+        window.handleTimelineDragEnd = handleTimelineDragEnd;
+        console.log('✅ Crash Out reorder functions registered globally:', {
+            moveTaskUp: typeof window.moveTaskUp,
+            moveTaskDown: typeof window.moveTaskDown,
+            moveTaskToTop: typeof window.moveTaskToTop,
+            moveTaskToBottom: typeof window.moveTaskToBottom,
+            promptTaskPosition: typeof window.promptTaskPosition
+        });
 
         // Helper to parse crash out time string back to Date
         function parseCrashOutTime(timeStr) {
