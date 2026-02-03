@@ -8460,6 +8460,61 @@ CHAIR: 9F
             _dataLoaded: false  // Flag to track if real data was loaded
         };
 
+        // Returns a fresh copy of the default roadmap data structure
+        // Used by importAndRestoreDirectly() and other reset operations
+        function getDefaultRoadmapData() {
+            return {
+                pedsLockedIn: 33.3,
+                mandatoryItems: {
+                    gatecontrol: false,
+                    acutepain: false,
+                    peextremities: false,
+                    npi: false,
+                    orthomodule: false,
+                    ips: false,
+                    periodiscussion: false
+                },
+                grades: {
+                    oralmed: { quiz1: 100 },
+                    paincontrol: {},
+                    critthink: { quiz1: 100 },
+                    peds: { exam1: 77, headstart: 100 },
+                    perio: { midterm: null, writtenAssignment: 100 },
+                    ortho: { midterm: null }
+                },
+                editedDeadlines: {},
+                customDeadlines: {},
+                deletedDeadlines: {},
+                completedDeadlines: {},
+                examStudyProgress: {},
+                dailyPlanner: {
+                    date: null,
+                    focus: '',
+                    notes: '',
+                    blocks: {},
+                    pomodorosCompleted: 0,
+                    bedtime: '23:00'
+                },
+                monthlyPlanner: {
+                    notes: {},
+                    customTasks: {},
+                    overriddenStatic: {},
+                    completedTasks: {}
+                },
+                clinicalData: {
+                    patients: {},
+                    appointments: {},
+                    completedProcedures: {},
+                    competencies: null
+                },
+                exams: {},
+                lastSaved: null,
+                _version: 0,
+                _lastModified: null,
+                _dataLoaded: false
+            };
+        }
+
         // ============================================
         // SYNC PROTECTION FLAGS - PREVENTS DATA WIPE
         // ============================================
@@ -9684,8 +9739,7 @@ CHAIR: 9F
                 .then(snapshot => {
                     const data = snapshot.val();
                     if (data) {
-                        // Merge Firebase data with defaults
-                        // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
+                        // Merge Firebase data with defaults - preserving local data where applicable
                         roadmapData = {
                             ...roadmapData,
                             pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
@@ -9693,28 +9747,32 @@ CHAIR: 9F
                             grades: { ...roadmapData.grades, ...(data.grades || {}) },
                             editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                             completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                            customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                            deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                            // FIXED: Merge local THEN cloud to preserve local data
+                            customDeadlines: { ...migrateArrayToObject(roadmapData.customDeadlines, 'deadline'), ...migrateArrayToObject(data.customDeadlines, 'deadline') },
+                            deletedDeadlines: { ...migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted'), ...migrateArrayToObject(data.deletedDeadlines, 'deleted') },
                             examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                            // FIXED: Monthly planner - merge local THEN cloud
                             monthlyPlanner: {
-                                notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                                customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                                overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                                completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                                notes: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(data.monthlyPlanner?.notes, 'note') },
+                                customTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask') },
+                                overriddenStatic: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override') },
+                                completedTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed') }
                             },
+                            // FIXED: Clinical data - merge local THEN cloud
                             clinicalData: {
                                 patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                                completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
+                                appointments: { ...migrateArrayToObject(roadmapData.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(data.clinicalData?.appointments, 'appt') },
+                                completedProcedures: { ...migrateArrayToObject(roadmapData.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc') },
                                 competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                             },
                             dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-                            exams: migrateArrayToObject(data.exams, 'exam'),
-                            lastSaved: data.lastSaved
+                            // FIXED: Exams - merge local THEN cloud
+                            exams: { ...migrateArrayToObject(roadmapData.exams, 'exam'), ...migrateArrayToObject(data.exams, 'exam') },
+                            lastSaved: data.lastSaved,
+                            _version: Math.max(data._version || 0, roadmapData._version || 0),
+                            _lastModified: data._lastModified || roadmapData._lastModified,
+                            _dataLoaded: true
                         };
-
-                        // Mark that we have real data loaded
-                        roadmapData._dataLoaded = true;
 
                         // Also save to localStorage as backup
                         localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
@@ -9795,39 +9853,42 @@ CHAIR: 9F
                 if (remoteLastSaved > localLastSaved + 1000 && remoteLastSaved > lastRemoteUpdate) {
                     lastRemoteUpdate = remoteLastSaved;
 
-                    // Deep merge the data (match loadFromFirebase pattern exactly)
-                    // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
+                    // FIXED: Deep merge - NO raw ...data spread to prevent data corruption
+                    // Explicitly merge each field, preserving local data where cloud is stale
                     roadmapData = {
                         ...roadmapData,
-                        ...data,
+                        // NO ...data spread - only explicit fields below
                         pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
                         mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
                         grades: { ...roadmapData.grades, ...(data.grades || {}) },
                         editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                         completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                        // FIXED: Merge local THEN cloud to preserve local data
+                        customDeadlines: { ...migrateArrayToObject(roadmapData.customDeadlines, 'deadline'), ...migrateArrayToObject(data.customDeadlines, 'deadline') },
+                        deletedDeadlines: { ...migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted'), ...migrateArrayToObject(data.deletedDeadlines, 'deleted') },
                         examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                        // FIXED: Monthly planner - merge local THEN cloud
                         monthlyPlanner: {
-                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                            notes: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(data.monthlyPlanner?.notes, 'note') },
+                            customTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask') },
+                            overriddenStatic: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override') },
+                            completedTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed') }
                         },
+                        // FIXED: Clinical data - merge local THEN cloud
                         clinicalData: {
                             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
+                            appointments: { ...migrateArrayToObject(roadmapData.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(data.clinicalData?.appointments, 'appt') },
+                            completedProcedures: { ...migrateArrayToObject(roadmapData.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc') },
                             competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-                        exams: migrateArrayToObject(data.exams, 'exam'),
-                        lastSaved: data.lastSaved
+                        // FIXED: Exams - merge local THEN cloud
+                        exams: { ...migrateArrayToObject(roadmapData.exams, 'exam'), ...migrateArrayToObject(data.exams, 'exam') },
+                        lastSaved: data.lastSaved,
+                        _version: Math.max(data._version || 0, roadmapData._version || 0),
+                        _lastModified: data._lastModified || roadmapData._lastModified,
+                        _dataLoaded: true
                     };
-
-                    // CRITICAL FIX: Preserve _dataLoaded after realtime sync merge
-                    // The spread operator above may have wiped it with undefined from cloud data
-                    roadmapData._dataLoaded = true;
 
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
 
@@ -10095,32 +10156,41 @@ CHAIR: 9F
         }
 
         // Helper to apply remote data to local state
+        // FIXED: Use explicit merge pattern (matching other merge locations) instead of deepMerge
         function applyRemoteData(data) {
-            roadmapData = deepMerge(roadmapData, {
-                pedsLockedIn: data.pedsLockedIn,
-                mandatoryItems: data.mandatoryItems || {},
-                grades: data.grades || {},
-                editedDeadlines: data.editedDeadlines || {},
-                completedDeadlines: data.completedDeadlines || {},
-                customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
-                examStudyProgress: data.examStudyProgress || {},
+            roadmapData = {
+                ...roadmapData,
+                pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
+                mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
+                grades: { ...roadmapData.grades, ...(data.grades || {}) },
+                editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
+                completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
+                // Merge local THEN cloud to preserve local data
+                customDeadlines: { ...migrateArrayToObject(roadmapData.customDeadlines, 'deadline'), ...migrateArrayToObject(data.customDeadlines, 'deadline') },
+                deletedDeadlines: { ...migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted'), ...migrateArrayToObject(data.deletedDeadlines, 'deleted') },
+                examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                // Monthly planner - merge local THEN cloud
                 monthlyPlanner: {
-                    notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                    notes: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(data.monthlyPlanner?.notes, 'note') },
+                    customTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask') },
+                    overriddenStatic: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override') },
+                    completedTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed') }
                 },
+                // Clinical data - merge local THEN cloud
                 clinicalData: {
-                    patients: data.clinicalData?.patients || {},
-                    appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                    competencies: migrateCompetencies(data.clinicalData?.competencies) || null
+                    patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
+                    appointments: { ...migrateArrayToObject(roadmapData.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(data.clinicalData?.appointments, 'appt') },
+                    completedProcedures: { ...migrateArrayToObject(roadmapData.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc') },
+                    competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                 },
-                exams: migrateArrayToObject(data.exams, 'exam'),
-                dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner),
-                lastSaved: data.lastSaved
-            });
+                dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
+                // Exams - merge local THEN cloud
+                exams: { ...migrateArrayToObject(roadmapData.exams, 'exam'), ...migrateArrayToObject(data.exams, 'exam') },
+                lastSaved: data.lastSaved,
+                _version: Math.max(data._version || 0, roadmapData._version || 0),
+                _lastModified: data._lastModified || roadmapData._lastModified,
+                _dataLoaded: true
+            };
 
             localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
             initUI();
@@ -10176,14 +10246,56 @@ CHAIR: 9F
 
             localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
 
+            // FIXED: Also save to Firebase for cross-device access
+            if (firebaseSyncEnabled && database && userPath) {
+                const cloudCheckpointPath = userPath + '/checkpoints/' + checkpoint.id;
+                // Clean checkpoint data before saving
+                const cleanCheckpoint = JSON.parse(JSON.stringify(checkpoint));
+                if (cleanCheckpoint.data) {
+                    delete cleanCheckpoint.data._dataLoaded;
+                }
+                database.ref(cloudCheckpointPath).set(cleanCheckpoint)
+                    .then(() => {
+                        console.log('☁️ Checkpoint saved to cloud:', checkpoint.id);
+                    })
+                    .catch(err => {
+                        console.error('Failed to save checkpoint to cloud:', err);
+                    });
+            }
+
             showToast(`✅ Checkpoint created: ${name}`);
             console.log('Checkpoint created:', checkpoint.id, checkpoint.dataCount);
 
             return checkpoint;
         }
 
-        function showCheckpointManager() {
-            const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+        async function showCheckpointManager() {
+            // Get local checkpoints
+            let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+
+            // FIXED: Also get cloud checkpoints for cross-device access
+            if (firebaseSyncEnabled && database && userPath) {
+                try {
+                    const snapshot = await database.ref(userPath + '/checkpoints').once('value');
+                    const cloudCheckpoints = snapshot.val();
+                    if (cloudCheckpoints) {
+                        const cloudList = Object.values(cloudCheckpoints);
+                        // Merge: add cloud checkpoints not in local (by ID)
+                        const localIds = new Set(checkpoints.map(c => c.id));
+                        cloudList.forEach(cc => {
+                            if (cc && cc.id && !localIds.has(cc.id)) {
+                                checkpoints.push(cc);
+                            }
+                        });
+                        // Sort by timestamp descending
+                        checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                        // Save merged list back to localStorage (keep max 50)
+                        localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+                    }
+                } catch (err) {
+                    console.error('Failed to load cloud checkpoints:', err);
+                }
+            }
 
             // Remove existing modal if any
             document.querySelector('.checkpoint-modal-overlay')?.remove();
@@ -10264,26 +10376,32 @@ CHAIR: 9F
             // Backup current state first
             createCheckpoint(`Pre-restore backup (${new Date().toLocaleString()})`);
 
-            // Restore - deep merge with migration
+            // Restore checkpoint - explicitly restore each field (no raw spread)
+            const cpData = checkpoint.data;
             roadmapData = {
-                ...roadmapData,
-                ...checkpoint.data,
-                customDeadlines: migrateArrayToObject(checkpoint.data.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(checkpoint.data.deletedDeadlines, 'deleted'),
+                pedsLockedIn: cpData.pedsLockedIn !== undefined ? cpData.pedsLockedIn : roadmapData.pedsLockedIn,
+                mandatoryItems: cpData.mandatoryItems || roadmapData.mandatoryItems || {},
+                grades: cpData.grades || roadmapData.grades || {},
+                editedDeadlines: cpData.editedDeadlines || {},
+                completedDeadlines: cpData.completedDeadlines || {},
+                customDeadlines: migrateArrayToObject(cpData.customDeadlines, 'deadline'),
+                deletedDeadlines: migrateArrayToObject(cpData.deletedDeadlines, 'deleted'),
+                examStudyProgress: cpData.examStudyProgress || {},
                 monthlyPlanner: {
-                    notes: migrateArrayToObject(checkpoint.data.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(checkpoint.data.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(checkpoint.data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(checkpoint.data.monthlyPlanner?.completedTasks, 'completed')
+                    notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
+                    customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
+                    overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
+                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed')
                 },
                 clinicalData: {
-                    patients: checkpoint.data.clinicalData?.patients || {},
-                    appointments: migrateArrayToObject(checkpoint.data.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(checkpoint.data.clinicalData?.completedProcedures, 'proc'),
-                    competencies: migrateCompetencies(checkpoint.data.clinicalData?.competencies) || null
+                    patients: cpData.clinicalData?.patients || {},
+                    appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
+                    completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
+                    competencies: migrateCompetencies(cpData.clinicalData?.competencies) || null
                 },
-                dailyPlanner: migrateDailyPlannerBlocks(checkpoint.data.dailyPlanner),
-                exams: migrateArrayToObject(checkpoint.data.exams, 'exam'),
+                dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
+                exams: migrateArrayToObject(cpData.exams, 'exam'),
+                lastSaved: cpData.lastSaved || Date.now(),
                 _version: Date.now(),
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
@@ -10306,8 +10424,18 @@ CHAIR: 9F
             if (!confirm('Delete this checkpoint?')) return;
 
             const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            const checkpoint = checkpoints[index];
             checkpoints.splice(index, 1);
             localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+
+            // FIXED: Also delete from Firebase
+            if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
+                database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
+                    .then(() => {
+                        console.log('☁️ Checkpoint deleted from cloud:', checkpoint.id);
+                    })
+                    .catch(err => console.error('Failed to delete cloud checkpoint:', err));
+            }
 
             // Refresh modal
             document.querySelector('.checkpoint-modal-overlay')?.remove();
@@ -10527,10 +10655,31 @@ CHAIR: 9F
                     // Create backup first
                     createCheckpoint('Auto-backup before direct restore');
 
-                    // Restore
+                    // Restore - use explicit fields instead of raw spread
                     roadmapData = {
-                        ...getDefaultRoadmapData(),
-                        ...data,
+                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : 33.3,
+                        mandatoryItems: data.mandatoryItems || getDefaultRoadmapData().mandatoryItems,
+                        grades: data.grades || getDefaultRoadmapData().grades,
+                        editedDeadlines: data.editedDeadlines || {},
+                        completedDeadlines: data.completedDeadlines || {},
+                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                        examStudyProgress: data.examStudyProgress || {},
+                        monthlyPlanner: {
+                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                        },
+                        clinicalData: {
+                            patients: data.clinicalData?.patients || {},
+                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
+                            competencies: migrateCompetencies(data.clinicalData?.competencies) || null
+                        },
+                        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
+                        exams: migrateArrayToObject(data.exams, 'exam'),
+                        lastSaved: data.lastSaved || Date.now(),
                         _version: Date.now(),
                         _lastModified: new Date().toISOString(),
                         _dataLoaded: true
@@ -10543,7 +10692,7 @@ CHAIR: 9F
 
                     // Close modal and refresh UI
                     document.querySelector('.checkpoint-modal-overlay')?.remove();
-                    initializeUI();
+                    initUI();  // FIXED: was initializeUI() which doesn't exist
 
                 } catch (err) {
                     console.error('Direct restore error:', err);
@@ -10618,14 +10767,25 @@ CHAIR: 9F
                     throw new Error('User path not set. Please enter your PIN again.');
                 }
 
+                // FIXED: Clean data before Firebase write
+                // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
+                const cleanData = JSON.parse(JSON.stringify(roadmapData));
+                // Remove internal flags that shouldn't be in Firebase
+                delete cleanData._dataLoaded;
+
+                console.log('Force upload data size:', JSON.stringify(cleanData).length, 'bytes');
+
                 // Attempt the upload
-                await database.ref(userPath).set(roadmapData);
+                await database.ref(userPath).set(cleanData);
                 localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('✅ Force upload complete!');
                 console.log('Force upload complete:', roadmapData._version);
             } catch (err) {
                 console.error('Force upload failed:', err);
+                console.error('Error code:', err.code);
+                console.error('Error message:', err.message);
+                console.error('Data size:', JSON.stringify(roadmapData).length, 'bytes');
                 updateSyncStatus('error', 'Upload failed');
                 // More specific error message
                 const errorMsg = err.message || 'Unknown error';
@@ -10776,18 +10936,29 @@ CHAIR: 9F
 
                 saveDebounceTimer = setTimeout(() => {
                     lastSaveTime = Date.now();
-                    database.ref(userPath).set(roadmapData)
+
+                    // FIXED: Clean data before Firebase write
+                    // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
+                    const cleanData = JSON.parse(JSON.stringify(roadmapData));
+                    // Remove internal flags that shouldn't be in Firebase
+                    delete cleanData._dataLoaded;
+
+                    database.ref(userPath).set(cleanData)
                         .then(() => {
                             updateSyncStatus('connected', 'Synced');
                             console.log('✅ Saved to Firebase, version:', roadmapData._version);
                         })
                         .catch(error => {
                             console.error('❌ Firebase save error:', error);
+                            console.error('Error code:', error.code);
+                            console.error('Error message:', error.message);
                             updateSyncStatus('error', 'Save failed - retrying...');
                             // Retry once after 2 seconds
                             setTimeout(() => {
                                 if (firebaseSyncEnabled && database && userPath) {
-                                    database.ref(userPath).set(roadmapData)
+                                    const retryData = JSON.parse(JSON.stringify(roadmapData));
+                                    delete retryData._dataLoaded;
+                                    database.ref(userPath).set(retryData)
                                         .then(() => {
                                             updateSyncStatus('connected', 'Synced');
                                         })
@@ -10802,7 +10973,9 @@ CHAIR: 9F
         }
 
         // ==================== DEADLINES DATA ====================
-        const deadlines = [
+        // STATIC_DEADLINES: Immutable source of truth for hardcoded deadlines
+        // Custom deadlines are stored in roadmapData.customDeadlines
+        const STATIC_DEADLINES = [
             // January
             { date: '2026-01-15', day: 'Wed', what: 'Quiz 1 due (11:59 PM) ✅ DONE', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january', done: true },
             { date: '2026-01-22', day: 'Thu', what: 'Quiz 2 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january' },
@@ -10852,6 +11025,10 @@ CHAIR: 9F
             { date: '2026-04-17', day: 'Fri', what: 'FINAL EXAM (4-5:50pm, L1101) — notecard allowed', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'april' },
             { date: '2026-04-17', day: 'Fri', what: 'Passion Project due (4pm) — needs DATED JOURNAL LOG', course: 'Oral Med', weight: '12.5%', type: 'Project', month: 'april' }
         ];
+
+        // Working deadlines array - reset from STATIC_DEADLINES at start of each initUI() call
+        // to prevent duplicate custom deadlines from accumulating
+        let deadlines = [];
 
         const exams = [
             { name: 'PC2 Midterm', date: '2026-02-02', weight: '30%', priority: '🔴 HIGH' },
@@ -11375,9 +11552,10 @@ CHAIR: 9F
             deadline.month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
             
             
-            // Store the edit
+            // Store the edit using STABLE ID (not array index!)
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-            roadmapData.editedDeadlines[index] = {
+            const deadlineId = getDeadlineId(deadline);
+            roadmapData.editedDeadlines[deadlineId] = {
                 date: deadline.date,
                 day: deadline.day,
                 month: deadline.month,
@@ -11385,20 +11563,22 @@ CHAIR: 9F
                 course: deadline.course,
                 weight: deadline.weight,
                 type: deadline.type,
-                tbd: deadline.tbd
+                tbd: deadline.tbd,
+                done: deadline.done || false,    // FIXED: Preserve completion status
+                grade: deadline.grade || null     // FIXED: Preserve grade
             };
-            
+
             // Save immediately
             localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
             saveData();
-            
+
             // Re-render
             renderDeadlines();
             renderDashboard();
-            
+
             showToast('Date updated!');
         }
-        
+
         // Handle text field edits (name, course, weight)
         function handleTextEdit(inputEl) {
             const index = parseInt(inputEl.dataset.index, 10);
@@ -11421,9 +11601,10 @@ CHAIR: 9F
             // Update the field
             deadline[field] = value;
 
-            // Store the edit (including completion status)
+            // Store the edit using STABLE ID (not array index!)
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-            roadmapData.editedDeadlines[index] = {
+            const deadlineId = getDeadlineId(deadline);
+            roadmapData.editedDeadlines[deadlineId] = {
                 date: deadline.date,
                 day: deadline.day,
                 month: deadline.month,
@@ -11432,8 +11613,8 @@ CHAIR: 9F
                 weight: deadline.weight,
                 type: deadline.type,
                 tbd: deadline.tbd,
-                done: deadline.done || false,    // FIXED: Preserve completion status
-                grade: deadline.grade || null    // FIXED: Preserve grade
+                done: deadline.done || false,    // Preserve completion status
+                grade: deadline.grade || null    // Preserve grade
             };
 
             // Save immediately
@@ -11446,7 +11627,7 @@ CHAIR: 9F
 
             showToast(`${field} updated!`);
         }
-        
+
         function handleDeadlineKeydown(event, inputEl) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -12326,11 +12507,26 @@ CHAIR: 9F
                 deletedAt: new Date().toISOString()
             };
             
-            // Remove from editedDeadlines if it was there
-            if (roadmapData.editedDeadlines && roadmapData.editedDeadlines[index]) {
-                delete roadmapData.editedDeadlines[index];
+            // Remove from editedDeadlines using STABLE ID
+            const deadlineId = getDeadlineId(deadline);
+            if (roadmapData.editedDeadlines) {
+                // Delete by stable ID
+                if (roadmapData.editedDeadlines[deadlineId]) {
+                    delete roadmapData.editedDeadlines[deadlineId];
+                }
+                // Also clean up any legacy index-based entry
+                if (roadmapData.editedDeadlines[index]) {
+                    delete roadmapData.editedDeadlines[index];
+                }
             }
-            
+
+            // Also remove from completedDeadlines
+            if (roadmapData.completedDeadlines) {
+                if (roadmapData.completedDeadlines[deadlineId]) {
+                    delete roadmapData.completedDeadlines[deadlineId];
+                }
+            }
+
             saveData();
             renderDeadlines();
             renderDashboard();
@@ -15104,6 +15300,14 @@ CHAIR: 9F
         // ==================== INITIALIZE ====================
         function initUI() {
 
+            // ============================================
+            // CRITICAL FIX: Reset deadlines array from STATIC_DEADLINES
+            // This prevents duplicate custom deadlines from accumulating
+            // when initUI() is called multiple times (tab switch, visibility change, etc.)
+            // ============================================
+            deadlines.length = 0; // Clear the working array
+            STATIC_DEADLINES.forEach(d => deadlines.push({...d})); // Deep copy static deadlines
+
             // Sync static exams array to roadmapData for cross-app integration
             // Body Comp Tracker pulls this from Firebase
             if (!roadmapData.exams || getCount(roadmapData.exams) === 0) {
@@ -15143,23 +15347,39 @@ CHAIR: 9F
             } catch(e) { console.error('Error restoring peds locked in:', e); }
             
             try {
-                // Restore edited deadlines - DEEP MERGE each property
+                // Restore edited deadlines using STABLE ID matching
+                // This survives array reordering and custom deadline additions
                 if (roadmapData.editedDeadlines) {
-                    Object.keys(roadmapData.editedDeadlines).forEach(indexStr => {
-                        const index = parseInt(indexStr, 10);
-                        const edited = roadmapData.editedDeadlines[indexStr];
-                        if (deadlines[index] && edited) {
-                            // Deep copy each property
-                            deadlines[index].date = edited.date || deadlines[index].date;
-                            deadlines[index].day = edited.day || deadlines[index].day;
-                            deadlines[index].what = edited.what || deadlines[index].what;
-                            deadlines[index].course = edited.course || deadlines[index].course;
-                            deadlines[index].weight = edited.weight || deadlines[index].weight;
-                            deadlines[index].type = edited.type || deadlines[index].type;
-                            deadlines[index].month = edited.month || deadlines[index].month;
-                            // FIXED: Restore completion status from edited deadlines
-                            if (edited.done !== undefined) deadlines[index].done = edited.done;
-                            if (edited.grade !== undefined) deadlines[index].grade = edited.grade;
+                    Object.entries(roadmapData.editedDeadlines).forEach(([key, edited]) => {
+                        if (!edited) return;
+
+                        // Try to find deadline by stable ID first
+                        let deadlineIdx = deadlines.findIndex(d => getDeadlineId(d) === key);
+
+                        // Fallback: Legacy numeric index (for migration from old data)
+                        if (deadlineIdx === -1 && /^\d+$/.test(key)) {
+                            const idx = parseInt(key, 10);
+                            if (deadlines[idx]) {
+                                // Migrate: re-save with stable ID
+                                const stableId = getDeadlineId(deadlines[idx]);
+                                roadmapData.editedDeadlines[stableId] = edited;
+                                delete roadmapData.editedDeadlines[key];
+                                deadlineIdx = idx;
+                            }
+                        }
+
+                        if (deadlineIdx !== -1) {
+                            // Apply the edit to the deadline
+                            const deadline = deadlines[deadlineIdx];
+                            if (edited.date) deadline.date = edited.date;
+                            if (edited.day) deadline.day = edited.day;
+                            if (edited.what) deadline.what = edited.what;
+                            if (edited.course) deadline.course = edited.course;
+                            if (edited.weight) deadline.weight = edited.weight;
+                            if (edited.type) deadline.type = edited.type;
+                            if (edited.month) deadline.month = edited.month;
+                            if (edited.done !== undefined) deadline.done = edited.done;
+                            if (edited.grade !== undefined) deadline.grade = edited.grade;
                         }
                     });
                 }
@@ -15296,7 +15516,10 @@ CHAIR: 9F
                 if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                     if (firebaseSyncEnabled && database && userPath) {
-                        database.ref(userPath).set(roadmapData)
+                        // FIXED: Clean data before Firebase write
+                        const cleanData = JSON.parse(JSON.stringify(roadmapData));
+                        delete cleanData._dataLoaded;
+                        database.ref(userPath).set(cleanData)
                             .catch(err => console.error('Save on hide failed:', err));
                     }
                 }
@@ -15315,36 +15538,42 @@ CHAIR: 9F
                                     return;
                                 }
 
-                                // Proper deep merge for all nested objects (match loadFromFirebase pattern)
-                                // CRITICAL: Use ensureArray() for all array fields - Firebase converts arrays to objects
+                                // FIXED: Proper deep merge - NO raw ...data spread to prevent data corruption
+                                // Explicitly merge each field, preserving local data where cloud is stale
                                 roadmapData = {
                                     ...roadmapData,
-                                    ...data,
+                                    // NO ...data spread - only explicit fields below
                                     pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
                                     mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
                                     grades: { ...roadmapData.grades, ...(data.grades || {}) },
                                     editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                                     completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                                    customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                                    deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                                    // FIXED: Merge local THEN cloud to preserve local data
+                                    customDeadlines: { ...migrateArrayToObject(roadmapData.customDeadlines, 'deadline'), ...migrateArrayToObject(data.customDeadlines, 'deadline') },
+                                    deletedDeadlines: { ...migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted'), ...migrateArrayToObject(data.deletedDeadlines, 'deleted') },
                                     examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
+                                    // FIXED: Monthly planner - merge local THEN cloud
                                     monthlyPlanner: {
-                                        notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                                        customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                                        overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                                        completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                                        notes: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(data.monthlyPlanner?.notes, 'note') },
+                                        customTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask') },
+                                        overriddenStatic: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override') },
+                                        completedTasks: { ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed') }
                                     },
+                                    // FIXED: Clinical data - merge local THEN cloud
                                     clinicalData: {
                                         patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                                        appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                                        completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
+                                        appointments: { ...migrateArrayToObject(roadmapData.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(data.clinicalData?.appointments, 'appt') },
+                                        completedProcedures: { ...migrateArrayToObject(roadmapData.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc') },
                                         competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                                     },
                                     dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-                                    exams: migrateArrayToObject(data.exams, 'exam'),
-                                    lastSaved: data.lastSaved
+                                    // FIXED: Exams - merge local THEN cloud
+                                    exams: { ...migrateArrayToObject(roadmapData.exams, 'exam'), ...migrateArrayToObject(data.exams, 'exam') },
+                                    lastSaved: data.lastSaved,
+                                    _version: Math.max(data._version || 0, roadmapData._version || 0),
+                                    _lastModified: data._lastModified || roadmapData._lastModified,
+                                    _dataLoaded: true
                                 };
-                                roadmapData._dataLoaded = true;
                                 initUI();
                             }
                         })

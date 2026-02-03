@@ -6348,22 +6348,26 @@
             100% { transform: translateX(0); opacity: 1; }
         }
 
-        /* Reorder Buttons */
+        /* Reorder Buttons - HORIZONTAL layout to reduce card height */
         .reorder-buttons {
             display: flex !important;
-            flex-direction: column !important;
-            gap: 2px !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 4px !important;
             margin-right: 8px !important;
+            align-items: center !important;
         }
         .btn-reorder {
             background: var(--bg-page) !important;
             border: 1px solid var(--border) !important;
             color: var(--text-muted) !important;
-            padding: 2px 8px !important;
-            font-size: 10px !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
             border-radius: 4px !important;
             cursor: pointer !important;
             transition: all 0.2s !important;
+            min-width: 28px !important;
+            text-align: center !important;
         }
         .btn-reorder:hover:not(:disabled) {
             background: var(--accent-blue) !important;
@@ -17219,23 +17223,48 @@
 
         // SWAP two adjacent tasks (for up/down buttons)
         function swapAdjacentTasks(taskId1, taskId2) {
-            if (isReorderingLocked) return;
+            console.log('🔄 swapAdjacentTasks called:', { taskId1, taskId2, isReorderingLocked });
+            if (isReorderingLocked) {
+                console.log('⚠️ swapAdjacentTasks: Reordering is locked!');
+                return;
+            }
             isReorderingLocked = true;
 
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const index1 = scheduledTasks.findIndex(t => t.id === taskId1);
             const index2 = scheduledTasks.findIndex(t => t.id === taskId2);
 
+            console.log('📍 Indices found:', { index1, index2 });
+
             if (index1 === -1 || index2 === -1) {
+                console.log('❌ swapAdjacentTasks: One or both tasks not found in scheduledTasks');
+                console.log('Tasks object has key taskId1?', tasks.hasOwnProperty(taskId1));
+                console.log('Tasks object has key taskId2?', tasks.hasOwnProperty(taskId2));
                 isReorderingLocked = false;
+                showToast('Error: Task not found', '❌');
                 return;
             }
 
             // Swap the crashOutOrder values
-            const order1 = tasks[taskId1].crashOutOrder;
-            const order2 = tasks[taskId2].crashOutOrder;
+            const order1 = tasks[taskId1]?.crashOutOrder;
+            const order2 = tasks[taskId2]?.crashOutOrder;
+            console.log('📊 Current orders:', { order1, order2 });
+
+            if (tasks[taskId1] === undefined || tasks[taskId2] === undefined) {
+                console.log('❌ Task objects not found in tasks object!');
+                console.log('tasks[taskId1]:', tasks[taskId1]);
+                console.log('tasks[taskId2]:', tasks[taskId2]);
+                isReorderingLocked = false;
+                showToast('Error: Task data missing', '❌');
+                return;
+            }
+
             tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
             tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
+            console.log('✅ Orders swapped:', {
+                task1NewOrder: tasks[taskId1].crashOutOrder,
+                task2NewOrder: tasks[taskId2].crashOutOrder
+            });
 
             // Recalculate times based on new order
             recalculateScheduledTimes();
@@ -17250,46 +17279,82 @@
         }
 
         function moveTaskUp(taskId) {
+            console.log('🔼 moveTaskUp called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const index = scheduledTasks.findIndex(t => t.id === taskId);
-            if (index <= 0) return; // Already at top
+            console.log('📍 Task index in scheduledTasks:', index);
+            if (index <= 0) {
+                console.log('⚠️ moveTaskUp: Task already at top or not found (index:', index, ')');
+                if (index === -1) showToast('Task not found in schedule', '⚠️');
+                return;
+            }
 
             // Swap with previous task
             const targetTaskId = scheduledTasks[index - 1].id;
+            console.log('🔄 Swapping with task:', targetTaskId);
             swapAdjacentTasks(taskId, targetTaskId);
         }
 
         function moveTaskDown(taskId) {
+            console.log('🔽 moveTaskDown called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const index = scheduledTasks.findIndex(t => t.id === taskId);
-            if (index === -1 || index >= scheduledTasks.length - 1) return; // Already at bottom
+            console.log('📍 Task index in scheduledTasks:', index);
+            if (index === -1 || index >= scheduledTasks.length - 1) {
+                console.log('⚠️ moveTaskDown: Task already at bottom or not found (index:', index, ', total:', scheduledTasks.length, ')');
+                if (index === -1) showToast('Task not found in schedule', '⚠️');
+                return;
+            }
 
             // Swap with next task
             const targetTaskId = scheduledTasks[index + 1].id;
+            console.log('🔄 Swapping with task:', targetTaskId);
             swapAdjacentTasks(taskId, targetTaskId);
         }
 
         // Move task to top of schedule (first position)
         function moveTaskToTop(taskId) {
+            console.log('⬆️⬆️ moveTaskToTop called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            if (scheduledTasks.length < 2) return;
+            console.log('📋 scheduledTasks count:', scheduledTasks.length);
+            if (scheduledTasks.length < 2) {
+                console.log('⚠️ Not enough tasks to reorder');
+                return;
+            }
 
             const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
-            if (currentIndex <= 0) return; // Already at top
+            console.log('📍 Current index:', currentIndex);
+            if (currentIndex <= 0) {
+                console.log('⚠️ Already at top or not found');
+                return;
+            }
 
             const firstTaskId = scheduledTasks[0].id;
+            console.log('🔄 Moving to position of first task:', firstTaskId);
             moveTaskToPosition(taskId, firstTaskId);
         }
 
         // Move task to bottom of schedule (last position)
         function moveTaskToBottom(taskId) {
+            console.log('⬇️⬇️ moveTaskToBottom called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            if (scheduledTasks.length < 2) return;
+            console.log('📋 scheduledTasks count:', scheduledTasks.length);
+            if (scheduledTasks.length < 2) {
+                console.log('⚠️ Not enough tasks to reorder');
+                return;
+            }
 
             const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
-            if (currentIndex === scheduledTasks.length - 1) return; // Already at bottom
+            console.log('📍 Current index:', currentIndex);
+            if (currentIndex === scheduledTasks.length - 1) {
+                console.log('⚠️ Already at bottom');
+                return;
+            }
 
             const lastTaskId = scheduledTasks[scheduledTasks.length - 1].id;
+            console.log('🔄 Moving to position of last task:', lastTaskId);
             moveTaskToPosition(taskId, lastTaskId);
         }
 
