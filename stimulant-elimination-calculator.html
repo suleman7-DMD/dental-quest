@@ -4409,19 +4409,8 @@
                 // XR splits into two releases
                 const immediateRelease = totalDose * 0.5;
                 const delayedRelease = totalDose * 0.5;
-                const delayedTime = baseDoseTime + 240; // T+4 hours
-
-                // DEBUG: Log XR calculation details (can be removed in production)
-                // console.log(`XR Calc: dose=${totalDose}mg at ${minutesToTime(baseDoseTime)}, checking at ${minutesToTime(atMinutes)}`);
-                // console.log(`  Immediate: ${immediateRelease}mg, Delayed: ${delayedRelease}mg at ${minutesToTime(delayedTime)}`);
-
-                // Handle midnight rollover for atMinutes
-                // If atMinutes is early morning (< 6 AM) and dose was evening (> 18:00)
-                // Then we're checking tomorrow's time against yesterday's dose
-                let effectiveAtMinutes = atMinutes;
-                if (atMinutes < 6 * 60 && baseDoseTime > 18 * 60) {
-                    effectiveAtMinutes = atMinutes + 24 * 60; // Treat as next day
-                }
+                // FIX: Use effectiveDoseTime (accounts for cross-date) instead of baseDoseTime
+                const delayedTime = effectiveDoseTime + 240; // T+4 hours
 
                 let immediateLoad = 0;
                 let delayedLoad = 0;
@@ -4430,13 +4419,14 @@
                 const vitCEffectiveFresh = isVitaminCEffective();
 
                 // Calculate immediate release component
-                if (effectiveAtMinutes >= baseDoseTime) {
-                    const elapsed = effectiveAtMinutes - baseDoseTime;
+                // FIX: Use effectiveDoseTime for cross-date correctness
+                if (atMinutes >= effectiveDoseTime) {
+                    const elapsed = atMinutes - effectiveDoseTime;
 
                     // If Vitamin C was taken AND still effective, use reduced half-life for time after it
-                    if (vitCEffectiveFresh && effectiveAtMinutes > vitCTime) {
-                        const beforeVitC = Math.max(0, vitCTime - baseDoseTime);
-                        const afterVitC = effectiveAtMinutes - Math.max(baseDoseTime, vitCTime);
+                    if (vitCEffectiveFresh && atMinutes > vitCTime) {
+                        const beforeVitC = Math.max(0, vitCTime - effectiveDoseTime);
+                        const afterVitC = atMinutes - Math.max(effectiveDoseTime, vitCTime);
 
                         // Decay before Vitamin C
                         let remaining = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
@@ -4450,18 +4440,13 @@
                 }
 
                 // Calculate delayed release component
-                // CRITICAL FIX: Handle midnight rollover for delayed time too
-                let effectiveDelayedTime = delayedTime;
-                if (delayedTime > 24 * 60) {
-                    effectiveDelayedTime = delayedTime; // Keep as is for comparison
-                }
+                // delayedTime is now based on effectiveDoseTime, handles cross-date correctly
+                if (atMinutes >= delayedTime) {
+                    const elapsed = atMinutes - delayedTime;
 
-                if (effectiveAtMinutes >= effectiveDelayedTime) {
-                    const elapsed = effectiveAtMinutes - effectiveDelayedTime;
-
-                    if (vitCEffectiveFresh && effectiveAtMinutes > vitCTime) {
-                        const beforeVitC = Math.max(0, vitCTime - effectiveDelayedTime);
-                        const afterVitC = effectiveAtMinutes - Math.max(effectiveDelayedTime, vitCTime);
+                    if (vitCEffectiveFresh && atMinutes > vitCTime) {
+                        const beforeVitC = Math.max(0, vitCTime - delayedTime);
+                        const afterVitC = atMinutes - Math.max(delayedTime, vitCTime);
 
                         let remaining = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
                         remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
@@ -4476,6 +4461,7 @@
                 // console.log(`  Result: immediate=${immediateLoad.toFixed(2)}mg, delayed=${delayedLoad.toFixed(2)}mg, total=${totalLoad.toFixed(2)}mg`);
             });
 
+            console.log('AMP LOAD at', atMinutes, '=', totalLoad.toFixed(2), 'mg');
             return totalLoad;
         }
 
@@ -4517,6 +4503,7 @@
                 }
             });
 
+            console.log('CAFF LOAD at', atMinutes, '=', totalLoad.toFixed(2), 'mg');
             return totalLoad;
         }
 
