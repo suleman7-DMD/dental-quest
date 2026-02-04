@@ -4270,6 +4270,7 @@
         // FIXED: Now handles date stamps and midnight rollovers correctly
         // UPDATED: Now supports Vitamin C "tomorrow" setting via getVitaminCTimeMinutes()
         function calculateAmpLoad(atMinutes) {
+            console.log('calculateAmpLoad called with atMinutes:', atMinutes, '(' + minutesToTime(atMinutes) + ')');
             let totalLoad = 0;
             const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
             const vitCTime = getVitaminCTimeMinutes(); // Handles today/tomorrow
@@ -4278,6 +4279,7 @@
 
             // FIX: Use getValues() for object iteration
             getValues(state.medications).forEach(med => {
+                const loadBefore = totalLoad; // DIAGNOSTIC
                 const baseDoseTime = timeToMinutes(med.time);
                 const totalDose = med.dose;
                 const medDate = med.date || today;
@@ -4402,6 +4404,7 @@
                             totalLoad += drLoad;
                         }
                     }
+                    console.log('  dose:', totalDose + 'mg', 'OLD-PATH', 'doseTime:', effectiveDoseTime, '(' + minutesToTime(effectiveDoseTime) + ')', 'elapsed:', elapsed, 'contribution:', (totalLoad - loadBefore).toFixed(2) + 'mg');
                     return;
                 }
 
@@ -4474,8 +4477,10 @@
                 
                 // DEBUG: Log component totals
                 // console.log(`  Result: immediate=${immediateLoad.toFixed(2)}mg, delayed=${delayedLoad.toFixed(2)}mg, total=${totalLoad.toFixed(2)}mg`);
+                console.log('  dose:', totalDose + 'mg', 'FRESH-PATH', 'doseTime:', baseDoseTime, '(' + minutesToTime(baseDoseTime) + ')', 'elapsed:', (effectiveAtMinutes - baseDoseTime), 'contribution:', (totalLoad - loadBefore).toFixed(2) + 'mg');
             });
-            
+
+            console.log('  TOTAL:', totalLoad.toFixed(2) + 'mg');
             return totalLoad;
         }
 
@@ -5892,6 +5897,7 @@
         // ============================================
         
         function recalculate() {
+            console.log('🔴 DIAGNOSTIC: recalculate() called - if you see this, local file is loaded');
             // Update state from inputs (safely - elements might not exist in focus mode)
             const wakeTimeEl = document.getElementById('wakeTime');
             const hoursSleptEl = document.getElementById('hoursSlept');
