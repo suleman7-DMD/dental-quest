@@ -11573,8 +11573,8 @@ CHAIR: 9F
             
             // Store the edit using STABLE ID (not array index!)
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-            const deadlineId = getDeadlineId(deadline);
-            roadmapData.editedDeadlines[deadlineId] = {
+            const stableId = getDeadlineId(deadline);
+            roadmapData.editedDeadlines[stableId] = {
                 date: deadline.date,
                 day: deadline.day,
                 month: deadline.month,
@@ -11627,8 +11627,8 @@ CHAIR: 9F
 
             // Store the edit using STABLE ID (not array index!)
             if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-            const deadlineId = getDeadlineId(deadline);
-            roadmapData.editedDeadlines[deadlineId] = {
+            const stableId = getDeadlineId(deadline);
+            roadmapData.editedDeadlines[stableId] = {
                 date: deadline.date,
                 day: deadline.day,
                 month: deadline.month,
