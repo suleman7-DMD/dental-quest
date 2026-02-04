@@ -9687,12 +9687,19 @@ CHAIR: 9F
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
-                    // Apply same array sanitization as Firebase load
+                    // FIX: Use explicit field merges (matching loadFromFirebase pattern)
+                    // Avoids raw spread which can propagate localStorage corruption
                     roadmapData = {
                         ...roadmapData,
-                        ...data,
+                        // Explicit field merges for safety (not raw ...data spread)
+                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
+                        mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
+                        grades: { ...roadmapData.grades, ...(data.grades || {}) },
+                        editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
+                        completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
                         customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
                         deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                        examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
                         monthlyPlanner: {
                             notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
                             customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
@@ -9706,7 +9713,10 @@ CHAIR: 9F
                             competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-                        exams: migrateArrayToObject(data.exams, 'exam')
+                        exams: migrateArrayToObject(data.exams, 'exam'),
+                        lastSaved: data.lastSaved || roadmapData.lastSaved,
+                        _version: data._version || roadmapData._version || 0,
+                        _lastModified: data._lastModified || roadmapData._lastModified
                     };
                 } catch (e) {
                     console.error('❌ Failed to parse localStorage data:', e);
@@ -10236,7 +10246,7 @@ CHAIR: 9F
                 data: JSON.parse(JSON.stringify(roadmapData))
             };
 
-            const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
             checkpoints.unshift(checkpoint);
 
             // Keep max 50 checkpoints
@@ -10397,12 +10407,14 @@ CHAIR: 9F
                     patients: cpData.clinicalData?.patients || {},
                     appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: migrateCompetencies(cpData.clinicalData?.competencies) || null
+                    // FIX: Preserve existing competencies if checkpoint doesn't have them
+                    competencies: migrateCompetencies(cpData.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(cpData.exams, 'exam'),
                 lastSaved: cpData.lastSaved || Date.now(),
-                _version: Date.now(),
+                // FIX: Use _version: 0 so cloud data wins on next sync (per CLAUDE.md rule)
+                _version: 0,
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
@@ -10675,12 +10687,14 @@ CHAIR: 9F
                             patients: data.clinicalData?.patients || {},
                             appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: migrateCompetencies(data.clinicalData?.competencies) || null
+                            // FIX: Preserve existing competencies if import doesn't have them
+                            competencies: migrateCompetencies(data.clinicalData?.competencies) || migrateCompetencies(roadmapData.clinicalData?.competencies) || null
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),
                         lastSaved: data.lastSaved || Date.now(),
-                        _version: Date.now(),
+                        // FIX: Use _version: 0 so cloud data wins on next sync (per CLAUDE.md rule)
+                        _version: 0,
                         _lastModified: new Date().toISOString(),
                         _dataLoaded: true
                     };
@@ -11911,8 +11925,10 @@ CHAIR: 9F
                         d.grade = grade;
 
                         // CRITICAL FIX: Persist completion to roadmapData for save
+                        // Use stable deadline ID instead of array index (indices shift when custom deadlines added)
                         if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
-                        roadmapData.completedDeadlines[idx] = {
+                        const stableId = getDeadlineId(d);
+                        roadmapData.completedDeadlines[stableId] = {
                             date: d.date,
                             what: d.what,
                             course: d.course,
@@ -11925,9 +11941,10 @@ CHAIR: 9F
                         d.done = false;
                         d.grade = null;
 
-                        // Remove from completedDeadlines if unmarking
-                        if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[idx]) {
-                            delete roadmapData.completedDeadlines[idx];
+                        // Remove from completedDeadlines if unmarking (using stable ID)
+                        const stableId = getDeadlineId(d);
+                        if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[stableId]) {
+                            delete roadmapData.completedDeadlines[stableId];
                         }
                     }
                 }
@@ -12184,7 +12201,18 @@ CHAIR: 9F
                 alert('Please select a date');
                 return;
             }
-            
+
+            // FIX: Check for duplicate deadlines (same date + what + course)
+            const isDuplicate = deadlines.some(d =>
+                d.date === date &&
+                d.what.toLowerCase() === what.toLowerCase() &&
+                d.course === course
+            );
+            if (isDuplicate) {
+                alert('A deadline with the same date, description, and course already exists.');
+                return;
+            }
+
             const month = new Date(date + 'T12:00:00').toLocaleString('en-US', { month: 'long' }).toLowerCase();
             
             const newDeadline = {
@@ -12485,7 +12513,14 @@ CHAIR: 9F
             deadlines.splice(index, 1);
             
             // Also remove from customDeadlines if it was custom
-            if (roadmapData.customDeadlines) {
+            // FIX: Use deadline.id for precise matching instead of property matching
+            // (property matching can delete wrong deadline if two have identical date/what/course)
+            if (roadmapData.customDeadlines && deadline.custom && deadline.id) {
+                if (roadmapData.customDeadlines[deadline.id]) {
+                    delete roadmapData.customDeadlines[deadline.id];
+                }
+            } else if (roadmapData.customDeadlines) {
+                // Fallback for legacy deadlines without id field
                 Object.keys(roadmapData.customDeadlines).forEach(id => {
                     const d = roadmapData.customDeadlines[id];
                     if (d && d.date === deadline.date && d.what === deadline.what && d.course === deadline.course) {
