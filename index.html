@@ -9016,7 +9016,7 @@
 
             items.forEach((item, index) => {
                 if (item === null || item === undefined) return;
-                const id = item.id || generateId(keyPrefix);
+                const id = String(item.id || generateId(keyPrefix));
                 result[id] = {
                     ...item,
                     id: id,

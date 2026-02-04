@@ -11461,42 +11461,42 @@ CHAIR: 9F
                 tbody.innerHTML = monthDeadlines.map((d, idx) => {
                     const days = getCountdown(d.date);
                     const isPassed = days < 0;
-                    const deadlineIndex = deadlines.indexOf(d);
+                    const deadlineId = getDeadlineId(d);
                     const isCustom = d.custom || false;
                     const isDone = d.done || false;
                     const grade = d.grade !== undefined ? d.grade : null;
-                    
+
                     // Row styling based on done status
                     const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
                     const rowClass = isPassed ? 'passed' : '';
-                    
+
                     return `
-                        <tr class="${rowClass}" data-deadline-index="${deadlineIndex}" style="${rowStyle}">
+                        <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}">
                             <td>
-                                <button onclick="toggleDeadlineDone(${deadlineIndex})" 
-                                    style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'}; 
-                                           border: 2px solid ${isDone ? '#059669' : '#4b5563'}; 
-                                           color: ${isDone ? 'white' : '#94a3b8'}; 
-                                           width: 32px; height: 32px; 
-                                           border-radius: 6px; cursor: pointer; 
-                                           font-size: 1.1em; display: flex; 
+                                <button onclick="toggleDeadlineDoneById('${deadlineId}')"
+                                    style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'};
+                                           border: 2px solid ${isDone ? '#059669' : '#4b5563'};
+                                           color: ${isDone ? 'white' : '#94a3b8'};
+                                           width: 32px; height: 32px;
+                                           border-radius: 6px; cursor: pointer;
+                                           font-size: 1.1em; display: flex;
                                            align-items: center; justify-content: center;"
                                     title="${isDone ? 'Mark incomplete' : 'Mark complete'}">
                                     ${isDone ? '✓' : '○'}
                                 </button>
                             </td>
                             <td>
-                                <input type="date" class="deadline-date-picker" 
-                                    value="${d.date}" 
-                                    data-index="${deadlineIndex}"
+                                <input type="date" class="deadline-date-picker"
+                                    value="${d.date}"
+                                    data-deadline-id="${deadlineId}"
                                     onchange="handleDateChange(this)">
                             </td>
                             <td>${d.day}</td>
                             <td>${isDone && grade !== null ? `<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">${grade}%</span>` : getCountdownBadge(days, d.tbd)}</td>
                             <td class="deadline-what-cell">
-                                <input type="text" class="deadline-edit-input" 
-                                    value="${escapeHtml(d.what)}" 
-                                    data-index="${deadlineIndex}" 
+                                <input type="text" class="deadline-edit-input"
+                                    value="${escapeHtml(d.what)}"
+                                    data-deadline-id="${deadlineId}"
                                     data-field="what"
                                     data-original="${escapeHtml(d.what)}"
                                     onblur="handleTextEdit(this)"
@@ -11504,9 +11504,9 @@ CHAIR: 9F
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">
                             </td>
                             <td>
-                                <input type="text" class="deadline-edit-input" 
-                                    value="${escapeHtml(d.course)}" 
-                                    data-index="${deadlineIndex}" 
+                                <input type="text" class="deadline-edit-input"
+                                    value="${escapeHtml(d.course)}"
+                                    data-deadline-id="${deadlineId}"
                                     data-field="course"
                                     data-original="${escapeHtml(d.course)}"
                                     onblur="handleTextEdit(this)"
@@ -11514,9 +11514,9 @@ CHAIR: 9F
                                     style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">
                             </td>
                             <td>
-                                <input type="text" class="deadline-edit-input" 
-                                    value="${escapeHtml(d.weight)}" 
-                                    data-index="${deadlineIndex}" 
+                                <input type="text" class="deadline-edit-input"
+                                    value="${escapeHtml(d.weight)}"
+                                    data-deadline-id="${deadlineId}"
                                     data-field="weight"
                                     data-original="${escapeHtml(d.weight)}"
                                     onblur="handleTextEdit(this)"
@@ -11525,7 +11525,7 @@ CHAIR: 9F
                             </td>
                             <td>${d.type}</td>
                             <td>
-                                <button onclick="deleteDeadline(${deadlineIndex})" 
+                                <button onclick="deleteDeadlineById('${deadlineId}')"
                                     style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"
                                     title="Delete this deadline">🗑️</button>
                             </td>
@@ -11537,19 +11537,24 @@ CHAIR: 9F
         
         // Handle date picker changes
         function handleDateChange(inputEl) {
-            const index = parseInt(inputEl.dataset.index, 10);
+            const deadlineId = inputEl.dataset.deadlineId;
             const newDate = inputEl.value; // Already in YYYY-MM-DD format
-            
-            
-            if (isNaN(index) || index < 0 || index >= deadlines.length) {
-                console.error('Invalid deadline index:', index);
+
+            if (!deadlineId) {
+                console.error('No deadline ID found on input');
                 return;
             }
-            
+
+            const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+            if (index === -1) {
+                console.error('Deadline not found for ID:', deadlineId);
+                return;
+            }
+
             if (!newDate) {
                 return;
             }
-            
+
             const deadline = deadlines[index];
             const oldDate = deadline.date;
             
@@ -11595,21 +11600,26 @@ CHAIR: 9F
 
         // Handle text field edits (name, course, weight)
         function handleTextEdit(inputEl) {
-            const index = parseInt(inputEl.dataset.index, 10);
+            const deadlineId = inputEl.dataset.deadlineId;
             const field = inputEl.dataset.field;
             const value = inputEl.value.trim();
             const original = inputEl.dataset.original || '';
-            
-            
+
             if (value === original) {
                 return;
             }
-            
-            if (isNaN(index) || index < 0 || index >= deadlines.length) {
-                console.error('Invalid deadline index:', index);
+
+            if (!deadlineId) {
+                console.error('No deadline ID found on input');
                 return;
             }
-            
+
+            const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+            if (index === -1) {
+                console.error('Deadline not found for ID:', deadlineId);
+                return;
+            }
+
             const deadline = deadlines[index];
 
             // Update the field
@@ -12291,30 +12301,54 @@ CHAIR: 9F
                 showGradeInputModal(index, deadline);
             }
         }
-        
+
+        // ID-based wrapper for toggleDeadlineDone (prevents index race conditions)
+        function toggleDeadlineDoneById(deadlineId) {
+            const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+            if (index === -1) {
+                showToast('Deadline not found', 'error');
+                console.error('toggleDeadlineDoneById: Deadline not found for ID:', deadlineId);
+                return;
+            }
+            toggleDeadlineDone(index);
+        }
+
+        // ID-based wrapper for deleteDeadline (prevents index race conditions)
+        function deleteDeadlineById(deadlineId) {
+            const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+            if (index === -1) {
+                showToast('Deadline not found', 'error');
+                console.error('deleteDeadlineById: Deadline not found for ID:', deadlineId);
+                return;
+            }
+            deleteDeadline(index);
+        }
+
         function showGradeInputModal(index, deadline) {
+            const deadlineId = getDeadlineId(deadline);
             const modal = document.createElement('div');
             modal.id = 'gradeInputModal';
+            modal.dataset.deadlineId = deadlineId;
             modal.innerHTML = `
                 <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
                     <div style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
                         <h3 style="color: #10b981; margin-bottom: 15px;">✓ Mark Complete</h3>
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>${escapeHtml(deadline.what)}</strong></p>
                         <p style="color: #b0bcc8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>
-                        
+
                         <div style="margin-bottom: 20px;">
                             <label style="color: #b0bcc8; display: block; margin-bottom: 8px;">What grade did you get? (Leave blank if N/A)</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="number" id="gradeInput" min="0" max="100" placeholder="e.g., 85" 
+                                <input type="number" id="gradeInput" min="0" max="100" placeholder="e.g., 85"
                                     style="flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 1.1em;">
                                 <span style="color: #b0bcc8; font-size: 1.2em;">%</span>
                             </div>
                         </div>
-                        
+
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button onclick="document.getElementById('gradeInputModal').remove()" 
+                            <button onclick="document.getElementById('gradeInputModal').remove()"
                                 style="padding: 10px 20px; background: #374151; border: none; border-radius: 6px; color: #e2e8f0; cursor: pointer;">Cancel</button>
-                            <button onclick="submitDeadlineGrade(${index})" 
+                            <button onclick="submitDeadlineGradeById()"
                                 style="padding: 10px 20px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">✓ Complete</button>
                         </div>
                     </div>
@@ -12322,11 +12356,26 @@ CHAIR: 9F
             `;
             document.body.appendChild(modal);
             document.getElementById('gradeInput').focus();
-            
+
             // Allow Enter to submit
             document.getElementById('gradeInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') submitDeadlineGrade(index);
+                if (e.key === 'Enter') submitDeadlineGradeById();
             });
+        }
+
+        // ID-based wrapper for submitDeadlineGrade (prevents index race conditions)
+        function submitDeadlineGradeById() {
+            const modal = document.getElementById('gradeInputModal');
+            if (!modal) return;
+            const deadlineId = modal.dataset.deadlineId;
+            const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+            if (index === -1) {
+                showToast('Error: Deadline not found', 'error');
+                console.error('submitDeadlineGradeById: Deadline not found for ID:', deadlineId);
+                modal.remove();
+                return;
+            }
+            submitDeadlineGrade(index);
         }
         
         function submitDeadlineGrade(index) {
@@ -13562,14 +13611,18 @@ CHAIR: 9F
             renderPatientTasksInModal();
         }
 
-        function removePatientTask(index) {
-            currentPatientTasks.splice(index, 1);
-            renderPatientTasksInModal();
+        function removePatientTask(taskId) {
+            const index = currentPatientTasks.findIndex(t => t.id === taskId);
+            if (index !== -1) {
+                currentPatientTasks.splice(index, 1);
+                renderPatientTasksInModal();
+            }
         }
 
-        function updatePatientTask(index, field, value) {
-            if (currentPatientTasks[index]) {
-                currentPatientTasks[index][field] = value;
+        function updatePatientTask(taskId, field, value) {
+            const task = currentPatientTasks.find(t => t.id === taskId);
+            if (task) {
+                task[field] = value;
             }
         }
 
@@ -13580,17 +13633,17 @@ CHAIR: 9F
                 return;
             }
 
-            container.innerHTML = currentPatientTasks.map((task, index) => `
-                <div class="patient-task-row">
+            container.innerHTML = currentPatientTasks.map((task) => `
+                <div class="patient-task-row" data-task-id="${task.id}">
                     <input type="text" value="${escapeHtml(task.procedure)}"
                            placeholder="e.g., MOD Composite #30"
-                           onchange="updatePatientTask(${index}, 'procedure', this.value)">
-                    <select onchange="updatePatientTask(${index}, 'status', this.value)">
+                           onchange="updatePatientTask('${task.id}', 'procedure', this.value)">
+                    <select onchange="updatePatientTask('${task.id}', 'status', this.value)">
                         <option value="planned" ${task.status === 'planned' ? 'selected' : ''}>Planned</option>
                         <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
                         <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
                     </select>
-                    <button onclick="removePatientTask(${index})">✕</button>
+                    <button onclick="removePatientTask('${task.id}')">✕</button>
                 </div>
             `).join('');
         }
@@ -13604,13 +13657,15 @@ CHAIR: 9F
 
             const patientId = document.getElementById('patientModalId').value || 'pt-' + Date.now();
 
-            // Sync task inputs before saving
-            document.querySelectorAll('#patientTasksList .patient-task-row').forEach((row, index) => {
+            // Sync task inputs before saving (by task ID, not index)
+            document.querySelectorAll('#patientTasksList .patient-task-row').forEach((row) => {
+                const taskId = row.dataset.taskId;
                 const input = row.querySelector('input');
                 const select = row.querySelector('select');
-                if (currentPatientTasks[index]) {
-                    currentPatientTasks[index].procedure = input.value;
-                    currentPatientTasks[index].status = select.value;
+                const task = currentPatientTasks.find(t => t.id === taskId);
+                if (task) {
+                    task.procedure = input.value;
+                    task.status = select.value;
                 }
             });
 
