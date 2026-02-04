@@ -2406,10 +2406,16 @@
                     <div id="modifierTimes" style="margin-top: 15px; display: none;">
                         <div class="input-row">
                             <div class="input-group" id="vitaminCTimeGroup" style="display: none;">
-                                <label>Vitamin C taken at:</label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    Vitamin C taken at:
+                                    <span id="vitaminCExpiredBadge" style="display: none; background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">EXPIRED</span>
+                                </label>
                                 <div style="display: flex; gap: 8px; align-items: center;">
                                     <input type="date" id="vitaminCDate" onchange="updateVitaminCDate(); recalculate(); saveState()" style="padding: 8px; border-radius: 6px; background: #161b22; border: 1px solid #30363d; color: #e6edf3; font-size: 0.9em;">
                                     <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState()">
+                                </div>
+                                <div id="vitaminCExpiredNote" style="display: none; color: #f59e0b; font-size: 0.8em; margin-top: 4px;">
+                                    ⚠️ Effect expired (>8 hours ago). Using normal 12h half-life.
                                 </div>
                             </div>
                             <div class="input-group" id="saunaTimeGroup" style="display: none;">
@@ -4493,17 +4499,18 @@
 
             // FIX: Use getCount() for object
             if (getCount(state.medications) === 0) return null;
-            
-            // Binary search from now to 36 hours later
+
+            // Binary search from now - extend to 48 hours in all-nighter mode
             const now = getCurrentMinutes();
             let low = now;
-            let high = now + 36 * 60; // 36 hours max search
-            
+            const maxSearchHours = state.allNighterMode ? 48 : 36;
+            let high = now + maxSearchHours * 60;
+
             // First check if already below threshold
             if (calculateAmpLoad(now) < threshold) {
                 return now;
             }
-            
+
             while (high - low > 1) {
                 const mid = Math.floor((low + high) / 2);
                 if (calculateAmpLoad(mid) > threshold) {
@@ -4512,24 +4519,32 @@
                     high = mid;
                 }
             }
-            
+
+            // Verify drugs actually cleared at the found time
+            // If still above threshold at max search, return max (indicates won't clear in window)
+            if (calculateAmpLoad(high) >= threshold) {
+                return high; // Still above threshold - return max search time
+            }
+
             return high;
         }
 
         // Find when caffeine clears threshold
         function findCaffClearTime() {
             const threshold = state.settings.caffThreshold;
-            
+
             if (getCount(state.caffeine) === 0) return null;
-            
+
+            // Extend to 36 hours in all-nighter mode (caffeine half-life ~5h so clears faster)
             const now = getCurrentMinutes();
             let low = now;
-            let high = now + 24 * 60;
-            
+            const maxSearchHours = state.allNighterMode ? 36 : 24;
+            let high = now + maxSearchHours * 60;
+
             if (calculateCaffLoad(now) < threshold) {
                 return now;
             }
-            
+
             while (high - low > 1) {
                 const mid = Math.floor((low + high) / 2);
                 if (calculateCaffLoad(mid) > threshold) {
@@ -4538,7 +4553,7 @@
                     high = mid;
                 }
             }
-            
+
             return high;
         }
 
@@ -4769,7 +4784,10 @@
                 return bTime - aTime;
             });
             
-            return { sleepTime, blockingFactors };
+            // Return both the final sleep time AND the raw drug clearance time
+            // pharmacokineticFloor = when drugs clear (no circadian constraints)
+            // sleepTime = final sleep time (after all constraints including circadian)
+            return { sleepTime, blockingFactors, pharmacokineticFloor };
         }
 
         function getCurrentMinutes() {
@@ -5107,6 +5125,15 @@
                 // Default to today if no date set
                 vitCDateEl.value = state.modifiers.vitaminC.date || getLocalDateString();
             }
+
+            // Show/hide expired badge for Vitamin C
+            const expiredBadge = document.getElementById('vitaminCExpiredBadge');
+            const expiredNote = document.getElementById('vitaminCExpiredNote');
+            if (expiredBadge && expiredNote && showVitC) {
+                const vitCEffective = isVitaminCEffective();
+                expiredBadge.style.display = vitCEffective ? 'none' : 'inline';
+                expiredNote.style.display = vitCEffective ? 'none' : 'block';
+            }
         }
 
         function updateVitaminCDate() {
@@ -5117,6 +5144,9 @@
         }
 
         // Helper to get Vitamin C time in minutes from wake time, accounting for actual date
+        // VITAMIN C EXPIRATION: Effect lasts ~8 hours (urinary acidification window)
+        const VITAMIN_C_EFFECT_HOURS = 8;
+
         function getVitaminCTimeMinutes() {
             if (!state.modifiers.vitaminC.active) return Infinity;
 
@@ -5129,8 +5159,26 @@
             const targetDate = parseLocalDate(vitCDate);
             const daysDiff = Math.round((targetDate - todayDate) / (1000 * 60 * 60 * 24));
 
-            // Add/subtract 24 hours per day difference
-            return baseMinutes + (daysDiff * 24 * 60);
+            // Calculate effective Vitamin C time (in today's minute scale)
+            const vitCTimeMinutes = baseMinutes + (daysDiff * 24 * 60);
+
+            // EXPIRATION CHECK: Vitamin C effect only lasts ~8 hours
+            // After that, urinary pH returns to normal and half-life is back to baseline
+            const now = getCurrentMinutes();
+            const hoursSinceVitC = (now - vitCTimeMinutes) / 60;
+
+            // If Vitamin C was taken more than 8 hours ago, it's no longer effective
+            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS) {
+                return Infinity; // Treat as inactive
+            }
+
+            return vitCTimeMinutes;
+        }
+
+        // Check if Vitamin C is currently effective (within TTL window)
+        function isVitaminCEffective() {
+            if (!state.modifiers.vitaminC.active) return false;
+            return getVitaminCTimeMinutes() !== Infinity;
         }
 
         // ============================================
@@ -5387,7 +5435,10 @@
             const forbiddenEnd = wakeMinutes + (15 * 60);   // Wake + 15 hours
             
             // Get base drug clear time (without workout effects)
-            const { sleepTime: baseSleepTime } = calculateSleepTime();
+            // Use pharmacokineticFloor for "drugs only" - this is when drugs actually clear
+            // NOT sleepTime which includes circadian constraints
+            const { sleepTime: finalSleepTime, pharmacokineticFloor } = calculateSleepTime();
+            const baseSleepTime = pharmacokineticFloor; // Raw drug clearance, no circadian
             
             // Check for hyperarousal state (acute sleep deprivation)
             const isHyperaroused = state.hoursSleptLastNight < 4;
@@ -5784,6 +5835,15 @@
                 const vitCDateEl = document.getElementById('vitaminCDate');
                 if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
                 if (vitCDateEl) state.modifiers.vitaminC.date = vitCDateEl.value || getLocalDateString();
+
+                // Update expired badge (in case time has passed)
+                const expiredBadge = document.getElementById('vitaminCExpiredBadge');
+                const expiredNote = document.getElementById('vitaminCExpiredNote');
+                if (expiredBadge && expiredNote) {
+                    const vitCEffective = isVitaminCEffective();
+                    expiredBadge.style.display = vitCEffective ? 'none' : 'inline';
+                    expiredNote.style.display = vitCEffective ? 'none' : 'block';
+                }
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTimeEl = document.getElementById('saunaTime');
@@ -5964,11 +6024,10 @@
             const timeRemainingEl = document.getElementById('timeRemaining');
             const sleepQualityEl = document.getElementById('sleepQuality');
             
-            // Handle case where sleep time might be next day
-            let displaySleepTime = sleepTime;
-            if (sleepTime > 24 * 60) {
-                displaySleepTime = sleepTime - 24 * 60;
-            }
+            // Handle case where sleep time might be next day (normalize to 0-1439 range)
+            // Use modulo to handle all-nighter mode where times can exceed 48 hours
+            let displaySleepTime = sleepTime % (24 * 60);
+            if (displaySleepTime < 0) displaySleepTime += 24 * 60;
             
             if (sleepTimeDisplay) sleepTimeDisplay.textContent = minutesToTime(displaySleepTime);
 
@@ -5996,7 +6055,7 @@
             }
             
             const sleepHours = Math.max(0, (nextWake - effectiveSleepTime) / 60);
-            
+
             // Color coding - updated terminology per expert recommendation
             let colorClass, qualityText;
             if (sleepHours >= 8) {
@@ -6005,9 +6064,14 @@
             } else if (sleepHours >= 6) {
                 colorClass = 'yellow';
                 qualityText = `⚠️ Projected Duration: ${sleepHours.toFixed(1)} hours - suboptimal but functional`;
-            } else if (sleepHours > 0) {
+            } else if (sleepHours >= 0.5) {
+                // At least 30 minutes - show the duration with warning
                 colorClass = 'red';
                 qualityText = `🚨 Projected Duration: ${sleepHours.toFixed(1)} hours - muscle catabolism risk`;
+            } else if (sleepHours > 0) {
+                // Less than 30 minutes - effectively no valid sleep window
+                colorClass = 'red';
+                qualityText = `🚨 NO VALID SLEEP WINDOW - drugs clear too close to wake time (${Math.round(sleepHours * 60)} min available)`;
             } else {
                 colorClass = 'red';
                 qualityText = `🚨 SLEEP IMPOSSIBLE TONIGHT - drugs won't clear before wake time`;
@@ -6034,7 +6098,7 @@
                     let html = realBlockers.map(f => `
                     <div class="blocking-factor">
                         <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #b0b8c4;">(${f.note})</span>` : ''}</span>
-                        <span class="clears-at">Clears at ${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                        <span class="clears-at">Clears at ${minutesToTime(f.clearsAt % (24*60))}</span>
                     </div>
                     `).join('');
                     
@@ -6392,10 +6456,13 @@
                 }
             }
             
-            // Crash point (when amp drops below threshold rapidly)
-            if (ampClear && ampClear > now) {
-                const crashTime = ampClear - 30; // Crash starts ~30 min before full clear
-                if (crashTime > now) {
+            // Crash point (when fatigue first sets in - ~6 hours after latest dose when IR starts declining)
+            // This is when you FEEL the crash, not when you're fully cleared
+            const todayMeds = medsArray.filter(m => m.date === getLocalDateString());
+            if (todayMeds.length > 0) {
+                const latestDoseTime = Math.max(...todayMeds.map(m => timeToMinutes(m.time)));
+                const crashTime = latestDoseTime + (6 * 60); // ~6 hours after latest dose
+                if (crashTime > now && crashTime < sleepTime) {
                     feelings.push({
                         time: crashTime,
                         emoji: '📉',
@@ -10362,7 +10429,12 @@
                 const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
                 const today = getLocalDateString();
                 const vitCDateLabel = vitCDate !== today ? ` (${formatDateLabel(vitCDate)})` : '';
-                modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDateLabel} → Half-life reduced to 70% after this time`);
+                const vitCEffective = isVitaminCEffective();
+                if (vitCEffective) {
+                    modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDateLabel} → Half-life reduced to 70% after this time`);
+                } else {
+                    modifierDetails.push(`• Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time}${vitCDateLabel}, >8 hours ago) → No longer affecting half-life`);
+                }
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 modifierDetails.push(`• Sauna: Scheduled at ${state.modifiers.sauna.time} → +${saunaBonus.toFixed(1)}mg threshold (parasympathetic)`);
@@ -10405,7 +10477,7 @@
                 if (f.type === 'nicotine-advisory') {
                     blockingDetails.push(`• ${f.name}: ${f.impact} impact (quality modifier, not blocker)`);
                 } else {
-                    const clearTime = f.clearsAt !== null ? minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt) : 'N/A';
+                    const clearTime = f.clearsAt !== null ? minutesToTime(f.clearsAt % (24*60)) : 'N/A';
                     blockingDetails.push(`• ${f.name}: Clears at ${clearTime}${f.note ? ' - ' + f.note : ''}`);
                 }
             });
@@ -10413,20 +10485,21 @@
                 blockingDetails.push('None - sleep possible now');
             }
             
-            // Calculate crash time
+            // Calculate crash time - when you START feeling fatigue
+            // This is approximately 6 hours after the latest dose when IR component starts declining rapidly
+            // NOT 30 min before clearance (which is when you're already exhausted, not when crash begins)
             let crashTime = null;
-            const medsForCrash = getValues(state.medications);
+            const medsForCrash = getValues(state.medications).filter(m => m.date === getLocalDateString());
             if (medsForCrash.length > 0) {
                 const latestDose = medsForCrash.reduce((latest, m) => {
                     const t = timeToMinutes(m.time);
                     return t > latest ? t : latest;
                 }, 0);
-                crashTime = latestDose + (6 * 60); // ~6 hours after dose
+                crashTime = latestDose + (6 * 60); // ~6 hours after latest dose
             }
-            
-            // Format sleep time
-            let sleepTimeDisplay = sleepTime;
-            if (sleepTimeDisplay > 24 * 60) sleepTimeDisplay -= 24 * 60;
+
+            // Format sleep time (normalize to 0-1439 range)
+            let sleepTimeDisplay = sleepTime % (24 * 60);
             if (sleepTimeDisplay < 0) sleepTimeDisplay += 24 * 60;
             
             // Calculate Wake Maintenance Zone
@@ -10473,7 +10546,12 @@
                 const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
                 const today = getLocalDateString();
                 const dayLabel = vitCDate !== today ? formatDateLabel(vitCDate) : 'today';
-                vitCInfo = `  • Vitamin C: Active at ${state.modifiers.vitaminC.time} ${dayLabel} → Half-life reduced to 70% after this time\n`;
+                const vitCEffective = isVitaminCEffective();
+                if (vitCEffective) {
+                    vitCInfo = `  • Vitamin C: Active at ${state.modifiers.vitaminC.time} ${dayLabel} → Half-life reduced to 70% after this time\n`;
+                } else {
+                    vitCInfo = `  • Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time} ${dayLabel}, >8 hours ago) → Using normal 12h half-life\n`;
+                }
             }
 
             // Build the forecast text
@@ -10829,10 +10907,10 @@ Current status at ${currentTime}:
                     let html = realBlockers.map(f => `
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <span>${f.name}</span>
-                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt % (24*60))}</span>
                         </div>
                     `).join('');
-                    
+
                     // Add advisory items with different styling
                     if (advisoryItems.length > 0) {
                         html += advisoryItems.map(f => `
@@ -11548,10 +11626,10 @@ Current status at ${currentTime}:
                     let html = realBlockers.map(f => `
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <span>${f.name}</span>
-                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt > 24*60 ? f.clearsAt - 24*60 : f.clearsAt)}</span>
+                            <span style="color: #f59e0b;">${minutesToTime(f.clearsAt % (24*60))}</span>
                         </div>
                     `).join('');
-                    
+
                     // Add advisory items with different styling
                     if (advisoryItems.length > 0) {
                         html += advisoryItems.map(f => `
