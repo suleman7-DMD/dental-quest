@@ -14740,8 +14740,8 @@
             }
             
             // Update sortOrder for all filtered tasks
-            const draggedIndex = filteredTasks.findIndex(t => t.id === draggedTaskId);
-            const targetIndex = filteredTasks.findIndex(t => t.id === targetTaskId);
+            const draggedIndex = filteredTasks.findIndex(t => String(t.id) === String(draggedTaskId));
+            const targetIndex = filteredTasks.findIndex(t => String(t.id) === String(targetTaskId));
             
             // Reorder
             filteredTasks.splice(draggedIndex, 1);
@@ -16405,8 +16405,8 @@
 
         function reorderTriageTasks(draggedId, targetId, tier) {
             const tierTasks = getTasksByTier(tier);
-            const draggedIndex = tierTasks.findIndex(t => t.id === draggedId);
-            const targetIndex = tierTasks.findIndex(t => t.id === targetId);
+            const draggedIndex = tierTasks.findIndex(t => String(t.id) === String(draggedId));
+            const targetIndex = tierTasks.findIndex(t => String(t.id) === String(targetId));
 
             if (draggedIndex === -1 || targetIndex === -1) return;
 
@@ -17180,8 +17180,8 @@
 
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
-            const draggedIndex = scheduledTasks.findIndex(t => t.id === draggedId);
-            const targetIndex = scheduledTasks.findIndex(t => t.id === targetId);
+            const draggedIndex = scheduledTasks.findIndex(t => String(t.id) === String(draggedId));
+            const targetIndex = scheduledTasks.findIndex(t => String(t.id) === String(targetId));
             console.log('📍 Indices:', { draggedIndex, targetIndex });
 
             if (draggedIndex === -1 || targetIndex === -1) {
@@ -17239,8 +17239,8 @@
             isReorderingLocked = true;
 
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            const index1 = scheduledTasks.findIndex(t => t.id === taskId1);
-            const index2 = scheduledTasks.findIndex(t => t.id === taskId2);
+            const index1 = scheduledTasks.findIndex(t => String(t.id) === String(taskId1));
+            const index2 = scheduledTasks.findIndex(t => String(t.id) === String(taskId2));
 
             console.log('📍 Indices found:', { index1, index2 });
 
@@ -17290,7 +17290,7 @@
             console.log('🔼 moveTaskUp called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
-            const index = scheduledTasks.findIndex(t => t.id === taskId);
+            const index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             console.log('📍 Task index in scheduledTasks:', index);
             if (index <= 0) {
                 console.log('⚠️ moveTaskUp: Task already at top or not found (index:', index, ')');
@@ -17308,7 +17308,7 @@
             console.log('🔽 moveTaskDown called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
-            const index = scheduledTasks.findIndex(t => t.id === taskId);
+            const index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             console.log('📍 Task index in scheduledTasks:', index);
             if (index === -1 || index >= scheduledTasks.length - 1) {
                 console.log('⚠️ moveTaskDown: Task already at bottom or not found (index:', index, ', total:', scheduledTasks.length, ')');
@@ -17332,7 +17332,7 @@
                 return;
             }
 
-            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             console.log('📍 Current index:', currentIndex);
             if (currentIndex <= 0) {
                 console.log('⚠️ Already at top or not found');
@@ -17354,7 +17354,7 @@
                 return;
             }
 
-            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             console.log('📍 Current index:', currentIndex);
             if (currentIndex === scheduledTasks.length - 1) {
                 console.log('⚠️ Already at bottom');
@@ -17377,7 +17377,7 @@
                 return;
             }
 
-            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             const targetIndex = newPosition - 1; // Convert to 0-indexed
 
             if (currentIndex === targetIndex) return; // Already in position
@@ -17391,7 +17391,7 @@
         function promptTaskPosition(taskId) {
             console.log('# promptTaskPosition called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            const currentIndex = scheduledTasks.findIndex(t => t.id === taskId);
+            const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             const totalTasks = scheduledTasks.length;
 
             const input = prompt(`Move task to position (1-${totalTasks}):`, currentIndex + 1);
