@@ -7164,7 +7164,7 @@
             <!-- Slim Toolbar -->
             <div class="data-controls" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
                 <button onclick="createCheckpoint()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Create Checkpoint">💾</button>
-                <button onclick="document.getElementById('checkpointFile').click()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Restore Checkpoint">📂</button>
+                <button onclick="showCheckpointManager()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Checkpoint Manager">📂</button>
                 <button onclick="clearAllData()" style="padding: 4px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Clear All Data">🗑️</button>
                 <span style="color: rgba(255,255,255,0.2); font-size: 0.8em;">│</span>
                 <button onclick="openNotebook()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Notebook">📓</button>
@@ -9683,46 +9683,353 @@
             return null;
         }
 
-        // Create Checkpoint (user-friendly backup)
+        // Cloud Checkpoint System - helper functions
+        function getCheckpointKey() {
+            const pin = localStorage.getItem('dentalQuestPin') || 'default';
+            return `dentalQuest_checkpoints_${btoa(pin).replace(/[^a-zA-Z0-9]/g, '')}`;
+        }
+
+        function getDataCountForCheckpoint() {
+            const taskCount = getCount(tasks);
+            const completedCount = getValues(tasks).filter(t => t.completed).length;
+            const notebookPages = getCount(notebook.pages);
+            const calendarNotesCount = Object.keys(calendarNotes || {}).length;
+            const eventsCount = getCount(calendarEvents);
+            return `${taskCount} tasks (${completedCount} done), ${notebookPages} notes, ${eventsCount} events`;
+        }
+
+        // Create Checkpoint (saves to localStorage AND Firebase)
         function createCheckpoint() {
+            const name = prompt('Checkpoint name (optional):') || `Checkpoint ${new Date().toLocaleString()}`;
+            if (name === null) return; // User cancelled
+
+            const timestamp = Date.now();
             const checkpoint = {
+                id: `checkpoint_${timestamp}_${Math.random().toString(36).substr(2, 6)}`,
+                name: name,
+                timestamp: timestamp,
+                date: new Date().toISOString(),
+                dataCount: getDataCountForCheckpoint(),
                 appVersion: APP_VERSION,
-                checkpointDate: new Date().toISOString(),
-                tasks,
-                stats,
-                medications,
-                calendarNotes,
-                notebook,
-                financials,
-                pillAssignments,
-                calendarEvents,
-                metadata: {
-                    totalTasks: getCount(tasks),
-                    completedTasks: getValues(tasks).filter(t => t.completed).length,
-                    medicationTracking: {
-                        '30mg': medications['30mg'].pills,
-                        '20mg': medications['20mg'].pills
+                data: {
+                    tasks: JSON.parse(JSON.stringify(tasks)),
+                    stats: JSON.parse(JSON.stringify(stats)),
+                    medications: JSON.parse(JSON.stringify(medications)),
+                    calendarNotes: JSON.parse(JSON.stringify(calendarNotes)),
+                    notebook: JSON.parse(JSON.stringify(notebook)),
+                    financials: JSON.parse(JSON.stringify(financials)),
+                    pillAssignments: JSON.parse(JSON.stringify(pillAssignments)),
+                    calendarEvents: JSON.parse(JSON.stringify(calendarEvents)),
+                    dailyPlanner: JSON.parse(JSON.stringify(dailyPlanner)),
+                    focusModeData: {
+                        oneThingId: focusModeData.oneThingId,
+                        microSteps: JSON.parse(JSON.stringify(focusModeData.microSteps)),
+                        todaysTasks: JSON.parse(JSON.stringify(focusModeData.todaysTasks)),
+                        lastPlanningDate: focusModeData.lastPlanningDate
                     },
-                    calendarNotesCount: Object.keys(calendarNotes).length,
-                    notebookPages: getCount(notebook.pages),
-                    countdownEvents: getCount(calendarEvents)
+                    commandCenterData: JSON.parse(JSON.stringify(commandCenterData))
                 }
             };
-            
+
+            // Save to localStorage
+            let checkpoints = [];
+            try {
+                checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            } catch (e) {
+                checkpoints = [];
+            }
+            checkpoints.unshift(checkpoint);
+            // Keep max 50 checkpoints
+            if (checkpoints.length > 50) {
+                checkpoints.splice(50);
+            }
+            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+
+            // Save to Firebase for cross-device access
+            if (firebaseInitialized && currentUser && database) {
+                const cloudCheckpointPath = 'users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id;
+                database.ref(cloudCheckpointPath).set(checkpoint)
+                    .then(() => {
+                        console.log('✅ Checkpoint saved to cloud:', checkpoint.id);
+                        showToast(`Checkpoint saved: ${name}`, '☁️');
+                    })
+                    .catch(err => {
+                        console.error('Failed to save checkpoint to cloud:', err);
+                        showToast(`Checkpoint saved locally (cloud failed)`, '💾');
+                    });
+            } else {
+                showToast(`Checkpoint saved locally: ${name}`, '💾');
+            }
+        }
+
+        // Show Checkpoint Manager modal with local + cloud checkpoints
+        async function showCheckpointManager() {
+            // Get local checkpoints
+            let checkpoints = [];
+            try {
+                checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            } catch (e) {
+                checkpoints = [];
+            }
+
+            // Also get cloud checkpoints for cross-device access
+            if (firebaseInitialized && currentUser && database) {
+                try {
+                    const snapshot = await database.ref('users/' + currentUser.uid + '/appData/checkpoints').once('value');
+                    const cloudCheckpoints = snapshot.val();
+                    if (cloudCheckpoints) {
+                        const cloudList = Object.values(cloudCheckpoints);
+                        // Merge: add cloud checkpoints not in local (by ID)
+                        const localIds = new Set(checkpoints.map(c => c.id));
+                        cloudList.forEach(cc => {
+                            if (cc && cc.id && !localIds.has(cc.id)) {
+                                checkpoints.push(cc);
+                            }
+                        });
+                        // Sort by timestamp descending
+                        checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                        // Save merged list back to localStorage (keep max 50)
+                        localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+                    }
+                } catch (err) {
+                    console.error('Failed to load cloud checkpoints:', err);
+                }
+            }
+
+            // Remove existing modal if any
+            document.querySelector('.checkpoint-modal-overlay')?.remove();
+
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = text || '';
+                return div.innerHTML;
+            };
+
+            const modal = document.createElement('div');
+            modal.className = 'checkpoint-modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+            modal.innerHTML = `
+                <div style="background:#1a1a2e;border-radius:16px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.1);">
+                    <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+                        <h2 style="margin:0;color:white;">☁️ Checkpoint Manager</h2>
+                        <button onclick="this.closest('.checkpoint-modal-overlay').remove()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">×</button>
+                    </div>
+                    <div style="padding:20px;overflow-y:auto;flex:1;">
+                        ${checkpoints.length === 0 ?
+                            '<p style="color:#888;text-align:center;padding:40px;">No checkpoints yet. Create one first!</p>' :
+                            `<p style="color:#888;margin-bottom:16px;">${checkpoints.length} checkpoint(s) saved</p>
+                            <div style="display:flex;flex-direction:column;gap:12px;">
+                                ${checkpoints.map((cp, i) => `
+                                    <div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                                        <div style="flex:1;min-width:200px;">
+                                            <strong style="color:white;">${escapeHtml(cp.name)}</strong>
+                                            <div style="color:#888;font-size:0.85em;margin-top:4px;">${new Date(cp.date || cp.timestamp).toLocaleString()}</div>
+                                            <div style="color:#666;font-size:0.8em;">${cp.dataCount || ''}</div>
+                                        </div>
+                                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                            <button onclick="restoreCheckpointByIndex(${i})" style="padding:8px 16px;background:#4CAF50;border:none;border-radius:8px;color:white;cursor:pointer;">Restore</button>
+                                            <button onclick="exportCheckpointByIndex(${i})" style="padding:8px 16px;background:#2196F3;border:none;border-radius:8px;color:white;cursor:pointer;">Export</button>
+                                            <button onclick="deleteCheckpointByIndex(${i})" style="padding:8px 12px;background:#f44336;border:none;border-radius:8px;color:white;cursor:pointer;">🗑️</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>`
+                        }
+                    </div>
+                    <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                        <button onclick="createCheckpoint(); document.querySelector('.checkpoint-modal-overlay')?.remove();" style="padding:12px 24px;background:rgba(74,222,128,0.2);border:1px solid rgba(74,222,128,0.4);border-radius:12px;color:#4ade80;cursor:pointer;">+ Create New</button>
+                        <button onclick="document.getElementById('checkpointFileImport').click()" style="padding:12px 24px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:white;cursor:pointer;">📂 Import File</button>
+                    </div>
+                </div>
+                <input type="file" id="checkpointFileImport" accept=".dent,.json" style="display:none;" onchange="importCheckpointFile(event)">
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        // Checkpoint action functions
+        function restoreCheckpointByIndex(index) {
+            let checkpoints = [];
+            try {
+                checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            } catch (e) {
+                checkpoints = [];
+            }
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint || !checkpoint.data) {
+                showToast('Checkpoint data not found', '❌');
+                return;
+            }
+
+            if (!confirm(`Restore checkpoint "${checkpoint.name}"?\n\nThis will replace your current data.`)) {
+                return;
+            }
+
+            // Restore all data
+            const data = checkpoint.data;
+
+            if (data.tasks) tasks = migrateArrayToObject(data.tasks, 'task');
+            if (data.stats) stats = { ...stats, ...data.stats };
+            if (data.medications) medications = { ...medications, ...data.medications };
+            if (data.calendarNotes) calendarNotes = data.calendarNotes;
+            if (data.notebook) notebook = data.notebook;
+            if (data.financials) financials = { ...financials, ...data.financials };
+            if (data.pillAssignments) pillAssignments = data.pillAssignments;
+            if (data.calendarEvents) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
+            if (data.dailyPlanner) dailyPlanner = { ...dailyPlanner, ...data.dailyPlanner };
+            if (data.focusModeData) focusModeData = { ...focusModeData, ...data.focusModeData };
+            if (data.commandCenterData) commandCenterData = { ...commandCenterData, ...data.commandCenterData };
+
+            // Re-render and save
+            updateStats();
+            renderTasks();
+            updateMedicationDisplay();
+            renderFocusMode();
+            saveData();
+
+            document.querySelector('.checkpoint-modal-overlay')?.remove();
+            showToast(`Restored: ${checkpoint.name}`, '✅');
+        }
+
+        function exportCheckpointByIndex(index) {
+            let checkpoints = [];
+            try {
+                checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            } catch (e) {
+                checkpoints = [];
+            }
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) {
+                showToast('Checkpoint not found', '❌');
+                return;
+            }
+
             const dataStr = JSON.stringify(checkpoint, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
-            
+
             const link = document.createElement('a');
             link.href = url;
-            const dateStr = getLocalDateString();
-            link.download = `dental-student-checkpoint-${dateStr}.dent`;
+            const safeName = (checkpoint.name || 'checkpoint').replace(/[^a-zA-Z0-9]/g, '-');
+            link.download = `checkpoint-${safeName}-${getLocalDateString()}.dent`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
-            showToast('Checkpoint created successfully!', '💾');
+
+            showToast('Checkpoint exported', '📥');
+        }
+
+        async function deleteCheckpointByIndex(index) {
+            let checkpoints = [];
+            try {
+                checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            } catch (e) {
+                checkpoints = [];
+            }
+            const checkpoint = checkpoints[index];
+
+            if (!checkpoint) return;
+
+            if (!confirm(`Delete checkpoint "${checkpoint.name}"?`)) {
+                return;
+            }
+
+            // Remove from array
+            checkpoints.splice(index, 1);
+            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+
+            // Also delete from Firebase
+            if (firebaseInitialized && currentUser && database && checkpoint.id) {
+                try {
+                    await database.ref('users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id).remove();
+                    console.log('Deleted checkpoint from cloud:', checkpoint.id);
+                } catch (err) {
+                    console.error('Failed to delete checkpoint from cloud:', err);
+                }
+            }
+
+            showToast('Checkpoint deleted', '🗑️');
+
+            // Refresh the modal
+            showCheckpointManager();
+        }
+
+        function importCheckpointFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+
+                    // Try to extract checkpoint data from various formats
+                    let checkpoint = imported;
+
+                    // If it's a full backup with checkpoints array
+                    if (imported.checkpoints && Array.isArray(imported.checkpoints)) {
+                        checkpoint = imported.checkpoints[0];
+                    }
+
+                    // If it has a data property, use that
+                    if (!checkpoint.data && imported.data) {
+                        checkpoint.data = imported.data;
+                    }
+
+                    // If no data property, assume the whole object is the data (old format)
+                    if (!checkpoint.data && (imported.tasks || imported.stats)) {
+                        checkpoint = {
+                            id: `imported_${Date.now()}`,
+                            name: file.name.replace(/\.(dent|json)$/i, ''),
+                            timestamp: Date.now(),
+                            date: new Date().toISOString(),
+                            dataCount: 'Imported from file',
+                            data: imported
+                        };
+                    }
+
+                    if (!checkpoint.data) {
+                        showToast('Invalid checkpoint format', '❌');
+                        return;
+                    }
+
+                    // Add to checkpoints list
+                    let checkpoints = [];
+                    try {
+                        checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+                    } catch (err) {
+                        checkpoints = [];
+                    }
+
+                    // Generate new ID if missing
+                    if (!checkpoint.id) {
+                        checkpoint.id = `imported_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+                    }
+
+                    checkpoints.unshift(checkpoint);
+                    localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+
+                    showToast(`Imported: ${checkpoint.name}`, '✅');
+                    showCheckpointManager(); // Refresh modal
+
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showToast('Failed to import checkpoint', '❌');
+                }
+            };
+            reader.readAsText(file);
+
+            // Reset input
+            event.target.value = '';
         }
 
         // Restore Checkpoint (with version compatibility and flexible format detection)
@@ -10230,7 +10537,10 @@
                         updateStats();
                         renderTasks();
                         updateMedicationDisplay();
-                        
+
+                        // Check for daily pill auto-reduce (Firebase path)
+                        checkAndApplyDailyPillReduce();
+
                         // Initialize Focus Mode after data loads
                         initFocusMode();
                         
@@ -13609,6 +13919,10 @@
             updateStats();
             renderTasks();
             updateMedicationDisplay();
+
+            // Check for daily pill auto-reduce (sync/pull path)
+            checkAndApplyDailyPillReduce();
+
             if (currentView === 'focus') {
                 renderFocusMode();
             }
@@ -13645,6 +13959,16 @@
                     microSteps: focusModeData.microSteps,
                     todaysTasks: focusModeData.todaysTasks,
                     lastPlanningDate: focusModeData.lastPlanningDate
+                },
+                commandCenterData: {
+                    crashOut: commandCenterData.crashOut,
+                    focusStats: commandCenterData.focusStats,
+                    currentSession: {
+                        taskId: commandCenterData.currentSession.taskId,
+                        checklist: commandCenterData.currentSession.checklist,
+                        timerMinutes: commandCenterData.currentSession.timerMinutes
+                        // Don't save timerRemaining - it's ephemeral
+                    }
                 },
                 lastCriticalEODReset,
                 lastSaved: saveTimestamp
@@ -14743,9 +15067,10 @@
             const draggedIndex = filteredTasks.findIndex(t => String(t.id) === String(draggedTaskId));
             const targetIndex = filteredTasks.findIndex(t => String(t.id) === String(targetTaskId));
             
-            // Reorder
+            // Reorder - adjust targetIndex when dragging down (target shifts after removal)
             filteredTasks.splice(draggedIndex, 1);
-            filteredTasks.splice(targetIndex, 0, draggedTask);
+            const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+            filteredTasks.splice(insertIndex, 0, draggedTask);
             
             // Update sortOrder based on new positions
             filteredTasks.forEach((task, index) => {
@@ -16066,6 +16391,15 @@
             task.completed = !task.completed;
 
             if (task.completed) {
+                // Track completion stats (mirror toggleTask behavior)
+                stats.totalTasks = (stats.totalTasks || 0) + 1;
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + 1;
+                }
+                task.completedAt = Date.now();
+                task.doToday = false;  // Remove from "Do Today" list when completed
+
                 // Award XP based on tier
                 const xp = task.triageTier === 'lockedIn' ? 50 :
                            task.crashOutScheduled ? 75 :
@@ -16083,8 +16417,17 @@
 
                 checkForPerfectDay();
                 updateStreaks();
+            } else {
+                // Handle un-complete: reverse stats
+                stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = Math.max(0, (stats.categoryXPGained[category] || 0) - 1);
+                }
+                task.completedAt = null;
             }
 
+            updateStats();
             renderFocusMode();
             renderTasks();
             saveData();
@@ -16132,15 +16475,11 @@
         }
 
         // Legacy function names for compatibility
-        function completeTriageTask(taskId) {
-            toggleTaskComplete(taskId);
-        }
-
         function updateTriageSectionCounts() {
             updateAllTriageProgress();
         }
 
-        // Triage task actions
+        // Triage task actions - complete a task from Focus Mode or Crash Out
         function completeTriageTask(taskId) {
             const task = tasks[taskId];
             if (!task) return;
@@ -16153,10 +16492,17 @@
                 ...task,
                 completed: nowCompleted,
                 completedAt: nowCompleted ? Date.now() : null,
-                doToday: true  // Ensure it stays counted in progress
+                doToday: false  // Remove from "Do Today" list when completed
             };
 
             if (nowCompleted) {
+                // Track completion stats (mirror toggleTask behavior)
+                stats.totalTasks = (stats.totalTasks || 0) + 1;
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + 1;
+                }
+
                 // Award XP based on tier
                 const xp = task.triageTier === 'lockedIn' ? 50 :
                            task.crashOutScheduled ? 75 :
@@ -16175,8 +16521,16 @@
                 // Check for perfect day and update streaks
                 checkForPerfectDay();
                 updateStreaks();
+            } else {
+                // Handle un-complete: reverse stats
+                stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = Math.max(0, (stats.categoryXPGained[category] || 0) - 1);
+                }
             }
 
+            updateStats();
             renderFocusMode();
             renderTasks(); // Also update Full View
             saveData();
@@ -17149,16 +17503,9 @@
             if (isReorderingLocked) return;
             if (!timelineDraggedTaskId || timelineDraggedTaskId === targetTaskId) return;
 
-            // Lock to prevent rapid multiple reorders
-            isReorderingLocked = true;
-
             // Move dragged task to target position
+            // NOTE: moveTaskToPosition handles its own locking internally
             moveTaskToPosition(timelineDraggedTaskId, targetTaskId);
-
-            // Unlock after a short delay
-            setTimeout(() => {
-                isReorderingLocked = false;
-            }, 300);
         }
 
         function handleTimelineDragEnd(event) {
