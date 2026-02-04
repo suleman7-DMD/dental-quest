@@ -7471,6 +7471,20 @@
             return div.innerHTML;
         }
 
+        // Helper: Get human-readable time ago string
+        function getTimeAgo(date) {
+            if (!date || isNaN(date.getTime())) return 'unknown';
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} hr ago`;
+            return `${Math.floor(diffHours / 24)} days ago`;
+        }
+
         // ============================================
         // SCHEDULE HELPER FUNCTIONS (God Mode 8A.1)
         // ============================================
@@ -7647,6 +7661,12 @@
         }
 
         function calculateMode(sleepHours, isBrainDay) {
+            // All-nighter mode forces ORANGE (maintenance) regardless of sleep
+            if (state.ecosystemContext?.stimulant?.allNighterMode === true) {
+                console.log('⚠️ All-nighter mode active - forcing ORANGE');
+                return 'ORANGE';
+            }
+
             // Brain day doesn't change mode, just adds carb reminder
             if (sleepHours >= 6) return 'GREEN';
             if (sleepHours >= 5) return 'YELLOW';
@@ -8086,6 +8106,12 @@
                 let nudgeHtml = '→ ' + escapeHtml(nudge.message);
                 if (nudge.verify) {
                     nudgeHtml += '<br><span style="font-size: 0.75em; color: var(--text-muted); opacity: 0.8;">' + escapeHtml(nudge.verify) + '</span>';
+                }
+                // Add last synced indicator for stimulant-related nudges
+                const stimLastSynced = state.ecosystemContext?.stimulant?.lastSynced;
+                if (stimLastSynced && (nudge.icon?.includes('💊') || nudge.icon?.includes('☕'))) {
+                    const syncedAgo = getTimeAgo(new Date(stimLastSynced));
+                    nudgeHtml += '<br><span style="font-size: 0.65em; color: var(--text-muted); opacity: 0.6;">Stim synced: ' + escapeHtml(syncedAgo) + '</span>';
                 }
                 document.getElementById('nudgeDetail').innerHTML = nudgeHtml;
             } else {
@@ -11603,15 +11629,17 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 mealCount: totals.mealCount,
                 workedOut: today.workedOut || getCount(today.workouts) > 0,
                 // Detailed data for history (store as objects with IDs for editing)
-                // FIX: Defensive fallback to empty object if meals/workouts are undefined
-                meals: today.meals ? { ...today.meals } : {},
-                workouts: today.workouts ? { ...today.workouts } : {},
-                // Ecosystem context snapshot
-                ecosystemSnapshot: {
-                    stimulant: { ...state.ecosystemContext?.stimulant },
-                    academic: { ...state.ecosystemContext?.academic },
-                    sleepDebt: { ...state.ecosystemContext?.sleepDebt }
-                },
+                // FIX: Use DEEP COPY to prevent reference mutation bugs
+                meals: today.meals ? JSON.parse(JSON.stringify(today.meals)) : {},
+                workouts: today.workouts ? JSON.parse(JSON.stringify(today.workouts)) : {},
+                // Ecosystem context snapshot (deep copy to preserve historical state)
+                ecosystemSnapshot: state.ecosystemContext ? JSON.parse(JSON.stringify({
+                    stimulant: state.ecosystemContext.stimulant || {},
+                    academic: state.ecosystemContext.academic || {},
+                    sleepDebt: state.ecosystemContext.sleepDebt || {}
+                })) : {},
+                // Logic transparency snapshot for debugging/export
+                logicLog: generateLogicLog(),
                 // Timestamp
                 lastUpdated: new Date().toISOString()
             };
@@ -14398,9 +14426,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // Check if it's a new day
                     const today = getLocalDateString();
                     if (state.today.date && state.today.date !== today) {
-                        // Save yesterday's data to dailyLogs
+                        // Save yesterday's data to dailyLogs (DEEP COPY to prevent reference bugs)
                         if (state.today.setupComplete) {
-                            state.dailyLogs[state.today.date] = { ...state.today };
+                            state.dailyLogs[state.today.date] = JSON.parse(JSON.stringify(state.today));
 
                             // Note: Cumulative deficit is now calculated from dailyLogs, not incremented
                             // This prevents double-counting from day transitions
@@ -14596,7 +14624,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         const today = getLocalDateString();
                         if (state.today.date && state.today.date !== today) {
                             if (state.today.setupComplete) {
-                                state.dailyLogs[state.today.date] = { ...state.today };
+                                // DEEP COPY to prevent reference bugs
+                                state.dailyLogs[state.today.date] = JSON.parse(JSON.stringify(state.today));
                             }
                             // Reset for new day - MUST include ALL today fields
                             state.today = {
@@ -14900,8 +14929,58 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+
+            // Also sync to Firebase for cross-device restore
+            saveCheckpointsToFirebase();
+
             showToast('✅ Checkpoint created: ' + checkpointName);
             return checkpoint;
+        }
+
+        // Firebase checkpoint storage for cross-device restore
+        async function saveCheckpointsToFirebase() {
+            if (!firebaseSyncEnabled || !database || !userPath) return;
+
+            try {
+                const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+                await database.ref(userPath + '/checkpoints').set({
+                    list: checkpoints,
+                    lastUpdated: new Date().toISOString()
+                });
+                console.log('✅ Checkpoints synced to Firebase');
+            } catch (err) {
+                console.error('Checkpoint sync failed:', err);
+            }
+        }
+
+        async function loadCheckpointsFromFirebase() {
+            if (!firebaseSyncEnabled || !database || !userPath) return;
+
+            try {
+                const snapshot = await database.ref(userPath + '/checkpoints').once('value');
+                const data = snapshot.val();
+                if (data && data.list && Array.isArray(data.list) && data.list.length > 0) {
+                    // Merge with local checkpoints (cloud wins for duplicates by timestamp)
+                    let localCheckpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+                    const merged = [...data.list];
+
+                    // Add local checkpoints not in cloud
+                    localCheckpoints.forEach(local => {
+                        if (!merged.some(cloud => cloud.timestamp === local.timestamp)) {
+                            merged.push(local);
+                        }
+                    });
+
+                    // Sort by timestamp descending, keep last 10
+                    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    const final = merged.slice(0, 10);
+
+                    localStorage.setItem('bodyCompCheckpoints', JSON.stringify(final));
+                    console.log('✅ Checkpoints loaded from Firebase');
+                }
+            } catch (err) {
+                console.error('Failed to load checkpoints from Firebase:', err);
+            }
         }
 
         function showCheckpointManager() {
@@ -15261,9 +15340,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state._version = Date.now();
             state._lastModified = new Date().toISOString();
 
+            // Match saveToFirebase format: strip ecosystemContext, use ISO timestamp
+            const saveTime = new Date().toISOString();
+            const stateToSave = {
+                profile: state.profile,
+                today: state.today,
+                frequentFoods: state.frequentFoods,
+                weighIns: state.weighIns,
+                bodyCompHistory: state.bodyCompHistory,
+                dailyLogs: state.dailyLogs,
+                refeedTracker: state.refeedTracker,
+                gamification: state.gamification,
+                achievements: state.achievements,
+                _version: state._version,
+                _lastModified: state._lastModified
+                // NOTE: ecosystemContext is NOT saved - it's pulled from other apps
+            };
+
             database.ref(userPath).set({
-                state: state,
-                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+                state: stateToSave,
+                lastUpdated: saveTime
             })
             .then(() => {
                 localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
@@ -15325,10 +15421,27 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
-                    initializeUI();
-                    updateSyncStatus('connected', 'Force pulled ✓');
-                    showToast('⬇️ Pulled from cloud');
-                    document.getElementById('checkpoint-modal')?.remove();
+                    // Reload ecosystem data (it's stripped from Firebase, need fresh pull)
+                    const hashedPin = userPath ? userPath.split('/')[1] : null;
+                    if (hashedPin) {
+                        loadEcosystemData(hashedPin).then(() => {
+                            initializeUI();
+                            updateSyncStatus('connected', 'Force pulled ✓');
+                            showToast('⬇️ Pulled from cloud');
+                            document.getElementById('checkpoint-modal')?.remove();
+                        }).catch(() => {
+                            // Even if ecosystem data fails, UI should still refresh
+                            initializeUI();
+                            updateSyncStatus('connected', 'Force pulled (no ecosystem) ✓');
+                            showToast('⬇️ Pulled from cloud');
+                            document.getElementById('checkpoint-modal')?.remove();
+                        });
+                    } else {
+                        initializeUI();
+                        updateSyncStatus('connected', 'Force pulled ✓');
+                        showToast('⬇️ Pulled from cloud');
+                        document.getElementById('checkpoint-modal')?.remove();
+                    }
                 })
                 .catch(err => {
                     console.error('Force pull failed:', err);
@@ -15418,9 +15531,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // This ensures ecosystem context is available when UI renders
             loadEcosystemData(hashedPin).then(() => {
                 loadFromFirebase();
+                // Load checkpoints from Firebase for cross-device restore
+                loadCheckpointsFromFirebase();
+                // Start periodic ecosystem refresh (every 60s)
+                startEcosystemRefresh();
+                // Setup realtime listener for stim calc changes
+                setupStimulantRealtimeListener();
             }).catch(() => {
                 // Even if ecosystem data fails, still load user data
                 loadFromFirebase();
+                loadCheckpointsFromFirebase();
+                startEcosystemRefresh();
+                setupStimulantRealtimeListener();
             });
         }
 
@@ -15539,12 +15661,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const roadmapSnapshot = await database.ref(basePath + '/d3Roadmap/exams').once('value');
                 const examsData = roadmapSnapshot.val();
 
-                if (examsData && Array.isArray(examsData)) {
+                // FIX: D3 Roadmap stores exams as OBJECT with ID keys, not array
+                const examsArr = examsData ? (Array.isArray(examsData) ? examsData : Object.values(examsData)) : [];
+
+                if (examsArr.length > 0) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
 
                     // Filter for upcoming exams (not passed)
-                    const upcomingExams = examsData
+                    const upcomingExams = examsArr
+                        .filter(exam => exam && exam.date)  // Filter out null/invalid entries
                         .map(exam => {
                             const examDate = parseLocalDate(exam.date);
                             const daysUntil = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
@@ -15585,6 +15711,111 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 console.error('❌ Error loading ecosystem data:', error);
                 // Non-fatal - app still works without cross-app data
             }
+        }
+
+        // ============================================
+        // ECOSYSTEM REALTIME SYNC
+        // ============================================
+
+        let ecosystemRefreshInterval = null;
+        let stimulantRealtimeListenerActive = false;
+
+        function startEcosystemRefresh() {
+            // Don't start multiple intervals
+            if (ecosystemRefreshInterval) return;
+
+            const hashedPin = userPath ? userPath.split('/')[1] : null;
+            if (!hashedPin) return;
+
+            // Refresh every 60 seconds
+            ecosystemRefreshInterval = setInterval(async () => {
+                if (document.visibilityState === 'visible') {
+                    console.log('🔄 Periodic ecosystem refresh...');
+                    await loadEcosystemData(hashedPin);
+                    // Re-render if on simple view
+                    const simpleView = document.getElementById('simpleView');
+                    if (simpleView && simpleView.classList.contains('active')) {
+                        renderSimpleView();
+                    }
+                }
+            }, 60000); // 60 seconds
+
+            console.log('✅ Ecosystem refresh started (60s interval)');
+        }
+
+        function stopEcosystemRefresh() {
+            if (ecosystemRefreshInterval) {
+                clearInterval(ecosystemRefreshInterval);
+                ecosystemRefreshInterval = null;
+            }
+        }
+
+        function setupStimulantRealtimeListener() {
+            const hashedPin = userPath ? userPath.split('/')[1] : null;
+            if (!database || !hashedPin) return;
+            if (stimulantRealtimeListenerActive) return; // Don't add duplicate listeners
+
+            const stimPath = 'users/' + hashedPin + '/stimulantCalculator/state';
+
+            database.ref(stimPath).on('value', (snapshot) => {
+                const stimData = snapshot.val();
+                if (!stimData) return;
+
+                // Skip if it's the initial load (we already have this data)
+                if (!state.ecosystemContext?.stimulant?.lastSynced) return;
+
+                // Check if sleep was pushed back
+                const oldProjected = state.ecosystemContext?.stimulant?.projectedSleepTime;
+                const newProjected = stimData.projectedSleepTime;
+
+                if (oldProjected && newProjected && newProjected !== oldProjected) {
+                    // Sleep time changed - show warning
+                    showToast(`⚠️ Sleep pushed: ${oldProjected} → ${newProjected}`);
+                    console.log(`⚠️ Stim calc update: Sleep ${oldProjected} → ${newProjected}`);
+                }
+
+                // Check for new all-nighter mode activation
+                const wasAllNighter = state.ecosystemContext?.stimulant?.allNighterMode;
+                const isAllNighter = stimData.allNighterMode === true;
+                if (!wasAllNighter && isAllNighter) {
+                    showToast('⚠️ All-nighter mode activated');
+                }
+
+                // Update ecosystem context with new stim data
+                const today = getLocalDateString();
+                const todayMeds = ensureArray(stimData.medications, []).filter(m => m.date === today);
+                const totalDose = todayMeds.reduce((sum, m) => sum + (m.dose || 0), 0);
+                const lastMed = todayMeds.length > 0 ? todayMeds[todayMeds.length - 1] : null;
+
+                const todayCaffeine = ensureArray(stimData.caffeine, []).filter(c => c.date === today);
+                const totalCaffeine = todayCaffeine.reduce((sum, c) => sum + (c.amount || 0), 0);
+                const lastCaff = todayCaffeine.length > 0 ? todayCaffeine[todayCaffeine.length - 1] : null;
+
+                state.ecosystemContext.stimulant = {
+                    sleepHours: stimData.hoursSleptLastNight || null,
+                    wakeTime: stimData.wakeTime || null,
+                    lastAdderallTime: lastMed?.time || null,
+                    lastAdderallDose: lastMed?.dose || null,
+                    totalAdderallToday: totalDose,
+                    isBooster: todayMeds.length > 1,
+                    lastCaffeineTime: lastCaff?.time || null,
+                    caffeineMg: totalCaffeine,
+                    projectedSleepTime: newProjected,
+                    projectedSleepMinutes: stimData.projectedSleepMinutes || null,
+                    allNighterMode: isAllNighter,
+                    lastSynced: new Date().toISOString()
+                };
+
+                // Re-render if on simple view
+                const simpleView = document.getElementById('simpleView');
+                if (simpleView && simpleView.classList.contains('active')) {
+                    console.log('🔄 Re-rendering simple view due to stim calc update');
+                    renderSimpleView();
+                }
+            });
+
+            stimulantRealtimeListenerActive = true;
+            console.log('✅ Stimulant realtime listener active');
         }
 
         // Helper: Parse date string as local date (avoid UTC issues)
@@ -17442,9 +17673,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 activeCalories: today.activeCalories || 0,
                 mealCount: totals.mealCount,
                 workedOut: today.workedOut || getCount(today.workouts) > 0,
-                // Detailed data (store as objects with IDs for editing)
-                meals: { ...today.meals },
-                workouts: { ...today.workouts },
+                // Detailed data (DEEP COPY to prevent reference mutation bugs)
+                meals: JSON.parse(JSON.stringify(today.meals || {})),
+                workouts: JSON.parse(JSON.stringify(today.workouts || {})),
                 // Full logic log snapshot
                 logicLog: logicSnapshot,
                 // Timestamp
