@@ -5271,11 +5271,32 @@
         }
 
         // Calculate remaining load from a yesterday dose
-        function calculateYesterdayDoseRemaining(dose, doseTimeMinutes, halfLifeHours) {
+        // FIX: Now uses XR IR/DR split for accuracy and consistent with calculateAmpLoad()
+        function calculateYesterdayDoseRemaining(dose, doseTimeMinutes, halfLifeHours, isXR = true) {
             const now = getCurrentMinutes();
-            // Effective elapsed time = time since midnight yesterday + time today
-            const effectiveElapsed = (24 * 60 - doseTimeMinutes) + now;
             const halfLifeMinutes = halfLifeHours * 60;
+
+            // FIX: Handle XR formulation (50% immediate, 50% delayed at T+4)
+            if (isXR && halfLifeHours >= 10) {  // Only XR for amphetamines (long half-life)
+                const immediateRelease = dose * 0.5;
+                const delayedRelease = dose * 0.5;
+                const delayedReleaseTime = doseTimeMinutes + 240;  // T+4 hours
+
+                // IR elapsed = time since dose to now (crossing midnight)
+                const irElapsed = (24 * 60 - doseTimeMinutes) + now;
+                const irRemaining = immediateRelease * Math.pow(0.5, irElapsed / halfLifeMinutes);
+
+                // DR elapsed = time since T+4 to now
+                const drElapsed = (24 * 60 - delayedReleaseTime) + now;
+                const drRemaining = drElapsed > 0
+                    ? delayedRelease * Math.pow(0.5, drElapsed / halfLifeMinutes)
+                    : delayedRelease;  // DR not yet released
+
+                return irRemaining + drRemaining;
+            }
+
+            // Simple decay for caffeine or non-XR
+            const effectiveElapsed = (24 * 60 - doseTimeMinutes) + now;
             return dose * Math.pow(0.5, effectiveElapsed / halfLifeMinutes);
         }
 
@@ -6189,6 +6210,9 @@
             // Update Ghost Load display (All-Nighter Mode)
             renderGhostLoad();
 
+            // FIX: Update Workout Planner (base time changes when meds/modifiers change)
+            updateWorkoutPlan();
+
             // Draw graph
             drawGraph();
             
@@ -7081,27 +7105,32 @@
         }
         
         function simulateVitaminC() {
-            if (state.modifiers.vitaminC.active) {
-                // Already active - show current sleep time
+            // FIX: Check if VitC is EFFECTIVELY active (not just toggled on but expired)
+            if (isVitaminCEffective()) {
+                // Already active AND effective - show current sleep time
                 return calculateSleepTime().sleepTime;
             }
-            
+
             const now = getCurrentMinutes();
             const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
-            
-            // Temporarily activate vitamin C
+            const today = getLocalDateString();
+
+            // Temporarily activate vitamin C with TODAY's date (fresh dose simulation)
             const wasActive = state.modifiers.vitaminC.active;
             const oldTime = state.modifiers.vitaminC.time;
-            
+            const oldDate = state.modifiers.vitaminC.date;
+
             state.modifiers.vitaminC.active = true;
             state.modifiers.vitaminC.time = nowTime;
-            
+            state.modifiers.vitaminC.date = today;  // FIX: Set fresh date so isVitaminCEffective() returns true
+
             const { sleepTime } = calculateSleepTime();
-            
+
             // Restore
             state.modifiers.vitaminC.active = wasActive;
             state.modifiers.vitaminC.time = oldTime;
-            
+            state.modifiers.vitaminC.date = oldDate;
+
             return sleepTime;
         }
         
