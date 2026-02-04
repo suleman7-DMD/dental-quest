@@ -3782,6 +3782,10 @@
             background: rgba(16, 185, 129, 0.4);
         }
 
+        .legend-box.empty {
+            background: rgba(107, 114, 128, 0.2);
+        }
+
         .month-stats {
             display: flex;
             justify-content: space-around;
@@ -6183,19 +6187,19 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-box missed"></div>
-                        <span>Over target</span>
+                        <span>Missed</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-box partial"></div>
-                        <span>Close</span>
+                        <span>Partial (deficit only)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-box good"></div>
-                        <span>Deficit hit</span>
+                        <span>Good (deficit + protein)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-box perfect"></div>
-                        <span>Perfect</span>
+                        <span>Perfect (all targets)</span>
                     </div>
                 </div>
 
@@ -15616,10 +15620,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const questMeds = questSnapshot.val();
 
                 if (questMeds) {
-                    const pills30 = questMeds['30mg']?.pills || 0;
-                    const pills20 = questMeds['20mg']?.pills || 0;
-                    const refill30 = questMeds['30mg']?.refillDate || null;
-                    const refill20 = questMeds['20mg']?.refillDate || null;
+                    // FIX: Dental Quest stores as adderall30/adderall20 with 'count' field, not '30mg'/'20mg' with 'pills'
+                    const pills30 = questMeds.adderall30?.count || questMeds['30mg']?.pills || 0;
+                    const pills20 = questMeds.adderall20?.count || questMeds['20mg']?.pills || 0;
+                    const refill30 = questMeds.adderall30?.refillDate || questMeds['30mg']?.refillDate || null;
+                    const refill20 = questMeds.adderall20?.refillDate || questMeds['20mg']?.refillDate || null;
 
                     // Log for debugging
                     console.log('💊 Dental Quest medications loaded:', {
@@ -17228,6 +17233,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 workoutsArr.forEach(w => {
                     text += `• ${w.type || 'Workout'}: ${w.duration || 0}min, +${w.calories || 0}cal @ ${w.time || '--'}\n`;
                 });
+                text += '\n';
+            }
+
+            // FIX: Include stored logicLog if available (captures full decision-making context from that day)
+            if (log.logicLog) {
+                text += `\n─── LOGIC LOG (Stored at ${log.savedAt || log.lastUpdated || 'save time'}) ───\n`;
+                text += log.logicLog;
             }
 
             navigator.clipboard.writeText(text).then(() => {
