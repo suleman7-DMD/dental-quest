@@ -3490,7 +3490,7 @@
                 modifiers: {
                     vitaminC: { active: false, time: '17:00', date: null },
                     heavyLift: { active: false },
-                    sauna: { active: false, time: '18:00' }
+                    sauna: { active: false, time: '18:00', date: null }
                 },
                 nicotine: {
                     active: false,
@@ -3536,7 +3536,7 @@
             modifiers: {
                 vitaminC: { active: false, time: '17:00', date: null },
                 heavyLift: { active: false },
-                sauna: { active: false, time: '18:00' }
+                sauna: { active: false, time: '18:00', date: null }
             },
             // Nicotine tracking - cardiovascular stimulant effects
             nicotine: {
@@ -4168,20 +4168,39 @@
             // 3. Sauna Bonus (Parasympathetic activation)
             // Sauna triggers heat shock proteins and subsequent parasympathetic
             // rebound, increasing sleep drive independent of adenosine
+            // FIX: Now uses date tracking like Vitamin C for cross-midnight accuracy
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTime = timeToMinutes(state.modifiers.sauna.time);
                 const now = getCurrentMinutes();
                 const fivePM = 17 * 60;
-                
-                // Only apply if sauna has been taken
+                const today = getLocalDateString();
+                const saunaDate = state.modifiers.sauna.date || today;
+
+                // Calculate if sauna has been taken (date-aware)
                 let saunaTaken = false;
-                if (saunaTime > now && saunaTime - now > 12 * 60) {
-                    // Stale setting from yesterday
+
+                // Parse dates to compare
+                const todayDate = parseLocalDate(today);
+                const saunaSetDate = parseLocalDate(saunaDate);
+                const daysDiff = Math.round((todayDate - saunaSetDate) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff === 0) {
+                    // Sauna set for today - check if time has passed
+                    saunaTaken = now >= saunaTime;
+                } else if (daysDiff === 1) {
+                    // Sauna was set yesterday
+                    // Effect lasts until wake time of next day (~12 hours max)
+                    // If it's early morning (before 6 AM), yesterday's evening sauna still counts
+                    if (now < 6 * 60 && saunaTime >= 17 * 60) {
+                        saunaTaken = true;
+                    } else {
+                        saunaTaken = false; // Stale from yesterday
+                    }
+                } else {
+                    // Sauna set 2+ days ago - definitely stale
                     saunaTaken = false;
-                } else if (now >= saunaTime || (saunaTime > 18 * 60 && now < 6 * 60)) {
-                    saunaTaken = true;
                 }
-                
+
                 if (saunaTaken) {
                     if (saunaTime >= fivePM) {
                         // Evening sauna - maximum parasympathetic benefit
@@ -4299,20 +4318,22 @@
                             const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
 
                             // Calculate IR component with Vitamin C time-split
+                            // FIX: Use isVitaminCEffective() to check TTL, not just active flag
+                            const vitCEffective = isVitaminCEffective();
                             if (atMinutes >= effectiveDoseTime) {
                                 let irLoad = 0;
-                                if (state.modifiers.vitaminC.active && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
+                                if (vitCEffective && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
                                     // Split decay: before VitC uses base half-life, after uses reduced
                                     const beforeVitC = vitCTime - effectiveDoseTime;
                                     const afterVitC = atMinutes - vitCTime;
                                     irLoad = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
                                            * Math.pow(0.5, afterVitC / reducedHalfLife);
-                                } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                } else if (vitCEffective && atMinutes > vitCTime) {
                                     // Dose was after VitC - use reduced for entire duration
                                     const irElapsed = atMinutes - effectiveDoseTime;
                                     irLoad = immediateRelease * Math.pow(0.5, irElapsed / reducedHalfLife);
                                 } else {
-                                    // No VitC or before VitC time - use base half-life
+                                    // No VitC or before VitC time or VitC expired - use base half-life
                                     const irElapsed = atMinutes - effectiveDoseTime;
                                     irLoad = immediateRelease * Math.pow(0.5, irElapsed / baseHalfLife);
                                 }
@@ -4322,18 +4343,18 @@
                             // Calculate DR component with Vitamin C time-split
                             if (atMinutes >= delayedReleaseTime) {
                                 let drLoad = 0;
-                                if (state.modifiers.vitaminC.active && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
+                                if (vitCEffective && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
                                     // Split decay: before VitC uses base half-life, after uses reduced
                                     const beforeVitC = vitCTime - delayedReleaseTime;
                                     const afterVitC = atMinutes - vitCTime;
                                     drLoad = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
                                            * Math.pow(0.5, afterVitC / reducedHalfLife);
-                                } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                                } else if (vitCEffective && atMinutes > vitCTime) {
                                     // DR was after VitC - use reduced for entire duration
                                     const drElapsed = atMinutes - delayedReleaseTime;
                                     drLoad = delayedRelease * Math.pow(0.5, drElapsed / reducedHalfLife);
                                 } else {
-                                    // No VitC or before VitC time - use base half-life
+                                    // No VitC or before VitC time or VitC expired - use base half-life
                                     const drElapsed = atMinutes - delayedReleaseTime;
                                     drLoad = delayedRelease * Math.pow(0.5, drElapsed / baseHalfLife);
                                 }
@@ -4347,15 +4368,18 @@
                             const delayedRelease = totalDose * 0.5;
                             const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
 
+                            // FIX: Use isVitaminCEffective() to check TTL
+                            const vitCEffectiveOld = isVitaminCEffective();
+
                             // Calculate IR component with Vitamin C time-split
                             let irLoad = 0;
                             const irElapsed = atMinutes - effectiveDoseTime;
-                            if (state.modifiers.vitaminC.active && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
+                            if (vitCEffectiveOld && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
                                 const beforeVitC = vitCTime - effectiveDoseTime;
                                 const afterVitC = atMinutes - vitCTime;
                                 irLoad = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
                                        * Math.pow(0.5, afterVitC / reducedHalfLife);
-                            } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                            } else if (vitCEffectiveOld && atMinutes > vitCTime) {
                                 irLoad = immediateRelease * Math.pow(0.5, irElapsed / reducedHalfLife);
                             } else {
                                 irLoad = immediateRelease * Math.pow(0.5, irElapsed / baseHalfLife);
@@ -4365,12 +4389,12 @@
                             // Calculate DR component with Vitamin C time-split
                             let drLoad = 0;
                             const drElapsed = atMinutes - delayedReleaseTime;
-                            if (state.modifiers.vitaminC.active && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
+                            if (vitCEffectiveOld && atMinutes > vitCTime && delayedReleaseTime < vitCTime) {
                                 const beforeVitC = vitCTime - delayedReleaseTime;
                                 const afterVitC = atMinutes - vitCTime;
                                 drLoad = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife)
                                        * Math.pow(0.5, afterVitC / reducedHalfLife);
-                            } else if (state.modifiers.vitaminC.active && atMinutes > vitCTime) {
+                            } else if (vitCEffectiveOld && atMinutes > vitCTime) {
                                 drLoad = delayedRelease * Math.pow(0.5, drElapsed / reducedHalfLife);
                             } else {
                                 drLoad = delayedRelease * Math.pow(0.5, drElapsed / baseHalfLife);
@@ -4402,15 +4426,18 @@
                 let immediateLoad = 0;
                 let delayedLoad = 0;
 
+                // FIX: Use isVitaminCEffective() to check TTL for fresh doses
+                const vitCEffectiveFresh = isVitaminCEffective();
+
                 // Calculate immediate release component
                 if (effectiveAtMinutes >= baseDoseTime) {
                     const elapsed = effectiveAtMinutes - baseDoseTime;
 
-                    // If Vitamin C was taken, use reduced half-life for time after it
-                    if (state.modifiers.vitaminC.active && effectiveAtMinutes > vitCTime) {
+                    // If Vitamin C was taken AND still effective, use reduced half-life for time after it
+                    if (vitCEffectiveFresh && effectiveAtMinutes > vitCTime) {
                         const beforeVitC = Math.max(0, vitCTime - baseDoseTime);
                         const afterVitC = effectiveAtMinutes - Math.max(baseDoseTime, vitCTime);
-                        
+
                         // Decay before Vitamin C
                         let remaining = immediateRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
                         // Then faster decay after
@@ -4421,21 +4448,21 @@
                     }
                     totalLoad += immediateLoad;
                 }
-                
+
                 // Calculate delayed release component
                 // CRITICAL FIX: Handle midnight rollover for delayed time too
                 let effectiveDelayedTime = delayedTime;
                 if (delayedTime > 24 * 60) {
                     effectiveDelayedTime = delayedTime; // Keep as is for comparison
                 }
-                
+
                 if (effectiveAtMinutes >= effectiveDelayedTime) {
                     const elapsed = effectiveAtMinutes - effectiveDelayedTime;
-                    
-                    if (state.modifiers.vitaminC.active && effectiveAtMinutes > vitCTime) {
+
+                    if (vitCEffectiveFresh && effectiveAtMinutes > vitCTime) {
                         const beforeVitC = Math.max(0, vitCTime - effectiveDelayedTime);
                         const afterVitC = effectiveAtMinutes - Math.max(effectiveDelayedTime, vitCTime);
-                        
+
                         let remaining = delayedRelease * Math.pow(0.5, beforeVitC / baseHalfLife);
                         remaining = remaining * Math.pow(0.5, afterVitC / reducedHalfLife);
                         delayedLoad = remaining;
@@ -5094,13 +5121,17 @@
         function toggleModifier(element, modifierName) {
             const modifier = state.modifiers[modifierName];
             modifier.active = !modifier.active;
-            
+
             if (modifier.active) {
                 element.classList.add('active');
+                // FIX: Set date when toggling ON (for date-aware expiration)
+                if (modifierName === 'vitaminC' || modifierName === 'sauna') {
+                    modifier.date = getLocalDateString();
+                }
             } else {
                 element.classList.remove('active');
             }
-            
+
             // Show/hide time inputs
             updateModifierTimeInputs();
             recalculate();
@@ -5847,7 +5878,14 @@
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTimeEl = document.getElementById('saunaTime');
-                if (saunaTimeEl) state.modifiers.sauna.time = saunaTimeEl.value || state.modifiers.sauna.time;
+                if (saunaTimeEl) {
+                    const newTime = saunaTimeEl.value || state.modifiers.sauna.time;
+                    // FIX: If time changed, update the date to today (user is setting new sauna time)
+                    if (newTime !== state.modifiers.sauna.time) {
+                        state.modifiers.sauna.date = getLocalDateString();
+                    }
+                    state.modifiers.sauna.time = newTime;
+                }
             }
 
             const now = getCurrentMinutes();
@@ -6053,8 +6091,17 @@
             if (sleepTime < 6 * 60) {
                 effectiveSleepTime = sleepTime + 24 * 60;
             }
-            
-            const sleepHours = Math.max(0, (nextWake - effectiveSleepTime) / 60);
+
+            // Calculate raw sleep hours
+            let sleepHours = Math.max(0, (nextWake - effectiveSleepTime) / 60);
+
+            // SANITY CAP: Max realistic sleep is ~14 hours (extreme catch-up sleep)
+            // Values above this indicate calculation error or edge case
+            const MAX_REALISTIC_SLEEP = 14;
+            if (sleepHours > MAX_REALISTIC_SLEEP) {
+                console.warn(`Sleep hours (${sleepHours.toFixed(1)}) exceeds realistic cap, capping to ${MAX_REALISTIC_SLEEP}`);
+                sleepHours = MAX_REALISTIC_SLEEP;
+            }
 
             // Color coding - updated terminology per expert recommendation
             let colorClass, qualityText;
@@ -6458,13 +6505,38 @@
             
             // Crash point (when fatigue first sets in - ~6 hours after latest dose when IR starts declining)
             // This is when you FEEL the crash, not when you're fully cleared
-            const todayMeds = medsArray.filter(m => m.date === getLocalDateString());
-            if (todayMeds.length > 0) {
-                const latestDoseTime = Math.max(...todayMeds.map(m => timeToMinutes(m.time)));
+            // FIX: In all-nighter mode, include yesterday's meds (they are "today's" effective doses)
+            const today = getLocalDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getLocalDateString(yesterday);
+
+            let relevantMeds = medsArray.filter(m => m.date === today);
+            if (state.allNighterMode && relevantMeds.length === 0) {
+                // In all-nighter mode after midnight, yesterday's meds are still "in play"
+                relevantMeds = medsArray.filter(m => m.date === yesterdayStr);
+            }
+
+            if (relevantMeds.length > 0) {
+                // Find the latest dose, accounting for date
+                let latestDoseTime = -Infinity;
+                relevantMeds.forEach(m => {
+                    let doseMinutes = timeToMinutes(m.time);
+                    // If this is yesterday's med, we need to calculate when crash would be today
+                    if (m.date === yesterdayStr) {
+                        doseMinutes = doseMinutes - (24 * 60); // Shift to "yesterday's timeline"
+                    }
+                    if (doseMinutes > latestDoseTime) {
+                        latestDoseTime = doseMinutes;
+                    }
+                });
+
                 const crashTime = latestDoseTime + (6 * 60); // ~6 hours after latest dose
-                if (crashTime > now && crashTime < sleepTime) {
+                const crashTimeNormalized = crashTime < 0 ? crashTime + (24 * 60) : crashTime;
+
+                if (crashTimeNormalized > now && crashTimeNormalized < sleepTime) {
                     feelings.push({
-                        time: crashTime,
+                        time: crashTimeNormalized,
                         emoji: '📉',
                         label: 'Crash Begins',
                         detail: 'Amphetamine dropping fast - fatigue onset',
@@ -10488,14 +10560,29 @@
             // Calculate crash time - when you START feeling fatigue
             // This is approximately 6 hours after the latest dose when IR component starts declining rapidly
             // NOT 30 min before clearance (which is when you're already exhausted, not when crash begins)
+            // FIX: In all-nighter mode, include yesterday's meds
             let crashTime = null;
-            const medsForCrash = getValues(state.medications).filter(m => m.date === getLocalDateString());
+            const todayStr = getLocalDateString();
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterdayStr = getLocalDateString(yesterdayDate);
+
+            let medsForCrash = getValues(state.medications).filter(m => m.date === todayStr);
+            if (state.allNighterMode && medsForCrash.length === 0) {
+                medsForCrash = getValues(state.medications).filter(m => m.date === yesterdayStr);
+            }
+
             if (medsForCrash.length > 0) {
-                const latestDose = medsForCrash.reduce((latest, m) => {
-                    const t = timeToMinutes(m.time);
-                    return t > latest ? t : latest;
-                }, 0);
+                let latestDose = -Infinity;
+                medsForCrash.forEach(m => {
+                    let t = timeToMinutes(m.time);
+                    if (m.date === yesterdayStr) {
+                        t = t - (24 * 60); // Shift yesterday's time
+                    }
+                    if (t > latestDose) latestDose = t;
+                });
                 crashTime = latestDose + (6 * 60); // ~6 hours after latest dose
+                if (crashTime < 0) crashTime += 24 * 60;
             }
 
             // Format sleep time (normalize to 0-1439 range)
