@@ -4270,7 +4270,6 @@
         // FIXED: Now handles date stamps and midnight rollovers correctly
         // UPDATED: Now supports Vitamin C "tomorrow" setting via getVitaminCTimeMinutes()
         function calculateAmpLoad(atMinutes) {
-            console.log('calculateAmpLoad called with atMinutes:', atMinutes, '(' + minutesToTime(atMinutes) + ')');
             let totalLoad = 0;
             const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
             const vitCTime = getVitaminCTimeMinutes(); // Handles today/tomorrow
@@ -4279,7 +4278,6 @@
 
             // FIX: Use getValues() for object iteration
             getValues(state.medications).forEach(med => {
-                const loadBefore = totalLoad; // DIAGNOSTIC
                 const baseDoseTime = timeToMinutes(med.time);
                 const totalDose = med.dose;
                 const medDate = med.date || today;
@@ -4404,7 +4402,6 @@
                             totalLoad += drLoad;
                         }
                     }
-                    console.log('  dose:', totalDose + 'mg', 'OLD-PATH', 'doseTime:', effectiveDoseTime, '(' + minutesToTime(effectiveDoseTime) + ')', 'elapsed:', elapsed, 'contribution:', (totalLoad - loadBefore).toFixed(2) + 'mg');
                     return;
                 }
 
@@ -4477,10 +4474,8 @@
                 
                 // DEBUG: Log component totals
                 // console.log(`  Result: immediate=${immediateLoad.toFixed(2)}mg, delayed=${delayedLoad.toFixed(2)}mg, total=${totalLoad.toFixed(2)}mg`);
-                console.log('  dose:', totalDose + 'mg', 'FRESH-PATH', 'doseTime:', baseDoseTime, '(' + minutesToTime(baseDoseTime) + ')', 'elapsed:', (effectiveAtMinutes - baseDoseTime), 'contribution:', (totalLoad - loadBefore).toFixed(2) + 'mg');
             });
 
-            console.log('  TOTAL:', totalLoad.toFixed(2) + 'mg');
             return totalLoad;
         }
 
@@ -4644,15 +4639,22 @@
             
             const forbiddenZone = getForbiddenZone();
             const wakeMaintenanceStart = forbiddenZone.start - (2 * 60); // 2 hours before forbidden zone
-            
+
+            // CRITICAL FIX: Calculate hours until drug clearance
+            // If drugs won't clear for 18+ hours, today's circadian rhythm doesn't apply
+            // (user will likely sleep and wake before then, resetting their rhythm)
+            const hoursUntilClearance = (sleepTime - now) / 60;
+            const applyCircadianConstraints = hoursUntilClearance < 18;
+
             let sleepTimeNormalized = sleepTime;
             if (sleepTime < timeToMinutes(state.wakeTime)) {
                 sleepTimeNormalized = sleepTime + 24 * 60;
             }
-            
+
             // Check if in Wake Maintenance Zone - this is a HARD BLOCKER
             // During WMZ, circadian alerting signal is at maximum
-            if (sleepTimeNormalized >= wakeMaintenanceStart && sleepTimeNormalized < forbiddenZone.start) {
+            // ONLY apply if drug clearance is within current circadian cycle
+            if (applyCircadianConstraints && sleepTimeNormalized >= wakeMaintenanceStart && sleepTimeNormalized < forbiddenZone.start) {
                 const forbiddenEnd = forbiddenZone.end;
                 blockingFactors.push({
                     name: 'Wake Maintenance Zone',
@@ -4663,7 +4665,7 @@
                 sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
             }
             // Check if in Forbidden Zone - push to after it ends
-            else if (sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
+            else if (applyCircadianConstraints && sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
                 const forbiddenEnd = forbiddenZone.end;
                 blockingFactors.push({
                     name: 'Forbidden Zone (Circadian)',
@@ -5217,19 +5219,26 @@
             const now = getCurrentMinutes();
             const hoursSinceVitC = (now - vitCTimeMinutes) / 60;
 
-            // If Vitamin C was taken more than 8 hours ago, it's no longer effective
-            // FIX: Also reject FUTURE times (negative hours = hasn't been taken yet)
-            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS || hoursSinceVitC < 0) {
-                return Infinity; // Treat as inactive (expired OR not yet taken)
+            // If Vitamin C was taken more than 8 hours ago, it's expired
+            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS) {
+                return Infinity; // Expired - no longer effective
             }
 
+            // CRITICAL FIX: For FUTURE VitC times, return the scheduled time
+            // This allows sleep predictions to factor in when VitC WILL be taken
+            // The calculation `atMinutes > vitCTime` handles whether it's effective at each evaluated time
             return vitCTimeMinutes;
         }
 
         // Check if Vitamin C is currently effective (within TTL window)
+        // Returns true only if VitC is active, not expired, AND not in the future
         function isVitaminCEffective() {
             if (!state.modifiers.vitaminC.active) return false;
-            return getVitaminCTimeMinutes() !== Infinity;
+            const vitCTime = getVitaminCTimeMinutes();
+            if (vitCTime === Infinity) return false; // Expired
+            const now = getCurrentMinutes();
+            if (now < vitCTime) return false; // Not yet taken (future)
+            return true; // Currently active and within TTL window
         }
 
         // Get Vitamin C status for UI display: 'effective', 'expired', 'future', or 'inactive'
@@ -5897,7 +5906,6 @@
         // ============================================
         
         function recalculate() {
-            console.log('🔴 DIAGNOSTIC: recalculate() called - if you see this, local file is loaded');
             // Update state from inputs (safely - elements might not exist in focus mode)
             const wakeTimeEl = document.getElementById('wakeTime');
             const hoursSleptEl = document.getElementById('hoursSlept');
