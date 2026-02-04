@@ -5157,13 +5157,27 @@
                 vitCDateEl.value = state.modifiers.vitaminC.date || getLocalDateString();
             }
 
-            // Show/hide expired badge for Vitamin C
+            // Show/hide expired/future badge for Vitamin C
             const expiredBadge = document.getElementById('vitaminCExpiredBadge');
             const expiredNote = document.getElementById('vitaminCExpiredNote');
             if (expiredBadge && expiredNote && showVitC) {
-                const vitCEffective = isVitaminCEffective();
-                expiredBadge.style.display = vitCEffective ? 'none' : 'inline';
-                expiredNote.style.display = vitCEffective ? 'none' : 'block';
+                const vitCStatus = getVitaminCStatus();
+                if (vitCStatus === 'effective') {
+                    expiredBadge.style.display = 'none';
+                    expiredNote.style.display = 'none';
+                } else if (vitCStatus === 'future') {
+                    expiredBadge.style.display = 'inline';
+                    expiredBadge.textContent = 'NOT YET';
+                    expiredBadge.style.background = '#6366f1';  // Purple for future
+                    expiredNote.style.display = 'block';
+                    expiredNote.innerHTML = '⏳ Scheduled for later. Effect starts when taken.';
+                } else {  // expired
+                    expiredBadge.style.display = 'inline';
+                    expiredBadge.textContent = 'EXPIRED';
+                    expiredBadge.style.background = '#ef4444';  // Red for expired
+                    expiredNote.style.display = 'block';
+                    expiredNote.innerHTML = '⚠️ Effect expired (>8 hours ago). Using normal 12h half-life.';
+                }
             }
         }
 
@@ -5199,8 +5213,9 @@
             const hoursSinceVitC = (now - vitCTimeMinutes) / 60;
 
             // If Vitamin C was taken more than 8 hours ago, it's no longer effective
-            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS) {
-                return Infinity; // Treat as inactive
+            // FIX: Also reject FUTURE times (negative hours = hasn't been taken yet)
+            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS || hoursSinceVitC < 0) {
+                return Infinity; // Treat as inactive (expired OR not yet taken)
             }
 
             return vitCTimeMinutes;
@@ -5210,6 +5225,27 @@
         function isVitaminCEffective() {
             if (!state.modifiers.vitaminC.active) return false;
             return getVitaminCTimeMinutes() !== Infinity;
+        }
+
+        // Get Vitamin C status for UI display: 'effective', 'expired', 'future', or 'inactive'
+        function getVitaminCStatus() {
+            if (!state.modifiers.vitaminC.active) return 'inactive';
+
+            const today = getLocalDateString();
+            const vitCDate = state.modifiers.vitaminC.date || today;
+            const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
+
+            const todayDate = parseLocalDate(today);
+            const targetDate = parseLocalDate(vitCDate);
+            const daysDiff = Math.round((targetDate - todayDate) / (1000 * 60 * 60 * 24));
+            const vitCTimeMinutes = baseMinutes + (daysDiff * 24 * 60);
+
+            const now = getCurrentMinutes();
+            const hoursSinceVitC = (now - vitCTimeMinutes) / 60;
+
+            if (hoursSinceVitC < 0) return 'future';  // Not yet taken
+            if (hoursSinceVitC > VITAMIN_C_EFFECT_HOURS) return 'expired';
+            return 'effective';
         }
 
         // ============================================
@@ -5893,13 +5929,27 @@
                 if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
                 if (vitCDateEl) state.modifiers.vitaminC.date = vitCDateEl.value || getLocalDateString();
 
-                // Update expired badge (in case time has passed)
+                // Update expired/future badge (in case time has passed)
                 const expiredBadge = document.getElementById('vitaminCExpiredBadge');
                 const expiredNote = document.getElementById('vitaminCExpiredNote');
                 if (expiredBadge && expiredNote) {
-                    const vitCEffective = isVitaminCEffective();
-                    expiredBadge.style.display = vitCEffective ? 'none' : 'inline';
-                    expiredNote.style.display = vitCEffective ? 'none' : 'block';
+                    const vitCStatus = getVitaminCStatus();
+                    if (vitCStatus === 'effective') {
+                        expiredBadge.style.display = 'none';
+                        expiredNote.style.display = 'none';
+                    } else if (vitCStatus === 'future') {
+                        expiredBadge.style.display = 'inline';
+                        expiredBadge.textContent = 'NOT YET';
+                        expiredBadge.style.background = '#6366f1';
+                        expiredNote.style.display = 'block';
+                        expiredNote.innerHTML = '⏳ Scheduled for later. Effect starts when taken.';
+                    } else {
+                        expiredBadge.style.display = 'inline';
+                        expiredBadge.textContent = 'EXPIRED';
+                        expiredBadge.style.background = '#ef4444';
+                        expiredNote.style.display = 'block';
+                        expiredNote.innerHTML = '⚠️ Effect expired (>8 hours ago). Using normal 12h half-life.';
+                    }
                 }
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
@@ -10535,9 +10585,11 @@
                 const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
                 const today = getLocalDateString();
                 const vitCDateLabel = vitCDate !== today ? ` (${formatDateLabel(vitCDate)})` : '';
-                const vitCEffective = isVitaminCEffective();
-                if (vitCEffective) {
+                const vitCStatus = getVitaminCStatus();
+                if (vitCStatus === 'effective') {
                     modifierDetails.push(`• Vitamin C: Active at ${state.modifiers.vitaminC.time}${vitCDateLabel} → Half-life reduced to 70% after this time`);
+                } else if (vitCStatus === 'future') {
+                    modifierDetails.push(`• Vitamin C: SCHEDULED for ${state.modifiers.vitaminC.time}${vitCDateLabel} → Not yet taken, no effect on half-life`);
                 } else {
                     modifierDetails.push(`• Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time}${vitCDateLabel}, >8 hours ago) → No longer affecting half-life`);
                 }
@@ -10672,9 +10724,11 @@
                 const vitCDate = state.modifiers.vitaminC.date || getLocalDateString();
                 const today = getLocalDateString();
                 const dayLabel = vitCDate !== today ? formatDateLabel(vitCDate) : 'today';
-                const vitCEffective = isVitaminCEffective();
-                if (vitCEffective) {
+                const vitCStatus = getVitaminCStatus();
+                if (vitCStatus === 'effective') {
                     vitCInfo = `  • Vitamin C: Active at ${state.modifiers.vitaminC.time} ${dayLabel} → Half-life reduced to 70% after this time\n`;
+                } else if (vitCStatus === 'future') {
+                    vitCInfo = `  • Vitamin C: SCHEDULED for ${state.modifiers.vitaminC.time} ${dayLabel} → Not yet taken, using normal 12h half-life\n`;
                 } else {
                     vitCInfo = `  • Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time} ${dayLabel}, >8 hours ago) → Using normal 12h half-life\n`;
                 }
