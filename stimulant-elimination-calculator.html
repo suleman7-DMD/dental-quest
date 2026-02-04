@@ -4646,6 +4646,9 @@
             const hoursUntilClearance = (sleepTime - now) / 60;
             const applyCircadianConstraints = hoursUntilClearance < 18;
 
+            // DEBUG: Log to verify fix is active
+            console.log('🔧 CIRCADIAN FIX v2: sleepTime=' + sleepTime + ', now=' + now + ', hoursUntil=' + hoursUntilClearance.toFixed(1) + ', applyCircadian=' + applyCircadianConstraints);
+
             let sleepTimeNormalized = sleepTime;
             if (sleepTime < timeToMinutes(state.wakeTime)) {
                 sleepTimeNormalized = sleepTime + 24 * 60;
