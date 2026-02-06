@@ -9995,14 +9995,13 @@ CHAIR: 9F
             const countEl = document.getElementById('doTodayCount');
             if (!listEl) return;
 
-            // Filter for doToday tasks
-            const doTodayTasks = mainAppTasks.filter(t => t.doToday === true);
+            // Filter for doToday tasks (exclude completed ones)
+            const doTodayTasks = mainAppTasks.filter(t => t.doToday === true && !t.completed);
 
             // Update count badge
             if (countEl) {
-                const incompleteCount = doTodayTasks.filter(t => !t.completed).length;
-                countEl.textContent = incompleteCount;
-                countEl.classList.toggle('empty', incompleteCount === 0);
+                countEl.textContent = doTodayTasks.length;
+                countEl.classList.toggle('empty', doTodayTasks.length === 0);
             }
 
             // Empty state
@@ -10022,9 +10021,8 @@ CHAIR: 9F
                 return;
             }
 
-            // Sort: incomplete first, then by id (recent first)
+            // Sort by id (recent first)
             const sorted = [...doTodayTasks].sort((a, b) => {
-                if (a.completed !== b.completed) return a.completed ? 1 : -1;
                 return (b.id || 0) - (a.id || 0);
             });
 
