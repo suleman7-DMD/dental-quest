@@ -16492,7 +16492,7 @@
                 ...task,
                 completed: nowCompleted,
                 completedAt: nowCompleted ? Date.now() : null,
-                doToday: false  // Remove from "Do Today" list when completed
+                doToday: task.doToday  // Preserve doToday so completed tasks stay in progress count
             };
 
             if (nowCompleted) {

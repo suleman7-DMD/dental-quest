@@ -5256,6 +5256,7 @@
 
         function toggleAllNighterMode() {
             state.allNighterMode = !state.allNighterMode;
+            state._dataLoaded = true;
             updateAllNighterUI();
             renderGhostLoad();
             recalculate();
@@ -9318,6 +9319,7 @@
 
                         // FIX: Restore allNighterMode UI
                         updateAllNighterUI();
+                        renderGhostLoad();
 
                         // Restore workout plan UI if applied
                         if (state.workoutPlan && state.workoutPlan.applied) {
@@ -9502,6 +9504,7 @@
 
                     // FIX: Restore allNighterMode UI
                     updateAllNighterUI();
+                    renderGhostLoad();
 
                     // Restore workout plan if applied
                     if (state.workoutPlan && state.workoutPlan.applied) {
@@ -10034,6 +10037,35 @@
                     updateSyncStatus('error', 'Pull failed');
                     showToast('❌ Pull failed: ' + err.message);
                 });
+        }
+
+        // Re-render everything (used by checkpoint restore, force pull, import)
+        function renderAll() {
+            document.getElementById('wakeTime').value = state.wakeTime;
+            document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
+            document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
+            document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
+            document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
+            document.getElementById('caffThreshold').value = state.settings.caffThreshold;
+            document.getElementById('weight').value = state.settings.weight;
+
+            renderMedEntries();
+            renderCaffeineEntries();
+            renderSleepCalendar();
+            renderSleepPerformance();
+            renderHistory();
+
+            if (state.workoutPlan && state.workoutPlan.applied) {
+                restoreWorkoutPlanUI();
+            }
+
+            updateAllNighterUI();
+            renderGhostLoad();
+            recalculate();
+
+            if (focusMode) {
+                renderFocusMode();
+            }
         }
 
         // Helper to apply remote state

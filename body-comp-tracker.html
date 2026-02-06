@@ -3782,6 +3782,10 @@
             background: rgba(16, 185, 129, 0.4);
         }
 
+        .legend-box.over {
+            background: rgba(220, 38, 38, 0.4);
+        }
+
         .legend-box.empty {
             background: rgba(107, 114, 128, 0.2);
         }
@@ -6201,6 +6205,10 @@
                         <div class="legend-box perfect"></div>
                         <span>Perfect (all targets)</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-box over"></div>
+                        <span>Over (exceeded 110%)</span>
+                    </div>
                 </div>
 
                 <!-- Month Stats Summary -->
@@ -7865,17 +7873,23 @@
             const tdee = getTDEEForDate(dateStr);
             const deficit = tdee - totals.calories;
 
-            // Determine status
+            // Determine status (matches saveDayLog() logic exactly)
             let status = 'missed';
             const targetCalories = log.target || 1900;
             const targetProtein = log.targetProtein || 150;
-            const proteinHit = totals.protein >= targetProtein * 0.8;
-            const deficitOk = deficit >= 0;
+            const targetFloor = log.targetFloor || Math.round(targetCalories * 0.85);
+            const proteinHit = totals.protein >= targetProtein * 0.9;
+            const calHit = totals.calories >= targetFloor && totals.calories <= targetCalories;
+            const perfect = calHit && proteinHit;
 
-            if (proteinHit && deficitOk) {
+            if (perfect) {
                 status = 'perfect';
-            } else if (proteinHit || deficitOk) {
+            } else if (deficit > 0 && proteinHit) {
                 status = 'good';
+            } else if (deficit > 0) {
+                status = 'partial';
+            } else if (totals.calories > targetCalories * 1.1) {
+                status = 'over';
             }
 
             // Update the log with recalculated values
@@ -9811,6 +9825,7 @@
                     state.dailyLogs[mealDate].meals = migrateArrayToObject(state.dailyLogs[mealDate].meals, 'meal');
                 }
                 state.dailyLogs[mealDate].meals[mealId] = meal;
+                recalculateDayLog(mealDate);
                 const dateDisplay = new Date(mealDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 showToast(`✓ Added ${name} to ${dateDisplay}`);
             }
