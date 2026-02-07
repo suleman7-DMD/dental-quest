@@ -659,8 +659,8 @@
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
         @media (max-width: 900px) {
@@ -677,9 +677,11 @@
         }
 
         .card h2 {
-            font-size: 1.2em;
+            font-size: 1.25em;
+            font-weight: 700;
             margin-bottom: 20px;
             color: #58a6ff;
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -2100,6 +2102,9 @@
             <button class="focus-quick-btn secondary" onclick="focusToggleVitC()" style="margin-top: 10px; width: 100%; font-size: 0.85em;" id="focusVitCToggle">
                 Disable Vitamin C
             </button>
+            <button class="focus-quick-btn secondary" id="focusAllNighterBtn" onclick="toggleAllNighterMode(); updateFocusAllNighterBtn();" style="margin-top: 8px; width: 100%; font-size: 0.85em;">
+                🌙 Enable All-Nighter Mode
+            </button>
         </div>
         
         <!-- Blocking Factors Summary -->
@@ -3110,12 +3115,12 @@
                 <div class="card" style="margin-top: 20px;">
                     <div class="section-header" onclick="toggleForecastLogic()" style="cursor: pointer;">
                         <span class="icon">🔬</span> Today's Forecast Logic
-                        <span id="forecastToggleIcon" style="float: right; transition: transform 0.3s;">▼</span>
+                        <span id="forecastToggleIcon" style="float: right; transition: transform 0.3s;">▶</span>
                     </div>
                     <p style="color: #b0b8c4; font-size: 0.85em; margin: 10px 0;">
                         Complete breakdown of how your sleep window is calculated. Copy this to verify the algorithm.
                     </p>
-                    <div id="forecastLogicContent" style="display: block;">
+                    <div id="forecastLogicContent" style="display: none;">
                         <div id="forecastLogicText" style="
                             background: rgba(0,0,0,0.3);
                             border: 1px solid rgba(99,102,241,0.3);
@@ -3150,6 +3155,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- Section divider -->
+        <div style="border-top: 1px solid rgba(255,255,255,0.06); margin: 28px 0 8px;"></div>
 
         <!-- 7-Day Sleep History Calendar -->
         <div class="card" style="margin-top: 20px;">
@@ -3464,11 +3472,19 @@
             </div>
         </div>
 
-        <!-- History Section -->
+        <!-- Prediction Accuracy Section (collapsed by default) -->
         <div class="card" style="margin-top: 20px;">
-            <h2><span class="icon">📊</span> History & Calibration</h2>
-            <div id="historyList">
-                <p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today's data to start tracking accuracy.</p>
+            <h2 onclick="toggleHistorySection()" style="cursor: pointer; user-select: none;">
+                <span class="icon">📊</span> Prediction Accuracy
+                <span id="historyToggleIcon" style="float: right; transition: transform 0.3s; font-size: 0.7em;">&#9654;</span>
+            </h2>
+            <div id="historyAccuracySummary" style="padding: 4px 0; color: #8b949e; font-size: 0.85em;">
+                Click to view prediction accuracy history
+            </div>
+            <div id="historyContent" style="display: none;">
+                <div id="historyList">
+                    <p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today's data to start tracking accuracy.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -3813,25 +3829,27 @@
                 if (entry) {
                     // Handle both old format (just number) and new format (object)
                     if (typeof entry === 'object' && entry.wakeTime) {
+                        const h = Number(entry.hoursSlept);
                         wakeTimes.push({
                             date: dateStr,
                             wakeMinutes: timeToMinutes(entry.wakeTime),
-                            hoursSlept: entry.hoursSlept || 0
+                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
                         });
                     } else if (typeof entry === 'number') {
                         // Old format - only has hours, no wake time
-                        // Skip for phase calculation but could use for sleep avg
-                        wakeTimes.push({
-                            date: dateStr,
-                            wakeMinutes: null, // Unknown
-                            hoursSlept: entry
-                        });
-                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
-                        // New format but no wake time yet
+                        const h = Number(entry);
                         wakeTimes.push({
                             date: dateStr,
                             wakeMinutes: null,
-                            hoursSlept: entry.hoursSlept
+                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
+                        });
+                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
+                        // New format but no wake time yet
+                        const h = Number(entry.hoursSlept);
+                        wakeTimes.push({
+                            date: dateStr,
+                            wakeMinutes: null,
+                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
                         });
                     }
                 }
@@ -4056,7 +4074,9 @@
                     } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
                         hoursSlept = entry.hoursSlept;
                     }
-                    
+                    // NaN guard: corrupted data defaults to 8h (no deficit assumed)
+                    if (isNaN(hoursSlept) || hoursSlept < 0) hoursSlept = 8;
+
                     const dayDeficit = Math.max(0, 8 - hoursSlept);
                     totalDeficit += dayDeficit * weights[i - 1];
                     daysWithData++;
@@ -4318,8 +4338,9 @@
                             const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
 
                             // Calculate IR component with Vitamin C time-split
-                            // FIX: Use isVitaminCEffective() to check TTL, not just active flag
-                            const vitCEffective = isVitaminCEffective();
+                            // FIX: Projection-safe check — allows future VitC to affect sleep projections
+                            // atMinutes > vitCTime handles WHEN it kicks in; we just need to know it's scheduled
+                            const vitCEffective = state.modifiers.vitaminC.active && vitCTime !== Infinity;
                             if (atMinutes >= effectiveDoseTime) {
                                 let irLoad = 0;
                                 if (vitCEffective && atMinutes > vitCTime && effectiveDoseTime < vitCTime) {
@@ -4368,8 +4389,8 @@
                             const delayedRelease = totalDose * 0.5;
                             const delayedReleaseTime = effectiveDoseTime + 240; // T+4 hours
 
-                            // FIX: Use isVitaminCEffective() to check TTL
-                            const vitCEffectiveOld = isVitaminCEffective();
+                            // FIX: Projection-safe check — allows future VitC to affect sleep projections
+                            const vitCEffectiveOld = state.modifiers.vitaminC.active && vitCTime !== Infinity;
 
                             // Calculate IR component with Vitamin C time-split
                             let irLoad = 0;
@@ -4415,8 +4436,8 @@
                 let immediateLoad = 0;
                 let delayedLoad = 0;
 
-                // FIX: Use isVitaminCEffective() to check TTL for fresh doses
-                const vitCEffectiveFresh = isVitaminCEffective();
+                // FIX: Projection-safe check — allows future VitC to affect sleep projections
+                const vitCEffectiveFresh = state.modifiers.vitaminC.active && vitCTime !== Infinity;
 
                 // Calculate immediate release component
                 // FIX: Use effectiveDoseTime for cross-date correctness
@@ -7163,9 +7184,9 @@
         }
         
         function simulateVitaminC() {
-            // FIX: Check if VitC is EFFECTIVELY active (not just toggled on but expired)
-            if (isVitaminCEffective()) {
-                // Already active AND effective - show current sleep time
+            // FIX: Check if VitC is scheduled (past OR future) — projection already factors it in
+            if (state.modifiers.vitaminC.active && getVitaminCTimeMinutes() !== Infinity) {
+                // Already scheduled (past or future, not expired) - projection includes it
                 return calculateSleepTime().sleepTime;
             }
 
@@ -7734,6 +7755,50 @@
             showToast('Day saved! Log actual sleep time tomorrow.');
         }
 
+        function toggleHistorySection() {
+            const content = document.getElementById('historyContent');
+            const icon = document.getElementById('historyToggleIcon');
+            const isOpen = content.style.display !== 'none';
+            content.style.display = isOpen ? 'none' : 'block';
+            icon.innerHTML = isOpen ? '&#9654;' : '&#9660;';
+        }
+
+        // Auto-populate feedback from sleep history (wakeTime - hoursSlept = sleep onset)
+        function autoPopulateFeedback() {
+            const historyValues = getValues(state.history);
+            let updated = false;
+
+            historyValues.forEach(entry => {
+                if (entry.actualSleep !== null && entry.actualSleep !== undefined) return;
+                if (!entry.date || !entry.predictedSleep) return;
+
+                // The actual sleep time can be inferred from the NEXT day's sleep record
+                const entryDate = parseLocalDate(entry.date);
+                const nextDay = new Date(entryDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayStr = getLocalDateString(nextDay);
+
+                const sleepEntry = state.sleepHistory[nextDayStr];
+                if (!sleepEntry) return;
+
+                const hoursSlept = typeof sleepEntry === 'number' ? sleepEntry : (sleepEntry && sleepEntry.hoursSlept);
+                const wakeTime = typeof sleepEntry === 'object' ? sleepEntry.wakeTime : null;
+
+                if (hoursSlept != null && !isNaN(hoursSlept) && wakeTime) {
+                    // Calculate actual sleep onset: wakeTime - hoursSlept
+                    let wakeMinutes = timeToMinutes(wakeTime);
+                    let actualSleep = wakeMinutes - (hoursSlept * 60);
+                    if (actualSleep < 0) actualSleep += 24 * 60; // Crossed midnight
+
+                    state.history[entry.id].actualSleep = actualSleep;
+                    state.history[entry.id].autoFilled = true;
+                    updated = true;
+                }
+            });
+
+            if (updated) saveState();
+        }
+
         function renderHistory() {
             const container = document.getElementById('historyList');
 
@@ -7801,8 +7866,25 @@
             }
             
             container.innerHTML = html;
+
+            // Update accuracy summary shown when section is collapsed
+            const summaryEl = document.getElementById('historyAccuracySummary');
+            if (summaryEl) {
+                const withFeedback = historyValues.filter(h => h.actualSleep !== null && h.actualSleep !== undefined && !isNaN(h.actualSleep));
+                if (withFeedback.length >= 3) {
+                    const recent = withFeedback.slice(0, 10);
+                    const avgError = recent.reduce((sum, h) => sum + Math.abs(h.actualSleep - h.predictedSleep), 0) / recent.length;
+                    const errMins = Math.round(avgError);
+                    const color = errMins <= 30 ? '#10b981' : errMins <= 60 ? '#f59e0b' : '#ef4444';
+                    summaryEl.innerHTML = `Avg prediction error: <span style="color:${color}; font-weight: 600;">&plusmn;${errMins} min</span> (${withFeedback.length} predictions)`;
+                } else if (withFeedback.length > 0) {
+                    summaryEl.textContent = `${withFeedback.length} prediction(s) tracked — need 3+ for accuracy score`;
+                } else {
+                    summaryEl.textContent = 'Click to view prediction accuracy history';
+                }
+            }
         }
-        
+
         // Clean up corrupted history entries
         function cleanupHistory() {
             const historyValues = getValues(state.history);
@@ -10384,8 +10466,20 @@
                         delete state.sleepHistory[dateStr];
                     }
                 });
+
+                // Remove corrupted sleep history entries (null, undefined, NaN)
+                Object.keys(state.sleepHistory).forEach(key => {
+                    const entry = state.sleepHistory[key];
+                    if (entry === null || entry === undefined) {
+                        delete state.sleepHistory[key];
+                    } else if (typeof entry === 'object' && (entry.hoursSlept === null || entry.hoursSlept === undefined || isNaN(Number(entry.hoursSlept)))) {
+                        delete state.sleepHistory[key];
+                    } else if (typeof entry === 'number' && isNaN(entry)) {
+                        delete state.sleepHistory[key];
+                    }
+                });
             }
-            
+
             // Firebase will load async and override if newer
         }
 
@@ -10447,7 +10541,7 @@
         // TODAY'S FORECAST LOGIC - EXPLAINER SECTION
         // ============================================
         
-        let forecastExpanded = true;
+        let forecastExpanded = false;
         
         function toggleForecastLogic() {
             forecastExpanded = !forecastExpanded;
@@ -11000,12 +11094,9 @@ Current status at ${currentTime}:
             // Setup graph tooltip
             setupGraphTooltip();
             
-            // Check for pending feedback
+            // Auto-populate feedback from sleep history (replaces manual feedback modal)
             setTimeout(() => {
-                const recent = getValues(state.history).find(h => h.actualSleep === null);
-                if (recent && recent.date !== getLocalDateString()) {
-                    showFeedbackModal();
-                }
+                autoPopulateFeedback();
             }, 2000);
             
             // Update every second for live countdown
@@ -11158,7 +11249,10 @@ Current status at ${currentTime}:
             
             // Update Vitamin C status
             updateFocusVitCStatus();
-            
+
+            // Update All-Nighter button status
+            updateFocusAllNighterBtn();
+
             // Draw focus graph
             drawFocusGraph();
         }
@@ -12012,8 +12106,21 @@ Current status at ${currentTime}:
                 focusVitCEnabled = true;
                 statusPill.classList.remove('warning');
                 statusPill.classList.add('success');
-                statusPill.textContent = '🍊 Vitamin C 1000mg';
                 toggleBtn.textContent = 'Disable Vitamin C';
+                // Enhanced status: show planned time and whether factored into projection
+                const vitCStatus = getVitaminCStatus();
+                if (vitCStatus === 'future') {
+                    const time12 = minutesToTime(timeToMinutes(state.modifiers.vitaminC.time));
+                    statusPill.textContent = '🍊 VitC planned ' + time12 + ' (in projection)';
+                } else if (vitCStatus === 'effective') {
+                    statusPill.textContent = '🍊 Vitamin C active';
+                } else if (vitCStatus === 'expired') {
+                    statusPill.textContent = '🍊 Vitamin C (expired)';
+                    statusPill.classList.remove('success');
+                    statusPill.classList.add('warning');
+                } else {
+                    statusPill.textContent = '🍊 Vitamin C 1000mg';
+                }
             } else {
                 focusVitCEnabled = false;
                 statusPill.classList.remove('success');
@@ -12023,6 +12130,24 @@ Current status at ${currentTime}:
             }
         }
         
+        function updateFocusAllNighterBtn() {
+            const btn = document.getElementById('focusAllNighterBtn');
+            if (!btn) return;
+            if (state.allNighterMode) {
+                btn.textContent = '🌙 Disable All-Nighter Mode';
+                btn.classList.remove('secondary');
+                btn.classList.add('active');
+                btn.style.background = 'rgba(139, 92, 246, 0.3)';
+                btn.style.borderColor = 'rgba(139, 92, 246, 0.6)';
+            } else {
+                btn.textContent = '🌙 Enable All-Nighter Mode';
+                btn.classList.remove('active');
+                btn.classList.add('secondary');
+                btn.style.background = '';
+                btn.style.borderColor = '';
+            }
+        }
+
         // Focus Mode Graph (simplified) - MOBILE FIXED
         function drawFocusGraph() {
             const canvas = document.getElementById('focusGraphCanvas');
