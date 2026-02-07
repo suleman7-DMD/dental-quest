@@ -1679,6 +1679,170 @@
             color: var(--text-primary);
         }
 
+        /* Quick Stats Strip (Task 2b) */
+        .quick-stats-strip {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+        .quick-stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-stat-chip:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .quick-stat-chip .chip-value {
+            color: var(--accent-green);
+        }
+        .quick-stat-chip .chip-value.warning {
+            color: var(--accent-yellow);
+        }
+
+        /* Inline Meal List in Simple View (Task 2a) */
+        .simple-meal-list {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .simple-meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .simple-meal-header:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .simple-meal-count {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .simple-meal-toggle {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+        .simple-meal-list.collapsed .simple-meal-toggle {
+            transform: rotate(-90deg);
+        }
+        .simple-meal-list.collapsed .simple-meal-items {
+            display: none;
+        }
+        .simple-meal-items {
+            border-top: 1px solid var(--border-color);
+        }
+        .simple-meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.82em;
+        }
+        .simple-meal-item:last-child {
+            border-bottom: none;
+        }
+        .simple-meal-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .simple-meal-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .simple-meal-macros {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+        .simple-meal-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .simple-meal-actions button {
+            padding: 4px 7px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.15s;
+        }
+        .simple-meal-actions button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .simple-meal-actions button.delete-btn:hover {
+            background: rgba(239,68,68,0.3);
+        }
+
+        /* Quick Tab Bar (Task 2c) */
+        .quick-tab-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .quick-tab-btn {
+            padding: 10px 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.78em;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.2s;
+        }
+        .quick-tab-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: rgba(255,255,255,0.15);
+        }
+        .quick-tab-btn .tab-icon {
+            font-size: 1.2em;
+        }
+
+        /* Simple Workout Summary (Task 2d) */
+        .simple-workout-summary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 14px;
+            margin-bottom: 12px;
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         /* Exam/Inventory Row */
         .info-row {
             display: flex;
@@ -3620,6 +3784,269 @@
 
         .pace-icon {
             font-size: 1.1em;
+        }
+
+        /* ============================================
+           PROGRESS TAB ENHANCEMENTS (Task 3)
+           ============================================ */
+
+        /* 3a. Weekly Report Card */
+        .report-card-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .report-card-section .section-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .report-grade-hero {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .report-grade-letter {
+            font-size: 3em;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .report-grade-letter.grade-a { color: var(--accent-green); }
+        .report-grade-letter.grade-b { color: var(--accent-blue); }
+        .report-grade-letter.grade-c { color: var(--accent-yellow); }
+        .report-grade-letter.grade-d { color: var(--accent-orange); }
+        .report-grade-letter.grade-f { color: var(--accent-red); }
+        .report-grade-score {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .report-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .report-category {
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 0.8em;
+        }
+        .report-category-label {
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+        .report-category-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .report-history {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .report-history-week {
+            padding: 6px 14px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8em;
+        }
+        .report-history-grade {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        .report-history-dates {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+
+        /* 3b. Personal Records */
+        .records-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .records-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .record-card {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .record-icon {
+            font-size: 1.4em;
+            margin-bottom: 4px;
+        }
+        .record-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        .record-label {
+            font-size: 0.72em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .record-date {
+            font-size: 0.68em;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        /* 3c. Consistency Score */
+        .consistency-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .consistency-rings {
+            display: flex;
+            justify-content: space-around;
+            margin: 14px 0;
+        }
+        .consistency-ring-item {
+            text-align: center;
+        }
+        .consistency-ring-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        .consistency-ring-detail {
+            font-size: 0.72em;
+            color: var(--text-muted);
+        }
+
+        /* 3d. Sleep-Performance Insight */
+        .sleep-insight-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .sleep-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .sleep-col {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .sleep-col-header {
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sleep-col-stat {
+            margin-bottom: 8px;
+        }
+        .sleep-col-value {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .sleep-col-label {
+            font-size: 0.72em;
+            color: var(--text-muted);
+        }
+
+        /* 3e. Achievement Progress Bars */
+        .achievement-progress-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .achievement-progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .achievement-progress-item {
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+        .achievement-progress-item.unlocked {
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .achievement-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .achievement-progress-name {
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .achievement-progress-status {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+        .achievement-progress-bar {
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .achievement-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .achievement-progress-fill.complete {
+            background: var(--accent-green);
+        }
+
+        /* 3f. Lifetime Stats */
+        .lifetime-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .lifetime-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .lifetime-stat {
+            text-align: center;
+            padding: 10px 6px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+        .lifetime-stat-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        .lifetime-stat-label {
+            font-size: 0.68em;
+            color: var(--text-muted);
+            margin-top: 3px;
         }
 
         /* ============================================
@@ -5641,6 +6068,22 @@
                 </div>
             </div>
 
+            <!-- Quick Stats Strip (Task 2b) -->
+            <div class="quick-stats-strip" id="quickStatsStrip">
+                <div class="quick-stat-chip" onclick="navigateToTab('progress')">
+                    <span>🔥</span> <span class="chip-value" id="chipStreak">0</span> streak
+                </div>
+                <div class="quick-stat-chip" onclick="navigateToTab('progress')">
+                    <span>📉</span> <span class="chip-value" id="chipWeekDeficit">0</span> wk deficit
+                </div>
+                <div class="quick-stat-chip" onclick="navigateToTab('calendar')">
+                    <span>✅</span> <span class="chip-value" id="chipDaysOnTrack">0/7</span> on track
+                </div>
+                <div class="quick-stat-chip" onclick="navigateToTab('badges')">
+                    <span>💪</span> <span class="chip-value" id="chipGymStreak">0</span> gym
+                </div>
+            </div>
+
             <!-- Schedule Card (God Mode 8A.1) -->
             <div class="context-card schedule-card" id="scheduleCard" style="display: none;">
                 <div class="card-header">
@@ -5733,21 +6176,53 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="simple-actions">
+            <!-- Action Buttons (2e: added Weigh In) -->
+            <div class="simple-actions" style="grid-template-columns: 1fr 1fr 1fr;">
                 <button class="action-btn primary" onclick="openQuickMealModal()">
-                    <span>+</span> Log Meal
+                    <span>+</span> Meal
                 </button>
                 <button class="action-btn secondary" onclick="openWorkoutModal()">
                     <span>💪</span> Workout
                 </button>
+                <button class="action-btn" onclick="openWeighInModal()" style="background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: white;">
+                    <span>⚖️</span> Weigh In
+                </button>
             </div>
 
-            <button class="details-btn" onclick="showDetailsView()">
-                <span>📊</span> View Details & History
-            </button>
+            <!-- Today's Meals Inline (Task 2a) -->
+            <div class="simple-meal-list" id="simpleMealList">
+                <div class="simple-meal-header" onclick="toggleSimpleMealList()">
+                    <span class="simple-meal-count" id="simpleMealCount">0 meals logged</span>
+                    <span class="simple-meal-toggle">▼</span>
+                </div>
+                <div class="simple-meal-items" id="simpleMealItems">
+                    <!-- Rendered by renderSimpleMealList() -->
+                </div>
+            </div>
 
-            <button class="details-btn" onclick="openWeeklyExportModal()" style="margin-top: 10px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)); border-color: rgba(139, 92, 246, 0.3);">
+            <!-- Today's Workout Summary (Task 2d) -->
+            <div class="simple-workout-summary" id="simpleWorkoutSummary" style="display: none;">
+                <span>💪</span>
+                <span id="simpleWorkoutText">No workouts today</span>
+            </div>
+
+            <!-- Quick Tab Access Bar (Task 2c) -->
+            <div class="quick-tab-bar">
+                <button class="quick-tab-btn" onclick="navigateToTab('today')">
+                    <span class="tab-icon">📊</span> Today
+                </button>
+                <button class="quick-tab-btn" onclick="navigateToTab('progress')">
+                    <span class="tab-icon">🎯</span> Progress
+                </button>
+                <button class="quick-tab-btn" onclick="navigateToTab('calendar')">
+                    <span class="tab-icon">📅</span> Calendar
+                </button>
+                <button class="quick-tab-btn" onclick="navigateToTab('badges')">
+                    <span class="tab-icon">🏆</span> Badges
+                </button>
+            </div>
+
+            <button class="details-btn" onclick="openWeeklyExportModal()" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)); border-color: rgba(139, 92, 246, 0.3);">
                 <span>📤</span> Weekly Check-In for Claude
             </button>
 
@@ -6076,6 +6551,9 @@
                             <div class="weight-stat-label">lbs/week</div>
                         </div>
                     </div>
+
+                    <!-- Goal Arrival Projection (Task 3g) -->
+                    <div id="goalProjection" style="text-align: center; padding: 10px 0 4px; font-size: 0.82em; color: var(--text-muted);"></div>
                 </div>
 
                 <!-- Weight Trend Chart -->
@@ -6163,6 +6641,25 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Weekly Report Card (Task 3a) -->
+                <div id="weeklyReportCard"></div>
+
+                <!-- Personal Records Wall (Task 3b) -->
+                <div id="personalRecords"></div>
+
+                <!-- Consistency Score (Task 3c) -->
+                <div id="consistencyScore"></div>
+
+                <!-- Sleep-Performance Insight (Task 3d) -->
+                <div id="sleepPerformanceInsight"></div>
+
+                <!-- Achievement Progress Bars (Task 3e) -->
+                <div id="achievementProgress"></div>
+
+                <!-- Lifetime Stats (Task 3f) -->
+                <div id="lifetimeStats"></div>
+
             </div>
 
             <!-- CALENDAR TAB -->
@@ -8251,6 +8748,147 @@
 
             // Update sleep debt indicator (God Mode 8A.4)
             renderSleepDebtIndicator();
+
+            // Task 2: Render new Simple View sections
+            renderSimpleMealList();
+            renderQuickStats();
+            renderSimpleWorkoutSummary();
+        }
+
+        // ============================================
+        // SIMPLE VIEW ENHANCEMENTS (Task 2)
+        // ============================================
+
+        // 2a. Render inline meal list in Simple View
+        function renderSimpleMealList() {
+            const mealsObj = state.today?.meals || {};
+            const mealsArr = Object.entries(mealsObj);
+            const countEl = document.getElementById('simpleMealCount');
+            const itemsEl = document.getElementById('simpleMealItems');
+
+            if (countEl) {
+                countEl.textContent = `${mealsArr.length} meal${mealsArr.length !== 1 ? 's' : ''} logged`;
+            }
+
+            if (!itemsEl) return;
+
+            if (mealsArr.length === 0) {
+                itemsEl.innerHTML = '<div style="padding: 10px 14px; color: var(--text-muted); font-size: 0.82em; text-align: center;">No meals yet — tap "+ Meal" to log</div>';
+                return;
+            }
+
+            // Sort by time if available
+            const sorted = mealsArr.sort((a, b) => {
+                const tA = a[1].time || '';
+                const tB = b[1].time || '';
+                return tA.localeCompare(tB);
+            });
+
+            itemsEl.innerHTML = sorted.map(([id, meal]) => {
+                const timeStr = meal.time ? formatTimeET(meal.time) : '';
+                return `<div class="simple-meal-item">
+                    <div class="simple-meal-info">
+                        <div class="simple-meal-name">${escapeHtml(meal.name || 'Meal')}</div>
+                        <div class="simple-meal-macros">${meal.calories || 0} cal &bull; ${meal.protein || 0}g P${timeStr ? ' &bull; ' + timeStr : ''}</div>
+                    </div>
+                    <div class="simple-meal-actions">
+                        <button onclick="event.stopPropagation(); editMeal('${id}')" title="Edit">✏️</button>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteMeal('${id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleSimpleMealList() {
+            const list = document.getElementById('simpleMealList');
+            if (list) list.classList.toggle('collapsed');
+        }
+
+        // 2b. Render quick stats strip
+        function renderQuickStats() {
+            // Streak
+            const streakEl = document.getElementById('chipStreak');
+            if (streakEl) {
+                streakEl.textContent = state.gamification?.streak || 0;
+            }
+
+            // Weekly deficit
+            const weekDeficitEl = document.getElementById('chipWeekDeficit');
+            if (weekDeficitEl) {
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay());
+                let weeklyDeficit = 0;
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(weekStart.getDate() + i);
+                    const dateStr = getLocalDateString(date);
+                    const log = state.dailyLogs[dateStr];
+                    if (log && log.deficit != null) {
+                        weeklyDeficit += log.deficit;
+                    }
+                }
+                weekDeficitEl.textContent = formatNumber(Math.round(weeklyDeficit));
+                weekDeficitEl.className = weeklyDeficit > 0 ? 'chip-value' : 'chip-value warning';
+            }
+
+            // Days on track this week
+            const onTrackEl = document.getElementById('chipDaysOnTrack');
+            if (onTrackEl) {
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay());
+                let onTrack = 0;
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(weekStart.getDate() + i);
+                    const dateStr = getLocalDateString(date);
+                    const log = state.dailyLogs[dateStr];
+                    if (log && (log.perfect || log.status === 'perfect' || log.status === 'good')) {
+                        onTrack++;
+                    }
+                }
+                onTrackEl.textContent = `${onTrack}/7`;
+            }
+
+            // Gym streak
+            const gymEl = document.getElementById('chipGymStreak');
+            if (gymEl) {
+                try {
+                    const workout = getWorkoutRecommendation();
+                    gymEl.textContent = workout.gymStreak || 0;
+                } catch (e) {
+                    gymEl.textContent = '0';
+                }
+            }
+        }
+
+        // 2c. Navigate to a tab in Details View
+        function navigateToTab(tabName) {
+            showDetailsView();
+            setTimeout(() => switchDashboardTab(tabName), 50);
+        }
+
+        // 2d. Render workout summary in Simple View
+        function renderSimpleWorkoutSummary() {
+            const container = document.getElementById('simpleWorkoutSummary');
+            const textEl = document.getElementById('simpleWorkoutText');
+            if (!container || !textEl) return;
+
+            const workouts = state.today?.workouts || {};
+            const workoutsArr = Object.values(workouts);
+
+            if (workoutsArr.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            const totalDuration = workoutsArr.reduce((sum, w) => sum + (w.duration || 0), 0);
+            const totalCals = workoutsArr.reduce((sum, w) => sum + (w.calories || w.caloriesBurned || 0), 0);
+            const types = [...new Set(workoutsArr.map(w => w.type || 'Workout'))].join(', ');
+
+            textEl.textContent = `${types} — ${totalDuration}min${totalCals > 0 ? ` (+${totalCals} cal burned)` : ''}`;
         }
 
         // ============================================
@@ -16346,6 +16984,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             renderWeightChart();
             renderDeficitTracking();
             renderWeeklySummary();
+            // Task 3: New sections
+            renderWeeklyReportCard();
+            renderPersonalRecords();
+            renderConsistencyScore();
+            renderSleepPerformanceInsight();
+            renderAchievementProgress();
+            renderLifetimeStats();
         }
 
         // Body Composition Trend Card
@@ -16567,9 +17212,27 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (lbsToGoEl) lbsToGoEl.textContent = lbsToGo.toFixed(1);
 
             // Calculate weekly rate from weigh-ins
+            const weeklyRate = calculateWeeklyRate();
             if (weeklyRateEl) {
-                const weeklyRate = calculateWeeklyRate();
                 weeklyRateEl.textContent = weeklyRate !== null ? weeklyRate.toFixed(1) : '-';
+            }
+
+            // 3g. Goal arrival projection
+            const projectionEl = document.getElementById('goalProjection');
+            if (projectionEl) {
+                if (weeklyRate && weeklyRate > 0 && lbsToGo > 0) {
+                    const weeksToGoal = lbsToGo / weeklyRate;
+                    const arrivalDate = new Date();
+                    arrivalDate.setDate(arrivalDate.getDate() + Math.round(weeksToGoal * 7));
+                    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    const projStr = `${monthNames[arrivalDate.getMonth()]} ${arrivalDate.getDate()}, ${arrivalDate.getFullYear()}`;
+                    const onTime = arrivalDate <= targetDate;
+                    projectionEl.innerHTML = `At current pace, you'll reach ${goalWeight} lbs by <strong style="color: ${onTime ? 'var(--accent-green)' : 'var(--accent-yellow)'}">${projStr}</strong>`;
+                } else if (lbsToGo <= 0) {
+                    projectionEl.innerHTML = '<strong style="color: var(--accent-green);">Goal reached!</strong>';
+                } else {
+                    projectionEl.textContent = 'Weigh in regularly to see goal projection';
+                }
             }
         }
 
@@ -16861,6 +17524,530 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 paceStatus.querySelector('.pace-icon').textContent = '📈';
             }
         }
+
+        // ============================================
+        // PROGRESS TAB ENHANCEMENTS (Task 3)
+        // ============================================
+
+        // Helper: Get week boundaries (Sun-Sat) for a given date
+        function getWeekRange(date) {
+            const d = new Date(date);
+            const start = new Date(d);
+            start.setDate(d.getDate() - d.getDay());
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            return { start, end };
+        }
+
+        // Helper: Get all dailyLogs for a week as array
+        function getWeekLogs(weekStart) {
+            const logs = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
+                const dateStr = getLocalDateString(d);
+                const log = state.dailyLogs[dateStr];
+                if (log) logs.push(log);
+            }
+            return logs;
+        }
+
+        // Helper: Calculate week composite score
+        function calculateWeekScore(logs) {
+            if (logs.length === 0) return { score: 0, calPct: 0, proPct: 0, gymPct: 0, trackPct: 0 };
+
+            const calDays = logs.filter(l => l.calHit || l.status === 'perfect' || l.status === 'good').length;
+            const proDays = logs.filter(l => l.proteinHit).length;
+            const gymDays = logs.filter(l => l.workedOut).length;
+            const trackDays = logs.length;
+
+            const calPct = Math.round((calDays / 7) * 100);
+            const proPct = Math.round((proDays / 7) * 100);
+            const gymPct = Math.round((gymDays / 7) * 100);
+            const trackPct = Math.round((trackDays / 7) * 100);
+
+            const score = Math.round(calPct * 0.3 + proPct * 0.3 + gymPct * 0.2 + trackPct * 0.2);
+            return { score, calPct, proPct, gymPct, trackPct, calDays, proDays, gymDays, trackDays };
+        }
+
+        // Helper: Score to letter grade
+        function scoreToGrade(score) {
+            if (score >= 93) return 'A+';
+            if (score >= 90) return 'A';
+            if (score >= 87) return 'A-';
+            if (score >= 83) return 'B+';
+            if (score >= 80) return 'B';
+            if (score >= 77) return 'B-';
+            if (score >= 73) return 'C+';
+            if (score >= 70) return 'C';
+            if (score >= 67) return 'C-';
+            if (score >= 63) return 'D+';
+            if (score >= 60) return 'D';
+            return 'F';
+        }
+
+        function gradeClass(grade) {
+            if (grade.startsWith('A')) return 'grade-a';
+            if (grade.startsWith('B')) return 'grade-b';
+            if (grade.startsWith('C')) return 'grade-c';
+            if (grade.startsWith('D')) return 'grade-d';
+            return 'grade-f';
+        }
+
+        // 3a. Weekly Report Card
+        function renderWeeklyReportCard() {
+            const container = document.getElementById('weeklyReportCard');
+            if (!container) return;
+
+            const today = new Date();
+            const { start: thisWeekStart } = getWeekRange(today);
+            const thisWeekLogs = getWeekLogs(thisWeekStart);
+            const thisWeek = calculateWeekScore(thisWeekLogs);
+            const thisGrade = scoreToGrade(thisWeek.score);
+
+            // Get last 4 weeks for history
+            const weekHistory = [];
+            for (let w = 1; w <= 4; w++) {
+                const ws = new Date(thisWeekStart);
+                ws.setDate(ws.getDate() - (w * 7));
+                const logs = getWeekLogs(ws);
+                if (logs.length > 0) {
+                    const score = calculateWeekScore(logs);
+                    const we = new Date(ws);
+                    we.setDate(ws.getDate() + 6);
+                    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    weekHistory.push({
+                        grade: scoreToGrade(score.score),
+                        score: score.score,
+                        label: `${monthNames[ws.getMonth()]} ${ws.getDate()}-${we.getDate()}`
+                    });
+                }
+            }
+
+            container.innerHTML = `
+                <div class="report-card-section">
+                    <div class="section-title">📝 Weekly Report Card</div>
+                    <div class="report-grade-hero">
+                        <div class="report-grade-letter ${gradeClass(thisGrade)}">${thisGrade}</div>
+                        <div class="report-grade-score">${thisWeek.score}/100 points this week</div>
+                    </div>
+                    <div class="report-breakdown">
+                        <div class="report-category">
+                            <div class="report-category-label">Calories (30%)</div>
+                            <div class="report-category-value">${thisWeek.calDays}/7 days — ${thisWeek.calPct}%</div>
+                        </div>
+                        <div class="report-category">
+                            <div class="report-category-label">Protein (30%)</div>
+                            <div class="report-category-value">${thisWeek.proDays}/7 days — ${thisWeek.proPct}%</div>
+                        </div>
+                        <div class="report-category">
+                            <div class="report-category-label">Gym (20%)</div>
+                            <div class="report-category-value">${thisWeek.gymDays}/7 days — ${thisWeek.gymPct}%</div>
+                        </div>
+                        <div class="report-category">
+                            <div class="report-category-label">Tracking (20%)</div>
+                            <div class="report-category-value">${thisWeek.trackDays}/7 days — ${thisWeek.trackPct}%</div>
+                        </div>
+                    </div>
+                    ${weekHistory.length > 0 ? `
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; text-align: center;">Previous Weeks</div>
+                        <div class="report-history">
+                            ${weekHistory.map(wh => `
+                                <div class="report-history-week">
+                                    <div class="report-history-grade ${gradeClass(wh.grade)}">${wh.grade}</div>
+                                    <div class="report-history-dates">${wh.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 3b. Personal Records Wall
+        function renderPersonalRecords() {
+            const container = document.getElementById('personalRecords');
+            if (!container) return;
+
+            const allLogs = Object.entries(state.dailyLogs || {});
+            if (allLogs.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Find records
+            let highestProtein = { value: 0, date: '' };
+            let biggestDeficit = { value: 0, date: '' };
+            let bestWeekDeficit = { value: 0, label: '' };
+            let consecutivePerfect = { value: 0 };
+            let currentPerfect = 0;
+
+            // Sort by date for streak calculation
+            const sortedLogs = allLogs.sort((a, b) => a[0].localeCompare(b[0]));
+
+            sortedLogs.forEach(([dateStr, log]) => {
+                // Highest protein
+                if ((log.protein || 0) > highestProtein.value) {
+                    highestProtein = { value: log.protein, date: dateStr };
+                }
+                // Biggest deficit
+                if ((log.deficit || 0) > biggestDeficit.value) {
+                    biggestDeficit = { value: Math.round(log.deficit), date: dateStr };
+                }
+                // Consecutive perfect
+                if (log.perfect || log.status === 'perfect') {
+                    currentPerfect++;
+                    if (currentPerfect > consecutivePerfect.value) {
+                        consecutivePerfect.value = currentPerfect;
+                    }
+                } else {
+                    currentPerfect = 0;
+                }
+            });
+
+            // Calculate best weekly deficit (sliding 7-day window)
+            const logDates = sortedLogs.map(l => l[0]);
+            for (let i = 0; i <= logDates.length - 7; i++) {
+                let weekDef = 0;
+                for (let j = i; j < i + 7 && j < sortedLogs.length; j++) {
+                    weekDef += sortedLogs[j][1].deficit || 0;
+                }
+                if (weekDef > bestWeekDeficit.value) {
+                    bestWeekDeficit = { value: Math.round(weekDef), label: `${logDates[i]} — ${logDates[Math.min(i+6, logDates.length-1)]}` };
+                }
+            }
+
+            // Lowest weight from weigh-ins
+            const weighIns = getValues(state.weighIns);
+            let lowestWeight = { value: null, date: '' };
+            weighIns.forEach(w => {
+                if (lowestWeight.value === null || w.weight < lowestWeight.value) {
+                    lowestWeight = { value: w.weight, date: w.date };
+                }
+            });
+
+            // Longest gym streak
+            let longestGymStreak = 0;
+            let currentGymStreak = 0;
+            sortedLogs.forEach(([dateStr, log]) => {
+                if (log.workedOut) {
+                    currentGymStreak++;
+                    if (currentGymStreak > longestGymStreak) longestGymStreak = currentGymStreak;
+                } else {
+                    currentGymStreak = 0;
+                }
+            });
+
+            const formatDate = (d) => {
+                if (!d) return '';
+                try {
+                    const [y, m, day] = d.split('-').map(Number);
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    return `${months[m-1]} ${day}`;
+                } catch { return d; }
+            };
+
+            const records = [
+                { icon: '🥩', value: `${highestProtein.value}g`, label: 'Best Protein Day', date: formatDate(highestProtein.date) },
+                { icon: '📉', value: formatNumber(biggestDeficit.value), label: 'Biggest Deficit', date: formatDate(biggestDeficit.date) },
+                { icon: '🔥', value: `${state.gamification?.longestStreak || 0}d`, label: 'Longest Streak', date: '' },
+                { icon: '✨', value: `${consecutivePerfect.value}d`, label: 'Perfect Day Streak', date: '' },
+                { icon: '💪', value: `${longestGymStreak}d`, label: 'Gym Streak Record', date: '' },
+                { icon: '⚖️', value: lowestWeight.value ? `${lowestWeight.value} lbs` : '--', label: 'Lowest Weight', date: formatDate(lowestWeight.date) },
+            ];
+
+            container.innerHTML = `
+                <div class="records-section">
+                    <div class="section-title" style="font-size: 1em; font-weight: 600; margin-bottom: 14px;">🏆 Personal Records</div>
+                    <div class="records-grid">
+                        ${records.map(r => `
+                            <div class="record-card">
+                                <div class="record-icon">${r.icon}</div>
+                                <div class="record-value">${r.value}</div>
+                                <div class="record-label">${r.label}</div>
+                                ${r.date ? `<div class="record-date">${r.date}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3c. Consistency Score
+        function renderConsistencyScore() {
+            const container = document.getElementById('consistencyScore');
+            if (!container) return;
+
+            const today = new Date();
+            const allLogs = Object.entries(state.dailyLogs || {});
+
+            // 30-day window
+            let calHitDays = 0, proHitDays = 0, totalDays = 0;
+            for (let i = 0; i < 30; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = getLocalDateString(d);
+                const log = state.dailyLogs[dateStr];
+                if (log && (log.calories > 0 || log.mealCount > 0)) {
+                    totalDays++;
+                    if (log.calHit || log.status === 'perfect' || log.status === 'good') calHitDays++;
+                    if (log.proteinHit) proHitDays++;
+                }
+            }
+
+            const calPct = totalDays > 0 ? Math.round((calHitDays / totalDays) * 100) : 0;
+            const proPct = totalDays > 0 ? Math.round((proHitDays / totalDays) * 100) : 0;
+
+            // SVG mini ring helper
+            const miniRing = (pct, color) => {
+                const r = 30;
+                const circ = 2 * Math.PI * r;
+                const offset = circ - (pct / 100) * circ;
+                return `<svg width="72" height="72" viewBox="0 0 72 72">
+                    <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--bg-tertiary)" stroke-width="6"/>
+                    <circle cx="36" cy="36" r="${r}" fill="none" stroke="${color}" stroke-width="6"
+                        stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+                        stroke-linecap="round" transform="rotate(-90 36 36)"/>
+                    <text x="36" y="40" text-anchor="middle" fill="var(--text-primary)" font-size="14" font-weight="700">${pct}%</text>
+                </svg>`;
+            };
+
+            container.innerHTML = `
+                <div class="consistency-section">
+                    <div class="section-title" style="font-size: 1em; font-weight: 600; margin-bottom: 4px;">📊 30-Day Consistency</div>
+                    <div style="font-size: 0.78em; color: var(--text-muted); margin-bottom: 10px;">${totalDays} days with data in last 30 days</div>
+                    <div class="consistency-rings">
+                        <div class="consistency-ring-item">
+                            ${miniRing(calPct, 'var(--accent-green)')}
+                            <div class="consistency-ring-label">Calorie Target</div>
+                            <div class="consistency-ring-detail">${calHitDays}/${totalDays} days</div>
+                        </div>
+                        <div class="consistency-ring-item">
+                            ${miniRing(proPct, 'var(--accent-blue)')}
+                            <div class="consistency-ring-label">Protein Target</div>
+                            <div class="consistency-ring-detail">${proHitDays}/${totalDays} days</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3d. Sleep-Performance Insight
+        function renderSleepPerformanceInsight() {
+            const container = document.getElementById('sleepPerformanceInsight');
+            if (!container) return;
+
+            const allLogs = Object.values(state.dailyLogs || {});
+            const goodSleep = allLogs.filter(l => l.sleepHours != null && l.sleepHours >= 7);
+            const badSleep = allLogs.filter(l => l.sleepHours != null && l.sleepHours < 6);
+
+            if (goodSleep.length < 3 && badSleep.length < 3) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const avg = (arr, key) => {
+                const vals = arr.map(l => l[key] || 0);
+                return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+            };
+            const pct = (arr, fn) => {
+                if (arr.length === 0) return 0;
+                return Math.round((arr.filter(fn).length / arr.length) * 100);
+            };
+
+            const goodDeficit = avg(goodSleep, 'deficit');
+            const badDeficit = avg(badSleep, 'deficit');
+            const goodProPct = pct(goodSleep, l => l.proteinHit);
+            const badProPct = pct(badSleep, l => l.proteinHit);
+            const goodGymPct = pct(goodSleep, l => l.workedOut);
+            const badGymPct = pct(badSleep, l => l.workedOut);
+
+            container.innerHTML = `
+                <div class="sleep-insight-section">
+                    <div class="section-title" style="font-size: 1em; font-weight: 600;">😴 Sleep vs Performance</div>
+                    <div style="font-size: 0.78em; color: var(--text-muted); margin-bottom: 4px;">How sleep quality affects your diet adherence</div>
+                    <div class="sleep-comparison">
+                        <div class="sleep-col" style="border: 1px solid rgba(16,185,129,0.2);">
+                            <div class="sleep-col-header" style="color: var(--accent-green);">7+ hrs sleep</div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${formatNumber(goodDeficit)} cal</div>
+                                <div class="sleep-col-label">avg deficit</div>
+                            </div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${goodProPct}%</div>
+                                <div class="sleep-col-label">protein hit rate</div>
+                            </div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${goodGymPct}%</div>
+                                <div class="sleep-col-label">gym rate</div>
+                            </div>
+                            <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">${goodSleep.length} days</div>
+                        </div>
+                        <div class="sleep-col" style="border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="sleep-col-header" style="color: var(--accent-red);"><6 hrs sleep</div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${formatNumber(badDeficit)} cal</div>
+                                <div class="sleep-col-label">avg deficit</div>
+                            </div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${badProPct}%</div>
+                                <div class="sleep-col-label">protein hit rate</div>
+                            </div>
+                            <div class="sleep-col-stat">
+                                <div class="sleep-col-value">${badGymPct}%</div>
+                                <div class="sleep-col-label">gym rate</div>
+                            </div>
+                            <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">${badSleep.length} days</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3e. Achievement Progress Bars
+        function renderAchievementProgress() {
+            const container = document.getElementById('achievementProgress');
+            if (!container) return;
+
+            const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
+            const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+            // Calculate progress for each achievement
+            const streak = state.gamification?.streak || 0;
+            const longestStreak = state.gamification?.longestStreak || 0;
+
+            // Weight loss progress
+            const startWeight = state.profile?.startingWeight_lbs || 190;
+            const currentWeight = state.profile?.currentWeight_lbs || 190;
+            const weightLost = Math.max(startWeight - currentWeight, 0);
+            const halfwayTarget = (startWeight - (state.profile?.goalWeight_lbs || 170)) / 2;
+
+            // Consecutive protein days
+            let proteinStreak = 0, tempProStreak = 0;
+            allLogs.forEach(([d, l]) => {
+                if (l.proteinHit) { tempProStreak++; proteinStreak = Math.max(proteinStreak, tempProStreak); }
+                else { tempProStreak = 0; }
+            });
+
+            // Consecutive deficit days
+            let deficitStreak = 0, tempDefStreak = 0;
+            allLogs.forEach(([d, l]) => {
+                if ((l.deficit || 0) > 0) { tempDefStreak++; deficitStreak = Math.max(deficitStreak, tempDefStreak); }
+                else { tempDefStreak = 0; }
+            });
+
+            // Consecutive perfect days
+            let perfectStreak = 0, tempPerfStreak = 0;
+            allLogs.forEach(([d, l]) => {
+                if (l.perfect || l.status === 'perfect') { tempPerfStreak++; perfectStreak = Math.max(perfectStreak, tempPerfStreak); }
+                else { tempPerfStreak = 0; }
+            });
+
+            // Early bird count (meals before 9am)
+            let earlyBirdCount = 0;
+            allLogs.forEach(([d, l]) => {
+                const meals = l.meals ? (Array.isArray(l.meals) ? l.meals : Object.values(l.meals)) : [];
+                const hasEarlyMeal = meals.some(m => {
+                    if (!m.time) return false;
+                    const hour = parseInt(m.time.split(':')[0]) || 0;
+                    return hour < 9;
+                });
+                if (hasEarlyMeal) earlyBirdCount++;
+            });
+
+            const achievements = [
+                { id: 'first_day', icon: '🚀', name: 'First Day', desc: 'Complete your first day', current: allLogs.length, target: 1, xp: 50 },
+                { id: 'week_streak', icon: '🔥', name: 'Week Warrior', desc: '7 day streak', current: Math.max(streak, longestStreak), target: 7, xp: 200 },
+                { id: 'two_week_streak', icon: '👑', name: 'Two Week King', desc: '14 day streak', current: Math.max(streak, longestStreak), target: 14, xp: 500 },
+                { id: 'month_streak', icon: '💎', name: 'Monthly Master', desc: '30 day streak', current: Math.max(streak, longestStreak), target: 30, xp: 1000 },
+                { id: 'first_lb', icon: '⬇️', name: 'First Pound', desc: 'Lose your first pound', current: weightLost, target: 1, xp: 100 },
+                { id: 'five_lbs', icon: '🎯', name: 'Five Down', desc: 'Lose 5 pounds', current: weightLost, target: 5, xp: 300 },
+                { id: 'ten_lbs', icon: '🏆', name: 'Ten Down', desc: 'Lose 10 pounds', current: weightLost, target: 10, xp: 500 },
+                { id: 'halfway', icon: '⭐', name: 'Halfway There', desc: 'Reach halfway to goal', current: weightLost, target: halfwayTarget, xp: 750 },
+                { id: 'protein_king', icon: '🥩', name: 'Protein King', desc: 'Hit protein 7 days in a row', current: proteinStreak, target: 7, xp: 250 },
+                { id: 'deficit_master', icon: '📉', name: 'Deficit Master', desc: '7 days hitting deficit', current: deficitStreak, target: 7, xp: 250 },
+                { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Log breakfast before 9am 5x', current: earlyBirdCount, target: 5, xp: 150 },
+                { id: 'perfect_week', icon: '✨', name: 'Perfect Week', desc: 'All targets for 7 days', current: perfectStreak, target: 7, xp: 400 },
+            ];
+
+            const isUnlocked = (id) => state.achievements && state.achievements[id];
+
+            container.innerHTML = `
+                <div class="achievement-progress-section">
+                    <div class="section-title" style="font-size: 1em; font-weight: 600; margin-bottom: 14px;">🎖️ Achievement Progress</div>
+                    <div class="achievement-progress-list">
+                        ${achievements.map(a => {
+                            const unlocked = isUnlocked(a.id);
+                            const pct = Math.min(Math.round((a.current / a.target) * 100), 100);
+                            const displayCurrent = typeof a.current === 'number' ? (a.current % 1 === 0 ? a.current : a.current.toFixed(1)) : a.current;
+                            const displayTarget = typeof a.target === 'number' ? (a.target % 1 === 0 ? a.target : a.target.toFixed(1)) : a.target;
+                            return `<div class="achievement-progress-item ${unlocked ? 'unlocked' : ''}">
+                                <div class="achievement-progress-header">
+                                    <span class="achievement-progress-name">${a.icon} ${a.name}</span>
+                                    <span class="achievement-progress-status">${unlocked ? '✅ +' + a.xp + ' XP' : displayCurrent + '/' + displayTarget}</span>
+                                </div>
+                                <div class="achievement-progress-bar">
+                                    <div class="achievement-progress-fill ${unlocked ? 'complete' : ''}" style="width: ${pct}%;"></div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3f. Lifetime Stats
+        function renderLifetimeStats() {
+            const container = document.getElementById('lifetimeStats');
+            if (!container) return;
+
+            const allLogs = Object.values(state.dailyLogs || {});
+            if (allLogs.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let totalCalories = 0, totalProtein = 0, totalWorkouts = 0, totalDeficit = 0;
+            allLogs.forEach(log => {
+                totalCalories += log.calories || 0;
+                totalProtein += log.protein || 0;
+                if (log.workedOut) totalWorkouts++;
+                if ((log.deficit || 0) > 0) totalDeficit += log.deficit;
+            });
+
+            // Total weight lost
+            const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            let totalWeightLost = 0;
+            if (weighIns.length >= 2) {
+                totalWeightLost = Math.max(weighIns[0].weight - weighIns[weighIns.length - 1].weight, 0);
+            }
+
+            const stats = [
+                { value: allLogs.length, label: 'Days Tracked' },
+                { value: formatNumber(totalCalories), label: 'Total Calories' },
+                { value: formatNumber(totalProtein) + 'g', label: 'Total Protein' },
+                { value: totalWorkouts, label: 'Workouts' },
+                { value: formatNumber(Math.round(totalDeficit)), label: 'Total Deficit (cal)' },
+                { value: totalWeightLost > 0 ? totalWeightLost.toFixed(1) + ' lbs' : '--', label: 'Weight Lost' },
+            ];
+
+            container.innerHTML = `
+                <div class="lifetime-section">
+                    <div class="section-title" style="font-size: 1em; font-weight: 600; margin-bottom: 14px;">🏅 All-Time Stats</div>
+                    <div class="lifetime-grid">
+                        ${stats.map(s => `
+                            <div class="lifetime-stat">
+                                <div class="lifetime-stat-value">${s.value}</div>
+                                <div class="lifetime-stat-label">${s.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3g. Goal Arrival Projection (added to renderSummerProgress)
+        // This is handled by modifying renderSummerProgress below
 
         // ============================================
         // CALENDAR TAB RENDERING
@@ -17623,8 +18810,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (state.today.date && state.today.date !== todayStr) {
                 console.log('📅 Date mismatch detected:', state.today.date, '→', todayStr);
 
-                // Save yesterday's data if setup was complete
+                const previousDate = state.today.date;
+
+                // Save yesterday's data if setup was complete and has meals
                 if (state.today.setupComplete && getCount(state.today.meals) > 0) {
+                    saveDayLogWithSnapshot();
+                }
+
+                // 1c. Verify the previous day's log was actually saved
+                // If dailyLogs is empty for previousDate but state.today had data, force save
+                if (previousDate && !state.dailyLogs[previousDate] && (getCount(state.today.meals) > 0 || state.today.setupComplete)) {
+                    console.warn(`🔧 Previous day ${previousDate} log missing — forcing save`);
                     saveDayLogWithSnapshot();
                 }
 
@@ -17715,6 +18911,97 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // DATA INTEGRITY & STORAGE HEALTH (Task 1)
+        // ============================================
+
+        // 1a. Check localStorage usage and warn if approaching limits
+        function checkStorageHealth() {
+            try {
+                const stateStr = localStorage.getItem('bodyCompTrackerState') || '';
+                const stateSizeKB = Math.round(stateStr.length / 1024);
+                const stateSizeMB = (stateStr.length / (1024 * 1024)).toFixed(2);
+
+                // Estimate total localStorage usage for this origin
+                let totalBytes = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    totalBytes += (localStorage.getItem(key) || '').length;
+                }
+                const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+
+                console.log(`💾 Storage Health: Body Comp = ${stateSizeMB}MB (${stateSizeKB}KB), Total localStorage = ${totalMB}MB / 5MB`);
+
+                // Warn at 4MB total usage
+                if (totalBytes > 4 * 1024 * 1024) {
+                    console.warn('⚠️ localStorage approaching 5MB limit!');
+                    showToast('⚠️ Storage nearly full — consider exporting a backup', 5000);
+                }
+
+                // Log daily log count for diagnostics
+                const logCount = Object.keys(state.dailyLogs || {}).length;
+                console.log(`📊 Daily logs stored: ${logCount} days`);
+
+                return { stateSizeKB, totalMB: parseFloat(totalMB), logCount };
+            } catch (e) {
+                console.error('Storage health check failed:', e);
+                return null;
+            }
+        }
+
+        // 1b. Verify integrity of a day's log by recalculating from meals
+        function verifyDayLogIntegrity(dateStr) {
+            const log = state.dailyLogs?.[dateStr];
+            if (!log || !log.meals) return true; // No data to verify
+
+            const mealsArr = Array.isArray(log.meals) ? log.meals : Object.values(log.meals);
+            if (mealsArr.length === 0) return true;
+
+            const recalcCalories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
+            const recalcProtein = mealsArr.reduce((sum, m) => sum + (m.protein || 0), 0);
+
+            const calMismatch = Math.abs((log.calories || 0) - recalcCalories) > 1;
+            const proMismatch = Math.abs((log.protein || 0) - recalcProtein) > 1;
+
+            if (calMismatch || proMismatch) {
+                console.warn(`🔧 Data integrity mismatch for ${dateStr}: stored cal=${log.calories} vs meals=${recalcCalories}, stored pro=${log.protein} vs meals=${recalcProtein}`);
+                recalculateDayLog(dateStr);
+                return false; // Was corrected
+            }
+            return true; // Data is consistent
+        }
+
+        // 1f. Audit recent daily logs for data completeness on load
+        function auditRecentDailyLogs() {
+            const today = new Date();
+            let fixCount = 0;
+
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = getLocalDateString(date);
+                const log = state.dailyLogs?.[dateStr];
+
+                if (log) {
+                    const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+                    // If has meals but calories=0, recalculate
+                    if (mealsArr.length > 0 && (!log.calories || log.calories === 0)) {
+                        console.log(`🔧 Auto-fixing empty totals for ${dateStr} (${mealsArr.length} meals found)`);
+                        recalculateDayLog(dateStr);
+                        fixCount++;
+                    }
+                    // Also verify integrity
+                    if (!verifyDayLogIntegrity(dateStr)) {
+                        fixCount++;
+                    }
+                }
+            }
+
+            if (fixCount > 0) {
+                console.log(`🔧 Audit complete: fixed ${fixCount} day(s)`);
+            }
+        }
+
+        // ============================================
         // INITIALIZATION
         // ============================================
 
@@ -17727,6 +19014,20 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Phase 2C: Restore collapsed state of context cards
             restoreCollapsedCards();
+
+            // 1e. Periodic auto-save safety net (every 5 minutes)
+            setInterval(() => {
+                if (state.today?.setupComplete && !isInitialLoad && hasLoadedFromCloud && state._dataLoaded) {
+                    saveDayLog();
+                    console.log('⏰ Periodic auto-save completed');
+                }
+            }, 5 * 60 * 1000);
+
+            // 1a + 1f. Run storage health check and data audit after load settles
+            setTimeout(() => {
+                checkStorageHealth();
+                auditRecentDailyLogs();
+            }, 3000);
         });
     </script>
 </body>
