@@ -376,7 +376,7 @@ remaining = dose × 0.5^(elapsed_hours / half_life)
 
 ### Default Parameters
 - Amphetamine half-life: 12 hours (user setting: 11)
-- Sleep threshold: 15mg
+- Sleep threshold: 14mg
 - Caffeine half-life: 5 hours
 - Caffeine threshold: 25mg
 

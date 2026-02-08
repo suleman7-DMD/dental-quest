@@ -3139,20 +3139,6 @@
             return !isEmptyState(data);
         }
 
-        // Helper to get count of items in object or array
-        function getCount(obj) {
-            if (!obj) return 0;
-            if (Array.isArray(obj)) return obj.length;
-            return Object.keys(obj).length;
-        }
-
-        // Helper to get values from object as array
-        function getValues(obj) {
-            if (!obj) return [];
-            if (Array.isArray(obj)) return obj;
-            return Object.values(obj).filter(v => v !== null && v !== undefined);
-        }
-
         // ============================================
         // DATA INTEGRITY UTILITIES
         // ============================================
@@ -3237,6 +3223,13 @@
                 console.error('localStorage error:', e);
                 return false;
             }
+        }
+
+        // Escape HTML to prevent XSS in innerHTML
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
         // Backup Manager with export/import
@@ -3396,15 +3389,19 @@
                 };
             }
             
-            // Calculate average wake time from entries that have it
-            const avgWakeMinutes = wakeTimesWithData.reduce((sum, w) => sum + w.wakeMinutes, 0) / wakeTimesWithData.length;
-            
-            // Calculate consistency (standard deviation of wake times)
+            // Calculate average wake time using circular mean (handles midnight crossing)
+            const sinSum = wakeTimesWithData.reduce((s, w) => s + Math.sin(w.wakeMinutes * 2 * Math.PI / 1440), 0);
+            const cosSum = wakeTimesWithData.reduce((s, w) => s + Math.cos(w.wakeMinutes * 2 * Math.PI / 1440), 0);
+            let avgWakeMinutes = Math.atan2(sinSum, cosSum) * 1440 / (2 * Math.PI);
+            if (avgWakeMinutes < 0) avgWakeMinutes += 1440;
+
+            // Calculate consistency (standard deviation using circular distance)
             let stdDev = 0;
             if (wakeTimesWithData.length >= 2) {
                 const variance = wakeTimesWithData.reduce((sum, w) => {
                     const diff = w.wakeMinutes - avgWakeMinutes;
-                    return sum + (diff * diff);
+                    const circDist = Math.min(Math.abs(diff), 1440 - Math.abs(diff));
+                    return sum + (circDist * circDist);
                 }, 0) / wakeTimesWithData.length;
                 stdDev = Math.sqrt(variance);
             }
@@ -3523,6 +3520,7 @@
         }
 
         function minutesToTime(mins) {
+            mins = ((mins % 1440) + 1440) % 1440;
             const hours = Math.floor(mins / 60) % 24;
             const minutes = Math.floor(mins % 60);
             const period = hours >= 12 ? 'PM' : 'AM';
@@ -3973,7 +3971,8 @@
             let high = now + maxSearchHours * 60;
 
             // First check if already below threshold
-            if (calculateAmpLoad(now) < threshold) {
+            // Also check T+4h to catch delayed-release XR that hasn't entered bloodstream yet
+            if (calculateAmpLoad(now) < threshold && calculateAmpLoad(now + 240) < threshold) {
                 return now;
             }
 
@@ -4312,7 +4311,7 @@
             const idsToDelete = [];
             Object.entries(state.medications).forEach(([id, med]) => {
                 if (!med) return;
-                if (!med.date) return; // Legacy entries without date - keep for now
+                if (!med.date) { med.date = today; return; } // Legacy entries: stamp today so they clean up tomorrow
                 if (med.date !== today && med.date !== yesterdayStr) {
                     idsToDelete.push(id);
                 }
@@ -4812,7 +4811,7 @@
                 const drElapsed = (24 * 60 - delayedReleaseTime) + now;
                 const drRemaining = drElapsed > 0
                     ? delayedRelease * Math.pow(0.5, drElapsed / halfLifeMinutes)
-                    : delayedRelease;  // DR not yet released
+                    : 0;  // DR not yet released — still in capsule, not in bloodstream
 
                 return irRemaining + drRemaining;
             }
@@ -4825,9 +4824,10 @@
         // Render the ghost load section for All-Nighter Mode
         function renderGhostLoad() {
             const section = document.getElementById('ghostLoadSection');
-            const content = document.getElementById('ghostLoadContent');
+            const medEntriesEl = document.getElementById('ghostMedEntries');
+            const totalEl = document.getElementById('ghostLoadTotal');
 
-            if (!section || !content) return;
+            if (!section || !medEntriesEl || !totalEl) return;
 
             if (!state.allNighterMode) {
                 section.style.display = 'none';
@@ -4839,31 +4839,28 @@
 
             if (yesterdayMeds.length === 0 && yesterdayCaff.length === 0) {
                 section.style.display = 'block';
-                content.innerHTML = '<div style="color: #b0b8c4; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
+                medEntriesEl.innerHTML = '<div style="color: #b0b8c4; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
+                totalEl.innerHTML = '';
                 return;
             }
 
-            let html = '';
+            let medsHtml = '';
             let totalAmpRemaining = 0;
             let totalCaffRemaining = 0;
 
-            // Medications from yesterday
+            // Medications from yesterday — use engine total for accuracy
             if (yesterdayMeds.length > 0) {
-                html += '<div style="margin-bottom: 10px;"><strong style="color: #a78bfa;">💊 Amphetamine:</strong></div>';
-                // FIX: Use reduced half-life if Vitamin C is currently effective
-                const effectiveAmpHalfLife = isVitaminCEffective()
-                    ? state.settings.ampHalfLife * 0.7
-                    : state.settings.ampHalfLife;
+                medsHtml += '<div style="margin-bottom: 10px;"><strong style="color: #a78bfa;">💊 Amphetamine:</strong></div>';
 
                 yesterdayMeds.forEach(med => {
                     const doseTime = timeToMinutes(med.time);
-                    const remaining = calculateYesterdayDoseRemaining(med.dose, doseTime, effectiveAmpHalfLife);
+                    const remaining = calculateYesterdayDoseRemaining(med.dose, doseTime, state.settings.ampHalfLife);
                     totalAmpRemaining += remaining;
-                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
-                        ${med.dose}mg XR @ ${formatTime12(med.time)} → <span style="color: #10b981;">${remaining.toFixed(1)}mg remaining</span>
+                    medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                        ${med.dose}mg XR @ ${formatTime12(med.time)} → <span style="color: #10b981;">~${remaining.toFixed(1)}mg remaining</span>
                     </div>`;
                 });
-                html += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+                medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
                     Total Ghost Amp: ${totalAmpRemaining.toFixed(1)}mg
                 </div>`;
             }
@@ -4885,14 +4882,14 @@
                     }
                 });
 
-                html += '<div style="margin-top: 12px; margin-bottom: 10px;"><strong style="color: #f59e0b;">☕ Caffeine:</strong></div>';
+                medsHtml += '<div style="margin-top: 12px; margin-bottom: 10px;"><strong style="color: #f59e0b;">☕ Caffeine:</strong></div>';
 
                 // Regular caffeine entries
                 regularCaff.forEach(caff => {
                     const doseTime = timeToMinutes(caff.time);
                     const remaining = calculateYesterdayDoseRemaining(caff.amount, doseTime, state.settings.caffHalfLife);
                     totalCaffRemaining += remaining;
-                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                    medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
                         ${caff.name} (${caff.amount}mg) @ ${formatTime12(caff.time)} → <span style="color: #10b981;">${remaining.toFixed(1)}mg remaining</span>
                     </div>`;
                 });
@@ -4912,18 +4909,19 @@
                     const displayName = sipMeta ? sipMeta.drinkName : firstEntry.name;
                     const timeRange = sipMeta ? `${sipMeta.startTime} - ${sipMeta.endTime}` : formatTime12(firstEntry.time);
 
-                    html += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
+                    medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
                         ⏱️ ${displayName} (${totalMg.toFixed(0)}mg sipped ${timeRange}) → <span style="color: #10b981;">${groupRemaining.toFixed(1)}mg remaining</span>
                     </div>`;
                 });
 
-                html += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+                medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
                     Total Ghost Caff: ${totalCaffRemaining.toFixed(1)}mg
                 </div>`;
             }
 
             section.style.display = 'block';
-            content.innerHTML = html;
+            medEntriesEl.innerHTML = medsHtml;
+            totalEl.innerHTML = `Ghost Load Total: ${totalAmpRemaining.toFixed(1)}mg amp + ${totalCaffRemaining.toFixed(1)}mg caff`;
         }
 
         // ============================================
@@ -5619,7 +5617,10 @@
             // Show bottleneck indicator in hero section
             const bottleneckEl = document.getElementById('bottleneckIndicator');
             if (bottleneckEl && blockingFactors.length > 0) {
-                const primary = blockingFactors.reduce((a, b) => (a.clearsAt || 0) > (b.clearsAt || 0) ? a : b);
+                // Normalize clearsAt using wake time as reference to handle midnight crossing
+                const wakeMin = timeToMinutes(state.wakeTime || '06:45');
+                const normClear = (t) => (t || 0) < wakeMin ? (t || 0) + 1440 : (t || 0);
+                const primary = blockingFactors.reduce((a, b) => normClear(a.clearsAt) > normClear(b.clearsAt) ? a : b);
                 bottleneckEl.textContent = `⏳ Bottleneck: ${primary.name}`;
                 bottleneckEl.style.display = 'block';
             } else if (bottleneckEl) {
@@ -6637,7 +6638,7 @@
             // Temporarily add caffeine and calculate
             const now = getCurrentMinutes();
             const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
-            
+
             const tempId = 'temp_simulation_999999';
             const tempCaff = { id: tempId, amount, name: 'Simulated', time: nowTime };
             if (!state.caffeine || Array.isArray(state.caffeine)) {
@@ -6645,12 +6646,15 @@
             }
             state.caffeine[tempId] = tempCaff;
 
-            const { sleepTime } = calculateSleepTime();
-
-            // Remove temp caffeine
-            delete state.caffeine[tempId];
-            
-            return sleepTime;
+            // Save and restore hyperarousalMode to prevent side-effect leakage
+            const savedHyperarousal = hyperarousalMode;
+            try {
+                const { sleepTime } = calculateSleepTime();
+                return sleepTime;
+            } finally {
+                delete state.caffeine[tempId];
+                hyperarousalMode = savedHyperarousal;
+            }
         }
         
         function simulateVitaminC() {
@@ -8764,6 +8768,10 @@
         
         function skipPin() {
             firebaseSyncEnabled = false;
+            pinValidated = true;
+            hasLoadedFromCloud = true;
+            isInitialLoad = false;
+            state._dataLoaded = true;
             updateSyncStatus('offline', 'Local only');
             showToast('Using offline mode');
             
@@ -9020,6 +9028,7 @@
                         sleepHistory: { ...state.sleepHistory, ...(firebaseState.sleepHistory || {}) },
                         workoutPlan: { ...state.workoutPlan, ...(firebaseState.workoutPlan || {}) },
                         nicotine: { ...state.nicotine, ...(firebaseState.nicotine || {}) },
+                        _dataLoaded: true,
                         _version: (firebaseState._version || 0) + 1
                     };
                     
@@ -9165,7 +9174,7 @@
                     return `
                         <div class="checkpoint-item">
                             <div class="checkpoint-info">
-                                <div class="checkpoint-name">${cp.name}</div>
+                                <div class="checkpoint-name">${escapeHtml(cp.name)}</div>
                                 <div class="checkpoint-meta">
                                     ${date.toLocaleDateString()} ${date.toLocaleTimeString()} ·
                                     ${meds} meds · ${caffeine} caffeine
@@ -9793,6 +9802,12 @@
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
 
+            // GUARD 0: Never save before PIN validation
+            if (!pinValidated) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted before PIN validation');
+                return false;
+            }
+
             // GUARD A: Never save during initial load
             if (isInitialLoad) {
                 console.warn('⚠️ BLOCKED: Immediate save attempted during initial load');
@@ -10056,12 +10071,27 @@
                 const saunaTime = timeToMinutes(state.modifiers.sauna.time);
                 const nowMins = getCurrentMinutes();
                 const fivePM = 17 * 60;
+                const todayStr = getLocalDateString();
+                const saunaDate = state.modifiers.sauna.date || todayStr;
                 let saunaTaken = false;
-                if (saunaTime > nowMins && saunaTime - nowMins > 12 * 60) {
+
+                // Date-aware sauna check (matches getEffectiveThreshold logic)
+                const todayDate = parseLocalDate(todayStr);
+                const saunaSetDate = parseLocalDate(saunaDate);
+                const daysDiff = Math.round((todayDate - saunaSetDate) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff === 0) {
+                    saunaTaken = nowMins >= saunaTime;
+                } else if (daysDiff === 1) {
+                    if (nowMins < 6 * 60 && saunaTime >= 17 * 60) {
+                        saunaTaken = true;
+                    } else {
+                        saunaTaken = false;
+                    }
+                } else {
                     saunaTaken = false;
-                } else if (nowMins >= saunaTime || (saunaTime > 18 * 60 && nowMins < 6 * 60)) {
-                    saunaTaken = true;
                 }
+
                 if (saunaTaken) {
                     saunaBonus = saunaTime >= fivePM ? 2.0 : 1.0;
                 }
@@ -10545,8 +10575,8 @@ Current status at ${currentTime}:
                 autoPopulateFeedback();
             }, 2000);
             
-            // Update every second for live countdown
-            setInterval(recalculate, 1000);
+            // Update every 5 seconds (drug levels don't change perceptibly faster)
+            setInterval(recalculate, 5000);
             
             // Redraw graph on resize
             window.addEventListener('resize', () => {
@@ -10566,31 +10596,6 @@ Current status at ${currentTime}:
         function setViewMode(mode) {
             // No-op: unified view replaces dual-view system
             return;
-            
-            if (focusMode) {
-                document.body.classList.add('focus-mode');
-                renderFocusMode();
-            } else {
-                document.body.classList.remove('focus-mode');
-                // FIX: Explicitly re-render entries when switching to Full View
-                // This ensures caffeine/meds added in Focus Mode show correctly
-                renderMedEntries();
-                renderCaffeineEntries();
-                recalculate(); // Refresh full view calculations
-            }
-            
-            // Update ALL toggle buttons (both in Focus and Full views)
-            document.querySelectorAll('.view-toggle').forEach(toggle => {
-                const btns = toggle.querySelectorAll('button');
-                btns.forEach(btn => {
-                    const isFocusBtn = btn.textContent.includes('Focus');
-                    const isFullBtn = btn.textContent.includes('Full');
-                    btn.classList.toggle('active', (isFocusBtn && focusMode) || (isFullBtn && !focusMode));
-                });
-            });
-            
-            // Save view preference
-            localStorage.setItem('stimCalcViewMode', mode);
         }
         
         function renderFocusMode() {
@@ -10791,11 +10796,20 @@ Current status at ${currentTime}:
                 if (vitCTimeRow) vitCTimeRow.style.display = 'flex';
                 const vitCTimeEl = document.getElementById('vitaminCTime');
                 if (vitCTimeEl) vitCTimeEl.value = state.modifiers.vitaminC.time || '17:00';
-                // Restore VitC date
+                // Restore VitC date (handle past/today/tomorrow)
                 const vitCDateEl = document.getElementById('vitaminCDate');
                 if (vitCDateEl && state.modifiers.vitaminC.date) {
                     const today = getLocalDateString();
-                    vitCDateEl.value = state.modifiers.vitaminC.date === today ? 'today' : 'tomorrow';
+                    const tomorrow = getLocalDateString(new Date(Date.now() + 86400000));
+                    if (state.modifiers.vitaminC.date === today) {
+                        vitCDateEl.value = 'today';
+                    } else if (state.modifiers.vitaminC.date === tomorrow) {
+                        vitCDateEl.value = 'tomorrow';
+                    } else {
+                        // Past date — expired, reset to today
+                        vitCDateEl.value = 'today';
+                        state.modifiers.vitaminC.date = today;
+                    }
                 }
                 // Show VitC status badge
                 updateVitCBadge();
