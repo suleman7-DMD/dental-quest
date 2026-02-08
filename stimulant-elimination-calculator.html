@@ -1289,6 +1289,39 @@
             font-weight: 600;
         }
 
+        /* Accuracy Dashboard */
+        .accuracy-progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .accuracy-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        .accuracy-fill-green {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+        .accuracy-fill-blue {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+        .history-delta {
+            font-size: 0.78em;
+            margin-top: 2px;
+        }
+        .history-delta.delta-early { color: #10b981; }
+        .history-delta.delta-close { color: #10b981; }
+        .history-delta.delta-moderate { color: #f59e0b; }
+        .history-delta.delta-late { color: #ef4444; }
+        .accuracy-hero-hint {
+            font-size: 0.72em;
+            color: #8b9cb6;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
         /* Buttons */
         .btn {
             padding: 12px 24px;
@@ -2506,6 +2539,7 @@
             <div class="hero-countdown" id="timeRemaining">Calculating...</div>
             <div class="hero-quality" id="sleepQuality" style="background: rgba(16,185,129,0.15); color: #10b981;"></div>
             <div id="bottleneckIndicator" style="display:none; font-size:0.78em; color:#f59e0b; margin-top:4px;"></div>
+            <div id="accuracyHeroHint" class="accuracy-hero-hint" style="display:none;"></div>
             <div class="hero-progress-bar">
                 <div class="hero-progress-fill" id="heroProgressFill" style="width: 0%;"></div>
             </div>
@@ -2891,6 +2925,58 @@
             </div>
         </div>
 
+        <!-- ======= Prediction Accuracy Dashboard ======= -->
+        <div class="unified-perf-section">
+            <h3 onclick="toggleAccuracyDashboard()" style="cursor:pointer; user-select:none;">
+                📊 Prediction Accuracy
+                <span id="accuracyToggleIcon" style="float:right; font-size:0.7em;">▼</span>
+            </h3>
+            <div id="accuracyDashboardContent">
+                <div id="accuracyGradeBanner" style="text-align:center; padding:12px; margin-bottom:12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
+                    <div style="font-size:0.75em; color:#8b9cb6; text-transform:uppercase; letter-spacing:1px;">Overall Accuracy</div>
+                    <div id="accuracyGradeValue" style="font-size:2em; font-weight:700; color:#10b981;">--</div>
+                    <div id="accuracyGradeLabel" style="font-size:0.82em; color:#b0b8c4;">Need 3+ days with feedback</div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
+                    <div style="padding:10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15); border-radius:8px; text-align:center;">
+                        <div style="font-size:0.75em; color:#60a5fa;">Days Tracked</div>
+                        <div id="accStatDaysTracked" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                    </div>
+                    <div style="padding:10px; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.15); border-radius:8px; text-align:center;">
+                        <div style="font-size:0.75em; color:#c084fc;">Avg Error</div>
+                        <div id="accStatAvgError" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                    </div>
+                    <div style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:8px; text-align:center;">
+                        <div style="font-size:0.75em; color:#34d399;">Within 30 min</div>
+                        <div id="accStatWithin30" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                    </div>
+                    <div style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15); border-radius:8px; text-align:center;">
+                        <div style="font-size:0.75em; color:#fbbf24;">Within 1 hour</div>
+                        <div id="accStatWithin60" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                    </div>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px;">
+                        <span>Within 30 min</span><span id="accBar30Label">0%</span>
+                    </div>
+                    <div class="accuracy-progress-bar">
+                        <div class="accuracy-progress-fill accuracy-fill-green" id="accBar30Fill" style="width:0%;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px; margin-top:8px;">
+                        <span>Within 1 hour</span><span id="accBar60Label">0%</span>
+                    </div>
+                    <div class="accuracy-progress-bar">
+                        <div class="accuracy-progress-fill accuracy-fill-blue" id="accBar60Fill" style="width:0%;"></div>
+                    </div>
+                </div>
+                <div id="accuracyTrendBox" style="padding:10px 12px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid #10b981;">
+                    <div id="accuracyTrendText" style="font-size:0.85em; color:#b0b8c4;">
+                        💡 Track 3+ days to see accuracy analysis
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ======= ACCORDION: Recommendations ======= -->
         <div class="accordion-section" data-section="recs">
             <div class="accordion-header" onclick="toggleAccordion('recs')">
@@ -2959,6 +3045,18 @@
             </div>
             <div class="accordion-body">
                 <div id="sleepHistoryList" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
+
+        <!-- ======= ACCORDION: Prediction History ======= -->
+        <div class="accordion-section" data-section="predictionHistory">
+            <div class="accordion-header" onclick="toggleAccordion('predictionHistory')">
+                🎯 Prediction History
+                <span id="historyAccuracySummary" style="font-size:0.75em; color:#8b9cb6; margin-left:auto; margin-right:8px;"></span>
+                <span class="accordion-arrow">▼</span>
+            </div>
+            <div class="accordion-body">
+                <div id="historyList"></div>
             </div>
         </div>
 
@@ -3115,6 +3213,10 @@
         let isInitialLoad = true;      // Block ALL saves until data loaded
         let hasLoadedFromCloud = false; // Track if we've checked Firebase
         let pinValidated = false;      // Track if PIN has been validated (prevents race condition)
+
+        // Auto-save prediction throttle state
+        let lastAutoSavePredictionTime = 0;
+        let lastAutoSavePredictionMinutes = null;
 
         // Check if state has real user data (not just defaults)
         function isEmptyState(data) {
@@ -3532,6 +3634,65 @@
             const hours = Math.floor(mins / 60) % 24;
             const minutes = Math.floor(mins % 60);
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Compute signed sleep time delta handling midnight crossing
+        // Returns minutes: positive = actual later than predicted, negative = earlier
+        function computeSleepDelta(predicted, actual) {
+            const p = ((predicted % 1440) + 1440) % 1440;
+            const a = ((actual % 1440) + 1440) % 1440;
+            let diff = a - p;
+            if (diff > 720) diff -= 1440;
+            if (diff < -720) diff += 1440;
+            return diff;
+        }
+
+        function snapshotPredictionInputs() {
+            const now = getCurrentMinutes();
+            return {
+                wakeTime: state.wakeTime,
+                hoursSleptLastNight: state.hoursSleptLastNight,
+                ampLoadAtPrediction: parseFloat(calculateAmpLoad(now).toFixed(1)),
+                caffLoadAtPrediction: parseFloat(calculateCaffLoad(now).toFixed(1)),
+                effectiveThreshold: parseFloat(getEffectiveThreshold().toFixed(1)),
+                sleepDebtBonus: parseFloat(calculateSleepDebtBonus().toFixed(1)),
+                baseThreshold: state.settings.sleepThreshold,
+                ampHalfLife: state.settings.ampHalfLife,
+                caffHalfLife: state.settings.caffHalfLife,
+                totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
+                totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
+                hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
+                hasSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
+                hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
+                allNighterMode: !!state.allNighterMode
+            };
+        }
+
+        function migrateHistoryEntries() {
+            const entries = getValues(state.history);
+            let changed = false;
+            entries.forEach(entry => {
+                if (entry.deltaMinutes === undefined) {
+                    if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
+                        entry.deltaMinutes = entry.actualSleep - entry.predictedSleep;
+                        entry.absError = Math.abs(entry.deltaMinutes);
+                    } else {
+                        entry.deltaMinutes = null;
+                        entry.absError = null;
+                    }
+                    changed = true;
+                }
+                if (entry.autoSaved === undefined) { entry.autoSaved = false; changed = true; }
+                if (entry.inputs === undefined) { entry.inputs = null; changed = true; }
+                if (entry.predictedAt === undefined) {
+                    const idParts = entry.id ? entry.id.split('_') : [];
+                    const ts = idParts.length >= 2 ? parseInt(idParts[1]) : null;
+                    entry.predictedAt = (ts && !isNaN(ts) && ts > 1000000000000) ? new Date(ts).toISOString() : null;
+                    changed = true;
+                }
+                if (state.history[entry.id]) state.history[entry.id] = entry;
+            });
+            return changed;
         }
 
         // ============================================
@@ -5773,10 +5934,13 @@
 
             // Update Today's Forecast Logic (explainer section)
             updateForecastLogic();
-            
-            // NOTE: Do NOT call saveState() here!
-            // recalculate() is called every second for live UI updates.
-            // saveState() should only be called when user makes actual changes.
+
+            // Auto-save today's prediction (throttled — won't spam saveState)
+            autoSavePrediction(sleepTime);
+
+            // NOTE: Do NOT call saveState() here directly!
+            // recalculate() is called every 5 seconds for live UI updates.
+            // autoSavePrediction() handles its own throttling (10 min / 5 min change).
         }
 
         function updateStatusItem(indicatorId, isOk, current, threshold) {
@@ -7204,28 +7368,92 @@
         // HISTORY & FEEDBACK
         // ============================================
         
-        function saveDay() {
-            const { sleepTime } = calculateSleepTime();
+        function autoSavePrediction(sleepTimeMinutes) {
+            if (!state._dataLoaded || isInitialLoad || !hasLoadedFromCloud) return;
 
-            const id = generateId('hist');
-            const entry = {
-                id: id,
-                date: getLocalDateString(),
-                medications: getValues(state.medications), // Store snapshot as array for simplicity
-                caffeine: getValues(state.caffeine),
-                modifiers: JSON.parse(JSON.stringify(state.modifiers)),
-                predictedSleep: sleepTime,
-                actualSleep: null
-            };
+            const now = Date.now();
+            const today = getLocalDateString();
+            const todayEntry = getValues(state.history).find(h => h.date === today);
+
+            // Don't overwrite manual saves
+            if (todayEntry && todayEntry.autoSaved === false) return;
+
+            // Throttle: skip if <10 min AND prediction changed <5 min
+            const timeSince = now - lastAutoSavePredictionTime;
+            const predDelta = lastAutoSavePredictionMinutes !== null
+                ? Math.abs(sleepTimeMinutes - lastAutoSavePredictionMinutes) : Infinity;
+
+            if (todayEntry && timeSince < 600000 && predDelta < 5) return;
 
             // Ensure history is an object
             if (!state.history || Array.isArray(state.history)) {
                 state.history = migrateArrayToObject(state.history, 'hist');
             }
-            state.history[id] = entry;
 
-            // History limit REMOVED - keep full history for long-term tracking
-            // Text data is minimal; 10 years of history < 1MB
+            if (todayEntry) {
+                state.history[todayEntry.id].predictedSleep = sleepTimeMinutes;
+                state.history[todayEntry.id].medications = getValues(state.medications);
+                state.history[todayEntry.id].caffeine = getValues(state.caffeine);
+                state.history[todayEntry.id].modifiers = JSON.parse(JSON.stringify(state.modifiers));
+                state.history[todayEntry.id].lastUpdated = new Date().toISOString();
+                state.history[todayEntry.id].inputs = snapshotPredictionInputs();
+            } else {
+                const id = generateId('hist');
+                state.history[id] = {
+                    id: id,
+                    date: today,
+                    medications: getValues(state.medications),
+                    caffeine: getValues(state.caffeine),
+                    modifiers: JSON.parse(JSON.stringify(state.modifiers)),
+                    predictedSleep: sleepTimeMinutes,
+                    actualSleep: null,
+                    autoSaved: true,
+                    predictedAt: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString(),
+                    inputs: snapshotPredictionInputs()
+                };
+            }
+
+            lastAutoSavePredictionTime = now;
+            lastAutoSavePredictionMinutes = sleepTimeMinutes;
+            saveState();
+        }
+
+        function saveDay() {
+            const { sleepTime } = calculateSleepTime();
+            const today = getLocalDateString();
+
+            // Ensure history is an object
+            if (!state.history || Array.isArray(state.history)) {
+                state.history = migrateArrayToObject(state.history, 'hist');
+            }
+
+            const existingEntry = getValues(state.history).find(h => h.date === today);
+
+            if (existingEntry) {
+                state.history[existingEntry.id].predictedSleep = sleepTime;
+                state.history[existingEntry.id].medications = getValues(state.medications);
+                state.history[existingEntry.id].caffeine = getValues(state.caffeine);
+                state.history[existingEntry.id].modifiers = JSON.parse(JSON.stringify(state.modifiers));
+                state.history[existingEntry.id].autoSaved = false;
+                state.history[existingEntry.id].lastUpdated = new Date().toISOString();
+                state.history[existingEntry.id].inputs = snapshotPredictionInputs();
+            } else {
+                const id = generateId('hist');
+                state.history[id] = {
+                    id: id,
+                    date: today,
+                    medications: getValues(state.medications),
+                    caffeine: getValues(state.caffeine),
+                    modifiers: JSON.parse(JSON.stringify(state.modifiers)),
+                    predictedSleep: sleepTime,
+                    actualSleep: null,
+                    autoSaved: false,
+                    predictedAt: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString(),
+                    inputs: snapshotPredictionInputs()
+                };
+            }
 
             saveState();
             renderHistory();
@@ -7245,12 +7473,12 @@
         function autoPopulateFeedback() {
             const historyValues = getValues(state.history);
             let updated = false;
+            let yesterdayFeedback = null;
 
             historyValues.forEach(entry => {
                 if (entry.actualSleep !== null && entry.actualSleep !== undefined) return;
                 if (!entry.date || !entry.predictedSleep) return;
 
-                // The actual sleep time can be inferred from the NEXT day's sleep record
                 const entryDate = parseLocalDate(entry.date);
                 const nextDay = new Date(entryDate);
                 nextDay.setDate(nextDay.getDate() + 1);
@@ -7263,18 +7491,42 @@
                 const wakeTime = typeof sleepEntry === 'object' ? sleepEntry.wakeTime : null;
 
                 if (hoursSlept != null && !isNaN(hoursSlept) && wakeTime) {
-                    // Calculate actual sleep onset: wakeTime - hoursSlept
                     let wakeMinutes = timeToMinutes(wakeTime);
                     let actualSleep = wakeMinutes - (hoursSlept * 60);
-                    if (actualSleep < 0) actualSleep += 24 * 60; // Crossed midnight
+                    if (actualSleep < 0) actualSleep += 24 * 60;
 
                     state.history[entry.id].actualSleep = actualSleep;
                     state.history[entry.id].autoFilled = true;
+                    state.history[entry.id].deltaMinutes = computeSleepDelta(entry.predictedSleep, actualSleep);
+                    state.history[entry.id].absError = Math.abs(state.history[entry.id].deltaMinutes);
                     updated = true;
+
+                    // Track yesterday's feedback for toast
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (entry.date === getLocalDateString(yesterday)) {
+                        const diff = computeSleepDelta(entry.predictedSleep, actualSleep);
+                        yesterdayFeedback = {
+                            predicted: minutesToTime(entry.predictedSleep > 24*60 ? entry.predictedSleep - 24*60 : entry.predictedSleep),
+                            actual: minutesToTime(actualSleep),
+                            diffMinutes: Math.round(Math.abs(diff)),
+                            direction: diff > 0 ? 'later' : 'earlier'
+                        };
+                    }
                 }
             });
 
-            if (updated) saveState();
+            if (updated) {
+                saveState();
+                if (yesterdayFeedback) {
+                    const fb = yesterdayFeedback;
+                    if (fb.diffMinutes <= 15) {
+                        showToast('Yesterday\u2019s prediction was spot on! Predicted ' + fb.predicted + ', Actual ' + fb.actual);
+                    } else {
+                        showToast('Yesterday: Predicted ' + fb.predicted + ' \u2192 Actual ' + fb.actual + ' (' + fb.diffMinutes + ' min ' + fb.direction + ')');
+                    }
+                }
+            }
         }
 
         function renderHistory() {
@@ -7322,7 +7574,26 @@
                 if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
                     actualStr = 'Actual: ' + minutesToTime(entry.actualSleep);
                 }
-                
+
+                // Calculate delta text for display
+                let deltaHtml = '';
+                if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
+                    const rawDiff = computeSleepDelta(entry.predictedSleep, entry.actualSleep);
+                    const absDiff = Math.abs(Math.round(rawDiff));
+                    let deltaClass, deltaText;
+                    if (absDiff <= 15) {
+                        deltaClass = 'delta-close';
+                        deltaText = absDiff + ' min off \u2713';
+                    } else if (rawDiff > 0) {
+                        deltaClass = absDiff <= 30 ? 'delta-close' : absDiff <= 60 ? 'delta-moderate' : 'delta-late';
+                        deltaText = absDiff + ' min late' + (absDiff > 30 ? ' \u26a0\ufe0f' : ' \u2713');
+                    } else {
+                        deltaClass = absDiff <= 30 ? 'delta-early' : absDiff <= 60 ? 'delta-moderate' : 'delta-late';
+                        deltaText = absDiff + ' min early' + (absDiff <= 30 ? ' \u2713' : ' \u26a0\ufe0f');
+                    }
+                    deltaHtml = '<div class="history-delta ' + deltaClass + '">' + deltaText + '</div>';
+                }
+
                 return `
                     <div class="history-entry">
                         <div>
@@ -7332,6 +7603,7 @@
                         <div class="history-accuracy">
                             <div class="history-predicted">Predicted: ${predictedStr}</div>
                             <div class="history-actual" ${accuracyClass}>${actualStr}</div>
+                            ${deltaHtml}
                         </div>
                     </div>
                 `;
@@ -7663,7 +7935,7 @@
             sleepPerfExpanded = !sleepPerfExpanded;
             const content = document.getElementById('sleepPerformanceContent');
             const icon = document.getElementById('sleepPerfToggleIcon');
-            
+
             if (content) {
                 content.style.display = sleepPerfExpanded ? 'block' : 'none';
             }
@@ -7671,7 +7943,93 @@
                 icon.textContent = sleepPerfExpanded ? '▼' : '▶';
             }
         }
-        
+
+        let accuracyDashExpanded = true;
+
+        function toggleAccuracyDashboard() {
+            accuracyDashExpanded = !accuracyDashExpanded;
+            const content = document.getElementById('accuracyDashboardContent');
+            const icon = document.getElementById('accuracyToggleIcon');
+            if (content) content.style.display = accuracyDashExpanded ? 'block' : 'none';
+            if (icon) icon.textContent = accuracyDashExpanded ? '\u25bc' : '\u25b6';
+        }
+
+        function renderAccuracyDashboard() {
+            const stats = calculateAccuracyStats(30);
+            const cal = getCalibrationRecommendation();
+
+            const avgErr = stats.avgAbsError;
+            const hasData = stats.entriesWithFeedback >= 1;
+            const hasEnough = stats.entriesWithFeedback >= 3;
+
+            let gradeColor = '#10b981', gradeBg = 'rgba(16,185,129,0.1)', gradeBorder = 'rgba(16,185,129,0.2)';
+            if (avgErr > 60) { gradeColor = '#ef4444'; gradeBg = 'rgba(239,68,68,0.1)'; gradeBorder = 'rgba(239,68,68,0.2)'; }
+            else if (avgErr > 30) { gradeColor = '#f59e0b'; gradeBg = 'rgba(245,158,11,0.1)'; gradeBorder = 'rgba(245,158,11,0.2)'; }
+
+            const banner = document.getElementById('accuracyGradeBanner');
+            if (banner) { banner.style.background = gradeBg; banner.style.borderColor = gradeBorder; }
+
+            const gradeVal = document.getElementById('accuracyGradeValue');
+            if (gradeVal) {
+                gradeVal.textContent = hasEnough ? '\u00b1' + avgErr + ' min' : '--';
+                gradeVal.style.color = gradeColor;
+            }
+            const gradeLabel = document.getElementById('accuracyGradeLabel');
+            if (gradeLabel) gradeLabel.textContent = hasData ? stats.entriesWithFeedback + ' predictions tracked' : 'Need 3+ days with feedback';
+
+            const daysEl = document.getElementById('accStatDaysTracked');
+            if (daysEl) daysEl.textContent = hasData ? stats.entriesWithFeedback : '--';
+
+            const avgEl = document.getElementById('accStatAvgError');
+            if (avgEl) { avgEl.textContent = hasEnough ? '\u00b1' + avgErr + 'm' : '--'; avgEl.style.color = gradeColor; }
+
+            const w30El = document.getElementById('accStatWithin30');
+            if (w30El) {
+                w30El.textContent = hasEnough ? stats.within30min + '%' : '--';
+                if (hasEnough) w30El.style.color = stats.within30min >= 50 ? '#10b981' : stats.within30min >= 30 ? '#f59e0b' : '#ef4444';
+            }
+            const w60El = document.getElementById('accStatWithin60');
+            if (w60El) {
+                w60El.textContent = hasEnough ? stats.within60min + '%' : '--';
+                if (hasEnough) w60El.style.color = stats.within60min >= 70 ? '#10b981' : stats.within60min >= 50 ? '#f59e0b' : '#ef4444';
+            }
+
+            const bar30Fill = document.getElementById('accBar30Fill');
+            const bar30Label = document.getElementById('accBar30Label');
+            if (bar30Fill) bar30Fill.style.width = (hasEnough ? stats.within30min : 0) + '%';
+            if (bar30Label) bar30Label.textContent = (hasEnough ? stats.within30min : 0) + '%';
+
+            const bar60Fill = document.getElementById('accBar60Fill');
+            const bar60Label = document.getElementById('accBar60Label');
+            if (bar60Fill) bar60Fill.style.width = (hasEnough ? stats.within60min : 0) + '%';
+            if (bar60Label) bar60Label.textContent = (hasEnough ? stats.within60min : 0) + '%';
+
+            const trendBox = document.getElementById('accuracyTrendBox');
+            const trendText = document.getElementById('accuracyTrendText');
+            if (trendBox && trendText) {
+                trendBox.style.borderLeftColor = gradeColor;
+                if (!hasEnough) {
+                    trendText.innerHTML = '\ud83d\udca1 Track 3+ days to see accuracy analysis';
+                } else {
+                    const trendLabel = stats.trend === 'improving' ? 'Improving \u2191' : stats.trend === 'worsening' ? 'Worsening \u2193' : 'Stable';
+                    const recIcon = avgErr <= 30 ? '\u2713' : avgErr <= 60 ? '\u26a0\ufe0f' : '\ud83d\udd27';
+                    trendText.innerHTML = '<strong>' + trendLabel + '</strong> ' + recIcon + '<br><span style="font-size:0.9em; color:#8b9cb6;">\ud83d\udca1 ' + cal.recommendation + '</span>';
+                }
+            }
+
+            renderAccuracyHeroHint(stats);
+        }
+
+        function renderAccuracyHeroHint(stats) {
+            const el = document.getElementById('accuracyHeroHint');
+            if (!el) return;
+            if (!stats || stats.entriesWithFeedback < 3) { el.style.display = 'none'; return; }
+            const avgErr = stats.avgAbsError;
+            const color = avgErr <= 30 ? '#10b981' : avgErr <= 60 ? '#f59e0b' : '#ef4444';
+            el.innerHTML = 'Historical accuracy: <span style="color:' + color + '; font-weight:600;">\u00b1' + avgErr + ' min</span> (' + stats.entriesWithFeedback + ' days)';
+            el.style.display = 'block';
+        }
+
         function getSleepDataForDays(numDays) {
             const today = new Date();
             const data = [];
@@ -8498,15 +8856,144 @@
             
             const recent = getValues(state.history).find(h => h.actualSleep === null);
             if (recent && state.history[recent.id]) {
-                state.history[recent.id].actualSleep = timeToMinutes(actualTime);
+                const actualMinutes = timeToMinutes(actualTime);
+                state.history[recent.id].actualSleep = actualMinutes;
+                state.history[recent.id].deltaMinutes = computeSleepDelta(recent.predictedSleep, actualMinutes);
+                state.history[recent.id].absError = Math.abs(state.history[recent.id].deltaMinutes);
                 saveState();
                 renderHistory();
+                renderAccuracyDashboard();
                 closeFeedbackModal();
                 showToast('Feedback recorded! This helps calibrate your settings.');
-                
+
                 // Suggest calibration if consistently off
                 suggestCalibration();
             }
+        }
+
+        function calculateAccuracyStats(days) {
+            if (days === undefined) days = 30;
+            const entries = getValues(state.history);
+            const emptyResult = {
+                totalEntries: 0, entriesWithFeedback: 0,
+                avgError: null, avgAbsError: null,
+                within30min: null, within60min: null,
+                trend: null, recentBias: null
+            };
+            if (entries.length === 0) return emptyResult;
+
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+            const cutoffStr = getLocalDateString(cutoffDate);
+            const inRange = entries.filter(e => e.date && e.date >= cutoffStr);
+            const withFeedback = inRange.filter(e =>
+                e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
+                e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep)
+            );
+
+            if (withFeedback.length === 0) return Object.assign({}, emptyResult, { totalEntries: inRange.length });
+
+            const deltas = withFeedback.map(e => computeSleepDelta(e.predictedSleep, e.actualSleep));
+            const absErrors = deltas.map(d => Math.abs(d));
+            const avgError = deltas.reduce((s, d) => s + d, 0) / deltas.length;
+            const avgAbsError = absErrors.reduce((s, d) => s + d, 0) / absErrors.length;
+            const within30 = absErrors.filter(e => e <= 30).length / absErrors.length;
+            const within60 = absErrors.filter(e => e <= 60).length / absErrors.length;
+
+            let trend = null;
+            if (withFeedback.length >= 6) {
+                const sorted = withFeedback.slice().sort((a, b) => b.date.localeCompare(a.date));
+                const recent3 = sorted.slice(0, 3).map(e => Math.abs(computeSleepDelta(e.predictedSleep, e.actualSleep)));
+                const older3 = sorted.slice(3, 6).map(e => Math.abs(computeSleepDelta(e.predictedSleep, e.actualSleep)));
+                const recentAvg = recent3.reduce((s, v) => s + v, 0) / 3;
+                const olderAvg = older3.reduce((s, v) => s + v, 0) / 3;
+                const trendDiff = recentAvg - olderAvg;
+                trend = trendDiff < -10 ? 'improving' : trendDiff > 10 ? 'worsening' : 'stable';
+            }
+
+            return {
+                totalEntries: inRange.length,
+                entriesWithFeedback: withFeedback.length,
+                avgError: Math.round(avgError),
+                avgAbsError: Math.round(avgAbsError),
+                within30min: Math.round(within30 * 100),
+                within60min: Math.round(within60 * 100),
+                trend: trend,
+                recentBias: avgError > 15 ? 'late' : avgError < -15 ? 'early' : 'neutral'
+            };
+        }
+
+        function getRecentPredictions(n) {
+            if (n === undefined) n = 7;
+            const entries = getValues(state.history);
+            if (entries.length === 0) return [];
+            const sorted = entries.slice().sort((a, b) => b.date.localeCompare(a.date));
+            return sorted.slice(0, n).map(entry => {
+                const hasActual = entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep);
+                const hasPredicted = entry.predictedSleep !== null && entry.predictedSleep !== undefined && !isNaN(entry.predictedSleep);
+                let delta = null, absError = null;
+                if (hasActual && hasPredicted) {
+                    delta = computeSleepDelta(entry.predictedSleep, entry.actualSleep);
+                    absError = Math.abs(delta);
+                }
+                return {
+                    id: entry.id, date: entry.date,
+                    predictedSleep: hasPredicted ? entry.predictedSleep : null,
+                    predictedStr: hasPredicted ? minutesToTime(entry.predictedSleep > 24*60 ? entry.predictedSleep - 24*60 : entry.predictedSleep) : '--:--',
+                    actualSleep: hasActual ? entry.actualSleep : null,
+                    actualStr: hasActual ? minutesToTime(entry.actualSleep) : null,
+                    delta: delta, absError: absError,
+                    status: hasActual ? (absError <= 30 ? 'accurate' : absError <= 60 ? 'close' : 'off') : 'pending'
+                };
+            });
+        }
+
+        function getCalibrationRecommendation() {
+            const allWithFeedback = getValues(state.history).filter(e =>
+                e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
+                e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep)
+            );
+            const entries = allWithFeedback.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+
+            if (entries.length === 0) return {
+                recommendation: 'No feedback data yet. Save a prediction and log actual sleep to start calibrating.',
+                confidence: 'none', adjustmentMg: null, details: null
+            };
+            if (entries.length < 3) return {
+                recommendation: 'Only ' + entries.length + ' data point(s). Need 3+ for calibration advice.',
+                confidence: 'none', adjustmentMg: null, details: null
+            };
+
+            const deltas = entries.map(e => computeSleepDelta(e.predictedSleep, e.actualSleep));
+            const avgDelta = deltas.reduce((s, v) => s + v, 0) / deltas.length;
+            const absErrors = deltas.map(d => Math.abs(d));
+            const avgAbsError = absErrors.reduce((s, v) => s + v, 0) / absErrors.length;
+            const confidence = allWithFeedback.length >= 15 ? 'high' : allWithFeedback.length >= 5 ? 'medium' : 'low';
+            const currentThreshold = state.settings.sleepThreshold;
+
+            if (avgAbsError <= 30) return {
+                recommendation: 'Predictions are accurate (avg ' + Math.round(avgAbsError) + ' min off). No adjustment needed.',
+                confidence: confidence, adjustmentMg: 0,
+                details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: currentThreshold }
+            };
+
+            let adjustmentMg = null, recommendation = '';
+            if (avgDelta > 30) {
+                adjustmentMg = avgDelta > 60 ? -2 : -1;
+                const newTh = Math.max(8, currentThreshold + adjustmentMg);
+                recommendation = 'You fall asleep ' + Math.round(avgDelta) + ' min later than predicted. Try lowering Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re more sensitive than assumed).';
+            } else if (avgDelta < -30) {
+                adjustmentMg = avgDelta < -60 ? 2 : 1;
+                const newTh = Math.min(25, currentThreshold + adjustmentMg);
+                recommendation = 'You fall asleep ' + Math.round(Math.abs(avgDelta)) + ' min earlier than predicted. Try raising Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re less sensitive than assumed).';
+            } else {
+                recommendation = 'Predictions vary by ' + Math.round(avgAbsError) + ' min avg without consistent direction. May be due to variable sleep debt or exercise timing. Keep logging.';
+            }
+
+            return {
+                recommendation: recommendation, confidence: confidence, adjustmentMg: adjustmentMg,
+                details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: adjustmentMg !== null ? Math.max(8, Math.min(25, currentThreshold + adjustmentMg)) : currentThreshold }
+            };
         }
 
         function suggestCalibration() {
@@ -10574,7 +11061,14 @@ Current status at ${currentTime}:
             setTimeout(() => {
                 autoPopulateFeedback();
             }, 2000);
-            
+
+            // Migrate history entries and render accuracy dashboard
+            setTimeout(() => {
+                migrateHistoryEntries();
+                renderHistory();
+                renderAccuracyDashboard();
+            }, 2500);
+
             // Update every 5 seconds (drug levels don't change perceptibly faster)
             setInterval(recalculate, 5000);
             
@@ -10627,7 +11121,8 @@ Current status at ${currentTime}:
             const defaults = {
                 sleep: true, meds: false, caffeine: false, modifiers: false,
                 nicotine: false, workout: false, circadian: false, calendar: false,
-                recs: false, forecast: false, settings: false, sleephistory: false
+                recs: false, forecast: false, settings: false, sleephistory: false,
+                predictionHistory: false
             };
             const merged = { ...defaults, ...openSections };
 
