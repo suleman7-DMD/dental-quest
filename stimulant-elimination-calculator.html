@@ -2505,6 +2505,7 @@
             <div class="hero-time green" id="sleepTime">--:-- PM</div>
             <div class="hero-countdown" id="timeRemaining">Calculating...</div>
             <div class="hero-quality" id="sleepQuality" style="background: rgba(16,185,129,0.15); color: #10b981;"></div>
+            <div id="bottleneckIndicator" style="display:none; font-size:0.78em; color:#f59e0b; margin-top:4px;"></div>
             <div class="hero-progress-bar">
                 <div class="hero-progress-fill" id="heroProgressFill" style="width: 0%;"></div>
             </div>
@@ -5615,12 +5616,15 @@
             // Calculate sleep time
             const { sleepTime, blockingFactors } = calculateSleepTime();
 
-            // DEBUG: Log VitC state (remove after confirming fix)
-            const _vitCActive = state.modifiers.vitaminC?.active;
-            const _vitCTime = getRawVitaminCTimeMinutes();
-            const _ampLoad = calculateAmpLoad(getCurrentMinutes());
-            const _medCount = getCount(state.medications);
-            console.log(`🍊 VitC DEBUG: active=${_vitCActive}, vitCTimeMin=${_vitCTime}, ampLoadNow=${_ampLoad.toFixed(1)}mg, meds=${_medCount}, sleepTime=${sleepTime}, displayed=${minutesToTime(sleepTime % (24*60))}`);
+            // Show bottleneck indicator in hero section
+            const bottleneckEl = document.getElementById('bottleneckIndicator');
+            if (bottleneckEl && blockingFactors.length > 0) {
+                const primary = blockingFactors.reduce((a, b) => (a.clearsAt || 0) > (b.clearsAt || 0) ? a : b);
+                bottleneckEl.textContent = `⏳ Bottleneck: ${primary.name}`;
+                bottleneckEl.style.display = 'block';
+            } else if (bottleneckEl) {
+                bottleneckEl.style.display = 'none';
+            }
             
             // Update main countdown display (safely)
             const sleepTimeDisplay = document.getElementById('sleepTime');
