@@ -4579,16 +4579,14 @@
 
         function toggleModifier(element, modifierName) {
             const modifier = state.modifiers[modifierName];
-            modifier.active = !modifier.active;
+            // Use checkbox checked state (not toggle) to prevent desync
+            modifier.active = element.checked !== undefined ? element.checked : !modifier.active;
 
             if (modifier.active) {
-                element.classList.add('active');
                 // FIX: Set date when toggling ON (for date-aware expiration)
                 if (modifierName === 'vitaminC' || modifierName === 'sauna') {
                     modifier.date = getLocalDateString();
                 }
-            } else {
-                element.classList.remove('active');
             }
 
             // Show/hide time inputs
@@ -4598,52 +4596,45 @@
         }
 
         function updateModifierTimeInputs() {
-            const container = document.getElementById('modifierTimes');
-            const vitCGroup = document.getElementById('vitaminCTimeGroup');
-            const saunaGroup = document.getElementById('saunaTimeGroup');
+            const vitCGroup = document.getElementById('vitCTimeRow');
+            const saunaGroup = document.getElementById('saunaTimeRow');
 
             const showVitC = state.modifiers.vitaminC.active;
             const showSauna = state.modifiers.sauna.active;
 
             if (vitCGroup) vitCGroup.style.display = showVitC ? 'flex' : 'none';
             if (saunaGroup) saunaGroup.style.display = showSauna ? 'flex' : 'none';
-            if (container) container.style.display = (showVitC || showSauna) ? 'block' : 'none';
 
-            // Update Vitamin C date input to match state
+            // Update Vitamin C date select to match state
             const vitCDateEl = document.getElementById('vitaminCDate');
-            if (vitCDateEl) {
-                // Default to today if no date set
-                vitCDateEl.value = state.modifiers.vitaminC.date || getLocalDateString();
-            }
-
-            // Show/hide expired/future badge for Vitamin C
-            const expiredBadge = document.getElementById('vitaminCExpiredBadge');
-            const expiredNote = document.getElementById('vitaminCExpiredNote');
-            if (expiredBadge && expiredNote && showVitC) {
-                const vitCStatus = getVitaminCStatus();
-                if (vitCStatus === 'effective') {
-                    expiredBadge.style.display = 'none';
-                    expiredNote.style.display = 'none';
-                } else if (vitCStatus === 'future') {
-                    expiredBadge.style.display = 'inline';
-                    expiredBadge.textContent = 'NOT YET';
-                    expiredBadge.style.background = '#6366f1';  // Purple for future
-                    expiredNote.style.display = 'block';
-                    expiredNote.innerHTML = '⏳ Scheduled for later. Effect starts when taken.';
-                } else {  // expired
-                    expiredBadge.style.display = 'inline';
-                    expiredBadge.textContent = 'EXPIRED';
-                    expiredBadge.style.background = '#ef4444';  // Red for expired
-                    expiredNote.style.display = 'block';
-                    expiredNote.innerHTML = '⚠️ Effect expired (>8 hours ago). Using normal 12h half-life.';
+            if (vitCDateEl && state.modifiers.vitaminC.date) {
+                const today = getLocalDateString();
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = getLocalDateString(tomorrow);
+                if (state.modifiers.vitaminC.date === tomorrowStr) {
+                    vitCDateEl.value = 'tomorrow';
+                } else {
+                    vitCDateEl.value = 'today';
                 }
             }
+
+            // Show/hide VitC status badge
+            updateVitCBadge();
         }
 
         function updateVitaminCDate() {
             const vitCDateEl = document.getElementById('vitaminCDate');
             if (vitCDateEl) {
-                state.modifiers.vitaminC.date = vitCDateEl.value;
+                const val = vitCDateEl.value;
+                if (val === 'tomorrow') {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    state.modifiers.vitaminC.date = getLocalDateString(tomorrow);
+                } else {
+                    state.modifiers.vitaminC.date = getLocalDateString();
+                }
+                saveState();
             }
         }
 
@@ -4655,7 +4646,13 @@
             if (!state.modifiers.vitaminC.active) return Infinity;
 
             const today = getLocalDateString();
-            const vitCDate = state.modifiers.vitaminC.date || today;
+            // Guard against stale "today"/"tomorrow" strings in state
+            let vitCDate = state.modifiers.vitaminC.date || today;
+            if (vitCDate === 'today') vitCDate = today;
+            if (vitCDate === 'tomorrow') {
+                const tom = new Date(); tom.setDate(tom.getDate() + 1);
+                vitCDate = getLocalDateString(tom);
+            }
             const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
 
             // Calculate day offset from today
@@ -4689,7 +4686,13 @@
             if (!state.modifiers.vitaminC.active) return Infinity;
 
             const today = getLocalDateString();
-            const vitCDate = state.modifiers.vitaminC.date || today;
+            // Guard against stale "today"/"tomorrow" strings in state
+            let vitCDate = state.modifiers.vitaminC.date || today;
+            if (vitCDate === 'today') vitCDate = today;
+            if (vitCDate === 'tomorrow') {
+                const tom = new Date(); tom.setDate(tom.getDate() + 1);
+                vitCDate = getLocalDateString(tom);
+            }
             const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
 
             const todayDate = parseLocalDate(today);
@@ -5176,11 +5179,17 @@
             const coldShowerDiv = document.getElementById('coldShowerOption');
             const applyBtn = document.getElementById('applyWorkoutBtn');
             
+            // Show result divs
+            if (resultDiv) resultDiv.style.display = 'block';
+            if (headerDiv) headerDiv.style.display = 'block';
+            if (textDiv) textDiv.style.display = 'block';
+            if (detailsDiv) detailsDiv.style.display = 'block';
+
             // Update styling based on status
             resultDiv.className = `workout-result-${impact.status}`;
             resultDiv.style.borderLeftColor = impact.status === 'optimal' ? '#10b981' : impact.status === 'caution' ? '#f59e0b' : '#ef4444';
             resultDiv.style.background = impact.status === 'optimal' ? 'rgba(16, 185, 129, 0.1)' : impact.status === 'caution' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-            
+
             // Update header
             const statusIcons = { optimal: '✅ GOLDEN SLOT', caution: '⚠️ PROCEED WITH CAUTION', danger: '🚫 NOT RECOMMENDED' };
             const statusColors = { optimal: '#10b981', caution: '#f59e0b', danger: '#ef4444' };
@@ -5295,8 +5304,8 @@
             // Also update the heavyLift modifier for backward compatibility
             if (type === 'lifting' || type === 'zone2') {
                 state.modifiers.heavyLift.active = true;
-                const liftingEl = document.querySelector('[data-modifier="heavyLift"]');
-                if (liftingEl) liftingEl.classList.add('active');
+                const liftToggle = document.getElementById('liftToggle');
+                if (liftToggle) liftToggle.checked = true;
             }
             
             // Save and recalculate - THIS NOW ACTUALLY AFFECTS THE MAIN COUNTDOWN
@@ -5409,30 +5418,21 @@
                 const vitCTimeEl = document.getElementById('vitaminCTime');
                 const vitCDateEl = document.getElementById('vitaminCDate');
                 if (vitCTimeEl) state.modifiers.vitaminC.time = vitCTimeEl.value || state.modifiers.vitaminC.time;
-                if (vitCDateEl) state.modifiers.vitaminC.date = vitCDateEl.value || getLocalDateString();
-
-                // Update expired/future badge (in case time has passed)
-                const expiredBadge = document.getElementById('vitaminCExpiredBadge');
-                const expiredNote = document.getElementById('vitaminCExpiredNote');
-                if (expiredBadge && expiredNote) {
-                    const vitCStatus = getVitaminCStatus();
-                    if (vitCStatus === 'effective') {
-                        expiredBadge.style.display = 'none';
-                        expiredNote.style.display = 'none';
-                    } else if (vitCStatus === 'future') {
-                        expiredBadge.style.display = 'inline';
-                        expiredBadge.textContent = 'NOT YET';
-                        expiredBadge.style.background = '#6366f1';
-                        expiredNote.style.display = 'block';
-                        expiredNote.innerHTML = '⏳ Scheduled for later. Effect starts when taken.';
-                    } else {
-                        expiredBadge.style.display = 'inline';
-                        expiredBadge.textContent = 'EXPIRED';
-                        expiredBadge.style.background = '#ef4444';
-                        expiredNote.style.display = 'block';
-                        expiredNote.innerHTML = '⚠️ Effect expired (>8 hours ago). Using normal 12h half-life.';
+                // Convert "today"/"tomorrow" select to actual date strings
+                if (vitCDateEl) {
+                    const val = vitCDateEl.value;
+                    if (val === 'tomorrow') {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        state.modifiers.vitaminC.date = getLocalDateString(tomorrow);
+                    } else if (val === 'today') {
+                        state.modifiers.vitaminC.date = getLocalDateString();
                     }
+                    // If val is already a date string, keep it
                 }
+
+                // Update VitC status badge
+                updateVitCBadge();
             }
             if (state.modifiers.sauna && state.modifiers.sauna.active) {
                 const saunaTimeEl = document.getElementById('saunaTime');
@@ -8847,18 +8847,8 @@
                         renderSleepPerformance();
                         renderHistory();
 
-                        // FIX: Restore modifier UI classes after Firebase sync (prevents double-press bug)
-                        Object.keys(state.modifiers).forEach(key => {
-                            const el = document.querySelector(`[data-modifier="${key}"]`);
-                            if (el) {
-                                if (state.modifiers[key]?.active) {
-                                    el.classList.add('active');
-                                } else {
-                                    el.classList.remove('active');
-                                }
-                            }
-                        });
-                        updateModifierTimeInputs();
+                        // Restore modifier checkbox states + time rows
+                        restoreModifierUI();
 
                         // FIX: Restore allNighterMode UI
                         updateAllNighterUI();
@@ -9032,18 +9022,8 @@
                     renderSleepPerformance();
                     renderHistory();
 
-                    // FIX: Restore modifier UI classes after Firebase sync (prevents double-press bug)
-                    Object.keys(state.modifiers).forEach(key => {
-                        const el = document.querySelector(`[data-modifier="${key}"]`);
-                        if (el) {
-                            if (state.modifiers[key]?.active) {
-                                el.classList.add('active');
-                            } else {
-                                el.classList.remove('active');
-                            }
-                        }
-                    });
-                    updateModifierTimeInputs();
+                    // Restore modifier checkbox states + time rows
+                    restoreModifierUI();
 
                     // FIX: Restore allNighterMode UI
                     updateAllNighterUI();
@@ -10518,16 +10498,7 @@ Current status at ${currentTime}:
             // Initialize today's sleep in calendar
             updateTodaySleepHistory();
             
-            // Restore modifier states
-            Object.keys(state.modifiers).forEach(key => {
-                if (state.modifiers[key] && state.modifiers[key].active) {
-                    const el = document.querySelector(`[data-modifier="${key}"]`);
-                    if (el) el.classList.add('active');
-                }
-            });
-            updateModifierTimeInputs();
-
-            // Restore Vitamin C date (handled by updateModifierTimeInputs now)
+            // Restore modifier checkbox states + time rows (handled by initUnifiedView → restoreModifierUI)
 
             // Update All-Nighter Mode UI
             updateAllNighterUI();
