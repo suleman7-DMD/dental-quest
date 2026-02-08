@@ -5614,6 +5614,13 @@
             
             // Calculate sleep time
             const { sleepTime, blockingFactors } = calculateSleepTime();
+
+            // DEBUG: Log VitC state (remove after confirming fix)
+            const _vitCActive = state.modifiers.vitaminC?.active;
+            const _vitCTime = getRawVitaminCTimeMinutes();
+            const _ampLoad = calculateAmpLoad(getCurrentMinutes());
+            const _medCount = getCount(state.medications);
+            console.log(`🍊 VitC DEBUG: active=${_vitCActive}, vitCTimeMin=${_vitCTime}, ampLoadNow=${_ampLoad.toFixed(1)}mg, meds=${_medCount}, sleepTime=${sleepTime}, displayed=${minutesToTime(sleepTime % (24*60))}`);
             
             // Update main countdown display (safely)
             const sleepTimeDisplay = document.getElementById('sleepTime');
@@ -6769,7 +6776,8 @@
                         state.modifiers.vitaminC.active = true;
                         state.modifiers.vitaminC.time = nowTime;
                         state.modifiers.vitaminC.date = getLocalDateString();
-                        document.querySelector('[data-modifier="vitaminC"]').classList.add('active');
+                        const vitCToggle = document.getElementById('vitCToggle');
+                        if (vitCToggle) vitCToggle.checked = true;
                         document.getElementById('vitaminCTime').value = nowTime;
                         updateModifierTimeInputs();
                         showToast('🍊 Vitamin C activated!');
@@ -6781,7 +6789,9 @@
                     if (!state.modifiers.sauna.active) {
                         state.modifiers.sauna.active = true;
                         state.modifiers.sauna.time = nowTime;
-                        document.querySelector('[data-modifier="sauna"]').classList.add('active');
+                        state.modifiers.sauna.date = getLocalDateString();
+                        const saunaToggle = document.getElementById('saunaToggle');
+                        if (saunaToggle) saunaToggle.checked = true;
                         document.getElementById('saunaTime').value = nowTime;
                         updateModifierTimeInputs();
                         showToast('🧖 Sauna session added!');
