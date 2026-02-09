@@ -929,27 +929,7 @@
             animation: celebrationBounce 0.5s ease;
         }
 
-        /* Confetti Container */
-        .confetti-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            overflow: hidden;
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            opacity: 0;
-        }
-        @keyframes confettiFall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+        /* Confetti styles moved to Focus View CSS section below */
 
         /* Empty State */
         .cc-empty-state {
@@ -2432,16 +2412,18 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--bg-card, #1e293b);
+            border: 1px solid var(--border, #334155);
+            padding: 14px 22px;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
-            gap: 15px;
-            z-index: 10100;  /* Above modals and saving toast */
+            gap: 12px;
+            z-index: 10100;
             transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 340px;
         }
 
         .toast-notification.show {
@@ -2449,12 +2431,20 @@
         }
 
         .toast-icon {
-            font-size: 1.5em;
+            font-size: 1.4em;
+            flex-shrink: 0;
         }
 
         .toast-message {
-            font-weight: 500;
-            color: #333;
+            font-weight: 600;
+            color: var(--text-primary, #f1f5f9);
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+
+        .toast-notification.toast-xp {
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 12px rgba(34, 197, 94, 0.15);
         }
 
         /* Medication Tracker Styles */
@@ -5463,6 +5453,132 @@
             --accent-amber: #f59e0b;
             --accent-teal: #14b8a6;
             --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-indigo: #6366f1;
+            --gam-gold: #fbbf24;
+            --gam-xp-green: #22c55e;
+            --gam-streak-warm: #fb923c;
+            --gam-streak-hot: #f87171;
+            --gam-streak-blazing: #fbbf24;
+        }
+
+        /* === ANIMATION KEYFRAMES === */
+        @keyframes progressShimmer {
+            0% { transform: translateX(-200%); }
+            100% { transform: translateX(200%); }
+        }
+        @keyframes checkPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        @keyframes subtlePulse {
+            0%, 100% { border-left-color: var(--accent-amber); }
+            50% { border-left-color: rgba(245, 158, 11, 0.6); }
+        }
+        @keyframes setupRingPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.15); opacity: 0; }
+        }
+        @keyframes nowPulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+        }
+        @keyframes sleepBreathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        @keyframes xpFloat {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            30% { transform: translateX(-50%) translateY(-15px) scale(1.2); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(0.8); }
+        }
+        @keyframes xpCounterPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #22c55e; }
+            100% { transform: scale(1); }
+        }
+        @keyframes levelBadgePulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.7); }
+        }
+        @keyframes levelUpPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        }
+        @keyframes fireFlickerSubtle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(-2deg); }
+            75% { transform: scale(0.98) rotate(2deg); }
+        }
+        @keyframes fireFlickerMedium {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            25% { transform: scale(1.15) rotate(-4deg); opacity: 0.9; }
+            50% { transform: scale(1.05) rotate(2deg); }
+            75% { transform: scale(1.1) rotate(-2deg); opacity: 0.95; }
+        }
+        @keyframes fireFlickerIntense {
+            0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            15% { transform: scale(1.2) rotate(-5deg); filter: brightness(1.3); }
+            30% { transform: scale(1.05) rotate(3deg); }
+            45% { transform: scale(1.15) rotate(-3deg); filter: brightness(1.2); }
+            60% { transform: scale(1.1) rotate(4deg); }
+            80% { transform: scale(1.2) rotate(-2deg); filter: brightness(1.4); }
+        }
+        @keyframes streakRiskPulse {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.3); }
+            50% { border-color: rgba(239, 68, 68, 0.7); box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
+        }
+        @keyframes milestonePulse {
+            0% { filter: brightness(1); }
+            30% { filter: brightness(1.6); }
+            100% { filter: brightness(1); }
+        }
+        @keyframes completionMessagePop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+            25% { transform: translate(-50%, -50%) scale(1); }
+            65% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) translateY(-30px) scale(0.8); opacity: 0; }
+        }
+        @keyframes screenPulse {
+            0% { box-shadow: inset 0 0 0 0 rgba(34, 197, 94, 0); }
+            50% { box-shadow: inset 0 0 60px 0 rgba(34, 197, 94, 0.08); }
+            100% { box-shadow: inset 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        @keyframes slideInBottom {
+            0% { transform: translateY(100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes perfectDayFlash {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes badgePopEnhanced {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-5deg); opacity: 0; }
+            60% { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+        @keyframes trophyBounce {
+            0% { transform: scale(0); }
+            40% { transform: scale(1.3); }
+            60% { transform: scale(0.9); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+            50% { transform: translateX(-50%) scale(1.3); opacity: 1; }
+        }
+        @keyframes taskCardFlash {
+            0% { background: inherit; }
+            30% { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); }
+            100% { background: inherit; }
         }
 
         /* === FULL WIDTH LAYOUT === */
@@ -5509,24 +5625,48 @@
             border: 1px solid var(--border) !important;
             color: var(--text-secondary) !important;
             padding: 12px 28px !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             font-size: 14px !important;
             font-weight: 500 !important;
             cursor: pointer !important;
-            transition: all 0.2s !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .cc-tab::after,
+        .cc-mode-tab::after {
+            content: '' !important;
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) scaleX(0) !important;
+            width: 60% !important;
+            height: 3px !important;
+            border-radius: 3px 3px 0 0 !important;
+            background: var(--accent-blue) !important;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         .cc-tab:hover,
         .cc-mode-tab:hover {
             border-color: var(--border-hover) !important;
             color: var(--text-primary) !important;
+            background: rgba(59, 130, 246, 0.05) !important;
         }
 
         .cc-tab.active,
         .cc-mode-tab.active {
-            background: var(--bg-card-hover) !important;
+            background: rgba(59, 130, 246, 0.1) !important;
             border-color: var(--accent-blue) !important;
             color: var(--text-primary) !important;
+            font-weight: 600 !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .cc-tab.active::after,
+        .cc-mode-tab.active::after {
+            transform: translateX(-50%) scaleX(1) !important;
         }
 
         /* === GREETING === */
@@ -5534,16 +5674,18 @@
         [class*="greeting"],
         .greeting-section {
             text-align: center !important;
-            margin-bottom: 16px !important;
+            margin-bottom: 20px !important;
+            padding: 8px 0 !important;
         }
 
         .triage-greeting h2,
         [class*="greeting"] h2,
         .greeting-section h2 {
-            font-size: 20px !important;
-            font-weight: 500 !important;
+            font-size: 22px !important;
+            font-weight: 600 !important;
             color: var(--text-primary) !important;
-            margin: 0 0 4px 0 !important;
+            margin: 0 0 6px 0 !important;
+            letter-spacing: -0.3px !important;
         }
 
         .triage-date,
@@ -5551,6 +5693,8 @@
         .greeting-date {
             font-size: 13px !important;
             color: var(--text-muted) !important;
+            letter-spacing: 0.3px !important;
+            font-variant-numeric: tabular-nums !important;
         }
 
         /* === PROGRESS BAR === */
@@ -5560,43 +5704,61 @@
         .triage-progress {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 10px !important;
-            padding: 14px 20px !important;
+            border-radius: 12px !important;
+            padding: 16px 20px !important;
             margin-bottom: 24px !important;
             display: flex !important;
             align-items: center !important;
             gap: 16px !important;
             width: 100% !important;
+            position: relative !important;
+            overflow: hidden !important;
         }
 
         .progress-label {
             font-size: 14px !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
             color: var(--text-secondary) !important;
+            white-space: nowrap !important;
         }
 
         .progress-bar-container,
-        [class*="progress-bar"]:not(.mini-progress-bar):not([class*="fill"]) {
+        [class*="progress-bar"]:not(.mini-progress-bar):not([class*="fill"]):not(.progress-bar-enhanced):not(.time-progress-bar):not(.xp-level-bar) {
             flex: 1 !important;
             height: 10px !important;
             background: var(--bg-page) !important;
             border-radius: 5px !important;
             overflow: hidden !important;
+            position: relative !important;
         }
 
         .progress-bar-fill,
-        [class*="progress-fill"],
-        [class*="progress-bar"] > div {
+        [class*="progress-fill"]:not(.progress-fill-enhanced):not(.progress-ring-fill):not(.time-progress-fill) {
             height: 100% !important;
             background: linear-gradient(90deg, var(--accent-blue), #8b5cf6) !important;
             border-radius: 5px !important;
-            transition: width 0.3s !important;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .progress-bar-fill::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%) !important;
+            animation: progressShimmer 2s ease-in-out infinite !important;
         }
 
         .progress-text {
             font-size: 13px !important;
             color: var(--text-muted) !important;
             font-variant-numeric: tabular-nums !important;
+            white-space: nowrap !important;
+            font-weight: 500 !important;
         }
 
         /* === THREE COLUMNS === */
@@ -5617,29 +5779,33 @@
         [data-tier] {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 10px !important;
-            padding: 8px !important;
-            min-height: 180px !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
+            min-height: 200px !important;
             max-height: 550px !important;
             display: flex !important;
             flex-direction: column !important;
-            box-shadow: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+            transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
         }
 
         .triage-column.locked-in,
         .cc-locked-in,
         [data-tier="lockedIn"] {
             border-left: 4px solid var(--accent-amber) !important;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.04) 100%) !important;
         }
 
         .triage-column.today,
         [data-tier="today"] {
             border-left: 4px solid var(--accent-blue) !important;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(59, 130, 246, 0.03) 100%) !important;
         }
 
         .triage-column.tomorrow,
         [data-tier="tomorrow"] {
             border-left: 4px solid var(--accent-teal) !important;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(20, 184, 166, 0.03) 100%) !important;
         }
 
         .triage-section.scheduled,
@@ -5655,17 +5821,17 @@
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            padding-bottom: 8px !important;
-            margin-bottom: 8px !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 10px !important;
             border-bottom: 1px solid var(--border) !important;
         }
 
         .column-name,
         .cc-section-header span:first-child {
-            font-size: 13px !important;
-            font-weight: 600 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 1px !important;
             color: var(--text-secondary) !important;
             background: none !important;
             -webkit-text-fill-color: var(--text-secondary) !important;
@@ -5675,6 +5841,7 @@
         .cc-locked-in .cc-section-header span:first-child {
             color: var(--accent-amber) !important;
             -webkit-text-fill-color: var(--accent-amber) !important;
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.2) !important;
         }
 
         .triage-column.today .column-name {
@@ -5690,11 +5857,13 @@
         /* Count badge */
         .column-count,
         [id$="Count"] {
-            font-size: 12px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
             background: var(--bg-page) !important;
             color: var(--text-muted) !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
+            padding: 3px 10px !important;
+            border-radius: 10px !important;
+            letter-spacing: 0.3px !important;
         }
 
         /* === TASK LIST === */
@@ -5718,17 +5887,42 @@
         .cc-task-item {
             background: var(--bg-page) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
-            padding: 6px 10px !important;
-            margin-bottom: 4px !important;
-            transition: all 0.15s !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 6px !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
         }
 
         .task-card:hover,
         .cc-task-item:hover {
-            border-color: var(--accent-blue) !important;
-            transform: none !important;
-            background: rgba(56, 139, 253, 0.04) !important;
+            border-color: rgba(59, 130, 246, 0.4) !important;
+            transform: translateY(-1px) !important;
+            background: rgba(59, 130, 246, 0.04) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Tier-specific left accent on task cards */
+        .triage-column.locked-in .task-card {
+            border-left: 3px solid rgba(245, 158, 11, 0.3) !important;
+        }
+        .triage-column.locked-in .task-card:hover {
+            border-left-color: var(--accent-amber) !important;
+            border-color: rgba(245, 158, 11, 0.3) !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1) !important;
+        }
+        .triage-column.today .task-card {
+            border-left: 3px solid rgba(59, 130, 246, 0.2) !important;
+        }
+        .triage-column.today .task-card:hover {
+            border-left-color: var(--accent-blue) !important;
+        }
+        .triage-column.tomorrow .task-card {
+            border-left: 3px solid rgba(20, 184, 166, 0.2) !important;
+        }
+        .triage-column.tomorrow .task-card:hover {
+            border-left-color: var(--accent-teal) !important;
+            border-color: rgba(20, 184, 166, 0.3) !important;
         }
 
         /* Drag handle */
@@ -5737,11 +5931,12 @@
             cursor: grab !important;
             margin-right: 4px !important;
             font-size: 11px !important;
-            opacity: 0.5 !important;
+            opacity: 0.3 !important;
+            transition: opacity 0.15s !important;
         }
 
         .task-card:hover .drag-handle {
-            opacity: 1 !important;
+            opacity: 0.8 !important;
         }
 
         /* === TASK TEXT — READABLE === */
@@ -5749,7 +5944,7 @@
         .cc-task-item span:not([style]):not([class*="badge"]),
         .cc-task-item > div:first-child > span:last-child {
             font-size: 13px !important;
-            line-height: 1.4 !important;
+            line-height: 1.5 !important;
             color: var(--text-primary) !important;
             display: inline !important;
             word-wrap: break-word !important;
@@ -5760,14 +5955,40 @@
         .task-card input[type="checkbox"],
         .cc-task-item input[type="checkbox"],
         .task-checkbox {
-            width: 15px !important;
-            height: 15px !important;
+            width: 16px !important;
+            height: 16px !important;
             accent-color: var(--accent-blue) !important;
             cursor: pointer !important;
             flex-shrink: 0 !important;
+            transition: transform 0.15s ease !important;
+        }
+        .task-card input[type="checkbox"]:hover,
+        .task-checkbox:hover {
+            transform: scale(1.15) !important;
+        }
+        .task-card input[type="checkbox"]:checked,
+        .task-checkbox:checked {
+            animation: checkPop 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         /* === TASK BUTTONS === */
+        .task-card-actions {
+            display: flex !important;
+            gap: 4px !important;
+            margin-left: auto !important;
+            flex-shrink: 0 !important;
+            opacity: 0 !important;
+            transition: opacity 0.2s ease !important;
+        }
+        .task-card:hover .task-card-actions {
+            opacity: 1 !important;
+        }
+        @media (hover: none) {
+            .task-card-actions {
+                opacity: 1 !important;
+            }
+        }
+
         .task-card button,
         .task-card-actions button,
         .cc-task-item button,
@@ -5775,12 +5996,13 @@
         .btn-crash-out,
         button[onclick*="startFocus"],
         button[onclick*="Crash"] {
-            padding: 3px 8px !important;
+            padding: 4px 10px !important;
             font-size: 11px !important;
             font-weight: 500 !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
             cursor: pointer !important;
-            transition: all 0.15s !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            white-space: nowrap !important;
         }
 
         .btn-start,
@@ -5789,11 +6011,14 @@
             background: var(--accent-green) !important;
             color: white !important;
             border: none !important;
+            box-shadow: 0 1px 3px rgba(34, 197, 94, 0.3) !important;
         }
 
         .btn-start:hover,
         button[onclick*="startFocus"]:hover {
             background: #16a34a !important;
+            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
         .btn-crash-out,
@@ -5801,12 +6026,14 @@
         button[onclick*="Crash"] {
             background: transparent !important;
             color: var(--accent-teal) !important;
-            border: 1px solid var(--accent-teal) !important;
+            border: 1px solid rgba(20, 184, 166, 0.3) !important;
         }
 
         .btn-crash-out:hover,
         button[onclick*="sendToCrashOut"]:hover {
-            background: rgba(20, 184, 166, 0.15) !important;
+            background: rgba(20, 184, 166, 0.12) !important;
+            border-color: var(--accent-teal) !important;
+            transform: translateY(-1px) !important;
         }
 
         .btn-remove {
@@ -5818,6 +6045,7 @@
         .btn-remove:hover {
             border-color: var(--accent-red) !important;
             color: var(--accent-red) !important;
+            background: rgba(239, 68, 68, 0.08) !important;
         }
 
         /* === SCHEDULED & ROLLED OVER SECTIONS === */
@@ -5826,57 +6054,78 @@
         #rolledOverSection {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            padding: 10px 14px !important;
-            margin-bottom: 10px !important;
+            border-radius: 10px !important;
+            padding: 12px 16px !important;
+            margin-bottom: 12px !important;
             width: 100% !important;
+            transition: border-color 0.2s ease !important;
         }
 
         #scheduledSection { border-left: 4px solid var(--accent-teal) !important; }
-        #rolledOverSection { border-left: 4px solid var(--accent-amber) !important; }
+        #rolledOverSection {
+            border-left: 4px solid var(--accent-amber) !important;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.04) 100%) !important;
+            animation: subtlePulse 3s ease-in-out infinite !important;
+        }
 
         .section-header {
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
-            margin-bottom: 8px !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
         }
 
         .section-title {
             font-size: 12px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
             color: var(--text-secondary) !important;
         }
 
         .section-subtitle {
             font-size: 11px !important;
             color: var(--text-muted) !important;
+            font-style: italic !important;
         }
 
         .section-count {
             font-size: 11px !important;
+            font-weight: 600 !important;
             color: var(--text-muted) !important;
             margin-left: auto !important;
+            background: var(--bg-page) !important;
+            padding: 2px 8px !important;
+            border-radius: 8px !important;
         }
 
         .scheduled-task-card {
             background: var(--bg-page) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
-            padding: 6px 10px !important;
-            margin-bottom: 4px !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 6px !important;
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 10px !important;
+            transition: all 0.2s ease !important;
+        }
+        .scheduled-task-card:hover {
+            border-color: rgba(20, 184, 166, 0.4) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
         }
 
         .scheduled-time {
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             color: var(--accent-teal) !important;
-            font-family: 'SF Mono', Monaco, monospace !important;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
             min-width: 60px !important;
+            background: rgba(20, 184, 166, 0.08) !important;
+            padding: 3px 8px !important;
+            border-radius: 6px !important;
+            text-align: center !important;
         }
 
         /* === QUICK ADD === */
@@ -5884,8 +6133,8 @@
         [class*="quick-add"] {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            padding: 10px !important;
+            border-radius: 12px !important;
+            padding: 14px !important;
             margin-top: 14px !important;
         }
 
@@ -5902,14 +6151,16 @@
             border: 1px solid var(--border) !important;
             color: var(--text-primary) !important;
             padding: 12px 16px !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             font-size: 14px !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         }
 
         .triage-quick-add input:focus,
         #triageQuickAdd:focus {
             border-color: var(--accent-blue) !important;
             outline: none !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
         }
 
         .triage-quick-add-btn {
@@ -5917,9 +6168,16 @@
             color: white !important;
             border: none !important;
             padding: 12px 24px !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             font-weight: 600 !important;
             cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3) !important;
+        }
+        .triage-quick-add-btn:hover {
+            background: #2563eb !important;
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
         .triage-action-btns {
@@ -5933,14 +6191,16 @@
             border: 1px solid var(--border) !important;
             color: var(--text-secondary) !important;
             padding: 10px 16px !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             font-size: 13px !important;
             cursor: pointer !important;
+            transition: all 0.2s ease !important;
         }
 
         .triage-action-btn:hover {
             border-color: var(--accent-blue) !important;
             color: var(--text-primary) !important;
+            background: rgba(59, 130, 246, 0.05) !important;
         }
 
         .triage-action-btn.primary {
@@ -5948,6 +6208,11 @@
             border-color: var(--accent-amber) !important;
             color: #0f172a !important;
             font-weight: 600 !important;
+            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3) !important;
+        }
+        .triage-action-btn.primary:hover {
+            box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
         /* === MINI PROGRESS BARS === */
@@ -5969,16 +6234,24 @@
             height: 100% !important;
             background: var(--accent-blue) !important;
             border-radius: 3px !important;
-            transition: width 0.3s !important;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         .triage-column.locked-in .mini-progress-fill {
-            background: var(--accent-amber) !important;
+            background: linear-gradient(90deg, var(--accent-amber), #fbbf24) !important;
+        }
+        .triage-column.today .mini-progress-fill {
+            background: linear-gradient(90deg, var(--accent-blue), #60a5fa) !important;
+        }
+        .triage-column.tomorrow .mini-progress-fill {
+            background: linear-gradient(90deg, var(--accent-teal), #2dd4bf) !important;
         }
 
         .mini-progress-text {
             font-size: 11px !important;
             color: var(--text-muted) !important;
+            font-weight: 500 !important;
+            font-variant-numeric: tabular-nums !important;
         }
 
         /* Empty state */
@@ -5986,8 +6259,30 @@
             color: var(--text-muted) !important;
             background: transparent !important;
             text-align: center !important;
-            padding: 20px 12px !important;
+            padding: 32px 16px !important;
             font-size: 12px !important;
+            line-height: 1.6 !important;
+            opacity: 0.7 !important;
+            border: 2px dashed rgba(100, 116, 139, 0.2) !important;
+            border-radius: 8px !important;
+            margin: 8px 4px !important;
+            transition: border-color 0.2s ease, opacity 0.2s ease !important;
+        }
+        .column-empty-state:hover {
+            border-color: rgba(100, 116, 139, 0.35) !important;
+            opacity: 0.9 !important;
+        }
+        .triage-column.locked-in .column-empty-state {
+            border-color: rgba(245, 158, 11, 0.15) !important;
+        }
+        .triage-column.locked-in .column-empty-state:hover {
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+        .triage-column.today .column-empty-state {
+            border-color: rgba(59, 130, 246, 0.15) !important;
+        }
+        .triage-column.tomorrow .column-empty-state {
+            border-color: rgba(20, 184, 166, 0.15) !important;
         }
 
         /* === CRASH OUT SETUP === */
@@ -5998,10 +6293,44 @@
             margin: 0 auto !important;
         }
 
-        .setup-icon { font-size: 72px !important; margin-bottom: 20px !important; }
-        .setup-title { font-size: 32px !important; font-weight: 700 !important; color: var(--text-primary) !important; margin: 0 0 8px 0 !important; }
+        .setup-icon-container {
+            position: relative !important;
+            width: 96px !important;
+            height: 96px !important;
+            margin: 0 auto 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .setup-icon-ring {
+            position: absolute !important;
+            inset: 0 !important;
+            border-radius: 50% !important;
+            border: 2px solid rgba(99, 102, 241, 0.3) !important;
+            animation: setupRingPulse 3s ease-in-out infinite !important;
+        }
+
+        .setup-icon {
+            font-size: 56px !important;
+            z-index: 1 !important;
+        }
+
+        .setup-title {
+            font-size: 28px !important;
+            font-weight: 700 !important;
+            color: var(--text-primary) !important;
+            margin: 0 0 8px 0 !important;
+            letter-spacing: -0.5px !important;
+        }
+
         .setup-date { font-size: 16px !important; color: var(--text-muted) !important; margin: 0 0 32px 0 !important; }
-        .setup-question { font-size: 18px !important; color: var(--text-secondary) !important; margin: 0 0 24px 0 !important; }
+
+        .setup-question {
+            font-size: 16px !important;
+            color: var(--text-muted) !important;
+            margin: 0 0 32px 0 !important;
+        }
 
         .sleep-options {
             display: flex !important;
@@ -6014,29 +6343,74 @@
         .sleep-option {
             background: var(--bg-card) !important;
             border: 2px solid var(--border) !important;
-            border-radius: 12px !important;
-            padding: 24px 32px !important;
-            min-width: 140px !important;
+            border-radius: 16px !important;
+            padding: 20px 24px !important;
+            min-width: 150px !important;
             cursor: pointer !important;
-            transition: all 0.2s !important;
+            transition: all 0.25s ease !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 8px !important;
+            position: relative !important;
+            overflow: hidden !important;
         }
 
-        .sleep-option:hover { border-color: var(--accent-blue) !important; }
+        .sleep-option::before {
+            content: '' !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.08) 100%) !important;
+            opacity: 0 !important;
+            transition: opacity 0.25s !important;
+        }
+
+        .sleep-option:hover::before {
+            opacity: 1 !important;
+        }
+
+        .sleep-option:hover {
+            border-color: #6366f1 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15) !important;
+        }
+
+        .sleep-option-tonight:hover {
+            border-color: var(--accent-amber) !important;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .sleep-option-late:hover {
+            border-color: #8b5cf6 !important;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15) !important;
+        }
+
+        .option-icon {
+            font-size: 28px !important;
+            margin-bottom: 4px !important;
+        }
 
         .option-label {
             display: block !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
             color: var(--text-muted) !important;
             text-transform: uppercase !important;
-            margin-bottom: 8px !important;
+            letter-spacing: 1.5px !important;
         }
 
         .option-time {
             display: block !important;
-            font-size: 20px !important;
-            font-weight: 600 !important;
+            font-size: 22px !important;
+            font-weight: 700 !important;
             color: var(--text-primary) !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        .option-tag {
+            font-size: 10px !important;
+            color: var(--text-muted) !important;
+            opacity: 0.7 !important;
         }
 
         .setup-hint {
@@ -6077,74 +6451,91 @@
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            margin-bottom: 14px !important;
+            margin-bottom: 16px !important;
+            padding-bottom: 12px !important;
+            border-bottom: 1px solid var(--border) !important;
         }
 
         .timeline-header h2 {
             font-size: 20px !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
             color: var(--text-primary) !important;
             margin: 0 !important;
-        }
-
-        .btn-change-sleep {
-            background: transparent !important;
-            border: 1px solid var(--border) !important;
-            color: var(--text-secondary) !important;
-            padding: 8px 16px !important;
-            border-radius: 6px !important;
-            cursor: pointer !important;
-        }
-
-        .btn-change-sleep:hover {
-            border-color: var(--accent-amber) !important;
-            color: var(--text-primary) !important;
+            letter-spacing: -0.3px !important;
         }
 
         .sleep-time-adjuster {
             display: flex !important;
             align-items: center !important;
             gap: 4px !important;
+            background: var(--bg-page) !important;
+            padding: 4px 6px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border) !important;
         }
 
         .btn-adjust-sleep {
             background: transparent !important;
-            border: 1px solid #334155 !important;
-            color: #94a3b8 !important;
+            border: none !important;
+            color: var(--text-muted) !important;
             padding: 4px 8px !important;
             border-radius: 4px !important;
             cursor: pointer !important;
             font-size: 12px !important;
             font-family: 'SF Mono', Monaco, monospace !important;
+            transition: all 0.15s !important;
         }
 
         .btn-adjust-sleep:hover {
-            background: #1e293b !important;
-            color: #f1f5f9 !important;
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
         }
 
         .current-sleep-label {
-            color: #f1f5f9 !important;
-            font-weight: 600 !important;
+            color: #c4b5fd !important;
+            font-weight: 700 !important;
             font-size: 14px !important;
             padding: 0 8px !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        .btn-change-sleep {
+            background: transparent !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-muted) !important;
+            padding: 4px 10px !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            font-size: 11px !important;
+            margin-left: 4px !important;
+            transition: all 0.15s !important;
+        }
+
+        .btn-change-sleep:hover {
+            border-color: var(--accent-red) !important;
+            color: var(--accent-red) !important;
         }
 
         .time-summary {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            padding: 10px 14px !important;
-            margin-bottom: 12px !important;
+            border-radius: 12px !important;
+            padding: 14px 18px !important;
+            margin-bottom: 16px !important;
         }
 
         .time-until-sleep {
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
-            margin-bottom: 8px !important;
-            font-size: 14px !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
             color: var(--text-primary) !important;
+        }
+
+        .time-icon {
+            font-size: 16px !important;
         }
 
         .time-progress {
@@ -6155,16 +6546,22 @@
 
         .time-progress-bar {
             flex: 1 !important;
-            height: 8px !important;
+            height: 10px !important;
             background: var(--bg-page) !important;
-            border-radius: 4px !important;
+            border-radius: 5px !important;
             overflow: hidden !important;
+            position: relative !important;
         }
 
         .time-progress-fill {
             height: 100% !important;
+            border-radius: 5px !important;
+            transition: width 0.5s ease, background 0.3s !important;
+            background: linear-gradient(90deg, var(--accent-green), #4ade80) !important;
+        }
+
+        .time-progress-fill.tight {
             background: linear-gradient(90deg, var(--accent-amber), #fbbf24) !important;
-            transition: width 0.3s !important;
         }
 
         .time-progress-fill.overscheduled {
@@ -6172,9 +6569,10 @@
         }
 
         .scheduled-time-text {
-            font-size: 14px !important;
+            font-size: 13px !important;
             color: var(--text-muted) !important;
             white-space: nowrap !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         /* Overscheduled Warning */
@@ -6208,39 +6606,79 @@
         /* Timeline Content */
         .timeline-content {
             position: relative !important;
-            padding-left: 80px !important;
+            padding-left: 88px !important;
             margin-bottom: 16px !important;
+        }
+
+        /* Vertical connecting rail */
+        .timeline-content::before {
+            content: '' !important;
+            position: absolute !important;
+            left: 76px !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            width: 2px !important;
+            background: linear-gradient(
+                180deg,
+                var(--accent-amber) 0%,
+                var(--accent-blue) 40%,
+                #6366f1 70%,
+                #8b5cf6 90%,
+                rgba(139, 92, 246, 0.3) 100%
+            ) !important;
+            border-radius: 1px !important;
         }
 
         /* NOW Marker */
         .timeline-now {
             display: flex !important;
             align-items: center !important;
-            margin-bottom: 10px !important;
+            margin-bottom: 12px !important;
+            margin-top: 4px !important;
             position: relative !important;
+            z-index: 2 !important;
         }
 
         .now-label {
             position: absolute !important;
-            left: -80px !important;
+            left: -88px !important;
             background: var(--accent-amber) !important;
             color: #0f172a !important;
-            padding: 2px 8px !important;
-            border-radius: 3px !important;
+            padding: 3px 10px !important;
+            border-radius: 4px !important;
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.5px !important;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4) !important;
+            animation: nowPulse 2s ease-in-out infinite !important;
+        }
+
+        .now-label::after {
+            content: '' !important;
+            position: absolute !important;
+            right: -5px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 0 !important;
+            height: 0 !important;
+            border-top: 5px solid transparent !important;
+            border-bottom: 5px solid transparent !important;
+            border-left: 5px solid var(--accent-amber) !important;
         }
 
         .now-time {
-            font-size: 14px !important;
-            color: var(--text-muted) !important;
-            margin-left: 12px !important;
+            font-size: 13px !important;
+            color: var(--accent-amber) !important;
+            font-weight: 600 !important;
+            margin-left: 8px !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .now-line {
             flex: 1 !important;
             height: 2px !important;
-            background: var(--accent-amber) !important;
+            background: linear-gradient(90deg, var(--accent-amber), transparent) !important;
+            margin-left: 8px !important;
         }
 
         .timeline-task {
@@ -6250,35 +6688,53 @@
 
         .task-time-marker {
             position: absolute !important;
-            left: -80px !important;
-            width: 72px !important;
+            left: -88px !important;
+            width: 76px !important;
             text-align: right !important;
         }
 
         .task-start-time {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: var(--text-muted) !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: var(--text-secondary) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        /* Dot on the vertical rail connecting to the task */
+        .task-time-marker::after {
+            content: '' !important;
+            position: absolute !important;
+            right: -17px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 8px !important;
+            height: 8px !important;
+            border-radius: 50% !important;
+            background: var(--accent-blue) !important;
+            border: 2px solid var(--bg-page) !important;
+            box-shadow: 0 0 0 1px var(--accent-blue) !important;
         }
 
         .task-card-timeline {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
-            padding: 5px 8px !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
-            transition: all 0.15s !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+            position: relative !important;
         }
 
         .task-card-timeline:hover {
-            border-color: var(--accent-blue) !important;
+            border-color: var(--border-hover) !important;
+            background: var(--bg-card-hover) !important;
         }
 
         .task-card-timeline.locked-in {
             border-left: 3px solid var(--accent-amber) !important;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, var(--bg-card) 40%) !important;
         }
 
         .task-tier-badge {
@@ -6313,7 +6769,7 @@
             font-size: 13px !important;
             color: var(--text-primary) !important;
             margin-bottom: 0 !important;
-            line-height: 1.3 !important;
+            line-height: 1.4 !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
@@ -6321,9 +6777,13 @@
             min-width: 0 !important;
         }
 
+        /* Duration badge - pill style */
         .task-duration-info {
-            font-size: 10px !important;
+            font-size: 11px !important;
             color: var(--text-muted) !important;
+            background: rgba(100, 116, 139, 0.15) !important;
+            padding: 2px 6px !important;
+            border-radius: 10px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
         }
@@ -6341,13 +6801,21 @@
             border-radius: 4px !important;
             font-size: 11px !important;
             cursor: pointer !important;
-            transition: all 0.15s !important;
+            transition: all 0.2s !important;
         }
 
         .timeline-task-actions .btn-start {
             background: var(--accent-green) !important;
             color: white !important;
             border: none !important;
+            padding: 4px 10px !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+        }
+
+        .timeline-task-actions .btn-start:hover {
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4) !important;
+            transform: scale(1.05) !important;
         }
 
         .timeline-task-actions .btn-edit,
@@ -6355,6 +6823,13 @@
             background: transparent !important;
             border: 1px solid var(--border) !important;
             color: var(--text-muted) !important;
+            opacity: 0.4 !important;
+            transition: opacity 0.2s !important;
+        }
+
+        .timeline-task:hover .timeline-task-actions .btn-edit,
+        .timeline-task:hover .timeline-task-actions .btn-remove {
+            opacity: 1 !important;
         }
 
         .timeline-task-actions .btn-edit:hover,
@@ -6367,10 +6842,17 @@
             background: var(--bg-page) !important;
             border: 1px solid var(--border) !important;
             color: var(--text-primary) !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
+            padding: 3px 6px !important;
+            border-radius: 6px !important;
             font-size: 11px !important;
             cursor: pointer !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%2364748b' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 4px center !important;
+            padding-right: 14px !important;
         }
 
         /* Timeline Task Drag-Drop */
@@ -6390,14 +6872,14 @@
             margin-top: -3px !important;
         }
         .timeline-task.cascade-shift {
-            animation: cascadeShift 0.5s ease-out !important;
+            animation: timelineCascadeShift 0.5s ease-out !important;
         }
-        @keyframes cascadeShift {
+        @keyframes timelineCascadeShift {
             0% { transform: translateX(-10px); opacity: 0.7; }
             100% { transform: translateX(0); opacity: 1; }
         }
 
-        /* Reorder Buttons - HORIZONTAL layout to reduce card height */
+        /* Reorder Buttons - HIDDEN by default, show on hover */
         .reorder-buttons {
             display: flex !important;
             flex-direction: row !important;
@@ -6405,6 +6887,14 @@
             gap: 2px !important;
             margin-right: 4px !important;
             align-items: center !important;
+            opacity: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden !important;
+            transition: all 0.2s ease !important;
+        }
+        .timeline-task:hover .reorder-buttons {
+            opacity: 1 !important;
+            max-width: 150px !important;
         }
         .btn-reorder {
             background: var(--bg-page) !important;
@@ -6441,19 +6931,55 @@
             border-color: var(--accent-purple) !important;
         }
 
-        /* Protected Hour */
-        .timeline-protected {
-            background: linear-gradient(135deg, rgba(100, 116, 139, 0.2), rgba(71, 85, 105, 0.2)) !important;
-            border: 1px dashed #64748b !important;
-            border-radius: 6px !important;
-            padding: 10px 12px !important;
-            margin: 10px 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
+        /* Elapsed tasks (past NOW) - dimmed */
+        .timeline-task.elapsed .task-card-timeline {
+            opacity: 0.45 !important;
+            border-color: rgba(51, 65, 85, 0.5) !important;
+        }
+        .timeline-task.elapsed .task-start-time {
+            color: var(--text-muted) !important;
+            opacity: 0.6 !important;
         }
 
-        .protected-badge { font-size: 20px !important; }
+        /* Active task (currently in progress window) */
+        .timeline-task.active-now .task-card-timeline {
+            border-color: var(--accent-amber) !important;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.15) !important;
+        }
+
+        /* Protected Hour */
+        .timeline-protected {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.05)) !important;
+            border: 1px solid rgba(139, 92, 246, 0.2) !important;
+            border-left: 3px solid rgba(139, 92, 246, 0.4) !important;
+            border-radius: 10px !important;
+            padding: 14px 16px !important;
+            margin: 16px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .timeline-protected::before {
+            content: '' !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 8px,
+                rgba(139, 92, 246, 0.03) 8px,
+                rgba(139, 92, 246, 0.03) 16px
+            ) !important;
+            pointer-events: none !important;
+        }
+
+        .protected-badge {
+            font-size: 22px !important;
+            filter: grayscale(0.2) !important;
+        }
 
         .protected-info {
             display: flex !important;
@@ -6462,155 +6988,193 @@
         }
 
         .protected-time {
-            font-size: 12px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
-            color: var(--text-secondary) !important;
+            color: #a78bfa !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .protected-label {
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            color: var(--text-primary) !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #c4b5fd !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
         }
 
         .protected-hint {
             font-size: 11px !important;
             color: var(--text-muted) !important;
+            font-style: italic !important;
         }
 
         /* Sleep Marker */
         .timeline-sleep {
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
-            padding: 10px 12px !important;
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
-            margin-top: 10px !important;
+            gap: 10px !important;
+            padding: 12px 16px !important;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08)) !important;
+            border: 1px solid rgba(99, 102, 241, 0.2) !important;
+            border-radius: 10px !important;
+            margin-top: 12px !important;
+            position: relative !important;
         }
 
-        .sleep-icon { font-size: 18px !important; }
+        .sleep-icon {
+            font-size: 20px !important;
+            animation: sleepBreathe 4s ease-in-out infinite !important;
+        }
 
         .sleep-time {
-            font-size: 15px !important;
-            font-weight: 600 !important;
-            color: var(--text-primary) !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #c4b5fd !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .sleep-label {
-            font-size: 14px !important;
+            font-size: 12px !important;
             color: var(--text-muted) !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
         }
 
         /* Unscheduled Pool */
         .unscheduled-pool {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 12px !important;
+            border-radius: 14px !important;
             padding: 20px !important;
             margin-bottom: 24px !important;
+            margin-top: 8px !important;
         }
 
         .pool-header {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 12px !important;
         }
 
         .pool-title {
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            color: var(--text-primary) !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: var(--text-secondary) !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 1px !important;
         }
 
         .pool-count {
             font-size: 12px !important;
-            color: var(--text-muted) !important;
+            color: #0f172a !important;
+            background: var(--accent-amber) !important;
+            padding: 2px 8px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
         }
 
         .pool-hint {
-            font-size: 13px !important;
+            font-size: 12px !important;
             color: var(--text-muted) !important;
-            margin: 0 0 16px 0 !important;
+            margin: 0 0 14px 0 !important;
         }
 
         .pool-tasks {
             display: flex !important;
             flex-wrap: wrap !important;
-            gap: 8px !important;
+            gap: 10px !important;
         }
 
         .pool-task-card {
             background: var(--bg-page) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
-            padding: 8px 10px !important;
-            min-width: 120px !important;
-            max-width: 180px !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            min-width: 140px !important;
+            max-width: 200px !important;
             flex: 1 !important;
+            transition: all 0.2s ease !important;
         }
 
         .pool-task-card:hover {
-            border-color: var(--accent-blue) !important;
+            border-color: var(--accent-teal) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.1) !important;
         }
 
         .pool-task-text {
             font-size: 12px !important;
             color: var(--text-primary) !important;
-            margin-bottom: 4px !important;
+            margin-bottom: 6px !important;
             display: -webkit-box !important;
             -webkit-line-clamp: 2 !important;
             -webkit-box-orient: vertical !important;
             overflow: hidden !important;
-            line-height: 1.3 !important;
+            line-height: 1.4 !important;
+            font-weight: 500 !important;
         }
 
         .pool-task-meta {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            margin-bottom: 6px !important;
+            margin-bottom: 8px !important;
         }
 
         .pool-task-duration {
             font-size: 11px !important;
             color: var(--text-muted) !important;
+            background: rgba(100, 116, 139, 0.15) !important;
+            padding: 1px 6px !important;
+            border-radius: 8px !important;
         }
 
         .pool-task-tier { font-size: 11px !important; }
 
         .btn-add-to-timeline {
-            background: var(--accent-teal) !important;
-            color: white !important;
-            border: none !important;
-            padding: 4px 8px !important;
-            border-radius: 4px !important;
+            background: transparent !important;
+            color: var(--accent-teal) !important;
+            border: 1px solid rgba(20, 184, 166, 0.3) !important;
+            padding: 5px 10px !important;
+            border-radius: 6px !important;
             font-size: 11px !important;
             cursor: pointer !important;
             width: 100% !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
+            transition: all 0.2s !important;
+            letter-spacing: 0.3px !important;
         }
 
         .btn-add-to-timeline:hover {
-            background: #0d9488 !important;
+            background: rgba(20, 184, 166, 0.15) !important;
+            border-color: var(--accent-teal) !important;
         }
 
         /* Empty Timeline State */
         .timeline-empty {
             text-align: center !important;
-            padding: 40px 20px !important;
+            padding: 48px 24px !important;
             color: var(--text-muted) !important;
         }
 
-        .timeline-empty-icon { font-size: 48px !important; margin-bottom: 12px !important; }
-        .timeline-empty-text { font-size: 16px !important; color: var(--text-secondary) !important; margin-bottom: 8px !important; }
-        .timeline-empty-hint { font-size: 14px !important; color: var(--text-muted) !important; }
+        .timeline-empty-icon {
+            font-size: 40px !important;
+            margin-bottom: 16px !important;
+            opacity: 0.6 !important;
+        }
+
+        .timeline-empty-text {
+            font-size: 16px !important;
+            color: var(--text-secondary) !important;
+            margin-bottom: 6px !important;
+            font-weight: 500 !important;
+        }
+
+        .timeline-empty-hint {
+            font-size: 13px !important;
+            color: var(--text-muted) !important;
+        }
 
         /* Reset Button */
         .reset-container { text-align: center !important; }
@@ -7020,43 +7584,84 @@
             height: 10px;
         }
 
-        /* Perfect day badge */
+        /* Perfect day celebration */
+        .perfect-day-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15), transparent 70%);
+            z-index: 9999;
+            pointer-events: none;
+            animation: perfectDayFlash 3s ease-out forwards;
+        }
         .perfect-day-badge {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.15));
+            border: 2px solid rgba(251, 191, 36, 0.4);
+            backdrop-filter: blur(20px);
             padding: 40px 60px;
-            border-radius: 20px;
+            border-radius: 24px;
             text-align: center;
             z-index: 10000;
-            animation: badgePop 0.5s ease-out;
+            animation: badgePopEnhanced 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
         }
-
-        .perfect-day-badge .trophy { font-size: 64px; margin-bottom: 10px; }
-        .perfect-day-badge .text { font-size: 28px; font-weight: 700; color: #0f172a; }
-
-        @keyframes badgePop {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        .perfect-day-badge .trophy {
+            font-size: 64px;
+            margin-bottom: 10px;
+            animation: trophyBounce 0.8s ease-in-out;
+            display: inline-block;
+        }
+        .perfect-day-badge .text {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .perfect-day-badge .perfect-day-stats {
+            margin-top: 12px;
+            font-size: 0.85em;
+            color: rgba(251, 191, 36, 0.8);
+        }
+        .perfect-day-badge .trophy-glow {
+            position: absolute;
+            top: 20%; left: 50%;
+            transform: translateX(-50%);
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
+            animation: glowPulse 1.5s ease-in-out infinite;
         }
 
         /* === DRAG AND DROP === */
         .task-card.dragging {
-            opacity: 0.5 !important;
+            opacity: 0.4 !important;
+            transform: scale(0.97) rotate(1deg) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+            transition: all 0.15s ease !important;
         }
 
         .triage-column.drag-over,
         .column-tasks.drag-over {
-            background: rgba(59, 130, 246, 0.1) !important;
+            background: rgba(59, 130, 246, 0.08) !important;
             border-color: var(--accent-blue) !important;
+            box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.06), 0 0 15px rgba(59, 130, 246, 0.08) !important;
+            transition: all 0.2s ease !important;
+        }
+        .triage-column.locked-in.drag-over {
+            background: rgba(245, 158, 11, 0.08) !important;
+            border-color: var(--accent-amber) !important;
+            box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.06), 0 0 15px rgba(245, 158, 11, 0.08) !important;
         }
 
         .cc-section.drop-target {
-            background: rgba(59, 130, 246, 0.1) !important;
+            background: rgba(59, 130, 246, 0.08) !important;
             border-color: var(--accent-blue) !important;
+            box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.05) !important;
         }
 
         /* Task details modal */
@@ -7156,6 +7761,1318 @@
             color: var(--accent-red);
         }
 
+/* ================================================================
+   FOCUS TAB REDESIGN — PREMIUM POMODORO UI
+   ================================================================ */
+
+/* --- TIMER CONTAINER --- */
+.focus-timer-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 30px;
+}
+
+@media (min-width: 600px) {
+    .focus-timer-container {
+        width: 340px;
+        height: 340px;
+    }
+}
+
+.focus-timer-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.focus-progress-ring {
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+}
+
+.focus-timer-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 280px;
+    height: 280px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+    transition: background 0.5s ease;
+}
+
+.focus-timer-container.running .focus-timer-glow {
+    animation: focusGlowPulse 3s ease-in-out infinite;
+}
+
+.focus-timer-container.warning .focus-timer-glow {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+}
+
+.focus-timer-container.critical .focus-timer-glow {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.18) 0%, transparent 70%);
+    animation: focusGlowPulse 1.5s ease-in-out infinite;
+}
+
+.focus-timer-digits {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    color: #f1f5f9;
+    font-size: 3.5em;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Fira Code', Monaco, 'Courier New', monospace;
+    letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+    font-variant-numeric: tabular-nums;
+    transition: text-shadow 0.5s ease;
+}
+
+@media (min-width: 600px) {
+    .focus-timer-digits {
+        font-size: 4em;
+    }
+}
+
+.focus-timer-container.running .focus-timer-digits {
+    animation: focusDigitBreathe 4s ease-in-out infinite;
+}
+
+.focus-timer-container.warning .focus-timer-digits {
+    text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+}
+
+.focus-timer-container.critical .focus-timer-digits {
+    text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+    animation: focusDigitBreathe 2s ease-in-out infinite;
+}
+
+.focus-timer-paused {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    color: #f59e0b;
+    font-size: 0.85em;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: focusPausedBlink 2s ease-in-out infinite;
+}
+
+.focus-session-card {
+    background: linear-gradient(145deg, #1e293b 0%, #172033 100%);
+    border: 1px solid #334155;
+    border-radius: 24px;
+    padding: 32px 28px 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.focus-task-header {
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-task-name {
+    font-size: 1.35em;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 10px;
+    line-height: 1.3;
+}
+
+.focus-task-meta {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.focus-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.focus-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.78em;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.focus-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-btn-main {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    color: white;
+    font-size: 1.2em;
+}
+
+.focus-btn-main:hover {
+    transform: scale(1.08);
+}
+
+.focus-btn-main:active {
+    transform: scale(0.95);
+}
+
+.focus-btn-start {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.focus-btn-start:hover {
+    box-shadow: 0 6px 25px rgba(34, 197, 94, 0.45);
+}
+
+.focus-btn-pause {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.focus-btn-pause:hover {
+    box-shadow: 0 6px 25px rgba(245, 158, 11, 0.45);
+}
+
+.focus-btn-adjust {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #475569;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    font-size: 0.85em;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.focus-btn-adjust:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+    border-color: #64748b;
+    transform: scale(1.05);
+}
+
+.focus-btn-adjust:active {
+    transform: scale(0.93);
+}
+
+.focus-duration-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-dur-btn {
+    padding: 6px 18px;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.focus-dur-btn:hover {
+    color: #94a3b8;
+    border-color: #475569;
+}
+
+.focus-dur-btn.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+}
+
+.focus-checklist-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.focus-checklist-title {
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 16px;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.focus-checkbox {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border: 2px solid #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: transparent;
+}
+
+.focus-checkbox:hover {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.focus-checkbox.checked {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+    animation: focusCheckPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-check-icon {
+    width: 14px;
+    height: 14px;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    transition: stroke-dashoffset 0.3s ease 0.1s;
+}
+
+.focus-checkbox.checked .focus-check-icon {
+    stroke-dashoffset: 0;
+}
+
+.focus-checklist-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    transition: all 0.25s ease !important;
+    border-left: 3px solid transparent !important;
+}
+
+.focus-checklist-item:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.focus-checklist-item.checked {
+    opacity: 0.55;
+    border-left-color: #22c55e !important;
+}
+
+.focus-checklist-item .item-text {
+    flex: 1 !important;
+    color: #e2e8f0 !important;
+    font-size: 0.92em !important;
+    transition: all 0.3s ease !important;
+}
+
+.focus-checklist-item .item-text.completed {
+    text-decoration: line-through !important;
+    color: #64748b !important;
+}
+
+.focus-checklist-item .delete-item {
+    opacity: 0;
+    background: transparent !important;
+    border: none !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.focus-checklist-item:hover .delete-item {
+    opacity: 1;
+}
+
+.focus-checklist-item .delete-item:hover {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.focus-checklist-progress-wrap {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.focus-checklist-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.focus-checklist-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #22c55e);
+    background-size: 200% 100%;
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.focus-add-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    color: #e2e8f0;
+    font-size: 0.85em;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.focus-add-input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.focus-add-input::placeholder {
+    color: #475569;
+}
+
+.focus-add-btn {
+    padding: 8px 16px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.focus-add-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.focus-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.focus-btn-complete {
+    width: 100%;
+    max-width: 550px;
+    padding: 18px 24px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.05em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.25);
+    letter-spacing: 0.5px;
+}
+
+.focus-btn-complete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35);
+}
+
+.focus-btn-complete:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.focus-btn-skip {
+    padding: 10px 24px;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    background: transparent;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.9em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.focus-btn-skip:hover {
+    border-color: #64748b;
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.focus-btn-exit {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.focus-btn-exit:hover {
+    color: #94a3b8;
+}
+
+.focus-empty-state {
+    background: linear-gradient(145deg, #1e293b 0%, #172033 100%);
+    border: 1px solid #334155;
+    border-radius: 24px;
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.focus-empty-icon {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+}
+
+.focus-empty-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    border-radius: 50%;
+    animation: focusEmptyPulse 3s ease-in-out infinite;
+}
+
+.focus-empty-title {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 12px;
+}
+
+.focus-empty-desc {
+    color: #94a3b8;
+    font-size: 1em;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.focus-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.focus-empty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.focus-empty-btn:active {
+    transform: translateY(0);
+}
+
+.focus-complete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: focusOverlayIn 0.3s ease;
+}
+
+.focus-complete-card {
+    background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: 28px;
+    padding: 44px 36px 36px;
+    text-align: center;
+    max-width: 420px;
+    width: calc(100% - 40px);
+    position: relative;
+    overflow: hidden;
+    animation: focusCardSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.focus-complete-flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+    animation: focusFlashPulse 0.6s ease-out;
+    pointer-events: none;
+}
+
+.focus-complete-emoji {
+    font-size: 4em;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-complete-bounce {
+    display: inline-block;
+    animation: focusCelebBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.focus-complete-title {
+    font-size: 1.6em;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-xp-float {
+    font-size: 1.3em;
+    font-weight: 800;
+    color: #22c55e;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    animation: focusXpFloat 1.5s ease-out;
+}
+
+.focus-complete-stats {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    color: #94a3b8;
+    font-size: 0.92em;
+}
+
+.focus-stat-icon {
+    font-size: 1.1em;
+}
+
+.focus-complete-checklist {
+    color: #64748b;
+    font-size: 0.85em;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-complete-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.focus-modal-btn {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.focus-modal-btn.primary {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.focus-modal-btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.focus-modal-btn.secondary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.focus-modal-btn.secondary:hover {
+    transform: translateY(-1px);
+}
+
+.focus-modal-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.focus-modal-btn.ghost {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid #334155;
+    padding: 10px 16px;
+    font-size: 0.88em;
+}
+
+.focus-modal-btn.ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+}
+
+/* CSS Confetti System */
+.focus-confetti-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.focus-confetti-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: focusConfettiFall var(--fall-duration, 2s) ease-out var(--fall-delay, 0s) forwards;
+}
+
+.focus-confetti-particle.circle {
+    border-radius: 50%;
+}
+
+.focus-confetti-particle.rect {
+    width: 6px;
+    height: 12px;
+    border-radius: 1px;
+}
+
+.focus-confetti-particle.diamond {
+    transform: rotate(45deg);
+}
+
+/* === GAMIFICATION CSS === */
+
+.xp-display-enhanced {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.xp-level-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-weight: 800;
+    font-size: 0.75em;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    animation: levelBadgePulse 3s ease-in-out infinite;
+}
+
+.xp-level-bar {
+    width: 60px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.xp-level-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xp-float {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 800;
+    font-size: 1.1em;
+    color: #22c55e;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+    pointer-events: none;
+    z-index: 100;
+    animation: xpFloat 1.2s ease-out forwards;
+}
+
+.xp-counter-rolling {
+    display: inline-block;
+    transition: none;
+}
+
+.xp-counter-rolling.animating {
+    animation: xpCounterPop 0.3s ease-out;
+}
+
+.level-up-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 10001;
+    text-align: center;
+    pointer-events: none;
+    animation: levelUpPop 2s ease-out forwards;
+}
+
+.level-up-overlay .level-up-text {
+    font-size: 2.5em;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+}
+
+.level-up-overlay .level-number {
+    font-size: 4em;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    margin-top: -5px;
+}
+
+.streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+}
+
+.streak-badge.streak-cold {
+    background: rgba(100, 116, 139, 0.2);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #94a3b8;
+}
+
+.streak-badge.streak-warm {
+    background: rgba(251, 146, 60, 0.15);
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    color: #fb923c;
+}
+
+.streak-badge.streak-hot {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}
+
+.streak-badge.streak-blazing {
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: #fbbf24;
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+}
+
+.streak-fire {
+    display: inline-block;
+    font-size: 1.1em;
+}
+
+.streak-warm .streak-fire {
+    animation: fireFlickerSubtle 2s ease-in-out infinite;
+}
+
+.streak-hot .streak-fire {
+    animation: fireFlickerMedium 1.2s ease-in-out infinite;
+}
+
+.streak-blazing .streak-fire {
+    animation: fireFlickerIntense 0.8s ease-in-out infinite;
+}
+
+.streak-at-risk {
+    animation: streakRiskPulse 2s ease-in-out infinite;
+}
+
+.progress-ring-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+}
+
+.progress-ring-svg {
+    transform: rotate(-90deg);
+    width: 80px;
+    height: 80px;
+}
+
+.progress-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 6;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke: var(--accent-blue);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+}
+
+.progress-ring-fill.progress-low { stroke: #3b82f6; }
+.progress-ring-fill.progress-mid { stroke: #22c55e; }
+.progress-ring-fill.progress-high { stroke: #f59e0b; }
+.progress-ring-fill.progress-complete { stroke: #fbbf24; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5)); }
+
+.progress-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.progress-bar-enhanced {
+    position: relative;
+    width: 100%;
+    height: 10px;
+    background: var(--bg-page);
+    border-radius: 5px;
+    overflow: visible;
+}
+
+.progress-bar-enhanced .progress-fill-enhanced {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
+    position: relative;
+}
+
+.progress-fill-enhanced.pf-low { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.progress-fill-enhanced.pf-mid { background: linear-gradient(90deg, #3b82f6, #22c55e); }
+.progress-fill-enhanced.pf-high { background: linear-gradient(90deg, #22c55e, #f59e0b); }
+.progress-fill-enhanced.pf-complete { background: linear-gradient(90deg, #f59e0b, #fbbf24); box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+
+.progress-milestone-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.progress-milestone-dot.reached {
+    background: #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+.completion-message {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 10000;
+    pointer-events: none;
+    font-size: 1.4em;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    animation: completionMessagePop 1.8s ease-out forwards;
+}
+
+.screen-pulse {
+    animation: screenPulse 0.4s ease-out;
+}
+
+.perfect-day-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15), transparent 70%);
+    z-index: 9999;
+    pointer-events: none;
+    animation: perfectDayFlash 3s ease-out forwards;
+}
+
+.perfect-day-badge {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.15));
+    border: 2px solid rgba(251, 191, 36, 0.4);
+    backdrop-filter: blur(20px);
+    padding: 40px 60px;
+    border-radius: 24px;
+    text-align: center;
+    z-index: 10000;
+    animation: badgePopEnhanced 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
+}
+
+.perfect-day-badge .trophy {
+    font-size: 64px;
+    margin-bottom: 10px;
+    animation: trophyBounce 0.8s ease-in-out;
+    display: inline-block;
+}
+
+.perfect-day-badge .text {
+    font-size: 28px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.perfect-day-badge .perfect-day-stats {
+    margin-top: 12px;
+    font-size: 0.85em;
+    color: rgba(251, 191, 36, 0.8);
+}
+
+.perfect-day-badge .trophy-glow {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
+    animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+.time-prompt-modal-enhanced {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9998;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0;
+}
+
+.time-prompt-content-enhanced {
+    background: var(--bg-card, #1e293b);
+    border: 1px solid var(--border, #334155);
+    border-bottom: none;
+    border-radius: 24px 24px 0 0;
+    padding: 32px 24px 28px;
+    text-align: center;
+    max-width: 480px;
+    width: 100%;
+    animation: slideInBottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nudge-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 20px;
+    font-size: 0.85em;
+    color: #60a5fa;
+    margin-bottom: 16px;
+}
+
+.nudge-task-name {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--text-primary, #f1f5f9);
+    margin: 12px 0;
+}
+
+.nudge-start-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    margin: 16px 0 12px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.nudge-start-btn:active {
+    transform: scale(0.97);
+}
+
+.nudge-push-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 12px 0;
+}
+
+.nudge-push-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border, #334155);
+    border-radius: 8px;
+    background: var(--bg-page, #0f172a);
+    color: var(--text-secondary, #94a3b8);
+    font-weight: 600;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.nudge-push-btn:hover {
+    border-color: var(--accent-blue, #3b82f6);
+    color: var(--text-primary, #f1f5f9);
+}
+
+.nudge-dismiss-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.nudge-dismiss-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border, #334155);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #64748b);
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nudge-dismiss-btn:hover {
+    color: var(--text-secondary, #94a3b8);
+}
+
+.nudge-remove-btn {
+    padding: 8px 16px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    background: transparent;
+    color: #ef4444;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
+/* --- FOCUS KEYFRAMES --- */
+
+@keyframes focusGlowPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes focusDigitBreathe {
+    0%, 100% { transform: translate(-50%, -55%) scale(1); opacity: 0.95; }
+    50% { transform: translate(-50%, -55%) scale(1.02); opacity: 1; }
+}
+
+@keyframes focusPausedBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes focusCheckPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+@keyframes focusEmptyPulse {
+    0%, 100% { transform: scale(1); opacity: 0.15; }
+    50% { transform: scale(1.1); opacity: 0.25; }
+}
+
+@keyframes focusOverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes focusCardSlideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes focusFlashPulse {
+    0% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2); }
+}
+
+@keyframes focusCelebBounce {
+    0% { transform: scale(0) rotate(-10deg); }
+    50% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes focusXpFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    70% { opacity: 1; transform: translateY(-30px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-50px) scale(0.9); }
+}
+
+@keyframes focusConfettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(var(--fall-distance, 400px)) rotate(var(--fall-rotation, 720deg)); opacity: 0; }
+}
+
+@media (max-width: 480px) {
+    .focus-timer-container {
+        width: 260px;
+        height: 260px;
+    }
+    .focus-timer-digits {
+        font-size: 2.8em;
+    }
+    .focus-session-card {
+        padding: 24px 16px 20px;
+        border-radius: 20px;
+    }
+    .focus-task-name {
+        font-size: 1.15em;
+    }
+    .focus-btn-main {
+        width: 48px;
+        height: 48px;
+    }
+    .focus-btn-adjust {
+        width: 36px;
+        height: 36px;
+        font-size: 0.8em;
+    }
+    .focus-complete-card {
+        padding: 32px 24px 28px;
+    }
+    .focus-modal-row {
+        flex-direction: column;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -7229,9 +9146,17 @@
 
         <!-- Slim Stats Bar -->
         <div class="stats-container" style="display: flex; justify-content: center; gap: 8px; padding: 8px 0; margin: 0; flex-wrap: wrap;">
-            <div class="stat-card" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
-                <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">XP Earned</span>
-                <span id="totalXPGained" style="font-size: 1.1em; font-weight: 700; color: white; margin-left: 6px;">0</span>
+            <div class="stat-card xp-display-enhanced" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center; position: relative;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="xp-level-badge" id="xpLevelBadge">1</span>
+                    <div>
+                        <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">XP</span>
+                        <span id="totalXPGained" class="xp-counter-rolling" style="font-size: 1.1em; font-weight: 700; color: white; margin-left: 4px;">0</span>
+                    </div>
+                </div>
+                <div class="xp-level-bar">
+                    <div class="xp-level-bar-fill" id="xpLevelBarFill" style="width: 0%;"></div>
+                </div>
             </div>
 
             <div class="stat-card" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
@@ -7256,6 +9181,12 @@
                 <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Completed</span>
                 <span id="totalTasks" style="font-size: 1.1em; font-weight: 700; color: #4ade80; margin-left: 6px;">0</span>
                 <span style="font-size: 0.7em; margin-left: 2px;">🏆</span>
+            </div>
+
+            <div class="streak-badge streak-cold" id="streakBadge" style="padding: 8px 12px; min-width: auto; flex: 0 1 auto;">
+                <span class="streak-fire">&#x1F525;</span>
+                <span id="streakCount">0</span>
+                <span style="font-size: 0.7em; color: inherit; opacity: 0.8;">day streak</span>
             </div>
         </div>
 
@@ -7346,12 +9277,27 @@
                     </div>
 
                     <!-- Overall Progress -->
-                    <div class="triage-overall-progress">
-                        <span class="progress-label">📊 Today's Progress</span>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" id="overallProgressBar" style="width: 0%;"></div>
+                    <div class="triage-overall-progress" style="gap: 16px;">
+                        <div class="progress-ring-container">
+                            <svg class="progress-ring-svg" viewBox="0 0 80 80">
+                                <circle class="progress-ring-bg" cx="40" cy="40" r="34"/>
+                                <circle class="progress-ring-fill progress-low" id="progressRingFill" cx="40" cy="40" r="34"
+                                    stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+                            </svg>
+                            <span class="progress-ring-text" id="progressRingPercent">0%</span>
                         </div>
-                        <span class="progress-text" id="overallProgressText">0/0 tasks • 0%</span>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span class="progress-label">Today's Progress</span>
+                                <span class="progress-text" id="overallProgressText">0/0 tasks</span>
+                            </div>
+                            <div class="progress-bar-enhanced">
+                                <div class="progress-fill-enhanced pf-low" id="overallProgressBar" style="width: 0%;"></div>
+                                <div class="progress-milestone-dot" style="left: 25%;" id="milestone25"></div>
+                                <div class="progress-milestone-dot" style="left: 50%;" id="milestone50"></div>
+                                <div class="progress-milestone-dot" style="left: 75%;" id="milestone75"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- THREE HORIZONTAL COLUMNS -->
@@ -7463,23 +9409,32 @@
 
                     <!-- Setup Screen (shown when no sleep time set) -->
                     <div id="crashOutSetup" class="crash-out-setup">
-                        <div class="setup-icon">🔥</div>
-                        <h2 class="setup-title">CRASH OUT MODE</h2>
+                        <div class="setup-icon-container">
+                            <div class="setup-icon-ring"></div>
+                            <div class="setup-icon">🌙</div>
+                        </div>
+                        <h2 class="setup-title">Set Your Crash Time</h2>
                         <p class="setup-date" id="crashOutSetupDate">📅 Thursday, Jan 29 • 5:01 PM</p>
-                        <p class="setup-question">When are you going to sleep?</p>
+                        <p class="setup-question">How long can you push tonight?</p>
 
                         <div class="sleep-options">
-                            <button class="sleep-option" onclick="setCrashOutSleep('tonight')">
+                            <button class="sleep-option sleep-option-tonight" onclick="setCrashOutSleep('tonight')">
+                                <span class="option-icon">🌆</span>
                                 <span class="option-label">TONIGHT</span>
                                 <span class="option-time">11:00 PM</span>
+                                <span class="option-tag">~Standard</span>
                             </button>
-                            <button class="sleep-option" onclick="setCrashOutSleep('latenight')">
+                            <button class="sleep-option sleep-option-late" onclick="setCrashOutSleep('latenight')">
+                                <span class="option-icon">🌃</span>
                                 <span class="option-label">LATE NIGHT</span>
                                 <span class="option-time">2:00 AM</span>
+                                <span class="option-tag">~Extended</span>
                             </button>
-                            <button class="sleep-option" onclick="showCustomSleepPicker()">
+                            <button class="sleep-option sleep-option-custom" onclick="showCustomSleepPicker()">
+                                <span class="option-icon">⚙️</span>
                                 <span class="option-label">CUSTOM</span>
-                                <span class="option-time">⚙️</span>
+                                <span class="option-time">Pick Time</span>
+                                <span class="option-tag">~Your call</span>
                             </button>
                         </div>
 
@@ -7549,11 +9504,11 @@
 
                             <!-- Protected Wind-Down -->
                             <div class="timeline-protected" id="windDownHour">
-                                <div class="protected-badge">🛡️</div>
+                                <div class="protected-badge">🌙</div>
                                 <div class="protected-info">
                                     <span class="protected-time" id="windDownTimeRange">10:00 PM - 11:00 PM</span>
-                                    <span class="protected-label">PROTECTED WIND-DOWN HOUR</span>
-                                    <span class="protected-hint">Nothing can be scheduled here. Time to relax.</span>
+                                    <span class="protected-label">Wind-Down Hour</span>
+                                    <span class="protected-hint">Protected time - nothing scheduled here</span>
                                 </div>
                             </div>
 
@@ -7590,64 +9545,101 @@
                 <div id="focusPomodoroContent" class="cc-mode-content" style="display: none;">
 
                     <!-- No Task Selected State -->
-                    <div id="focusNoTask" style="background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 50px; text-align: center; max-width: 500px; margin: 0 auto;">
-                        <div style="font-size: 4em; margin-bottom: 20px;">🎯</div>
-                        <div style="font-size: 1.5em; font-weight: 700; color: #f1f5f9; margin-bottom: 15px;">FOCUS MODE</div>
-                        <div style="color: #94a3b8; margin-bottom: 25px; font-size: 1em;">Select a task from Triage or Crash Out to start a focus session</div>
-                        <button onclick="switchCommandCenterMode('triage')" style="padding: 14px 28px; border: none; border-radius: 12px; background: #3b82f6; color: white; font-weight: 600; font-size: 1em; cursor: pointer;">Go to Triage</button>
+                    <div id="focusNoTask" class="focus-empty-state">
+                        <div class="focus-empty-icon">
+                            <div class="focus-empty-ring"></div>
+                            <span>🎯</span>
+                        </div>
+                        <div class="focus-empty-title">Ready to focus?</div>
+                        <div class="focus-empty-desc">Pick a task from Triage or Crash Out to start a deep work session.</div>
+                        <button class="focus-empty-btn" onclick="switchCommandCenterMode('triage')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                            Go to Triage
+                        </button>
                     </div>
 
-                    <!-- Active Focus Session -->
                     <div id="focusActiveSession" style="display: none; max-width: 550px; margin: 0 auto;">
-                        <!-- Timer Card -->
-                        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 20px;">
-                            <div style="font-size: 1.2em; font-weight: 600; color: #f1f5f9; margin-bottom: 20px;">🎯 FOCUS MODE</div>
+                        <!-- Session Card with Timer -->
+                        <div class="focus-session-card">
+                            <!-- Task Header (above timer) -->
+                            <div class="focus-task-header">
+                                <div class="focus-task-name" id="focusCurrentTaskText">Study Peds Chapter 12</div>
+                                <div class="focus-task-meta">
+                                    <span class="focus-tier-badge" id="focusCurrentTaskTier">LOCKED IN</span>
+                                    <span class="focus-progress-badge" id="focusTaskProgress">Task 3 of 12</span>
+                                </div>
+                            </div>
 
                             <!-- Timer Circle -->
-                            <div style="position: relative; width: 200px; height: 200px; margin: 0 auto 25px;">
-                                <svg width="200" height="200" style="transform: rotate(-90deg);">
-                                    <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="12"/>
-                                    <circle id="focusTimerCircle" cx="100" cy="100" r="90" fill="none" stroke="#3b82f6" stroke-width="12" stroke-linecap="round" stroke-dasharray="565.48" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"/>
+                            <div class="focus-timer-container" id="focusTimerContainer">
+                                <div class="focus-timer-glow"></div>
+                                <svg class="focus-timer-svg" viewBox="0 0 320 320">
+                                    <defs>
+                                        <linearGradient id="timerGradientGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#22c55e"/>
+                                            <stop offset="100%" stop-color="#3b82f6"/>
+                                        </linearGradient>
+                                        <linearGradient id="timerGradientYellow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#f59e0b"/>
+                                            <stop offset="100%" stop-color="#ef4444"/>
+                                        </linearGradient>
+                                        <linearGradient id="timerGradientRed" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#ef4444"/>
+                                            <stop offset="100%" stop-color="#dc2626"/>
+                                        </linearGradient>
+                                        <filter id="timerGlow">
+                                            <feGaussianBlur stdDeviation="4" result="blur"/>
+                                            <feMerge>
+                                                <feMergeNode in="blur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <circle cx="160" cy="160" r="140" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                                    <circle cx="160" cy="160" r="140" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="10" stroke-dasharray="4 173.8"/>
+                                    <circle id="focusTimerCircle" cx="160" cy="160" r="140" fill="none" stroke="url(#timerGradientGreen)" stroke-width="10" stroke-linecap="round" stroke-dasharray="879.6" stroke-dashoffset="0" filter="url(#timerGlow)" class="focus-progress-ring"/>
                                 </svg>
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f1f5f9; font-size: 3em; font-weight: 700; font-family: 'SF Mono', Monaco, monospace;" id="focusTimerDisplay">25:00</div>
+                                <div class="focus-timer-digits" id="focusTimerDisplay">25:00</div>
+                                <div class="focus-timer-paused" id="focusPausedLabel" style="display: none;">PAUSED</div>
                             </div>
 
                             <!-- Timer Controls -->
-                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
-                                <button id="focusStartBtn" onclick="startFocusTimer()" style="padding: 14px 32px; border: none; border-radius: 12px; background: #22c55e; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ START</button>
-                                <button id="focusPauseBtn" onclick="pauseFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #f59e0b; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">⏸ PAUSE</button>
-                                <button id="focusResumeBtn" onclick="resumeFocusTimer()" style="display: none; padding: 14px 32px; border: none; border-radius: 12px; background: #22c55e; color: white; font-weight: 700; font-size: 1em; cursor: pointer;">▶ RESUME</button>
+                            <div class="focus-controls">
+                                <button class="focus-btn-adjust" onclick="adjustFocusTimer(-300)" title="-5 min">-5</button>
+                                <button class="focus-btn-main focus-btn-start" id="focusStartBtn" onclick="startFocusTimer()">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                                </button>
+                                <button class="focus-btn-main focus-btn-pause" id="focusPauseBtn" onclick="pauseFocusTimer()" style="display: none;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                </button>
+                                <button class="focus-btn-main focus-btn-start" id="focusResumeBtn" onclick="resumeFocusTimer()" style="display: none;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                                </button>
+                                <button class="focus-btn-adjust" onclick="adjustFocusTimer(300)" title="+5 min">+5</button>
                             </div>
 
                             <!-- Duration Toggle -->
-                            <div style="display: flex; justify-content: center; gap: 10px;">
-                                <button onclick="setFocusDuration(25)" id="focus25Btn" class="focus-duration-btn active" style="padding: 8px 16px; border: 1px solid #334155; border-radius: 20px; background: rgba(59, 130, 246, 0.2); color: #f1f5f9; font-size: 0.9em; cursor: pointer;">25 min</button>
-                                <button onclick="setFocusDuration(50)" id="focus50Btn" class="focus-duration-btn" style="padding: 8px 16px; border: 1px solid #334155; border-radius: 20px; background: transparent; color: #94a3b8; font-size: 0.9em; cursor: pointer;">50 min</button>
+                            <div class="focus-duration-toggle">
+                                <button onclick="setFocusDuration(15)" class="focus-dur-btn" id="focus15Btn">15m</button>
+                                <button onclick="setFocusDuration(25)" class="focus-dur-btn active" id="focus25Btn">25m</button>
+                                <button onclick="setFocusDuration(50)" class="focus-dur-btn" id="focus50Btn">50m</button>
                             </div>
-                        </div>
-
-                        <!-- Current Task Card -->
-                        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 16px;">
-                            <div style="font-size: 0.9em; color: #94a3b8; margin-bottom: 8px;">Currently working on:</div>
-                            <div style="font-size: 1.2em; font-weight: 700; color: #f1f5f9;" id="focusCurrentTaskText">Study Peds Chapter 12</div>
-                            <div style="font-size: 0.85em; color: #3b82f6; margin-top: 5px;" id="focusCurrentTaskTier">from: LOCKED IN</div>
                         </div>
 
                         <!-- Session Checklist -->
-                        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 16px;">
-                            <div style="font-weight: 700; color: #f1f5f9; margin-bottom: 15px;">This session's checklist:</div>
+                        <div class="focus-checklist-card">
+                            <div class="focus-checklist-title">📋 Session Checklist</div>
                             <div id="focusSessionChecklist" style="margin-bottom: 15px;">
                                 <!-- Checklist items will be rendered here -->
                             </div>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="text" id="focusAddChecklistItem" placeholder="+ Add item..."
-                                       onkeypress="if(event.key==='Enter')addFocusChecklistItem()"
-                                       style="flex: 1; padding: 10px 14px; border: 1px solid #334155; border-radius: 8px; font-size: 0.9em; background: #0f172a; color: #f1f5f9;">
-                                <button onclick="addFocusChecklistItem()" style="padding: 10px 16px; border: none; border-radius: 8px; background: #3b82f6; color: white; font-weight: 600; cursor: pointer;">Add</button>
+                            <div class="focus-add-row">
+                                <input type="text" id="focusAddChecklistItem" class="focus-add-input" placeholder="+ Add item..."
+                                       onkeypress="if(event.key==='Enter')addFocusChecklistItem()">
+                                <button class="focus-add-btn" onclick="addFocusChecklistItem()">Add</button>
                             </div>
-                            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #334155;">
-                                <div style="height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden;">
-                                    <div id="focusChecklistProgress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); transition: width 0.3s;"></div>
+                            <div class="focus-checklist-progress-wrap">
+                                <div class="focus-checklist-bar">
+                                    <div class="focus-checklist-bar-fill" id="focusChecklistProgress" style="width: 0%;"></div>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: #64748b;">
                                     <span id="focusChecklistCount">0/0 items</span>
@@ -7656,33 +9648,49 @@
                             </div>
                         </div>
 
-                        <!-- Complete Task Button -->
-                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 16px; cursor: pointer;" onclick="completeFocusTask()">
-                            <div style="color: white; font-weight: 700; font-size: 1.1em;">✓ COMPLETE TASK</div>
-                        </div>
-
-                        <!-- Exit Button -->
-                        <div style="text-align: center;">
-                            <button onclick="exitFocusMode()" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 10px; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer;">✕ Exit Focus</button>
+                        <!-- Action Buttons -->
+                        <div class="focus-actions">
+                            <button class="focus-btn-complete" onclick="completeFocusTask()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4,12 10,18 20,6"/></svg>
+                                COMPLETE TASK
+                            </button>
+                            <button class="focus-btn-skip" onclick="skipFocusTask()">
+                                Skip
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+                            </button>
+                            <button class="focus-btn-exit" onclick="exitFocusMode()">Exit Focus</button>
                         </div>
                     </div>
 
-                    <!-- Timer Complete Modal (hidden by default) -->
-                    <div id="focusTimerCompleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center;">
-                        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; margin: 20px;">
-                            <div style="font-size: 4em; margin-bottom: 15px;">🎉</div>
-                            <div style="font-size: 1.5em; font-weight: 700; color: #f1f5f9; margin-bottom: 20px;">CRUSHED IT!</div>
-                            <div style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                                <div style="color: #22c55e; font-weight: 700; font-size: 1.2em;" id="focusXpEarned">+75 XP</div>
-                                <div style="color: #94a3b8; font-size: 0.9em; margin-top: 5px;" id="focusStreakDisplay">🔥 Focus streak: 4 sessions</div>
-                                <div style="color: #94a3b8; font-size: 0.9em;" id="focusTodayProgress">📊 Today: 3/12 tasks done</div>
+                    <!-- Timer Complete Modal -->
+                    <div id="focusTimerCompleteModal" class="focus-complete-overlay" style="display: none;">
+                        <div class="focus-complete-card">
+                            <div class="focus-confetti-wrap" id="focusConfettiContainer"></div>
+                            <div class="focus-complete-flash"></div>
+                            <div class="focus-complete-emoji">
+                                <span class="focus-complete-bounce">&#127881;</span>
                             </div>
-                            <div style="color: #64748b; margin-bottom: 20px;" id="focusChecklistSummary">Session checklist: 3/4 completed</div>
-                            <button onclick="completeFocusTaskFromModal()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #22c55e; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 10px;">✓ TASK DONE</button>
-                            <button onclick="startNextFocusTask()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: #3b82f6; color: white; font-weight: 700; font-size: 1em; cursor: pointer; margin-bottom: 15px;">→ NEXT TASK</button>
-                            <div style="display: flex; gap: 10px; justify-content: center;">
-                                <button onclick="takeBreak()" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #94a3b8; font-size: 0.9em; cursor: pointer;">Take a break</button>
-                                <button onclick="backToTriageFromModal()" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #94a3b8; font-size: 0.9em; cursor: pointer;">Back to Triage</button>
+                            <div class="focus-complete-title" id="focusCompleteTitle">CRUSHED IT!</div>
+                            <div class="focus-xp-float" id="focusXpFloat">+20 XP</div>
+                            <div class="focus-complete-stats">
+                                <div class="focus-stat-row" id="focusXpEarned">
+                                    <span class="focus-stat-icon">&#11088;</span> +20 XP earned
+                                </div>
+                                <div class="focus-stat-row" id="focusStreakDisplay">
+                                    <span class="focus-stat-icon">&#128293;</span> Focus streak: 4 sessions
+                                </div>
+                                <div class="focus-stat-row" id="focusTodayProgress">
+                                    <span class="focus-stat-icon">&#128202;</span> Today: 3/12 tasks done
+                                </div>
+                            </div>
+                            <div class="focus-complete-checklist" id="focusChecklistSummary">Session checklist: 3/4 completed</div>
+                            <div class="focus-complete-actions">
+                                <button class="focus-modal-btn primary" onclick="completeFocusTaskFromModal()">TASK DONE</button>
+                                <button class="focus-modal-btn secondary" onclick="startNextFocusTask()">NEXT TASK</button>
+                                <div class="focus-modal-row">
+                                    <button class="focus-modal-btn ghost" onclick="takeBreak()">Take a break</button>
+                                    <button class="focus-modal-btn ghost" onclick="backToTriageFromModal()">Back to Triage</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -15530,7 +17538,16 @@
             if (remainingElement) remainingElement.textContent = tasksRemaining;
             if (availableElement) availableElement.textContent = totalXPAvailable;
             if (doTodayElement) doTodayElement.textContent = doTodayTasks;
-            
+
+            // Update level display
+            const totalXP = commandCenterData?.focusStats?.totalXP || stats.totalXPGained || 0;
+            const currentLevel = Math.floor(totalXP / 500) + 1;
+            const levelBadge = document.getElementById('xpLevelBadge');
+            const levelBar = document.getElementById('xpLevelBarFill');
+            if (levelBadge) levelBadge.textContent = currentLevel;
+            if (levelBar) levelBar.style.width = `${((totalXP % 500) / 500) * 100}%`;
+            if (typeof updateStreakBadge === 'function') updateStreakBadge();
+
             // Update current category XP display
             updateCategoryXPDisplay();
         }
@@ -15645,10 +17662,10 @@
                 </div>
                 
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; flex-wrap: wrap;">
-                    <div id="focusTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: #e6edf3;">
+                    <div id="oneThingTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: #e6edf3;">
                         ${formatFocusTimer(focusModeData.focusTimerSeconds)}
                     </div>
-                    <button id="focusTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                    <button id="oneThingTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                         ${focusModeData.focusTimerRunning ? '⏸ Pause' : '▶ Start Focus'}
                     </button>
                     <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
@@ -16226,6 +18243,50 @@
 
             if (textEl) textEl.textContent = `${completed}/${total} tasks • ${percent}%`;
             if (barEl) barEl.style.width = `${percent}%`;
+
+            // Update progress ring
+            const ringFill = document.getElementById('progressRingFill');
+            const ringPercent = document.getElementById('progressRingPercent');
+            const circumference = 213.6;
+
+            if (ringFill) {
+                const offset = circumference - (percent / 100) * circumference;
+                ringFill.style.strokeDashoffset = offset;
+                ringFill.classList.remove('progress-low', 'progress-mid', 'progress-high', 'progress-complete');
+                if (percent >= 100) ringFill.classList.add('progress-complete');
+                else if (percent >= 75) ringFill.classList.add('progress-high');
+                else if (percent >= 50) ringFill.classList.add('progress-mid');
+                else ringFill.classList.add('progress-low');
+            }
+            if (ringPercent) ringPercent.textContent = `${percent}%`;
+
+            // Enhanced bar color
+            const bar = document.getElementById('overallProgressBar');
+            if (bar) {
+                bar.classList.remove('pf-low', 'pf-mid', 'pf-high', 'pf-complete');
+                if (percent >= 100) bar.classList.add('pf-complete');
+                else if (percent >= 75) bar.classList.add('pf-high');
+                else if (percent >= 50) bar.classList.add('pf-mid');
+                else bar.classList.add('pf-low');
+            }
+
+            // Milestone dots
+            [25, 50, 75].forEach(m => {
+                const dot = document.getElementById(`milestone${m}`);
+                if (dot) {
+                    if (percent >= m) dot.classList.add('reached');
+                    else dot.classList.remove('reached');
+                }
+            });
+
+            // Milestone celebration triggers
+            const prevPercent = parseInt(ringPercent?.dataset?.prev || '0');
+            if (ringPercent) ringPercent.dataset.prev = percent;
+
+            if (prevPercent < 25 && percent >= 25) { if (typeof showCelebration === 'function') showCelebration('small'); if (typeof showToast === 'function') showToast('25% done! Keep going!', '🎯'); }
+            if (prevPercent < 50 && percent >= 50) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('HALFWAY THERE!', '🔥'); }
+            if (prevPercent < 75 && percent >= 75) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('75%! Almost there!', '💪'); }
+            if (prevPercent < 100 && percent >= 100) { if (typeof showCelebration === 'function') showCelebration('big'); if (typeof showToast === 'function') showToast('ALL TASKS DONE!', '🏆'); }
         }
 
         // Get all tasks that should appear in Focus View (doToday = true)
@@ -16470,6 +18531,10 @@
                 } else {
                     showCelebration(task.triageTier === 'lockedIn' ? 'medium' : 'small');
                 }
+
+                if (typeof showCompletionMessage === 'function') showCompletionMessage();
+                document.body.classList.add('screen-pulse');
+                setTimeout(() => document.body.classList.remove('screen-pulse'), 500);
 
                 checkForPerfectDay();
                 updateStreaks();
@@ -17051,35 +19116,34 @@
             const existing = document.getElementById('timePromptModal');
             if (existing) existing.remove();
 
+            const todayTasks = typeof getTodayTriageTasks === 'function' ? getTodayTriageTasks() : [];
+            const completed = todayTasks.filter(t => t.completed).length;
+            const total = todayTasks.length;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
             const modal = document.createElement('div');
-            modal.className = 'time-prompt-modal';
+            modal.className = 'time-prompt-modal-enhanced';
             modal.id = 'timePromptModal';
             modal.innerHTML = `
-                <div class="time-prompt-content">
-                    <div style="font-size: 2em; margin-bottom: 10px;">⏰</div>
-                    <div style="color: #6b7280;">It's ${task.crashOutTime}</div>
-                    <div style="color: #374151; margin-bottom: 5px;">Time to start:</div>
-                    <div class="time-prompt-task">${task.triageTier === 'lockedIn' ? '🔥' : '📋'} ${escapeHtml(task.text)}</div>
-
-                    <div class="time-prompt-buttons">
-                        <button class="primary-btn" onclick="startTaskFromPrompt('${task.id}')">▶ START NOW</button>
+                <div class="time-prompt-content-enhanced">
+                    <div class="nudge-progress">${completed}/${total} done today &middot; ${pct}%</div>
+                    <div style="color: var(--text-muted, #64748b); font-size: 0.9em;">It's ${task.crashOutTime}</div>
+                    <div style="color: var(--text-secondary, #94a3b8); margin-bottom: 4px;">Time to start:</div>
+                    <div class="nudge-task-name">${task.triageTier === 'lockedIn' ? '&#x1F525;' : '&#x1F4CB;'} ${typeof escapeHtml === 'function' ? escapeHtml(task.text) : task.text}</div>
+                    <button class="nudge-start-btn" onclick="startTaskFromPrompt('${task.id}')">&#x25B6; START NOW</button>
+                    <div style="color: var(--text-muted, #64748b); font-size: 0.85em; margin-top: 8px;">Not ready? Push all tasks:</div>
+                    <div class="nudge-push-grid">
+                        <button class="nudge-push-btn" onclick="pushAllTasks(5)">+5m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(10)">+10m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(15)">+15m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(20)">+20m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(30)">+30m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(45)">+45m</button>
+                        <button class="nudge-push-btn" onclick="pushAllTasks(60)">+60m</button>
                     </div>
-
-                    <div style="color: #6b7280; margin: 15px 0;">Not ready? Push all tasks:</div>
-
-                    <div class="time-prompt-buttons">
-                        <button onclick="pushAllTasks(5)">+5m</button>
-                        <button onclick="pushAllTasks(10)">+10m</button>
-                        <button onclick="pushAllTasks(15)">+15m</button>
-                        <button onclick="pushAllTasks(20)">+20m</button>
-                        <button onclick="pushAllTasks(30)">+30m</button>
-                        <button onclick="pushAllTasks(45)">+45m</button>
-                        <button onclick="pushAllTasks(60)">+60m</button>
-                    </div>
-
-                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                        <button onclick="skipTask('${task.id}')" style="color: #94a3b8; border-color: #475569;" title="Dismiss this prompt (task stays in schedule)">Dismiss</button>
-                        <button onclick="removeTaskFromSchedule('${task.id}')" style="color: #dc2626; border-color: #fecaca;" title="Remove task from crash out schedule">Remove</button>
+                    <div class="nudge-dismiss-row">
+                        <button class="nudge-dismiss-btn" onclick="skipTask('${task.id}')">Dismiss</button>
+                        <button class="nudge-remove-btn" onclick="removeTaskFromSchedule('${task.id}')">Remove</button>
                     </div>
                 </div>
             `;
@@ -17466,8 +19530,12 @@
                     progressEl.style.width = `${Math.min(100, percent)}%`;
                     if (gapMinutes < 0) {
                         progressEl.classList.add('overscheduled');
-                    } else {
+                        progressEl.classList.remove('tight');
+                    } else if (gapMinutes < 30) {
+                        progressEl.classList.add('tight');
                         progressEl.classList.remove('overscheduled');
+                    } else {
+                        progressEl.classList.remove('overscheduled', 'tight');
                     }
                 }
 
@@ -17547,13 +19615,17 @@
                 }
 
                 // Insert NOW before the first task that hasn't fully elapsed
+                const taskEndTime = tsd ? new Date(tsd.getTime() + duration * 60 * 1000) : null;
+                const isElapsed = tsd && taskEndTime && taskEndTime < now;
+                const isActiveNow = tsd && tsd <= now && taskEndTime > now;
+
                 if (!_ni && tsd) {
                     const ted = new Date(tsd.getTime() + duration * 60 * 1000);
                     if (now < ted) { _h += _nm; _ni = true; }
                 }
 
                 _h += `
-                    <div class="timeline-task" data-task-id="${task.id}" data-order="${task.crashOutOrder ?? index}"
+                    <div class="timeline-task${isElapsed ? ' elapsed' : ''}${isActiveNow ? ' active-now' : ''}" data-task-id="${task.id}" data-order="${task.crashOutOrder ?? index}"
                          draggable="true"
                          ondragstart="handleTimelineDragStart(event, '${task.id}')"
                          ondragover="handleTimelineDragOver(event)"
@@ -18232,8 +20304,35 @@
             if (circleEl) {
                 const totalSeconds = focusTimerDuration * 60;
                 const progress = 1 - (focusTimerSecondsRemaining / totalSeconds);
-                const circumference = 2 * Math.PI * 90; // r=90
+                const circumference = 879.6; // 2*PI*140
                 circleEl.style.strokeDashoffset = circumference * progress;
+            }
+
+            // Update timer container state classes for CSS color transitions
+            const timerContainer = document.getElementById('focusTimerContainer');
+            if (timerContainer) {
+                const pctRemaining = focusTimerSecondsRemaining / (focusTimerDuration * 60);
+                timerContainer.classList.toggle('running', focusTimerRunning);
+                timerContainer.classList.toggle('warning', pctRemaining <= 0.33 && pctRemaining > 0.1);
+                timerContainer.classList.toggle('critical', pctRemaining <= 0.1);
+
+                // Switch SVG gradient
+                const circle = document.getElementById('focusTimerCircle');
+                if (circle) {
+                    if (pctRemaining <= 0.1) {
+                        circle.setAttribute('stroke', 'url(#timerGradientRed)');
+                    } else if (pctRemaining <= 0.33) {
+                        circle.setAttribute('stroke', 'url(#timerGradientYellow)');
+                    } else {
+                        circle.setAttribute('stroke', 'url(#timerGradientGreen)');
+                    }
+                }
+            }
+
+            // Show/hide paused label
+            const pausedLabel = document.getElementById('focusPausedLabel');
+            if (pausedLabel) {
+                pausedLabel.style.display = (!focusTimerRunning && focusTimerSecondsRemaining < focusTimerDuration * 60) ? 'block' : 'none';
             }
 
             // Update button visibility
@@ -18294,17 +20393,15 @@
             focusTimerDuration = minutes;
             focusTimerSecondsRemaining = minutes * 60;
 
-            // Update button styling - dark theme
+            // Update button styling - toggle active class
+            const btn15 = document.getElementById('focus15Btn');
             const btn25 = document.getElementById('focus25Btn');
             const btn50 = document.getElementById('focus50Btn');
-            if (btn25) {
-                btn25.style.background = minutes === 25 ? 'rgba(59, 130, 246, 0.2)' : 'transparent';
-                btn25.style.color = minutes === 25 ? '#f1f5f9' : '#94a3b8';
-            }
-            if (btn50) {
-                btn50.style.background = minutes === 50 ? 'rgba(59, 130, 246, 0.2)' : 'transparent';
-                btn50.style.color = minutes === 50 ? '#f1f5f9' : '#94a3b8';
-            }
+            [btn15, btn25, btn50].forEach(btn => {
+                if (btn) btn.classList.remove('active');
+            });
+            const activeBtn = minutes === 15 ? btn15 : minutes === 25 ? btn25 : btn50;
+            if (activeBtn) activeBtn.classList.add('active');
 
             if (commandCenterData.currentSession) {
                 commandCenterData.currentSession.timerMinutes = minutes;
@@ -18336,13 +20433,47 @@
             if (modal) {
                 modal.style.display = 'flex';
 
+                // Random completion message
+                const FOCUS_COMPLETE_MESSAGES = [
+                    'CRUSHED IT!', 'LOCKED IN!', 'BEAST MODE!', 'UNSTOPPABLE!',
+                    'LET\'S GO!', 'ON FIRE!', 'NAILED IT!', 'PURE FOCUS!'
+                ];
+                const titleEl = document.getElementById('focusCompleteTitle');
+                if (titleEl) {
+                    titleEl.textContent = FOCUS_COMPLETE_MESSAGES[Math.floor(Math.random() * FOCUS_COMPLETE_MESSAGES.length)];
+                }
+
+                // Trigger CSS confetti
+                const confettiWrap = document.getElementById('focusConfettiContainer');
+                if (confettiWrap) {
+                    confettiWrap.innerHTML = '';
+                    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
+                    const shapes = ['', 'circle', 'rect', 'diamond'];
+                    for (let i = 0; i < 40; i++) {
+                        const p = document.createElement('div');
+                        p.className = `focus-confetti-particle ${shapes[Math.floor(Math.random() * shapes.length)]}`;
+                        p.style.left = `${Math.random() * 100}%`;
+                        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        p.style.setProperty('--fall-duration', `${1.5 + Math.random() * 2}s`);
+                        p.style.setProperty('--fall-delay', `${Math.random() * 0.4}s`);
+                        confettiWrap.appendChild(p);
+                    }
+                }
+
+                // XP float display
+                const xpFloat = document.getElementById('focusXpFloat');
+                if (xpFloat) {
+                    const xpAmount = commandCenterData?.focusStats?.lastXPGained || 20;
+                    xpFloat.textContent = `+${xpAmount} XP`;
+                }
+
                 // Update modal content
                 const xpEl = document.getElementById('focusXpEarned');
                 const streakEl = document.getElementById('focusStreakDisplay');
                 const progressEl = document.getElementById('focusTodayProgress');
                 const checklistEl = document.getElementById('focusChecklistSummary');
 
-                if (xpEl) xpEl.textContent = '+20 XP';
+                if (xpEl) xpEl.textContent = `+${commandCenterData?.focusStats?.lastXPGained || 20} XP`;
                 if (streakEl) streakEl.textContent = `🔥 Focus streak: ${commandCenterData.focusStats?.focusStreak || 1} sessions`;
 
                 const todayTasks = getTodayTriageTasks();
@@ -18504,6 +20635,7 @@
 
         function awardCommandCenterXP(amount, reason) {
             commandCenterData.focusStats.totalXP = (commandCenterData.focusStats.totalXP || 0) + amount;
+            commandCenterData.focusStats.lastXPGained = amount;
 
             // Also add to main stats
             if (typeof stats !== 'undefined' && stats) {
@@ -18511,6 +20643,42 @@
             }
 
             showToast(`+${amount} XP (${reason})`, '⭐');
+
+            // Floating XP text
+            const xpContainer = document.querySelector('.xp-display-enhanced');
+            if (xpContainer) {
+                const floater = document.createElement('div');
+                floater.className = 'xp-float';
+                floater.textContent = `+${amount}`;
+                xpContainer.appendChild(floater);
+                setTimeout(() => floater.remove(), 1300);
+            }
+
+            // Rolling counter pop
+            const counter = document.getElementById('totalXPGained');
+            if (counter) {
+                counter.classList.add('animating');
+                setTimeout(() => counter.classList.remove('animating'), 300);
+            }
+
+            // Level check (500 XP per level)
+            const totalXP = commandCenterData.focusStats.totalXP || 0;
+            const newLevel = Math.floor(totalXP / 500) + 1;
+            const prevLevel = Math.floor((totalXP - amount) / 500) + 1;
+            const levelBadge = document.getElementById('xpLevelBadge');
+            const levelBar = document.getElementById('xpLevelBarFill');
+            if (levelBadge) levelBadge.textContent = newLevel;
+            if (levelBar) levelBar.style.width = `${((totalXP % 500) / 500) * 100}%`;
+
+            if (newLevel > prevLevel) {
+                const overlay = document.createElement('div');
+                overlay.className = 'level-up-overlay';
+                overlay.innerHTML = `<div class="level-up-text">LEVEL UP!</div><div class="level-number">${newLevel}</div>`;
+                document.body.appendChild(overlay);
+                if (typeof showCelebration === 'function') showCelebration('big');
+                setTimeout(() => overlay.remove(), 2200);
+            }
+
             saveData();
         }
 
@@ -18533,6 +20701,55 @@
             }
 
             setTimeout(() => container.remove(), 3000);
+        }
+
+        // Completion message rotation
+        const COMPLETION_MESSAGES = [
+            'Crushed it!', 'Locked in!', 'One down!', 'Lets go!',
+            'On fire!', 'Beast mode!', 'Unstoppable!', 'Nailed it!',
+            'Money!', 'Easy work!', 'Too smooth!', 'No sweat!'
+        ];
+
+        function showCompletionMessage() {
+            const msg = document.createElement('div');
+            msg.className = 'completion-message';
+            msg.textContent = COMPLETION_MESSAGES[Math.floor(Math.random() * COMPLETION_MESSAGES.length)];
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+
+        function updateStreakBadge() {
+            const badge = document.getElementById('streakBadge');
+            const countEl = document.getElementById('streakCount');
+            if (!badge || !countEl) return;
+
+            const streak = commandCenterData?.focusStats?.dailyStreak || 0;
+            countEl.textContent = streak;
+
+            badge.classList.remove('streak-cold', 'streak-warm', 'streak-hot', 'streak-blazing', 'streak-at-risk');
+
+            if (streak >= 8) badge.classList.add('streak-blazing');
+            else if (streak >= 4) badge.classList.add('streak-hot');
+            else if (streak >= 1) badge.classList.add('streak-warm');
+            else badge.classList.add('streak-cold');
+
+            const hour = new Date().getHours();
+            const todayTasks = typeof getTodayTriageTasks === 'function' ? getTodayTriageTasks() : [];
+            const completedToday = todayTasks.some(t => t.completed);
+            if (hour >= 21 && !completedToday && streak > 0) {
+                badge.classList.add('streak-at-risk');
+            }
+        }
+
+        function adjustFocusTimer(seconds) {
+            if (typeof focusTimerSecondsRemaining !== 'undefined') {
+                focusTimerSecondsRemaining = Math.max(0, focusTimerSecondsRemaining + seconds);
+                if (typeof updateFocusTimerDisplay === 'function') updateFocusTimerDisplay();
+            }
+        }
+
+        function skipFocusTask() {
+            if (typeof exitFocusMode === 'function') exitFocusMode();
         }
 
         // ==================== ROLLOVER LOGIC ====================
@@ -18594,12 +20811,25 @@
         function showPerfectDayBadge() {
             const badge = document.createElement('div');
             badge.className = 'perfect-day-badge';
+
+            // Add background flash overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'perfect-day-overlay';
+            document.body.appendChild(overlay);
+
+            const todayTasks = typeof getTodayTriageTasks === 'function' ? getTodayTriageTasks() : [];
+
             badge.innerHTML = `
-                <div class="trophy">🏆</div>
+                <div class="trophy-glow"></div>
+                <div class="trophy">&#x1F3C6;</div>
                 <div class="text">PERFECT DAY!</div>
+                <div class="perfect-day-stats">${todayTasks.length} tasks completed &middot; +200 XP</div>
             `;
             document.body.appendChild(badge);
-            setTimeout(() => badge.remove(), 2500);
+            setTimeout(() => {
+                badge.remove();
+                overlay.remove();
+            }, 3500);
         }
 
         // Update streaks
@@ -18639,6 +20869,8 @@
                     localStorage.setItem('lastLockedInComplete', today);
                 }
             }
+
+            if (typeof updateStreakBadge === 'function') updateStreakBadge();
 
             saveData();
         }
