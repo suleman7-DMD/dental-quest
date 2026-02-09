@@ -7528,7 +7528,7 @@
                         </div>
 
                         <!-- Overscheduled Warning (hidden by default) -->
-                        <div class="overscheduled-warning" id="overscheduledWarning" style="display: none;">
+                        <div class="overscheduled-warning hidden" id="overscheduledWarning">
                             <span class="warning-icon">⚠️</span>
                             <span class="warning-text">Tasks end <strong id="overByAmount">1.5h</strong> into wind-down hour! Consider shortening or moving tasks.</span>
                             <button class="btn-dismiss" onclick="dismissOverscheduledWarning()">Dismiss</button>
@@ -17371,7 +17371,9 @@
                 return;
             }
 
+            commandCenterData.crashOut.warningDismissed = false;
             commandCenterData.crashOut.sleepTime = newSleep.toISOString();
+            recalculateScheduledTimes();
             saveData();
             renderCrashOutTimeline();
 
@@ -17849,23 +17851,38 @@
         // Move task to bottom of schedule (last position)
         function moveTaskToBottom(taskId) {
             console.log('⬇️⬇️ moveTaskToBottom called with taskId:', taskId);
+            if (isReorderingLocked) return;
+            isReorderingLocked = true;
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             console.log('📋 scheduledTasks count:', scheduledTasks.length);
             if (scheduledTasks.length < 2) {
-                console.log('⚠️ Not enough tasks to reorder');
+                isReorderingLocked = false;
                 return;
             }
 
-            const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
-            console.log('📍 Current index:', currentIndex);
-            if (currentIndex === scheduledTasks.length - 1) {
-                console.log('⚠️ Already at bottom');
+            const taskIds = scheduledTasks.map(t => t.id);
+            const idx = taskIds.indexOf(taskId);
+            if (idx === -1 || idx === taskIds.length - 1) {
+                isReorderingLocked = false;
                 return;
             }
 
-            const lastTaskId = scheduledTasks[scheduledTasks.length - 1].id;
-            console.log('🔄 Moving to position of last task:', lastTaskId);
-            moveTaskToPosition(taskId, lastTaskId);
+            try {
+                taskIds.splice(idx, 1);
+                taskIds.push(taskId);
+                taskIds.forEach((id, i) => {
+                    tasks[id] = { ...tasks[id], crashOutOrder: i };
+                });
+                recalculateScheduledTimes();
+                renderCrashOutMode();
+                saveData();
+                showToast('Task moved to bottom!', '⬇️');
+            } catch (e) {
+                console.error('moveTaskToBottom error:', e);
+                showToast('Error moving task', '❌');
+            } finally {
+                setTimeout(() => { isReorderingLocked = false; }, 200);
+            }
         }
 
         // Set exact position (1-indexed for user-friendliness)
