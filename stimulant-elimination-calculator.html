@@ -3630,6 +3630,13 @@
             return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
         }
 
+        // Day-aware time formatter: appends "(tomorrow)" when clearance is next day
+        function minutesToTimeWithDay(mins) {
+            const timeStr = minutesToTime(mins);
+            if (mins >= 1440) return timeStr + ' (tomorrow)';
+            return timeStr;
+        }
+
         function minutesToTimeValue(mins) {
             const hours = Math.floor(mins / 60) % 24;
             const minutes = Math.floor(mins % 60);
@@ -3898,13 +3905,26 @@
                 }
 
                 if (saunaTaken) {
-                    if (saunaTime >= fivePM) {
-                        // Evening sauna - maximum parasympathetic benefit
-                        threshold += 2.0;
+                    // Calculate hours since sauna for time-based decay
+                    // Parasympathetic rebound peaks ~1-2h post-sauna, decays over ~4h
+                    let hoursSinceSauna;
+                    if (daysDiff === 0) {
+                        hoursSinceSauna = (now - saunaTime) / 60;
                     } else {
-                        // Earlier sauna - reduced benefit (body re-arouses)
-                        threshold += 1.0;
+                        // Cross-midnight: sauna was yesterday
+                        hoursSinceSauna = ((24 * 60 - saunaTime) + now) / 60;
                     }
+
+                    // Peak for first 2 hours, then linear decay over next 4 hours (6h total)
+                    const peakDuration = 2;
+                    const decayDuration = 4;
+                    let decayFactor = 1.0;
+                    if (hoursSinceSauna > peakDuration) {
+                        decayFactor = Math.max(0, 1.0 - (hoursSinceSauna - peakDuration) / decayDuration);
+                    }
+
+                    const baseBonus = saunaTime >= fivePM ? 2.0 : 1.0;
+                    threshold += baseBonus * decayFactor;
                 }
             }
             
@@ -4119,40 +4139,70 @@
         }
 
         // Find when amphetamine clears threshold
+        // FIX: DR-aware search — binary search alone assumes monotonic decrease,
+        // but XR delayed-release at T+4h creates non-monotonic spikes.
+        // After finding initial clearance, verify load stays below threshold at ALL future DR release times.
         function findAmpClearTime() {
-            const threshold = getEffectiveThreshold(); // Use effective threshold with sleep debt
+            const threshold = getEffectiveThreshold();
 
-            // FIX: Use getCount() for object
             if (getCount(state.medications) === 0) return null;
 
-            // Binary search from now - extend to 48 hours in all-nighter mode
             const now = getCurrentMinutes();
-            let low = now;
             const maxSearchHours = state.allNighterMode ? 48 : 36;
-            let high = now + maxSearchHours * 60;
+            const maxTime = now + maxSearchHours * 60;
 
-            // First check if already below threshold
-            // Also check T+4h to catch delayed-release XR that hasn't entered bloodstream yet
-            if (calculateAmpLoad(now) < threshold && calculateAmpLoad(now + 240) < threshold) {
-                return now;
-            }
+            // Collect ALL future DR release times (XR releases 50% at T+4h)
+            const drReleaseTimes = [];
+            const today = getLocalDateString();
+            getValues(state.medications).forEach(med => {
+                const baseDoseTime = timeToMinutes(med.time);
+                const medDate = med.date || today;
+                const todayDate = parseLocalDate(today);
+                const doseDate = parseLocalDate(medDate);
+                const daysDiff = Math.round((todayDate - doseDate) / (1000 * 60 * 60 * 24));
+                if (daysDiff < 0 || daysDiff > 3) return;
+                if (daysDiff > 1 && !state.allNighterMode) return;
+                const effectiveDoseTime = baseDoseTime - (daysDiff * 24 * 60);
+                const drTime = effectiveDoseTime + 240;
+                if (drTime > now) drReleaseTimes.push(drTime);
+            });
+            drReleaseTimes.sort((a, b) => a - b);
 
-            while (high - low > 1) {
-                const mid = Math.floor((low + high) / 2);
-                if (calculateAmpLoad(mid) > threshold) {
-                    low = mid;
-                } else {
-                    high = mid;
+            // Check if already below threshold now AND at all future DR release points
+            if (calculateAmpLoad(now) < threshold) {
+                let allClear = true;
+                for (const drTime of drReleaseTimes) {
+                    if (calculateAmpLoad(drTime) >= threshold) { allClear = false; break; }
                 }
+                if (allClear) return now;
             }
 
-            // Verify drugs actually cleared at the found time
-            // If still above threshold at max search, return max (indicates won't clear in window)
-            if (calculateAmpLoad(high) >= threshold) {
-                return high; // Still above threshold - return max search time
+            // Iterative: binary search, then verify against DR spikes
+            let searchStart = now;
+            let clearTime = maxTime;
+
+            for (let iteration = 0; iteration < 10; iteration++) {
+                let low = searchStart;
+                let high = maxTime;
+                while (high - low > 1) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (calculateAmpLoad(mid) > threshold) { low = mid; } else { high = mid; }
+                }
+                clearTime = high;
+
+                // Verify: no DR spike after clearTime pushes load back above threshold
+                let reSpike = false;
+                for (const drTime of drReleaseTimes) {
+                    if (drTime > clearTime && calculateAmpLoad(drTime) >= threshold) {
+                        searchStart = drTime; // Restart search from DR spike
+                        reSpike = true;
+                        break;
+                    }
+                }
+                if (!reSpike) break;
             }
 
-            return high;
+            return (calculateAmpLoad(clearTime) >= threshold) ? maxTime : clearTime;
         }
 
         // Find when caffeine clears threshold
@@ -4205,24 +4255,30 @@
             // NO modifier can push sleep time earlier than this
             let pharmacokineticFloor = now;
             
-            if (ampClear !== null && ampClear > pharmacokineticFloor) {
-                pharmacokineticFloor = ampClear;
-                sleepTime = ampClear;
+            // FIX: Always add substances as blockers when above threshold (even if not the bottleneck)
+            // so users see both amp AND caffeine in the blocking factors list
+            if (ampClear !== null && ampClear > now) {
                 blockingFactors.push({
                     name: 'Amphetamine',
                     clearsAt: ampClear,
                     type: 'drug'
                 });
+                if (ampClear > pharmacokineticFloor) {
+                    pharmacokineticFloor = ampClear;
+                    sleepTime = ampClear;
+                }
             }
-            
-            if (caffClear !== null && caffClear > pharmacokineticFloor) {
-                pharmacokineticFloor = caffClear;
-                sleepTime = caffClear;
+
+            if (caffClear !== null && caffClear > now) {
                 blockingFactors.push({
                     name: 'Caffeine',
                     clearsAt: caffClear,
                     type: 'drug'
                 });
+                if (caffClear > pharmacokineticFloor) {
+                    pharmacokineticFloor = caffClear;
+                    sleepTime = caffClear;
+                }
             }
             
             // =============================================
@@ -4395,9 +4451,11 @@
             }
             
             // Check both Wake Maintenance Zone AND Forbidden Zone
-            if (normalizedFinalSleep >= wakeMaintenanceStart && normalizedFinalSleep < forbiddenZone.end) {
+            // FIX: Gate on applyCircadianConstraints (same as Phase 2) to prevent
+            // overriding pharmacokinetic floor when clearance is >18h away
+            if (applyCircadianConstraints && normalizedFinalSleep >= wakeMaintenanceStart && normalizedFinalSleep < forbiddenZone.end) {
                 sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
-                
+
                 // Add blocking factor if not already present
                 const hasCircadianBlocker = blockingFactors.some(f => f.type === 'circadian');
                 if (!hasCircadianBlocker) {
@@ -4409,7 +4467,41 @@
                     });
                 }
             }
-            
+
+            // =============================================
+            // PHASE 6: PHARMACOKINETIC FLOOR ENFORCEMENT
+            // =============================================
+            // Circadian adjustments must NEVER push sleep time before drug clearance.
+            // Compare in normalized space to handle midnight wrapping correctly.
+            const wakeMin = timeToMinutes(state.wakeTime);
+            let sleepNorm = sleepTime < wakeMin ? sleepTime + 1440 : sleepTime;
+            let floorNorm = pharmacokineticFloor < wakeMin ? pharmacokineticFloor + 1440 : pharmacokineticFloor;
+            if (sleepNorm < floorNorm) {
+                sleepTime = pharmacokineticFloor >= 1440 ? pharmacokineticFloor - 1440 : pharmacokineticFloor;
+            }
+
+            // =============================================
+            // PHASE 7: FINAL DRUG VERIFICATION
+            // =============================================
+            // Confirm both substances are actually below threshold at the predicted sleep time.
+            // Uses raw minutes for accurate load calculation.
+            const verifyTime = sleepTime < getCurrentMinutes() ? sleepTime + 1440 : sleepTime;
+            if (calculateAmpLoad(verifyTime) >= effectiveThreshold) {
+                // Drugs haven't cleared — fall back to pharmacokinetic floor
+                sleepTime = pharmacokineticFloor >= 1440 ? pharmacokineticFloor - 1440 : pharmacokineticFloor;
+            }
+            const caffThresh = state.settings.caffThreshold;
+            if (calculateCaffLoad(verifyTime) >= caffThresh) {
+                const caffClearCheck = findCaffClearTime();
+                if (caffClearCheck !== null) {
+                    const caffClearNorm = caffClearCheck < wakeMin ? caffClearCheck + 1440 : caffClearCheck;
+                    const curSleepNorm = sleepTime < wakeMin ? sleepTime + 1440 : sleepTime;
+                    if (caffClearNorm > curSleepNorm) {
+                        sleepTime = caffClearCheck >= 1440 ? caffClearCheck - 1440 : caffClearCheck;
+                    }
+                }
+            }
+
             // Sort blocking factors by clear time
             blockingFactors.sort((a, b) => {
                 let aTime = a.clearsAt || 0;
@@ -5876,7 +5968,7 @@
                     let html = realBlockers.map(f => `
                     <div class="blocking-factor">
                         <span>${f.name}${f.note ? ` <span style="font-size: 0.8em; color: #b0b8c4;">(${f.note})</span>` : ''}</span>
-                        <span class="clears-at">Clears at ${minutesToTime(f.clearsAt % (24*60))}</span>
+                        <span class="clears-at">Clears at ${minutesToTimeWithDay(f.clearsAt)}</span>
                     </div>
                     `).join('');
                     
@@ -6287,7 +6379,9 @@
             const fzStart = forbiddenZone.start > 24 * 60 ? forbiddenZone.start - 24 * 60 : forbiddenZone.start;
             const fzEnd = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
             
-            if (fzStart > now) {
+            // FIX: Only show second wind if it occurs before predicted sleep time
+            const sleepTimeNorm = sleepTime > 24 * 60 ? sleepTime - 24 * 60 : sleepTime;
+            if (fzStart > now && fzStart < sleepTimeNorm) {
                 feelings.push({
                     time: fzStart,
                     emoji: '⚠️',
@@ -6296,10 +6390,10 @@
                     color: '#ef4444'
                 });
             }
-            
+
             // Sleep Gate opening
             const sgStart = sleepGate.start > 24 * 60 ? sleepGate.start - 24 * 60 : sleepGate.start;
-            if (sgStart > now) {
+            if (sgStart > now && sgStart < sleepTimeNorm) {
                 feelings.push({
                     time: sgStart,
                     emoji: '🌙',
@@ -10580,7 +10674,21 @@
                 }
 
                 if (saunaTaken) {
-                    saunaBonus = saunaTime >= fivePM ? 2.0 : 1.0;
+                    // Mirror decay logic from getEffectiveThreshold()
+                    let hoursSinceSauna;
+                    if (daysDiff === 0) {
+                        hoursSinceSauna = (nowMins - saunaTime) / 60;
+                    } else {
+                        hoursSinceSauna = ((24 * 60 - saunaTime) + nowMins) / 60;
+                    }
+                    const peakDuration = 2;
+                    const decayDuration = 4;
+                    let decayFactor = 1.0;
+                    if (hoursSinceSauna > peakDuration) {
+                        decayFactor = Math.max(0, 1.0 - (hoursSinceSauna - peakDuration) / decayDuration);
+                    }
+                    const baseBonus = saunaTime >= fivePM ? 2.0 : 1.0;
+                    saunaBonus = baseBonus * decayFactor;
                 }
             }
             
@@ -10611,7 +10719,23 @@
                     debtDetails.push(`${dayName}: No data (assumed 8h)`);
                 }
             }
-            
+
+            // Compute raw weighted deficit for display (independent of hyperarousal)
+            let rawWeightedDeficit = todayDeficit; // today at 100% weight
+            for (let i = 1; i <= 2; i++) {
+                const date2 = new Date(today);
+                date2.setDate(date2.getDate() - i);
+                const dateStr2 = getLocalDateString(date2);
+                const entry2 = state.sleepHistory[dateStr2];
+                if (entry2) {
+                    let hs = 8;
+                    if (typeof entry2 === 'number') hs = entry2;
+                    else if (typeof entry2 === 'object' && entry2.hoursSlept !== undefined) hs = entry2.hoursSlept;
+                    if (isNaN(hs) || hs < 0) hs = 8;
+                    rawWeightedDeficit += Math.max(0, 8 - hs) * weights[i - 1];
+                }
+            }
+
             // Build caffeine details
             let caffeineDetails = [];
             if (getCount(state.caffeine) === 0) {
@@ -10735,7 +10859,7 @@
                 if (f.type === 'nicotine-advisory') {
                     blockingDetails.push(`• ${f.name}: ${f.impact} impact (quality modifier, not blocker)`);
                 } else {
-                    const clearTime = f.clearsAt !== null ? minutesToTime(f.clearsAt % (24*60)) : 'N/A';
+                    const clearTime = f.clearsAt !== null ? minutesToTimeWithDay(f.clearsAt) : 'N/A';
                     blockingDetails.push(`• ${f.name}: Clears at ${clearTime}${f.note ? ' - ' + f.note : ''}`);
                 }
             });
@@ -10808,12 +10932,12 @@
   Yesterday's medications: ${yesterdayMeds.length} doses
   Yesterday's caffeine: ${yesterdayCaff.length} entries
 
-  GHOST LOAD (Remaining from yesterday):
-  • Amphetamine: ${ghostAmpTotal.toFixed(1)}mg still active
-  • Caffeine: ${ghostCaffTotal.toFixed(1)}mg still active
+  GHOST LOAD (Already included in Current Load below):
+  • Amphetamine: ~${ghostAmpTotal.toFixed(1)}mg from yesterday (of ${ampLoad.toFixed(1)}mg total)
+  • Caffeine: ~${ghostCaffTotal.toFixed(1)}mg from yesterday (of ${caffLoad.toFixed(0)}mg total)
 
-  NOTE: These residual amounts are ADDED to today's calculations.
-  The sleep prediction accounts for this 48-hour cumulative load.
+  NOTE: These values are ALREADY FACTORED INTO all calculations.
+  Today's new doses contribute: ~${Math.max(0, ampLoad - ghostAmpTotal).toFixed(1)}mg amp, ~${Math.max(0, caffLoad - ghostCaffTotal).toFixed(0)}mg caffeine.
 
 `;
             }
@@ -10865,7 +10989,7 @@ ${allNighterSection}
   ROLLING 3-DAY SLEEP DEBT CALCULATION:
   ${debtDetails.join('\n  ')}
   ─────────────────────────────────
-  Total weighted deficit: ${(sleepDebtBonus / 1.0).toFixed(1)}h → +${sleepDebtBonus.toFixed(1)}mg threshold bonus
+  Total weighted deficit: ${rawWeightedDeficit.toFixed(1)}h${isHyperarousalMode() ? ' → ⚠️ HYPERAROUSAL ACTIVE (< 4h sleep) → bonus NEGATED → +0.0mg' : ` → +${sleepDebtBonus.toFixed(1)}mg threshold bonus`}
   
   HOW THIS IS USED:
   → Sleep debt increases adenosine (Process S)
@@ -10947,9 +11071,9 @@ ${allNighterSection}
 ┌─────────────────────────────────────────────────────────────┐
 │ 9. WHAT YOU'LL FEEL TONIGHT                                 │
 └─────────────────────────────────────────────────────────────┘
-  ${crashTime ? `• Crash begins: ~${minutesToTime(crashTime > 24*60 ? crashTime - 24*60 : crashTime)} (amphetamine dropping fast)` : '• No medication crash expected'}
+  ${crashTime && (crashTime < sleepTime || crashTime - 1440 < sleepTime) ? `• Crash begins: ~${minutesToTime(crashTime > 24*60 ? crashTime - 24*60 : crashTime)} (amphetamine dropping fast)` : '• No medication crash expected before sleep'}
   • Sleep onset: ${minutesToTime(sleepTimeDisplay)}
-  • Second wind: ${minutesToTime((forbiddenZone.end + 30) > 24*60 ? (forbiddenZone.end + 30) - 24*60 : (forbiddenZone.end + 30))} (circadian alerting may cause brief wakefulness)
+  ${(() => { const fzStartNorm = forbiddenZone.start > 24*60 ? forbiddenZone.start - 24*60 : forbiddenZone.start; return fzStartNorm < sleepTimeDisplay || (fzStartNorm > 20*60 && sleepTimeDisplay < 6*60) ? `• Second wind: ~${minutesToTime(fzStartNorm)} (circadian alerting peak - may feel awake despite exhaustion)` : '• Second wind: occurs after predicted sleep onset'; })()}
 
 ═══════════════════════════════════════════════════════════════
 FINAL PROJECTED SLEEP WINDOW: ${minutesToTime(sleepTimeDisplay)}
