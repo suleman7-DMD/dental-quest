@@ -9871,9 +9871,9 @@
 
 /* ==================== RESPONSIVE FIXES ==================== */
 
-/* Touch targets minimum */
+/* Touch targets minimum - exclude task action buttons (handled separately) */
 @media (hover: none), (pointer: coarse) {
-    button, [role="button"], .nav-link, .data-btn, .category-tab,
+    .nav-link, .data-btn,
     .view-toggle-btn, .stat-card.clickable-card, .action-checkbox,
     .fin-add-btn, .fin-update-btn, .triage-action-btn {
         min-height: 44px;
@@ -9892,20 +9892,214 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     .drag-handle { display: none !important; }
 }
 
-/* Mobile Full View improvements */
-@media (max-width: 768px) {
-    .category-tab {
-        min-height: 44px !important;
-        padding: 10px 16px !important;
-        font-size: 0.85em !important;
-    }
-}
-
 /* Stat card label readability */
 @media (max-width: 480px) {
     .stat-card h3 { font-size: 0.7em; }
     .calendar-day-note { font-size: 0.7em; }
     .calendar-day-header { font-size: 0.7em; }
+}
+
+/* ==================== FULL VIEW MOBILE OVERHAUL ==================== */
+@media (max-width: 768px) {
+    /* Container: full width, no overflow clipping */
+    #fullViewContainer {
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    #fullViewContainer .main-content {
+        display: block !important;
+        width: 100%;
+        grid-template-columns: 1fr !important;
+    }
+
+    #fullViewContainer .tasks-section {
+        padding: 10px 6px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Category tabs: horizontal scroll pills */
+    #fullViewContainer .category-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+        margin-bottom: 10px;
+        padding: 4px 2px 8px;
+        scrollbar-width: none;
+    }
+    #fullViewContainer .category-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    #fullViewContainer .category-tab {
+        flex-shrink: 0;
+        padding: 8px 12px;
+        font-size: 0.78em;
+        border-radius: 20px;
+        white-space: nowrap;
+        min-height: 34px;
+    }
+
+    /* Add task form: stack vertically */
+    #fullViewContainer .add-task-form {
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    #fullViewContainer .add-task-input {
+        width: 100%;
+        min-width: 0;
+        font-size: 16px;
+        padding: 10px 12px;
+        box-sizing: border-box;
+    }
+    #fullViewContainer .add-task-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    /* Category XP bar: compact */
+    #fullViewContainer .category-xp-bar {
+        padding: 8px 10px;
+        margin-bottom: 10px;
+    }
+
+    /* Task list: tighter gaps */
+    #fullViewContainer .task-list {
+        gap: 6px;
+    }
+
+    /* TASK ITEMS: flex-wrap so buttons flow to next line */
+    #fullViewContainer .task-item {
+        padding: 10px 8px;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        border-radius: 8px;
+        overflow: visible;
+    }
+
+    /* Disable hover lift on mobile */
+    #fullViewContainer .task-item:hover {
+        transform: none !important;
+    }
+
+    /* Checkbox: compact visual, full touch target via padding */
+    #fullViewContainer .task-item .task-checkbox {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        min-height: 26px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    /* Task text: fills remaining width on first row */
+    #fullViewContainer .task-item .task-text {
+        flex: 1 1 0;
+        min-width: 0;
+        font-size: 0.88em;
+        line-height: 1.35;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Size icon: compact inline */
+    #fullViewContainer .task-item > span[title] {
+        font-size: 0.7em;
+        flex-shrink: 0;
+    }
+
+    /* Category label */
+    #fullViewContainer .task-item .category-label {
+        font-size: 0.6em;
+        padding: 1px 5px;
+        flex-shrink: 0;
+    }
+
+    /* Today badge */
+    #fullViewContainer .task-item .today-badge {
+        font-size: 0.6em;
+        padding: 1px 5px;
+    }
+
+    /* ACTION BUTTONS: compact, flow to second row via flex-wrap */
+    #fullViewContainer .task-item .do-today-btn {
+        padding: 4px 8px;
+        font-size: 0.68em;
+        min-height: 28px;
+        min-width: auto;
+        border-radius: 6px;
+        order: 10;
+    }
+    #fullViewContainer .task-item .task-timer-btn {
+        padding: 4px 8px;
+        font-size: 0.68em;
+        min-height: 28px;
+        min-width: auto;
+        border-radius: 6px;
+        order: 11;
+    }
+    #fullViewContainer .task-item .task-delete-btn {
+        padding: 4px 8px;
+        font-size: 0.68em;
+        min-height: 28px;
+        min-width: auto;
+        border-radius: 6px;
+        order: 12;
+    }
+
+    /* Force buttons to wrap to their own row */
+    #fullViewContainer .task-item .do-today-btn,
+    #fullViewContainer .task-item .task-timer-btn:first-of-type {
+        margin-left: 0;
+    }
+
+    /* Timer section: hide on mobile to save space */
+    #fullViewContainer .timer-section {
+        display: none;
+    }
+}
+
+/* Extra small screens (iPhone SE, older models) */
+@media (max-width: 420px) {
+    #fullViewContainer .tasks-section {
+        padding: 8px 4px;
+    }
+    #fullViewContainer .category-tab {
+        padding: 6px 10px;
+        font-size: 0.72em;
+        min-height: 30px;
+    }
+    #fullViewContainer .task-item {
+        padding: 8px 6px;
+        gap: 5px;
+    }
+    #fullViewContainer .task-item .task-checkbox {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        min-height: 22px;
+    }
+    #fullViewContainer .task-item .task-text {
+        font-size: 0.82em;
+    }
+    #fullViewContainer .task-item .do-today-btn,
+    #fullViewContainer .task-item .task-timer-btn,
+    #fullViewContainer .task-item .task-delete-btn {
+        padding: 3px 6px;
+        font-size: 0.65em;
+        min-height: 26px;
+    }
 }
 
     </style>
