@@ -5618,8 +5618,8 @@
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
             border-radius: 10px !important;
-            padding: 12px !important;
-            min-height: 300px !important;
+            padding: 8px !important;
+            min-height: 180px !important;
             max-height: 550px !important;
             display: flex !important;
             flex-direction: column !important;
@@ -6101,6 +6101,35 @@
             color: var(--text-primary) !important;
         }
 
+        .sleep-time-adjuster {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .btn-adjust-sleep {
+            background: transparent !important;
+            border: 1px solid #334155 !important;
+            color: #94a3b8 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            font-size: 12px !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        .btn-adjust-sleep:hover {
+            background: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+
+        .current-sleep-label {
+            color: #f1f5f9 !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            padding: 0 8px !important;
+        }
+
         .time-summary {
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
@@ -6216,7 +6245,7 @@
 
         .timeline-task {
             position: relative !important;
-            margin-bottom: 6px !important;
+            margin-bottom: 4px !important;
         }
 
         .task-time-marker {
@@ -6237,10 +6266,10 @@
             background: var(--bg-card) !important;
             border: 1px solid var(--border) !important;
             border-radius: 6px !important;
-            padding: 6px 10px !important;
+            padding: 5px 8px !important;
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 6px !important;
             transition: all 0.15s !important;
         }
 
@@ -6253,13 +6282,13 @@
         }
 
         .task-tier-badge {
-            width: 22px !important;
-            height: 22px !important;
-            border-radius: 5px !important;
+            width: 18px !important;
+            height: 18px !important;
+            border-radius: 4px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 11px !important;
+            font-size: 10px !important;
             flex-shrink: 0 !important;
         }
 
@@ -6274,22 +6303,29 @@
         .task-content {
             flex: 1 !important;
             min-width: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
         }
 
         .task-content .task-text {
-            display: block !important;
+            display: inline !important;
             font-size: 13px !important;
             color: var(--text-primary) !important;
-            margin-bottom: 1px !important;
+            margin-bottom: 0 !important;
             line-height: 1.3 !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+            flex: 1 !important;
+            min-width: 0 !important;
         }
 
         .task-duration-info {
-            font-size: 11px !important;
+            font-size: 10px !important;
             color: var(--text-muted) !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
         }
 
         .timeline-task-actions {
@@ -7467,7 +7503,14 @@
                         <!-- Header -->
                         <div class="timeline-header">
                             <h2>🔥 CRASH OUT</h2>
-                            <button class="btn-change-sleep" onclick="changeSleepTime()">Change Sleep</button>
+                            <div class="sleep-time-adjuster">
+                                <button class="btn-adjust-sleep" onclick="adjustSleepTime(-30)" title="30 min earlier">-30m</button>
+                                <button class="btn-adjust-sleep" onclick="adjustSleepTime(-15)" title="15 min earlier">-15m</button>
+                                <span class="current-sleep-label" id="sleepTimeLabel">11:00 PM</span>
+                                <button class="btn-adjust-sleep" onclick="adjustSleepTime(15)" title="15 min later">+15m</button>
+                                <button class="btn-adjust-sleep" onclick="adjustSleepTime(30)" title="30 min later">+30m</button>
+                                <button class="btn-change-sleep" onclick="changeSleepTime()">Reset</button>
+                            </div>
                         </div>
 
                         <!-- Time Summary -->
@@ -16348,14 +16391,14 @@
                 container.innerHTML = rolledOverTasks.map(task => `
                     <div class="task-card" data-task-id="${task.id}" style="border-left: 3px solid #f59e0b;">
                         <div class="task-card-main">
-                            <span style="color: #f59e0b;">⚠️</span>
+                            <span style="color: #f59e0b; font-size: 12px;">⚠️</span>
                             <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                             <span class="task-text">${escapeHtml(task.text)}</span>
                             <span style="font-size: 11px; color: #8b949e;">from ${task.rolledOver.fromDate}</span>
-                        </div>
-                        <div class="task-card-actions">
-                            <button class="btn-start" onclick="startFocusSession('${task.id}')">▶ Start</button>
-                            <button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>
+                            <div class="task-card-actions">
+                                <button class="btn-start" onclick="startFocusSession('${task.id}')">▶</button>
+                                <button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -16956,7 +16999,8 @@
 
         function checkForTimePrompts() {
             if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
-            if (commandCenterMode !== 'crashout') return;
+            // Allow prompts in triage and crashout modes — only block during active focus session
+            if (commandCenterMode === 'focus' && currentFocusTaskId) return;
 
             // Don't show prompts if a task is actively being worked on
             if (currentFocusTaskId) return;
@@ -16981,11 +17025,24 @@
 
                 // If within 2 minutes of start time
                 const diff = now - taskTime;
-                if (diff >= 0 && diff <= 120000) {
+                if (diff >= -30000 && diff <= 600000) {
                     lastPromptedTaskId = task.id;
                     showTimePrompt(task);
-                    break;
+                    return;
                 }
+            }
+
+            // Catch-up: show prompt for first past-due unstarted task
+            const pastDueTasks = scheduledTasks.filter(task => {
+                if (!task.crashOutTime || task.id === lastPromptedTaskId) return false;
+                if (skippedTasks[task.id] === task.crashOutTime) return false;
+                const taskTime = parseCrashOutTime(task.crashOutTime);
+                if (!taskTime) return false;
+                return (now - taskTime) > 0;
+            });
+            if (pastDueTasks.length > 0) {
+                lastPromptedTaskId = pastDueTasks[0].id;
+                showTimePrompt(pastDueTasks[0]);
             }
         }
 
@@ -17172,20 +17229,29 @@
         // ==================== CRASH OUT MODE ====================
 
         let crashOutTimelineInterval = null;
+        let nowTimeInterval = null;
 
         function startCrashOutTimelineInterval() {
             if (crashOutTimelineInterval) clearInterval(crashOutTimelineInterval);
+            if (nowTimeInterval) clearInterval(nowTimeInterval);
+            // Full rebuild every 60 seconds (repositions NOW between tasks)
             crashOutTimelineInterval = setInterval(() => {
                 if (commandCenterData.crashOut && commandCenterData.crashOut.sleepTime) {
                     renderCrashOutTimeline();
                 }
-            }, 60000); // Update every 60 seconds
+            }, 60000);
+            // Lightweight NOW time text update every 15 seconds
+            nowTimeInterval = setInterval(updateNowMarkerTime, 15000);
         }
 
         function stopCrashOutTimelineInterval() {
             if (crashOutTimelineInterval) {
                 clearInterval(crashOutTimelineInterval);
                 crashOutTimelineInterval = null;
+            }
+            if (nowTimeInterval) {
+                clearInterval(nowTimeInterval);
+                nowTimeInterval = null;
             }
         }
 
@@ -17293,6 +17359,27 @@
             renderCrashOutMode();
         }
 
+        function adjustSleepTime(minutesDelta) {
+            if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
+
+            const currentSleep = new Date(commandCenterData.crashOut.sleepTime);
+            const newSleep = new Date(currentSleep.getTime() + minutesDelta * 60 * 1000);
+
+            // Don't allow sleep time to be in the past
+            if (newSleep <= new Date()) {
+                showToast('Sleep time cannot be in the past', '⚠️');
+                return;
+            }
+
+            commandCenterData.crashOut.sleepTime = newSleep.toISOString();
+            saveData();
+            renderCrashOutTimeline();
+
+            const timeStr = newSleep.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            showToast('Sleep time: ' + timeStr, '✓');
+        }
+        window.adjustSleepTime = adjustSleepTime;
+
         function renderCrashOutTimeline() {
             if (!commandCenterData.crashOut || !commandCenterData.crashOut.sleepTime) return;
 
@@ -17323,6 +17410,10 @@
             if (sleepMarkerEl) sleepMarkerEl.textContent = sleepTimeStr;
             if (currentTimeEl) currentTimeEl.textContent = currentTimeStr;
             if (windDownEl) windDownEl.textContent = `${windDownStartStr} - ${sleepTimeStr}`;
+
+            // Update inline sleep time label in header adjuster
+            const sleepLabelEl = document.getElementById('sleepTimeLabel');
+            if (sleepLabelEl) sleepLabelEl.textContent = sleepTimeStr;
 
             // Calculate scheduled time based on LAST TASK'S END TIME vs WIND-DOWN START
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
@@ -17419,7 +17510,7 @@
 
             // Dynamic NOW marker HTML
             const _ct = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            const _nm = '<div class="timeline-now"><span class="now-label">NOW</span><span class="now-time">' + _ct + '</span><div class="now-line"></div></div>';
+            const _nm = '<div class="timeline-now" id="dynamicNowMarker"><span class="now-label">NOW</span><span class="now-time" id="dynamicNowTime">' + _ct + '</span><div class="now-line"></div></div>';
 
             if (scheduledTasks.length === 0) {
                 container.innerHTML = _nm + `
@@ -17478,8 +17569,11 @@
                             </div>
                             <div class="timeline-task-actions">
                                 <div class="reorder-buttons">
+                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToTop('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move to top">⬆⬆</button>
                                     <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
                                     <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown('${task.id}')" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToBottom('${task.id}')" ${isLast ? 'disabled' : ''} title="Move to bottom">⬇⬇</button>
+                                    <button class="btn-reorder" onclick="event.stopPropagation(); promptTaskPosition('${task.id}')" title="Set position">#</button>
                                 </div>
                                 <button class="btn-start" onclick="startTaskInFocus('${task.id}')" title="Start">▶</button>
                                 <select class="duration-select" onchange="setDurationDirect('${task.id}', this.value)">
@@ -17500,6 +17594,14 @@
 
             if (!_ni) { _h += _nm; }
             container.innerHTML = _h;
+        }
+
+        // Lightweight NOW marker time update (no full rebuild)
+        function updateNowMarkerTime() {
+            const el = document.getElementById('dynamicNowTime');
+            if (el) {
+                el.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            }
         }
 
         // ==================== TIMELINE DRAG-DROP REORDERING ====================
@@ -17588,32 +17690,39 @@
                 return;
             }
 
+            // For adjacent tasks, use swap instead of insert (handles one-position-down edge case)
+            if (Math.abs(draggedIndex - targetIndex) === 1) {
+                isReorderingLocked = false; // swapAdjacentTasks manages its own lock
+                swapAdjacentTasks(draggedId, targetId);
+                return;
+            }
+
             console.log(`✅ Moving task from position ${draggedIndex} to position ${targetIndex}`);
 
-            // Create new order array by removing dragged and inserting at target
-            const taskIds = scheduledTasks.map(t => t.id);
-            const [draggedTaskId] = taskIds.splice(draggedIndex, 1);
+            try {
+                // Create new order array by removing dragged and inserting at target
+                const taskIds = scheduledTasks.map(t => t.id);
+                const [draggedTaskId] = taskIds.splice(draggedIndex, 1);
 
-            // Insert at target position (adjusted for removal if dragging down)
-            // When dragging down, target shifts by -1 after removal
-            const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-            taskIds.splice(insertIndex, 0, draggedTaskId);
+                // Insert at target position (adjusted for removal if dragging down)
+                const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                taskIds.splice(insertIndex, 0, draggedTaskId);
 
-            // Update crashOutOrder for ALL tasks based on new array order
-            taskIds.forEach((id, newIndex) => {
-                tasks[id] = { ...tasks[id], crashOutOrder: newIndex };
-            });
+                // Update crashOutOrder for ALL tasks based on new array order
+                taskIds.forEach((id, newIndex) => {
+                    tasks[id] = { ...tasks[id], crashOutOrder: newIndex };
+                });
 
-            // Recalculate times based on new order
-            recalculateScheduledTimes();
-
-            renderCrashOutMode();
-            saveData();
-            showToast('Task moved!', '↕️');
-
-            setTimeout(() => {
-                isReorderingLocked = false;
-            }, 200);
+                recalculateScheduledTimes();
+                renderCrashOutMode();
+                saveData();
+                showToast('Task moved!', '↕️');
+            } catch (e) {
+                console.error('Reorder error:', e);
+                showToast('Error reordering', '❌');
+            } finally {
+                setTimeout(() => { isReorderingLocked = false; }, 200);
+            }
         }
 
         // Legacy function for backwards compatibility
@@ -17659,23 +17768,24 @@
                 return;
             }
 
-            tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
-            tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
-            console.log('✅ Orders swapped:', {
-                task1NewOrder: tasks[taskId1].crashOutOrder,
-                task2NewOrder: tasks[taskId2].crashOutOrder
-            });
+            try {
+                tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
+                tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
+                console.log('✅ Orders swapped:', {
+                    task1NewOrder: tasks[taskId1].crashOutOrder,
+                    task2NewOrder: tasks[taskId2].crashOutOrder
+                });
 
-            // Recalculate times based on new order
-            recalculateScheduledTimes();
-
-            renderCrashOutMode();
-            saveData();
-            showToast('Tasks swapped!', '↕️');
-
-            setTimeout(() => {
-                isReorderingLocked = false;
-            }, 200);
+                recalculateScheduledTimes();
+                renderCrashOutMode();
+                saveData();
+                showToast('Tasks swapped!', '↕️');
+            } catch (e) {
+                console.error('Swap error:', e);
+                showToast('Error swapping', '❌');
+            } finally {
+                setTimeout(() => { isReorderingLocked = false; }, 200);
+            }
         }
 
         function moveTaskUp(taskId) {
