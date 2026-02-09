@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dental Student Quest</title>
     
     <!-- Firebase SDK -->
@@ -17,32 +17,35 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            min-height: 100dvh;
+            padding: 12px;
             color: #333;
-            /* Scale down on desktop to fit more content - mobile uses full size */
-            zoom: 0.70;
+            font-size: 14px;
+            -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+            padding-left: env(safe-area-inset-left, 0);
+            padding-right: env(safe-area-inset-right, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
         }
 
-        /* Mobile: reset zoom to 100% for touch-friendly UI */
-        @media (max-width: 768px) {
+        @media (min-width: 769px) {
             body {
-                zoom: 1;
+                padding: 16px;
+                font-size: 13.5px;
             }
         }
 
-        /* Firefox fallback (doesn't support zoom) - use font scaling */
-        @supports not (zoom: 0.7) {
+        @media (min-width: 1400px) {
             body {
-                font-size: 0.85em;
-            }
-            @media (max-width: 768px) {
-                body {
-                    font-size: 1em;
-                }
+                font-size: 13px;
             }
         }
 
@@ -9481,6 +9484,430 @@
     }
 }
 
+/* ==================== COMPACT HEADER ==================== */
+.header-compact {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0 16px;
+    height: 48px;
+}
+.header-compact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    gap: 8px;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    transition: background 0.3s;
+}
+.sync-dot.syncing { background: #3b82f6; animation: syncPulse 1s infinite; }
+.sync-dot.offline { background: #ef4444; }
+.sync-dot.error { background: #f59e0b; }
+@keyframes syncPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.header-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.today-pill {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.streak-pill {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+.streak-fire-mini { font-size: 0.9em; }
+.header-center { flex-shrink: 0; }
+.view-toggle-compact {
+    display: flex;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 2px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.vtc-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.vtc-btn.active {
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+.header-right { flex-shrink: 0; }
+.menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.menu-btn:hover, .menu-btn:active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+/* Slide-down hamburger menu */
+.header-menu-panel {
+    display: none;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    z-index: 999;
+    padding: 16px 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+    animation: menuSlideDown 0.2s ease-out;
+}
+.header-menu-panel.open { display: block; }
+@keyframes menuSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.header-menu-backdrop {
+    display: none;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+}
+.header-menu-backdrop.open { display: block; }
+.menu-section { margin-bottom: 16px; }
+.menu-section:last-child { margin-bottom: 0; }
+.menu-section-title {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.menu-stats-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.menu-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    min-width: 65px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.menu-stat:active { background: rgba(255,255,255,0.1); }
+.menu-stat-val {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: white;
+}
+.menu-stat-label {
+    font-size: 0.6em;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+.menu-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+}
+.menu-tools-grid button,
+.menu-tools-grid a {
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+.menu-tools-grid button:hover,
+.menu-tools-grid a:hover,
+.menu-tools-grid button:active,
+.menu-tools-grid a:active {
+    background: rgba(255,255,255,0.12);
+    color: white;
+}
+
+/* Hide old header elements on mobile when compact header is active */
+@media (max-width: 768px) {
+    .cross-app-nav { display: none !important; }
+    .header .data-controls { display: none !important; }
+    .stats-container { display: none !important; }
+    .header > div:first-child { display: none !important; }
+    .header { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
+}
+/* Show compact header only on mobile */
+.header-compact { display: none; }
+@media (max-width: 768px) {
+    .header-compact { display: block; }
+}
+
+/* ==================== QUICK ADD FAB ==================== */
+#quickAddFAB {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+#quickAddFAB:active { transform: scale(0.92); }
+#quickAddFAB.panel-open {
+    transform: rotate(45deg);
+    background: #475569;
+    box-shadow: none;
+}
+#quickAddBackdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+#quickAddBackdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+#quickAddPanel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #161b22;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 10001;
+    padding: 8px 20px 28px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+}
+#quickAddPanel.open { transform: translateY(0); }
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    #quickAddPanel { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+}
+.qa-handle-bar { display: flex; justify-content: center; padding: 8px 0 12px; }
+.qa-handle { width: 40px; height: 4px; background: #30363d; border-radius: 2px; }
+.qa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.qa-title { font-size: 1.1em; font-weight: 700; color: #e6edf3; }
+.qa-close-btn {
+    background: none; border: none; color: #6e7681; cursor: pointer;
+    padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+.qa-close-btn:active { background: rgba(255, 255, 255, 0.05); }
+.qa-input-row { margin-bottom: 16px; }
+.qa-input {
+    width: 100%; padding: 14px 16px; background: #0d1117;
+    border: 2px solid #30363d; border-radius: 12px; color: #e6edf3;
+    font-size: 16px; font-family: inherit; outline: none;
+    transition: border-color 0.2s ease; box-sizing: border-box;
+}
+.qa-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+.qa-input::placeholder { color: #484f58; }
+.qa-section { margin-bottom: 14px; }
+.qa-label {
+    display: block; font-size: 0.8em; font-weight: 600; color: #6e7681;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.qa-pills {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
+}
+.qa-pills::-webkit-scrollbar { display: none; }
+.qa-pill {
+    display: flex; align-items: center; gap: 6px; padding: 10px 14px;
+    border: 2px solid #30363d; border-radius: 10px; background: #21262d;
+    color: #8b949e; font-size: 0.85em; font-weight: 600; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; min-height: 44px;
+    transition: all 0.15s ease; -webkit-tap-highlight-color: transparent;
+}
+.qa-pill:active { transform: scale(0.96); }
+.qa-pill-icon { font-size: 1.1em; }
+.qa-pill.selected[data-cat="financial"] { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-color: #43e97b; color: #111; }
+.qa-pill.selected[data-cat="clinic"] { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-color: #fa709a; color: #111; }
+.qa-pill.selected[data-cat="health"] { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); border-color: #30cfd0; color: white; }
+.qa-pill.selected[data-cat="school"] { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-color: #a8edea; color: #333; }
+.qa-pill.selected[data-cat="academic"] { background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%); border-color: #ff9a56; color: white; }
+.qa-pill.selected[data-cat="future"] { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-color: #4facfe; color: white; }
+.qa-pill.selected[data-cat="life"] { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-color: #f093fb; color: white; }
+.qa-size-row { display: flex; gap: 8px; }
+.qa-size-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 12px; border: 2px solid #30363d; border-radius: 10px;
+    background: #21262d; color: #8b949e; font-size: 0.85em; font-weight: 600;
+    cursor: pointer; min-height: 44px; transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.qa-size-btn:active { transform: scale(0.96); }
+.qa-size-btn.active { border-color: #667eea; background: rgba(102, 126, 234, 0.15); color: #e6edf3; }
+.qa-size-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.qa-size-dot.small { background: #22c55e; }
+.qa-size-dot.medium { background: #eab308; }
+.qa-size-dot.big { background: #ef4444; }
+.qa-size-time { font-size: 0.75em; color: #6e7681; margin-left: 2px; }
+.qa-options-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.qa-option-toggle {
+    display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+    border: 1px solid #30363d; border-radius: 8px; background: transparent;
+    color: #6e7681; font-size: 0.82em; font-weight: 600; cursor: pointer;
+    transition: all 0.15s ease; -webkit-tap-highlight-color: transparent;
+}
+.qa-option-toggle.active { border-color: #667eea; color: #e6edf3; background: rgba(102, 126, 234, 0.1); }
+.qa-option-dot { width: 8px; height: 8px; border-radius: 50%; background: #30363d; transition: background 0.15s ease; }
+.qa-option-toggle.active .qa-option-dot { background: #667eea; }
+#qaDoTodayToggle.active { border-color: #ff416c; background: rgba(255, 65, 108, 0.1); }
+#qaDoTodayToggle.active .qa-option-dot { background: #ff416c; }
+.qa-submit-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; font-size: 1em; font-weight: 700; cursor: pointer;
+    min-height: 48px; transition: transform 0.15s ease, opacity 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.qa-submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+.qa-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (min-width: 769px) {
+    #quickAddPanel {
+        left: 50%; right: auto; width: 480px; margin-left: -240px;
+        border-radius: 20px; bottom: 50%;
+        transform: translateY(calc(50% + 100vh));
+    }
+    #quickAddPanel.open { transform: translateY(50%); }
+    #quickAddFAB { bottom: 32px; right: 32px; }
+}
+@media (max-width: 380px) {
+    .qa-pill { padding: 8px 10px; font-size: 0.8em; }
+    .qa-size-time { display: none; }
+    #quickAddPanel { padding: 8px 16px 24px; }
+}
+
+/* ==================== RESPONSIVE FIXES ==================== */
+
+/* Touch targets minimum */
+@media (hover: none), (pointer: coarse) {
+    button, [role="button"], .nav-link, .data-btn, .category-tab,
+    .view-toggle-btn, .stat-card.clickable-card, .action-checkbox,
+    .fin-add-btn, .fin-update-btn, .triage-action-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* Touch-action for faster taps */
+button, a, .nav-link, .stat-card.clickable-card, .category-tab,
+.view-toggle-btn, .task-checkbox, input[type="checkbox"] {
+    touch-action: manipulation;
+}
+
+/* Hide drag handles on touch devices */
+@media (hover: none), (pointer: coarse) {
+    .drag-handle { display: none !important; }
+}
+
+/* Mobile Full View improvements */
+@media (max-width: 768px) {
+    .category-tab {
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+        font-size: 0.85em !important;
+    }
+}
+
+/* Stat card label readability */
+@media (max-width: 480px) {
+    .stat-card h3 { font-size: 0.7em; }
+    .calendar-day-note { font-size: 0.7em; }
+    .calendar-day-header { font-size: 0.7em; }
+}
+
     </style>
 </head>
 <body>
@@ -9502,6 +9929,79 @@
     <div class="toast-notification" id="toast">
         <span class="toast-icon" id="toastIcon">✅</span>
         <span class="toast-message" id="toastMessage">Success!</span>
+    </div>
+
+    <!-- Compact Header (mobile) -->
+    <div class="header-compact" id="compactHeader">
+        <div class="header-compact-row">
+            <div class="header-left">
+                <span class="sync-dot" id="syncDot" title="Sync status"></span>
+                <span class="header-stat-pill today-pill" onclick="toggleDashboardExpansion('doToday')">
+                    <span id="headerDoToday">0</span> today
+                </span>
+                <span class="header-stat-pill streak-pill" id="headerStreakPill">
+                    <span class="streak-fire-mini">&#x1F525;</span><span id="headerStreakCount">0</span>
+                </span>
+            </div>
+            <div class="header-center">
+                <div class="view-toggle-compact">
+                    <button class="vtc-btn active" id="compactFocusBtn" onclick="switchToFocusMode()">Focus</button>
+                    <button class="vtc-btn" id="compactFullBtn" onclick="switchToFullView()">Tasks</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="menu-btn" onclick="toggleHeaderMenu()" id="headerMenuBtn" aria-label="Menu">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect y="3" width="20" height="2" rx="1"/>
+                        <rect y="9" width="20" height="2" rx="1"/>
+                        <rect y="15" width="20" height="2" rx="1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hamburger Menu Panel -->
+    <div class="header-menu-backdrop" id="headerMenuBackdrop" onclick="toggleHeaderMenu()"></div>
+    <div class="header-menu-panel" id="headerMenuPanel">
+        <div class="menu-section">
+            <div class="menu-section-title">Stats</div>
+            <div class="menu-stats-row">
+                <div class="menu-stat"><span class="menu-stat-val" id="menuXP">0</span><span class="menu-stat-label">XP</span></div>
+                <div class="menu-stat"><span class="menu-stat-val" id="menuAvailable">0</span><span class="menu-stat-label">Available</span></div>
+                <div class="menu-stat" onclick="toggleDashboardExpansion('remaining');toggleHeaderMenu()"><span class="menu-stat-val" id="menuRemaining">0</span><span class="menu-stat-label">Remaining</span></div>
+                <div class="menu-stat" onclick="toggleDashboardExpansion('completed');toggleHeaderMenu()"><span class="menu-stat-val" id="menuCompleted">0</span><span class="menu-stat-label">Completed</span></div>
+            </div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-section-title">Tools</div>
+            <div class="menu-tools-grid">
+                <button onclick="openNotebook();toggleHeaderMenu()">Notebook</button>
+                <button onclick="openDailyPlanner();toggleHeaderMenu()">Planner</button>
+                <button onclick="openCalendar();toggleHeaderMenu()">Calendar</button>
+                <button onclick="openFinancials();toggleHeaderMenu()">Financials</button>
+            </div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-section-title">Apps</div>
+            <div class="menu-tools-grid">
+                <a href="d3-roadmap.html">Roadmap</a>
+                <a href="stimulant-elimination-calculator.html">Sleep Calc</a>
+                <a href="body-comp-tracker.html">Body Comp</a>
+                <a href="lecture-prompt-transformer.html">Lectures</a>
+            </div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-section-title">Data</div>
+            <div class="menu-tools-grid">
+                <button onclick="forceCloudSync();toggleHeaderMenu()">Sync Now</button>
+                <button onclick="forceUploadToCloud();toggleHeaderMenu()">Upload</button>
+                <button onclick="forcePullFromCloud();toggleHeaderMenu()">Pull</button>
+                <button onclick="createCheckpoint();toggleHeaderMenu()">Checkpoint</button>
+                <button onclick="showCheckpointManager();toggleHeaderMenu()">Restore</button>
+                <button onclick="showHelp();toggleHeaderMenu()">Help</button>
+            </div>
+        </div>
     </div>
 
     <!-- Cross-App Navigation -->
@@ -21450,6 +21950,235 @@
         }
 
         // Reset daily stats at midnight
+    </script>
+
+    <!-- Quick Add FAB -->
+    <button id="quickAddFAB" onclick="openQuickAddPanel()" aria-label="Add task">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+    </button>
+    <div id="quickAddBackdrop" onclick="closeQuickAddPanel()"></div>
+    <div id="quickAddPanel">
+        <div class="qa-handle-bar"><div class="qa-handle"></div></div>
+        <div class="qa-header">
+            <span class="qa-title">New Task</span>
+            <button class="qa-close-btn" onclick="closeQuickAddPanel()" aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="qa-input-row">
+            <input type="text" id="qaTaskInput" class="qa-input" placeholder="What needs to get done?"
+                   autocomplete="off" enterkeyhint="done"
+                   onkeypress="if(event.key==='Enter')submitQuickAdd()">
+        </div>
+        <div class="qa-section">
+            <label class="qa-label">Category</label>
+            <div class="qa-pills" id="qaCategoryPills">
+                <button class="qa-pill" data-cat="financial" onclick="selectQACategory('financial')"><span class="qa-pill-icon">💰</span><span class="qa-pill-text">Financial</span></button>
+                <button class="qa-pill" data-cat="clinic" onclick="selectQACategory('clinic')"><span class="qa-pill-icon">🦷</span><span class="qa-pill-text">Clinic</span></button>
+                <button class="qa-pill" data-cat="health" onclick="selectQACategory('health')"><span class="qa-pill-icon">❤️</span><span class="qa-pill-text">Health</span></button>
+                <button class="qa-pill" data-cat="school" onclick="selectQACategory('school')"><span class="qa-pill-icon">📋</span><span class="qa-pill-text">School</span></button>
+                <button class="qa-pill" data-cat="academic" onclick="selectQACategory('academic')"><span class="qa-pill-icon">📚</span><span class="qa-pill-text">Academic</span></button>
+                <button class="qa-pill" data-cat="future" onclick="selectQACategory('future')"><span class="qa-pill-icon">🚀</span><span class="qa-pill-text">Future</span></button>
+                <button class="qa-pill" data-cat="life" onclick="selectQACategory('life')"><span class="qa-pill-icon">🏡</span><span class="qa-pill-text">Life</span></button>
+            </div>
+        </div>
+        <div class="qa-section">
+            <label class="qa-label">Size</label>
+            <div class="qa-size-row">
+                <button class="qa-size-btn" data-size="small" onclick="selectQASize('small')"><span class="qa-size-dot small"></span>Small<span class="qa-size-time">2-15m</span></button>
+                <button class="qa-size-btn active" data-size="medium" onclick="selectQASize('medium')"><span class="qa-size-dot medium"></span>Medium<span class="qa-size-time">15-45m</span></button>
+                <button class="qa-size-btn" data-size="big" onclick="selectQASize('big')"><span class="qa-size-dot big"></span>Big<span class="qa-size-time">1hr+</span></button>
+            </div>
+        </div>
+        <div class="qa-options-row">
+            <button class="qa-option-toggle" id="qaDoTodayToggle" onclick="toggleQADoToday()"><span class="qa-option-dot"></span> Do Today</button>
+            <button class="qa-option-toggle" id="qaHighLeverageToggle" onclick="toggleQALeverage()"><span class="qa-option-dot"></span> High Leverage</button>
+        </div>
+        <button class="qa-submit-btn" onclick="submitQuickAdd()">Add Task</button>
+    </div>
+
+    <script>
+    // ==================== QUICK ADD PANEL JS ====================
+    let qaSelectedCategory = localStorage.getItem('qaLastCategory') || 'health';
+    let qaSelectedSize = 'medium';
+    let qaDoToday = false;
+    let qaHighLeverage = false;
+
+    function openQuickAddPanel() {
+        document.getElementById('quickAddBackdrop').classList.add('visible');
+        document.getElementById('quickAddPanel').classList.add('open');
+        document.getElementById('quickAddFAB').classList.add('panel-open');
+        setTimeout(() => document.getElementById('qaTaskInput').focus(), 300);
+    }
+
+    function closeQuickAddPanel() {
+        document.getElementById('quickAddBackdrop').classList.remove('visible');
+        document.getElementById('quickAddPanel').classList.remove('open');
+        document.getElementById('quickAddFAB').classList.remove('panel-open');
+        document.getElementById('qaTaskInput').value = '';
+    }
+
+    function selectQACategory(cat) {
+        qaSelectedCategory = cat;
+        localStorage.setItem('qaLastCategory', cat);
+        document.querySelectorAll('#qaCategoryPills .qa-pill').forEach(p => {
+            p.classList.toggle('selected', p.getAttribute('data-cat') === cat);
+        });
+    }
+
+    function selectQASize(size) {
+        qaSelectedSize = size;
+        document.querySelectorAll('.qa-size-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-size') === size);
+        });
+    }
+
+    function toggleQADoToday() {
+        qaDoToday = !qaDoToday;
+        document.getElementById('qaDoTodayToggle').classList.toggle('active', qaDoToday);
+    }
+
+    function toggleQALeverage() {
+        qaHighLeverage = !qaHighLeverage;
+        document.getElementById('qaHighLeverageToggle').classList.toggle('active', qaHighLeverage);
+    }
+
+    function submitQuickAdd() {
+        const input = document.getElementById('qaTaskInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const id = generateId('task');
+        const task = {
+            id: id,
+            text: text,
+            category: qaSelectedCategory,
+            completed: false,
+            doToday: qaDoToday,
+            createdAt: new Date().toISOString(),
+            size: qaSelectedSize,
+            highLeverage: qaHighLeverage,
+            sortOrder: getCount(tasks)
+        };
+
+        tasks[id] = task;
+        input.value = '';
+        renderTasks();
+        if (typeof renderFocusMode === 'function' && currentView === 'focus') renderFocusMode();
+        updateStats();
+        saveData();
+        showToast('Task added to ' + qaSelectedCategory, '✅');
+    }
+
+    // Initialize QA panel visual state
+    function initQuickAddPanel() {
+        selectQACategory(qaSelectedCategory);
+        selectQASize(qaSelectedSize);
+    }
+    // Run on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQuickAddPanel);
+    } else {
+        initQuickAddPanel();
+    }
+
+    // ==================== HEADER MENU JS ====================
+    function toggleHeaderMenu() {
+        const panel = document.getElementById('headerMenuPanel');
+        const backdrop = document.getElementById('headerMenuBackdrop');
+        if (!panel) return;
+        const isOpen = panel.classList.contains('open');
+        panel.classList.toggle('open', !isOpen);
+        if (backdrop) backdrop.classList.toggle('open', !isOpen);
+        if (!isOpen) updateMenuStats();
+    }
+
+    function updateSyncDot(status) {
+        const dot = document.getElementById('syncDot');
+        if (!dot) return;
+        dot.classList.remove('syncing', 'offline', 'error');
+        if (status === 'syncing') dot.classList.add('syncing');
+        else if (status === 'offline') dot.classList.add('offline');
+        else if (status === 'error') dot.classList.add('error');
+        // Default (connected) has no extra class = green
+    }
+
+    function updateMenuStats() {
+        const xpEl = document.getElementById('menuXP');
+        const availEl = document.getElementById('menuAvailable');
+        const remEl = document.getElementById('menuRemaining');
+        const compEl = document.getElementById('menuCompleted');
+        if (xpEl) xpEl.textContent = document.getElementById('totalXPGained')?.textContent || '0';
+        if (availEl) availEl.textContent = document.getElementById('totalXPAvailable')?.textContent || '0';
+        if (remEl) remEl.textContent = document.getElementById('tasksRemaining')?.textContent || '0';
+        if (compEl) compEl.textContent = document.getElementById('totalTasks')?.textContent || '0';
+    }
+
+    function updateCompactHeader() {
+        // Mirror Do Today count
+        const doTodayVal = document.getElementById('tasksToDoToday');
+        const headerDoToday = document.getElementById('headerDoToday');
+        if (doTodayVal && headerDoToday) headerDoToday.textContent = doTodayVal.textContent;
+
+        // Mirror streak count
+        const streakVal = document.getElementById('streakCount');
+        const headerStreak = document.getElementById('headerStreakCount');
+        if (streakVal && headerStreak) headerStreak.textContent = streakVal.textContent;
+    }
+
+    // Hook into existing updateStats to also update compact header
+    const _origUpdateStats = typeof updateStats === 'function' ? updateStats : null;
+    if (_origUpdateStats) {
+        updateStats = function() {
+            _origUpdateStats.apply(this, arguments);
+            updateCompactHeader();
+        };
+    }
+
+    // Hook into existing updateSyncStatus to also update sync dot
+    const _origUpdateSyncStatus = typeof updateSyncStatus === 'function' ? updateSyncStatus : null;
+    if (_origUpdateSyncStatus) {
+        updateSyncStatus = function(status, message) {
+            _origUpdateSyncStatus.apply(this, arguments);
+            updateSyncDot(status);
+        };
+    }
+
+    // Hook into switchToFocusMode/switchToFullView to update compact header toggle
+    const _origSwitchFocus = typeof switchToFocusMode === 'function' ? switchToFocusMode : null;
+    const _origSwitchFull = typeof switchToFullView === 'function' ? switchToFullView : null;
+    if (_origSwitchFocus) {
+        switchToFocusMode = function() {
+            _origSwitchFocus.apply(this, arguments);
+            const fb = document.getElementById('compactFocusBtn');
+            const tb = document.getElementById('compactFullBtn');
+            if (fb) fb.classList.add('active');
+            if (tb) tb.classList.remove('active');
+        };
+    }
+    if (_origSwitchFull) {
+        switchToFullView = function() {
+            _origSwitchFull.apply(this, arguments);
+            const fb = document.getElementById('compactFocusBtn');
+            const tb = document.getElementById('compactFullBtn');
+            if (fb) fb.classList.remove('active');
+            if (tb) tb.classList.add('active');
+        };
+    }
+
+    // Hook into updateStreakBadge to also update header streak
+    const _origStreakBadge = typeof updateStreakBadge === 'function' ? updateStreakBadge : null;
+    if (_origStreakBadge) {
+        updateStreakBadge = function() {
+            _origStreakBadge.apply(this, arguments);
+            updateCompactHeader();
+        };
+    }
     </script>
 </body>
 </html>
