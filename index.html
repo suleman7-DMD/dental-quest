@@ -17,9 +17,7 @@
             box-sizing: border-box;
         }
 
-        html {
-            overflow-x: hidden;
-        }
+        /* overflow-x: hidden on body only — having it on BOTH html+body causes iOS Safari clipping bugs */
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -5598,7 +5596,9 @@
             background: var(--bg-page) !important;
         }
 
-        .main-content, .content-wrapper, .app-content, #mainContent, .container {
+        #focusModeContainer .main-content, #focusModeContainer .content-wrapper,
+        #focusModeContainer .app-content, #focusModeContainer #mainContent,
+        .container {
             max-width: 100% !important;
             width: 100% !important;
         }
@@ -5725,8 +5725,8 @@
             white-space: nowrap !important;
         }
 
-        .progress-bar-container,
-        [class*="progress-bar"]:not(.mini-progress-bar):not([class*="fill"]):not(.progress-bar-enhanced):not(.time-progress-bar):not(.xp-level-bar) {
+        #focusModeContainer .progress-bar-container,
+        #focusModeContainer [class*="progress-bar"]:not(.mini-progress-bar):not([class*="fill"]):not(.progress-bar-enhanced):not(.time-progress-bar):not(.xp-level-bar) {
             flex: 1 !important;
             height: 10px !important;
             background: var(--bg-page) !important;
@@ -5735,8 +5735,8 @@
             position: relative !important;
         }
 
-        .progress-bar-fill,
-        [class*="progress-fill"]:not(.progress-fill-enhanced):not(.progress-ring-fill):not(.time-progress-fill) {
+        #focusModeContainer .progress-bar-fill,
+        #focusModeContainer [class*="progress-fill"]:not(.progress-fill-enhanced):not(.progress-ring-fill):not(.time-progress-fill) {
             height: 100% !important;
             background: linear-gradient(90deg, var(--accent-blue), #8b5cf6) !important;
             border-radius: 5px !important;
