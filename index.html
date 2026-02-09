@@ -7176,6 +7176,398 @@
             color: var(--text-muted) !important;
         }
 
+        /* === GOOGLE CALENDAR GRID OVERLAY === */
+        .timeline-grid {
+            position: relative !important;
+            margin-left: 56px !important;
+            border-left: 1px solid rgba(51, 65, 85, 0.3) !important;
+        }
+
+        .gcal-hour {
+            position: absolute !important;
+            left: -56px !important;
+            right: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .gcal-hour-label {
+            position: absolute !important;
+            left: 0 !important;
+            top: -7px !important;
+            font-size: 11px !important;
+            color: var(--text-muted) !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+            width: 44px !important;
+            text-align: right !important;
+            line-height: 1 !important;
+        }
+
+        .gcal-hour-line {
+            position: absolute !important;
+            left: 54px !important;
+            right: 0 !important;
+            height: 1px !important;
+            background: rgba(51, 65, 85, 0.25) !important;
+        }
+
+        .gcal-half-line {
+            position: absolute !important;
+            left: 54px !important;
+            right: 0 !important;
+            height: 1px !important;
+            background: rgba(51, 65, 85, 0.1) !important;
+            border-top: 1px dashed rgba(51, 65, 85, 0.12) !important;
+            pointer-events: none !important;
+        }
+
+        /* NOW marker - single red line like Google Calendar */
+        .gcal-now {
+            position: absolute !important;
+            left: -8px !important;
+            right: 0 !important;
+            z-index: 10 !important;
+            pointer-events: none !important;
+            height: 0 !important;
+        }
+
+        .gcal-now-dot {
+            position: absolute !important;
+            left: 0 !important;
+            top: -5px !important;
+            width: 10px !important;
+            height: 10px !important;
+            border-radius: 50% !important;
+            background: #ef4444 !important;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5) !important;
+        }
+
+        .gcal-now-ruler {
+            position: absolute !important;
+            left: 8px !important;
+            right: 0 !important;
+            height: 2px !important;
+            background: #ef4444 !important;
+            top: -1px !important;
+        }
+
+        /* Task blocks positioned in the grid */
+        .gcal-task {
+            position: absolute !important;
+            left: 4px !important;
+            right: 4px !important;
+            min-height: 36px !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            cursor: grab !important;
+            z-index: 5 !important;
+            border: 1px solid rgba(59, 130, 246, 0.25) !important;
+            border-left: 4px solid var(--accent-blue) !important;
+            background: rgba(59, 130, 246, 0.1) !important;
+            transition: all 0.15s ease !important;
+            overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        .gcal-task:hover {
+            z-index: 15 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+            background: rgba(59, 130, 246, 0.18) !important;
+            border-color: rgba(59, 130, 246, 0.4) !important;
+        }
+
+        .gcal-task:active {
+            cursor: grabbing !important;
+        }
+
+        .gcal-task.locked-in {
+            border-left-color: var(--accent-amber) !important;
+            background: rgba(245, 158, 11, 0.1) !important;
+            border-color: rgba(245, 158, 11, 0.25) !important;
+        }
+
+        .gcal-task.locked-in:hover {
+            background: rgba(245, 158, 11, 0.18) !important;
+            border-color: rgba(245, 158, 11, 0.4) !important;
+        }
+
+        .gcal-task.elapsed {
+            opacity: 0.4 !important;
+        }
+
+        .gcal-task.active-now {
+            border-color: var(--accent-amber) !important;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.2) !important;
+        }
+
+        .gcal-task.gcal-dragging {
+            opacity: 0.5 !important;
+            transform: scale(1.02) !important;
+            z-index: 20 !important;
+        }
+
+        .gcal-task.gcal-drag-over {
+            box-shadow: 0 -3px 0 0 #667eea, 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .gcal-task-content {
+            flex: 1 !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1px !important;
+        }
+
+        .gcal-task-title {
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: var(--text-primary) !important;
+            line-height: 1.3 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        .gcal-task-time {
+            font-size: 10px !important;
+            color: var(--text-muted) !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        /* Task actions - compact row, faded until hover */
+        .gcal-task-actions {
+            display: flex !important;
+            gap: 4px !important;
+            align-items: center !important;
+            flex-shrink: 0 !important;
+            opacity: 0.3 !important;
+            transition: opacity 0.2s !important;
+        }
+
+        .gcal-task:hover .gcal-task-actions {
+            opacity: 1 !important;
+        }
+
+        .gcal-task-actions .btn-start {
+            background: var(--accent-green) !important;
+            color: white !important;
+            border: none !important;
+            padding: 3px 8px !important;
+            border-radius: 5px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+        }
+
+        .gcal-task-actions .btn-start:hover {
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4) !important;
+        }
+
+        .gcal-task-actions .duration-select {
+            background: var(--bg-page) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important;
+            padding: 2px 14px 2px 4px !important;
+            border-radius: 5px !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%2364748b' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 3px center !important;
+        }
+
+        .gcal-task-actions .reorder-buttons {
+            display: flex !important;
+            gap: 1px !important;
+            opacity: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .gcal-task:hover .gcal-task-actions .reorder-buttons {
+            opacity: 1 !important;
+            max-width: 120px !important;
+        }
+
+        .gcal-task-actions .btn-reorder {
+            background: transparent !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-muted) !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+            font-size: 9px !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+        }
+
+        .gcal-task-actions .btn-reorder:hover {
+            border-color: var(--accent-blue) !important;
+            color: var(--accent-blue) !important;
+        }
+
+        .gcal-task-actions .btn-reorder:disabled {
+            opacity: 0.3 !important;
+            cursor: default !important;
+        }
+
+        .gcal-task-actions .btn-edit,
+        .gcal-task-actions .btn-remove {
+            background: transparent !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-muted) !important;
+            padding: 2px 5px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            opacity: 0 !important;
+            transition: opacity 0.2s !important;
+        }
+
+        .gcal-task:hover .gcal-task-actions .btn-edit,
+        .gcal-task:hover .gcal-task-actions .btn-remove {
+            opacity: 1 !important;
+        }
+
+        .gcal-task-actions .btn-edit:hover {
+            border-color: var(--accent-blue) !important;
+            color: var(--accent-blue) !important;
+        }
+
+        .gcal-task-actions .btn-remove:hover {
+            border-color: #f87171 !important;
+            color: #f87171 !important;
+        }
+
+        /* Wind-down block in grid */
+        .gcal-winddown {
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(99, 102, 241, 0.04)) !important;
+            border: 1px solid rgba(139, 92, 246, 0.2) !important;
+            border-left: 3px solid rgba(139, 92, 246, 0.4) !important;
+            border-radius: 8px !important;
+            z-index: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 8px 12px !important;
+            gap: 10px !important;
+            overflow: hidden !important;
+        }
+
+        .gcal-winddown::before {
+            content: '' !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 8px,
+                rgba(139, 92, 246, 0.03) 8px,
+                rgba(139, 92, 246, 0.03) 16px
+            ) !important;
+            pointer-events: none !important;
+        }
+
+        .gcal-winddown-icon {
+            font-size: 20px !important;
+        }
+
+        .gcal-winddown-info {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+
+        .gcal-winddown-time {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #a78bfa !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        .gcal-winddown-label {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #c4b5fd !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+        }
+
+        .gcal-winddown-hint {
+            font-size: 10px !important;
+            color: var(--text-muted) !important;
+            font-style: italic !important;
+        }
+
+        /* Sleep marker in grid */
+        .gcal-sleep {
+            position: absolute !important;
+            left: -56px !important;
+            right: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            z-index: 2 !important;
+        }
+
+        .gcal-sleep-icon {
+            font-size: 18px !important;
+        }
+
+        .gcal-sleep-time {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #c4b5fd !important;
+            font-family: 'SF Mono', Monaco, monospace !important;
+        }
+
+        .gcal-sleep-label {
+            font-size: 11px !important;
+            color: var(--text-muted) !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+        }
+
+        .gcal-sleep-line {
+            flex: 1 !important;
+            height: 2px !important;
+            background: linear-gradient(90deg, #8b5cf6, rgba(139, 92, 246, 0.2)) !important;
+        }
+
+        /* Empty state in grid */
+        .gcal-empty {
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            text-align: center !important;
+            padding: 20px !important;
+            color: var(--text-muted) !important;
+            z-index: 3 !important;
+        }
+
+        .gcal-empty-icon {
+            font-size: 32px !important;
+            margin-bottom: 8px !important;
+            opacity: 0.5 !important;
+        }
+
+        .gcal-empty-text {
+            font-size: 14px !important;
+            color: var(--text-secondary) !important;
+            margin-bottom: 4px !important;
+        }
+
+        .gcal-empty-hint {
+            font-size: 12px !important;
+            color: var(--text-muted) !important;
+        }
+
         /* Reset Button */
         .reset-container { text-align: center !important; }
 
@@ -7507,6 +7899,22 @@
             }
             .timeline-content {
                 padding-left: 0 !important;
+            }
+            .timeline-grid {
+                margin-left: 40px !important;
+            }
+            .gcal-hour {
+                left: -40px !important;
+            }
+            .gcal-hour-label {
+                width: 32px !important;
+                font-size: 10px !important;
+            }
+            .gcal-hour-line, .gcal-half-line {
+                left: 38px !important;
+            }
+            .gcal-sleep {
+                left: -40px !important;
             }
             .task-time-marker {
                 position: relative !important;
@@ -9492,32 +9900,8 @@
                         <!-- The Timeline -->
                         <div class="timeline-content" id="timelineContent">
 
-                            <!-- NOW marker -->
-                            <div class="timeline-now">
-                                <span class="now-label">NOW</span>
-                                <span class="now-time" id="currentTimeDisplay">5:01 PM</span>
-                                <div class="now-line"></div>
-                            </div>
-
-                            <!-- Timeline tasks will be rendered here -->
-                            <div id="crashOutTimelineTasks"></div>
-
-                            <!-- Protected Wind-Down -->
-                            <div class="timeline-protected" id="windDownHour">
-                                <div class="protected-badge">🌙</div>
-                                <div class="protected-info">
-                                    <span class="protected-time" id="windDownTimeRange">10:00 PM - 11:00 PM</span>
-                                    <span class="protected-label">Wind-Down Hour</span>
-                                    <span class="protected-hint">Protected time - nothing scheduled here</span>
-                                </div>
-                            </div>
-
-                            <!-- Sleep marker -->
-                            <div class="timeline-sleep">
-                                <span class="sleep-icon">😴</span>
-                                <span class="sleep-time" id="sleepMarkerTime">11:00 PM</span>
-                                <span class="sleep-label">SLEEP</span>
-                            </div>
+                            <!-- NOW marker rendered dynamically -->
+                            <!-- Wind-down and sleep rendered dynamically in grid -->
 
                         </div>
 
@@ -19209,8 +19593,8 @@
         }
 
         function showCascadeAnimation() {
-            // Use correct selector - timeline tasks have class .timeline-task
-            const taskElements = document.querySelectorAll('.timeline-task');
+            // Use correct selector - timeline tasks have data-task-id attribute
+            const taskElements = document.querySelectorAll('[data-task-id]');
             taskElements.forEach((el, i) => {
                 setTimeout(() => {
                     el.classList.add('cascade-shift');
@@ -19294,6 +19678,7 @@
 
         let crashOutTimelineInterval = null;
         let nowTimeInterval = null;
+        let gcalGridParams = null; // { gridStartMs, pxPerHour } - shared between render and updateNowMarkerTime
 
         function startCrashOutTimelineInterval() {
             if (crashOutTimelineInterval) clearInterval(crashOutTimelineInterval);
@@ -19563,118 +19948,181 @@
                 if (warningEl) warningEl.classList.add('hidden');
             }
 
-            // Hide static NOW marker - rendered dynamically inside task list
-            const staticNow = document.querySelector('#timelineContent > .timeline-now');
-            if (staticNow) staticNow.style.display = 'none';
-
-            // Render timeline tasks with dynamic NOW marker
-            renderCrashOutTimelineTasks(scheduledTasks, now);
+            // Render Google Calendar grid with tasks, NOW marker, wind-down, and sleep
+            renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownStart);
 
             // Render unscheduled pool
             renderUnscheduledPool();
         }
 
-        function renderCrashOutTimelineTasks(scheduledTasks, now) {
-            const container = document.getElementById('crashOutTimelineTasks');
+        function renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownStart) {
+            const container = document.getElementById('timelineContent');
             if (!container) return;
 
-            // Dynamic NOW marker HTML
-            const _ct = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            const _nm = '<div class="timeline-now" id="dynamicNowMarker"><span class="now-label">NOW</span><span class="now-time" id="dynamicNowTime">' + _ct + '</span><div class="now-line"></div></div>';
+            const PX_PER_HOUR = 80;
 
-            if (scheduledTasks.length === 0) {
-                container.innerHTML = _nm + `
-                    <div class="timeline-empty">
-                        <div class="timeline-empty-icon">📋</div>
-                        <div class="timeline-empty-text">No tasks scheduled yet</div>
-                        <div class="timeline-empty-hint">Send tasks from Triage or add from below</div>
-                    </div>
-                `;
-                return;
+            // Calculate grid range: floor now to current hour, ceil sleep to next hour
+            const gridStart = new Date(now);
+            gridStart.setMinutes(0, 0, 0);
+
+            const gridEnd = new Date(sleepTime);
+            if (gridEnd.getMinutes() > 0 || gridEnd.getSeconds() > 0) {
+                gridEnd.setHours(gridEnd.getHours() + 1);
+            }
+            gridEnd.setMinutes(0, 0, 0);
+            // Add 1 more hour padding after sleep
+            gridEnd.setHours(gridEnd.getHours() + 1);
+
+            // Ensure at least 2 hours of grid
+            if (gridEnd <= gridStart) {
+                gridEnd.setTime(gridStart.getTime() + 2 * 60 * 60 * 1000);
             }
 
-            let _ni = false;
-            let _h = '';
+            const totalMs = gridEnd - gridStart;
+            const totalHours = totalMs / (1000 * 60 * 60);
+            const totalHeight = totalHours * PX_PER_HOUR;
 
-            scheduledTasks.forEach((task, index) => {
-                const isLockedIn = task.triageTier === 'lockedIn';
-                const tierIcon = isLockedIn ? '🔥' : '📋';
-                const duration = task.crashOutDuration || 30;
-                const isFirst = index === 0;
-                const isLast = index === scheduledTasks.length - 1;
+            // Store for lightweight NOW updates
+            gcalGridParams = { gridStartMs: gridStart.getTime(), pxPerHour: PX_PER_HOUR };
 
-                const startTime = task.crashOutTime || 'TBD';
-                let endTimeStr = '';
-                let tsd = null;
-                if (task.crashOutTime) {
-                    tsd = parseCrashOutTime(task.crashOutTime);
-                    if (tsd) {
-                        const endDate = new Date(tsd.getTime() + duration * 60 * 1000);
-                        endTimeStr = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            function timeToPx(time) {
+                const ms = (time instanceof Date ? time.getTime() : time) - gridStart.getTime();
+                return (ms / (1000 * 60 * 60)) * PX_PER_HOUR;
+            }
+
+            function formatHourLabel(date) {
+                return date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+            }
+
+            let html = '<div class="timeline-grid" style="height: ' + totalHeight + 'px;">';
+
+            // --- Hour grid lines ---
+            let hourTime = new Date(gridStart);
+            while (hourTime <= gridEnd) {
+                const top = timeToPx(hourTime);
+                const label = formatHourLabel(hourTime);
+                html += '<div class="gcal-hour" style="top: ' + top + 'px;">';
+                html += '<span class="gcal-hour-label">' + label + '</span>';
+                html += '<div class="gcal-hour-line"></div>';
+                html += '</div>';
+                // Half-hour line
+                const halfHour = new Date(hourTime.getTime() + 30 * 60 * 1000);
+                if (halfHour < gridEnd) {
+                    const halfTop = timeToPx(halfHour);
+                    html += '<div class="gcal-half-line" style="top: ' + halfTop + 'px;"></div>';
+                }
+                hourTime = new Date(hourTime.getTime() + 60 * 60 * 1000);
+            }
+
+            // --- NOW marker (single red line + dot) ---
+            const nowTop = timeToPx(now);
+            html += '<div class="gcal-now" id="gcalNowMarker" style="top: ' + nowTop + 'px;">';
+            html += '<div class="gcal-now-dot"></div>';
+            html += '<div class="gcal-now-ruler"></div>';
+            html += '</div>';
+
+            // --- Task blocks ---
+            if (scheduledTasks.length === 0) {
+                html += '<div class="gcal-empty" style="top: ' + (nowTop + 20) + 'px;">';
+                html += '<div class="gcal-empty-icon">📋</div>';
+                html += '<div class="gcal-empty-text">No tasks scheduled yet</div>';
+                html += '<div class="gcal-empty-hint">Send tasks from Triage or add from below</div>';
+                html += '</div>';
+            } else {
+                scheduledTasks.forEach(function(task, index) {
+                    const isLockedIn = task.triageTier === 'lockedIn';
+                    const tierIcon = isLockedIn ? '🔥' : '📋';
+                    const duration = task.crashOutDuration || 30;
+                    const isFirst = index === 0;
+                    const isLast = index === scheduledTasks.length - 1;
+
+                    const startTimeStr = task.crashOutTime || 'TBD';
+                    let endTimeStr = '';
+                    let tsd = null;
+                    if (task.crashOutTime) {
+                        tsd = parseCrashOutTime(task.crashOutTime);
+                        if (tsd) {
+                            const endDate = new Date(tsd.getTime() + duration * 60 * 1000);
+                            endTimeStr = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        }
                     }
-                }
 
-                // Insert NOW before the first task that hasn't fully elapsed
-                const taskEndTime = tsd ? new Date(tsd.getTime() + duration * 60 * 1000) : null;
-                const isElapsed = tsd && taskEndTime && taskEndTime < now;
-                const isActiveNow = tsd && tsd <= now && taskEndTime > now;
+                    const taskEndTime = tsd ? new Date(tsd.getTime() + duration * 60 * 1000) : null;
+                    const isElapsed = tsd && taskEndTime && taskEndTime < now;
+                    const isActiveNow = tsd && tsd <= now && taskEndTime > now;
 
-                if (!_ni && tsd) {
-                    const ted = new Date(tsd.getTime() + duration * 60 * 1000);
-                    if (now < ted) { _h += _nm; _ni = true; }
-                }
+                    // Position and size
+                    const taskTop = tsd ? timeToPx(tsd) : (nowTop + 20);
+                    const heightPx = Math.max(36, (duration / 60) * PX_PER_HOUR);
 
-                _h += `
-                    <div class="timeline-task${isElapsed ? ' elapsed' : ''}${isActiveNow ? ' active-now' : ''}" data-task-id="${task.id}" data-order="${task.crashOutOrder ?? index}"
-                         draggable="true"
-                         ondragstart="handleTimelineDragStart(event, '${task.id}')"
-                         ondragover="handleTimelineDragOver(event)"
-                         ondragleave="handleTimelineDragLeave(event)"
-                         ondrop="handleTimelineDrop(event, '${task.id}')"
-                         ondragend="handleTimelineDragEnd(event)">
-                        <div class="task-time-marker">
-                            <span class="task-start-time">${startTime}</span>
-                        </div>
-                        <div class="task-card-timeline ${isLockedIn ? 'locked-in' : ''}">
-                            <div class="task-tier-badge ${isLockedIn ? 'locked-in' : 'today'}">${tierIcon}</div>
-                            <div class="task-content">
-                                <span class="task-text">${escapeHtml(task.text)}</span>
-                                <span class="task-duration-info">${duration}m${endTimeStr ? ' ~ ' + endTimeStr : ''}</span>
-                            </div>
-                            <div class="timeline-task-actions">
-                                <div class="reorder-buttons">
-                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToTop('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move to top">⬆⬆</button>
-                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp('${task.id}')" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
-                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown('${task.id}')" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
-                                    <button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToBottom('${task.id}')" ${isLast ? 'disabled' : ''} title="Move to bottom">⬇⬇</button>
-                                    <button class="btn-reorder" onclick="event.stopPropagation(); promptTaskPosition('${task.id}')" title="Set position">#</button>
-                                </div>
-                                <button class="btn-start" onclick="startTaskInFocus('${task.id}')" title="Start">▶</button>
-                                <select class="duration-select" onchange="setDurationDirect('${task.id}', this.value)">
-                                    <option value="15" ${duration === 15 ? 'selected' : ''}>15m</option>
-                                    <option value="30" ${duration === 30 ? 'selected' : ''}>30m</option>
-                                    <option value="45" ${duration === 45 ? 'selected' : ''}>45m</option>
-                                    <option value="60" ${duration === 60 ? 'selected' : ''}>60m</option>
-                                    <option value="90" ${duration === 90 ? 'selected' : ''}>90m</option>
-                                    <option value="120" ${duration === 120 ? 'selected' : ''}>2h</option>
-                                </select>
-                                <button class="btn-edit" onclick="openTaskEditModal('${task.id}')" title="Edit">✎</button>
-                                <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')" title="Remove">✕</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+                    const stateClass = (isLockedIn ? ' locked-in' : '') + (isElapsed ? ' elapsed' : '') + (isActiveNow ? ' active-now' : '');
 
-            if (!_ni) { _h += _nm; }
-            container.innerHTML = _h;
+                    html += '<div class="gcal-task' + stateClass + '" '
+                        + 'data-task-id="' + task.id + '" data-order="' + (task.crashOutOrder ?? index) + '" '
+                        + 'style="top: ' + taskTop + 'px; height: ' + heightPx + 'px;" '
+                        + 'draggable="true" '
+                        + 'ondragstart="handleTimelineDragStart(event, \'' + task.id + '\')" '
+                        + 'ondragover="handleTimelineDragOver(event)" '
+                        + 'ondragleave="handleTimelineDragLeave(event)" '
+                        + 'ondrop="handleTimelineDrop(event, \'' + task.id + '\')" '
+                        + 'ondragend="handleTimelineDragEnd(event)">';
+                    html += '<div class="gcal-task-content">';
+                    html += '<div class="gcal-task-title">' + tierIcon + ' ' + escapeHtml(task.text) + '</div>';
+                    html += '<div class="gcal-task-time">' + startTimeStr + (endTimeStr ? ' – ' + endTimeStr : '') + ' · ' + duration + 'm</div>';
+                    html += '</div>';
+                    html += '<div class="gcal-task-actions">';
+                    html += '<div class="reorder-buttons">';
+                    html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToTop(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move to top">⬆⬆</button>';
+                    html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move up">▲</button>';
+                    html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move down">▼</button>';
+                    html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToBottom(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move to bottom">⬇⬇</button>';
+                    html += '<button class="btn-reorder" onclick="event.stopPropagation(); promptTaskPosition(\'' + task.id + '\')" title="Set position">#</button>';
+                    html += '</div>';
+                    html += '<button class="btn-start" onclick="startTaskInFocus(\'' + task.id + '\')" title="Start">▶</button>';
+                    html += '<select class="duration-select" onchange="setDurationDirect(\'' + task.id + '\', this.value)">';
+                    html += '<option value="15"' + (duration === 15 ? ' selected' : '') + '>15m</option>';
+                    html += '<option value="30"' + (duration === 30 ? ' selected' : '') + '>30m</option>';
+                    html += '<option value="45"' + (duration === 45 ? ' selected' : '') + '>45m</option>';
+                    html += '<option value="60"' + (duration === 60 ? ' selected' : '') + '>60m</option>';
+                    html += '<option value="90"' + (duration === 90 ? ' selected' : '') + '>90m</option>';
+                    html += '<option value="120"' + (duration === 120 ? ' selected' : '') + '>2h</option>';
+                    html += '</select>';
+                    html += '<button class="btn-edit" onclick="openTaskEditModal(\'' + task.id + '\')" title="Edit">✎</button>';
+                    html += '<button class="btn-remove" onclick="removeFromCrashOut(\'' + task.id + '\')" title="Remove">✕</button>';
+                    html += '</div>';
+                    html += '</div>';
+                });
+            }
+
+            // --- Wind-down block (purple hatched) ---
+            const windDownTop = timeToPx(windDownStart);
+            const windDownStartStr = windDownStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const sleepTimeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            html += '<div class="gcal-winddown" style="top: ' + windDownTop + 'px; height: ' + PX_PER_HOUR + 'px;">';
+            html += '<div class="gcal-winddown-label">🌙 Wind Down</div>';
+            html += '<div class="gcal-winddown-time">' + windDownStartStr + ' – ' + sleepTimeStr + '</div>';
+            html += '</div>';
+
+            // --- Sleep marker ---
+            const sleepTop = timeToPx(sleepTime);
+            html += '<div class="gcal-sleep" style="top: ' + sleepTop + 'px;">';
+            html += '<span class="gcal-sleep-icon">😴</span>';
+            html += '<span class="gcal-sleep-label">Sleep ' + sleepTimeStr + '</span>';
+            html += '<div class="gcal-sleep-line"></div>';
+            html += '</div>';
+
+            html += '</div>'; // close timeline-grid
+            container.innerHTML = html;
         }
 
         // Lightweight NOW marker time update (no full rebuild)
         function updateNowMarkerTime() {
-            const el = document.getElementById('dynamicNowTime');
-            if (el) {
-                el.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const el = document.getElementById('gcalNowMarker');
+            if (el && gcalGridParams) {
+                const now = new Date();
+                const ms = now.getTime() - gcalGridParams.gridStartMs;
+                const newTop = (ms / (1000 * 60 * 60)) * gcalGridParams.pxPerHour;
+                el.style.top = newTop + 'px';
             }
         }
 
@@ -19688,7 +20136,7 @@
                 return;
             }
             timelineDraggedTaskId = taskId;
-            event.target.classList.add('timeline-dragging');
+            event.target.classList.add('gcal-dragging');
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', taskId);  // Required for Firefox
         }
@@ -19697,17 +20145,17 @@
             event.preventDefault();
             event.stopPropagation();
             event.dataTransfer.dropEffect = 'move';
-            const taskEl = event.target.closest('.timeline-task');
-            if (taskEl && !taskEl.classList.contains('timeline-dragging')) {
-                taskEl.classList.add('timeline-drag-over');
+            const taskEl = event.target.closest('[data-task-id]');
+            if (taskEl && !taskEl.classList.contains('gcal-dragging')) {
+                taskEl.classList.add('gcal-drag-over');
             }
         }
 
         function handleTimelineDragLeave(event) {
             event.stopPropagation();
-            const taskEl = event.target.closest('.timeline-task');
+            const taskEl = event.target.closest('[data-task-id]');
             if (taskEl) {
-                taskEl.classList.remove('timeline-drag-over');
+                taskEl.classList.remove('gcal-drag-over');
             }
         }
 
@@ -19715,9 +20163,9 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const taskEl = event.target.closest('.timeline-task');
+            const taskEl = event.target.closest('[data-task-id]');
             if (taskEl) {
-                taskEl.classList.remove('timeline-drag-over');
+                taskEl.classList.remove('gcal-drag-over');
             }
 
             // Prevent if locked or invalid
@@ -19730,9 +20178,9 @@
         }
 
         function handleTimelineDragEnd(event) {
-            event.target.classList.remove('timeline-dragging');
-            document.querySelectorAll('.timeline-task').forEach(el => {
-                el.classList.remove('timeline-drag-over');
+            event.target.classList.remove('gcal-dragging');
+            document.querySelectorAll('[data-task-id]').forEach(el => {
+                el.classList.remove('gcal-drag-over');
             });
             timelineDraggedTaskId = null;
         }
