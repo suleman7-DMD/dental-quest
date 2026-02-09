@@ -659,6 +659,20 @@
         .task-item.life { border-left-color: #f093fb; }
         .task-item.dotoday { border-left-color: #ff416c; }
 
+        /* Desktop: task-row-top and task-actions display inline with task-item flex */
+        .task-item .task-row-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+        .task-item .task-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         /* ==================== COMMAND CENTER STYLES ==================== */
 
         /* Mode Tab Styles */
@@ -10082,78 +10096,91 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         order: 0;
     }
 
-    /* Task text: full display, no truncation — FORCE BUTTONS TO SECOND ROW */
+    /* TASK ITEM: 2-row layout using explicit DOM structure */
+    #fullViewContainer .task-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px;
+    }
+
+    /* Row 1: checkbox + icon + text in a horizontal strip */
+    #fullViewContainer .task-item .task-row-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+    }
+
+    /* Task text: fills remaining space on row 1 */
     #fullViewContainer .task-item .task-text {
-        flex: 1 1 0;
-        min-width: calc(100% - 70px);
+        flex: 1 1 auto;
+        min-width: 0;
         font-size: 0.88em;
         line-height: 1.45;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        display: block;
-        overflow: visible;
         white-space: normal;
         color: #e6edf3;
-        order: 1;
     }
 
-    /* Size icon: stays on row 1 next to checkbox */
-    #fullViewContainer .task-item > span[title] {
+    /* Size icon in row 1 */
+    #fullViewContainer .task-item .task-row-top > span[title] {
         font-size: 0.72em;
         flex-shrink: 0;
-        order: 0;
+        margin-top: 2px;
     }
 
-    /* Category label: stays on row 1 */
-    #fullViewContainer .task-item .category-label {
+    /* Category label in row 1 (doToday view) */
+    #fullViewContainer .task-item .task-row-top .category-label {
         font-size: 0.72em;
         padding: 2px 6px;
         flex-shrink: 0;
         border-radius: 4px;
-        order: 0;
     }
 
-    /* Today badge: push to button row (row 2) */
-    #fullViewContainer .task-item .today-badge {
+    /* Row 2: actions strip — badges + buttons */
+    #fullViewContainer .task-item .task-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        padding-left: 30px;
+    }
+
+    /* Today badge in action row */
+    #fullViewContainer .task-item .task-actions .today-badge {
         font-size: 0.7em;
         padding: 3px 8px;
         background: rgba(255, 65, 108, 0.2);
         color: #ff6b8a;
         border-radius: 6px;
         font-weight: 600;
-        order: 10;
     }
 
-    /* ACTION BUTTONS: compact row 2 — full width strip below text */
-    #fullViewContainer .task-item .do-today-btn {
+    /* ACTION BUTTONS: compact themed pills */
+    #fullViewContainer .task-item .task-actions .do-today-btn {
         padding: 4px 10px;
         font-size: 0.7em;
         min-height: 28px;
-        min-width: auto;
         border-radius: 6px;
-        order: 11;
         background: rgba(255, 65, 108, 0.15);
         border: 1px solid rgba(255, 65, 108, 0.3);
         color: #ff8fa3;
     }
-    #fullViewContainer .task-item .task-timer-btn {
+    #fullViewContainer .task-item .task-actions .task-timer-btn {
         padding: 4px 10px;
         font-size: 0.7em;
         min-height: 28px;
-        min-width: auto;
         border-radius: 6px;
-        order: 12;
         background: rgba(102, 126, 234, 0.15);
         border: 1px solid rgba(102, 126, 234, 0.3);
         color: #93a8f5;
     }
-    #fullViewContainer .task-item .task-delete-btn {
+    #fullViewContainer .task-item .task-actions .task-delete-btn {
         padding: 4px 10px;
         font-size: 0.7em;
         min-height: 28px;
-        min-width: auto;
         border-radius: 6px;
-        order: 13;
         background: rgba(239, 68, 68, 0.12);
         border: 1px solid rgba(239, 68, 68, 0.25);
         color: #fca5a5;
@@ -10196,11 +10223,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     }
     #fullViewContainer .task-item .task-text {
         font-size: 0.84em;
-        min-width: calc(100% - 60px);
     }
-    #fullViewContainer .task-item .do-today-btn,
-    #fullViewContainer .task-item .task-timer-btn,
-    #fullViewContainer .task-item .task-delete-btn {
+    #fullViewContainer .task-item .task-actions {
+        padding-left: 28px;
+        gap: 5px;
+    }
+    #fullViewContainer .task-item .task-actions .do-today-btn,
+    #fullViewContainer .task-item .task-actions .task-timer-btn,
+    #fullViewContainer .task-item .task-actions .task-delete-btn {
         padding: 3px 7px;
         font-size: 0.68em;
         min-height: 26px;
@@ -18241,22 +18271,26 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                          ondrop="handleDrop(event, '${task.id}')"
                          ondragend="handleDragEnd(event)">
                         <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-                        <input type="checkbox"
-                               class="task-checkbox"
-                               ${task.completed ? 'checked' : ''}
-                               onchange="toggleTask('${task.id}')">
-                        ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
-                        <span style="font-size: 0.8em; margin-right: 5px;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
-                        <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
-                        ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
-                        ${!task.completed && !isDoTodayView ? `
-                            <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')" style="margin-right: 5px;">
-                                ${task.doToday ? '✓ Today' : '🔴 Today'}
-                            </button>
-                        ` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">⏱️</button>` : ''}
-                        ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">✏️</button>` : ''}
-                        <button class="task-delete-btn" onclick="deleteTask('${task.id}')">🗑️</button>
+                        <div class="task-row-top">
+                            <input type="checkbox"
+                                   class="task-checkbox"
+                                   ${task.completed ? 'checked' : ''}
+                                   onchange="toggleTask('${task.id}')">
+                            ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
+                            <span style="font-size: 0.8em; flex-shrink: 0;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
+                            <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
+                        </div>
+                        <div class="task-actions">
+                            ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
+                            ${!task.completed && !isDoTodayView ? `
+                                <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')">
+                                    ${task.doToday ? '✓ Today' : '🔴 Today'}
+                                </button>
+                            ` : ''}
+                            ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">⏱️</button>` : ''}
+                            ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">✏️</button>` : ''}
+                            <button class="task-delete-btn" onclick="deleteTask('${task.id}')">🗑️</button>
+                        </div>
                     </div>
                 `;
             }).join('');
