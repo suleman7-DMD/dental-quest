@@ -5954,10 +5954,10 @@
             overflow-wrap: break-word !important;
         }
 
-        /* === CHECKBOX === */
+        /* === CHECKBOX (scoped to Focus View) === */
         .task-card input[type="checkbox"],
         .cc-task-item input[type="checkbox"],
-        .task-checkbox {
+        #focusModeContainer .task-checkbox {
             width: 16px !important;
             height: 16px !important;
             accent-color: var(--accent-blue) !important;
@@ -5966,11 +5966,11 @@
             transition: transform 0.15s ease !important;
         }
         .task-card input[type="checkbox"]:hover,
-        .task-checkbox:hover {
+        #focusModeContainer .task-checkbox:hover {
             transform: scale(1.15) !important;
         }
         .task-card input[type="checkbox"]:checked,
-        .task-checkbox:checked {
+        #focusModeContainer .task-checkbox:checked {
             animation: checkPop 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
@@ -9494,7 +9494,8 @@
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     padding: 0 16px;
-    height: 48px;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(48px + env(safe-area-inset-top, 0px));
 }
 .header-compact-row {
     display: flex;
@@ -9713,7 +9714,7 @@
 /* ==================== QUICK ADD FAB ==================== */
 #quickAddFAB {
     position: fixed;
-    bottom: 24px;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     right: 24px;
     width: 56px;
     height: 56px;
@@ -9883,7 +9884,8 @@
 
 /* Touch-action for faster taps */
 button, a, .nav-link, .stat-card.clickable-card, .category-tab,
-.view-toggle-btn, .task-checkbox, input[type="checkbox"] {
+.view-toggle-btn, .task-checkbox, input[type="checkbox"],
+.do-today-btn, .task-timer-btn, .task-delete-btn {
     touch-action: manipulation;
 }
 
@@ -9899,9 +9901,22 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     .calendar-day-header { font-size: 0.7em; }
 }
 
-/* ==================== FULL VIEW MOBILE OVERHAUL ==================== */
+/* ==================== FULL VIEW MOBILE OVERHAUL v2 ==================== */
+
+/* Stagger animation for task items */
+@keyframes slideInTask {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Do Today pulse glow */
+@keyframes urgentPulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(255, 65, 108, 0.15); }
+    50% { box-shadow: 0 2px 16px rgba(255, 65, 108, 0.35); }
+}
+
 @media (max-width: 768px) {
-    /* Container: full width, no overflow clipping */
+    /* Container: full width */
     #fullViewContainer {
         width: 100%;
         max-width: 100vw;
@@ -9913,14 +9928,16 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         grid-template-columns: 1fr !important;
     }
 
+    /* Tasks section: dark themed */
     #fullViewContainer .tasks-section {
         padding: 10px 6px;
-        border-radius: 10px;
+        border-radius: 12px;
         width: 100%;
         max-width: 100%;
+        background: rgba(13, 17, 23, 0.6) !important;
     }
 
-    /* Category tabs: horizontal scroll pills */
+    /* Category tabs: sticky horizontal scroll pills */
     #fullViewContainer .category-tabs {
         display: flex;
         flex-wrap: nowrap;
@@ -9929,59 +9946,123 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         -webkit-overflow-scrolling: touch;
         gap: 6px;
         margin-bottom: 10px;
-        padding: 4px 2px 8px;
+        padding: 8px 4px;
         scrollbar-width: none;
+        position: sticky;
+        top: calc(48px + env(safe-area-inset-top, 0px));
+        z-index: 50;
+        background: rgba(13, 17, 23, 0.95);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 0;
+        margin-left: -6px;
+        margin-right: -6px;
+        padding-left: 6px;
+        padding-right: 6px;
     }
     #fullViewContainer .category-tabs::-webkit-scrollbar {
         display: none;
     }
     #fullViewContainer .category-tab {
         flex-shrink: 0;
-        padding: 8px 12px;
-        font-size: 0.78em;
+        padding: 8px 14px;
+        font-size: 0.8em;
         border-radius: 20px;
         white-space: nowrap;
-        min-height: 34px;
+        min-height: 40px;
+    }
+    #fullViewContainer .category-tab .task-count {
+        background: rgba(0, 0, 0, 0.25);
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 0.8em;
+        font-weight: 700;
+        margin-left: 3px;
     }
 
-    /* Add task form: stack vertically */
+    /* Add task form: stack vertically, dark themed */
     #fullViewContainer .add-task-form {
         flex-direction: column;
         gap: 8px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
     #fullViewContainer .add-task-input {
         width: 100%;
         min-width: 0;
         font-size: 16px;
-        padding: 10px 12px;
+        padding: 12px 14px;
         box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #e6edf3;
+        border-radius: 12px;
+    }
+    #fullViewContainer .add-task-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
     }
     #fullViewContainer .add-task-btn {
         width: 100%;
-        padding: 10px;
+        padding: 12px;
         font-size: 0.9em;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
     }
 
     /* Category XP bar: compact */
     #fullViewContainer .category-xp-bar {
         padding: 8px 10px;
         margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 8px;
     }
 
-    /* Task list: tighter gaps */
+    /* Task list */
     #fullViewContainer .task-list {
-        gap: 6px;
+        gap: 8px;
     }
 
-    /* TASK ITEMS: flex-wrap so buttons flow to next line */
+    /* TASK ITEMS: dark glassmorphism cards */
     #fullViewContainer .task-item {
-        padding: 10px 8px;
-        gap: 6px;
+        padding: 12px 10px;
+        gap: 8px;
         flex-wrap: wrap;
         align-items: flex-start;
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: visible;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-left: 3px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        animation: slideInTask 0.25s ease-out backwards;
+        -webkit-user-drag: none;
+    }
+    /* Stagger delays */
+    #fullViewContainer .task-item:nth-child(1) { animation-delay: 0ms; }
+    #fullViewContainer .task-item:nth-child(2) { animation-delay: 30ms; }
+    #fullViewContainer .task-item:nth-child(3) { animation-delay: 60ms; }
+    #fullViewContainer .task-item:nth-child(4) { animation-delay: 90ms; }
+    #fullViewContainer .task-item:nth-child(5) { animation-delay: 120ms; }
+    #fullViewContainer .task-item:nth-child(6) { animation-delay: 150ms; }
+    #fullViewContainer .task-item:nth-child(7) { animation-delay: 180ms; }
+    #fullViewContainer .task-item:nth-child(8) { animation-delay: 210ms; }
+    #fullViewContainer .task-item:nth-child(9) { animation-delay: 240ms; }
+    #fullViewContainer .task-item:nth-child(10) { animation-delay: 270ms; }
+
+    /* Category color tints on task cards */
+    #fullViewContainer .task-item.financial { border-left-color: #43e97b !important; background: linear-gradient(135deg, rgba(67,233,123,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.clinic { border-left-color: #fa709a !important; background: linear-gradient(135deg, rgba(250,112,154,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.health { border-left-color: #30cfd0 !important; background: linear-gradient(135deg, rgba(48,207,208,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.school { border-left-color: #a8edea !important; background: linear-gradient(135deg, rgba(168,237,234,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.academic { border-left-color: #ff9a56 !important; background: linear-gradient(135deg, rgba(255,154,86,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.future { border-left-color: #4facfe !important; background: linear-gradient(135deg, rgba(79,172,254,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.life { border-left-color: #f093fb !important; background: linear-gradient(135deg, rgba(240,147,251,0.06) 0%, rgba(255,255,255,0.03) 100%) !important; }
+    #fullViewContainer .task-item.dotoday { border-left-color: #ff416c !important; background: linear-gradient(135deg, rgba(255,65,108,0.08) 0%, rgba(255,255,255,0.03) 100%) !important; animation: slideInTask 0.25s ease-out backwards, urgentPulse 2s ease-in-out infinite; }
+
+    #fullViewContainer .task-item:active {
+        background: rgba(255, 255, 255, 0.08) !important;
     }
 
     /* Disable hover lift on mobile */
@@ -9989,84 +10070,102 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         transform: none !important;
     }
 
-    /* Checkbox: compact visual, full touch target via padding */
+    /* Checkbox: visible on dark bg */
     #fullViewContainer .task-item .task-checkbox {
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
-        min-height: 26px;
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
         flex-shrink: 0;
-        margin-top: 1px;
+        margin-top: 2px;
+        accent-color: #667eea;
     }
 
-    /* Task text: fills remaining width on first row */
+    /* Task text: full display, no truncation, light text on dark */
     #fullViewContainer .task-item .task-text {
         flex: 1 1 0;
         min-width: 0;
-        font-size: 0.88em;
-        line-height: 1.35;
+        font-size: 0.9em;
+        line-height: 1.4;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        display: block;
+        overflow: visible;
+        white-space: normal;
+        color: #e6edf3;
     }
 
-    /* Size icon: compact inline */
+    /* Size icon */
     #fullViewContainer .task-item > span[title] {
-        font-size: 0.7em;
+        font-size: 0.72em;
         flex-shrink: 0;
     }
 
-    /* Category label */
+    /* Category label: readable */
     #fullViewContainer .task-item .category-label {
-        font-size: 0.6em;
-        padding: 1px 5px;
+        font-size: 0.72em;
+        padding: 2px 6px;
         flex-shrink: 0;
+        border-radius: 4px;
     }
 
-    /* Today badge */
+    /* Today badge: readable */
     #fullViewContainer .task-item .today-badge {
-        font-size: 0.6em;
-        padding: 1px 5px;
+        font-size: 0.72em;
+        padding: 2px 6px;
+        background: rgba(255, 65, 108, 0.2);
+        color: #ff6b8a;
+        border-radius: 4px;
+        font-weight: 600;
     }
 
-    /* ACTION BUTTONS: compact, flow to second row via flex-wrap */
+    /* ACTION BUTTONS: compact, themed, flow to second row */
     #fullViewContainer .task-item .do-today-btn {
-        padding: 4px 8px;
-        font-size: 0.68em;
-        min-height: 28px;
+        padding: 5px 10px;
+        font-size: 0.72em;
+        min-height: 32px;
         min-width: auto;
-        border-radius: 6px;
+        border-radius: 8px;
         order: 10;
+        background: rgba(255, 65, 108, 0.15);
+        border: 1px solid rgba(255, 65, 108, 0.3);
+        color: #ff8fa3;
     }
     #fullViewContainer .task-item .task-timer-btn {
-        padding: 4px 8px;
-        font-size: 0.68em;
-        min-height: 28px;
+        padding: 5px 10px;
+        font-size: 0.72em;
+        min-height: 32px;
         min-width: auto;
-        border-radius: 6px;
+        border-radius: 8px;
         order: 11;
+        background: rgba(102, 126, 234, 0.15);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        color: #93a8f5;
     }
     #fullViewContainer .task-item .task-delete-btn {
-        padding: 4px 8px;
-        font-size: 0.68em;
-        min-height: 28px;
+        padding: 5px 10px;
+        font-size: 0.72em;
+        min-height: 32px;
         min-width: auto;
-        border-radius: 6px;
+        border-radius: 8px;
         order: 12;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
     }
 
-    /* Force buttons to wrap to their own row */
-    #fullViewContainer .task-item .do-today-btn,
-    #fullViewContainer .task-item .task-timer-btn:first-of-type {
-        margin-left: 0;
-    }
-
-    /* Timer section: hide on mobile to save space */
+    /* Timer section: hide on mobile */
     #fullViewContainer .timer-section {
         display: none;
+    }
+
+    /* Completed tasks: muted appearance */
+    #fullViewContainer .task-item.completed {
+        opacity: 0.5;
+    }
+    #fullViewContainer .task-item.completed .task-text {
+        text-decoration: line-through;
+        color: #6b7280;
     }
 }
 
@@ -10076,29 +10175,29 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         padding: 8px 4px;
     }
     #fullViewContainer .category-tab {
-        padding: 6px 10px;
-        font-size: 0.72em;
-        min-height: 30px;
+        padding: 7px 11px;
+        font-size: 0.75em;
+        min-height: 36px;
     }
     #fullViewContainer .task-item {
-        padding: 8px 6px;
-        gap: 5px;
+        padding: 10px 8px;
+        gap: 6px;
     }
     #fullViewContainer .task-item .task-checkbox {
-        width: 22px;
-        height: 22px;
-        min-width: 22px;
-        min-height: 22px;
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
     }
     #fullViewContainer .task-item .task-text {
-        font-size: 0.82em;
+        font-size: 0.86em;
     }
     #fullViewContainer .task-item .do-today-btn,
     #fullViewContainer .task-item .task-timer-btn,
     #fullViewContainer .task-item .task-delete-btn {
-        padding: 3px 6px;
-        font-size: 0.65em;
-        min-height: 26px;
+        padding: 4px 8px;
+        font-size: 0.7em;
+        min-height: 30px;
     }
 }
 
