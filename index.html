@@ -2648,7 +2648,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 2000;
+            z-index: 10002;
             align-items: center;
             justify-content: center;
         }
@@ -7198,6 +7198,7 @@
             position: relative !important;
             margin-left: 56px !important;
             border-left: 1px solid rgba(51, 65, 85, 0.3) !important;
+            overflow: hidden !important;
         }
 
         .gcal-hour {
@@ -10305,10 +10306,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         <div class="menu-section">
             <div class="menu-section-title">Tools</div>
             <div class="menu-tools-grid">
-                <button onclick="openNotebook();toggleHeaderMenu()">Notebook</button>
-                <button onclick="openDailyPlanner();toggleHeaderMenu()">Planner</button>
-                <button onclick="openCalendar();toggleHeaderMenu()">Calendar</button>
-                <button onclick="openFinancials();toggleHeaderMenu()">Financials</button>
+                <button onclick="toggleHeaderMenu();setTimeout(openNotebook,50)">Notebook</button>
+                <button onclick="toggleHeaderMenu();setTimeout(openDailyPlanner,50)">Planner</button>
+                <button onclick="toggleHeaderMenu();setTimeout(openCalendar,50)">Calendar</button>
+                <button onclick="toggleHeaderMenu();setTimeout(openFinancials,50)">Financials</button>
             </div>
         </div>
         <div class="menu-section">
@@ -10328,7 +10329,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 <button onclick="forcePullFromCloud();toggleHeaderMenu()">Pull</button>
                 <button onclick="createCheckpoint();toggleHeaderMenu()">Checkpoint</button>
                 <button onclick="showCheckpointManager();toggleHeaderMenu()">Restore</button>
-                <button onclick="showHelp();toggleHeaderMenu()">Help</button>
+                <button onclick="toggleHeaderMenu();setTimeout(showHelp,50)">Help</button>
             </div>
         </div>
     </div>
@@ -11040,7 +11041,63 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 </div>
 
                 <!-- Medication Settings Modal -->
-                <div class="modal-overlay" id="medModal" onclick="closeMedModal()">
+
+                <!-- Calendar Note Modal -->
+
+                <!-- Add Countdown Modal -->
+
+                <!-- Help Modal -->
+
+                <div class="task-list" id="taskList"></div>
+            </div>
+
+            <div class="timer-section">
+                <h3 style="text-align: center; margin-bottom: 12px; color: #60a5fa; font-size: 1em; font-weight: 600;">⏱️ Pomodoro Timer</h3>
+                
+                <div class="pomodoro-options">
+                    <div class="pomodoro-option active" onclick="selectPomodoro(25, 5)">
+                        <div class="time">25/5</div>
+                        <div class="label">minutes</div>
+                    </div>
+                    <div class="pomodoro-option" onclick="selectPomodoro(50, 10)">
+                        <div class="time">50/10</div>
+                        <div class="label">minutes</div>
+                    </div>
+                </div>
+
+                <!-- Financial Dashboard Modal -->
+                <!-- Calendar Modal -->
+
+                <!-- Financial Modal -->
+
+                <!-- Help Modal -->
+
+                <!-- Notebook Modal -->
+
+                <!-- Daily Planner Modal - Full Featured -->
+
+                <div class="timer-display">
+                    <div class="timer-mode" id="timerMode">Work Session</div>
+                    <div class="timer-clock" id="timerClock">25:00</div>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="startBtn" onclick="startTimer()">Start</button>
+                    <button class="timer-btn pause" id="pauseBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+                    <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
+                </div>
+
+                <div class="current-task" id="currentTaskDisplay" style="display: none;">
+                    <div class="label">Currently working on:</div>
+                    <div class="task-name" id="currentTaskName"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div> <!-- Close fullViewContainer -->
+
+    <!-- ==================== MODALS (outside containers for visibility) ==================== -->
+                <div class="modal-overlay" id="medModal" onclick="safeModalClose(closeMedModal, event)">
                     <div class="modal-content" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeMedModal()" title="Close">×</button>
                         <h3 id="modalTitle">Medication Settings</h3>
@@ -11060,9 +11117,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Calendar Note Modal -->
-                <div class="modal-overlay" id="noteModal" onclick="closeNoteModal()">
+                <div class="modal-overlay" id="noteModal" onclick="safeModalClose(closeNoteModal, event)">
                     <div class="modal-content" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeNoteModal()" title="Close">×</button>
                         <h3 id="noteModalTitle">Add Note</h3>
@@ -11082,9 +11137,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Add Countdown Modal -->
-                <div class="modal-overlay" id="addCountdownModal" onclick="closeAddCountdown()">
+                <div class="modal-overlay" id="addCountdownModal" onclick="safeModalClose(closeAddCountdown, event)">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
                         <button class="modal-close-x" onclick="closeAddCountdown()" title="Close">×</button>
                         <h2 style="color: #58a6ff; margin-bottom: 20px;">➕ Add New Countdown</h2>
@@ -11139,9 +11192,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Help Modal -->
-                <div class="modal-overlay" id="helpModal" onclick="closeHelp()">
+                <div class="modal-overlay" id="helpModal" onclick="safeModalClose(closeHelp, event)">
                     <div class="modal-content help-modal" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeHelp()" title="Close">×</button>
                         <h3>📖 Quick Reference Guide</h3>
@@ -11246,27 +11297,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <div class="task-list" id="taskList"></div>
-            </div>
-
-            <div class="timer-section">
-                <h3 style="text-align: center; margin-bottom: 12px; color: #60a5fa; font-size: 1em; font-weight: 600;">⏱️ Pomodoro Timer</h3>
-                
-                <div class="pomodoro-options">
-                    <div class="pomodoro-option active" onclick="selectPomodoro(25, 5)">
-                        <div class="time">25/5</div>
-                        <div class="label">minutes</div>
-                    </div>
-                    <div class="pomodoro-option" onclick="selectPomodoro(50, 10)">
-                        <div class="time">50/10</div>
-                        <div class="label">minutes</div>
-                    </div>
-                </div>
-
-                <!-- Financial Dashboard Modal -->
-                <!-- Calendar Modal -->
-                <div class="modal-overlay" id="calendarModal" onclick="closeCalendar()">
+                <div class="modal-overlay" id="calendarModal" onclick="safeModalClose(closeCalendar, event)">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 98%; max-height: 98%; overflow-y: auto; background: #0f1419; padding: 0;">
                         <!-- Header -->
                         <div style="position: sticky; top: 0; background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 25px; border-bottom: 3px solid #30363d; z-index: 100; border-radius: 12px 12px 0 0;">
@@ -11310,9 +11341,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Financial Modal -->
-                <div class="modal-overlay" id="financialModal" onclick="closeFinancials()">
+                <div class="modal-overlay" id="financialModal" onclick="safeModalClose(closeFinancials, event)">
                     <div class="modal-content financial-modal fin-modal-container" onclick="event.stopPropagation()">
                         <!-- Sticky Header -->
                         <div class="fin-modal-header">
@@ -11351,8 +11380,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Help Modal -->
                 <div class="help-modal-overlay" id="financialHelpModal" onclick="closeFinancialHelp()">
                     <div class="help-modal-content" onclick="event.stopPropagation()">
                         <div id="helpContent"></div>
@@ -11361,9 +11388,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </button>
                     </div>
                 </div>
-
-                <!-- Notebook Modal -->
-                <div class="modal-overlay" id="notebookModal" onclick="closeNotebook()">
+                <div class="modal-overlay" id="notebookModal" onclick="safeModalClose(closeNotebook, event)">
                     <div class="modal-content notebook-modal" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeNotebook()" title="Close">×</button>
                         <h3>📓 My Notebook</h3>
@@ -11399,9 +11424,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                 </div>
-
-                <!-- Daily Planner Modal - Full Featured -->
-                <div class="modal-overlay" id="dailyPlannerModal" onclick="closeDailyPlanner()">
+                <div class="modal-overlay" id="dailyPlannerModal" onclick="safeModalClose(closeDailyPlanner, event)">
                     <div class="modal-content planner-modal" onclick="event.stopPropagation()">
                         <!-- Header with live time -->
                         <div class="planner-header">
@@ -11506,25 +11529,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     </div>
                 </div>
 
-                <div class="timer-display">
-                    <div class="timer-mode" id="timerMode">Work Session</div>
-                    <div class="timer-clock" id="timerClock">25:00</div>
-                </div>
-
-                <div class="timer-controls">
-                    <button class="timer-btn start" id="startBtn" onclick="startTimer()">Start</button>
-                    <button class="timer-btn pause" id="pauseBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
-                    <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
-                </div>
-
-                <div class="current-task" id="currentTaskDisplay" style="display: none;">
-                    <div class="label">Currently working on:</div>
-                    <div class="task-name" id="currentTaskName"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div> <!-- Close fullViewContainer -->
 
     <!-- Planning Modal for Focus Mode -->
     <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
@@ -14427,12 +14431,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         function openMedSettings(medType) {
             currentMedModal = medType;
             const med = medications[medType];
-            
+
             document.getElementById('modalTitle').textContent = `${medType} Settings`;
             document.getElementById('modalPills').value = med.pills;
             document.getElementById('modalRefill').value = med.refillDate || '';
-            
-            document.getElementById('medModal').classList.add('show');
+
+            const modal = document.getElementById('medModal');
+            ensureModalOnBody(modal);
+            modal.classList.add('show');
         }
 
         function closeMedModal() {
@@ -14441,23 +14447,46 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         }
 
         function showHelp() {
-            document.getElementById('helpModal').classList.add('show');
+            const modal = document.getElementById('helpModal');
+            if (!modal) return;
+            ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
+            modal.classList.add('show');
         }
 
         function closeHelp() {
             document.getElementById('helpModal').classList.remove('show');
         }
 
+        // Ensure modal is a direct child of document.body so it's never
+        // trapped inside a hidden parent (fullViewContainer / timer-section)
+        function ensureModalOnBody(modal) {
+            if (modal && modal.parentNode !== document.body) {
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Guard against ghost clicks closing modals immediately after opening (iOS Safari bug)
+        let _modalOpenTime = 0;
+        function safeModalClose(closeFn, event) {
+            // Only close if: (1) click target is the overlay itself, and (2) 400ms have passed since open
+            if (event && event.target !== event.currentTarget) return;
+            if (Date.now() - _modalOpenTime < 400) return;
+            closeFn();
+        }
+
         // ============================================
         // FINANCIAL COCKPIT - MASTER CONTROL SYSTEM
         // ============================================
-        
+
         function openFinancials() {
             const modal = document.getElementById('financialModal');
             if (!modal) {
                 console.error('Financial modal not found');
                 return;
             }
+            ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
             modal.classList.add('show');
             
             try {
@@ -15504,7 +15533,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         // ============================================
         
         function openFinancialHelp() {
-            document.getElementById('financialHelpModal').style.display = 'flex';
+            const modal = document.getElementById('financialHelpModal');
+            if (!modal) return;
+            ensureModalOnBody(modal);
+            modal.style.display = 'flex';
         }
         
         function closeFinancialHelp() {
@@ -15807,6 +15839,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 console.error('Calendar modal not found');
                 return;
             }
+            ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
             modal.classList.add('show');
             try {
                 renderMasterCalendar();
@@ -16141,7 +16175,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             document.getElementById('countdownNotes').value = '';
             document.getElementById('countdownDeleteBtn').style.display = 'none';
             document.getElementById('saveCountdownBtn').textContent = '✓ Create Countdown';
-            document.getElementById('addCountdownModal').classList.add('show');
+            const modal = document.getElementById('addCountdownModal');
+            ensureModalOnBody(modal);
+            modal.classList.add('show');
         }
         
         function closeAddCountdown() {
@@ -16506,7 +16542,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 console.error('Daily planner modal not found');
                 return;
             }
-            
+            ensureModalOnBody(modal);
+
             try {
                 // Ensure dailyPlanner is properly initialized
                 if (!dailyPlanner) {
@@ -16550,9 +16587,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 
                 renderPlannerTimeline();
                 startPlannerClock();
-                
+
+                _modalOpenTime = Date.now();
                 modal.classList.add('show');
-                
+
                 // Scroll to current time after a brief delay
                 setTimeout(() => scrollToCurrentTime(), 150);
             } catch (error) {
@@ -17520,7 +17558,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 console.error('Notebook modal not found');
                 return;
             }
-            
+            ensureModalOnBody(modal);
+
             try {
                 // Ensure notebook is properly initialized
                 if (!notebook) {
@@ -17537,6 +17576,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 
                 renderNotebookTabs();
                 renderNotebookContent();
+                _modalOpenTime = Date.now();
                 modal.classList.add('show');
             } catch (error) {
                 console.error('Error opening notebook:', error);
@@ -17868,7 +17908,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 charCount.textContent = this.value.length;
             };
             
-            document.getElementById('noteModal').classList.add('show');
+            const modal = document.getElementById('noteModal');
+            ensureModalOnBody(modal);
+            modal.classList.add('show');
         }
 
         function closeNoteModal() {
@@ -18792,8 +18834,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             document.getElementById('focusModeBtn').style.color = 'white';
             document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.95)';
             document.getElementById('fullViewBtn').style.color = '#667eea';
+            // Re-render tasks so Full View shows current data
+            if (typeof renderTasks === 'function') renderTasks();
         }
-        
+
         function renderFocusMode() {
             // Render the new Command Center
             updateCommandCenterGreeting();
@@ -20226,16 +20270,16 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
                     <div class="task-details-actions">
-                        <button onclick="startTaskInFocus(${taskId}); closeTaskDetailsModal();">
+                        <button onclick="startTaskInFocus('${taskId}'); closeTaskDetailsModal();">
                             <span>▶</span> Start Focus Session
                         </button>
-                        <button onclick="sendToCrashOut(${taskId}); closeTaskDetailsModal();">
+                        <button onclick="sendToCrashOut('${taskId}'); closeTaskDetailsModal();">
                             <span>🔥</span> Send to Crash Out
                         </button>
-                        <button onclick="editTriageTaskText(${taskId}); closeTaskDetailsModal();">
+                        <button onclick="editTriageTaskText('${taskId}'); closeTaskDetailsModal();">
                             <span>✏️</span> Edit Task Text
                         </button>
-                        <button class="danger-btn" onclick="unflagFromToday(${taskId}); closeTaskDetailsModal();">
+                        <button class="danger-btn" onclick="unflagFromToday('${taskId}'); closeTaskDetailsModal();">
                             <span>🚫</span> Remove from Today (unflag)
                         </button>
                     </div>
@@ -20272,7 +20316,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         // Time-aware prompts
         let timePromptInterval = null;
         let lastPromptedTaskId = null;
-        let skippedTasks = {}; // { taskId: 'time string when skipped' } - prevents re-prompting until time changes
+        let dismissedUntil = {}; // { taskId: timestamp } - 3-minute cooldown after dismiss, then re-prompts
 
         function startTimePromptChecker() {
             if (timePromptInterval) clearInterval(timePromptInterval);
@@ -20289,7 +20333,15 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (commandCenterData.currentSession && commandCenterData.currentSession.confirmedStarted) return;
 
             const now = new Date();
+            const nowMs = now.getTime();
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
+
+            // Clean up expired dismissals (older than 3 minutes)
+            for (const tid in dismissedUntil) {
+                if (dismissedUntil[tid] <= nowMs) {
+                    delete dismissedUntil[tid];
+                }
+            }
 
             // Find task that should be starting now
             for (const task of scheduledTasks) {
@@ -20298,8 +20350,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 // Skip if already prompted for this task at this time
                 if (task.id === lastPromptedTaskId) continue;
 
-                // Skip if user dismissed this task at its current time
-                if (skippedTasks[task.id] === task.crashOutTime) continue;
+                // Skip if within 3-minute dismiss cooldown
+                if (dismissedUntil[task.id] && dismissedUntil[task.id] > nowMs) continue;
 
                 // Use parseCrashOutTime() which handles non-breaking spaces from toLocaleTimeString
                 const taskTime = parseCrashOutTime(task.crashOutTime);
@@ -20317,7 +20369,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             // Catch-up: show prompt for first past-due unstarted task
             const pastDueTasks = scheduledTasks.filter(task => {
                 if (!task.crashOutTime || task.id === lastPromptedTaskId) return false;
-                if (skippedTasks[task.id] === task.crashOutTime) return false;
+                if (dismissedUntil[task.id] && dismissedUntil[task.id] > nowMs) return false;
                 const taskTime = parseCrashOutTime(task.crashOutTime);
                 if (!taskTime) return false;
                 return (now - taskTime) > 0;
@@ -20377,7 +20429,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         function closeTimePrompt() {
             const modal = document.getElementById('timePromptModal');
             if (modal) modal.remove();
-            // Reset so future prompts can fire (skippedTasks handles dismiss-specific blocking)
+            // Reset so future prompts can fire (dismissedUntil handles dismiss-specific blocking)
             lastPromptedTaskId = null;
         }
 
@@ -20390,7 +20442,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             // CRITICAL: Reset tracking so popups re-appear at new times
             lastPromptedTaskId = null;
-            skippedTasks = {}; // Clear skipped tracking since all times are changing
+            dismissedUntil = {}; // Clear dismiss cooldowns since all times are changing
 
             // Save state for undo
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
@@ -20411,17 +20463,18 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             // Show cascade animation
             showCascadeAnimation();
 
-            renderCrashOutMode();
+            // Only re-render crashout UI if we're in crashout mode; push works from any page
+            if (commandCenterMode === 'crashout') {
+                renderCrashOutMode();
+            }
             saveData();
 
             // Show undo toast
             showUndoToast(minutes);
 
-            // Schedule a re-check after the delay so popup re-appears when new time arrives
+            // Schedule a re-check so popup re-appears when new time arrives (works from any mode)
             setTimeout(() => {
-                if (commandCenterMode === 'crashout') {
-                    checkForTimePrompts();
-                }
+                checkForTimePrompts();
             }, minutes * 60 * 1000 + 5000); // Re-check 5 seconds after the pushed time arrives
         }
 
@@ -20479,25 +20532,24 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             });
 
             undoState = null;
-            skippedTasks = {}; // Clear since times changed back
+            dismissedUntil = {}; // Clear since times changed back
             lastPromptedTaskId = null;
             const toast = document.querySelector('.undo-toast');
             if (toast) toast.remove();
             if (undoTimeout) clearTimeout(undoTimeout);
 
-            renderCrashOutMode();
+            if (commandCenterMode === 'crashout') {
+                renderCrashOutMode();
+            }
             saveData();
             showToast('Undone!', '↩️');
         }
 
         function skipTask(taskId) {
-            const task = tasks[taskId];
             closeTimePrompt();
-            // Track that this task was skipped at its current time (won't prompt again until time changes)
-            if (task && task.crashOutTime) {
-                skippedTasks[taskId] = task.crashOutTime;
-            }
-            showToast('Prompt dismissed - task stays in schedule', '⏭️');
+            // Set 3-minute cooldown before this task can prompt again
+            dismissedUntil[taskId] = Date.now() + 3 * 60 * 1000;
+            showToast('Dismissed for 3 min - task stays in schedule', '⏭️');
         }
 
         function removeTaskFromSchedule(taskId) {
@@ -20827,7 +20879,25 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 return date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
             }
 
-            let html = '<div class="timeline-grid" style="height: ' + totalHeight + 'px;">';
+            // Pre-compute maximum bottom position to ensure grid contains all elements
+            let maxBottom = totalHeight;
+            scheduledTasks.forEach(function(task) {
+                if (task.crashOutTime) {
+                    const tsd = parseCrashOutTime(task.crashOutTime);
+                    if (tsd) {
+                        const taskTop = timeToPx(tsd);
+                        const heightPx = Math.max(36, ((task.crashOutDuration || 30) / 60) * PX_PER_HOUR);
+                        maxBottom = Math.max(maxBottom, taskTop + heightPx);
+                    }
+                }
+            });
+            // Wind-down block bottom
+            maxBottom = Math.max(maxBottom, timeToPx(windDownStart) + PX_PER_HOUR);
+            // Sleep marker with padding
+            maxBottom = Math.max(maxBottom, timeToPx(sleepTime) + 40);
+
+            const gridHeight = maxBottom;
+            let html = '<div class="timeline-grid" style="height: ' + gridHeight + 'px;">';
 
             // --- Hour grid lines ---
             let hourTime = new Date(gridStart);
@@ -21315,6 +21385,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             const date = new Date();
             date.setHours(hours, minutes, 0, 0);
+
+            // Handle midnight crossover: if parsed time is >12h in the past,
+            // the crash out session likely spans midnight — push to tomorrow
+            const now = new Date();
+            if (date.getTime() < now.getTime() - 12 * 60 * 60 * 1000) {
+                date.setDate(date.getDate() + 1);
+            }
             return date;
         }
 
@@ -21525,9 +21602,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             commandCenterData.currentSession.startedAt = new Date().toISOString();
             currentFocusTaskId = taskId;
 
-            // Clear skip tracking - we're now working on this task
-            if (skippedTasks[taskId]) {
-                delete skippedTasks[taskId];
+            // Clear dismiss cooldown - we're now working on this task
+            if (dismissedUntil[taskId]) {
+                delete dismissedUntil[taskId];
             }
             lastPromptedTaskId = taskId; // Prevent prompt for this task
 
