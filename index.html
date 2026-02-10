@@ -13550,12 +13550,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 '30mg': {
                     pills: 30,
                     refillDate: null,
-                    dosesLogged: []
+                    dosesLogged: {}
                 },
                 '20mg': {
                     pills: 30,
                     refillDate: null,
-                    dosesLogged: []
+                    dosesLogged: {}
                 }
             };
             
@@ -14438,6 +14438,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             const modal = document.getElementById('medModal');
             ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
             modal.classList.add('show');
         }
 
@@ -16068,7 +16069,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             }
             
             // Sort by date (soonest first)
-            const sortedEvents = [...calendarEvents].sort((a, b) => {
+            const sortedEvents = getValues(calendarEvents).sort((a, b) => {
                 return parseLocalDate(a.dateStr) - parseLocalDate(b.dateStr);
             });
             
@@ -16177,6 +16178,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             document.getElementById('saveCountdownBtn').textContent = '✓ Create Countdown';
             const modal = document.getElementById('addCountdownModal');
             ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
             modal.classList.add('show');
         }
         
@@ -16701,7 +16703,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     html += `<optgroup label="${cat.name}">`;
                     cat.tasks.forEach(task => {
                         const truncatedText = task.text.length > 60 ? task.text.substring(0, 60) + '...' : task.text;
-                        html += `<option value="${task.id}">${truncatedText}</option>`;
+                        html += `<option value="${task.id}">${escapeHtml(truncatedText)}</option>`;
                     });
                     html += '</optgroup>';
                 }
@@ -17910,6 +17912,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             
             const modal = document.getElementById('noteModal');
             ensureModalOnBody(modal);
+            _modalOpenTime = Date.now();
             modal.classList.add('show');
         }
 
@@ -18533,9 +18536,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         function selectPomodoro(work, breakTime) {
             workMinutes = work;
             breakMinutes = breakTime;
-            
+
             document.querySelectorAll('.pomodoro-option').forEach(opt => opt.classList.remove('active'));
-            event.target.closest('.pomodoro-option').classList.add('active');
+            const ev = window.event || arguments[arguments.length - 1];
+            if (ev && ev.target) ev.target.closest('.pomodoro-option').classList.add('active');
             
             resetTimer();
         }
@@ -19096,7 +19100,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const isSelected = selectedPlanningTaskId === task.id;
             
             return `
-                <div onclick="selectPlanningTask(${task.id}, this)" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: ${isSelected ? 'rgba(102, 126, 234, 0.15)' : '#21262d'}; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid ${isSelected ? '#667eea' : 'transparent'};">
+                <div onclick="selectPlanningTask('${task.id}', this)" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: ${isSelected ? 'rgba(102, 126, 234, 0.15)' : '#21262d'}; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid ${isSelected ? '#667eea' : 'transparent'};">
                     <div style="width: 20px; height: 20px; border: 2px solid ${isSelected ? '#667eea' : '#6e7681'}; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ${isSelected ? '#667eea' : 'transparent'};">
                         ${isSelected ? '<div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>' : ''}
                     </div>
@@ -19771,17 +19775,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (task.completed) {
                 // Track completion stats (mirror toggleTask behavior)
                 stats.totalTasks = (stats.totalTasks || 0) + 1;
-                const category = task.category || 'life';
-                if (stats.categoryXPGained && category) {
-                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + 1;
-                }
-                task.completedAt = Date.now();
-                task.doToday = false;  // Remove from "Do Today" list when completed
 
                 // Award XP based on tier
                 const xp = task.triageTier === 'lockedIn' ? 50 :
                            task.crashOutScheduled ? 75 :
                            task.rolledOver ? 40 : 25;
+
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + xp;
+                }
+                task.completedAt = Date.now();
+                task.doToday = false;  // Remove from "Do Today" list when completed
+
                 awardCommandCenterXP(xp, task.triageTier === 'lockedIn' ? 'LOCKED IN task' : 'task');
 
                 // Check if all locked in tasks done
@@ -19880,15 +19886,16 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (nowCompleted) {
                 // Track completion stats (mirror toggleTask behavior)
                 stats.totalTasks = (stats.totalTasks || 0) + 1;
-                const category = task.category || 'life';
-                if (stats.categoryXPGained && category) {
-                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + 1;
-                }
 
                 // Award XP based on tier
                 const xp = task.triageTier === 'lockedIn' ? 50 :
                            task.crashOutScheduled ? 75 :
                            task.rolledOver ? 40 : 25;
+
+                const category = task.category || 'life';
+                if (stats.categoryXPGained && category) {
+                    stats.categoryXPGained[category] = (stats.categoryXPGained[category] || 0) + xp;
+                }
                 awardCommandCenterXP(xp, task.triageTier === 'lockedIn' ? 'LOCKED IN task' : 'task');
 
                 // Check if all locked in tasks done
@@ -22203,7 +22210,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 if (lastActiveDay) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    const yesterdayStr = getLocalDateString(yesterday);
 
                     if (lastActiveDay === yesterdayStr) {
                         // Consecutive day
