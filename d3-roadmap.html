@@ -8538,11 +8538,14 @@ CHAIR: 9F
             const hasGrades = data.grades && Object.values(data.grades).some(course =>
                 course && Object.keys(course).length > 0
             );
+            // FIX: Also check exams and editedDeadlines to prevent false "empty" detection
+            const hasExams = getCount(data.exams) > 0;
+            const hasEditedDeadlines = getCount(data.editedDeadlines) > 0;
 
             // Empty if NONE of these exist
             return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
                    !hasNotes && !hasPatients && !hasCompletedDeadlines &&
-                   !hasExamStudyProgress && !hasGrades;
+                   !hasExamStudyProgress && !hasGrades && !hasExams && !hasEditedDeadlines;
         }
 
         function hasRealData(data) {
@@ -9175,8 +9178,9 @@ CHAIR: 9F
                     console.log('🟢 Firebase connected');
                     updateSyncStatus('connected', 'Connected');
 
-                    // If we just reconnected, sync data
-                    if (!wasConnected && firebaseSyncEnabled && userPath) {
+                    // If we just reconnected (NOT initial load), sync data
+                    // FIX: Added !isInitialLoad guard to prevent auto-sync racing with loadFromFirebase()
+                    if (!wasConnected && firebaseSyncEnabled && userPath && !isInitialLoad) {
                         console.log('🔄 Reconnected - syncing data...');
                         forceCloudSync();
                     }
@@ -9733,6 +9737,7 @@ CHAIR: 9F
             if (finalize) {
                 hasLoadedFromCloud = true;  // We've "checked" cloud (or decided not to use it)
                 isInitialLoad = false;      // Initial load is complete
+                lastSyncTimestamp = Date.now(); // FIX: Initialize so conflict detection works on first Sync click
                 console.log('✅ Loaded from localStorage (finalized) - saves now allowed');
                 initUI();
             }
@@ -9809,6 +9814,7 @@ CHAIR: 9F
 
                     // NOW we can allow saves
                     isInitialLoad = false;
+                    lastSyncTimestamp = Date.now(); // FIX: Initialize so conflict detection works on first Sync click
                     console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
@@ -10128,8 +10134,11 @@ CHAIR: 9F
                         return;
                     }
 
-                    // Check for conflicts
-                    if (localChangesSinceLastSync && lastSyncTimestamp && remoteData.lastSaved > lastSyncTimestamp) {
+                    // Check for conflicts — ALWAYS show modal if local changes exist
+                    // FIX: Removed lastSyncTimestamp && remoteData.lastSaved > lastSyncTimestamp checks
+                    // Those conditions prevented the conflict modal from appearing when lastSyncTimestamp
+                    // was null (first sync) or when the local save hadn't reached Firebase yet
+                    if (localChangesSinceLastSync) {
                         showSyncConflictModal(roadmapData, remoteData, (choice) => {
                             if (choice === 'local') {
                                 saveData();
@@ -10697,7 +10706,11 @@ CHAIR: 9F
                         _dataLoaded: true
                     };
 
-                    // Save
+                    // FIX: Save to localStorage BEFORE saveData() so data persists even if guards block
+                    // This matches restoreCheckpoint() pattern (line 10421)
+                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+
+                    // Save to Firebase
                     saveData();
 
                     showToast('✅ Data restored from file');
@@ -15604,6 +15617,8 @@ CHAIR: 9F
                 if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
                     if (firebaseSyncEnabled && database && userPath) {
+                        // FIX: Set local update flag to prevent realtime listener from re-processing this write
+                        setLocalUpdateFlag();
                         // FIXED: Clean data before Firebase write
                         const cleanData = JSON.parse(JSON.stringify(roadmapData));
                         delete cleanData._dataLoaded;
@@ -15614,7 +15629,8 @@ CHAIR: 9F
             } else if (document.visibilityState === 'visible') {
                 // Tab is visible again - refresh from Firebase
                 // GUARD: Only refresh if we've completed initial load
-                if (firebaseSyncEnabled && database && userPath && !isInitialLoad) {
+                // FIX: Skip cloud refresh if local changes are pending (prevents overwriting unsaved work)
+                if (firebaseSyncEnabled && database && userPath && !isInitialLoad && !localChangesSinceLastSync) {
                     database.ref(userPath).once('value')
                         .then(snapshot => {
                             if (snapshot.exists()) {
