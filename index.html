@@ -14985,12 +14985,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             var totalUnpaidExpenses = unpaid.filter(function(b) { return b.type === 'expense'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
             var totalUnpaidIncome = unpaid.filter(function(b) { return b.type === 'income'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
 
-            return '<div class="fin-section">' +
+            var html = '<div class="fin-section">' +
                 '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
                     '<div style="display: flex; align-items: center; gap: 15px;">' +
                         '<h3 style="margin: 0;">One-Time Bills</h3>' +
-                        '<button onclick="addOneTimeBill()" class="fin-add-btn">+ Add</button>
-                        </div>
+                        '<button onclick="addOneTimeBill()" class="fin-add-btn">+ Add</button>' +
                     '</div>' +
                     '<div style="text-align: right;">' +
                         '<div style="font-size: 0.85em; color: #b0b8c4;">Unpaid</div>' +
