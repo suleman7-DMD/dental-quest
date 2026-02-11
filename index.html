@@ -3543,6 +3543,345 @@
             }
         }
 
+        /* Month Group - Collapsible per-month expense cards */
+        .fin-month-group {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .fin-month-group.all-paid {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .fin-month-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+
+        .fin-month-group-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .fin-month-group-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fin-month-group-chevron {
+            font-size: 0.8em;
+            color: #8b949e;
+            transition: transform 0.2s;
+            width: 16px;
+            text-align: center;
+        }
+
+        .fin-month-group.collapsed .fin-month-group-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .fin-month-group-label {
+            font-weight: 600;
+            color: #e6edf3;
+            font-size: 1em;
+        }
+
+        .fin-month-group-badge {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .fin-month-group-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fin-month-group-amount {
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+
+        .fin-month-group-body {
+            border-top: 1px solid #30363d;
+            padding: 8px 0;
+        }
+
+        .fin-month-group.collapsed .fin-month-group-body {
+            display: none;
+        }
+
+        .fin-month-expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            transition: background 0.15s;
+        }
+
+        .fin-month-expense-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .fin-month-expense-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fin-month-expense-name {
+            color: #b0b8c4;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fin-month-expense-name.paid {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .fin-month-expense-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .fin-month-expense-amount {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #f87171;
+        }
+
+        .fin-month-expense-amount.paid {
+            color: #6b7280;
+            text-decoration: line-through;
+        }
+
+        .fin-month-expense-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .fin-month-expense-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8em;
+            padding: 4px 6px;
+            border-radius: 4px;
+            opacity: 0.6;
+            transition: opacity 0.15s, background 0.15s;
+        }
+
+        .fin-month-expense-actions button:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .fin-month-group-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-top: 1px solid #30363d;
+            gap: 8px;
+        }
+
+        .fin-pay-all-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #22c55e;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .fin-pay-all-btn:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        .fin-add-month-expense-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .fin-add-month-expense-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Template section */
+        .fin-template-section {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px dashed #30363d;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .fin-template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fin-template-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #8b949e;
+        }
+
+        .fin-template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .fin-template-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* One-time bills section */
+        .fin-onetime-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+            transition: background 0.15s;
+        }
+
+        .fin-onetime-item:last-child {
+            border-bottom: none;
+        }
+
+        .fin-onetime-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .fin-onetime-item.paid {
+            opacity: 0.5;
+        }
+
+        .fin-onetime-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fin-onetime-name {
+            font-size: 0.9em;
+            color: #b0b8c4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fin-onetime-name.paid {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .fin-onetime-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Mobile responsive for month groups */
+        @media (max-width: 768px) {
+            .fin-month-group-header {
+                padding: 12px 14px;
+            }
+
+            .fin-month-expense-item {
+                padding: 8px 14px;
+            }
+
+            .fin-month-group-footer {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .fin-onetime-item {
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fin-month-group-label {
+                font-size: 0.9em;
+            }
+
+            .fin-month-group-amount {
+                font-size: 0.95em;
+            }
+
+            .fin-month-expense-item {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .fin-month-expense-name {
+                font-size: 0.85em;
+            }
+
+            .fin-month-expense-amount {
+                font-size: 0.85em;
+            }
+
+            .fin-month-group-footer {
+                padding: 8px 10px;
+            }
+
+            .fin-pay-all-btn,
+            .fin-add-month-expense-btn {
+                padding: 5px 10px;
+                font-size: 0.8em;
+            }
+
+            .fin-template-item {
+                padding: 6px 8px;
+            }
+
+            .fin-onetime-item {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+        }
+
         /* Projection Panel - Responsive Classes */
         .fin-projection-section {
             background: rgba(59, 130, 246, 0.05);
@@ -11788,229 +12127,106 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             currentPageId: null
         };
 
-        // Financial Data Structure - COCKPIT MODE
+        // Financial Data Structure - COCKPIT MODE (v2: per-month expenses)
         let financials = {
             // MASTER LIQUIDITY CONTROL
             masterLiquidity: {
-                currentCash: 0, // User inputs actual cash in checking
+                currentCash: 0,
                 lastUpdated: null,
                 loanDisbursementDate: '2026-01-10',
                 loanAmount: 18447,
-                targetCushion: 2285, // Target cushion for May 14
-                semesterEndDate: '2026-05-14' // Next disbursement date
-            },
-            
-            // COMMITTED BILLS (Check these off as you pay them)
-            committedBills: [
-                {
-                    id: 'loan_disbursement',
-                    description: 'Loan Disbursement',
-                    amount: 18447,
-                    type: 'income',
-                    dueDate: '2026-01-10',
-                    paid: false,
-                    category: 'loan',
-                    recurring: false
-                },
-                {
-                    id: 'brother',
-                    description: 'Pay Brother (Full)',
-                    amount: 2000,
-                    type: 'expense',
-                    dueDate: '2026-01-16',
-                    paid: false,
-                    category: 'debt',
-                    recurring: false,
-                    notes: 'Back rent help - clear in full'
-                },
-                {
-                    id: 'landlord',
-                    description: 'Landlord Back Rent',
-                    amount: 250,
-                    type: 'expense',
-                    dueDate: '2026-01-16',
-                    paid: false,
-                    category: 'debt',
-                    recurring: false
-                },
-                {
-                    id: 'roommate',
-                    description: 'Roommate Back Utilities',
-                    amount: 150,
-                    type: 'expense',
-                    dueDate: '2026-01-16',
-                    paid: false,
-                    category: 'debt',
-                    recurring: false
-                },
-                {
-                    id: 'chase_jan',
-                    description: 'Chase Sapphire Payment',
-                    amount: 1482,
-                    type: 'expense',
-                    dueDate: '2026-01-16',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    confirmationNumber: 'Scheduled - Auto-pay'
-                },
-                {
-                    id: 'creditone2914_jan',
-                    description: 'Credit One 2914',
-                    amount: 116,
-                    type: 'expense',
-                    dueDate: '2026-01-05',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    confirmationNumber: '820479',
-                    notes: 'PREVENTS CHARGE-OFF JAN 6'
-                },
-                {
-                    id: 'creditone1857_jan',
-                    description: 'Credit One 1857',
-                    amount: 39,
-                    type: 'expense',
-                    dueDate: '2026-01-15',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false
-                },
-                {
-                    id: 'discover_jan',
-                    description: 'Discover',
-                    amount: 45,
-                    type: 'expense',
-                    dueDate: '2026-01-05',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    notes: 'ALREADY PAID - mark complete'
-                },
-                {
-                    id: 'milestone_jan',
-                    description: 'Milestone',
-                    amount: 75,
-                    type: 'expense',
-                    dueDate: '2026-01-08',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    notes: 'Need to call and negotiate'
-                },
-                {
-                    id: 'indigoa_jan',
-                    description: 'Indigo A',
-                    amount: 75,
-                    type: 'expense',
-                    dueDate: '2026-01-08',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    notes: 'Need to call and negotiate'
-                },
-                {
-                    id: 'indigob_jan',
-                    description: 'Indigo B',
-                    amount: 120,
-                    type: 'expense',
-                    dueDate: '2026-01-09',
-                    paid: false,
-                    category: 'credit_card',
-                    recurring: false,
-                    notes: 'Get current with $120'
-                },
-                {
-                    id: 'rent_jan',
-                    description: 'January Rent',
-                    amount: 1280,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'housing',
-                    recurring: false
-                },
-                {
-                    id: 'parking_jan',
-                    description: 'January Parking',
-                    amount: 300,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'housing',
-                    recurring: false
-                },
-                {
-                    id: 'gym_jan',
-                    description: 'SOWA Gym (January)',
-                    amount: 195,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'wellness',
-                    recurring: false
-                },
-                {
-                    id: 'utilities_jan',
-                    description: 'Utilities',
-                    amount: 60,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'housing',
-                    recurring: false
-                },
-                {
-                    id: 'food_jan',
-                    description: 'Food Budget',
-                    amount: 350,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'living',
-                    recurring: false,
-                    notes: 'Estimate - adjust as needed'
-                },
-                {
-                    id: 'social_jan',
-                    description: 'Social/Dating',
-                    amount: 250,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'living',
-                    recurring: false
-                },
-                {
-                    id: 'nicotine_jan',
-                    description: 'Nicotine',
-                    amount: 50,
-                    type: 'expense',
-                    dueDate: '2026-01-31',
-                    paid: false,
-                    category: 'living',
-                    recurring: false
-                }
-            ],
-            
-            // RECURRING MONTHLY EXPENSES (Feb-May)
-            recurringExpenses: {
-                rent: { amount: 1280, category: 'housing' },
-                parking: { amount: 300, category: 'housing' },
-                utilities: { amount: 60, category: 'housing' },
-                gym: { amount: 195, category: 'wellness' },
-                food: { amount: 350, category: 'living' },
-                social: { amount: 250, category: 'living' },
-                nicotine: { amount: 50, category: 'living' },
-                creditCards: { amount: 235, category: 'debt', notes: 'After negotiation' }
+                targetCushion: 2285,
+                semesterEndDate: '2026-05-14'
             },
 
-            // Track which months' recurring expenses have been paid
-            monthlyPayments: {
-                '2026-02': { paid: false, paidDate: null, label: 'February 2026' },
-                '2026-03': { paid: false, paidDate: null, label: 'March 2026' },
-                '2026-04': { paid: false, paidDate: null, label: 'April 2026' },
-                '2026-05': { paid: false, paidDate: null, label: 'May 1-14', partial: true, fraction: 0.45 }
+            // EXPENSE TEMPLATE - used to initialize new months (editing doesn't change existing months)
+            expenseTemplate: {
+                rent: { name: 'Rent', amount: 1280, category: 'housing' },
+                parking: { name: 'Parking', amount: 300, category: 'housing' },
+                utilities: { name: 'Utilities', amount: 60, category: 'housing' },
+                gym: { name: 'SOWA Gym', amount: 195, category: 'wellness' },
+                food: { name: 'Food', amount: 350, category: 'living' },
+                social: { name: 'Social/Dating', amount: 250, category: 'living' },
+                nicotine: { name: 'Nicotine', amount: 50, category: 'living' },
+                creditCards: { name: 'Credit Cards', amount: 235, category: 'debt', notes: 'After negotiation' }
+            },
+
+            // PER-MONTH EXPENSES - each independently editable
+            months: {
+                '2026-02': {
+                    label: 'February 2026', partial: false, fraction: 1.0,
+                    expenses: {
+                        rent: { name: 'Rent', amount: 1280, category: 'housing', paid: false },
+                        parking: { name: 'Parking', amount: 300, category: 'housing', paid: false },
+                        utilities: { name: 'Utilities', amount: 60, category: 'housing', paid: false },
+                        gym: { name: 'SOWA Gym', amount: 195, category: 'wellness', paid: false },
+                        food: { name: 'Food', amount: 350, category: 'living', paid: false },
+                        social: { name: 'Social/Dating', amount: 250, category: 'living', paid: false },
+                        nicotine: { name: 'Nicotine', amount: 50, category: 'living', paid: false },
+                        creditCards: { name: 'Credit Cards', amount: 235, category: 'debt', paid: false, notes: 'After negotiation' }
+                    }
+                },
+                '2026-03': {
+                    label: 'March 2026', partial: false, fraction: 1.0,
+                    expenses: {
+                        rent: { name: 'Rent', amount: 1280, category: 'housing', paid: false },
+                        parking: { name: 'Parking', amount: 300, category: 'housing', paid: false },
+                        utilities: { name: 'Utilities', amount: 60, category: 'housing', paid: false },
+                        gym: { name: 'SOWA Gym', amount: 195, category: 'wellness', paid: false },
+                        food: { name: 'Food', amount: 350, category: 'living', paid: false },
+                        social: { name: 'Social/Dating', amount: 250, category: 'living', paid: false },
+                        nicotine: { name: 'Nicotine', amount: 50, category: 'living', paid: false },
+                        creditCards: { name: 'Credit Cards', amount: 235, category: 'debt', paid: false, notes: 'After negotiation' }
+                    }
+                },
+                '2026-04': {
+                    label: 'April 2026', partial: false, fraction: 1.0,
+                    expenses: {
+                        rent: { name: 'Rent', amount: 1280, category: 'housing', paid: false },
+                        parking: { name: 'Parking', amount: 300, category: 'housing', paid: false },
+                        utilities: { name: 'Utilities', amount: 60, category: 'housing', paid: false },
+                        gym: { name: 'SOWA Gym', amount: 195, category: 'wellness', paid: false },
+                        food: { name: 'Food', amount: 350, category: 'living', paid: false },
+                        social: { name: 'Social/Dating', amount: 250, category: 'living', paid: false },
+                        nicotine: { name: 'Nicotine', amount: 50, category: 'living', paid: false },
+                        creditCards: { name: 'Credit Cards', amount: 235, category: 'debt', paid: false, notes: 'After negotiation' }
+                    }
+                },
+                '2026-05': {
+                    label: 'May 1-14', partial: true, fraction: 0.45,
+                    expenses: {
+                        rent: { name: 'Rent', amount: 576, category: 'housing', paid: false },
+                        parking: { name: 'Parking', amount: 135, category: 'housing', paid: false },
+                        utilities: { name: 'Utilities', amount: 27, category: 'housing', paid: false },
+                        gym: { name: 'SOWA Gym', amount: 88, category: 'wellness', paid: false },
+                        food: { name: 'Food', amount: 158, category: 'living', paid: false },
+                        social: { name: 'Social/Dating', amount: 113, category: 'living', paid: false },
+                        nicotine: { name: 'Nicotine', amount: 23, category: 'living', paid: false },
+                        creditCards: { name: 'Credit Cards', amount: 106, category: 'debt', paid: false, notes: 'After negotiation' }
+                    }
+                }
+            },
+
+            // ONE-TIME BILLS (not tied to any month)
+            oneTimeBills: {
+                loan_disbursement: { id: 'loan_disbursement', description: 'Loan Disbursement', amount: 18447, type: 'income', dueDate: '2026-01-10', paid: false, category: 'loan' },
+                brother: { id: 'brother', description: 'Pay Brother (Full)', amount: 2000, type: 'expense', dueDate: '2026-01-16', paid: false, category: 'debt', notes: 'Back rent help - clear in full' },
+                landlord: { id: 'landlord', description: 'Landlord Back Rent', amount: 250, type: 'expense', dueDate: '2026-01-16', paid: false, category: 'debt' },
+                roommate: { id: 'roommate', description: 'Roommate Back Utilities', amount: 150, type: 'expense', dueDate: '2026-01-16', paid: false, category: 'debt' },
+                chase_jan: { id: 'chase_jan', description: 'Chase Sapphire Payment', amount: 1482, type: 'expense', dueDate: '2026-01-16', paid: false, category: 'credit_card', confirmationNumber: 'Scheduled - Auto-pay' },
+                creditone2914_jan: { id: 'creditone2914_jan', description: 'Credit One 2914', amount: 116, type: 'expense', dueDate: '2026-01-05', paid: false, category: 'credit_card', confirmationNumber: '820479', notes: 'PREVENTS CHARGE-OFF JAN 6' },
+                creditone1857_jan: { id: 'creditone1857_jan', description: 'Credit One 1857', amount: 39, type: 'expense', dueDate: '2026-01-15', paid: false, category: 'credit_card' },
+                discover_jan: { id: 'discover_jan', description: 'Discover', amount: 45, type: 'expense', dueDate: '2026-01-05', paid: false, category: 'credit_card', notes: 'ALREADY PAID - mark complete' },
+                milestone_jan: { id: 'milestone_jan', description: 'Milestone', amount: 75, type: 'expense', dueDate: '2026-01-08', paid: false, category: 'credit_card', notes: 'Need to call and negotiate' },
+                indigoa_jan: { id: 'indigoa_jan', description: 'Indigo A', amount: 75, type: 'expense', dueDate: '2026-01-08', paid: false, category: 'credit_card', notes: 'Need to call and negotiate' },
+                indigob_jan: { id: 'indigob_jan', description: 'Indigo B', amount: 120, type: 'expense', dueDate: '2026-01-09', paid: false, category: 'credit_card', notes: 'Get current with $120' },
+                rent_jan: { id: 'rent_jan', description: 'January Rent', amount: 1280, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'housing' },
+                parking_jan: { id: 'parking_jan', description: 'January Parking', amount: 300, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'housing' },
+                gym_jan: { id: 'gym_jan', description: 'SOWA Gym (January)', amount: 195, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'wellness' },
+                utilities_jan: { id: 'utilities_jan', description: 'Utilities', amount: 60, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'housing' },
+                food_jan: { id: 'food_jan', description: 'Food Budget', amount: 350, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'living', notes: 'Estimate - adjust as needed' },
+                social_jan: { id: 'social_jan', description: 'Social/Dating', amount: 250, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'living' },
+                nicotine_jan: { id: 'nicotine_jan', description: 'Nicotine', amount: 50, type: 'expense', dueDate: '2026-01-31', paid: false, category: 'living' }
             },
 
             creditCards: [
@@ -12231,6 +12447,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             customTransactions: []
         };
 
+        // UI state for collapsible month groups (in-memory only, not saved)
+        let collapsedMonths = {};
+
         let currentMedModal = null;
 
         // ==================== DATA INTEGRITY UTILITIES ====================
@@ -12307,6 +12526,82 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             });
 
             return result;
+        }
+
+        // Migrate financials from old format (committedBills/recurringExpenses/monthlyPayments) to new (months/expenseTemplate/oneTimeBills)
+        function migrateFinancials(raw) {
+            if (!raw) return financials;
+
+            // Already new format - has 'months' key with content
+            if (raw.months && Object.keys(raw.months).length > 0) {
+                return {
+                    masterLiquidity: raw.masterLiquidity || financials.masterLiquidity,
+                    expenseTemplate: raw.expenseTemplate || financials.expenseTemplate,
+                    months: raw.months,
+                    oneTimeBills: raw.oneTimeBills || financials.oneTimeBills,
+                    creditCards: migrateArrayToObject(raw.creditCards, 'card') || financials.creditCards,
+                    actionItems: migrateArrayToObject(raw.actionItems, 'action') || financials.actionItems,
+                    customTransactions: migrateArrayToObject(raw.customTransactions, 'txn') || []
+                };
+            }
+
+            // OLD FORMAT: migrate from committedBills + recurringExpenses + monthlyPayments
+            const oldRecurring = raw.recurringExpenses || {};
+            const oldMonthly = raw.monthlyPayments || {};
+            const oldBills = migrateArrayToObject(raw.committedBills, 'bill');
+
+            // Build expense template from old recurringExpenses
+            const template = {};
+            Object.entries(oldRecurring).forEach(function(entry) {
+                var key = entry[0], exp = entry[1];
+                template[key] = {
+                    name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+                    amount: exp.amount || 0,
+                    category: exp.category || 'other'
+                };
+                if (exp.notes) template[key].notes = exp.notes;
+            });
+
+            // Build per-month data from old monthlyPayments
+            var months = {};
+            Object.entries(oldMonthly).forEach(function(entry) {
+                var monthKey = entry[0], monthData = entry[1];
+                var fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
+                var expenses = {};
+                Object.entries(template).forEach(function(tplEntry) {
+                    var expKey = tplEntry[0], expData = tplEntry[1];
+                    expenses[expKey] = {
+                        name: expData.name,
+                        amount: Math.round(expData.amount * fraction),
+                        category: expData.category,
+                        paid: monthData.paid || false
+                    };
+                    if (expData.notes) expenses[expKey].notes = expData.notes;
+                });
+                months[monthKey] = {
+                    label: monthData.label || monthKey,
+                    partial: monthData.partial || false,
+                    fraction: fraction,
+                    expenses: expenses
+                };
+            });
+
+            // Move old committedBills to oneTimeBills
+            var oneTimeBills = {};
+            getValues(oldBills).forEach(function(bill) {
+                var id = bill.id || generateId('bill');
+                oneTimeBills[id] = Object.assign({}, bill, { id: id });
+            });
+
+            return {
+                masterLiquidity: raw.masterLiquidity || financials.masterLiquidity,
+                expenseTemplate: Object.keys(template).length > 0 ? template : financials.expenseTemplate,
+                months: Object.keys(months).length > 0 ? months : financials.months,
+                oneTimeBills: Object.keys(oneTimeBills).length > 0 ? oneTimeBills : financials.oneTimeBills,
+                creditCards: migrateArrayToObject(raw.creditCards, 'card') || financials.creditCards,
+                actionItems: migrateArrayToObject(raw.actionItems, 'action') || financials.actionItems,
+                customTransactions: migrateArrayToObject(raw.customTransactions, 'txn') || []
+            };
         }
 
         // Convert object back to array (for rendering)
@@ -12510,18 +12805,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     };
                 }
 
-                // Load financials with array protection for all array fields
+                // Load financials with migration support (old→new format)
                 if (data.financials) {
-                    financials = {
-                        ...financials,
-                        masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
-                        recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
-                        monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
-                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
-                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
-                    };
+                    financials = migrateFinancials(data.financials);
                 }
                 
                 // Load pill assignments
@@ -13161,7 +13447,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (data.medications) medications = { ...medications, ...data.medications };
             if (data.calendarNotes) calendarNotes = data.calendarNotes;
             if (data.notebook) notebook = data.notebook;
-            if (data.financials) financials = { ...financials, ...data.financials };
+            if (data.financials) financials = migrateFinancials(data.financials);
             if (data.pillAssignments) pillAssignments = data.pillAssignments;
             if (data.calendarEvents) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
             if (data.dailyPlanner) dailyPlanner = { ...dailyPlanner, ...data.dailyPlanner };
@@ -13432,16 +13718,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     
                     // Restore financials (if available - backward compatible)
                     if (checkpoint.financials) {
-                        financials = {
-                            ...financials,
-                            masterLiquidity: checkpoint.financials.masterLiquidity || financials.masterLiquidity,
-                            committedBills: checkpoint.financials.committedBills || financials.committedBills,
-                            recurringExpenses: checkpoint.financials.recurringExpenses || financials.recurringExpenses,
-                            monthlyPayments: checkpoint.financials.monthlyPayments || financials.monthlyPayments,
-                            creditCards: checkpoint.financials.creditCards || financials.creditCards,
-                            actionItems: checkpoint.financials.actionItems || financials.actionItems,
-                            customTransactions: checkpoint.financials.customTransactions || financials.customTransactions
-                        };
+                        financials = migrateFinancials(checkpoint.financials);
                     }
                     
                     // Restore pill assignments (if available - backward compatible)
@@ -13709,16 +13986,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         }
 
                         if (data.financials) {
-                            financials = {
-                                ...financials,
-                                masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                                committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
-                                recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
-                                monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                                creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
-                                actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
-                                customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
-                            };
+                            financials = migrateFinancials(data.financials);
                         }
 
                         // Load pill assignments from Firebase
@@ -13983,16 +14251,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                 }
 
                                 if (data.financials) {
-                                    financials = {
-                                        ...financials,
-                                        masterLiquidity: data.financials.masterLiquidity || financials.masterLiquidity,
-                                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
-                                        recurringExpenses: data.financials.recurringExpenses || financials.recurringExpenses,
-                                        monthlyPayments: data.financials.monthlyPayments || financials.monthlyPayments,
-                                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
-                                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
-                                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
-                                    };
+                                    financials = migrateFinancials(data.financials);
                                 }
 
                                 if (data.pillAssignments) {
@@ -14517,223 +14776,141 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (modal) modal.classList.remove('show');
         }
 
-        // Calculate real-time financial status with month-by-month tracking
+        // Calculate real-time financial status with per-month expense tracking
         function calculateFinancialStatus() {
-            // Safety checks
-            if (!financials || !financials.masterLiquidity || !financials.committedBills || !financials.recurringExpenses) {
-                console.error('Financial data not properly initialized');
+            if (!financials || !financials.masterLiquidity) {
                 return {
-                    currentLiquid: 0,
-                    committedExpenses: 0,
-                    committedIncome: 0,
-                    availableCash: 0,
-                    monthlyBurn: 0,
-                    unpaidMonths: [],
-                    unpaidMonthsTotal: 0,
-                    daysRemaining: 0,
-                    projectedBalance: 0,
-                    targetCushion: 2285,
-                    healthStatus: 'unknown',
-                    healthColor: '#8b949e',
-                    healthMessage: 'DATA NOT LOADED'
+                    currentLiquid: 0, oneTimeExpenses: 0, oneTimeIncome: 0,
+                    availableCash: 0, monthlyDetails: [], totalUnpaidMonthly: 0,
+                    daysRemaining: 0, projectedBalance: 0, targetCushion: 2285,
+                    healthStatus: 'unknown', healthColor: '#8b949e', healthMessage: 'DATA NOT LOADED'
                 };
             }
 
-            const liquid = financials.masterLiquidity.currentCash || 0;
+            var liquid = financials.masterLiquidity.currentCash || 0;
 
-            // Calculate committed payments (unpaid one-time bills from committedBills)
-            const unpaidBills = getValues(financials.committedBills).filter(bill => !bill.paid);
-            const committedExpenses = unpaidBills
-                .filter(bill => bill.type === 'expense')
-                .reduce((sum, bill) => sum + bill.amount, 0);
+            // One-time bills
+            var allOneTime = getValues(financials.oneTimeBills || {});
+            var unpaidOneTime = allOneTime.filter(function(b) { return !b.paid; });
+            var oneTimeExpenses = unpaidOneTime.filter(function(b) { return b.type === 'expense'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
+            var oneTimeIncome = unpaidOneTime.filter(function(b) { return b.type === 'income'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
 
-            const committedIncome = unpaidBills
-                .filter(bill => bill.type === 'income')
-                .reduce((sum, bill) => sum + bill.amount, 0);
+            var availableCash = liquid + oneTimeIncome - oneTimeExpenses;
 
-            // Available cash after committed one-time bills
-            const availableCash = liquid + committedIncome - committedExpenses;
+            // Per-month breakdown
+            var months = financials.months || {};
+            var monthlyDetails = [];
+            var totalUnpaidMonthly = 0;
 
-            // Calculate monthly burn rate from recurring expenses
-            const monthlyBurn = Object.values(financials.recurringExpenses)
-                .reduce((sum, expense) => sum + expense.amount, 0);
+            Object.entries(months).forEach(function(entry) {
+                var monthKey = entry[0], monthData = entry[1];
+                var expenses = monthData.expenses || {};
+                var monthTotal = 0, monthUnpaid = 0, paidCount = 0, totalCount = 0;
 
-            // Calculate unpaid months' recurring expenses
-            const monthlyPayments = financials.monthlyPayments || {};
-            const unpaidMonths = [];
-            let unpaidMonthsTotal = 0;
+                Object.values(expenses).forEach(function(exp) {
+                    totalCount++;
+                    monthTotal += exp.amount || 0;
+                    if (exp.paid) { paidCount++; } else { monthUnpaid += exp.amount || 0; }
+                });
 
-            Object.entries(monthlyPayments).forEach(([monthKey, monthData]) => {
-                if (!monthData.paid) {
-                    const fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
-                    const amount = Math.round(monthlyBurn * fraction);
-                    unpaidMonths.push({
-                        key: monthKey,
-                        label: monthData.label,
-                        amount: amount,
-                        fraction: fraction,
-                        partial: monthData.partial || false
-                    });
-                    unpaidMonthsTotal += amount;
-                }
+                monthlyDetails.push({
+                    key: monthKey, label: monthData.label || monthKey,
+                    partial: monthData.partial || false, fraction: monthData.fraction || 1,
+                    monthTotal: monthTotal, unpaidAmount: monthUnpaid,
+                    paidCount: paidCount, totalCount: totalCount,
+                    allPaid: totalCount > 0 && paidCount === totalCount
+                });
+                totalUnpaidMonthly += monthUnpaid;
             });
 
-            // Days until May 14 - use parseLocalDate to avoid timezone off-by-one errors
-            const today = new Date();
-            const semesterEnd = parseLocalDate(financials.masterLiquidity.semesterEndDate);
-            const daysRemaining = Math.ceil((semesterEnd - today) / (1000 * 60 * 60 * 24));
+            var today = new Date();
+            var semesterEnd = parseLocalDate(financials.masterLiquidity.semesterEndDate);
+            var daysRemaining = Math.ceil((semesterEnd - today) / (1000 * 60 * 60 * 24));
+            var projectedBalance = availableCash - totalUnpaidMonthly;
 
-            // Projected May 14 balance = Available after bills - Unpaid months' recurring
-            const projectedBalance = availableCash - unpaidMonthsTotal;
-
-            // Health status
-            let healthStatus = 'good';
-            let healthColor = '#4ade80';
-            let healthMessage = 'ON TRACK';
-
-            if (projectedBalance < 0) {
-                healthStatus = 'critical';
-                healthColor = '#dc2626';
-                healthMessage = 'DEFICIT PROJECTED';
-            } else if (projectedBalance < financials.masterLiquidity.targetCushion) {
-                healthStatus = 'warning';
-                healthColor = '#f59e0b';
-                healthMessage = 'BELOW TARGET';
-            }
+            var healthStatus = 'good', healthColor = '#4ade80', healthMessage = 'ON TRACK';
+            if (projectedBalance < 0) { healthStatus = 'critical'; healthColor = '#dc2626'; healthMessage = 'DEFICIT PROJECTED'; }
+            else if (projectedBalance < financials.masterLiquidity.targetCushion) { healthStatus = 'warning'; healthColor = '#f59e0b'; healthMessage = 'BELOW TARGET'; }
 
             return {
-                currentLiquid: liquid,
-                committedExpenses,
-                committedIncome,
-                availableCash,
-                monthlyBurn,
-                unpaidMonths,
-                unpaidMonthsTotal,
-                daysRemaining,
-                projectedBalance,
+                currentLiquid: liquid, oneTimeExpenses: oneTimeExpenses, oneTimeIncome: oneTimeIncome,
+                availableCash: availableCash, monthlyDetails: monthlyDetails, totalUnpaidMonthly: totalUnpaidMonthly,
+                daysRemaining: daysRemaining, projectedBalance: projectedBalance,
                 targetCushion: financials.masterLiquidity.targetCushion,
-                healthStatus,
-                healthColor,
-                healthMessage
+                healthStatus: healthStatus, healthColor: healthColor, healthMessage: healthMessage
             };
         }
 
         function updateCockpitStats() {
-            // Only update if the modal is open and elements exist
-            const totalDebtEl = document.getElementById('totalDebtStat');
-            const currentBalanceEl = document.getElementById('currentBalanceStat');
-            const actionsRemainingEl = document.getElementById('actionsRemainingStat');
-            
-            if (!totalDebtEl || !currentBalanceEl || !actionsRemainingEl) {
-                return; // Elements don't exist yet
-            }
-            
-            const status = calculateFinancialStatus();
-            
-            // Update header stats
-            const totalDebt = getValues(financials.creditCards).reduce((sum, card) => sum + card.balance, 0);
+            var totalDebtEl = document.getElementById('totalDebtStat');
+            var currentBalanceEl = document.getElementById('currentBalanceStat');
+            var actionsRemainingEl = document.getElementById('actionsRemainingStat');
+            if (!totalDebtEl || !currentBalanceEl || !actionsRemainingEl) return;
+
+            var status = calculateFinancialStatus();
+            var totalDebt = getValues(financials.creditCards).reduce(function(sum, card) { return sum + card.balance; }, 0);
             totalDebtEl.textContent = '$' + totalDebt.toLocaleString();
             currentBalanceEl.textContent = '$' + status.currentLiquid.toLocaleString();
-            
-            const unpaidBills = getValues(financials.committedBills).filter(bill => !bill.paid && bill.type === 'expense').length;
-            actionsRemainingEl.textContent = unpaidBills;
+
+            var unpaidOneTime = getValues(financials.oneTimeBills || {}).filter(function(b) { return !b.paid && b.type === 'expense'; }).length;
+            var unpaidMonthlyItems = 0;
+            Object.values(financials.months || {}).forEach(function(month) {
+                Object.values(month.expenses || {}).forEach(function(exp) { if (!exp.paid) unpaidMonthlyItems++; });
+            });
+            actionsRemainingEl.textContent = unpaidOneTime + unpaidMonthlyItems;
         }
 
         function renderFinancialCockpit() {
-            
-            const dashboard = document.getElementById('financialDashboard');
-            if (!dashboard) {
-                console.error('Dashboard element not found!');
-                return;
-            }
-            
+            var dashboard = document.getElementById('financialDashboard');
+            if (!dashboard) return;
+
             try {
-                dashboard.innerHTML = `
-                    ${renderMasterCockpit()}
-                    ${renderCommittedBills()}
-                    ${renderRecurringExpenses()}
-                    ${renderProjectionPanel()}
-                    ${renderActionItems()}
-                    ${renderCreditCards()}
-                `;
+                dashboard.innerHTML =
+                    renderMasterCockpit() +
+                    renderOneTimeBills() +
+                    renderMonthlyExpenses() +
+                    renderExpenseTemplate() +
+                    renderProjectionPanel() +
+                    renderActionItems() +
+                    renderCreditCards();
             } catch (error) {
                 console.error('Error in renderFinancialCockpit:', error);
-                dashboard.innerHTML = `
-                    <div style="padding: 40px; color: #f87171; background: #161b22; border-radius: 12px; margin: 20px;">
-                        <h3>⚠️ Rendering Error</h3>
-                        <p style="margin-top: 15px; color: #b0b8c4;">${error.message}</p>
-                        <pre style="margin-top: 15px; padding: 15px; background: #0d1117; border-radius: 6px; overflow: auto; color: #e6edf3; font-size: 0.85em;">${error.stack}</pre>
-                    </div>
-                `;
+                dashboard.innerHTML = '<div style="padding: 40px; color: #f87171; background: #161b22; border-radius: 12px; margin: 20px;"><h3>Rendering Error</h3><p style="margin-top: 15px; color: #b0b8c4;">' + escapeHtml(error.message) + '</p></div>';
             }
         }
 
         function renderMasterCockpit() {
-            const status = calculateFinancialStatus();
-            const lastUpdated = financials.masterLiquidity.lastUpdated
+            var status = calculateFinancialStatus();
+            var lastUpdated = financials.masterLiquidity.lastUpdated
                 ? new Date(financials.masterLiquidity.lastUpdated).toLocaleString()
                 : 'Never';
 
-            return `
-                <div class="fin-section fin-master-cockpit" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none;">
-                    <div class="fin-master-header">
-                        <h3 class="fin-master-title">🎛️ MASTER LIQUIDITY</h3>
-                        <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('masterLiquidity')" style="border-color: white; color: white;">
-                            ❓ Help
-                        </button>
-                    </div>
-
-                    <div class="fin-master-grid">
-                        <!-- Actual Cash -->
-                        <div class="fin-master-card">
-                            <div class="fin-master-label">💰 ACTUAL CASH</div>
-                            <div class="fin-master-value">
-                                $${status.currentLiquid.toLocaleString()}
-                            </div>
-                            <button onclick="updateMasterLiquidity()" class="fin-update-btn">
-                                ✏️ Update Cash
-                            </button>
-                            <div class="fin-master-updated">
-                                Updated: ${lastUpdated}
-                            </div>
-                        </div>
-
-                        <!-- Projected May 14 -->
-                        <div class="fin-master-card">
-                            <div class="fin-master-label">📊 MAY 14 PROJECTION</div>
-                            <div class="fin-master-value" style="color: ${status.healthColor};">
-                                $${status.projectedBalance.toLocaleString()}
-                            </div>
-                            <div class="fin-health-badge" style="background: ${status.healthColor};">
-                                ${status.healthMessage}
-                            </div>
-                            <div class="fin-master-updated">
-                                Target: $${status.targetCushion.toLocaleString()} | ${status.daysRemaining} days
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Calculations -->
-                    <div class="fin-quick-stats">
-                        <div class="fin-quick-stat">
-                            <div class="fin-quick-label">Committed Bills</div>
-                            <div class="fin-quick-value" style="color: #fca5a5;">-$${status.committedExpenses.toLocaleString()}</div>
-                        </div>
-                        <div class="fin-quick-stat">
-                            <div class="fin-quick-label">Expected Income</div>
-                            <div class="fin-quick-value" style="color: #86efac;">+$${status.committedIncome.toLocaleString()}</div>
-                        </div>
-                        <div class="fin-quick-stat">
-                            <div class="fin-quick-label">After Bills</div>
-                            <div class="fin-quick-value" style="color: white;">$${status.availableCash.toLocaleString()}</div>
-                        </div>
-                        <div class="fin-quick-stat">
-                            <div class="fin-quick-label">Monthly Burn</div>
-                            <div class="fin-quick-value" style="color: #fbbf24;">$${status.monthlyBurn.toLocaleString()}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return '<div class="fin-section fin-master-cockpit" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none;">' +
+                '<div class="fin-master-header">' +
+                    '<h3 class="fin-master-title">MASTER LIQUIDITY</h3>' +
+                    '<button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp(\'masterLiquidity\')" style="border-color: white; color: white;">? Help</button>' +
+                '</div>' +
+                '<div class="fin-master-grid">' +
+                    '<div class="fin-master-card">' +
+                        '<div class="fin-master-label">ACTUAL CASH</div>' +
+                        '<div class="fin-master-value">$' + status.currentLiquid.toLocaleString() + '</div>' +
+                        '<button onclick="updateMasterLiquidity()" class="fin-update-btn">Update Cash</button>' +
+                        '<div class="fin-master-updated">Updated: ' + lastUpdated + '</div>' +
+                    '</div>' +
+                    '<div class="fin-master-card">' +
+                        '<div class="fin-master-label">MAY 14 PROJECTION</div>' +
+                        '<div class="fin-master-value" style="color: ' + status.healthColor + ';">$' + status.projectedBalance.toLocaleString() + '</div>' +
+                        '<div class="fin-health-badge" style="background: ' + status.healthColor + ';">' + status.healthMessage + '</div>' +
+                        '<div class="fin-master-updated">Target: $' + status.targetCushion.toLocaleString() + ' | ' + status.daysRemaining + ' days</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="fin-quick-stats">' +
+                    '<div class="fin-quick-stat"><div class="fin-quick-label">One-Time Bills</div><div class="fin-quick-value" style="color: #fca5a5;">-$' + status.oneTimeExpenses.toLocaleString() + '</div></div>' +
+                    '<div class="fin-quick-stat"><div class="fin-quick-label">Expected Income</div><div class="fin-quick-value" style="color: #86efac;">+$' + status.oneTimeIncome.toLocaleString() + '</div></div>' +
+                    '<div class="fin-quick-stat"><div class="fin-quick-label">After One-Time</div><div class="fin-quick-value" style="color: white;">$' + status.availableCash.toLocaleString() + '</div></div>' +
+                    '<div class="fin-quick-stat"><div class="fin-quick-label">Unpaid Monthly</div><div class="fin-quick-value" style="color: #fbbf24;">-$' + status.totalUnpaidMonthly.toLocaleString() + '</div></div>' +
+                '</div>' +
+            '</div>';
         }
 
         function updateMasterLiquidity() {
@@ -14741,6 +14918,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             const overlay = document.createElement('div');
             overlay.className = 'edit-overlay';
+            overlay.id = 'cashEditOverlay';
             overlay.onclick = (e) => {
                 if (e.target === overlay) overlay.remove();
             };
@@ -14782,7 +14960,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const amount = parseFloat(document.getElementById('edit_cashAmount').value);
 
             if (isNaN(amount)) {
-                showToast('Please enter a valid number', '⚠️');
+                showToast('Please enter a valid number', '!');
                 return;
             }
 
@@ -14792,531 +14970,458 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             saveData();
             renderFinancialCockpit();
             updateCockpitStats();
-            document.querySelector('.edit-overlay').remove();
+            var el = document.getElementById('cashEditOverlay');
+            if (el) el.remove();
 
-            showToast(`Updated: $${amount.toLocaleString()}`, '💰');
+            showToast('Updated: $' + amount.toLocaleString(), '$');
         }
 
-        function renderCommittedBills() {
-            const unpaid = getValues(financials.committedBills).filter(bill => !bill.paid);
-            const paid = getValues(financials.committedBills).filter(bill => bill.paid);
+        // ==================== ONE-TIME BILLS ====================
+        function renderOneTimeBills() {
+            var allBills = getValues(financials.oneTimeBills || {});
+            var unpaid = allBills.filter(function(b) { return !b.paid; });
+            var paid = allBills.filter(function(b) { return b.paid; });
             
-            const totalUnpaidExpenses = unpaid.filter(b => b.type === 'expense').reduce((sum, b) => sum + b.amount, 0);
-            const totalUnpaidIncome = unpaid.filter(b => b.type === 'income').reduce((sum, b) => sum + b.amount, 0);
-            
-            return `
-                <div class="fin-section">
-                    <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <h3 style="margin: 0;">📋 Committed Bills & Payments</h3>
-                            <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('committedBills')">❓ How To Use</button>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.85em; color: #b0b8c4;">Unpaid</div>
-                            <div style="font-size: 1.3em; font-weight: 700; color: #f87171;">-$${totalUnpaidExpenses.toLocaleString()}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 6px;">
-                        💡 <strong>Check off bills as you pay them</strong> - your liquid cash and projections will auto-update!
-                    </div>
-                    
-                    ${unpaid.length === 0 ? '<p style="text-align: center; padding: 40px; color: #4ade80; font-size: 1.3em;">🎉 All bills paid!</p>' : ''}
-                    
-                    ${[...unpaid, ...paid].map(bill => {
-                        // Use parseLocalDate to avoid timezone off-by-one errors
-                        const dueDate = parseLocalDate(bill.dueDate);
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        const daysUntil = Math.ceil((dueDate - today) / (1000*60*60*24));
-                        
-                        let urgencyClass = '';
-                        let urgencyText = '';
-                        if (bill.paid) {
-                            urgencyClass = 'success';
-                            urgencyText = '✓ PAID';
-                        } else if (daysUntil < 0) {
-                            urgencyClass = 'urgent';
-                            urgencyText = `⚠️ ${Math.abs(daysUntil)} days overdue`;
-                        } else if (daysUntil === 0) {
-                            urgencyClass = 'urgent';
-                            urgencyText = '🔥 DUE TODAY';
-                        } else if (daysUntil <= 3) {
-                            urgencyClass = 'high';
-                            urgencyText = `⏰ Due in ${daysUntil} days`;
-                        } else {
-                            urgencyClass = 'medium';
-                            urgencyText = `Due ${dueDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}`;
-                        }
-                        
-                        return `
-                            <div class="action-item ${urgencyClass} ${bill.paid ? 'completed' : ''}" 
-                                 onclick="toggleBillPaid('${bill.id}')" 
-                                 style="cursor: pointer;">
-                                <div class="action-checkbox ${bill.paid ? 'checked' : ''}"
-                                     onclick="event.stopPropagation(); toggleBillPaid('${bill.id}')">
-                                </div>
-                                <div class="action-content" style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <div class="action-title">${escapeHtml(bill.description)}</div>
-                                            <div class="action-deadline ${urgencyClass === 'urgent' ? 'overdue' : urgencyClass === 'high' ? 'soon' : 'ok'}">
-                                                ${urgencyText}
-                                            </div>
-                                            ${bill.notes ? `<div class="action-notes">${escapeHtml(bill.notes)}</div>` : ''}
-                                            ${bill.confirmationNumber ? `<div style="font-size: 0.85em; color: #4ade80; margin-top: 4px;">Confirmation: ${bill.confirmationNumber}</div>` : ''}
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div class="cash-amount ${bill.type === 'income' ? 'positive' : 'negative'}" style="font-size: 1.3em;">
-                                                ${bill.type === 'income' ? '+' : '-'}$${bill.amount.toLocaleString()}
-                                            </div>
-                                            ${!bill.paid ? `
-                                                <button onclick="event.stopPropagation(); editBill('${bill.id}')" 
-                                                        style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px;">
-                                                    Edit
-                                                </button>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
+            var totalUnpaidExpenses = unpaid.filter(function(b) { return b.type === 'expense'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
+            var totalUnpaidIncome = unpaid.filter(function(b) { return b.type === 'income'; }).reduce(function(sum, b) { return sum + b.amount; }, 0);
 
-        function toggleBillPaid(billId) {
-            const bill = getValues(financials.committedBills).find(b => b.id === billId);
-            if (!bill) return;
-            
-            bill.paid = !bill.paid;
-            
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
-            
-            if (bill.paid) {
-                showToast(`✓ Marked paid: ${bill.description}`, '✓');
+            return '<div class="fin-section">' +
+                '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
+                    '<div style="display: flex; align-items: center; gap: 15px;">' +
+                        '<h3 style="margin: 0;">One-Time Bills</h3>' +
+                        '<button onclick="addOneTimeBill()" class="fin-add-btn">+ Add</button>
+                        </div>
+                    '</div>' +
+                    '<div style="text-align: right;">' +
+                        '<div style="font-size: 0.85em; color: #b0b8c4;">Unpaid</div>' +
+                        '<div style="font-size: 1.3em; font-weight: 700; color: #f87171;">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
+                        (totalUnpaidIncome > 0 ? '<div style="font-size: 1em; color: #4ade80;">+$' + totalUnpaidIncome.toLocaleString() + '</div>' : '') +
+                    '</div>' +
+                '</div>';
+
+            if (unpaid.length === 0 && paid.length === 0) {
+                html += '<p style="text-align: center; padding: 30px; color: #4ade80; font-size: 1.1em;">No one-time bills</p>';
             }
+
+            var allBillsList = unpaid.concat(paid);
+            for (var bi = 0; bi < allBillsList.length; bi++) {
+                var bill = allBillsList[bi];
+                var dueDate = parseLocalDate(bill.dueDate);
+                var today = new Date(); today.setHours(0,0,0,0);
+                var daysUntil = Math.ceil((dueDate - today) / (1000*60*60*24));
+                var urgencyClass = '', urgencyText = '';
+                if (bill.paid) { urgencyClass = 'success'; urgencyText = 'PAID'; }
+                else if (daysUntil < 0) { urgencyClass = 'urgent'; urgencyText = Math.abs(daysUntil) + ' days overdue'; }
+                else if (daysUntil === 0) { urgencyClass = 'urgent'; urgencyText = 'DUE TODAY'; }
+                else if (daysUntil <= 3) { urgencyClass = 'high'; urgencyText = 'Due in ' + daysUntil + ' days'; }
+                else { urgencyClass = 'medium'; urgencyText = 'Due ' + dueDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}); }
+
+                html += '<div class="action-item ' + urgencyClass + (bill.paid ? ' completed' : '') + '" onclick="toggleOneTimeBillPaid(\'' + bill.id + '\')" style="cursor: pointer;">' +
+                    '<div class="action-checkbox ' + (bill.paid ? 'checked' : '') + '" onclick="event.stopPropagation(); toggleOneTimeBillPaid(\'' + bill.id + '\')"></div>' +
+                    '<div class="action-content" style="flex: 1;"><div style="display: flex; justify-content: space-between; align-items: start;">' +
+                        '<div><div class="action-title">' + escapeHtml(bill.description) + '</div>' +
+                        '<div class="action-deadline ' + (urgencyClass === 'urgent' ? 'overdue' : urgencyClass === 'high' ? 'soon' : 'ok') + '">' + urgencyText + '</div>' +
+                        (bill.notes ? '<div class="action-notes">' + escapeHtml(bill.notes) + '</div>' : '') + '</div>' +
+                        '<div style="text-align: right;">' +
+                            '<div class="cash-amount ' + (bill.type === 'income' ? 'positive' : 'negative') + '" style="font-size: 1.3em;">' + (bill.type === 'income' ? '+' : '-') + '$' + bill.amount.toLocaleString() + '</div>' +
+                            (!bill.paid ? '<button onclick="event.stopPropagation(); editOneTimeBill(\'' + bill.id + '\')" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px;">Edit</button>' +
+                            '<button onclick="event.stopPropagation(); deleteOneTimeBill(\'' + bill.id + '\')" style="background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px; margin-left: 4px;">x</button>' : '') +
+                        '</div></div></div></div>';
+            }
+
+            html += '</div>';
+            return html;
         }
 
-        function editBill(billId) {
-            const bill = getValues(financials.committedBills).find(b => b.id === billId);
-            if (!bill) return;
-            
-            const overlay = document.createElement('div');
-            overlay.className = 'edit-overlay';
-            overlay.onclick = (e) => {
-                if (e.target === overlay) overlay.remove();
-            };
-            
-            overlay.innerHTML = `
-                <div class="edit-panel" onclick="event.stopPropagation()">
-                    <h3>Edit Bill</h3>
-                    
-                    <div class="edit-field">
-                        <label>Description</label>
-                        <input type="text" id="edit_description" value="${bill.description}">
-                    </div>
-                    
-                    <div class="edit-field">
-                        <label>Amount ($)</label>
-                        <input type="number" id="edit_amount" value="${bill.amount}" step="0.01">
-                    </div>
-                    
-                    <div class="edit-field">
-                        <label>Due Date</label>
-                        <input type="date" id="edit_dueDate" value="${bill.dueDate}" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">
-                    </div>
-                    
-                    <div class="edit-field">
-                        <label>Notes</label>
-                        <textarea id="edit_billNotes" rows="2">${bill.notes || ''}</textarea>
-                    </div>
+        function toggleOneTimeBillPaid(billId) {
+            var bills = financials.oneTimeBills || {};
+            if (!bills[billId]) return;
+            bills[billId].paid = !bills[billId].paid;
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            if (bills[billId].paid) showToast('Marked paid: ' + bills[billId].description, 'v');
+        }
 
-                    <div class="edit-field">
-                        <label>Confirmation Number</label>
-                        <input type="text" id="edit_confirmation" value="${bill.confirmationNumber || ''}">
-                    </div>
-                    
-                    <div class="edit-actions">
-                        <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
-                        <button class="btn-save" onclick="saveBillEdit('${billId}')">Save Changes</button>
-                    </div>
-                </div>
-            `;
-            
+        function addOneTimeBill() {
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'oneTimeBillOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Add One-Time Bill</h3>' +
+                '<div class="edit-field"><label>Description</label><input type="text" id="new_otb_desc" placeholder="e.g., New textbook"></div>' +
+                '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_otb_amount" value="0" step="0.01"></div>' +
+                '<div class="edit-field"><label>Type</label><select id="new_otb_type" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="expense">Expense</option><option value="income">Income</option></select></div>' +
+                '<div class="edit-field"><label>Due Date</label><input type="date" id="new_otb_date" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"></div>' +
+                '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="new_otb_notes" placeholder="Any notes..."></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewOneTimeBill()">Add Bill</button></div></div>';
             document.body.appendChild(overlay);
         }
 
-        function saveBillEdit(billId) {
-            const bill = getValues(financials.committedBills).find(b => b.id === billId);
+        function saveNewOneTimeBill() {
+            var desc = document.getElementById('new_otb_desc').value.trim();
+            var amount = parseFloat(document.getElementById('new_otb_amount').value) || 0;
+            var type = document.getElementById('new_otb_type').value;
+            var dueDate = document.getElementById('new_otb_date').value;
+            var notes = document.getElementById('new_otb_notes').value.trim();
+            if (!desc) { showToast('Please enter a description', '!'); return; }
+            if (amount <= 0) { showToast('Please enter a valid amount', '!'); return; }
+            var id = generateId('bill');
+            if (!financials.oneTimeBills) financials.oneTimeBills = {};
+            financials.oneTimeBills[id] = { id: id, description: desc, amount: amount, type: type, dueDate: dueDate || new Date().toISOString().split('T')[0], paid: false, category: 'other', notes: notes || undefined };
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('oneTimeBillOverlay'); if (el) el.remove();
+            showToast('Added: ' + desc, '+');
+        }
+
+        function editOneTimeBill(billId) {
+            var bill = (financials.oneTimeBills || {})[billId];
             if (!bill) return;
-            
-            bill.description = document.getElementById('edit_description').value;
-            bill.amount = parseFloat(document.getElementById('edit_amount').value) || 0;
-            bill.dueDate = document.getElementById('edit_dueDate').value;
-            bill.notes = document.getElementById('edit_billNotes').value || '';
-            bill.confirmationNumber = document.getElementById('edit_confirmation').value || null;
-            
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
-            document.querySelector('.edit-overlay').remove();
-            
-            showToast('Bill updated', '✓');
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'editOTBOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Edit Bill</h3>' +
+                '<div class="edit-field"><label>Description</label><input type="text" id="edit_otb_desc" value="' + escapeHtml(bill.description) + '"></div>' +
+                '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_otb_amount" value="' + bill.amount + '" step="0.01"></div>' +
+                '<div class="edit-field"><label>Due Date</label><input type="date" id="edit_otb_date" value="' + (bill.dueDate || '') + '" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"></div>' +
+                '<div class="edit-field"><label>Notes</label><textarea id="edit_otb_notes" rows="2">' + escapeHtml(bill.notes || '') + '</textarea></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveOneTimeBillEdit(\'' + billId + '\')">Save</button></div></div>';
+            document.body.appendChild(overlay);
         }
 
-        function renderRecurringExpenses() {
-            const expenses = financials.recurringExpenses;
-            const total = Object.values(expenses).reduce((sum, exp) => sum + exp.amount, 0);
-            const monthlyPayments = financials.monthlyPayments || {};
-            const status = calculateFinancialStatus();
-
-            // Count paid vs unpaid months
-            const paidMonths = Object.values(monthlyPayments).filter(m => m.paid).length;
-            const totalMonths = Object.keys(monthlyPayments).length;
-
-            return `
-                <div class="fin-section">
-                    <div class="fin-section-header fin-recurring-header">
-                        <div class="fin-recurring-title-row">
-                            <h3>🔄 Monthly Expenses</h3>
-                            <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('recurringExpenses')">❓</button>
-                        </div>
-                        <div class="fin-recurring-total">
-                            <div class="fin-recurring-total-label">Monthly Total</div>
-                            <div class="fin-recurring-total-value">$${total.toLocaleString()}/mo</div>
-                        </div>
-                    </div>
-
-                    <!-- EXPENSE CATEGORIES -->
-                    <div class="fin-expense-section">
-                        <div class="fin-expense-header">
-                            <div class="fin-expense-header-title">📋 Your Expenses</div>
-                            <button onclick="addRecurringExpense()" class="fin-add-btn">+ Add</button>
-                        </div>
-                        <div class="fin-expense-list">
-                            ${Object.entries(expenses).map(([key, expense]) => `
-                                <div class="fin-expense-item">
-                                    <div class="fin-expense-info">
-                                        <div class="fin-expense-name">
-                                            ${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                                        </div>
-                                        <div class="fin-expense-category">
-                                            ${escapeHtml(expense.category)}${expense.notes ? ' • ' + escapeHtml(expense.notes) : ''}
-                                        </div>
-                                    </div>
-                                    <div class="fin-expense-actions">
-                                        <div class="fin-expense-amount">$${expense.amount.toLocaleString()}</div>
-                                        <button onclick="editRecurringExpense('${key}')" class="fin-edit-btn">Edit</button>
-                                        <button onclick="deleteRecurringExpense('${key}')" class="fin-delete-btn">×</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <!-- MONTH-BY-MONTH PAYMENT TRACKING -->
-                    <div class="fin-month-tracker">
-                        <div class="fin-month-tracker-header">
-                            <div class="fin-month-tracker-title">📅 Month Tracker</div>
-                            <div class="fin-month-tracker-count">${paidMonths}/${totalMonths} paid</div>
-                        </div>
-
-                        <div class="fin-month-tracker-tip">
-                            💡 Check off months as you pay. Only unchecked months count toward projection.
-                        </div>
-
-                        <div class="fin-month-list">
-                            ${Object.entries(monthlyPayments).map(([monthKey, monthData]) => {
-                                const fraction = monthData.partial ? (monthData.fraction || 0.5) : 1;
-                                const amount = Math.round(total * fraction);
-                                const isPaid = monthData.paid;
-                                const paidDate = monthData.paidDate ? new Date(monthData.paidDate).toLocaleDateString() : null;
-
-                                return `
-                                    <div class="fin-month-item ${isPaid ? 'paid' : ''}" onclick="toggleMonthPaid('${monthKey}')">
-                                        <div class="fin-month-left">
-                                            <div class="fin-month-checkbox ${isPaid ? 'checked' : ''}">
-                                                ${isPaid ? '✓' : ''}
-                                            </div>
-                                            <div class="fin-month-info">
-                                                <div class="fin-month-label ${isPaid ? 'paid' : ''}">
-                                                    ${monthData.label}${monthData.partial ? ' (partial)' : ''}
-                                                </div>
-                                                <div class="fin-month-detail ${isPaid ? 'paid' : ''}">
-                                                    ${isPaid ? (paidDate ? 'Paid ' + paidDate : '✓ Paid') : (monthData.partial ? `${Math.round(fraction * 100)}%` : 'Full month')}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="fin-month-right">
-                                            <div class="fin-month-amount ${isPaid ? 'paid' : ''}">
-                                                ${isPaid ? '✓ PAID' : '-$' + amount.toLocaleString()}
-                                            </div>
-                                            ${!isPaid ? `<div class="fin-month-tap">Tap to pay</div>` : ''}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-
-                        <div class="fin-month-footer">
-                            <div class="fin-month-footer-label">
-                                <strong>Unpaid:</strong> ${status.unpaidMonths.length} month${status.unpaidMonths.length !== 1 ? 's' : ''}
-                            </div>
-                            <div class="fin-month-footer-amount">
-                                -$${status.unpaidMonthsTotal.toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        function saveOneTimeBillEdit(billId) {
+            var bill = (financials.oneTimeBills || {})[billId];
+            if (!bill) return;
+            bill.description = document.getElementById('edit_otb_desc').value;
+            bill.amount = parseFloat(document.getElementById('edit_otb_amount').value) || 0;
+            bill.dueDate = document.getElementById('edit_otb_date').value;
+            bill.notes = document.getElementById('edit_otb_notes').value || '';
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('editOTBOverlay'); if (el) el.remove();
+            showToast('Bill updated', 'v');
         }
 
-        function toggleMonthPaid(monthKey) {
-            if (!financials.monthlyPayments || !financials.monthlyPayments[monthKey]) return;
+        function deleteOneTimeBill(billId) {
+            var bill = (financials.oneTimeBills || {})[billId];
+            if (!bill) return;
+            if (!confirm('Delete "' + bill.description + '"?')) return;
+            delete financials.oneTimeBills[billId];
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            showToast('Deleted: ' + bill.description, 'x');
+        }
 
-            const month = financials.monthlyPayments[monthKey];
-            month.paid = !month.paid;
-            month.paidDate = month.paid ? new Date().toISOString() : null;
+        // ==================== MONTHLY EXPENSES (per-month) ====================
+        function renderMonthlyExpenses() {
+            var months = financials.months || {};
+            var status = calculateFinancialStatus();
+            var totalPaidMonths = 0, totalMonths = Object.keys(months).length;
+            Object.values(months).forEach(function(month) {
+                var exps = Object.values(month.expenses || {});
+                if (exps.length > 0 && exps.every(function(e) { return e.paid; })) totalPaidMonths++;
+            });
 
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
+            var html = '<div class="fin-section">' +
+                '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
+                    '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0;">Monthly Expenses</h3></div>' +
+                    '<div style="text-align: right;">' +
+                        '<div style="font-size: 0.85em; color: #b0b8c4;">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
+                        '<div style="font-size: 1.3em; font-weight: 700; color: #fbbf24;">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
+                    '</div></div>' +
+                '<div style="margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 0.9em; color: #93c5fd;">Tap a month header to expand/collapse. Check individual expenses or use "Pay All" for the entire month.</div>';
 
-            if (month.paid) {
-                showToast(`✓ ${month.label} marked as paid`, '✓');
+            var now = new Date();
+            var currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+            Object.entries(months).forEach(function(entry) {
+                var monthKey = entry[0], monthData = entry[1];
+                var expenses = monthData.expenses || {};
+                var expEntries = Object.entries(expenses);
+                var paidCount = expEntries.filter(function(e) { return e[1].paid; }).length;
+                var totalCount = expEntries.length;
+                var allPaid = totalCount > 0 && paidCount === totalCount;
+                var unpaidAmount = expEntries.filter(function(e) { return !e[1].paid; }).reduce(function(sum, e) { return sum + (e[1].amount || 0); }, 0);
+                var totalAmount = expEntries.reduce(function(sum, e) { return sum + (e[1].amount || 0); }, 0);
+
+                var shouldExpand = monthKey === currentMonthKey || collapsedMonths[monthKey] === false;
+                var collapsed = !shouldExpand && collapsedMonths[monthKey] !== false;
+
+                html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? '#16a34a' : '#30363d') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
+                    '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'rgba(22, 163, 74, 0.15)' : '#21262d') + '; cursor: pointer; user-select: none;">' +
+                        '<div style="display: flex; align-items: center; gap: 12px;">' +
+                            '<span id="arrow_' + monthKey + '" style="color: #b0b8c4; font-size: 0.9em; font-family: monospace; min-width: 14px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
+                            '<div><div style="font-weight: 700; color: ' + (allPaid ? '#4ade80' : '#e6edf3') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
+                            '<div style="font-size: 0.8em; color: #8b949e;">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
+                        '<div style="display: flex; align-items: center; gap: 12px;">' +
+                            '<div style="text-align: right;"><div style="font-size: 1.1em; font-weight: 700; color: ' + (allPaid ? '#4ade80' : '#f87171') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
+                            (!allPaid ? '<div style="font-size: 0.75em; color: #8b949e;">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
+                            (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
+                        '</div></div>';
+
+                html += '<div id="monthBody_' + monthKey + '" style="display: ' + (collapsed ? 'none' : 'block') + '; padding: 8px;">';
+                for (var ei = 0; ei < expEntries.length; ei++) {
+                    var expKey = expEntries[ei][0], exp = expEntries[ei][1];
+                    html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; background: ' + (exp.paid ? 'rgba(22, 163, 74, 0.1)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
+                        '<div style="display: flex; align-items: center; gap: 10px;">' +
+                            '<div class="action-checkbox ' + (exp.paid ? 'checked' : '') + '" style="width: 22px; height: 22px; min-width: 22px;" onclick="event.stopPropagation(); toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')"></div>' +
+                            '<div><div style="font-weight: 600; color: ' + (exp.paid ? '#4ade80' : '#e6edf3') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
+                            '<div style="font-size: 0.75em; color: #8b949e;">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
+                        '<div style="display: flex; align-items: center; gap: 8px;">' +
+                            '<div style="font-weight: 700; color: ' + (exp.paid ? '#4ade80' : '#f87171') + '; font-size: 1em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
+                            (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button>' : '') +
+                        '</div></div>';
+                }
+                html += '<div style="padding: 8px 12px; margin-top: 4px;"><button onclick="addExpenseToMonth(\'' + monthKey + '\')" class="fin-add-btn" style="width: 100%; padding: 10px;">+ Add Expense to ' + escapeHtml(monthData.label) + '</button></div>';
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function toggleMonthCollapse(monthKey) {
+            var now = new Date();
+            var currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            if (collapsedMonths[monthKey] === undefined) {
+                collapsedMonths[monthKey] = (monthKey === currentMonthKey);
             } else {
-                showToast(`${month.label} marked as unpaid`, '↩');
+                collapsedMonths[monthKey] = !collapsedMonths[monthKey];
             }
+            var body = document.getElementById('monthBody_' + monthKey);
+            var arrow = document.getElementById('arrow_' + monthKey);
+            if (body) body.style.display = collapsedMonths[monthKey] ? 'none' : 'block';
+            if (arrow) arrow.textContent = collapsedMonths[monthKey] ? '>' : 'v';
         }
 
-        function addRecurringExpense() {
-            const overlay = document.createElement('div');
-            overlay.className = 'edit-overlay';
-            overlay.onclick = (e) => {
-                if (e.target === overlay) overlay.remove();
-            };
+        function toggleMonthExpensePaid(monthKey, expenseKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month || !month.expenses || !month.expenses[expenseKey]) return;
+            month.expenses[expenseKey].paid = !month.expenses[expenseKey].paid;
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            if (month.expenses[expenseKey].paid) showToast('Paid: ' + month.expenses[expenseKey].name, 'v');
+        }
 
-            overlay.innerHTML = `
-                <div class="edit-panel" onclick="event.stopPropagation()">
-                    <h3>Add New Recurring Expense</h3>
+        function payAllMonth(monthKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month || !month.expenses) return;
+            var allPaid = Object.values(month.expenses).every(function(e) { return e.paid; });
+            Object.values(month.expenses).forEach(function(exp) { exp.paid = !allPaid; });
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            showToast(month.label + (allPaid ? ' - all marked unpaid' : ' - all marked paid'), 'v');
+        }
 
-                    <div class="edit-field">
-                        <label>Expense Name</label>
-                        <input type="text" id="new_expenseName" placeholder="e.g., Insurance, Subscriptions">
-                    </div>
-
-                    <div class="edit-field">
-                        <label>Monthly Amount ($)</label>
-                        <input type="number" id="new_expenseAmount" value="0" step="0.01">
-                    </div>
-
-                    <div class="edit-field">
-                        <label>Category</label>
-                        <select id="new_expenseCategory" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">
-                            <option value="housing">Housing</option>
-                            <option value="living">Living</option>
-                            <option value="wellness">Wellness</option>
-                            <option value="debt">Debt</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="edit-field">
-                        <label>Notes (optional)</label>
-                        <input type="text" id="new_expenseNotes" placeholder="Any notes...">
-                    </div>
-
-                    <div class="edit-actions">
-                        <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
-                        <button class="btn-save" onclick="saveNewRecurringExpense()">Add Expense</button>
-                    </div>
-                </div>
-            `;
-
+        function editMonthExpense(monthKey, expenseKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month || !month.expenses || !month.expenses[expenseKey]) return;
+            var exp = month.expenses[expenseKey];
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'editMonthExpOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Edit ' + escapeHtml(exp.name) + ' - ' + escapeHtml(month.label) + '</h3>' +
+                '<div class="edit-field"><label>Name</label><input type="text" id="edit_mexp_name" value="' + escapeHtml(exp.name) + '"></div>' +
+                '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_mexp_amount" value="' + exp.amount + '" step="0.01"></div>' +
+                '<div class="edit-field"><label>Category</label><select id="edit_mexp_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">' +
+                    '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
+                    '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
+                    '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
+                    '<option value="debt"' + (exp.category === 'debt' ? ' selected' : '') + '>Debt</option>' +
+                    '<option value="other"' + (exp.category === 'other' ? ' selected' : '') + '>Other</option></select></div>' +
+                '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="edit_mexp_notes" value="' + escapeHtml(exp.notes || '') + '"></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveMonthExpenseEdit(\'' + monthKey + '\', \'' + expenseKey + '\')">Save</button></div>' +
+                '<div style="margin-top: 15px; text-align: center;"><button onclick="deleteMonthExpense(\'' + monthKey + '\', \'' + expenseKey + '\')" style="background: transparent; color: #f87171; border: 1px solid #f87171; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">Delete from ' + escapeHtml(month.label) + '</button></div></div>';
             document.body.appendChild(overlay);
         }
 
-        function saveNewRecurringExpense() {
-            const name = document.getElementById('new_expenseName').value.trim();
-            const amount = parseFloat(document.getElementById('new_expenseAmount').value) || 0;
-            const category = document.getElementById('new_expenseCategory').value;
-            const notes = document.getElementById('new_expenseNotes').value.trim();
-
-            if (!name) {
-                alert('Please enter an expense name');
-                return;
-            }
-
-            // Create a key from the name (lowercase, no spaces)
-            const key = name.toLowerCase().replace(/\s+/g, '');
-
-            if (financials.recurringExpenses[key]) {
-                alert('An expense with this name already exists');
-                return;
-            }
-
-            financials.recurringExpenses[key] = {
-                amount: amount,
-                category: category,
-                notes: notes || undefined
-            };
-
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
-            document.querySelector('.edit-overlay').remove();
-
-            showToast(`Added: ${name}`, '+');
+        function saveMonthExpenseEdit(monthKey, expenseKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month || !month.expenses || !month.expenses[expenseKey]) return;
+            month.expenses[expenseKey].name = document.getElementById('edit_mexp_name').value.trim() || month.expenses[expenseKey].name;
+            month.expenses[expenseKey].amount = parseFloat(document.getElementById('edit_mexp_amount').value) || 0;
+            month.expenses[expenseKey].category = document.getElementById('edit_mexp_category').value;
+            var notes = document.getElementById('edit_mexp_notes').value.trim();
+            if (notes) { month.expenses[expenseKey].notes = notes; } else { delete month.expenses[expenseKey].notes; }
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
+            showToast('Expense updated', 'v');
         }
 
-        function deleteRecurringExpense(expenseKey) {
-            const expense = financials.recurringExpenses[expenseKey];
-            if (!expense) return;
-
-            const displayName = expenseKey.charAt(0).toUpperCase() + expenseKey.slice(1).replace(/([A-Z])/g, ' $1');
-
-            if (!confirm(`Delete "${displayName}" ($${expense.amount}/mo) from recurring expenses?`)) {
-                return;
-            }
-
-            delete financials.recurringExpenses[expenseKey];
-
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
-
-            showToast(`Deleted: ${displayName}`, '×');
+        function deleteMonthExpense(monthKey, expenseKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month || !month.expenses || !month.expenses[expenseKey]) return;
+            var name = month.expenses[expenseKey].name;
+            if (!confirm('Delete "' + name + '" from ' + month.label + '?')) return;
+            delete month.expenses[expenseKey];
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
+            showToast('Deleted: ' + name, 'x');
         }
 
-        function editRecurringExpense(expenseKey) {
-            const expense = financials.recurringExpenses[expenseKey];
-            if (!expense) return;
-            
-            const overlay = document.createElement('div');
-            overlay.className = 'edit-overlay';
-            overlay.onclick = (e) => {
-                if (e.target === overlay) overlay.remove();
-            };
-            
-            overlay.innerHTML = `
-                <div class="edit-panel" onclick="event.stopPropagation()">
-                    <h3>Edit ${expenseKey.charAt(0).toUpperCase() + expenseKey.slice(1)}</h3>
-                    
-                    <div class="edit-field">
-                        <label>Monthly Amount ($)</label>
-                        <input type="number" id="edit_recurringAmount" value="${expense.amount}" step="0.01">
-                    </div>
-                    
-                    <div class="edit-actions">
-                        <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
-                        <button class="btn-save" onclick="saveRecurringExpenseEdit('${expenseKey}')">Save Changes</button>
-                    </div>
-                </div>
-            `;
-            
+        function addExpenseToMonth(monthKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month) return;
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'addMonthExpOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Add Expense to ' + escapeHtml(month.label) + '</h3>' +
+                '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_mexp_name" placeholder="e.g., Insurance"></div>' +
+                '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_mexp_amount" value="0" step="0.01"></div>' +
+                '<div class="edit-field"><label>Category</label><select id="new_mexp_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewMonthExpense(\'' + monthKey + '\')">Add</button></div></div>';
             document.body.appendChild(overlay);
         }
 
-        function saveRecurringExpenseEdit(expenseKey) {
-            const expense = financials.recurringExpenses[expenseKey];
-            if (!expense) return;
-            
-            expense.amount = parseFloat(document.getElementById('edit_recurringAmount').value) || 0;
-            
-            saveData();
-            renderFinancialCockpit();
-            updateCockpitStats();
-            document.querySelector('.edit-overlay').remove();
-            
-            showToast('Recurring expense updated', '✓');
+        function saveNewMonthExpense(monthKey) {
+            var month = (financials.months || {})[monthKey];
+            if (!month) return;
+            var name = document.getElementById('new_mexp_name').value.trim();
+            var amount = parseFloat(document.getElementById('new_mexp_amount').value) || 0;
+            var category = document.getElementById('new_mexp_category').value;
+            if (!name) { showToast('Please enter a name', '!'); return; }
+            var key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now().toString(36);
+            if (!month.expenses) month.expenses = {};
+            month.expenses[key] = { name: name, amount: amount, category: category, paid: false };
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('addMonthExpOverlay'); if (el) el.remove();
+            showToast('Added: ' + name + ' to ' + month.label, '+');
+        }
+
+        // ==================== EXPENSE TEMPLATE ====================
+        function renderExpenseTemplate() {
+            var template = financials.expenseTemplate || {};
+            var total = Object.values(template).reduce(function(sum, exp) { return sum + (exp.amount || 0); }, 0);
+
+            var html = '<div class="fin-section" style="border-color: #6366f1;">' +
+                '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
+                    '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0; color: #a78bfa;">Expense Template</h3></div>' +
+                    '<div style="text-align: right;"><div style="font-size: 0.85em; color: #b0b8c4;">Template Total</div>' +
+                    '<div style="font-size: 1.2em; font-weight: 700; color: #a78bfa;">$' + total.toLocaleString() + '/mo</div></div></div>' +
+                '<div style="margin-bottom: 12px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 6px; font-size: 0.85em; color: #a5b4fc;">Edit this template to change what gets created for future months. Existing months are NOT affected.</div>' +
+                '<div class="fin-expense-list">';
+
+            Object.entries(template).forEach(function(entry) {
+                var key = entry[0], exp = entry[1];
+                html += '<div class="fin-expense-item">' +
+                    '<div class="fin-expense-info"><div class="fin-expense-name">' + escapeHtml(exp.name || key) + '</div>' +
+                    '<div class="fin-expense-category">' + escapeHtml(exp.category || 'other') + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div>' +
+                    '<div class="fin-expense-actions"><div class="fin-expense-amount">$' + (exp.amount || 0).toLocaleString() + '</div>' +
+                    '<button onclick="editTemplateExpense(\'' + key + '\')" class="fin-edit-btn">Edit</button>' +
+                    '<button onclick="deleteTemplateExpense(\'' + key + '\')" class="fin-delete-btn">x</button></div></div>';
+            });
+
+            html += '</div><div style="margin-top: 12px;"><button onclick="addTemplateExpense()" class="fin-add-btn" style="width: 100%; padding: 10px;">+ Add to Template</button></div></div>';
+            return html;
+        }
+
+        function editTemplateExpense(expKey) {
+            var exp = (financials.expenseTemplate || {})[expKey];
+            if (!exp) return;
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'editTemplateOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Edit Template: ' + escapeHtml(exp.name || expKey) + '</h3>' +
+                '<div class="edit-field"><label>Name</label><input type="text" id="edit_tpl_name" value="' + escapeHtml(exp.name || expKey) + '"></div>' +
+                '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="edit_tpl_amount" value="' + exp.amount + '" step="0.01"></div>' +
+                '<div class="edit-field"><label>Category</label><select id="edit_tpl_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">' +
+                    '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
+                    '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
+                    '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
+                    '<option value="debt"' + (exp.category === 'debt' ? ' selected' : '') + '>Debt</option>' +
+                    '<option value="other"' + (exp.category === 'other' ? ' selected' : '') + '>Other</option></select></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveTemplateExpenseEdit(\'' + expKey + '\')">Save</button></div></div>';
+            document.body.appendChild(overlay);
+        }
+
+        function saveTemplateExpenseEdit(expKey) {
+            var exp = (financials.expenseTemplate || {})[expKey];
+            if (!exp) return;
+            exp.name = document.getElementById('edit_tpl_name').value.trim() || exp.name;
+            exp.amount = parseFloat(document.getElementById('edit_tpl_amount').value) || 0;
+            exp.category = document.getElementById('edit_tpl_category').value;
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('editTemplateOverlay'); if (el) el.remove();
+            showToast('Template updated', 'v');
+        }
+
+        function deleteTemplateExpense(expKey) {
+            var exp = (financials.expenseTemplate || {})[expKey];
+            if (!exp) return;
+            if (!confirm('Delete "' + (exp.name || expKey) + '" from template?')) return;
+            delete financials.expenseTemplate[expKey];
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            showToast('Removed from template', 'x');
+        }
+
+        function addTemplateExpense() {
+            var overlay = document.createElement('div');
+            overlay.className = 'edit-overlay'; overlay.id = 'addTemplateOverlay';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
+                '<h3>Add to Expense Template</h3>' +
+                '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_tpl_name" placeholder="e.g., Insurance"></div>' +
+                '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="new_tpl_amount" value="0" step="0.01"></div>' +
+                '<div class="edit-field"><label>Category</label><select id="new_tpl_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+                '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewTemplateExpense()">Add</button></div></div>';
+            document.body.appendChild(overlay);
+        }
+
+        function saveNewTemplateExpense() {
+            var name = document.getElementById('new_tpl_name').value.trim();
+            var amount = parseFloat(document.getElementById('new_tpl_amount').value) || 0;
+            var category = document.getElementById('new_tpl_category').value;
+            if (!name) { showToast('Please enter a name', '!'); return; }
+            var key = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+            if (!financials.expenseTemplate) financials.expenseTemplate = {};
+            if (financials.expenseTemplate[key]) { showToast('Already exists in template', '!'); return; }
+            financials.expenseTemplate[key] = { name: name, amount: amount, category: category };
+            saveData(); renderFinancialCockpit(); updateCockpitStats();
+            var el = document.getElementById('addTemplateOverlay'); if (el) el.remove();
+            showToast('Added to template: ' + name, '+');
         }
 
         function renderProjectionPanel() {
-            const status = calculateFinancialStatus();
-            const progressPercent = Math.max(0, Math.min(100, (status.projectedBalance / status.targetCushion) * 100));
+            var status = calculateFinancialStatus();
+            var progressPercent = Math.max(0, Math.min(100, (status.projectedBalance / status.targetCushion) * 100));
 
-            return `
-                <div class="fin-section fin-projection-section">
-                    <div class="fin-projection-header">
-                        <h3 class="fin-projection-title">📊 Projection</h3>
-                        <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('projections')">❓</button>
-                    </div>
+            var html = '<div class="fin-section fin-projection-section">' +
+                '<div class="fin-projection-header"><h3 class="fin-projection-title">Projection</h3>' +
+                '<button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp(\'projections\')">?</button></div>' +
+                '<div class="fin-calc-breakdown"><div class="fin-calc-title">Calculation Breakdown</div>' +
+                '<div class="fin-calc-row"><span>Current Cash</span><span class="fin-calc-value positive">$' + status.currentLiquid.toLocaleString() + '</span></div>';
 
-                    <!-- CALCULATION BREAKDOWN -->
-                    <div class="fin-calc-breakdown">
-                        <div class="fin-calc-title">📐 Math</div>
+            if (status.oneTimeIncome > 0) {
+                html += '<div class="fin-calc-row"><span>+ Expected Income</span><span class="fin-calc-value positive">+$' + status.oneTimeIncome.toLocaleString() + '</span></div>';
+            }
+            if (status.oneTimeExpenses > 0) {
+                html += '<div class="fin-calc-row"><span>- One-Time Bills</span><span class="fin-calc-value negative">-$' + status.oneTimeExpenses.toLocaleString() + '</span></div>';
+            }
 
-                        <div class="fin-calc-row">
-                            <span>Current Cash</span>
-                            <span class="fin-calc-value positive">$${status.currentLiquid.toLocaleString()}</span>
-                        </div>
+            html += '<div class="fin-calc-row subtotal"><span>= After One-Time</span><span class="fin-calc-value highlight">$' + status.availableCash.toLocaleString() + '</span></div>';
 
-                        ${status.committedIncome > 0 ? `
-                        <div class="fin-calc-row">
-                            <span>+ Income</span>
-                            <span class="fin-calc-value positive">+$${status.committedIncome.toLocaleString()}</span>
-                        </div>
-                        ` : ''}
+            for (var mi = 0; mi < status.monthlyDetails.length; mi++) {
+                var month = status.monthlyDetails[mi];
+                html += '<div class="fin-calc-row sub"><span>- ' + escapeHtml(month.label) + (month.allPaid ? ' (PAID)' : '') + ' (' + month.paidCount + '/' + month.totalCount + ' items)</span>' +
+                    '<span class="fin-calc-value ' + (month.allPaid ? 'positive' : 'negative') + '">' + (month.allPaid ? 'PAID' : '-$' + month.unpaidAmount.toLocaleString()) + '</span></div>';
+            }
 
-                        <div class="fin-calc-row">
-                            <span>− Bills</span>
-                            <span class="fin-calc-value negative">-$${status.committedExpenses.toLocaleString()}</span>
-                        </div>
+            if (status.monthlyDetails.every(function(m) { return m.allPaid; })) {
+                html += '<div class="fin-calc-all-paid">All months paid!</div>';
+            }
 
-                        <div class="fin-calc-row subtotal">
-                            <span>= Available</span>
-                            <span class="fin-calc-value highlight">$${status.availableCash.toLocaleString()}</span>
-                        </div>
+            html += '<div class="fin-calc-row total"><span>- Unpaid Monthly Total</span><span class="fin-calc-value negative">-$' + status.totalUnpaidMonthly.toLocaleString() + '</span></div></div>';
 
-                        ${status.unpaidMonths.map(month => `
-                        <div class="fin-calc-row sub">
-                            <span>− ${month.label}${month.partial ? ` (${Math.round(month.fraction * 100)}%)` : ''}</span>
-                            <span class="fin-calc-value negative">-$${month.amount.toLocaleString()}</span>
-                        </div>
-                        `).join('')}
+            html += '<div class="fin-projection-result" style="border-color: ' + status.healthColor + ';">' +
+                '<div class="fin-projection-label">MAY 14 BALANCE</div>' +
+                '<div class="fin-projection-amount" style="color: ' + status.healthColor + ';">$' + status.projectedBalance.toLocaleString() + '</div>' +
+                '<div class="fin-projection-status" style="background: ' + status.healthColor + ';">' + status.healthMessage + '</div>' +
+                '<div class="fin-projection-days">' + status.daysRemaining + ' days left</div></div>';
 
-                        ${status.unpaidMonths.length === 0 ? `
-                        <div class="fin-calc-all-paid">✓ All months paid!</div>
-                        ` : ''}
+            html += '<div class="fin-progress-section"><div class="fin-progress-header"><span>Target: $' + status.targetCushion.toLocaleString() + '</span>' +
+                '<span style="color: ' + status.healthColor + '; font-weight: 700;">' + progressPercent.toFixed(0) + '%</span></div>' +
+                '<div class="progress-container"><div class="progress-bar-fill" style="width: ' + progressPercent + '%;">' +
+                (progressPercent > 15 ? '$' + status.projectedBalance.toLocaleString() : '') + '</div></div></div></div>';
 
-                        <div class="fin-calc-row total">
-                            <span>− Monthly Total</span>
-                            <span class="fin-calc-value negative">-$${status.unpaidMonthsTotal.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    <!-- PROJECTED BALANCE -->
-                    <div class="fin-projection-result" style="border-color: ${status.healthColor};">
-                        <div class="fin-projection-label">MAY 14 BALANCE</div>
-                        <div class="fin-projection-amount" style="color: ${status.healthColor};">
-                            $${status.projectedBalance.toLocaleString()}
-                        </div>
-                        <div class="fin-projection-status" style="background: ${status.healthColor};">
-                            ${status.healthMessage}
-                        </div>
-                        <div class="fin-projection-days">
-                            ${status.daysRemaining} days left
-                        </div>
-                    </div>
-
-                    <!-- PROGRESS BAR -->
-                    <div class="fin-progress-section">
-                        <div class="fin-progress-header">
-                            <span>Target: $${status.targetCushion.toLocaleString()}</span>
-                            <span style="color: ${status.healthColor}; font-weight: 700;">${progressPercent.toFixed(0)}%</span>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar-fill" style="width: ${progressPercent}%;">
-                                ${progressPercent > 15 ? `$${status.projectedBalance.toLocaleString()}` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return html;
         }
 
         function renderActionItems() {
@@ -15517,9 +15622,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             card.targetMin = parseFloat(document.getElementById('edit_targetMin').value) || 0;
             card.negotiationNotes = document.getElementById('edit_cardNotes').value || '';
             
-            // Recalculate recurring expenses for credit cards
+            // Update template credit card amount when minimums change
             const totalMinimums = getValues(financials.creditCards).reduce((sum, c) => sum + c.targetMin, 0);
-            financials.recurringExpenses.creditCards.amount = totalMinimums;
+            if (financials.expenseTemplate && financials.expenseTemplate.creditCards) {
+                financials.expenseTemplate.creditCards.amount = totalMinimums;
+            }
             
             saveData();
             renderFinancialCockpit();
@@ -15590,42 +15697,35 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 `,
                 
                 committedBills: `
-                    <h2>📋 Committed Bills - How To Use</h2>
-                    
+                    <h2>📋 One-Time Bills & Monthly Expenses</h2>
+
                     <div class="help-tip">
-                        <strong>💡 TIP:</strong> Check off bills AS YOU PAY THEM. This keeps your projections accurate and prevents double-paying!
+                        <strong>💡 TIP:</strong> Check off items AS YOU PAY THEM. This keeps your May 14 projection accurate!
                     </div>
-                    
-                    <h3>What Are "Committed Bills"?</h3>
+
+                    <h3>One-Time Bills</h3>
                     <div class="help-section">
-                        <p>These are bills you MUST pay in January - they're already committed. Once you pay them, check them off and they disappear from your "Available Cash" calculation.</p>
+                        <p>These are standalone bills that happen ONCE (not monthly). Examples: loan disbursement income, paying back your brother, landlord deposit.</p>
+                        <p><strong>Check off</strong> each bill after you pay it. Paid bills no longer affect your projection.</p>
+                        <p><strong>Add new</strong> one-time bills with the "+ Add Bill" button.</p>
                     </div>
-                    
-                    <h3>How To Check Off Bills:</h3>
+
+                    <h3>Monthly Expenses (Per-Month)</h3>
                     <div class="help-section">
-                        <p><strong>1. Pay the bill (Venmo, Zelle, Auto-pay, etc.)</strong></p>
-                        <p>Actually send the money or confirm the auto-payment went through.</p>
+                        <p>Each month (Feb, Mar, Apr, May 1-14) has its OWN set of expenses. You can:</p>
+                        <p>• <strong>Check off individual expenses</strong> as you pay them</p>
+                        <p>• <strong>"Pay All"</strong> to mark an entire month as paid at once</p>
+                        <p>• <strong>Edit/delete</strong> expenses per month (e.g., if March rent is different)</p>
+                        <p>• <strong>Add custom expenses</strong> to a specific month</p>
                     </div>
-                    
+
+                    <h3>Expense Template</h3>
                     <div class="help-section">
-                        <p><strong>2. Click the checkbox next to the bill</strong></p>
-                        <p>The checkbox turns green with a checkmark ✓</p>
+                        <p>The template defines the DEFAULT expenses for each month. Editing the template does NOT change existing months - it only affects new months if you add them later.</p>
                     </div>
-                    
-                    <div class="help-section">
-                        <p><strong>3. Bill moves to bottom and turns lighter</strong></p>
-                        <p>Completed bills stay visible for your records but no longer affect projections.</p>
-                    </div>
-                    
-                    <h3>How To Edit Bill Amounts:</h3>
-                    <div class="help-section">
-                        <p><strong>Before paying:</strong> Click the bill → Click "Edit" → Change amount → Save</p>
-                        <p><strong>After negotiating:</strong> Update to the new agreed amount</p>
-                        <p><strong>Add confirmation numbers:</strong> Store payment receipts in the bill for your records</p>
-                    </div>
-                    
+
                     <div class="help-warning">
-                        <strong>⚠️ WARNING:</strong> Don't check off a bill unless you've ACTUALLY paid it! The app will think you have more money than you do.
+                        <strong>⚠️ WARNING:</strong> Don't check off items unless you've ACTUALLY paid them! The projection assumes unchecked items still need to be paid.
                     </div>
                 `,
                 
@@ -15721,28 +15821,26 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     </div>
 
                     <div class="help-section">
-                        <p><strong>Step 2: + Expected Income (if any)</strong></p>
-                        <p>Any unchecked income items in Committed Bills</p>
+                        <p><strong>Step 2: + Unpaid One-Time Income</strong></p>
+                        <p>Income items in One-Time Bills you haven't checked off yet (e.g., loan disbursement)</p>
                     </div>
 
                     <div class="help-section">
-                        <p><strong>Step 3: − Unpaid One-Time Bills</strong></p>
-                        <p>All the committed bills you haven't checked off yet</p>
-                        <p>= Available After Bills</p>
+                        <p><strong>Step 3: − Unpaid One-Time Expenses</strong></p>
+                        <p>One-time bills you haven't checked off yet (e.g., paying back brother)</p>
                     </div>
 
                     <div class="help-section">
                         <p><strong>Step 4: − Unpaid Monthly Expenses</strong></p>
-                        <p>Only months you HAVEN'T checked off in the tracker:</p>
-                        <p>• February (if unchecked) = full monthly total</p>
-                        <p>• March (if unchecked) = full monthly total</p>
-                        <p>• April (if unchecked) = full monthly total</p>
-                        <p>• May 1-14 (if unchecked) = 45% of monthly total</p>
+                        <p>Only the INDIVIDUAL unchecked expenses across all months:</p>
+                        <p>• Each month shows its own paid/unpaid count</p>
+                        <p>• Only unchecked items in each month are subtracted</p>
+                        <p>• May 1-14 amounts are pre-scaled to 45% already</p>
                     </div>
 
                     <div class="help-section">
-                        <p><strong>Step 5: = Final Projection</strong></p>
-                        <p>This is what you'll have on May 14 when the next disbursement arrives!</p>
+                        <p><strong>Step 5: = May 14 Projected Balance</strong></p>
+                        <p>This is what you'll have when the next disbursement arrives!</p>
                     </div>
 
                     <h3>🚦 What The Colors Mean:</h3>
@@ -15763,59 +15861,73 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                     <h3>How To Improve Your Projection:</h3>
                     <div class="help-tip">
-                        ✅ Check off months as you pay them (removes from calculation)<br>
-                        ✅ Negotiate credit card minimums down<br>
-                        ✅ Apply for SNAP benefits (reduce Food expense)<br>
-                        ✅ Reduce Social budget temporarily<br>
+                        ✅ Check off individual expenses as you pay them<br>
+                        ✅ Use "Pay All" when you've paid an entire month<br>
+                        ✅ Negotiate credit card minimums down (update template + months)<br>
+                        ✅ Delete unnecessary expenses from specific months<br>
                         ✅ Update actual cash (might be higher than you thought!)
                     </div>
                 `,
                 
                 recurringExpenses: `
-                    <h2>🔄 Recurring Monthly Expenses - How To Use</h2>
+                    <h2>🔄 Per-Month Expenses - How To Use</h2>
 
                     <div class="help-tip">
-                        <strong>💡 NEW: MONTH-BY-MONTH TRACKING!</strong> Now you can check off each month's expenses as you pay them, so projections are always accurate!
+                        <strong>💡 KEY:</strong> Each month has its OWN independent set of expenses. Editing one month does NOT affect any other month!
                     </div>
 
-                    <h3>📋 Two Sections:</h3>
+                    <h3>How It Works:</h3>
                     <div class="help-section">
-                        <p><strong>1. Your Monthly Expenses (Top)</strong></p>
-                        <p>These are your expense CATEGORIES and their monthly amounts. Edit these when costs change (e.g., after negotiating a bill).</p>
+                        <p>Each month (Feb, Mar, Apr, May 1-14) shows a collapsible card with all its expenses. Click the header to expand/collapse.</p>
                     </div>
 
+                    <h3>Checking Off Expenses:</h3>
                     <div class="help-section">
-                        <p><strong>2. Month-by-Month Payment Tracker (Bottom)</strong></p>
-                        <p>This shows Feb, Mar, Apr, and May 1-14. Check off each month after you've paid ALL that month's expenses.</p>
+                        <p><strong>Individual:</strong> Click the checkbox next to each expense as you pay it.</p>
+                        <p><strong>Pay All:</strong> Use the "Pay All" button to mark every expense in a month as paid at once.</p>
+                        <p><strong>Undo:</strong> Click "Uncheck All" (appears when all are paid) to reset a month.</p>
                     </div>
 
-                    <h3>How The New System Works:</h3>
+                    <h3>Customizing Per Month:</h3>
                     <div class="help-section">
-                        <p><strong>✅ Checked month = PAID</strong></p>
-                        <p>If February is checked, the projection doesn't subtract February expenses anymore.</p>
+                        <p><strong>Edit:</strong> Change an expense's name, amount, or category for that specific month.</p>
+                        <p><strong>Delete:</strong> Remove an expense from a specific month (doesn't affect other months).</p>
+                        <p><strong>Add:</strong> Use "+ Add" to add a custom expense to a specific month.</p>
                     </div>
 
+                    <h3>Expense Template:</h3>
                     <div class="help-section">
-                        <p><strong>❌ Unchecked month = NOT PAID</strong></p>
-                        <p>Only unchecked months get subtracted from your projection.</p>
+                        <p>The template defines your DEFAULT monthly expenses. It's used to initialize new months.</p>
+                        <p><strong>Editing the template does NOT change existing months</strong> — only future months you create.</p>
                     </div>
 
-                    <h3>Example Workflow:</h3>
+                    <h3>Projection Impact:</h3>
                     <div class="help-section">
-                        <p><strong>End of January:</strong> You've paid all January bills (tracked in Committed Bills). February is still unchecked.</p>
-                        <p><strong>End of February:</strong> You paid rent, gym, food, etc. for Feb. Click February checkbox → it turns green.</p>
-                        <p><strong>Projection updates:</strong> Now only Mar, Apr, and May 1-14 are subtracted!</p>
+                        <p>Only <strong>unchecked</strong> expenses are subtracted from your projection. As you check off items, your May 14 projected balance goes UP.</p>
+                    </div>
+                `,
+
+                expenseTemplate: `
+                    <h2>📝 Expense Template - How To Use</h2>
+
+                    <div class="help-tip">
+                        <strong>💡 KEY:</strong> The template defines the DEFAULT expenses that each new month starts with. Editing the template does NOT retroactively change existing months.
                     </div>
 
-                    <h3>Managing Expense Categories:</h3>
+                    <h3>What's In The Template:</h3>
                     <div class="help-section">
-                        <p><strong>Edit:</strong> Click the blue "Edit" button next to any expense to change its amount.</p>
-                        <p><strong>Delete:</strong> Click the red "×" button to remove an expense category.</p>
-                        <p><strong>Add New:</strong> Click "+ Add Expense" to add a new category (e.g., "Insurance").</p>
+                        <p>Your standard monthly expenses: rent, parking, gym, food, credit card minimums, etc.</p>
+                    </div>
+
+                    <h3>When To Edit The Template:</h3>
+                    <div class="help-section">
+                        <p>• After negotiating a lower credit card minimum</p>
+                        <p>• When a recurring cost changes (e.g., rent increase)</p>
+                        <p>• To add a new monthly expense category</p>
                     </div>
 
                     <div class="help-warning">
-                        <strong>⚠️ IMPORTANT:</strong> Only check off a month when you've ACTUALLY paid all the expenses for that month. The projection assumes unchecked months still need to be paid!
+                        <strong>⚠️ NOTE:</strong> If you want to change an expense for a SPECIFIC month (e.g., March only), edit it in the monthly expenses section instead. The template is only for setting defaults.
                     </div>
                 `
             };
@@ -17181,7 +17293,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             }
 
             if (data.financials) {
-                financials = deepMerge(financials, data.financials);
+                financials = migrateFinancials(data.financials);
             }
 
             if (data.pillAssignments) {
@@ -17523,14 +17635,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 }
 
                 if (data.financials) {
-                    financials = {
-                        ...financials,
-                        ...data.financials,
-                        committedBills: migrateArrayToObject(data.financials.committedBills, 'bill') || financials.committedBills,
-                        creditCards: migrateArrayToObject(data.financials.creditCards, 'card') || financials.creditCards,
-                        actionItems: migrateArrayToObject(data.financials.actionItems, 'action') || financials.actionItems,
-                        customTransactions: migrateArrayToObject(data.financials.customTransactions, 'txn') || financials.customTransactions
-                    };
+                    financials = migrateFinancials(data.financials);
                 }
                 
                 // Sync lastCriticalEODReset to prevent duplicate resets
