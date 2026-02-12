@@ -9538,11 +9538,63 @@ CHAIR: 9F
 
         // Generate stable deadline ID based on properties (for static deadlines)
         // Custom deadlines use their own 'id' property
+        // Sanitize a string to be safe as a Firebase RTDB key
+        // Firebase prohibits: . # $ / [ ] in key names
+        function sanitizeFirebaseKey(key) {
+            return key.replace(/[.#$/\[\]]/g, '');
+        }
+
         function getDeadlineId(deadline) {
-            if (deadline.id) return deadline.id; // Custom deadlines have their own ID
+            if (deadline.id) return sanitizeFirebaseKey(deadline.id); // Custom deadlines have their own ID
             // For static deadlines, create a stable hash from key properties
             const key = `${deadline.date}_${deadline.course}_${deadline.what}`.toLowerCase().replace(/\s+/g, '_');
-            return 'dl_' + key;
+            return sanitizeFirebaseKey('dl_' + key);
+        }
+
+        // Recursively sanitize ALL keys in a nested object for Firebase safety
+        // This is a safety net applied before every .set() call
+        function sanitizeFirebaseData(obj) {
+            if (obj === null || obj === undefined || typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(item => sanitizeFirebaseData(item));
+            const result = {};
+            for (const key of Object.keys(obj)) {
+                const safeKey = sanitizeFirebaseKey(key);
+                result[safeKey] = sanitizeFirebaseData(obj[key]);
+            }
+            return result;
+        }
+
+        // Migrate roadmapData keys that contain Firebase-invalid characters
+        // This fixes data that was stored with old unsanitized getDeadlineId() keys
+        function migrateInvalidFirebaseKeys(data) {
+            if (!data) return;
+            const invalidKeyPattern = /[.#$/\[\]]/;
+            const fieldsToMigrate = ['editedDeadlines', 'completedDeadlines', 'customDeadlines', 'deletedDeadlines', 'examStudyProgress'];
+            let migrated = false;
+
+            fieldsToMigrate.forEach(field => {
+                if (data[field] && typeof data[field] === 'object' && !Array.isArray(data[field])) {
+                    const keys = Object.keys(data[field]);
+                    keys.forEach(key => {
+                        if (invalidKeyPattern.test(key)) {
+                            const safeKey = sanitizeFirebaseKey(key);
+                            if (safeKey !== key) {
+                                // Copy value to sanitized key, preserving existing safe-key data
+                                if (!data[field][safeKey]) {
+                                    data[field][safeKey] = data[field][key];
+                                }
+                                delete data[field][key];
+                                migrated = true;
+                                console.log(`🔧 Migrated invalid key in ${field}: "${key}" → "${safeKey}"`);
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (migrated) {
+                console.log('🔧 Firebase key migration complete — invalid characters removed');
+            }
         }
 
         // Get count of items in object or array
@@ -9732,6 +9784,9 @@ CHAIR: 9F
             // This was causing saves to be blocked when Firebase was disabled or failed
             roadmapData._dataLoaded = true;
 
+            // Migrate any keys with Firebase-invalid characters (# / . $ [ ])
+            migrateInvalidFirebaseKeys(roadmapData);
+
             // If finalize=true, we're the terminal loading function (no Firebase)
             // Set all flags and call initUI
             if (finalize) {
@@ -9788,6 +9843,9 @@ CHAIR: 9F
                             _lastModified: data._lastModified || roadmapData._lastModified,
                             _dataLoaded: true
                         };
+
+                        // Migrate any keys with Firebase-invalid characters (# / . $ [ ])
+                        migrateInvalidFirebaseKeys(roadmapData);
 
                         // Also save to localStorage as backup
                         localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
@@ -9906,6 +9964,7 @@ CHAIR: 9F
                         _dataLoaded: true
                     };
 
+                    migrateInvalidFirebaseKeys(roadmapData);
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
 
                     // Re-render tabs based on which one is active
@@ -10209,6 +10268,7 @@ CHAIR: 9F
                 _dataLoaded: true
             };
 
+            migrateInvalidFirebaseKeys(roadmapData);
             localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
             initUI();
         }
@@ -10425,6 +10485,9 @@ CHAIR: 9F
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
+
+            // Migrate any invalid Firebase keys from checkpoint data
+            migrateInvalidFirebaseKeys(roadmapData);
 
             // Save everywhere
             localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
@@ -10706,6 +10769,9 @@ CHAIR: 9F
                         _dataLoaded: true
                     };
 
+                    // Migrate any invalid Firebase keys from imported data
+                    migrateInvalidFirebaseKeys(roadmapData);
+
                     // FIX: Save to localStorage BEFORE saveData() so data persists even if guards block
                     // This matches restoreCheckpoint() pattern (line 10421)
                     localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
@@ -10794,9 +10860,11 @@ CHAIR: 9F
 
                 // FIXED: Clean data before Firebase write
                 // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
-                const cleanData = JSON.parse(JSON.stringify(roadmapData));
+                let cleanData = JSON.parse(JSON.stringify(roadmapData));
                 // Remove internal flags that shouldn't be in Firebase
                 delete cleanData._dataLoaded;
+                // CRITICAL FIX: Sanitize ALL keys to prevent Firebase InvalidKey throws
+                cleanData = sanitizeFirebaseData(cleanData);
 
                 console.log('Force upload data size:', JSON.stringify(cleanData).length, 'bytes');
 
@@ -10962,35 +11030,47 @@ CHAIR: 9F
                 saveDebounceTimer = setTimeout(() => {
                     lastSaveTime = Date.now();
 
-                    // FIXED: Clean data before Firebase write
-                    // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
-                    const cleanData = JSON.parse(JSON.stringify(roadmapData));
-                    // Remove internal flags that shouldn't be in Firebase
-                    delete cleanData._dataLoaded;
+                    try {
+                        // FIXED: Clean data before Firebase write
+                        // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
+                        let cleanData = JSON.parse(JSON.stringify(roadmapData));
+                        // Remove internal flags that shouldn't be in Firebase
+                        delete cleanData._dataLoaded;
+                        // CRITICAL FIX: Sanitize ALL keys to prevent Firebase InvalidKey throws
+                        cleanData = sanitizeFirebaseData(cleanData);
 
-                    database.ref(userPath).set(cleanData)
-                        .then(() => {
-                            updateSyncStatus('connected', 'Synced');
-                            console.log('✅ Saved to Firebase, version:', roadmapData._version);
-                        })
-                        .catch(error => {
-                            console.error('❌ Firebase save error:', error);
-                            console.error('Error code:', error.code);
-                            console.error('Error message:', error.message);
-                            updateSyncStatus('error', 'Save failed - retrying...');
-                            // Retry once after 2 seconds
-                            setTimeout(() => {
-                                if (firebaseSyncEnabled && database && userPath) {
-                                    const retryData = JSON.parse(JSON.stringify(roadmapData));
-                                    delete retryData._dataLoaded;
-                                    database.ref(userPath).set(retryData)
-                                        .then(() => {
-                                            updateSyncStatus('connected', 'Synced');
-                                        })
-                                        .catch(e => console.error('Retry failed:', e));
-                                }
-                            }, 2000);
-                        });
+                        database.ref(userPath).set(cleanData)
+                            .then(() => {
+                                updateSyncStatus('connected', 'Synced');
+                                console.log('✅ Saved to Firebase, version:', roadmapData._version);
+                            })
+                            .catch(error => {
+                                console.error('❌ Firebase save error:', error);
+                                console.error('Error code:', error.code);
+                                console.error('Error message:', error.message);
+                                updateSyncStatus('error', 'Save failed - retrying...');
+                                // Retry once after 2 seconds
+                                setTimeout(() => {
+                                    try {
+                                        if (firebaseSyncEnabled && database && userPath) {
+                                            let retryData = JSON.parse(JSON.stringify(roadmapData));
+                                            delete retryData._dataLoaded;
+                                            retryData = sanitizeFirebaseData(retryData);
+                                            database.ref(userPath).set(retryData)
+                                                .then(() => {
+                                                    updateSyncStatus('connected', 'Synced');
+                                                })
+                                                .catch(e => console.error('Retry failed:', e));
+                                        }
+                                    } catch (retryErr) {
+                                        console.error('❌ Retry threw:', retryErr);
+                                    }
+                                }, 2000);
+                            });
+                    } catch (syncError) {
+                        console.error('❌ Firebase .set() threw synchronously:', syncError);
+                        updateSyncStatus('error', 'Save error: ' + syncError.message);
+                    }
                 }, delay);
             }
 
