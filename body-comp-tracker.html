@@ -15348,18 +15348,45 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 })
                 .catch(error => {
                     console.error('Firebase load error:', error);
-                    updateSyncStatus('error', 'Load failed');
+                    updateSyncStatus('error', 'Load failed - using offline mode');
 
-                    // If we have local data, use it
+                    // ALWAYS allow saves when Firebase fails
+                    // The isEmptyState() guard still prevents saving truly empty state
+                    state._dataLoaded = true;
+                    hasLoadedFromCloud = true;
+                    isInitialLoad = false;
+
                     const hasLocalData = hasRealData(state);
                     if (hasLocalData) {
-                        state._dataLoaded = true;
-                        hasLoadedFromCloud = true;  // Allow saves with local data
-                        isInitialLoad = false;
-                        console.log('⚠️ Firebase failed but have local data - allowing saves');
+                        console.log('⚠️ Firebase failed but have local data - saving to localStorage');
+                    } else {
+                        console.log('⚠️ Firebase failed, no local data - offline mode, saves to localStorage only');
                     }
 
                     initializeUI();
+
+                    // Retry Firebase connection after 5 seconds
+                    setTimeout(() => {
+                        if (firebaseSyncEnabled && database && userPath) {
+                            console.log('🔄 Retrying Firebase connection...');
+                            database.ref(userPath).once('value')
+                                .then(snapshot => {
+                                    const data = snapshot.val();
+                                    if (data && data.state && !isEmptyState(data.state)) {
+                                        console.log('✅ Firebase reconnected - merging cloud data');
+                                        // Re-run the full load to merge properly
+                                        loadFromFirebase();
+                                    } else {
+                                        updateSyncStatus('connected', 'Connected');
+                                        console.log('✅ Firebase reconnected - no cloud data to merge');
+                                        setupRealtimeSync();
+                                    }
+                                })
+                                .catch(retryErr => {
+                                    console.warn('🔄 Firebase retry failed:', retryErr.message);
+                                });
+                        }
+                    }, 5000);
                 });
         }
 
