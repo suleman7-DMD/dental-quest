@@ -8150,20 +8150,21 @@
                 }
             });
 
-            // Add today's workout calories
+            // Add today's workout calories (from actual workout objects only)
+            // FIX: Only use real workout object data — never fall back to todayActiveCalories
+            // which is an accumulated field prone to circular inflation.
             const todayWorkoutCals = getValues(state.today?.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
-            if (todayWorkoutCals > 0 || todayActiveCalories != null) {
-                totalActive += todayWorkoutCals || todayActiveCalories || 0;
+            if (todayWorkoutCals > 0) {
+                totalActive += todayWorkoutCals;
                 daysWithLogs++;
             }
 
             let avgWorkoutCalories;
-            if (daysWithLogs >= 3) {
-                // Use actual average across days with data
+            if (daysWithLogs > 0) {
                 avgWorkoutCalories = Math.round(totalActive / daysWithLogs);
             } else {
-                // Fall back to today's input if not enough history
-                avgWorkoutCalories = todayActiveCalories || 0;
+                // Brand new user, zero workout history — assume 0 extra burn
+                avgWorkoutCalories = 0;
             }
 
             // TDEE = (BMR × multiplier) + workout calories
@@ -8199,7 +8200,10 @@
             if (daysWithLogs >= 3) {
                 return { avg: Math.round(totalWorkout / daysWithLogs), days: daysWithLogs };
             }
-            return { avg: todayWorkoutCals || state.today?.activeCalories || 0, days: daysWithLogs };
+            // FIX: Do NOT fall back to state.today.activeCalories — it creates a circular
+            // self-reinforcing loop where inflated values persist forever.
+            // Only return actual workout data. Zero is correct when there are no workouts.
+            return { avg: todayWorkoutCals, days: daysWithLogs };
         }
 
         function calculateMode(sleepHours, isBrainDay) {
@@ -8612,7 +8616,8 @@
             // TDEE Breakdown display
             const bmr = calculateBMR(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age);
             const activeInfo = get7DayAvgActiveCalories();
-            const tdee = bmr + activeInfo.avg;
+            // FIX: Use calculateTDEE() which includes activity multiplier (was bmr + avg, missing multiplier)
+            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
             const tdeeBreakdown = document.getElementById('tdeeBreakdown');
             if (tdeeBreakdown) {
                 tdeeBreakdown.innerHTML = `
@@ -8698,8 +8703,20 @@
 
         function renderSimpleView() {
             const totals = getTodayTotals();
-            const targets = state.today.targets || { calories: 1900, protein: 172 };
+            let targets = state.today.targets || { calories: 1900, protein: 172 };
             const mode = state.today.mode || 'GREEN';
+
+            // FIX: Recalculate targets if they've diverged from current TDEE.
+            // This catches stale targets from inflated TDEE at autoStartDay time.
+            const freshTDEE = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
+            const freshTargets = calculateTargets(mode, freshTDEE, state.profile.currentWeight_lbs, state.today.isBrainDay);
+            if (Math.abs(freshTargets.calories - targets.calories) > 100) {
+                console.warn(`⚠️ Stale targets detected: ${targets.calories} → ${freshTargets.calories} (TDEE: ${freshTDEE})`);
+                state.today.targets = freshTargets;
+                targets = freshTargets;
+                saveState();
+                saveDayLog();
+            }
 
             // Update status
             const status = getSimpleStatus();
@@ -12257,7 +12274,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             state.today.workouts[workoutId] = workout;
             state.today.workedOut = true;
 
-            // Add workout calories to active calories for TDEE adjustment
+            // Add workout calories to active calories for TDEE adjustment (clamped)
             state.today.activeCalories = (state.today.activeCalories || 0) + workout.calories;
 
             // Recalculate targets with new active calories
@@ -19636,11 +19653,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         async function initializeUI() {
             const todayStr = getLocalDateString();
 
-            // Check if it's a new day and save previous day's log
-            if (state.today.date && state.today.date !== todayStr && state.today.setupComplete) {
-                // Save previous day's data
-                saveDayLog();
-                updateStreak();
+            // Check if it's a new day — reset even if setupComplete was false
+            // FIX: Previously only reset if setupComplete, leaving stale activeCalories from previous day
+            if (state.today.date && state.today.date !== todayStr) {
+                // Save previous day's data (only if setup was complete and had meals)
+                if (state.today.setupComplete && getCount(state.today.meals) > 0) {
+                    saveDayLog();
+                    updateStreak();
+                }
 
                 // Reset for new day - MUST include ALL today fields
                 state.today = {
@@ -19705,9 +19725,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             sleepHours = sleepHours ?? 6;
             state.today.sleepHours = sleepHours;
 
-            // Get active calories from 7-day average
+            // Get active calories from 7-day average of actual workout objects
+            // (circular fallback removed from get7DayAvgActiveCalories — only real data)
             const activeInfo = get7DayAvgActiveCalories();
-            state.today.activeCalories = activeInfo.avg || 300; // Default 300 if no history
+            state.today.activeCalories = activeInfo.avg || 0;
 
             // Calculate base mode based on last night's sleep
             state.today.mode = calculateMode(sleepHours, false);
