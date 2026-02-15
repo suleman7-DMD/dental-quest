@@ -114,6 +114,44 @@ Sully's stim calc app predicts when he can fall asleep based on Adderall XR, caf
 
 ---
 
+## WHAT SHOULD IMPROVE AFTER FINAL SPLIT COMPLETES
+
+### 1. Sleep Predictions That Actually Get Smarter Over Time
+The calibration system has been learning from CORRUPTED data since day one. When your actual sleep crosses midnight (which it almost always does), 3 functions compute the delta wrong:
+- Prediction: 11:40 PM (1420 min). Actual: 12:20 AM (20 min).
+- **Current app calculates**: 20 - 1420 = **-1400 minutes off** (insane garbage)
+- **Fixed app calculates**: +40 minutes off (correct)
+That -1400 corrupts accuracy stats, calibration suggestions, and history. The app has been telling you "your threshold is wildly wrong" when it was only 40 min off. **After the fix, a few weeks of entering actual sleep data will genuinely tune the prediction to your body.** The feedback loop goes from poisoned to functional.
+
+### 2. Stable Circadian Zones
+Currently if you wake at 7 AM one day and 10 AM the next, the Forbidden Zone shifts by 3 hours instantly. After the fix, zones use your 7-day average wake time — so one weird morning doesn't throw off the entire prediction by 2 hours. Your circadian model reflects your actual rhythm, not daily noise.
+
+### 3. No More App Crashes / Freezes
+Currently if ANY single calculation throws a runtime error, `recalculate()` crashes. Since it runs every 5 seconds via `setInterval`, it crashes AGAIN 5 seconds later, and again forever. The hero goes blank, the countdown stops, the graph dies. **After the refactor**, `recalculate()` has try/catch isolation — if one calculation fails, the hero shows "Calc Error" for 5 seconds and self-heals on the next cycle. The app becomes resilient instead of fragile.
+
+### 4. Noticeably Faster Performance
+Currently: 8 full `calculateSleepTime()` calls per 5-second cycle (1 main + 1 workout + 6 what-if), each with iterative binary search calling `calculateAmpLoad()` hundreds of times. **After optimization**: when the what-if accordion is closed (which it usually is), that drops to 1-2 calls. ~75% fewer pharmacokinetic calculations per cycle. The app should feel snappier, especially on mobile.
+
+### 5. Accurate Ghost Load Display
+When VitC is active and you're in all-nighter mode, the ghost load display currently shows WRONG residual amounts because `calculateYesterdayDoseRemaining()` uses simple decay instead of the VitC-aware 3-segment model. After the fix, the display matches what the engine actually calculates.
+
+### 6. Accurate Workout Planner Display
+The workout planner currently double-counts adenosine — it raises the threshold (making drugs "clear" earlier) AND subtracts time from the display prediction. After the fix, the "predicted sleep with workout" display shows the correct time.
+
+### 7. Calibration Suggestions That Make Sense
+With the midnight-crossing bugs fixed, `suggestCalibration()` and `getCalibrationRecommendation()` will give sensible advice like "Your predictions are consistently 30 min late — consider lowering threshold from 14 to 13 mg" instead of nonsensical suggestions based on corrupted ±1400 min deltas.
+
+### 8. Future Debugging Actually Works
+When something breaks after the split, Claude Code reads a 200-900 line file instead of hunting through 8,400 lines. No more "fixed one bug, introduced three others" regressions. Each module has clear boundaries and a single responsibility. Features like tolerance modeling, auto-calibration, food timing effects — all become feasible additions instead of suicide missions.
+
+### 9. Sync Bugs Become One-Fix-Fits-All
+The 4 duplicated Firebase merge blocks are consolidated into one `mergeRemoteState()`. When a sync edge case is found, you fix it ONCE and it works for initial load, realtime sync, tab refocus, AND force pull. No more "fixed it in loadFromFirebase but forgot setupRealtimeSync."
+
+### The Honest Assessment
+The split doesn't magically perfect the pharmacokinetic model — the 14mg threshold is still a starting guess, the 11h half-life might be wrong for Sully's body, and there's no tolerance/adaptation modeling yet. But those things are currently UNFIXABLE because the calibration that tunes them is broken, and every fix attempt in the 8,400-line monolith risks regressions. After the split: ~75% useful on day one (up from ~60%), and genuinely improvable going forward. Each remaining issue becomes a focused task in a small, understandable module.
+
+---
+
 ## FILE STRUCTURE (10 JS Files)
 
 ```

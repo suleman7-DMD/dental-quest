@@ -127,6 +127,60 @@ Today: 0h slept -> 8.0h deficit (100% weight)
 
 ---
 
+## UNFIXED BUGS (To Be Fixed During Split — see SPLIT-PLAN-V2.md)
+
+### BUG 12: suggestCalibration() midnight-crossing (HIGH)
+- **Location:** `suggestCalibration()` line ~9097
+- **Bug:** Uses raw `actualSleep - predictedSleep` instead of `computeSleepDelta()`. If predicted=1420 (11:40 PM) and actual=20 (12:20 AM), computes -1400 instead of +40. Corrupts all calibration suggestions.
+- **Fix:** Replace with `computeSleepDelta(h.predictedSleep, h.actualSleep)`
+
+### BUG 13: migrateHistoryEntries() midnight-crossing (HIGH)
+- **Location:** `migrateHistoryEntries()` line ~3684
+- **Bug:** Same raw subtraction bug. Corrupts historical delta/absError values during migration.
+- **Fix:** Replace with `computeSleepDelta(entry.predictedSleep, entry.actualSleep)`
+
+### BUG 14: renderHistory() accuracy midnight-crossing (MEDIUM)
+- **Location:** `renderHistory()` line ~7654
+- **Bug:** Raw `Math.abs(entry.actualSleep - entry.predictedSleep)` for accuracy text. Shows "1400 min off" for entries crossing midnight.
+- **Fix:** Replace with `Math.abs(computeSleepDelta(entry.predictedSleep, entry.actualSleep))`
+
+### BUG 15: Circadian zones ignore 7-day avg wake time (MEDIUM)
+- **Location:** `getForbiddenZone()` line ~3945, `getSleepGate()` line ~3953
+- **Bug:** Uses today's `state.wakeTime` directly. One weird morning shifts entire prediction by hours.
+- **Fix:** Use `analyzeCircadianPhase().avgWakeTime` when available.
+
+### BUG 16: Ghost load display ignores VitC (MEDIUM)
+- **Location:** `calculateYesterdayDoseRemaining()` line ~5049
+- **Bug:** Uses simple `Math.pow(0.5, elapsed/halfLife)` instead of `calculateDecayWithVitC()`. Shows wrong residual when VitC was active.
+- **Fix:** Use `calculateDecayWithVitC()` for consistency with main engine.
+
+### BUG 17: Workout planner double-counts adenosine in display (MEDIUM)
+- **Location:** `calculateWorkoutImpact()` display at line ~5359
+- **Bug:** Subtracts adenosineBonus from predictedSleep AND raises threshold. Double-counting.
+- **Fix:** Remove `- adenosineBonus` from the display calc (threshold path is correct).
+
+### BUG 18: Settings parsed with || instead of ?? (LOW)
+- **Location:** `recalculate()` lines ~5663-5667
+- **Bug:** `parseFloat(val) || fallback` treats 0 as falsy. Violates codebase rule.
+- **Fix:** Use `parseFloat(val) ?? fallback`
+
+### BUG 19: Duplicate showToast() definitions (LOW)
+- **Location:** Lines ~6806 and ~10584
+- **Bug:** Two definitions, second silently overwrites first.
+- **Fix:** Keep one (the one with undo support), delete other.
+
+### BUG 20: Duplicate toggleModifier() definitions (LOW)
+- **Location:** Lines ~4833 and ~11479
+- **Bug:** Unified view version overrides original.
+- **Fix:** Keep unified view version (11479), delete old (4833).
+
+### BUG 21: Dead getCortisolClearTime() (LOW)
+- **Location:** Line ~4237
+- **Bug:** Returns null, never meaningfully used anywhere.
+- **Fix:** Delete entirely.
+
+---
+
 ## Prevention Patterns
 
 ### XR Clearance Search Pattern
