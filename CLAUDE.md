@@ -36,7 +36,7 @@ const foods = loadedFoods?.length > 0 ? loadedFoods : defaults;
 | `index.html` | ~22,700 | Main app: Command Center (Triage/Crash Out/Focus), tasks, financials, calendar, medications, notebook |
 | `d3-roadmap.html` | ~17,575 | Academic tracker: 11 tabs (grades, deadlines, clinical, competencies, monthly/daily planner, exams, mandatory) |
 | `stimulant-elimination-calculator.html` | ~11,526 | Sleep prediction, pharmacokinetic modeling (amphetamine/caffeine/nicotine), workout planner |
-| `body-comp-tracker.html` | ~20,158 | Calorie/protein/workout tracking, cross-app ecosystem, V2 analytics, recomp predictor |
+| `body-comp-tracker.html` | ~20,203 | Calorie/protein/workout tracking, cross-app ecosystem, V2 analytics, recomp predictor |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder |
 
 ### Hosting
@@ -606,7 +606,7 @@ Fixed, Operative, Dentures, RPDs, SRPs, Endo, Oral Surgery, Peds, Perio, Group P
 
 ## BODY COMP TRACKER (body-comp-tracker.html)
 
-### File Layout (~20,158 lines)
+### File Layout (~20,203 lines)
 | Range | Content |
 |-------|---------|
 | 1-5,962 | **CSS** — dark theme, responsive, glassmorphism, 13 animations |
@@ -1106,6 +1106,10 @@ openFinancialHelp()            // Help modal with negotiation scripts
 6. **_version: Date.now() in defaults** - causes data wipe on fresh device
 7. **Saving before pinValidated** - causes race condition data wipe
 8. **Saving before hasLoadedFromCloud** - overwrites cloud with empty data
+9. **`||` vs `??` for numeric fallbacks** - `|| default` treats `0` as falsy; use `?? default` for targets/floors/counts where 0 is valid (e.g., maintenance mode calories)
+10. **Circular self-reinforcing calculations** - never use a computed output as its own input fallback (e.g., `get7DayAvg()` falling back to `state.today.activeCalories` which was SET by `get7DayAvg()`)
+11. **Stale cached targets** - targets set once at autoStartDay can diverge from real-time TDEE; renderSimpleView now auto-corrects if >100 cal off
+12. **Wrong state field names** - always verify field exists in `getDefaultState()` (e.g., `goalWeight_lbs` not `goalWeight`)
 
 ### Cross-App Data Flow Map
 ```
@@ -1166,6 +1170,27 @@ All cross-app reads are **READ-ONLY via Firebase**. If a source app is wiped, re
 ### Body Comp — Missing Functions & V2 Upgrade (Jan 2026)
 - Added `getDefaultState()`. Calendar: 8 statuses (was 5) including deficit_gym, gym_only. Streak: daily completion (`gam.streak`), not gym streak. Added `updateStreak()` calls after meal logging. Added `allNighterMode` to ecosystem context.
 - V2 upgrade: margin-based scoring, `determineDayStatus()`, `aggregateDailyLogs()`, recomp predictor, macro timing analysis, deficit sustainability analytics.
+
+### Body Comp — TDEE Circular Inflation Bug + Progress Tab Fixes (Feb 2026)
+**Root cause:** `get7DayAvgActiveCalories()` fell back to `state.today.activeCalories`, which was set by `autoStartDay()` from that same function — circular self-reinforcing loop inflated calorie targets to 46,000+.
+
+**7 structural TDEE fixes (no clamps):**
+1. `get7DayAvgActiveCalories()` — removed circular fallback to `state.today.activeCalories`
+2. `calculateTDEE()` — only uses real workout object data, never `todayActiveCalories` parameter
+3. `renderSimpleView()` — auto-corrects stale targets if TDEE diverges >100 cal
+4. `renderDashboard()` — calls `calculateTDEE()` instead of raw `bmr + avg`
+5. `autoStartDay()` — honest `|| 0` fallback instead of `|| 300`
+6. `logQuickWorkout()` — removed arbitrary 2000 cal cap on activeCalories
+7. `initializeUI()` — resets state.today on day change even without setupComplete
+
+**9 progress tab analytics fixes:**
+- `aggregateDailyLogs()` + `calculateWeekScore()` — `||` → `??` for target/floor/protein (0 is valid in maintenance)
+- `calculateWeekScore()` — gymScore capped at 100 at source (5+ gym days can't inflate weighted average)
+- `renderRecompPredictor()` — fixed `goalWeight` → `goalWeight_lbs` (was always defaulting to 170)
+- `renderCalendarHeatmap()` — fallback uses `determineDayStatus()` instead of simplified 3-status inline logic
+- `renderMacroTimingAnalysis()` — shows message when meals lack timestamps instead of hiding
+- `renderDeficitSustainability()` — adds sparse data caveat when <14 days
+- `renderWorkoutStats()` — friendly empty state instead of hiding section
 
 ---
 

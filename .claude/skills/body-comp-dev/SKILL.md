@@ -62,7 +62,7 @@ Read the APP OVERVIEW and KEY CONCEPTS below. Determine which subsystem is relev
 
 ### Step 2: Find the exact function and line number
 Use the QUICK REFERENCE table below or [references/function-map.md](references/function-map.md) for the full 237-function index.
-All line numbers are verified against the actual 20,158-line file.
+All line numbers are verified against the actual 20,203-line file.
 
 ### Step 3: Read the code before changing it
 This is a single 19,034-line HTML file. Always read the target function and 50 lines of surrounding context before editing. Never write blind.
@@ -127,8 +127,16 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 **Solution:** Verify every meal/workout function calls `saveState()` then `saveDayLog()`. Check guard status in console.
 
 ### Error: TDEE seems wrong (too high or too low)
-**Cause:** `calculateTDEE()` (line 8090) uses 7-day rolling average of workout calories via `get7DayAvgActiveCalories()` (line 8143). With <3 days of data, it falls back to today's input.
-**Solution:** Check `state.today.activeCalories` and recent dailyLogs for workout data. Verify `activityLevel` multiplier in profile (default: sedentary=1.2).
+**Cause:** `calculateTDEE()` (line 8123) uses 7-day rolling average from actual workout objects in dailyLogs. No fallback to `state.today.activeCalories` (circular reference removed Feb 2026).
+**Solution:** Check workout objects in `state.today.workouts` and recent dailyLogs. Verify `activityLevel` multiplier in profile (default: sedentary=1.2). If targets seem stale, `renderSimpleView()` auto-corrects if TDEE diverges >100 cal.
+
+### Error: Calorie target wildly inflated (FIXED Feb 2026)
+**Cause:** Circular self-reinforcing bug — `get7DayAvgActiveCalories()` fell back to `state.today.activeCalories`, which was set BY `autoStartDay()` FROM that same function. Once inflated, the value persisted forever.
+**Solution:** Fixed structurally — `get7DayAvgActiveCalories()` (line 8177) and `calculateTDEE()` (line 8123) now only use actual workout object data. `renderSimpleView()` auto-corrects stale targets. No clamps needed.
+
+### Error: Progress tab showing wrong scores or hiding sections
+**Cause:** Several analytics functions had `||` instead of `??` for numeric fallbacks (treating 0 as falsy), wrong field names (`goalWeight` vs `goalWeight_lbs`), or simplified status fallback logic.
+**Solution:** Fixed Feb 2026 — all target/floor/protein fallbacks use `??`, gymScore capped at 100, recomp predictor reads `goalWeight_lbs`, calendar heatmap uses `determineDayStatus()` for fallback.
 
 ### Error: Mode shows ORANGE when sleep was fine
 **Cause:** All-nighter mode from stim calc forces ORANGE regardless of sleep hours. Check `calculateMode()` line 8172.
@@ -150,7 +158,7 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 
 ## PERFORMANCE NOTES
 
-- **Read before you edit.** This is a 19,034-line single file. Always read the target function and 50+ lines of context before making any change. Blind edits break things silently.
+- **Read before you edit.** This is a 20,203-line single file. Always read the target function and 50+ lines of context before making any change. Blind edits break things silently.
 - **Quality over speed.** A broken sync guard wipes ALL user data across devices. Take your time verifying guards are intact after every edit.
 - **Check the save chain every time.** After any state mutation, verify `saveState()` is called, then `saveDayLog()` if meals/workouts changed, then the appropriate render function. Missing any link in this chain causes silent data loss.
 - **Do not skip brace balance checks** after edits touching more than 10 lines. One missing brace in a 19K-line file is nearly impossible to find manually.
@@ -229,7 +237,7 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Track calories, protein, workouts, weight, and body composition for a dental student's cut to 170 lbs by June 2026. Integrates with 3 other apps via Firebase for stimulant-aware eating guidance.
 
-**File:** `body-comp-tracker.html` (20,158 lines, single file, no build system)
+**File:** `body-comp-tracker.html` (20,203 lines, single file, no build system)
 
 **File Layout:**
 | Range | Content |
@@ -255,16 +263,16 @@ This app uses the same Firebase patterns as all Sully apps.
 | 15562-16109 | Checkpoint system (create/restore/export/import) |
 | 16110-16635 | Firebase init, PIN auth, ecosystem data integration |
 | 16636-16975 | Gamification (XP, levels, streaks, achievements) |
-| 16976-17711 | Progress tab (12 sub-renderers + aggregateDailyLogs) |
-| 17712-18051 | **V2 aggregation**: aggregateDailyLogs(start, end) |
-| 18052-18242 | Calendar heatmap (8 statuses including deficit_gym, gym_only) |
-| 18243-18399 | **V2 progress**: renderDailySnapshot(), renderWorkoutStats() |
-| 18400-18553 | **V2 analytics**: renderMacroTimingAnalysis() (ISSN protein timing) |
-| 18554-18692 | **V2 analytics**: renderDeficitSustainability() (CV, yo-yo detection) |
-| 18693-18913 | **V2 analytics**: renderRecompPredictor() (Longland et al., Mifflin-St Jeor) |
-| 18914-18930 | refreshProgressIfActive() |
-| 18931-19100 | Initialization, day management, event listeners |
-| 19100-20158 | Data integrity checks (enhanced audit), badges tab, DOMContentLoaded |
+| 16976-17728 | Progress tab (13+ sub-renderers) |
+| 17729-18070 | **V2 aggregation**: aggregateDailyLogs(start, end), calculateWeekScore() |
+| 18070-18262 | Calendar heatmap (8 statuses including deficit_gym, gym_only) |
+| 18263-18423 | **V2 progress**: renderDailySnapshot(), renderWorkoutStats() |
+| 18424-18585 | **V2 analytics**: renderMacroTimingAnalysis() (ISSN protein timing) |
+| 18586-18728 | **V2 analytics**: renderDeficitSustainability() (CV, yo-yo detection) |
+| 18729-18950 | **V2 analytics**: renderRecompPredictor() (Longland et al., Mifflin-St Jeor) |
+| 18951-18967 | refreshProgressIfActive() |
+| 18968-19178 | Initialization, day management, event listeners |
+| 19179-20203 | Calendar tab, data integrity checks, badges tab, DOMContentLoaded |
 
 ---
 
@@ -332,17 +340,18 @@ let pinValidated = false;        // line 7634
 | `formatTimeET(input)` | 7907 | Format time in Eastern Time |
 | `escapeHtml(str)` | 7976 | XSS protection for innerHTML |
 | `formatNumber(num)` | 7971 | Locale-formatted number display |
-| `calculateTDEE(...)` | 8090 | BMR * activity + 7-day avg workout cals |
-| `calculateMode(sleep, brain)` | 8172 | Determines GREEN/YELLOW/ORANGE from sleep |
-| `calculateTargets(mode, tdee, weight, brain)` | 8185 | Calorie/protein/carb targets for mode |
-| `getTodayTotals()` | 8236 | Sum calories/protein/carbs from today's meals |
-| `renderSimpleView()` | 8557 | Main dashboard renderer (calls 6+ sub-renders) |
+| `calculateTDEE(...)` | 8123 | BMR * activity + 7-day avg workout cals (no circular fallback) |
+| `get7DayAvgActiveCalories()` | 8177 | Workout-only average from dailyLogs (no activeCalories fallback) |
+| `calculateMode(sleep, brain)` | 8209 | Determines GREEN/YELLOW/ORANGE from sleep |
+| `calculateTargets(mode, tdee, weight, brain)` | 8222 | Calorie/protein/carb targets for mode |
+| `getTodayTotals()` | 8269 | Sum calories/protein/carbs from today's meals |
+| `renderSimpleView()` | 8704 | Main dashboard renderer (auto-corrects stale targets) |
 | `getSimpleStatus()` | 9791 | Dashboard status icon/label/color |
 | `getEatingNudge()` | 9845 | Context-aware stimulant eating nudge |
 | `getWorkoutRecommendation()` | 9980 | Sleep-based workout advice + gym streak |
 | `openQuickMealModal()` | 11528 | Primary meal entry point |
 | `openWorkoutModal()` | 12001 | Workout logging modal |
-| `saveDayLog()` | 12228 | Snapshot today to dailyLogs[date] (called ~23 places) |
+| `saveDayLog()` | 12387 | Snapshot today to dailyLogs[date] (called ~23 places) |
 | `generateLogicLog()` | 13311 | 9-section diagnostic output |
 | `openBodyCompModal()` | 13707 | Navy method + scale body fat measurement |
 | `saveState()` | 14942 | **CRITICAL** — 5-guard save to localStorage + Firebase |
@@ -354,22 +363,23 @@ let pinValidated = false;        // line 7634
 | `forceUploadToCloud()` | 15982 | Bypass guards, overwrite cloud |
 | `forcePullFromCloud()` | 16034 | Overwrite local from cloud |
 | `loadEcosystemData(pin)` | 16211 | Cross-app reads from stim calc, dental quest, d3 roadmap |
-| `autoStartDay()` | 18583 | Auto-setup day from ecosystem data |
-| `initializeUI()` | 18534 | Main UI init, handles day rollover |
+| `autoStartDay()` | 19729 | Auto-setup day from ecosystem data (honest 0 fallback) |
+| `initializeUI()` | 19677 | Main UI init, handles day rollover (resets even w/o setupComplete) |
 | `determineDayStatus(...)` | 8387 | **V2** Shared status logic (8 statuses), single source of truth |
 | `calculateDayCalScore(...)` | 8416 | **V2** Margin-based calorie score 0-100 (USDA HEI) |
 | `calculateDayProteinScore(...)` | 8440 | **V2** Margin-based protein score 0-100 |
 | `calculateDayDeficitScore(...)` | 8457 | **V2** Margin-based deficit score 0-100 |
 | `recalculateAllDayLogs()` | 8561 | **V2** Batch migration for historical dailyLogs |
-| `aggregateDailyLogs(start, end)` | 17712 | **V2** Shared data source for calendar + progress |
-| `renderDailySnapshot()` | 18243 | **V2** Today's real-time progress vs yesterday |
-| `renderWorkoutStats()` | 18317 | **V2** All-time workout analytics |
-| `renderMacroTimingAnalysis()` | 18400 | **V2** Protein distribution across 4 time windows (ISSN) |
-| `renderDeficitSustainability()` | 18554 | **V2** Deficit consistency via coefficient of variation |
-| `renderRecompPredictor()` | 18693 | **V2** Fat/lean projection (Longland et al., Mifflin-St Jeor) |
-| `refreshProgressIfActive()` | 18914 | **V2** Auto-refresh progress tab after data changes |
-| `renderProgressTab()` | 16980 | Renders all progress sub-sections (V2: 15+ renderers) |
-| `renderCalendarHeatmap()` | 18056 | Monthly calendar (V2: 8 statuses incl. deficit_gym, gym_only) |
+| `aggregateDailyLogs(start, end)` | 17729 | **V2** Shared data source for calendar + progress (uses ??) |
+| `calculateWeekScore(logs)` | 17840 | **V2** Margin-based weekly score, gymScore capped at 100 |
+| `renderDailySnapshot()` | 18263 | **V2** Today's real-time progress vs yesterday |
+| `renderWorkoutStats()` | 18337 | **V2** All-time workout analytics (friendly empty state) |
+| `renderMacroTimingAnalysis()` | 18424 | **V2** Protein distribution across 4 windows (ISSN) |
+| `renderDeficitSustainability()` | 18586 | **V2** Deficit consistency via CV (sparse data caveat) |
+| `renderRecompPredictor()` | 18729 | **V2** Fat/lean projection (reads goalWeight_lbs) |
+| `refreshProgressIfActive()` | 18951 | **V2** Auto-refresh progress tab after data changes |
+| `renderProgressTab()` | 17165 | Renders all progress sub-sections (V2: 15+ renderers) |
+| `renderCalendarHeatmap()` | 19179 | Calendar (determineDayStatus fallback, 8 statuses) |
 | `awardXP(amount, reason)` | 16753 | XP award with level-up check |
 | `updateStreak()` | 16772 | Daily completion streak |
 | `checkDayCompletion()` | 16808 | Check calorie/protein targets, award XP |
