@@ -17757,8 +17757,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     if (log.perfect || log.status === 'perfect') perfectDays++;
 
                     // Margin scores (use stored or compute on-the-fly)
-                    totalCalScore += (log.calScore ?? calculateDayCalScore(log.calories || 0, log.target || 1900, log.floor || Math.round((log.target || 1900) * 0.85)));
-                    totalProScore += (log.proteinScore ?? calculateDayProteinScore(log.protein || 0, log.targetProtein || 172));
+                    // FIX: Use ?? instead of || so explicit 0 values (maintenance mode) aren't treated as falsy
+                    totalCalScore += (log.calScore ?? calculateDayCalScore(log.calories ?? 0, log.target ?? 1900, log.floor ?? Math.round((log.target ?? 1900) * 0.85)));
+                    totalProScore += (log.proteinScore ?? calculateDayProteinScore(log.protein ?? 0, log.targetProtein ?? 172));
 
                     // Gym & workouts
                     if (log.workedOut) {
@@ -17845,11 +17846,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const trackDays = logs.length;
 
             logs.forEach(log => {
+                // FIX: Use ?? so explicit 0 values aren't treated as falsy
                 const calScore = log.calScore ?? calculateDayCalScore(
-                    log.calories || 0, log.target || 1900, log.floor || log.targetFloor || Math.round((log.target || 1900) * 0.85)
+                    log.calories ?? 0, log.target ?? 1900, log.floor ?? Math.round((log.target ?? 1900) * 0.85)
                 );
                 const proScore = log.proteinScore ?? calculateDayProteinScore(
-                    log.protein || 0, log.targetProtein || 172
+                    log.protein ?? 0, log.targetProtein ?? 172
                 );
                 const targetDeficit = log.mode === 'ORANGE' ? 0 : (log.mode === 'YELLOW' ? 300 : 500);
                 const defScore = calculateDayDeficitScore(log.deficit || 0, targetDeficit);
@@ -17866,13 +17868,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const avgCalScore = Math.round(totalCalScore / trackDays);
             const avgProScore = Math.round(totalProScore / trackDays);
             const avgDefScore = Math.round(totalDefScore / trackDays);
-            const gymScore = Math.round((gymDays / Math.min(trackDays, 5)) * 100); // Target 5 gym days/week
+            // FIX: Cap gymScore at 100 at source — 5+ gym days shouldn't inflate the weighted average
+            const gymScore = Math.min(100, Math.round((gymDays / Math.min(trackDays, 5)) * 100));
             const trackScore = Math.round((trackDays / 7) * 100);
 
             // Weights: Deficit 25%, Protein 25%, Calories 20%, Gym 15%, Tracking 15%
             const score = Math.round(
                 avgDefScore * 0.25 + avgProScore * 0.25 + avgCalScore * 0.20 +
-                Math.min(gymScore, 100) * 0.15 + trackScore * 0.15
+                gymScore * 0.15 + trackScore * 0.15
             );
 
             return {
@@ -17962,7 +17965,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         ${scoreBar('Deficit', thisWeek.avgDefScore, `Avg ${formatNumber(thisWeek.avgDeficit)} cal deficit/day`, 25)}
                         ${scoreBar('Protein', thisWeek.avgProScore, `Avg ${thisWeek.avgProtein}g protein/day`, 25)}
                         ${scoreBar('Calories', thisWeek.avgCalScore, `Avg ${formatNumber(thisWeek.avgCalories)} cal/day`, 20)}
-                        ${scoreBar('Gym', Math.min(thisWeek.gymScore, 100), `${thisWeek.gymDays} sessions this week`, 15)}
+                        ${scoreBar('Gym', thisWeek.gymScore, `${thisWeek.gymDays} sessions this week`, 15)}
                         ${scoreBar('Tracking', thisWeek.trackScore, `${thisWeek.trackDays}/7 days logged`, 15)}
                     </div>
                     ${weekHistory.length > 0 ? `
@@ -18364,7 +18367,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             });
 
             if (totalWorkouts === 0) {
-                container.innerHTML = '';
+                // FIX: Show friendly empty state instead of hiding
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:6px;">💪 Workout Stats</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">No workouts logged yet. Log a workout to see your stats here.</div>
+                </div>`;
                 return;
             }
 
@@ -18473,7 +18480,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             if (totalMealsWithTime < 10) {
-                container.innerHTML = '';
+                // FIX: Show helpful message when meals exist but lack time data, instead of hiding
+                if (daysAnalyzed > 0) {
+                    container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                        <div style="font-size:1em;font-weight:600;margin-bottom:6px;">\u{1F551} Macro Timing Analysis</div>
+                        <div style="font-size:0.82em;color:var(--text-muted);">Need 10+ meals with timestamps for timing analysis. ${totalMealsWithTime > 0 ? totalMealsWithTime + ' timed meals so far.' : 'Meal times are recorded automatically when you log.'}</div>
+                    </div>`;
+                } else {
+                    container.innerHTML = '';
+                }
                 return;
             }
 
@@ -18582,6 +18597,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 return;
             }
 
+            // FIX: Flag sparse data — CV with <14 days is statistically weak
+            const isSparseData = agg.daysWithData < 14;
+
             // Collect daily deficit values
             const deficits = agg.days.map(d => d.deficit || 0);
             const avgDeficit = deficits.reduce((s, d) => s + d, 0) / deficits.length;
@@ -18649,6 +18667,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
                     <div style="font-size:1em;font-weight:600;margin-bottom:4px;">\u{1F4C9} Deficit Sustainability</div>
                     <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">${agg.daysWithData} days analyzed \u2022 Are you consistent or yo-yo?</div>
+                    ${isSparseData ? '<div style="font-size:0.72em;color:var(--accent-yellow);margin-bottom:10px;">Based on ' + agg.daysWithData + ' days \u2014 scores become more reliable with 14+ days of data.</div>' : ''}
 
                     <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
                         <div style="font-size:1.5em;">${patternIcon}</div>
@@ -18723,7 +18742,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Current stats
             const currentWeight = state.profile?.currentWeight_lbs || 190;
-            const goalWeight = state.profile?.goalWeight || 170;
+            // FIX: Field is goalWeight_lbs, not goalWeight
+            const goalWeight = state.profile?.goalWeight_lbs || 170;
             const heightCm = state.profile?.height_cm || 174;
             const age = state.profile?.age || 27;
 
@@ -19214,8 +19234,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         deficit = tdee - displayCalories;
                     }
 
-                    // Use status if available, otherwise calculate from data
-                    const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
+                    // Use status if available, otherwise use determineDayStatus() for correct 8-status logic
+                    const status = log.status || determineDayStatus(
+                        displayCalories, displayProtein, log.target ?? 1900,
+                        log.floor ?? Math.round((log.target ?? 1900) * 0.85),
+                        log.targetProtein ?? 172, deficit ?? 0, log.workedOut
+                    ).status;
                     switch (status) {
                         case 'perfect':
                             statusClass = 'perfect';  // Green
