@@ -15,6 +15,8 @@ description: |
   Those apps have their own skills.
 globs:
   - "stimulant-elimination-calculator.html"
+  - "js/stimcalc/**"
+  - "SPLIT-PLAN-V2.md"
   - ".claude/skills/stim-calc-dev/**"
 metadata:
   author: Sully
@@ -428,6 +430,12 @@ if (daysDiff > 3) return; // Skip very old regardless
 
 ---
 
+## SPLIT PLAN
+
+When user says **"execute split plan"**, read `SPLIT-PLAN-V2.md` in the repo root and follow it phase by phase.
+This plan splits the 11,526-line single file into 10 separate JS modules, fixes 16 bugs during extraction,
+and refactors `recalculate()` from a 400-line god function into 3 clean phases with error isolation.
+
 ## CONSULT REFERENCES FOR
 
 - **Full architecture details** -> `references/app-architecture.md`
@@ -439,6 +447,7 @@ if (daysDiff > 3) return; // Skip very old regardless
 - **Bugs we've fixed** -> `references/known-bugs-and-fixes.md`
 - **Prediction accuracy tracking** -> `references/calibration-system.md`
 - **Debugging issues** -> `references/debugging-guide.md`
+- **App split execution plan** -> `SPLIT-PLAN-V2.md` (repo root)
 
 ---
 
