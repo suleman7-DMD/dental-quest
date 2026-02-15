@@ -157,14 +157,14 @@ const proteinHit = totals.protein >= targets.protein * 0.9;
 | `protein_king` | Protein King | 7 day protein streak | 250 |
 | `deficit_master` | Deficit Master | 7 day deficit streak | 250 |
 | `early_bird` | Early Bird | 5 early breakfasts | 150 |
-| `perfect_week` | Perfect Week | 7 perfect days | 400 |
+| `perfect_week` | Perfect Week | 7 **consecutive** perfect days | 400 |
 
 ### `checkAchievements()` — Line 16848
 
 Runs after `updateStreak()`. Checks:
 - First day (totalDaysTracked >= 1)
 - Streak achievements (streak >= 7/14/30)
-- Perfect week (perfectDays >= 7)
+- Perfect week (7 consecutive perfect days in dailyLogs — fixed Feb 2026 from cumulative to consecutive)
 - Weight loss milestones (startingWeight - currentWeight >= 1/5/10)
 - Halfway (lbsLost >= totalToLose / 2)
 

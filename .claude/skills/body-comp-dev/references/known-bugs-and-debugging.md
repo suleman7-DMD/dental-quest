@@ -55,6 +55,34 @@
 
 ---
 
+## Fixed Bugs (V3 — Feb 2026 Progress Tab Overhaul)
+
+### Bug Fixed: `wrapProgressModules()` Undefined Function Call
+**Cause:** Called at end of `renderProgressTab()` but never defined. Threw ReferenceError on every progress tab render. Fixed by removing the orphan call and implementing the actual function in V3.
+
+### Bug Fixed: Hard-Coded Targets in `renderConsistencyScore()`
+**Cause:** Used `avgCalTarget = 1900`, `avgProTarget = 172`, `avgDefTarget = 500` instead of reading from `state.today?.targets`. Now reads actual user targets with mode-aware deficit.
+
+### Bug Fixed: Streak Gaps Not Breaking Streaks in `renderAchievementProgress()`
+**Cause:** Protein/deficit/perfect streak iteration only counted existing log entries. Gaps between dates didn't break streaks. Fixed to iterate every calendar date.
+
+### Bug Fixed: Achievement Unlock Check Always Truthy
+**Cause:** `state.achievements[id]` checked object truthiness — `{unlocked: false}` is truthy. Fixed to check `state.achievements?.[id]?.unlocked`.
+
+### Bug Fixed: Stale Today in 7-Day At-A-Glance
+**Cause:** Today's card showed "—" because today's data not yet saved to dailyLogs. Fixed: falls back to live `state.today` with `getTodayTotals()`.
+
+### Bug Fixed: Surplus Days Misclassified as "missed" in `determineDayStatus()`
+**Cause:** `calories > target * 1.1` was unreachable for moderate surplus. Changed to `deficit <= 0 && calories > 0` → `over`.
+
+### Bug Fixed: `perfect_week` Achievement Checked Cumulative Not Consecutive
+**Cause:** `gam.perfectDays >= 7` triggered after 7 total perfect days ever. Fixed to iterate calendar dates checking for 7 consecutive perfect days.
+
+### Bug Fixed: `saveStateImmediate()` Missing PIN Guard
+**Cause:** Had 4 guards but missing `!pinValidated`. Now has all 5 guards matching `saveState()`.
+
+---
+
 ## Known Bugs (Unpatched)
 
 ### Bug 1: `skipPin()` Missing Guard Flags — Line 16624
@@ -81,19 +109,9 @@ state._dataLoaded = true;
 
 ---
 
-### Bug 2: `saveStateImmediate()` Missing PIN Guard — Line 14996
+### Bug 2: `saveStateImmediate()` Missing PIN Guard — **FIXED Feb 2026**
 
-**Severity:** MEDIUM — theoretical data safety issue
-
-`saveStateImmediate()` has 4 guards (A, B, C, D) but is missing Guard 0 (`!pinValidated`). This means it could theoretically save before PIN validation in edge cases.
-
-**Fix:** Add as first guard:
-```javascript
-if (!pinValidated) {
-    console.warn('⚠️ BLOCKED: Immediate save attempted before PIN validation');
-    return false;
-}
-```
+**Status:** FIXED — `saveStateImmediate()` now has all 5 guards matching `saveState()`.
 
 ---
 

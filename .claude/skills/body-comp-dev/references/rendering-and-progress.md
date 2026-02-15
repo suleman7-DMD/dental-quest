@@ -93,31 +93,40 @@ Switches between 4 tabs:
 
 ## Progress Tab
 
-### `renderProgressTab()` — Line 16980
+### `renderProgressTab()` — Line ~18500
 
-Dispatches to 15+ sub-renderers (expanded in V2):
+Dispatches to 23+ sub-renderers (V3 expanded). All modules are collapsible accordion-style with localStorage persistence.
 
 ```javascript
 function renderProgressTab() {
-    renderBodyCompTrend();           // Fat vs lean mass trend
-    renderRefeedTracker();           // Cumulative deficit + refeed timing
+    // Core analytics:
+    renderDailySnapshot();           // Today's real-time progress vs yesterday
+    renderWeeklyReportCard();        // V2: Margin-based 0-100 scoring
+    renderConsistencyScore();        // V2: Rich 5-section analytics
     renderSummerProgress();          // Progress toward June 1 goal
     renderWeightChart();             // Weight trend over time
     renderDeficitTracking();         // Weekly deficit trend
     renderWeeklySummary();           // This week's daily breakdown
-    // V2 Enhanced sections:
-    renderWeeklyReportCard();        // V2: Margin-based 0-100 scoring (was A-F)
-    renderPersonalRecords();         // Best day, best streak, etc.
-    renderConsistencyScore();        // V2: Rich analytics (5 sections, replaces simple %)
-    renderSleepPerformanceInsight(); // Sleep quality vs performance correlation
-    renderAchievementProgress();     // Next achievement and progress
-    renderLifetimeStats();           // Total calories, meals, workouts
-    // V2 New renderers:
-    renderDailySnapshot();           // Today's real-time progress vs yesterday
-    renderWorkoutStats();            // All-time workout analytics
-    renderMacroTimingAnalysis();     // Protein timing across 4 windows (ISSN)
+    renderBodyCompTrend();           // Fat vs lean mass trend
+    renderRefeedTracker();           // Cumulative deficit + refeed timing
+    // V3 Research-backed modules (Feb 2026):
+    renderRateOfWeightLoss();        // Helms et al. 2014 — 0.5-1% BW/week optimal
+    renderMetabolicAdaptation();     // Trexler et al. 2014 — adaptive thermogenesis
+    renderProteinEfficiency();       // Morton et al. 2018 — composite protein score
+    renderRecompTrajectory();        // Barakat et al. 2020 — fat vs lean trends
+    renderDeficitAdherence();        // Day-of-week heatmap, danger zones
+    renderTrainingVolume();          // Schoenfeld et al. 2017 — volume & deload
+    // V2 analytics:
     renderDeficitSustainability();   // Deficit consistency via CV, yo-yo detection
-    renderRecompPredictor();         // Fat/lean projection at 4/8 weeks, June 1 goal
+    renderRecompPredictor();         // Fat/lean projection at 4/8 weeks
+    renderMacroTimingAnalysis();     // Protein timing across 4 windows (ISSN)
+    renderWorkoutStats();            // All-time workout analytics
+    renderPersonalRecords();         // Best day, best streak, etc.
+    renderSleepPerformanceInsight(); // Sleep quality vs performance correlation
+    renderLifetimeStats();           // Total calories, meals, workouts
+    renderAchievementProgress();     // LAST: achievements at bottom (V3 move)
+    // V3: Wrap all modules in collapsible accordion:
+    wrapProgressModules();           // Adds chevron, click handlers, localStorage collapse state
 }
 ```
 

@@ -30,7 +30,7 @@ const date = new Date(year, month - 1, day);
 | `index.html` | ~22,700 | Main app: Command Center (Triage/Crash Out/Focus), tasks, financials, calendar, meds, notebook |
 | `d3-roadmap.html` | ~17,575 | Academic tracker: 11 tabs (grades, deadlines, clinical, competencies, planners, exams) |
 | `stimulant-elimination-calculator.html` | ~11,526 | Sleep prediction, pharmacokinetic modeling (amphetamine/caffeine/nicotine) |
-| `body-comp-tracker.html` | ~20,203 | Calorie/protein/workout tracking, cross-app ecosystem, V2 analytics |
+| `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
@@ -128,7 +128,7 @@ Default `_version: Date.now()` caused fresh browser to overwrite cloud with empt
 | index.html | `saveData()` | `initialLoadComplete` | 4 | Guards behind `firebaseInitialized`. No `_dataLoaded` check. |
 | d3-roadmap | `saveData()` | `isInitialLoad` | 5 | PIN guard last. |
 | stim-calc | `saveState()` | `isInitialLoad` | 5 | Both save fns have identical guards. |
-| body-comp | `saveState()` | `isInitialLoad` | 5/4 | `saveStateImmediate` missing PIN guard (known bug). |
+| body-comp | `saveState()` | `isInitialLoad` | 5/5 | Both save fns have all 5 guards (PIN bug fixed Feb 2026). |
 
 ### Standard Guard Pattern (d3/stim/body-comp)
 ```javascript
@@ -280,7 +280,7 @@ avgNeeded = ((targetGrade - earnedPoints) / remainingWeight) * 100;
 
 ## BODY COMP TRACKER (body-comp-tracker.html)
 
-### File Layout (~20,203 lines)
+### File Layout (~21,854 lines)
 | Range | Content |
 |-------|---------|
 | 1-5,962 | **CSS** |
@@ -300,17 +300,16 @@ avgNeeded = ((targetGrade - earnedPoints) / remainingWeight) * 100;
 | 10,260-11,320 | Meal/workout CRUD, historical editing, TDEE recalculation |
 | 11,320-11,610 | Import from Claude (MEAL\|/WORKOUT\| pipe format) |
 | 12,228 | `saveDayLog()` — snapshot today → dailyLogs[date] |
-| 14,942-15,135 | **CRITICAL**: `saveState()` (5 guards) + `saveStateImmediate()` (4 guards) |
+| 14,942-15,135 | **CRITICAL**: `saveState()` (5 guards) + `saveStateImmediate()` (5 guards) |
 | 15,135-15,560 | `saveToFirebase()` (strips ecosystemContext), `loadFromFirebase()`, realtime sync |
 | 16,110-16,340 | Firebase init, PIN auth |
 | 16,340-16,810 | `loadEcosystemData()` (reads 4 Firebase paths), ecosystem refresh (60s polling) |
 | 16,810-16,975 | Gamification (10 levels, XP, streaks, achievements) |
-| 16,976-17,710 | Progress tab (13+ sub-renderers) |
-| 17,710-18,920 | V2: `aggregateDailyLogs`, `calculateWeekScore`, analytics (macro timing, deficit sustainability, recomp predictor) |
-| 19,142-19,555 | Calendar heatmap (8 statuses), day details modal |
-| 19,636-19,750 | `initializeUI()`, `autoStartDay()` |
-| 19,833-20,005 | End-of-day save, `autoResetForNewDay()`, `saveDayLogWithSnapshot()` |
-| 20,008-20,158 | Data integrity + DOMContentLoaded init |
+| 16,976-17,300 | Progress tab dispatcher (23+ sub-renderers, collapsible accordion) |
+| 17,300-18,600 | **V3 analytics**: 6 new research-backed modules (RoWL, metabolic adaptation, protein efficiency, recomp trajectory, deficit adherence, training volume) |
+| 18,600-19,500 | V2 analytics + aggregation + weekly score |
+| 19,500-20,300 | Calendar heatmap (8 statuses), day details modal |
+| 20,300-21,854 | Initialization, day management, data integrity, DOMContentLoaded |
 
 ### Save Chain
 ```
@@ -336,12 +335,12 @@ Loaded via `loadEcosystemData()` (~16,340) + 60s polling + stimulant realtime li
 | 5-6 hrs | YELLOW | 300 cal | Light |
 | <5 hrs | ORANGE | 0 (maintenance) | Recovery only |
 
-### V2 Analytics
-- `determineDayStatus()`: 8 statuses (RED, YELLOW, GREEN, DEFICIT_HIT, DEFICIT_GYM, GYM_ONLY, PROTEIN_ONLY, MAINTENANCE)
+### V2/V3 Analytics
+- `determineDayStatus()`: 8 statuses (perfect/good/partial/over/missed/deficit_gym/gym_only/no_data)
 - `aggregateDailyLogs(start, end)`: Shared data source for calendar + progress
 - `calculateWeekScore`: Letter grades A+ through F, gymScore capped at 100
-- Recomp predictor: Longland et al. + Mifflin-St Jeor
-- Calendar heatmap: perfect/good/partial/over/missed/deficit_gym/gym_only/no-data
+- **V3 (Feb 2026)**: 6 new research-backed modules, all collapsible accordion, achievements at bottom
+- V3 modules: Rate of Weight Loss (Helms), Metabolic Adaptation (Trexler), Protein Efficiency (Morton), Recomp Trajectory (Barakat), Deficit Adherence Patterns, Training Volume & Recovery (Schoenfeld)
 
 ### Day Lifecycle
 ```
@@ -357,7 +356,8 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ### Key Historical Fixes
 - **TDEE circular inflation** (Feb 2026): `get7DayAvgActiveCalories()` and `calculateTDEE()` only use workout object data, no `activeCalories` fallback. `renderSimpleView` auto-corrects stale targets.
-- **Progress tab** (Feb 2026): `??` for numeric fallbacks, gymScore capped, `goalWeight_lbs` field, `determineDayStatus()` in calendar fallback.
+- **Progress tab V2** (Feb 2026): `??` for numeric fallbacks, gymScore capped, `goalWeight_lbs` field, `determineDayStatus()` in calendar fallback.
+- **Progress tab V3** (Feb 2026): 8 bugs fixed (undefined wrapProgressModules, hard-coded targets, streak gaps, achievement unlock truthiness, stale today data, surplus misclassified as missed, perfect_week cumulative→consecutive, saveStateImmediate PIN guard). 6 new research-backed analytics modules added. All modules collapsible. Achievements moved to bottom.
 
 ---
 

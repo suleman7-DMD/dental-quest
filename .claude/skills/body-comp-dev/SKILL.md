@@ -3,7 +3,7 @@ name: body-comp-dev
 user-invocable: false
 description: |
   Development patterns for Body Comp Tracker — a calorie/protein tracking app with cross-app Firebase integration.
-  Single HTML file (~19,000 lines) with Firebase sync, dark theme UI, ecosystem reads from 3 other apps.
+  Single HTML file (~21,850 lines) with Firebase sync, dark theme UI, ecosystem reads from 3 other apps.
   Use when: debugging meal/workout tracking, modifying calorie calculations, working on TDEE/mode system,
   weigh-ins, body composition, progress tab, gamification, ecosystem integration, or any body comp feature.
   Trigger phrases: "body comp", "body comp tracker", "calorie tracking", "protein tracking",
@@ -17,10 +17,10 @@ globs:
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
 metadata:
   author: Sully
-  version: 2.0.0
+  version: 3.0.0
   file: body-comp-tracker.html
-  lines: ~20158
-  last-verified: 2026-02-14
+  lines: ~21854
+  last-verified: 2026-02-15
 ---
 
 # Body Comp Tracker Development Patterns
@@ -150,9 +150,8 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 **Cause:** `skipPin()` at line 16624 doesn't set guard flags (`pinValidated`, `hasLoadedFromCloud`, `isInitialLoad`, `_dataLoaded`). All saves blocked.
 **Solution:** Add the 4 missing flag sets to `skipPin()`. Reference stim-calc's correct implementation at line 9350.
 
-### Error: saveStateImmediate() bypasses PIN check
-**Cause:** Known bug — `saveStateImmediate()` (line 14996) has 4 guards but missing `!pinValidated` check.
-**Solution:** Add `if (!pinValidated) return false;` as the first guard in `saveStateImmediate()`.
+### Error: saveStateImmediate() bypasses PIN check — FIXED Feb 2026
+**Status:** Fixed. `saveStateImmediate()` now has all 5 guards matching `saveState()`.
 
 ---
 
@@ -237,42 +236,29 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Track calories, protein, workouts, weight, and body composition for a dental student's cut to 170 lbs by June 2026. Integrates with 3 other apps via Firebase for stimulant-aware eating guidance.
 
-**File:** `body-comp-tracker.html` (20,203 lines, single file, no build system)
+**File:** `body-comp-tracker.html` (~21,854 lines, single file, no build system)
 
 **File Layout:**
 | Range | Content |
 |-------|---------|
-| 1-5956 | CSS styles (dark theme, responsive) |
-| 5957-7310 | HTML structure, modals (~16 modals) |
-| 7311-7654 | State management (getDefaultState, isEmptyState) |
-| 7656-7876 | Data integrity utilities, Firebase config |
-| 7877-8079 | Utility functions, Eastern timezone helpers |
-| 8080-8256 | Core algorithms (TDEE, mode, targets) |
-| 8257-8552 | Date-based calculations, UI helpers |
-| 8387-8560 | **V2 shared infrastructure**: determineDayStatus(), calculateDayCalScore/ProteinScore/DeficitScore(), recalculateAllDayLogs() |
-| 8553-9363 | Simple View rendering, schedule/exam cards |
-| 9364-10163 | Stimulant modeling, nudges, status |
-| 10164-11174 | Meal/workout rendering and editing |
-| 11175-11835 | Import from Claude, quick meal modal, qty selector |
-| 11836-12467 | Workout modal, nudges, micronutrients |
-| 12468-12961 | Weigh-in, export system |
-| 12962-13702 | Weekly export, logic log (9 sections) |
-| 13703-14066 | Body comp modal (Navy method + scale) |
-| 14067-14940 | UI/UX functions, settings, data management |
-| 14942-15561 | **saveState()**, saveStateImmediate(), loadState(), saveToFirebase(), loadFromFirebase(), setupRealtimeSync() |
-| 15562-16109 | Checkpoint system (create/restore/export/import) |
-| 16110-16635 | Firebase init, PIN auth, ecosystem data integration |
-| 16636-16975 | Gamification (XP, levels, streaks, achievements) |
-| 16976-17728 | Progress tab (13+ sub-renderers) |
-| 17729-18070 | **V2 aggregation**: aggregateDailyLogs(start, end), calculateWeekScore() |
-| 18070-18262 | Calendar heatmap (8 statuses including deficit_gym, gym_only) |
-| 18263-18423 | **V2 progress**: renderDailySnapshot(), renderWorkoutStats() |
-| 18424-18585 | **V2 analytics**: renderMacroTimingAnalysis() (ISSN protein timing) |
-| 18586-18728 | **V2 analytics**: renderDeficitSustainability() (CV, yo-yo detection) |
-| 18729-18950 | **V2 analytics**: renderRecompPredictor() (Longland et al., Mifflin-St Jeor) |
-| 18951-18967 | refreshProgressIfActive() |
-| 18968-19178 | Initialization, day management, event listeners |
-| 19179-20203 | Calendar tab, data integrity checks, badges tab, DOMContentLoaded |
+| 1-6509 | CSS styles (dark theme, responsive, glass-morphism, collapsible modules) |
+| 6510-7900 | HTML structure, modals (~16 modals), progress tab containers |
+| 7900-8250 | State management (getDefaultState, isEmptyState), data integrity |
+| 8250-8700 | Core algorithms (TDEE, mode, targets), V2 shared infrastructure |
+| 8700-9400 | Simple View rendering, schedule/exam cards |
+| 9400-10200 | Stimulant modeling, nudges, status |
+| 10200-12000 | Meal/workout rendering, import, quick meal, workout modal |
+| 12000-13700 | Weigh-in, export, weekly export, logic log (9 sections) |
+| 13700-15100 | Body comp modal, UI/UX functions, settings |
+| 15100-15900 | **saveState()** (5 guards), saveStateImmediate() (5 guards), load/sync |
+| 15900-16600 | Checkpoint system, Firebase init, PIN auth |
+| 16600-17300 | Ecosystem integration, gamification (XP, levels, streaks, achievements) |
+| 17300-18600 | **V3 progress tab**: 6 new analytics (RoWL, metabolic adaptation, protein efficiency, recomp trajectory, deficit adherence, training volume) |
+| 18600-18700 | Collapsible module system (wrapProgressModules, toggle, localStorage persist) |
+| 18700-19500 | V2 analytics (daily snapshot, workout stats, macro timing, deficit sustainability, recomp predictor) |
+| 19500-20300 | Progress tab dispatcher (23+ sub-renderers), aggregation, weekly score |
+| 20300-20800 | Calendar heatmap (8 statuses), day details modal |
+| 20800-21854 | Initialization, day management, data integrity, DOMContentLoaded |
 
 ---
 
@@ -354,8 +340,8 @@ let pinValidated = false;        // line 7634
 | `saveDayLog()` | 12387 | Snapshot today to dailyLogs[date] (called ~23 places) |
 | `generateLogicLog()` | 13311 | 9-section diagnostic output |
 | `openBodyCompModal()` | 13707 | Navy method + scale body fat measurement |
-| `saveState()` | 14942 | **CRITICAL** — 5-guard save to localStorage + Firebase |
-| `saveStateImmediate()` | 14996 | Immediate save (4 guards — missing PIN, known bug) |
+| `saveState()` | ~15100 | **CRITICAL** — 5-guard save to localStorage + Firebase |
+| `saveStateImmediate()` | ~15154 | Immediate save (5 guards — PIN bug fixed Feb 2026) |
 | `saveToFirebase()` | 15163 | Actual Firebase write (strips ecosystemContext) |
 | `loadFromFirebase()` | 15217 | Load + merge from Firebase, sets all flags |
 | `setupRealtimeSync()` | 15366 | Version-compared realtime listener |
@@ -377,9 +363,16 @@ let pinValidated = false;        // line 7634
 | `renderMacroTimingAnalysis()` | 18424 | **V2** Protein distribution across 4 windows (ISSN) |
 | `renderDeficitSustainability()` | 18586 | **V2** Deficit consistency via CV (sparse data caveat) |
 | `renderRecompPredictor()` | 18729 | **V2** Fat/lean projection (reads goalWeight_lbs) |
-| `refreshProgressIfActive()` | 18951 | **V2** Auto-refresh progress tab after data changes |
-| `renderProgressTab()` | 17165 | Renders all progress sub-sections (V2: 15+ renderers) |
-| `renderCalendarHeatmap()` | 19179 | Calendar (determineDayStatus fallback, 8 statuses) |
+| `refreshProgressIfActive()` | ~18951 | **V2** Auto-refresh progress tab after data changes |
+| `renderProgressTab()` | ~18500 | Renders all progress sub-sections (**V3: 23+ renderers**, collapsible) |
+| `wrapProgressModules()` | ~18621 | **V3** Makes all progress modules collapsible (accordion) |
+| `renderRateOfWeightLoss()` | ~17766 | **V3** Helms et al. 2014, SVG chart, 0.5-1% BW/week optimal |
+| `renderMetabolicAdaptation()` | ~17905 | **V3** Trexler et al. 2014, adaptive thermogenesis detection |
+| `renderProteinEfficiency()` | ~18033 | **V3** Morton et al. 2018, composite gauge (adequacy+consistency+timing) |
+| `renderRecompTrajectory()` | ~18181 | **V3** Barakat et al. 2020, fat vs lean mass trend visualization |
+| `renderDeficitAdherence()` | ~18295 | **V3** Day-of-week heatmap, danger zones, refeed suggestions |
+| `renderTrainingVolume()` | ~18419 | **V3** Schoenfeld et al. 2017, volume trends + deload recs |
+| `renderCalendarHeatmap()` | ~20300 | Calendar (determineDayStatus fallback, 8 statuses) |
 | `awardXP(amount, reason)` | 16753 | XP award with level-up check |
 | `updateStreak()` | 16772 | Daily completion streak |
 | `checkDayCompletion()` | 16808 | Check calorie/protein targets, award XP |
