@@ -4170,6 +4170,9 @@
             background: rgba(107, 114, 128, 0.2);
         }
 
+        .calendar-day.deficit-gym { background: rgba(6, 182, 212, 0.4); }
+        .calendar-day.gym-only { background: rgba(139, 92, 246, 0.35); }
+
         .calendar-legend {
             display: flex;
             justify-content: center;
@@ -4216,6 +4219,9 @@
         .legend-box.empty {
             background: rgba(107, 114, 128, 0.2);
         }
+
+        .legend-box.deficit-gym { background: rgba(6, 182, 212, 0.4); }
+        .legend-box.gym-only { background: rgba(139, 92, 246, 0.35); }
 
         .month-stats {
             display: flex;
@@ -6657,6 +6663,21 @@
                 <!-- Achievement Progress Bars (Task 3e) -->
                 <div id="achievementProgress"></div>
 
+                <!-- Daily Snapshot (real-time today) -->
+                <div id="dailySnapshot"></div>
+
+                <!-- Workout Stats -->
+                <div id="workoutStats"></div>
+
+                <!-- Macro Timing Analysis -->
+                <div id="macroTimingAnalysis"></div>
+
+                <!-- Deficit Sustainability Score -->
+                <div id="deficitSustainability"></div>
+
+                <!-- Body Recomposition Predictor -->
+                <div id="recompPredictor"></div>
+
                 <!-- Lifetime Stats (Task 3f) -->
                 <div id="lifetimeStats"></div>
 
@@ -6691,20 +6712,28 @@
                         <span>Missed</span>
                     </div>
                     <div class="legend-item">
+                        <div class="legend-box over"></div>
+                        <span>Over (exceeded 110%)</span>
+                    </div>
+                    <div class="legend-item">
                         <div class="legend-box partial"></div>
                         <span>Partial (deficit only)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box gym-only"></div>
+                        <span>Gym Only</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-box good"></div>
                         <span>Good (deficit + protein)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box perfect"></div>
-                        <span>Perfect (all targets)</span>
+                        <div class="legend-box deficit-gym"></div>
+                        <span>Deficit + Gym</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box over"></div>
-                        <span>Over (exceeded 110%)</span>
+                        <div class="legend-box perfect"></div>
+                        <span>Perfect (all targets)</span>
                     </div>
                 </div>
 
@@ -6721,6 +6750,10 @@
                     <div class="month-stat">
                         <div class="month-stat-value" id="monthAvgProtein">0g</div>
                         <div class="month-stat-label">avg protein</div>
+                    </div>
+                    <div class="month-stat">
+                        <div class="month-stat-value" id="monthGymDays">0</div>
+                        <div class="month-stat-label">gym days</div>
                     </div>
                 </div>
             </div>
@@ -8325,7 +8358,7 @@
                 activeCalories = state.today.activeCalories || 0;
             } else {
                 const log = state.dailyLogs?.[dateStr];
-                activeCalories = log?.activeCalories || log?.tdee ? 0 : 300; // Default 300 if no workout data
+                activeCalories = (log?.activeCalories != null) ? log.activeCalories : (log?.tdee ? 0 : 300); // Default 300 if no workout data
             }
 
             return calculateTDEE(
@@ -8345,6 +8378,93 @@
             const totals = getTotalsForDate(dateStr);
             const tdee = getTDEEForDate(dateStr);
             return tdee - totals.calories;
+        }
+
+        /**
+         * Shared day status determination — ALL status computing must use this.
+         * Replaces divergent logic in saveDayLog, recalculateDayLog, saveDayLogWithSnapshot.
+         */
+        function determineDayStatus(calories, protein, target, floor, targetProtein, deficit, workedOut) {
+            const calHit = calories >= floor && calories <= target;
+            const proteinHit = protein >= targetProtein * 0.9;
+            const perfect = calHit && proteinHit;
+
+            let status = 'missed';
+            if (calories === 0 && protein === 0) {
+                status = 'no_data';
+            } else if (perfect) {
+                status = 'perfect';
+            } else if (deficit > 0 && workedOut) {
+                status = 'deficit_gym';
+            } else if (deficit > 0 && proteinHit) {
+                status = 'good';
+            } else if (deficit > 0) {
+                status = 'partial';
+            } else if (workedOut && deficit <= 0) {
+                status = 'gym_only';
+            } else if (calories > target * 1.1) {
+                status = 'over';
+            }
+
+            return { status, calHit, proteinHit, perfect };
+        }
+
+        /**
+         * Margin-based calorie score (0-100) — USDA Healthy Eating Index methodology
+         * Continuous scoring instead of binary pass/fail
+         */
+        function calculateDayCalScore(calories, target, floor) {
+            if (calories >= floor && calories <= target) return 100;
+            const overTarget = calories - target;
+            const underFloor = floor - calories;
+            if (overTarget > 0) {
+                if (overTarget <= 50) return 90;
+                if (overTarget <= 100) return 75;
+                if (overTarget <= 200) return 50;
+                if (calories > target * 1.1) return 10;
+                return 25;
+            }
+            if (underFloor > 0) {
+                if (underFloor <= 50) return 85;
+                if (underFloor <= 100) return 70;
+                if (underFloor <= 200) return 50;
+                return 25;
+            }
+            return 100;
+        }
+
+        /**
+         * Margin-based protein score (0-100) — ISSN position stand on protein adherence
+         * 90%+ adherence is clinically equivalent per sports dietetics
+         */
+        function calculateDayProteinScore(protein, target) {
+            if (target <= 0) return 100;
+            const pct = protein / target;
+            if (pct >= 1.0) return 100;
+            if (pct >= 0.97) return 97;   // Within 5g at ~170g target
+            if (pct >= 0.94) return 93;   // Within 10g
+            if (pct >= 0.91) return 87;   // Within 15g
+            if (pct >= 0.85) return 78;   // B+ zone
+            if (pct >= 0.80) return 70;
+            if (pct >= 0.70) return 55;
+            if (pct >= 0.60) return 40;
+            return 20;
+        }
+
+        /**
+         * Margin-based deficit score (0-100) — continuous scoring
+         */
+        function calculateDayDeficitScore(deficit, targetDeficit) {
+            if (targetDeficit <= 0) return deficit >= 0 ? 100 : 50; // Maintenance mode
+            const pct = deficit / targetDeficit;
+            if (pct >= 0.95) return 100;
+            if (pct >= 0.90) return 95;
+            if (pct >= 0.80) return 85;
+            if (pct >= 0.70) return 75;
+            if (pct >= 0.50) return 60;
+            if (pct >= 0.25) return 40;
+            if (deficit > 0) return 25;
+            return 10;  // Surplus
         }
 
         /**
@@ -8370,24 +8490,19 @@
             const tdee = getTDEEForDate(dateStr);
             const deficit = tdee - totals.calories;
 
-            // Determine status (matches saveDayLog() logic exactly)
-            let status = 'missed';
+            // Determine status using shared function
             const targetCalories = log.target || 1900;
             const targetProtein = log.targetProtein || 150;
-            const targetFloor = log.targetFloor || Math.round(targetCalories * 0.85);
-            const proteinHit = totals.protein >= targetProtein * 0.9;
-            const calHit = totals.calories >= targetFloor && totals.calories <= targetCalories;
-            const perfect = calHit && proteinHit;
+            const targetFloor = log.floor || log.targetFloor || Math.round(targetCalories * 0.85);
+            const isWorkedOut = workoutTotals.workoutCount > 0;
+            const { status, calHit, proteinHit, perfect } = determineDayStatus(
+                totals.calories, totals.protein, targetCalories, targetFloor,
+                targetProtein, deficit, isWorkedOut
+            );
 
-            if (perfect) {
-                status = 'perfect';
-            } else if (deficit > 0 && proteinHit) {
-                status = 'good';
-            } else if (deficit > 0) {
-                status = 'partial';
-            } else if (totals.calories > targetCalories * 1.1) {
-                status = 'over';
-            }
+            // Margin-based scores for analytics
+            const calScore = calculateDayCalScore(totals.calories, targetCalories, targetFloor);
+            const proteinScore = calculateDayProteinScore(totals.protein, targetProtein);
 
             // Update the log with recalculated values
             state.dailyLogs[dateStr] = {
@@ -8398,8 +8513,13 @@
                 deficit: deficit,
                 tdee: tdee,
                 status: status,
-                perfect: status === 'perfect',
-                workedOut: workoutTotals.workoutCount > 0,
+                perfect: perfect,
+                calHit: calHit,
+                proteinHit: proteinHit,
+                calScore: calScore,
+                proteinScore: proteinScore,
+                floor: targetFloor,
+                workedOut: isWorkedOut,
                 activeCalories: workoutTotals.totalCalories,
                 _recalculatedAt: new Date().toISOString()
             };
@@ -8432,6 +8552,28 @@
                 console.log(`✅ Migrated ${migratedCount} dailyLog entries with recalculated totals`);
             }
             return migratedCount;
+        }
+
+        /**
+         * Batch recalculate ALL historical dailyLogs with new status system + margin scores.
+         * Called once on first load after upgrade (flag: state._v2StatusMigrated).
+         */
+        function recalculateAllDayLogs() {
+            const todayStr = getLocalDateString();
+            let migratedCount = 0;
+
+            for (const [dateStr, log] of Object.entries(state.dailyLogs || {})) {
+                if (dateStr === todayStr) continue;
+                recalculateDayLog(dateStr);
+                migratedCount++;
+            }
+
+            if (migratedCount > 0) {
+                state._v2StatusMigrated = true;
+                saveState();
+                console.log(`✅ V2 status migration: recalculated ${migratedCount} daily logs`);
+                showToast(`Upgraded ${migratedCount} days with new scoring system`);
+            }
         }
 
         // ============================================
@@ -12234,23 +12376,17 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             const targets = today.targets;
             const deficit = getCurrentDeficit();
 
-            // Check if day was "perfect" (hit calories and protein)
-            const calHit = totals.calories >= targets.floor && totals.calories <= targets.calories;
-            const proteinHit = totals.protein >= targets.protein * 0.9;
+            // Determine day status using shared function
+            const isWorkedOut = today.workedOut || getCount(today.workouts) > 0;
+            const { status, calHit, proteinHit, perfect } = determineDayStatus(
+                totals.calories, totals.protein, targets.calories, targets.floor,
+                targets.protein, deficit, isWorkedOut
+            );
             const carbsHit = !targets.carbs || totals.carbs >= targets.carbs * 0.8;
-            const perfect = calHit && proteinHit;
 
-            // Determine day status
-            let status = 'missed';
-            if (perfect) {
-                status = 'perfect';
-            } else if (deficit > 0 && proteinHit) {
-                status = 'good';
-            } else if (deficit > 0) {
-                status = 'partial';
-            } else if (totals.calories > targets.calories * 1.1) {
-                status = 'over';
-            }
+            // Margin-based scores for analytics
+            const calScore = calculateDayCalScore(totals.calories, targets.calories, targets.floor);
+            const proteinScore = calculateDayProteinScore(totals.protein, targets.protein);
 
             // Calculate TDEE for the day (needed for future recalculations)
             const tdee = calculateTDEE(
@@ -12279,12 +12415,14 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 calHit: calHit,
                 proteinHit: proteinHit,
                 carbsHit: carbsHit,
+                calScore: calScore,
+                proteinScore: proteinScore,
                 // Context
                 mode: today.mode,
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories,
                 mealCount: totals.mealCount,
-                workedOut: today.workedOut || getCount(today.workouts) > 0,
+                workedOut: isWorkedOut,
                 // Detailed data for history (store as objects with IDs for editing)
                 // FIX: Use DEEP COPY to prevent reference mutation bugs
                 meals: today.meals ? JSON.parse(JSON.stringify(today.meals)) : {},
@@ -12305,6 +12443,9 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             // This prevents double-counting from multiple saveDayLog calls
 
             saveState();
+
+            // Real-time: refresh progress tab if visible
+            refreshProgressIfActive();
         }
 
         function resetDay() {
@@ -17015,6 +17156,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             renderWeeklyReportCard();
             renderPersonalRecords();
             renderConsistencyScore();
+            renderDailySnapshot();
+            renderWorkoutStats();
+            renderMacroTimingAnalysis();
+            renderDeficitSustainability();
+            renderRecompPredictor();
             renderSleepPerformanceInsight();
             renderAchievementProgress();
             renderLifetimeStats();
@@ -17553,6 +17699,97 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // SHARED DATA AGGREGATION LAYER
+        // ============================================
+
+        /**
+         * Aggregate dailyLogs for a date range — single source of truth for both
+         * calendar tab and progress tab analytics.
+         * @param {string} startDateStr - Start date 'YYYY-MM-DD' (inclusive)
+         * @param {string} endDateStr - End date 'YYYY-MM-DD' (inclusive)
+         * @returns {Object} Pre-computed aggregates
+         */
+        function aggregateDailyLogs(startDateStr, endDateStr) {
+            const start = parseLocalDate(startDateStr);
+            const end = parseLocalDate(endDateStr);
+            const days = [];
+            let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalDeficit = 0;
+            let totalWorkouts = 0, totalWorkoutDuration = 0, totalWorkoutCalories = 0;
+            let gymDays = 0, perfectDays = 0, daysWithData = 0;
+            let calHitDays = 0, proteinHitDays = 0;
+            let totalCalScore = 0, totalProScore = 0;
+            const statusCounts = { perfect: 0, deficit_gym: 0, good: 0, partial: 0, gym_only: 0, over: 0, missed: 0, no_data: 0 };
+            const workoutTypes = {};
+
+            const current = new Date(start);
+            while (current <= end) {
+                const dateStr = getLocalDateString(current);
+                const log = state.dailyLogs?.[dateStr];
+
+                if (log && (log.calories > 0 || log.protein > 0 || log.mealCount > 0)) {
+                    daysWithData++;
+                    days.push({ dateStr, ...log });
+
+                    totalCalories += (log.calories || 0);
+                    totalProtein += (log.protein || 0);
+                    totalCarbs += (log.carbs || 0);
+                    totalDeficit += (log.deficit || 0);
+
+                    if (log.calHit) calHitDays++;
+                    if (log.proteinHit) proteinHitDays++;
+                    if (log.perfect || log.status === 'perfect') perfectDays++;
+
+                    // Margin scores (use stored or compute on-the-fly)
+                    totalCalScore += (log.calScore ?? calculateDayCalScore(log.calories || 0, log.target || 1900, log.floor || Math.round((log.target || 1900) * 0.85)));
+                    totalProScore += (log.proteinScore ?? calculateDayProteinScore(log.protein || 0, log.targetProtein || 172));
+
+                    // Gym & workouts
+                    if (log.workedOut) {
+                        gymDays++;
+                        const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
+                        workoutsArr.forEach(w => {
+                            totalWorkouts++;
+                            totalWorkoutDuration += (w.duration || 0);
+                            totalWorkoutCalories += (w.calories || w.caloriesBurned || 0);
+                            const wType = w.type || 'Unknown';
+                            workoutTypes[wType] = (workoutTypes[wType] || 0) + 1;
+                        });
+                    }
+
+                    // Status counts
+                    const status = log.status || 'missed';
+                    if (statusCounts.hasOwnProperty(status)) {
+                        statusCounts[status]++;
+                    } else {
+                        statusCounts.missed++;
+                    }
+                }
+
+                current.setDate(current.getDate() + 1);
+            }
+
+            const weeks = Math.max(1, Math.ceil(daysWithData / 7));
+
+            return {
+                days,
+                daysWithData,
+                totalCalories, totalProtein, totalCarbs, totalDeficit,
+                totalWorkouts, totalWorkoutDuration, totalWorkoutCalories,
+                statusCounts, gymDays, perfectDays,
+                calHitDays, proteinHitDays,
+                avgCalories: daysWithData > 0 ? Math.round(totalCalories / daysWithData) : 0,
+                avgProtein: daysWithData > 0 ? Math.round(totalProtein / daysWithData) : 0,
+                avgDeficit: daysWithData > 0 ? Math.round(totalDeficit / daysWithData) : 0,
+                avgCalScore: daysWithData > 0 ? Math.round(totalCalScore / daysWithData) : 0,
+                avgProScore: daysWithData > 0 ? Math.round(totalProScore / daysWithData) : 0,
+                avgWorkoutDuration: totalWorkouts > 0 ? Math.round(totalWorkoutDuration / totalWorkouts) : 0,
+                weeklyGymAvg: (gymDays / weeks).toFixed(1),
+                workoutTypes,
+                mostCommonWorkout: Object.entries(workoutTypes).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
+            };
+        }
+
+        // ============================================
         // PROGRESS TAB ENHANCEMENTS (Task 3)
         // ============================================
 
@@ -17579,22 +17816,55 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             return logs;
         }
 
-        // Helper: Calculate week composite score
+        // Helper: Calculate week composite score — margin-based (v2)
+        // Uses continuous 0-100 scoring per category instead of binary pass/fail
+        // Methodology: USDA Healthy Eating Index approach (continuous scoring)
         function calculateWeekScore(logs) {
-            if (logs.length === 0) return { score: 0, calPct: 0, proPct: 0, gymPct: 0, trackPct: 0 };
+            if (logs.length === 0) return { score: 0, avgCalScore: 0, avgProScore: 0, avgDefScore: 0, gymScore: 0, trackScore: 0, gymDays: 0, trackDays: 0, avgCalories: 0, avgProtein: 0, avgDeficit: 0 };
 
-            const calDays = logs.filter(l => l.calHit || l.status === 'perfect' || l.status === 'good').length;
-            const proDays = logs.filter(l => l.proteinHit).length;
-            const gymDays = logs.filter(l => l.workedOut).length;
+            let totalCalScore = 0, totalProScore = 0, totalDefScore = 0;
+            let totalCalories = 0, totalProtein = 0, totalDeficit = 0;
+            let gymDays = 0;
             const trackDays = logs.length;
 
-            const calPct = Math.round((calDays / 7) * 100);
-            const proPct = Math.round((proDays / 7) * 100);
-            const gymPct = Math.round((gymDays / 7) * 100);
-            const trackPct = Math.round((trackDays / 7) * 100);
+            logs.forEach(log => {
+                const calScore = log.calScore ?? calculateDayCalScore(
+                    log.calories || 0, log.target || 1900, log.floor || log.targetFloor || Math.round((log.target || 1900) * 0.85)
+                );
+                const proScore = log.proteinScore ?? calculateDayProteinScore(
+                    log.protein || 0, log.targetProtein || 172
+                );
+                const targetDeficit = log.mode === 'ORANGE' ? 0 : (log.mode === 'YELLOW' ? 300 : 500);
+                const defScore = calculateDayDeficitScore(log.deficit || 0, targetDeficit);
 
-            const score = Math.round(calPct * 0.3 + proPct * 0.3 + gymPct * 0.2 + trackPct * 0.2);
-            return { score, calPct, proPct, gymPct, trackPct, calDays, proDays, gymDays, trackDays };
+                totalCalScore += calScore;
+                totalProScore += proScore;
+                totalDefScore += defScore;
+                totalCalories += (log.calories || 0);
+                totalProtein += (log.protein || 0);
+                totalDeficit += (log.deficit || 0);
+                if (log.workedOut) gymDays++;
+            });
+
+            const avgCalScore = Math.round(totalCalScore / trackDays);
+            const avgProScore = Math.round(totalProScore / trackDays);
+            const avgDefScore = Math.round(totalDefScore / trackDays);
+            const gymScore = Math.round((gymDays / Math.min(trackDays, 5)) * 100); // Target 5 gym days/week
+            const trackScore = Math.round((trackDays / 7) * 100);
+
+            // Weights: Deficit 25%, Protein 25%, Calories 20%, Gym 15%, Tracking 15%
+            const score = Math.round(
+                avgDefScore * 0.25 + avgProScore * 0.25 + avgCalScore * 0.20 +
+                Math.min(gymScore, 100) * 0.15 + trackScore * 0.15
+            );
+
+            return {
+                score, avgCalScore, avgProScore, avgDefScore, gymScore, trackScore,
+                gymDays, trackDays,
+                avgCalories: Math.round(totalCalories / trackDays),
+                avgProtein: Math.round(totalProtein / trackDays),
+                avgDeficit: Math.round(totalDeficit / trackDays)
+            };
         }
 
         // Helper: Score to letter grade
@@ -17651,6 +17921,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
             }
 
+            // Score bar helper
+            const scoreBar = (label, score, detail, weight) => `
+                <div class="report-category">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="report-category-label">${label} (${weight}%)</div>
+                        <div style="font-weight: 600; color: ${score >= 85 ? 'var(--accent-green)' : score >= 70 ? 'var(--accent-yellow)' : 'var(--accent-red)'};">${score}/100</div>
+                    </div>
+                    <div style="background: var(--bg-tertiary); border-radius: 6px; height: 8px; margin: 4px 0;">
+                        <div style="width: ${Math.min(score, 100)}%; height: 100%; border-radius: 6px; background: ${score >= 85 ? 'var(--accent-green)' : score >= 70 ? 'var(--accent-yellow)' : 'var(--accent-red)'}; transition: width 0.3s;"></div>
+                    </div>
+                    <div style="font-size: 0.78em; color: var(--text-muted);">${detail}</div>
+                </div>`;
+
             container.innerHTML = `
                 <div class="report-card-section">
                     <div class="section-title">📝 Weekly Report Card</div>
@@ -17659,25 +17942,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         <div class="report-grade-score">${thisWeek.score}/100 points this week</div>
                     </div>
                     <div class="report-breakdown">
-                        <div class="report-category">
-                            <div class="report-category-label">Calories (30%)</div>
-                            <div class="report-category-value">${thisWeek.calDays}/7 days — ${thisWeek.calPct}%</div>
-                        </div>
-                        <div class="report-category">
-                            <div class="report-category-label">Protein (30%)</div>
-                            <div class="report-category-value">${thisWeek.proDays}/7 days — ${thisWeek.proPct}%</div>
-                        </div>
-                        <div class="report-category">
-                            <div class="report-category-label">Gym (20%)</div>
-                            <div class="report-category-value">${thisWeek.gymDays}/7 days — ${thisWeek.gymPct}%</div>
-                        </div>
-                        <div class="report-category">
-                            <div class="report-category-label">Tracking (20%)</div>
-                            <div class="report-category-value">${thisWeek.trackDays}/7 days — ${thisWeek.trackPct}%</div>
-                        </div>
+                        ${scoreBar('Deficit', thisWeek.avgDefScore, `Avg ${formatNumber(thisWeek.avgDeficit)} cal deficit/day`, 25)}
+                        ${scoreBar('Protein', thisWeek.avgProScore, `Avg ${thisWeek.avgProtein}g protein/day`, 25)}
+                        ${scoreBar('Calories', thisWeek.avgCalScore, `Avg ${formatNumber(thisWeek.avgCalories)} cal/day`, 20)}
+                        ${scoreBar('Gym', Math.min(thisWeek.gymScore, 100), `${thisWeek.gymDays} sessions this week`, 15)}
+                        ${scoreBar('Tracking', thisWeek.trackScore, `${thisWeek.trackDays}/7 days logged`, 15)}
                     </div>
                     ${weekHistory.length > 0 ? `
-                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; text-align: center;">Previous Weeks</div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; text-align: center; margin-top: 12px;">Previous Weeks</div>
                         <div class="report-history">
                             ${weekHistory.map(wh => `
                                 <div class="report-history-week">
@@ -17800,63 +18072,850 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             `;
         }
 
-        // 3c. Consistency Score
+        // 3c. Rich Analytics — replaces old 30-day consistency rings
         function renderConsistencyScore() {
             const container = document.getElementById('consistencyScore');
             if (!container) return;
 
             const today = new Date();
-            const allLogs = Object.entries(state.dailyLogs || {});
+            const thirtyAgo = new Date(today);
+            thirtyAgo.setDate(today.getDate() - 29);
+            const agg = aggregateDailyLogs(getLocalDateString(thirtyAgo), getLocalDateString(today));
 
-            // 30-day window
-            let calHitDays = 0, proHitDays = 0, totalDays = 0;
-            for (let i = 0; i < 30; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const dateStr = getLocalDateString(d);
-                const log = state.dailyLogs[dateStr];
-                if (log && (log.calories > 0 || log.mealCount > 0)) {
-                    totalDays++;
-                    if (log.calHit || log.status === 'perfect' || log.status === 'good') calHitDays++;
-                    if (log.proteinHit) proHitDays++;
-                }
+            if (agg.daysWithData === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:0.85em;">No data yet — start logging to see analytics</div>';
+                return;
             }
 
-            const calPct = totalDays > 0 ? Math.round((calHitDays / totalDays) * 100) : 0;
-            const proPct = totalDays > 0 ? Math.round((proHitDays / totalDays) * 100) : 0;
-
-            // SVG mini ring helper
-            const miniRing = (pct, color) => {
-                const r = 30;
-                const circ = 2 * Math.PI * r;
-                const offset = circ - (pct / 100) * circ;
-                return `<svg width="72" height="72" viewBox="0 0 72 72">
-                    <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--bg-tertiary)" stroke-width="6"/>
-                    <circle cx="36" cy="36" r="${r}" fill="none" stroke="${color}" stroke-width="6"
-                        stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
-                        stroke-linecap="round" transform="rotate(-90 36 36)"/>
-                    <text x="36" y="40" text-anchor="middle" fill="var(--text-primary)" font-size="14" font-weight="700">${pct}%</text>
-                </svg>`;
+            // Status colors map
+            const statusColors = {
+                perfect: 'rgba(16,185,129,0.8)', deficit_gym: 'rgba(6,182,212,0.8)',
+                good: 'rgba(59,130,246,0.7)', partial: 'rgba(245,158,11,0.7)',
+                gym_only: 'rgba(139,92,246,0.7)', over: 'rgba(239,68,68,0.8)',
+                missed: 'rgba(239,68,68,0.5)', no_data: 'rgba(107,114,128,0.4)'
+            };
+            const statusLabels = {
+                perfect: 'Perfect', deficit_gym: 'Deficit+Gym', good: 'Good',
+                partial: 'Partial', gym_only: 'Gym Only', over: 'Over', missed: 'Missed', no_data: 'No Data'
             };
 
+            // Section A: Status distribution stacked bar
+            const totalDays = Object.values(agg.statusCounts).reduce((a, b) => a + b, 0) || 1;
+            let barSegments = '';
+            let legendItems = '';
+            for (const [status, count] of Object.entries(agg.statusCounts)) {
+                if (count === 0) continue;
+                const pct = ((count / totalDays) * 100).toFixed(1);
+                barSegments += `<div style="width:${pct}%; background:${statusColors[status]}; height:100%; min-width:${count > 0 ? '3px' : '0'};" title="${statusLabels[status]}: ${count}"></div>`;
+                legendItems += `<span style="display:inline-flex; align-items:center; gap:3px; font-size:0.72em; color:var(--text-secondary);"><span style="width:8px;height:8px;border-radius:2px;background:${statusColors[status]};display:inline-block;"></span>${statusLabels[status]} ${count}</span>`;
+            }
+
+            // Section B: Nutrition averages with progress bars
+            const avgCalTarget = 1900;
+            const avgProTarget = 172;
+            const avgDefTarget = 500;
+            const nutBar = (label, value, target, unit, color) => {
+                const pct = Math.min(Math.round((value / target) * 100), 120);
+                return `<div style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:2px;">
+                        <span>${label}</span><span style="font-weight:600;">${formatNumber(value)}${unit} / ${formatNumber(target)}${unit}</span>
+                    </div>
+                    <div style="background:var(--bg-tertiary);border-radius:4px;height:6px;">
+                        <div style="width:${Math.min(pct,100)}%;height:100%;border-radius:4px;background:${color};"></div>
+                    </div>
+                </div>`;
+            };
+
+            // Section C: Gym consistency
+            const gymStreak = (() => {
+                let streak = 0;
+                const d = new Date(today);
+                for (let i = 0; i < 30; i++) {
+                    const ds = getLocalDateString(d);
+                    const log = state.dailyLogs?.[ds];
+                    if (log?.workedOut) { streak++; } else if (i > 0) { break; }
+                    d.setDate(d.getDate() - 1);
+                }
+                return streak;
+            })();
+
+            // Section D: Trend: this week vs 30-day avg
+            const sevenAgo = new Date(today);
+            sevenAgo.setDate(today.getDate() - 6);
+            const weekAgg = aggregateDailyLogs(getLocalDateString(sevenAgo), getLocalDateString(today));
+            const trendArrow = (weekVal, avgVal) => {
+                if (weekVal > avgVal * 1.05) return '<span style="color:var(--accent-green);">+</span>';
+                if (weekVal < avgVal * 0.95) return '<span style="color:var(--accent-red);">-</span>';
+                return '<span style="color:var(--text-muted);">=</span>';
+            };
+
+            // Section E: Previous 7 days at-a-glance
+            let dayCards = '';
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const ds = getLocalDateString(d);
+                const log = state.dailyLogs?.[ds];
+                const dayName = dayNames[d.getDay()];
+                const dotColor = log?.status ? (statusColors[log.status] || 'rgba(107,114,128,0.4)') : 'rgba(107,114,128,0.4)';
+                dayCards += `<div onclick="showDayDetails('${ds}')" style="flex:1;min-width:42px;text-align:center;padding:6px 2px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:${i===0?'1px solid var(--accent-blue)':'1px solid transparent'};">
+                    <div style="font-size:0.65em;color:var(--text-muted);">${dayName}</div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};margin:4px auto;"></div>
+                    <div style="font-size:0.7em;font-weight:600;">${log ? (log.calories || 0) : '—'}</div>
+                    <div style="font-size:0.6em;color:var(--text-muted);">${log ? (log.protein || 0) + 'g' : ''}</div>
+                    ${log?.workedOut ? '<div style="font-size:0.6em;">💪</div>' : ''}
+                </div>`;
+            }
+
             container.innerHTML = `
-                <div class="consistency-section">
-                    <div class="section-title" style="font-size: 1em; font-weight: 600; margin-bottom: 4px;">📊 30-Day Consistency</div>
-                    <div style="font-size: 0.78em; color: var(--text-muted); margin-bottom: 10px;">${totalDays} days with data in last 30 days</div>
-                    <div class="consistency-rings">
-                        <div class="consistency-ring-item">
-                            ${miniRing(calPct, 'var(--accent-green)')}
-                            <div class="consistency-ring-label">Calorie Target</div>
-                            <div class="consistency-ring-detail">${calHitDays}/${totalDays} days</div>
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:4px;">📊 30-Day Analytics</div>
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">${agg.daysWithData} days tracked in last 30 days</div>
+
+                    <!-- A: Status Distribution -->
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Day Status Distribution</div>
+                        <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;">${barSegments}</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${legendItems}</div>
+                    </div>
+
+                    <!-- B: Nutrition Averages -->
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:8px;">Avg Daily Nutrition (30d)</div>
+                        ${nutBar('Calories', agg.avgCalories, avgCalTarget, '', 'var(--accent-green)')}
+                        ${nutBar('Protein', agg.avgProtein, avgProTarget, 'g', 'var(--accent-blue)')}
+                        ${nutBar('Deficit', Math.max(agg.avgDeficit, 0), avgDefTarget, ' cal', 'var(--accent-yellow)')}
+                    </div>
+
+                    <!-- C: Gym Consistency -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${agg.gymDays}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">gym days (30d)</div>
                         </div>
-                        <div class="consistency-ring-item">
-                            ${miniRing(proPct, 'var(--accent-blue)')}
-                            <div class="consistency-ring-label">Protein Target</div>
-                            <div class="consistency-ring-detail">${proHitDays}/${totalDays} days</div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${agg.weeklyGymAvg}x</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg per week</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${agg.avgWorkoutDuration}m</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg workout</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${gymStreak}d</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">gym streak</div>
+                        </div>
+                    </div>
+
+                    <!-- D: Trend Comparison -->
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">This Week vs 30-Day Avg</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:0.78em;">
+                            <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                                <div style="color:var(--text-muted);">Deficit</div>
+                                <div style="font-weight:600;">${formatNumber(weekAgg.avgDeficit)} ${trendArrow(weekAgg.avgDeficit, agg.avgDeficit)}</div>
+                                <div style="font-size:0.85em;color:var(--text-muted);">avg ${formatNumber(agg.avgDeficit)}</div>
+                            </div>
+                            <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                                <div style="color:var(--text-muted);">Protein</div>
+                                <div style="font-weight:600;">${weekAgg.avgProtein}g ${trendArrow(weekAgg.avgProtein, agg.avgProtein)}</div>
+                                <div style="font-size:0.85em;color:var(--text-muted);">avg ${agg.avgProtein}g</div>
+                            </div>
+                            <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                                <div style="color:var(--text-muted);">Gym</div>
+                                <div style="font-weight:600;">${weekAgg.gymDays}d ${trendArrow(weekAgg.gymDays, agg.gymDays / 4.3)}</div>
+                                <div style="font-size:0.85em;color:var(--text-muted);">avg ${agg.weeklyGymAvg}/wk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- E: 7-Day At-A-Glance -->
+                    <div>
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Last 7 Days</div>
+                        <div style="display:flex;gap:4px;">${dayCards}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Daily Snapshot — real-time today's progress
+        function renderDailySnapshot() {
+            const container = document.getElementById('dailySnapshot');
+            if (!container) return;
+
+            const today = state.today;
+            if (!today || !today.date) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const totals = getTodayTotals();
+            const targets = today.targets || { calories: 1900, protein: 172, floor: 1615 };
+            const deficit = getCurrentDeficit();
+            const isWorkedOut = today.workedOut || getCount(today.workouts) > 0;
+
+            // Yesterday comparison
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayLog = state.dailyLogs?.[getLocalDateString(yesterday)];
+
+            const progBar = (current, target, color) => {
+                const pct = target > 0 ? Math.min(Math.round((current / target) * 100), 120) : 0;
+                return `<div style="background:var(--bg-tertiary);border-radius:4px;height:8px;margin-top:3px;">
+                    <div style="width:${Math.min(pct,100)}%;height:100%;border-radius:4px;background:${color};transition:width 0.3s;"></div>
+                </div>`;
+            };
+
+            // Get workouts for today
+            const workoutsArr = today.workouts ? (Array.isArray(today.workouts) ? today.workouts : Object.values(today.workouts)) : [];
+            const workoutDuration = workoutsArr.reduce((sum, w) => sum + (w.duration || 0), 0);
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:10px;">📍 Today's Progress</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.82em;">
+                                <span>Calories</span>
+                                <span style="font-weight:600;color:${totals.calories >= targets.floor && totals.calories <= targets.calories ? 'var(--accent-green)' : 'var(--text-primary)'};">${formatNumber(totals.calories)} / ${formatNumber(targets.calories)}</span>
+                            </div>
+                            ${progBar(totals.calories, targets.calories, 'var(--accent-green)')}
+                        </div>
+                        <div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.82em;">
+                                <span>Protein</span>
+                                <span style="font-weight:600;color:${totals.protein >= targets.protein * 0.9 ? 'var(--accent-green)' : 'var(--text-primary)'};">${totals.protein}g / ${targets.protein}g</span>
+                            </div>
+                            ${progBar(totals.protein, targets.protein, 'var(--accent-blue)')}
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:0.82em;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="color:var(--text-muted);">Deficit</div>
+                            <div style="font-weight:600;color:${deficit > 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${deficit > 0 ? '+' : ''}${formatNumber(deficit)}</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="color:var(--text-muted);">Gym</div>
+                            <div style="font-weight:600;">${isWorkedOut ? workoutDuration + 'm' : 'Not yet'}</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="color:var(--text-muted);">Meals</div>
+                            <div style="font-weight:600;">${totals.mealCount}</div>
+                        </div>
+                    </div>
+                    ${yesterdayLog ? `
+                        <div style="font-size:0.75em;color:var(--text-muted);margin-top:8px;text-align:center;">
+                            Yesterday: ${formatNumber(yesterdayLog.calories || 0)} cal, ${yesterdayLog.protein || 0}g P, ${(yesterdayLog.deficit || 0) > 0 ? '+' : ''}${formatNumber(yesterdayLog.deficit || 0)} deficit
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Workout Stats — all-time workout analytics
+        function renderWorkoutStats() {
+            const container = document.getElementById('workoutStats');
+            if (!container) return;
+
+            const allLogs = Object.values(state.dailyLogs || {});
+            let totalWorkouts = 0, totalDuration = 0, totalCalsBurned = 0;
+            let gymDaysTotal = 0;
+            const workoutTypes = {};
+            let longestGymStreak = 0, currentStreak = 0;
+
+            // Sort logs by date for streak calc
+            const sortedLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
+
+            sortedLogs.forEach(([dateStr, log]) => {
+                if (log.workedOut) {
+                    gymDaysTotal++;
+                    currentStreak++;
+                    if (currentStreak > longestGymStreak) longestGymStreak = currentStreak;
+
+                    const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
+                    workoutsArr.forEach(w => {
+                        totalWorkouts++;
+                        totalDuration += (w.duration || 0);
+                        totalCalsBurned += (w.calories || w.caloriesBurned || 0);
+                        const wType = w.type || 'General';
+                        workoutTypes[wType] = (workoutTypes[wType] || 0) + 1;
+                    });
+                } else {
+                    currentStreak = 0;
+                }
+            });
+
+            if (totalWorkouts === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const weeksWithData = Math.max(1, Math.ceil(sortedLogs.length / 7));
+            const avgPerWeek = (gymDaysTotal / weeksWithData).toFixed(1);
+            const avgDuration = Math.round(totalDuration / totalWorkouts);
+            const avgCalsBurned = Math.round(totalCalsBurned / totalWorkouts);
+            const mostCommon = Object.entries(workoutTypes).sort((a, b) => b[1] - a[1])[0];
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:12px;">💪 Workout Stats</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${totalWorkouts}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">total workouts</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${avgPerWeek}x</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg/week</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${avgDuration}m</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg duration</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${avgCalsBurned}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg cal burned</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${longestGymStreak}d</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">best streak</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.3em;font-weight:700;">${mostCommon ? mostCommon[0] : '--'}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">most common</div>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // ============================================
+        // MACRO TIMING ANALYSIS
+        // Analyzes protein distribution across meal windows
+        // Research: ISSN Position Stand on Protein & Exercise (2017)
+        // recommends ~0.4g/kg/meal spread across 4+ meals for
+        // optimal muscle protein synthesis (MPS) stimulation.
+        // ============================================
+        function renderMacroTimingAnalysis() {
+            const container = document.getElementById('macroTimingAnalysis');
+            if (!container) return;
+
+            // Collect all meals with timestamps from last 30 days
+            const today = new Date();
+            const thirtyAgo = new Date(today);
+            thirtyAgo.setDate(today.getDate() - 29);
+
+            const windows = {
+                morning:   { label: 'Morning',   range: '6am\u201312pm', calories: 0, protein: 0, meals: 0 },
+                afternoon: { label: 'Afternoon',  range: '12pm\u20135pm', calories: 0, protein: 0, meals: 0 },
+                evening:   { label: 'Evening',    range: '5pm\u201310pm', calories: 0, protein: 0, meals: 0 },
+                late:      { label: 'Late Night',  range: '10pm\u20136am', calories: 0, protein: 0, meals: 0 }
+            };
+
+            let totalMealsWithTime = 0;
+            let daysAnalyzed = 0;
+
+            // Walk through dailyLogs in the 30-day window
+            const current = new Date(thirtyAgo);
+            while (current <= today) {
+                const dateStr = getLocalDateString(current);
+                const log = state.dailyLogs?.[dateStr];
+                if (log && log.meals) {
+                    daysAnalyzed++;
+                    const mealsArr = getValues(log.meals);
+                    mealsArr.forEach(meal => {
+                        if (!meal.time) return;
+                        // Parse hour from time string (handles "14:30", "2:30 PM", etc.)
+                        let hour = -1;
+                        const match24 = meal.time.match(/^(\d{1,2}):(\d{2})$/);
+                        const match12 = meal.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                        if (match12) {
+                            hour = parseInt(match12[1]);
+                            const ampm = match12[3].toUpperCase();
+                            if (ampm === 'PM' && hour !== 12) hour += 12;
+                            if (ampm === 'AM' && hour === 12) hour = 0;
+                        } else if (match24) {
+                            hour = parseInt(match24[1]);
+                        }
+                        if (hour < 0) return;
+
+                        totalMealsWithTime++;
+                        let bucket;
+                        if (hour >= 6 && hour < 12) bucket = 'morning';
+                        else if (hour >= 12 && hour < 17) bucket = 'afternoon';
+                        else if (hour >= 17 && hour < 22) bucket = 'evening';
+                        else bucket = 'late';
+
+                        windows[bucket].calories += (meal.calories || 0);
+                        windows[bucket].protein += (meal.protein || 0);
+                        windows[bucket].meals++;
+                    });
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            if (totalMealsWithTime < 10) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Calculate distribution percentages
+            const totalProtein = Object.values(windows).reduce((s, w) => s + w.protein, 0) || 1;
+            const totalCalories = Object.values(windows).reduce((s, w) => s + w.calories, 0) || 1;
+
+            // ISSN optimal: ~25% per window (even distribution across 4 windows)
+            // Calculate distribution evenness score (0-100)
+            // Perfect = 25% each window, worst = 100% in one window
+            const proteinPcts = Object.values(windows).map(w => (w.protein / totalProtein) * 100);
+            const idealPct = 25;
+            const maxDeviation = 75; // worst case: one bucket has 100%, rest have 0%
+            const sumDeviation = proteinPcts.reduce((s, p) => s + Math.abs(p - idealPct), 0);
+            const evennessScore = Math.max(0, Math.round(100 - (sumDeviation / maxDeviation) * 100));
+
+            // Determine protein distribution verdict
+            let verdictIcon, verdictText, verdictColor;
+            const dominantWindow = Object.entries(windows).sort((a, b) => b[1].protein - a[1].protein)[0];
+            const dominantPct = Math.round((dominantWindow[1].protein / totalProtein) * 100);
+
+            if (evennessScore >= 70) {
+                verdictIcon = '\u{1F3AF}';
+                verdictText = 'Excellent protein distribution \u2014 optimizing MPS throughout the day';
+                verdictColor = 'var(--accent-green)';
+            } else if (evennessScore >= 45) {
+                verdictIcon = '\u{1F44D}';
+                verdictText = 'Good spread, but ' + dominantWindow[1].label + ' dominant (' + dominantPct + '%)';
+                verdictColor = 'var(--accent-blue)';
+            } else {
+                verdictIcon = '\u26A0\uFE0F';
+                verdictText = dominantPct + '% of protein loaded in ' + dominantWindow[1].label + ' \u2014 spread more evenly for better MPS';
+                verdictColor = 'var(--accent-yellow)';
+            }
+
+            // Build window bars
+            const windowColors = {
+                morning: 'rgba(251,191,36,0.8)',
+                afternoon: 'rgba(59,130,246,0.8)',
+                evening: 'rgba(139,92,246,0.8)',
+                late: 'rgba(107,114,128,0.6)'
+            };
+
+            let windowBars = '';
+            for (const [key, w] of Object.entries(windows)) {
+                if (w.meals === 0) continue;
+                const protPct = Math.round((w.protein / totalProtein) * 100);
+                const calPct = Math.round((w.calories / totalCalories) * 100);
+                const avgProtPerMeal = Math.round(w.protein / w.meals);
+                windowBars += `
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82em;margin-bottom:3px;">
+                            <span>${w.label} <span style="color:var(--text-muted);font-size:0.85em;">${w.range}</span></span>
+                            <span style="font-weight:600;">${protPct}% protein &bull; ${calPct}% cal</span>
+                        </div>
+                        <div style="display:flex;gap:4px;align-items:center;">
+                            <div style="flex:1;background:var(--bg-tertiary);border-radius:4px;height:8px;overflow:hidden;">
+                                <div style="width:${Math.min(protPct * 2, 100)}%;height:100%;border-radius:4px;background:${windowColors[key]};transition:width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.7em;color:var(--text-muted);margin-top:1px;">${w.meals} meals &bull; avg ${avgProtPerMeal}g protein/meal</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:4px;">\u{1F551} Macro Timing Analysis</div>
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">${totalMealsWithTime} meals across ${daysAnalyzed} days (last 30 days)</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${verdictIcon}</div>
+                        <div>
+                            <div style="font-size:0.82em;font-weight:600;color:${verdictColor};">Distribution Score: ${evennessScore}/100</div>
+                            <div style="font-size:0.75em;color:var(--text-muted);margin-top:2px;">${verdictText}</div>
+                        </div>
+                    </div>
+
+                    ${windowBars}
+
+                    <div style="font-size:0.7em;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border-color);">
+                        ISSN research: Distributing protein evenly across 4+ meals (0.4g/kg each) maximizes muscle protein synthesis vs. loading in one sitting.
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // DEFICIT SUSTAINABILITY SCORE
+        // Measures consistency of daily caloric deficit
+        // Research: Metabolic adaptation studies show consistent
+        // moderate deficits preserve metabolic rate better than
+        // large swings (yo-yo pattern). Trexler et al. 2014.
+        // ============================================
+        function renderDeficitSustainability() {
+            const container = document.getElementById('deficitSustainability');
+            if (!container) return;
+
+            const today = new Date();
+            const thirtyAgo = new Date(today);
+            thirtyAgo.setDate(today.getDate() - 29);
+            const agg = aggregateDailyLogs(getLocalDateString(thirtyAgo), getLocalDateString(today));
+
+            if (agg.daysWithData < 7) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Collect daily deficit values
+            const deficits = agg.days.map(d => d.deficit || 0);
+            const avgDeficit = deficits.reduce((s, d) => s + d, 0) / deficits.length;
+
+            // Standard deviation
+            const variance = deficits.reduce((s, d) => s + Math.pow(d - avgDeficit, 2), 0) / deficits.length;
+            const stdDev = Math.sqrt(variance);
+
+            // Coefficient of variation (normalized to avg)
+            const cv = avgDeficit > 0 ? (stdDev / avgDeficit) * 100 : (stdDev > 0 ? 200 : 0);
+
+            // Sustainability score (0-100): lower CV = higher score
+            // CV < 30% = excellent, 30-60% = moderate, 60-100% = volatile, 100%+ = yo-yo
+            let sustainScore;
+            if (cv <= 20) sustainScore = 100;
+            else if (cv <= 30) sustainScore = 90;
+            else if (cv <= 45) sustainScore = 75;
+            else if (cv <= 60) sustainScore = 60;
+            else if (cv <= 80) sustainScore = 45;
+            else if (cv <= 100) sustainScore = 30;
+            else sustainScore = 15;
+
+            // Classify pattern
+            let patternIcon, patternLabel, patternColor, patternAdvice;
+            if (sustainScore >= 75) {
+                patternIcon = '\u{1F7E2}';
+                patternLabel = 'Consistent & Sustainable';
+                patternColor = 'var(--accent-green)';
+                patternAdvice = 'Your deficit is steady day-to-day. This preserves metabolic rate and minimizes muscle loss.';
+            } else if (sustainScore >= 50) {
+                patternIcon = '\u{1F7E1}';
+                patternLabel = 'Moderate Variability';
+                patternColor = 'var(--accent-yellow)';
+                patternAdvice = 'Some days swing higher or lower. Try to keep daily intake within a tighter range.';
+            } else {
+                patternIcon = '\u{1F534}';
+                patternLabel = 'Yo-Yo Pattern';
+                patternColor = 'var(--accent-red)';
+                patternAdvice = 'Large daily swings can trigger metabolic adaptation and increase hunger hormones. Aim for more consistent intake.';
+            }
+
+            // Count surplus days vs deficit days
+            const surplusDays = deficits.filter(d => d < 0).length;
+            const deficitDays = deficits.filter(d => d > 0).length;
+            const maintenanceDays = deficits.filter(d => d === 0).length;
+
+            // Find highest and lowest deficit
+            const maxDeficit = Math.max(...deficits);
+            const minDeficit = Math.min(...deficits);
+            const range = maxDeficit - minDeficit;
+
+            // Build mini sparkline of daily deficits (last 14 days for readability)
+            const recentDeficits = deficits.slice(-14);
+            const sparkMax = Math.max(Math.abs(Math.min(...recentDeficits)), Math.max(...recentDeficits), 100);
+            let sparkBars = '';
+            recentDeficits.forEach((d, i) => {
+                const height = Math.max(2, Math.abs(d) / sparkMax * 40);
+                const color = d >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)';
+                sparkBars += `<div style="flex:1;position:relative;height:40px;" title="Day ${i+1}: ${d > 0 ? '+' : ''}${d} cal">
+                    <div style="position:absolute;${d >= 0 ? 'bottom:50%' : 'top:50%'};left:15%;width:70%;height:${height}px;background:${color};border-radius:2px;"></div>
+                </div>`;
+            });
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:4px;">\u{1F4C9} Deficit Sustainability</div>
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">${agg.daysWithData} days analyzed \u2022 Are you consistent or yo-yo?</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${patternIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.82em;font-weight:600;color:${patternColor};">${patternLabel} \u2014 Score: ${sustainScore}/100</div>
+                            <div style="font-size:0.75em;color:var(--text-muted);margin-top:2px;">${patternAdvice}</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${formatNumber(Math.round(avgDeficit))}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">avg deficit/day</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${Math.round(stdDev)}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">std deviation</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.2em;font-weight:700;">${formatNumber(range)}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">range (hi\u2013lo)</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;margin-bottom:14px;">
+                        <div style="flex:1;text-align:center;font-size:0.78em;">
+                            <span style="color:var(--accent-green);font-weight:600;">${deficitDays}d</span>
+                            <span style="color:var(--text-muted);"> deficit</span>
+                        </div>
+                        <div style="flex:1;text-align:center;font-size:0.78em;">
+                            <span style="color:var(--accent-red);font-weight:600;">${surplusDays}d</span>
+                            <span style="color:var(--text-muted);"> surplus</span>
+                        </div>
+                        <div style="flex:1;text-align:center;font-size:0.78em;">
+                            <span style="font-weight:600;">${maintenanceDays}d</span>
+                            <span style="color:var(--text-muted);"> even</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:6px;font-size:0.78em;color:var(--text-muted);">Last ${recentDeficits.length} days (green=deficit, red=surplus)</div>
+                    <div style="display:flex;gap:1px;background:var(--bg-tertiary);border-radius:8px;padding:4px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border-color);"></div>
+                        ${sparkBars}
+                    </div>
+
+                    <div style="font-size:0.7em;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border-color);">
+                        Research (Trexler et al. 2014): Consistent moderate deficits preserve resting metabolic rate and lean mass better than equivalent average deficits with large daily swings.
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // BODY RECOMPOSITION PREDICTOR
+        // Projects fat loss and lean mass changes based
+        // on current behavior using Mifflin-St Jeor TDEE
+        // and ISSN protein adequacy thresholds.
+        // ============================================
+        function renderRecompPredictor() {
+            const container = document.getElementById('recompPredictor');
+            if (!container) return;
+
+            const today = new Date();
+            const thirtyAgo = new Date(today);
+            thirtyAgo.setDate(today.getDate() - 29);
+            const agg = aggregateDailyLogs(getLocalDateString(thirtyAgo), getLocalDateString(today));
+
+            if (agg.daysWithData < 7) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Current stats
+            const currentWeight = state.profile?.currentWeight_lbs || 190;
+            const goalWeight = state.profile?.goalWeight || 170;
+            const heightCm = state.profile?.height_cm || 174;
+            const age = state.profile?.age || 27;
+
+            // Get actual TDEE from BMR calculation
+            const bmr = calculateBMR(currentWeight, heightCm, age);
+            const activityLevel = state.profile?.activityLevel || 'sedentary';
+            const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+            const multiplier = multipliers[activityLevel] || 1.2;
+
+            // Behavioral inputs from last 30 days
+            const avgDeficit = agg.avgDeficit;
+            const avgProtein = agg.avgProtein;
+            const gymFreq = parseFloat(agg.weeklyGymAvg) || 0;
+            const daysTracked = agg.daysWithData;
+
+            // Calculate weekly fat loss rate
+            // 1 lb fat = ~3500 calories
+            const weeklyDeficit = avgDeficit * 7;
+            const weeklyWeightLoss = weeklyDeficit / 3500;
+
+            // Protein adequacy assessment (ISSN thresholds)
+            // During deficit: 1.6-2.2 g/kg/day recommended to preserve lean mass
+            const weightKg = currentWeight / 2.205;
+            const proteinPerKg = avgProtein / weightKg;
+            let proteinAdequacy, proteinLabel, proteinColor;
+            if (proteinPerKg >= 2.0) {
+                proteinAdequacy = 'optimal';
+                proteinLabel = 'Optimal for recomp';
+                proteinColor = 'var(--accent-green)';
+            } else if (proteinPerKg >= 1.6) {
+                proteinAdequacy = 'adequate';
+                proteinLabel = 'Adequate for preservation';
+                proteinColor = 'var(--accent-blue)';
+            } else if (proteinPerKg >= 1.2) {
+                proteinAdequacy = 'suboptimal';
+                proteinLabel = 'Below optimal \u2014 may lose some lean mass';
+                proteinColor = 'var(--accent-yellow)';
+            } else {
+                proteinAdequacy = 'low';
+                proteinLabel = 'Too low \u2014 lean mass at risk';
+                proteinColor = 'var(--accent-red)';
+            }
+
+            // Lean mass preservation estimate
+            // Research-backed: With adequate protein + resistance training:
+            // ~75-90% of weight loss is fat (Longland et al. 2016)
+            // Without adequate protein: ~60-75% fat loss
+            // Without resistance training: ~50-70% fat loss
+            let fatLossRatio;
+            if (proteinAdequacy === 'optimal' && gymFreq >= 3) {
+                fatLossRatio = 0.90;
+            } else if (proteinAdequacy === 'adequate' && gymFreq >= 3) {
+                fatLossRatio = 0.85;
+            } else if ((proteinAdequacy === 'optimal' || proteinAdequacy === 'adequate') && gymFreq >= 1) {
+                fatLossRatio = 0.78;
+            } else if (gymFreq >= 3) {
+                fatLossRatio = 0.72;
+            } else if (proteinAdequacy === 'optimal' || proteinAdequacy === 'adequate') {
+                fatLossRatio = 0.70;
+            } else {
+                fatLossRatio = 0.60;
+            }
+
+            const weeklyFatActual = weeklyWeightLoss * fatLossRatio;
+            const weeklyLeanLoss = weeklyWeightLoss * (1 - fatLossRatio);
+
+            // Project forward: when will Sully hit goal weight?
+            const lbsToLose = Math.max(0, currentWeight - goalWeight);
+            const weeksToGoal = weeklyWeightLoss > 0 ? Math.round(lbsToLose / weeklyWeightLoss) : 0;
+            const goalDate = new Date(today);
+            goalDate.setDate(goalDate.getDate() + (weeksToGoal * 7));
+
+            // June 1, 2026 deadline check
+            const juneDeadline = new Date(2026, 5, 1); // June 1
+            const weeksUntilJune = Math.max(0, Math.round((juneDeadline - today) / (7 * 24 * 60 * 60 * 1000)));
+            const projectedWeightAtJune = currentWeight - (weeklyWeightLoss * weeksUntilJune);
+            const onTrack = projectedWeightAtJune <= goalWeight;
+
+            // Body fat projection (if we have current BF%)
+            const latestBF = getValues(state.weighIns).filter(w => w.bodyFat != null).pop();
+            let bfProjectionHTML = '';
+            if (latestBF) {
+                const currentBF = latestBF.bodyFat;
+                const currentFatMass = currentWeight * (currentBF / 100);
+                const projectedFatMass4w = currentFatMass - (weeklyFatActual * 4);
+                const projectedWeight4w = currentWeight - (weeklyWeightLoss * 4);
+                const projectedBF4w = projectedWeight4w > 0 ? ((projectedFatMass4w / projectedWeight4w) * 100).toFixed(1) : currentBF;
+
+                const projectedFatMass8w = currentFatMass - (weeklyFatActual * 8);
+                const projectedWeight8w = currentWeight - (weeklyWeightLoss * 8);
+                const projectedBF8w = projectedWeight8w > 0 ? ((projectedFatMass8w / projectedWeight8w) * 100).toFixed(1) : currentBF;
+
+                bfProjectionHTML = `
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:0.72em;color:var(--text-muted);">Now</div>
+                            <div style="font-weight:600;">${currentBF}%</div>
+                            <div style="font-size:0.68em;color:var(--text-muted);">body fat</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:0.72em;color:var(--text-muted);">4 weeks</div>
+                            <div style="font-weight:600;color:var(--accent-blue);">${projectedBF4w}%</div>
+                            <div style="font-size:0.68em;color:var(--text-muted);">projected</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:0.72em;color:var(--text-muted);">8 weeks</div>
+                            <div style="font-weight:600;color:var(--accent-green);">${projectedBF8w}%</div>
+                            <div style="font-size:0.68em;color:var(--text-muted);">projected</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Pace indicator
+            let paceIcon, paceText, paceColor;
+            if (weeklyWeightLoss <= 0) {
+                paceIcon = '\u26A0\uFE0F';
+                paceText = 'No deficit detected \u2014 currently at maintenance or surplus';
+                paceColor = 'var(--accent-red)';
+            } else if (weeklyWeightLoss > 2.0) {
+                paceIcon = '\u{1F6A8}';
+                paceText = 'Losing ' + weeklyWeightLoss.toFixed(1) + ' lbs/week \u2014 too aggressive, risks muscle loss';
+                paceColor = 'var(--accent-red)';
+            } else if (weeklyWeightLoss > 1.2) {
+                paceIcon = '\u26A1';
+                paceText = weeklyWeightLoss.toFixed(1) + ' lbs/week \u2014 aggressive but manageable with high protein';
+                paceColor = 'var(--accent-yellow)';
+            } else if (weeklyWeightLoss >= 0.5) {
+                paceIcon = '\u2705';
+                paceText = weeklyWeightLoss.toFixed(1) + ' lbs/week \u2014 ideal rate for body recomposition';
+                paceColor = 'var(--accent-green)';
+            } else {
+                paceIcon = '\u{1F422}';
+                paceText = weeklyWeightLoss.toFixed(1) + ' lbs/week \u2014 slow but sustainable';
+                paceColor = 'var(--accent-blue)';
+            }
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
+                    <div style="font-size:1em;font-weight:600;margin-bottom:4px;">\u{1F52E} Body Recomposition Predictor</div>
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">Based on your last ${daysTracked} days of behavior</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${paceIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.82em;font-weight:600;color:${paceColor};">${paceText}</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:var(--bg-tertiary);padding:12px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.4em;font-weight:700;color:var(--accent-green);">${weeklyFatActual.toFixed(2)}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">lbs fat lost/week</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:12px;border-radius:10px;text-align:center;">
+                            <div style="font-size:1.4em;font-weight:700;color:${weeklyLeanLoss > 0.2 ? 'var(--accent-red)' : 'var(--accent-blue)'};">${weeklyLeanLoss.toFixed(2)}</div>
+                            <div style="font-size:0.72em;color:var(--text-muted);">lbs lean lost/week</div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
+                            <span>Fat vs Lean Loss Ratio</span>
+                            <span style="font-weight:600;">${Math.round(fatLossRatio * 100)}% fat / ${Math.round((1 - fatLossRatio) * 100)}% lean</span>
+                        </div>
+                        <div style="background:var(--bg-secondary);border-radius:4px;height:10px;display:flex;overflow:hidden;">
+                            <div style="width:${fatLossRatio * 100}%;background:var(--accent-green);border-radius:4px 0 0 4px;"></div>
+                            <div style="width:${(1 - fatLossRatio) * 100}%;background:var(--accent-red);border-radius:0 4px 4px 0;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;">
+                            <div style="font-size:0.72em;color:var(--text-muted);margin-bottom:2px;">Protein Intake</div>
+                            <div style="font-size:0.88em;font-weight:600;color:${proteinColor};">${proteinPerKg.toFixed(1)} g/kg/day</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">${proteinLabel}</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:10px;">
+                            <div style="font-size:0.72em;color:var(--text-muted);margin-bottom:2px;">Gym Frequency</div>
+                            <div style="font-size:0.88em;font-weight:600;">${gymFreq}x/week</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">${gymFreq >= 3 ? 'Supports lean mass' : gymFreq >= 1 ? 'Increase for better results' : 'Resistance training needed'}</div>
+                        </div>
+                    </div>
+
+                    ${bfProjectionHTML}
+
+                    <div style="background:${onTrack ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'};border:1px solid ${onTrack ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};border-radius:10px;padding:12px;margin-top:12px;">
+                        <div style="font-size:0.85em;font-weight:600;color:${onTrack ? 'var(--accent-green)' : 'var(--accent-red)'};">
+                            ${onTrack ? '\u{1F3AF}' : '\u26A0\uFE0F'} June 1 Goal: ${goalWeight} lbs
+                        </div>
+                        <div style="font-size:0.78em;color:var(--text-secondary);margin-top:4px;">
+                            ${weeklyWeightLoss > 0 ? 'At current pace: <strong>' + Math.round(projectedWeightAtJune) + ' lbs</strong> by June 1 (' + weeksUntilJune + ' weeks away)' : 'No deficit detected \u2014 adjust intake to start losing'}
+                            ${weeksToGoal > 0 && weeklyWeightLoss > 0 ? '<br>ETA to ' + goalWeight + ' lbs: <strong>' + weeksToGoal + ' weeks</strong> (' + goalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ')' : ''}
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.7em;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border-color);">
+                        Based on Mifflin-St Jeor TDEE, ISSN protein guidelines (1.6-2.2 g/kg during deficit), and Longland et al. 2016 body composition research. Fat:lean ratio assumes consistent resistance training and protein intake.
+                    </div>
+                </div>
+            `;
+        }
+
+        // Real-time refresh: update progress tab if it's currently visible
+        function refreshProgressIfActive() {
+            const el = document.getElementById('progressTab');
+            if (el && el.style.display !== 'none') {
+                renderProgressTab();
+            }
         }
 
         // 3d. Sleep-Performance Insight
@@ -18156,6 +19215,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         case 'no_data':
                             statusClass = 'no-data';  // Gray
                             break;
+                        case 'deficit_gym':
+                            statusClass = 'deficit-gym';  // Teal
+                            break;
+                        case 'gym_only':
+                            statusClass = 'gym-only';    // Purple
+                            break;
                         default:
                             statusClass = 'missed';   // Red
                     }
@@ -18175,6 +19240,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let totalDeficit = 0;
             let totalProtein = 0;
             let daysWithData = 0;
+            let gymDays = 0;
 
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -18185,6 +19251,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (log) {
                     daysWithData++;
                     if (log.perfect) perfectDays++;
+                    if (log.workedOut) gymDays++;
 
                     // Get values from log, or recalculate from meals if missing
                     let logDeficit = log.deficit;
@@ -18209,10 +19276,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const perfectEl = document.getElementById('monthPerfectDays');
             const deficitEl = document.getElementById('monthTotalDeficit');
             const proteinEl = document.getElementById('monthAvgProtein');
+            const gymEl = document.getElementById('monthGymDays');
 
             if (perfectEl) perfectEl.textContent = perfectDays;
             if (deficitEl) deficitEl.textContent = formatNumber(Math.round(totalDeficit));
             if (proteinEl) proteinEl.textContent = daysWithData > 0 ? Math.round(totalProtein / daysWithData) + 'g' : '0g';
+            if (gymEl) gymEl.textContent = gymDays;
         }
 
         function prevCalendarMonth() {
@@ -18246,14 +19315,20 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 'good': 'var(--accent-blue)',
                 'partial': 'var(--accent-yellow)',
                 'over': 'var(--accent-red)',
-                'missed': 'var(--text-muted)'
+                'missed': 'var(--text-muted)',
+                'deficit_gym': 'rgb(6, 182, 212)',
+                'gym_only': 'rgb(139, 92, 246)',
+                'no_data': 'var(--text-muted)'
             };
             const statusEmoji = {
                 'perfect': '🎯',
                 'good': '✓',
                 'partial': '⚠️',
                 'over': '📈',
-                'missed': '✗'
+                'missed': '✗',
+                'deficit_gym': '🏋️',
+                'gym_only': '💪',
+                'no_data': '—'
             };
 
             // Recalculate totals from meals if stored values are missing/zero
@@ -18877,24 +19952,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             );
             const deficit = tdee - totals.calories;
 
-            // Check targets
-            const calHit = totals.calories >= (targets.floor || 1900) && totals.calories <= (targets.calories || 2000);
-            const proteinHit = totals.protein >= (targets.protein || 172) * 0.9;
-            const perfect = calHit && proteinHit;
-
-            // Determine status
-            let status = 'missed';
-            if (totals.calories === 0 && totals.protein === 0) {
-                status = 'no_data';
-            } else if (perfect) {
-                status = 'perfect';
-            } else if (deficit > 0 && proteinHit) {
-                status = 'good';
-            } else if (deficit > 0) {
-                status = 'partial';
-            } else if (totals.calories > (targets.calories || 2000) * 1.1) {
-                status = 'over';
-            }
+            // Determine status using shared function
+            const isWorkedOut = today.workedOut || getCount(today.workouts) > 0;
+            const { status, calHit, proteinHit, perfect } = determineDayStatus(
+                totals.calories, totals.protein, targets.calories || 2000,
+                targets.floor || 1900, targets.protein || 172, deficit, isWorkedOut
+            );
+            const calScore = calculateDayCalScore(totals.calories, targets.calories || 2000, targets.floor || 1900);
+            const proteinScore = calculateDayProteinScore(totals.protein, targets.protein || 172);
 
             // Generate logic log snapshot
             const logicSnapshot = generateLogicLog();
@@ -18911,18 +19976,20 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 targetCarbs: targets.carbs || 150,
                 floor: targets.floor,
                 // Performance
-                tdee: tdee,  // Save TDEE for historical recalculations
+                tdee: tdee,
                 deficit: deficit,
                 perfect: perfect,
                 status: status,
                 calHit: calHit,
                 proteinHit: proteinHit,
+                calScore: calScore,
+                proteinScore: proteinScore,
                 // Context
                 mode: today.mode || 'GREEN',
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories || 0,
                 mealCount: totals.mealCount,
-                workedOut: today.workedOut || getCount(today.workouts) > 0,
+                workedOut: isWorkedOut,
                 // Detailed data (DEEP COPY to prevent reference mutation bugs)
                 meals: JSON.parse(JSON.stringify(today.meals || {})),
                 workouts: JSON.parse(JSON.stringify(today.workouts || {})),
@@ -19010,6 +20077,31 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 if (log) {
                     const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
+
+                    // Verify status, calHit, proteinHit match recalculated values
+                    if (log.calories > 0 || log.protein > 0) {
+                        const target = log.target || 1900;
+                        const floor = log.floor || log.targetFloor || Math.round(target * 0.85);
+                        const targetProtein = log.targetProtein || 150;
+                        const deficit = log.deficit != null ? log.deficit : 0;
+                        const workedOut = log.workedOut || false;
+                        const { status: recalcStatus, calHit: recalcCalHit, proteinHit: recalcProteinHit } = determineDayStatus(
+                            log.calories, log.protein, target, floor, targetProtein, deficit, workedOut
+                        );
+
+                        if (log.status !== recalcStatus || log.calHit !== recalcCalHit || log.proteinHit !== recalcProteinHit) {
+                            console.log(`🔧 Status mismatch for ${dateStr}: stored=${log.status} vs calc=${recalcStatus}, calHit: ${log.calHit}→${recalcCalHit}, proteinHit: ${log.proteinHit}→${recalcProteinHit}`);
+                            recalculateDayLog(dateStr);
+                            fixCount++;
+                        }
+
+                        // Verify floor field exists
+                        if (!log.floor && log.target) {
+                            log.floor = Math.round(log.target * 0.85);
+                            fixCount++;
+                        }
+                    }
+
                     // If has meals but calories=0, recalculate
                     if (mealsArr.length > 0 && (!log.calories || log.calories === 0)) {
                         console.log(`🔧 Auto-fixing empty totals for ${dateStr} (${mealsArr.length} meals found)`);
@@ -19041,6 +20133,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Phase 2C: Restore collapsed state of context cards
             restoreCollapsedCards();
+
+            // V2 status migration: upgrade all historical logs with new scoring system
+            if (!state._v2StatusMigrated && Object.keys(state.dailyLogs || {}).length > 0) {
+                setTimeout(() => recalculateAllDayLogs(), 2000);
+            }
 
             // 1e. Periodic auto-save safety net (every 5 minutes)
             setInterval(() => {
