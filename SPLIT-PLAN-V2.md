@@ -6,6 +6,83 @@
 
 ---
 
+## DANGER ASSESSMENT — READ THIS FIRST
+
+### Why This Is Extremely High-Risk
+This is not a normal refactor. You are performing open-heart surgery on a live app while simultaneously:
+- **Splitting 8,400 lines of tightly coupled JS** into 10 interdependent modules
+- **Fixing 16 bugs** that have never been tested in combination
+- **Refactoring the 400-line central heartbeat function** (`recalculate()`) that runs every 5 seconds — if it breaks, the app crashes in an infinite loop with no recovery
+- **Touching the Firebase sync protection system** — 5 guards, 3 independent save paths, 4 merge blocks. One wrong guard = silent data wipe across all devices. This exact bug took days to fix in Jan 2026.
+- **Every module depends on shared mutable global state** (`window.state`) — a function extracted to the wrong file or loaded in the wrong order = undefined function errors cascading through the entire app
+
+### What Can Go Catastrophically Wrong
+| Failure Mode | Consequence | Likelihood |
+|-------------|-------------|------------|
+| Save guard missing after extraction | **All user data silently wiped** on next page load | Medium (Phase 3) |
+| `recalculate()` refactor has runtime error | App crashes every 5 seconds, hero shows nothing, no recovery | High (Phase 5) |
+| Script loading order wrong | `undefined is not a function` errors on every feature | Medium (any phase) |
+| `mergeRemoteState()` doesn't preserve `_dataLoaded` | Realtime sync starts wiping data on tab switch | Medium (Phase 3) |
+| Brace imbalance in extracted file | Entire module fails to parse, app dead | Low (any phase) |
+| Visibility handler not moved to firebase-sync.js | Tab switch causes data loss (inline save path broken) | Medium (Phase 3) |
+| Function extracted but not deleted from inline script | Duplicate definitions cause silent wrong behavior | Low (any phase) |
+
+### Mandatory Safety Protocol
+1. **NEVER skip Pre-Flight** — checkpoint + git branch are your lifeline
+2. **NEVER combine phases** — each phase gets its own commit, its own test, its own verification
+3. **NEVER push to main until ALL phases pass** — work on `split-stim-calc` branch only
+4. **After Phase 3 (Firebase)**: Run the FULL 9-step Firebase test. If ANY step fails, STOP and revert.
+5. **After Phase 5 (recalculate)**: Run the FULL 30+ item verification. If ANY step fails, STOP and revert.
+6. **If anything feels wrong**: `git checkout main` — you're back to the working app instantly
+7. **The original file is always preserved in git history** — you can never permanently lose it
+
+---
+
+## CATASTROPHIC FAILURE RECOVERY
+
+### Tier 1: Phase-Level Rollback (90% of problems)
+```bash
+# If current phase broke something, revert to last good phase:
+git log --oneline  # Find the last phase commit
+git reset --hard <commit-hash>  # Revert to that commit
+# Continue from that phase
+```
+
+### Tier 2: Branch Abandon (if multiple phases are tangled)
+```bash
+# Abandon the entire split attempt, go back to working app:
+git checkout main
+git branch -D split-stim-calc  # Delete the broken branch
+# App is exactly as it was before. Zero damage.
+```
+
+### Tier 3: Checkpoint Restore (if somehow main got corrupted)
+```
+1. Open the app in browser
+2. Click the checkpoint manager button (top right)
+3. Find "Pre-split checkpoint" (created during Pre-Flight)
+4. Click "Restore" — app data is back to pre-split state
+```
+
+### Tier 4: Git History Nuclear Recovery (absolute last resort)
+```bash
+# Find the exact commit before any split work:
+git log --oneline | grep "Pre-split"
+git checkout <that-hash> -- stimulant-elimination-calculator.html
+git add stimulant-elimination-calculator.html
+git commit -m "Restore original single-file app from pre-split"
+rm -rf js/stimcalc/  # Remove the split files
+git add -A && git commit -m "Remove failed split files"
+git push origin main
+```
+
+### What Is NEVER At Risk
+- **Firebase cloud data**: The split changes CODE, not DATA. Same state shape, same paths, same PIN. Your medications, caffeine entries, sleep history, checkpoints — all untouched.
+- **Other apps**: index.html, d3-roadmap.html, body-comp-tracker.html are completely separate files. This split cannot affect them.
+- **Git history**: Every version of every file is permanently preserved. You can always go back.
+
+---
+
 ## WHAT'S BROKEN AND WHY THIS SPLIT FIXES IT
 
 ### The Problem (Why the App is ~60% Useful)
@@ -640,14 +717,18 @@ if (!state._dataLoaded) return false;
 
 ## ROLLBACK STRATEGY
 
-| Situation | Action |
-|-----------|--------|
-| Phase fails mid-way | `git checkout main` (branch untouched) |
-| Split complete but bugs | `git revert HEAD` on main, or revert to any phase commit |
-| Data corruption | Restore from pre-split checkpoint (created in Pre-Flight) |
-| Nuclear option | `git log --oneline` → find pre-split commit → `git checkout <hash> -- stimulant-elimination-calculator.html` |
+See **CATASTROPHIC FAILURE RECOVERY** at the top of this document for the full 4-tier recovery system.
 
-Firebase data is NEVER affected by the split — same state shape, same paths, same PIN.
+**Quick reference:**
+| Situation | Action | Time to recover |
+|-----------|--------|----------------|
+| Phase fails mid-way | `git reset --hard <last-good-commit>` | 5 seconds |
+| Multiple phases tangled | `git checkout main && git branch -D split-stim-calc` | 5 seconds |
+| Somehow pushed bad code to main | `git revert HEAD && git push` | 30 seconds |
+| Need to restore app data | Use checkpoint manager → restore "Pre-split checkpoint" | 10 seconds |
+| Everything is on fire | `git log --oneline`, find pre-split commit, checkout that file | 1 minute |
+
+**Firebase data is NEVER affected** — same state shape, same paths, same PIN. Your data is safe no matter what happens to the code.
 
 ---
 
