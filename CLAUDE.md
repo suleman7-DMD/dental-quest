@@ -171,20 +171,46 @@ users/user_[hashedPin]/
     └── lastUpdated
 ```
 
-### Sync Pattern
+### Sync Pattern (All 4 Apps)
 ```javascript
 // On load:
 loadFromFirebase() → merge with defaults → initUI()
 
 // On save:
-saveData() → localStorage IMMEDIATELY → Firebase debounced (300ms-2000ms)
+saveData/saveState() → localStorage IMMEDIATELY → Firebase debounced (2s)
 
 // On visibility change:
-hidden → save immediately
-visible → refresh from Firebase
+hidden → save immediately (saveDataImmediate/saveStateImmediate)
+visible → refresh from Firebase (forceCloudSync)
 
 // Sync status: 🟢 connected | 🔄 syncing | 🔴 offline | ⚠️ error
 ```
+
+### Per-App Save Function Names
+| App | Primary Save | Immediate Save | Guard Count |
+|-----|-------------|----------------|-------------|
+| index.html | `saveData()` | `saveDataImmediate()` | 4 guards |
+| d3-roadmap | `saveData()` | — | 5 guards |
+| stim-calc | `saveState()` | `saveStateImmediate()` | 5 guards (identical) |
+| body-comp | `saveState()` | `saveStateImmediate()` | 5 / 4 (bug: missing PIN) |
+
+### Collection Safety (All 4 Apps)
+All collections use **objects with ID keys** (not arrays) for Firebase safety:
+```javascript
+generateId(prefix)    // 'meal_abc123', 'task_xyz789'
+getValues(collection) // Safe object→array for iteration (handles undefined/arrays/objects)
+getCount(collection)  // Safe key count
+```
+Firebase silently corrupts sparse arrays into objects — all apps migrated in Jan 2026.
+
+### Cross-App Navigation
+All 5 HTML files share a `<nav class="cross-app-nav">` bar linking to each app.
+
+### Deployment
+- **GitHub Pages**: Auto-deploys on push to `main` branch
+- **No build step**: Push HTML → live in ~30 seconds
+- **URL pattern**: `https://suleman7-dmd.github.io/dental-quest/[filename]`
+- **Default**: `index.html` loads at root URL
 
 ---
 
@@ -196,43 +222,23 @@ Opening any app on a fresh browser/device would wipe all cloud data because:
 - App thought local was newer → overwrote cloud with empty data
 
 ### 9 Firebase Bulletproof Fixes (All 4 Apps)
-```javascript
-// Fix 1: Default _version = 0 (not Date.now())
-_version: 0,
-_dataLoaded: false
+1. Default `_version = 0` (not `Date.now()`) + `_dataLoaded = false`
+2. `isEmptyState()` — app-specific validation (see table below)
+3. Sync protection flags: `isInitialLoad` / `hasLoadedFromCloud` / `pinValidated`
+4. Guards in save functions (4-5 guards, see per-app sections)
+5. Protected `loadFromFirebase()` — sets flags AFTER loading
+6. Protected realtime listener — only processes updates AFTER initial load
+7. Protected visibility handlers — only syncs if `!isInitialLoad && hasLoadedFromCloud`
+8. Version comparison on load — cloud wins if local `_version === 0` or local is empty
+9. Merge strategy preserves cloud data — never overwrites cloud with empty local state
 
-// Fix 2: isEmptyState() function - app-specific validation
-function isEmptyState(data) {
-    // Returns true if data has no real user content
-}
-
-// Fix 3: Sync protection flags
-let isInitialLoad = true;
-let hasLoadedFromCloud = false;
-let pinValidated = false;
-
-// Fix 4: Guards in saveData()/saveState()
-if (!pinValidated) return false;
-if (isInitialLoad) return false;
-if (!hasLoadedFromCloud) return false;
-if (isEmptyState(state)) return false;
-if (!state._dataLoaded) return false;
-
-// Fix 5: Protected loadFromFirebase()
-// Sets hasLoadedFromCloud = true and isInitialLoad = false AFTER loading
-
-// Fix 6: Protected realtime listener
-// Only processes updates AFTER initial load complete
-
-// Fix 7: Protected visibility handlers
-// Only syncs if !isInitialLoad && hasLoadedFromCloud
-
-// Fix 8: Version comparison on load
-// Cloud wins if local _version === 0 or local is empty
-
-// Fix 9: Merge strategy preserves cloud data
-// Never overwrites cloud with empty local state
-```
+### App-Specific Guard Differences
+| App | Flag Name | Guard Count | Notes |
+|-----|-----------|-------------|-------|
+| index.html | `initialLoadComplete` | 4 | No `_dataLoaded` check. Guards only apply when `firebaseInitialized`. |
+| d3-roadmap | `isInitialLoad` | 5 | PIN guard last (`firebaseSyncEnabled && !pinValidated`). |
+| stim-calc | `isInitialLoad` | 5 | Both `saveState` + `saveStateImmediate` have identical guards. |
+| body-comp | `isInitialLoad` | 5 / 4 | `saveStateImmediate` missing PIN guard (known bug). |
 
 ### App-Specific isEmptyState() Checks
 | App | Empty If Missing ALL Of |
@@ -1077,7 +1083,7 @@ openFinancialHelp()            // Help modal with negotiation scripts
 4. Check for orphan function calls (function called but not defined)
 5. Check visibility change handlers
 6. **Verify sync protection flags exist** (`isInitialLoad`, `hasLoadedFromCloud`, `pinValidated`)
-7. **Verify guards in saveData/saveState** (all 5 guards must be present)
+7. **Verify guards in saveData/saveState** (4-5 guards per app — see App-Specific Guard Differences)
 8. **Verify `_version: 0` in default state** (NOT `Date.now()`)
 
 ### Things NOT to Change Without Testing
@@ -1101,11 +1107,28 @@ openFinancialHelp()            // Help modal with negotiation scripts
 7. **Saving before pinValidated** - causes race condition data wipe
 8. **Saving before hasLoadedFromCloud** - overwrites cloud with empty data
 
-### Cross-App Data Reads (Body Comp → Other Apps)
-Body Comp reads FROM Firebase directly (READ-ONLY):
-- If source app gets wiped, Body Comp reads empty ecosystem data
-- Body Comp's core data (meals, workouts, weight) is NEVER affected
-- Worst case: empty ecosystem context, not data loss
+### Cross-App Data Flow Map
+```
+Stim Calc ──writes──→ projectedSleepTime, medications, caffeine, allNighterMode
+    ↓ (Body Comp reads)
+    └──→ Body Comp ecosystemContext.stimulant
+
+Index.html ──writes──→ medications (pill counts, refill dates)
+    ↓ (Body Comp reads)
+    └──→ Body Comp ecosystemContext.inventory
+
+Index.html ──writes──→ tasks (with doToday flag)
+    ↓ (D3 Roadmap reads via realtime listener)
+    └──→ D3 Roadmap Dashboard "Do Today" widget
+
+D3 Roadmap ──writes──→ exams, monthlyPlanner
+    ↓ (Body Comp reads)
+    └──→ Body Comp ecosystemContext.academic + schedule
+
+Stim Calc ──writes──→ (nothing reads stim-calc besides body-comp)
+Lecture Prompt ──────→ (standalone, no cross-app dependencies)
+```
+All cross-app reads are **READ-ONLY via Firebase**. If a source app is wiped, readers get empty data — their own data is never affected.
 
 ---
 
