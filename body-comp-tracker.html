@@ -5959,6 +5959,553 @@
                 justify-content: center;
             }
         }
+
+        /* ============================================
+           COLLAPSIBLE PROGRESS MODULES
+           ============================================ */
+        .progress-module {
+            margin-bottom: 16px;
+        }
+        .progress-module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px 14px 0 0;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.2s;
+        }
+        .progress-module-header:hover {
+            background: var(--bg-tertiary);
+        }
+        .progress-module.collapsed .progress-module-header {
+            border-radius: 14px;
+        }
+        .progress-module-header .module-title {
+            font-size: 1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .progress-module-header .module-chevron {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+        }
+        .progress-module.collapsed .module-chevron {
+            transform: rotate(-90deg);
+        }
+        .progress-module-body {
+            overflow: hidden;
+            max-height: 5000px;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+        .progress-module.collapsed .progress-module-body {
+            max-height: 0;
+            opacity: 0;
+        }
+        .progress-module-body > div:first-child {
+            border-top: none;
+            border-radius: 0 0 14px 14px;
+        }
+
+        /* ============================================
+           NEW ANALYTICS MODULE STYLES
+           ============================================ */
+        .rwl-warning-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .rwl-warning-badge.fast { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+        .rwl-warning-badge.slow { background: rgba(245,158,11,0.15); color: var(--accent-yellow); }
+        .rwl-warning-badge.optimal { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+
+        .dow-heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .dow-cell {
+            text-align: center;
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 0.78em;
+        }
+        .volume-trend-bar {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 60px;
+        }
+        .volume-bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+            transition: height 0.3s ease;
+        }
+        .research-citation {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            font-style: italic;
+            opacity: 0.7;
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+
+        /* ============================================
+           PROGRESS TAB UI POLISH
+           ============================================ */
+
+        /* --- Collapsible Module Headers --- */
+        .progress-module {
+            margin-bottom: 12px;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .progress-module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(30, 41, 59, 0.95));
+            border: 1px solid var(--border-color);
+            border-radius: 14px 14px 0 0;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.25s ease, border-color 0.25s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .progress-module-header:hover {
+            background: linear-gradient(135deg, var(--bg-tertiary), rgba(51, 65, 85, 0.9));
+            border-color: var(--border-color-hover);
+        }
+        .progress-module-header:active {
+            background: var(--bg-tertiary);
+        }
+        .progress-module.collapsed .progress-module-header {
+            border-radius: 14px;
+            border-bottom-color: var(--border-color);
+        }
+        .progress-module-header .module-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.01em;
+        }
+        .progress-module-header .module-chevron {
+            font-size: 0.75em;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .progress-module.collapsed .module-chevron {
+            transform: rotate(-90deg);
+        }
+        .progress-module-body {
+            overflow: hidden;
+            max-height: 5000px;
+            transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+            opacity: 1;
+        }
+        .progress-module.collapsed .progress-module-body {
+            max-height: 0;
+            opacity: 0;
+        }
+        .progress-module-body > div:first-child {
+            border-top: none;
+            border-radius: 0 0 14px 14px;
+        }
+
+        /* --- Summer Goal Card Premium Polish --- */
+        .summer-goal-card {
+            background: linear-gradient(145deg, var(--bg-secondary) 0%, rgba(30, 41, 59, 0.85) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+        .goal-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .weight-stat-value {
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* --- Chart Section Polish --- */
+        .chart-section,
+        .deficit-tracking-section,
+        .weekly-summary-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .section-title {
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        /* --- Weekly Stats Grid Polish --- */
+        .weekly-stat {
+            background: var(--bg-primary);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .weekly-stat:hover {
+            transform: translateY(-1px);
+            border-color: var(--border-color);
+        }
+
+        /* --- Inline Module Card Polish (new analytics modules) --- */
+        #progressTab [style*="background:var(--bg-secondary)"][style*="border-radius:14px"] {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Report Card Section Polish --- */
+        .report-card-section,
+        .records-section,
+        .consistency-section,
+        .sleep-insight-section,
+        .achievement-progress-section,
+        .lifetime-section {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .report-grade-hero {
+            padding: 8px 0 14px;
+        }
+        .report-grade-letter {
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+        .report-category {
+            transition: transform 0.15s ease;
+        }
+        .report-category:hover {
+            transform: translateY(-1px);
+        }
+
+        /* --- Record Cards Polish --- */
+        .record-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .record-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .record-value {
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* --- Consistency Rings Polish --- */
+        .consistency-ring-item svg {
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+        }
+
+        /* --- RWL Warning Badge Polish --- */
+        .rwl-warning-badge {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-size: 0.7em;
+        }
+
+        /* --- Day-of-Week Heatmap Polish --- */
+        .dow-cell {
+            transition: transform 0.15s ease;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .dow-cell:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- Volume Trend Bars Polish --- */
+        .volume-trend-bar {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 4px 4px 0;
+        }
+        .volume-bar {
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Achievement Progress Bars Polish --- */
+        .achievement-progress-fill {
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+        .achievement-progress-fill.complete {
+            background: var(--accent-green);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
+        .achievement-progress-item {
+            transition: transform 0.15s ease;
+        }
+        .achievement-progress-item:hover {
+            transform: translateX(2px);
+        }
+
+        /* --- Pace Indicator Polish --- */
+        .pace-indicator {
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: border-color 0.2s ease;
+        }
+        .pace-status {
+            letter-spacing: 0.01em;
+        }
+
+        /* --- Refeed Alert Polish --- */
+        .refeed-alert {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* --- Weekly Insight Polish --- */
+        .weekly-insight {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* --- SVG Chart Text Readability --- */
+        #progressTab svg text {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* --- Comp Card Styles (Body Composition Trend) --- */
+        .comp-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .comp-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .comp-status {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 14px;
+        }
+        .comp-status.success {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .comp-status.warning {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .comp-status.danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .comp-status.neutral {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .comp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .comp-stat {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .comp-stat-value {
+            font-size: 1.15em;
+            font-weight: 700;
+        }
+        .comp-stat-value.positive { color: var(--accent-green); }
+        .comp-stat-value.negative { color: var(--accent-red); }
+        .comp-stat-label {
+            font-size: 0.78em;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .comp-stat-detail {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+        .comp-ratio {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .comp-footer {
+            font-size: 0.72em;
+            color: var(--text-muted);
+            text-align: center;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+        .comp-empty {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        /* --- Progress Tab Mobile Responsive --- */
+        @media (max-width: 480px) {
+            .progress-module-header {
+                padding: 12px 14px;
+            }
+            .progress-module-header .module-title {
+                font-size: 0.88em;
+            }
+            .summer-goal-card {
+                padding: 18px 14px;
+            }
+            .progress-ring-container {
+                width: 170px;
+                height: 170px;
+            }
+            .ring-weight {
+                font-size: 2.2em;
+            }
+            .chart-section,
+            .deficit-tracking-section,
+            .weekly-summary-section {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .weekly-stats-grid {
+                gap: 8px;
+            }
+            .weekly-stat {
+                padding: 10px 6px;
+            }
+            .weekly-stat-value {
+                font-size: 1.15em;
+            }
+            .weekly-stat-label {
+                font-size: 0.65em;
+            }
+            .report-card-section,
+            .records-section,
+            .consistency-section,
+            .sleep-insight-section,
+            .achievement-progress-section,
+            .lifetime-section {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .report-breakdown {
+                gap: 6px;
+            }
+            .report-category {
+                padding: 6px 8px;
+                font-size: 0.75em;
+            }
+            .records-grid {
+                gap: 8px;
+            }
+            .record-card {
+                padding: 10px;
+            }
+            .record-icon {
+                font-size: 1.2em;
+            }
+            .record-value {
+                font-size: 1em;
+            }
+            .lifetime-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .lifetime-stat {
+                padding: 8px 4px;
+            }
+            .lifetime-stat-value {
+                font-size: 1.05em;
+            }
+            .lifetime-stat-label {
+                font-size: 0.64em;
+            }
+            .dow-heatmap {
+                gap: 3px;
+            }
+            .dow-cell {
+                padding: 6px 2px;
+                font-size: 0.72em;
+            }
+            .sleep-comparison {
+                gap: 8px;
+            }
+            .sleep-col {
+                padding: 10px 8px;
+            }
+            .research-citation {
+                font-size: 0.65em;
+            }
+            .consistency-rings {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .comp-grid {
+                gap: 8px;
+            }
+            .comp-stat {
+                padding: 10px 8px;
+            }
+            .volume-trend-bar {
+                height: 50px;
+            }
+            .report-history {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .report-history-week {
+                padding: 5px 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -6648,29 +7195,14 @@
                     </div>
                 </div>
 
-                <!-- Weekly Report Card (Task 3a) -->
-                <div id="weeklyReportCard"></div>
-
-                <!-- Personal Records Wall (Task 3b) -->
-                <div id="personalRecords"></div>
-
-                <!-- Consistency Score (Task 3c) -->
-                <div id="consistencyScore"></div>
-
-                <!-- Sleep-Performance Insight (Task 3d) -->
-                <div id="sleepPerformanceInsight"></div>
-
-                <!-- Achievement Progress Bars (Task 3e) -->
-                <div id="achievementProgress"></div>
-
                 <!-- Daily Snapshot (real-time today) -->
                 <div id="dailySnapshot"></div>
 
-                <!-- Workout Stats -->
-                <div id="workoutStats"></div>
+                <!-- Weekly Report Card (Task 3a) -->
+                <div id="weeklyReportCard"></div>
 
-                <!-- Macro Timing Analysis -->
-                <div id="macroTimingAnalysis"></div>
+                <!-- Consistency Score (Task 3c) -->
+                <div id="consistencyScore"></div>
 
                 <!-- Deficit Sustainability Score -->
                 <div id="deficitSustainability"></div>
@@ -6678,8 +7210,41 @@
                 <!-- Body Recomposition Predictor -->
                 <div id="recompPredictor"></div>
 
+                <!-- Rate of Weight Loss Analysis (NEW) -->
+                <div id="rateOfWeightLoss"></div>
+
+                <!-- Metabolic Adaptation Tracker (NEW) -->
+                <div id="metabolicAdaptation"></div>
+
+                <!-- Protein Efficiency Score (NEW) -->
+                <div id="proteinEfficiency"></div>
+
+                <!-- Body Recomp Trajectory (NEW) -->
+                <div id="recompTrajectory"></div>
+
+                <!-- Deficit Adherence Patterns (NEW) -->
+                <div id="deficitAdherence"></div>
+
+                <!-- Training Volume & Recovery (NEW) -->
+                <div id="trainingVolume"></div>
+
+                <!-- Macro Timing Analysis -->
+                <div id="macroTimingAnalysis"></div>
+
+                <!-- Workout Stats -->
+                <div id="workoutStats"></div>
+
+                <!-- Personal Records Wall (Task 3b) -->
+                <div id="personalRecords"></div>
+
+                <!-- Sleep-Performance Insight (Task 3d) -->
+                <div id="sleepPerformanceInsight"></div>
+
                 <!-- Lifetime Stats (Task 3f) -->
                 <div id="lifetimeStats"></div>
+
+                <!-- Achievement Progress Bars (MOVED TO BOTTOM) -->
+                <div id="achievementProgress"></div>
 
             </div>
 
@@ -8406,7 +8971,9 @@
                 status = 'partial';
             } else if (workedOut && deficit <= 0) {
                 status = 'gym_only';
-            } else if (calories > target * 1.1) {
+            } else if (deficit <= 0 && calories > 0) {
+                // FIX: Any surplus day (deficit <= 0) with food logged should be 'over', not 'missed'
+                // 'missed' implies no effort; 'over' correctly shows they ate but exceeded TDEE
                 status = 'over';
             }
 
@@ -15156,6 +15723,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
 
+            // GUARD 0: Never save before PIN validation
+            if (!pinValidated) {
+                console.warn('⚠️ BLOCKED: Immediate save attempted before PIN validation');
+                return false;
+            }
+
             // GUARD A: Never save during initial load
             if (isInitialLoad) {
                 console.warn('⚠️ BLOCKED: Immediate save attempted during initial load');
@@ -15632,6 +16205,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             state.dailyLogs[date].workouts = migrateArrayToObject(state.dailyLogs[date].workouts, 'workout');
                         }
                     });
+
+                    // Preserve _dataLoaded flag after merge so saves aren't blocked
+                    state._dataLoaded = true;
 
                     localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
 
@@ -16812,6 +17388,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             updateSyncStatus('offline', 'Local only');
             showToast('Using offline mode');
 
+            // Set guard flags so saves aren't blocked in offline mode
+            pinValidated = true;
+            hasLoadedFromCloud = true;
+            isInitialLoad = false;
+            state._dataLoaded = true;
+
             const overlay = document.getElementById('pinPromptOverlay');
             if (overlay) overlay.remove();
 
@@ -17050,9 +17632,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 unlockAchievement('month_streak');
             }
 
-            // Perfect week
-            if (!achievements.perfect_week.unlocked && gam.perfectDays >= 7) {
-                unlockAchievement('perfect_week');
+            // Perfect week — check for 7 CONSECUTIVE perfect days from dailyLogs
+            if (!achievements.perfect_week.unlocked) {
+                let consecPerfect = 0;
+                const sortedDates = Object.keys(state.dailyLogs || {}).sort();
+                if (sortedDates.length > 0) {
+                    const startD = parseLocalDate(sortedDates[0]);
+                    const endD = parseLocalDate(sortedDates[sortedDates.length - 1]);
+                    const cur = new Date(startD);
+                    while (cur <= endD) {
+                        const ds = getLocalDateString(cur);
+                        const log = state.dailyLogs[ds];
+                        if (log && (log.perfect || log.status === 'perfect')) {
+                            consecPerfect++;
+                            if (consecPerfect >= 7) { unlockAchievement('perfect_week'); break; }
+                        } else {
+                            consecPerfect = 0;
+                        }
+                        cur.setDate(cur.getDate() + 1);
+                    }
+                }
             }
 
             // Weight loss achievements
@@ -17159,28 +17758,915 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // NEW ANALYTICS MODULES (Task 4, Part 2)
+        // ============================================
+
+        // 1. Rate of Weight Loss Analysis
+        // Research: Helms et al. 2014 — 0.5-1.0% BW/week optimal for muscle retention
+        function renderRateOfWeightLoss() {
+            const container = document.getElementById('rateOfWeightLoss');
+            if (!container) return;
+
+            const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            if (weighIns.length < 3) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 3+ weigh-ins to analyze weight loss rate. Keep weighing in weekly.</div>
+                </div>`;
+                return;
+            }
+
+            // Calculate weekly rate at each weigh-in using 2-week rolling window
+            const rateData = [];
+            for (let i = 1; i < weighIns.length; i++) {
+                const prev = weighIns[i - 1];
+                const curr = weighIns[i];
+                const prevDate = parseLocalDate(prev.date);
+                const currDate = parseLocalDate(curr.date);
+                const daysDiff = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+                if (daysDiff < 1) continue;
+
+                const weeklyLoss = ((prev.weight - curr.weight) / daysDiff) * 7;
+                const pctBW = curr.weight > 0 ? (weeklyLoss / curr.weight) * 100 : 0;
+                rateData.push({
+                    date: curr.date,
+                    weight: curr.weight,
+                    weeklyLoss: weeklyLoss,
+                    pctBW: pctBW
+                });
+            }
+
+            if (rateData.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Current rate (last data point)
+            const current = rateData[rateData.length - 1];
+            const currentPct = current.pctBW;
+
+            // Classification
+            let badgeClass, badgeText, adviceText;
+            if (currentPct > 1.0) {
+                badgeClass = 'fast';
+                badgeText = 'Too Fast';
+                adviceText = 'Losing >1% BW/week risks muscle loss. Consider reducing deficit by 200-300 cal or adding a diet break.';
+            } else if (currentPct >= 0.5) {
+                badgeClass = 'optimal';
+                badgeText = 'Optimal Range';
+                adviceText = 'You are in the ideal 0.5-1.0% BW/week range for maximizing fat loss while preserving muscle mass.';
+            } else if (currentPct >= 0.25) {
+                badgeClass = 'slow';
+                badgeText = 'Slow but Sustainable';
+                adviceText = 'Slower rate is fine for muscle preservation, but progress toward your goal will take longer.';
+            } else if (currentPct > 0) {
+                badgeClass = 'slow';
+                badgeText = 'Very Slow';
+                adviceText = 'Weight loss has nearly stalled. Consider a small increase in deficit or checking for metabolic adaptation.';
+            } else {
+                badgeClass = 'fast';
+                badgeText = 'Gaining/Stalled';
+                adviceText = 'No weight loss detected in recent period. Review calorie tracking accuracy and deficit adherence.';
+            }
+
+            // Build SVG mini chart
+            const chartWidth = 280;
+            const chartHeight = 80;
+            const padding = { top: 10, right: 15, bottom: 20, left: 35 };
+            const plotW = chartWidth - padding.left - padding.right;
+            const plotH = chartHeight - padding.top - padding.bottom;
+
+            const maxPct = Math.max(1.5, ...rateData.map(d => Math.abs(d.pctBW))) + 0.2;
+            const minPct = Math.min(-0.5, ...rateData.map(d => d.pctBW)) - 0.2;
+            const xScale = (i) => padding.left + (i / Math.max(rateData.length - 1, 1)) * plotW;
+            const yScale = (v) => padding.top + ((maxPct - v) / (maxPct - minPct)) * plotH;
+
+            // Optimal band (0.5-1.0%)
+            const bandTop = yScale(1.0);
+            const bandBottom = yScale(0.5);
+
+            let pathD = '';
+            rateData.forEach((d, i) => {
+                pathD += (i === 0 ? 'M' : 'L') + xScale(i).toFixed(1) + ',' + yScale(d.pctBW).toFixed(1) + ' ';
+            });
+
+            const dots = rateData.map((d, i) => {
+                const color = d.pctBW > 1.0 ? 'var(--accent-red)' : d.pctBW >= 0.5 ? 'var(--accent-green)' : d.pctBW > 0 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+                return `<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(d.pctBW).toFixed(1)}" r="3" fill="${color}" stroke="var(--bg-primary)" stroke-width="1.5"/>`;
+            }).join('');
+
+            // Average rate
+            const avgPct = rateData.reduce((s, d) => s + d.pctBW, 0) / rateData.length;
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <div>
+                            <div style="font-size:0.78em;color:var(--text-muted);">Current rate</div>
+                            <div style="font-size:1.3em;font-weight:700;">${currentPct.toFixed(2)}% BW/wk</div>
+                        </div>
+                        <span class="rwl-warning-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${current.weeklyLoss.toFixed(2)}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">lbs/week</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${avgPct.toFixed(2)}%</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">avg rate</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${rateData.length}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">data points</div>
+                        </div>
+                    </div>
+
+                    <svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display:block;margin-bottom:8px;">
+                        <rect x="${padding.left}" y="${bandTop}" width="${plotW}" height="${bandBottom - bandTop}" fill="rgba(16,185,129,0.08)" rx="2"/>
+                        <line x1="${padding.left}" y1="${bandTop}" x2="${padding.left + plotW}" y2="${bandTop}" stroke="rgba(16,185,129,0.3)" stroke-width="0.5" stroke-dasharray="3,3"/>
+                        <line x1="${padding.left}" y1="${bandBottom}" x2="${padding.left + plotW}" y2="${bandBottom}" stroke="rgba(16,185,129,0.3)" stroke-width="0.5" stroke-dasharray="3,3"/>
+                        <line x1="${padding.left}" y1="${yScale(0)}" x2="${padding.left + plotW}" y2="${yScale(0)}" stroke="var(--border-color)" stroke-width="0.5"/>
+                        <text x="${padding.left + plotW + 3}" y="${bandTop + 4}" fill="var(--accent-green)" font-size="7">1.0%</text>
+                        <text x="${padding.left + plotW + 3}" y="${bandBottom + 4}" fill="var(--accent-green)" font-size="7">0.5%</text>
+                        <path d="${pathD}" fill="none" stroke="var(--accent-blue)" stroke-width="1.5"/>
+                        ${dots}
+                    </svg>
+
+                    <div style="font-size:0.78em;color:var(--text-secondary);padding:8px;background:var(--bg-tertiary);border-radius:8px;">${adviceText}</div>
+
+                    <div class="research-citation">Helms et al. 2014, JISSN: Optimal weight loss rate of 0.5-1.0% bodyweight/week for natural athletes to maximize muscle retention during a cut.</div>
+                </div>
+            `;
+        }
+
+        // 2. Metabolic Adaptation Tracker
+        // Research: Trexler et al. 2014 — metabolic adaptation to weight loss
+        function renderMetabolicAdaptation() {
+            const container = document.getElementById('metabolicAdaptation');
+            if (!container) return;
+
+            const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
+
+            if (weighIns.length < 3 || allLogs.length < 14) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 3+ weigh-ins and 14+ days of tracking to detect metabolic adaptation.</div>
+                </div>`;
+                return;
+            }
+
+            // Calculate expected TDEE based on weight loss math
+            // If you eat X calories and lose Y lbs/week, actual TDEE = X + (Y * 3500 / 7)
+            const recentLogs = allLogs.slice(-21);
+            const avgIntake = recentLogs.reduce((s, [, l]) => s + (l.calories ?? 0), 0) / recentLogs.length;
+
+            // Weight change over last 3 weeks from weigh-ins
+            const threeWeeksAgo = new Date();
+            threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
+            const threeWeeksAgoStr = getLocalDateString(threeWeeksAgo);
+            const recentWeighIns = weighIns.filter(w => w.date >= threeWeeksAgoStr);
+
+            let actualWeeklyLoss = 0;
+            if (recentWeighIns.length >= 2) {
+                const first = recentWeighIns[0];
+                const last = recentWeighIns[recentWeighIns.length - 1];
+                const days = (parseLocalDate(last.date) - parseLocalDate(first.date)) / (1000 * 60 * 60 * 24);
+                if (days >= 7) {
+                    actualWeeklyLoss = ((first.weight - last.weight) / days) * 7;
+                }
+            }
+
+            // Actual TDEE derived from weight change
+            const derivedTDEE = avgIntake + (actualWeeklyLoss * 3500 / 7);
+
+            // Expected TDEE from BMR calculation
+            const currentWeight = state.profile?.currentWeight_lbs ?? 190;
+            const heightCm = state.profile?.height_cm ?? 174;
+            const age = state.profile?.age ?? 27;
+            const bmr = calculateBMR(currentWeight, heightCm, age);
+            const actLevel = state.profile?.activityLevel || 'sedentary';
+            const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+            const expectedTDEE = bmr * (multipliers[actLevel] ?? 1.2) + (get7DayAvgActiveCalories() ?? 0);
+
+            // Adaptation percentage
+            const adaptationPct = expectedTDEE > 0 ? Math.max(0, ((expectedTDEE - derivedTDEE) / expectedTDEE) * 100) : 0;
+
+            // Diet break recommendation
+            let adaptIcon, adaptLabel, adaptColor, adaptAdvice;
+            if (adaptationPct > 15) {
+                adaptIcon = '\u{1F6A8}';
+                adaptLabel = 'Significant Adaptation';
+                adaptColor = 'var(--accent-red)';
+                adaptAdvice = 'Your metabolism may have slowed significantly. Consider a 1-2 week diet break at maintenance calories to restore metabolic rate (Peos et al. 2019).';
+            } else if (adaptationPct > 10) {
+                adaptIcon = '\u26A0\uFE0F';
+                adaptLabel = 'Moderate Adaptation';
+                adaptColor = 'var(--accent-yellow)';
+                adaptAdvice = 'Some metabolic slowdown detected. A strategic refeed or short diet break could help. Monitor closely.';
+            } else if (adaptationPct > 5) {
+                adaptIcon = '\u{1F7E1}';
+                adaptLabel = 'Mild Adaptation';
+                adaptColor = 'var(--accent-blue)';
+                adaptAdvice = 'Minimal adaptation is normal during any deficit. Your body is responding well.';
+            } else {
+                adaptIcon = '\u2705';
+                adaptLabel = 'No Significant Adaptation';
+                adaptColor = 'var(--accent-green)';
+                adaptAdvice = 'Your metabolic rate appears stable. Current approach is sustainable.';
+            }
+
+            // Bar chart: expected vs derived TDEE
+            const maxTDEE = Math.max(expectedTDEE, derivedTDEE, 1500);
+            const expectedPct = Math.round((expectedTDEE / maxTDEE) * 100);
+            const derivedPct = Math.round((derivedTDEE / maxTDEE) * 100);
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${adaptIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.82em;font-weight:600;color:${adaptColor};">${adaptLabel} (${adaptationPct.toFixed(1)}%)</div>
+                            <div style="font-size:0.75em;color:var(--text-muted);margin-top:2px;">${adaptAdvice}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
+                            <span>Expected TDEE</span>
+                            <span style="font-weight:600;">${formatNumber(Math.round(expectedTDEE))} cal</span>
+                        </div>
+                        <div style="background:var(--bg-tertiary);border-radius:4px;height:10px;margin-bottom:10px;">
+                            <div style="width:${expectedPct}%;height:100%;border-radius:4px;background:var(--accent-blue);"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
+                            <span>Effective TDEE (derived)</span>
+                            <span style="font-weight:600;">${formatNumber(Math.round(derivedTDEE))} cal</span>
+                        </div>
+                        <div style="background:var(--bg-tertiary);border-radius:4px;height:10px;">
+                            <div style="width:${derivedPct}%;height:100%;border-radius:4px;background:${adaptationPct > 15 ? 'var(--accent-red)' : adaptationPct > 10 ? 'var(--accent-yellow)' : 'var(--accent-green)'};"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${formatNumber(Math.round(avgIntake))}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">avg intake</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${actualWeeklyLoss.toFixed(2)}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">lbs/wk lost</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${Math.round(expectedTDEE - derivedTDEE)}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">cal gap</div>
+                        </div>
+                    </div>
+
+                    <div class="research-citation">Trexler et al. 2014, JISSN: Metabolic adaptation during prolonged deficit can reduce TDEE 5-15% beyond weight-based predictions. Peos et al. 2019: Diet breaks of 1-2 weeks may attenuate adaptation.</div>
+                </div>
+            `;
+        }
+
+        // 3. Protein Efficiency Score
+        // Research: Morton et al. 2018 systematic review — optimal 1.6-2.2 g/kg
+        function renderProteinEfficiency() {
+            const container = document.getElementById('proteinEfficiency');
+            if (!container) return;
+
+            const today = new Date();
+            const thirtyAgo = new Date(today);
+            thirtyAgo.setDate(today.getDate() - 29);
+            const agg = aggregateDailyLogs(getLocalDateString(thirtyAgo), getLocalDateString(today));
+
+            if (agg.daysWithData < 5) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 5+ days of tracking for protein efficiency analysis.</div>
+                </div>`;
+                return;
+            }
+
+            const currentWeight = state.profile?.currentWeight_lbs ?? 190;
+            const weightKg = currentWeight / 2.205;
+            const avgProtein = agg.avgProtein;
+            const proteinPerKg = avgProtein / weightKg;
+            const targetProtein = state.today?.targets?.protein ?? 172;
+
+            // Protein consistency: % of days hitting >= 90% target
+            let daysHit = 0;
+            agg.days.forEach(d => {
+                if ((d.protein ?? 0) >= targetProtein * 0.9) daysHit++;
+            });
+            const consistencyPct = Math.round((daysHit / agg.daysWithData) * 100);
+
+            // Timing distribution score from macro timing data
+            const timingScore = (() => {
+                let totalP = 0;
+                const buckets = { morning: 0, afternoon: 0, evening: 0, late: 0 };
+                let mealCount = 0;
+
+                agg.days.forEach(d => {
+                    const meals = d.meals ? (Array.isArray(d.meals) ? d.meals : Object.values(d.meals)) : [];
+                    meals.forEach(m => {
+                        if (!m.time || !(m.protein > 0)) return;
+                        let hour = -1;
+                        const match24 = m.time.match(/^(\d{1,2}):(\d{2})$/);
+                        const match12 = m.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                        if (match12) {
+                            hour = parseInt(match12[1]);
+                            if (match12[3].toUpperCase() === 'PM' && hour !== 12) hour += 12;
+                            if (match12[3].toUpperCase() === 'AM' && hour === 12) hour = 0;
+                        } else if (match24) {
+                            hour = parseInt(match24[1]);
+                        }
+                        if (hour < 0) return;
+                        mealCount++;
+                        totalP += m.protein;
+                        if (hour >= 6 && hour < 12) buckets.morning += m.protein;
+                        else if (hour >= 12 && hour < 17) buckets.afternoon += m.protein;
+                        else if (hour >= 17 && hour < 22) buckets.evening += m.protein;
+                        else buckets.late += m.protein;
+                    });
+                });
+
+                if (mealCount < 5 || totalP === 0) return null;
+                const pcts = Object.values(buckets).map(b => (b / totalP) * 100);
+                const ideal = 25;
+                const maxDev = 75;
+                const sumDev = pcts.reduce((s, p) => s + Math.abs(p - ideal), 0);
+                return Math.max(0, Math.round(100 - (sumDev / maxDev) * 100));
+            })();
+
+            // Overall protein efficiency score (0-100)
+            let adequacyScore;
+            if (proteinPerKg >= 2.2) adequacyScore = 100;
+            else if (proteinPerKg >= 1.6) adequacyScore = 70 + ((proteinPerKg - 1.6) / 0.6) * 30;
+            else if (proteinPerKg >= 1.2) adequacyScore = 40 + ((proteinPerKg - 1.2) / 0.4) * 30;
+            else adequacyScore = Math.max(0, (proteinPerKg / 1.2) * 40);
+            adequacyScore = Math.round(adequacyScore);
+
+            const overallScore = Math.round(
+                adequacyScore * 0.40 +
+                consistencyPct * 0.40 +
+                (timingScore ?? 50) * 0.20
+            );
+
+            // Gauge color
+            let gaugeColor;
+            if (overallScore >= 80) gaugeColor = 'var(--accent-green)';
+            else if (overallScore >= 60) gaugeColor = 'var(--accent-blue)';
+            else if (overallScore >= 40) gaugeColor = 'var(--accent-yellow)';
+            else gaugeColor = 'var(--accent-red)';
+
+            // SVG semi-circle gauge
+            const gaugeAngle = (overallScore / 100) * 180;
+            const r = 55;
+            const cx = 70, cy = 65;
+            const endX = cx + r * Math.cos(Math.PI - (gaugeAngle * Math.PI / 180));
+            const endY = cy - r * Math.sin(Math.PI - (gaugeAngle * Math.PI / 180));
+            const largeArc = gaugeAngle > 180 ? 1 : 0;
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="text-align:center;margin-bottom:12px;">
+                        <svg width="140" height="80" viewBox="0 0 140 80">
+                            <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="var(--bg-tertiary)" stroke-width="10" stroke-linecap="round"/>
+                            ${gaugeAngle > 0 ? `<path d="M ${cx - r} ${cy} A ${r} ${r} 0 ${largeArc} 1 ${endX.toFixed(1)} ${endY.toFixed(1)}" fill="none" stroke="${gaugeColor}" stroke-width="10" stroke-linecap="round"/>` : ''}
+                            <text x="${cx}" y="${cy - 8}" text-anchor="middle" fill="var(--text-primary)" font-size="18" font-weight="700">${overallScore}</text>
+                            <text x="${cx}" y="${cy + 6}" text-anchor="middle" fill="var(--text-muted)" font-size="9">/100</text>
+                        </svg>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${proteinPerKg.toFixed(1)}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">g/kg/day</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${consistencyPct}%</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">consistency</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${timingScore !== null ? timingScore : '--'}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">timing</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
+                            <span>Adequacy (${adequacyScore}/100)</span>
+                            <span style="color:var(--text-muted);">Goal: 1.6-2.2 g/kg</span>
+                        </div>
+                        <div style="background:var(--bg-tertiary);border-radius:4px;height:6px;">
+                            <div style="width:${Math.min(adequacyScore, 100)}%;height:100%;border-radius:4px;background:${adequacyScore >= 70 ? 'var(--accent-green)' : adequacyScore >= 40 ? 'var(--accent-yellow)' : 'var(--accent-red)'};"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
+                            <span>Consistency (${consistencyPct}%)</span>
+                            <span style="color:var(--text-muted);">${daysHit}/${agg.daysWithData} days hit</span>
+                        </div>
+                        <div style="background:var(--bg-tertiary);border-radius:4px;height:6px;">
+                            <div style="width:${Math.min(consistencyPct, 100)}%;height:100%;border-radius:4px;background:${consistencyPct >= 80 ? 'var(--accent-green)' : consistencyPct >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)'};"></div>
+                        </div>
+                    </div>
+
+                    <div class="research-citation">Morton et al. 2018, Br J Sports Med: Protein intakes of 1.6 g/kg/day are the breakpoint above which additional protein no longer benefits muscle mass gains. ISSN Position Stand: Distribute protein evenly across 4+ meals for optimal MPS.</div>
+                </div>
+            `;
+        }
+
+        // 4. Body Recomposition Trajectory
+        // Research: Barakat et al. 2020 — body recomp in trained individuals
+        function renderRecompTrajectory() {
+            const container = document.getElementById('recompTrajectory');
+            if (!container) return;
+
+            const weighInsWithBF = getValues(state.weighIns)
+                .filter(w => w.bodyFat != null && w.leanMass != null && w.fatMass != null)
+                .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+            if (weighInsWithBF.length < 2) {
+                container.innerHTML = `
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                        <div style="font-size:0.82em;color:var(--text-muted);margin-bottom:8px;">
+                            Need 2+ weigh-ins with body fat measurements to track recomposition trajectory.
+                        </div>
+                        <div style="font-size:0.78em;color:var(--text-secondary);">
+                            Use the body comp modal (Navy method or scale) to log body fat alongside your weight.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const first = weighInsWithBF[0];
+            const last = weighInsWithBF[weighInsWithBF.length - 1];
+            const fatChange = last.fatMass - first.fatMass;
+            const leanChange = last.leanMass - first.leanMass;
+
+            // Determine recomp status
+            let status, statusColor, statusIcon;
+            if (fatChange < -0.5 && leanChange > 0.5) {
+                status = 'True Recomposition — losing fat AND gaining muscle';
+                statusColor = 'var(--accent-green)';
+                statusIcon = '\u{1F3AF}';
+            } else if (fatChange < -0.5 && leanChange >= -0.5) {
+                status = 'Fat Loss with Muscle Preservation';
+                statusColor = 'var(--accent-blue)';
+                statusIcon = '\u{1F4AA}';
+            } else if (fatChange < -0.5 && leanChange < -0.5) {
+                status = 'Losing both fat and muscle — increase protein/training';
+                statusColor = 'var(--accent-yellow)';
+                statusIcon = '\u26A0\uFE0F';
+            } else if (fatChange >= 0 && leanChange > 0.5) {
+                status = 'Lean gain phase — gaining muscle, slight fat increase';
+                statusColor = 'var(--accent-blue)';
+                statusIcon = '\u{1F4C8}';
+            } else {
+                status = 'Tracking — more data points needed for clear trend';
+                statusColor = 'var(--text-muted)';
+                statusIcon = '\u{1F4CA}';
+            }
+
+            // Build dual-trend visual
+            const chartWidth = 280;
+            const chartHeight = 90;
+            const pad = { top: 10, right: 10, bottom: 20, left: 10 };
+            const plotW = chartWidth - pad.left - pad.right;
+            const plotH = chartHeight - pad.top - pad.bottom;
+
+            const allFat = weighInsWithBF.map(w => w.fatMass);
+            const allLean = weighInsWithBF.map(w => w.leanMass);
+            const allVals = [...allFat, ...allLean];
+            const minVal = Math.min(...allVals) - 2;
+            const maxVal = Math.max(...allVals) + 2;
+
+            const xS = (i) => pad.left + (i / Math.max(weighInsWithBF.length - 1, 1)) * plotW;
+            const yS = (v) => pad.top + ((maxVal - v) / (maxVal - minVal)) * plotH;
+
+            let fatPath = '', leanPath = '';
+            weighInsWithBF.forEach((w, i) => {
+                fatPath += (i === 0 ? 'M' : 'L') + xS(i).toFixed(1) + ',' + yS(w.fatMass).toFixed(1) + ' ';
+                leanPath += (i === 0 ? 'M' : 'L') + xS(i).toFixed(1) + ',' + yS(w.leanMass).toFixed(1) + ' ';
+            });
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${statusIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.82em;font-weight:600;color:${statusColor};">${status}</div>
+                        </div>
+                    </div>
+
+                    <svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display:block;margin-bottom:10px;">
+                        <path d="${fatPath}" fill="none" stroke="var(--accent-red)" stroke-width="2" opacity="0.8"/>
+                        <path d="${leanPath}" fill="none" stroke="var(--accent-green)" stroke-width="2" opacity="0.8"/>
+                        ${weighInsWithBF.map((w, i) => `
+                            <circle cx="${xS(i).toFixed(1)}" cy="${yS(w.fatMass).toFixed(1)}" r="3" fill="var(--accent-red)" opacity="0.8"/>
+                            <circle cx="${xS(i).toFixed(1)}" cy="${yS(w.leanMass).toFixed(1)}" r="3" fill="var(--accent-green)" opacity="0.8"/>
+                        `).join('')}
+                    </svg>
+
+                    <div style="display:flex;gap:16px;justify-content:center;font-size:0.78em;margin-bottom:12px;">
+                        <span><span style="display:inline-block;width:10px;height:3px;background:var(--accent-red);margin-right:4px;vertical-align:middle;border-radius:2px;"></span>Fat Mass</span>
+                        <span><span style="display:inline-block;width:10px;height:3px;background:var(--accent-green);margin-right:4px;vertical-align:middle;border-radius:2px;"></span>Lean Mass</span>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;color:${fatChange < 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${fatChange > 0 ? '+' : ''}${fatChange.toFixed(1)} lbs</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">fat mass change</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;color:${leanChange >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${leanChange >= 0 ? '+' : ''}${leanChange.toFixed(1)} lbs</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">lean mass change</div>
+                        </div>
+                    </div>
+
+                    <div class="research-citation">Barakat et al. 2020, Strength & Conditioning J: Body recomposition (simultaneous fat loss + muscle gain) is achievable with adequate protein (1.6+ g/kg), progressive resistance training, and moderate deficits.</div>
+                </div>
+            `;
+        }
+
+        // 5. Deficit Adherence Patterns
+        // Original analytics — day-of-week patterns, danger zones
+        function renderDeficitAdherence() {
+            const container = document.getElementById('deficitAdherence');
+            if (!container) return;
+
+            const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
+            if (allLogs.length < 7) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 7+ days of tracking to identify adherence patterns.</div>
+                </div>`;
+                return;
+            }
+
+            // Day-of-week analysis
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayData = Array.from({ length: 7 }, () => ({ deficits: [], calories: [], adherent: 0, total: 0 }));
+
+            allLogs.forEach(([dateStr, log]) => {
+                const date = parseLocalDate(dateStr);
+                const dow = date.getDay();
+                dayData[dow].total++;
+                const deficit = log.deficit ?? 0;
+                dayData[dow].deficits.push(deficit);
+                dayData[dow].calories.push(log.calories ?? 0);
+                if (deficit > 0) dayData[dow].adherent++;
+            });
+
+            // Calculate adherence rate per day
+            const dayAdherence = dayData.map((d, i) => ({
+                day: dayNames[i],
+                rate: d.total > 0 ? Math.round((d.adherent / d.total) * 100) : 0,
+                avgDeficit: d.deficits.length > 0 ? Math.round(d.deficits.reduce((a, b) => a + b, 0) / d.deficits.length) : 0,
+                avgCal: d.calories.length > 0 ? Math.round(d.calories.reduce((a, b) => a + b, 0) / d.calories.length) : 0,
+                total: d.total
+            }));
+
+            // Find best and worst days
+            const sortedByRate = [...dayAdherence].filter(d => d.total >= 2).sort((a, b) => b.rate - a.rate);
+            const bestDay = sortedByRate[0];
+            const worstDay = sortedByRate[sortedByRate.length - 1];
+
+            // Meal timing analysis — when do most calories get logged
+            const hourBuckets = Array.from({ length: 24 }, () => 0);
+            let mealsWithTime = 0;
+            allLogs.forEach(([, log]) => {
+                const meals = log.meals ? (Array.isArray(log.meals) ? log.meals : Object.values(log.meals)) : [];
+                meals.forEach(m => {
+                    if (!m.time) return;
+                    let hour = -1;
+                    const match24 = m.time.match(/^(\d{1,2}):(\d{2})$/);
+                    const match12 = m.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                    if (match12) {
+                        hour = parseInt(match12[1]);
+                        if (match12[3].toUpperCase() === 'PM' && hour !== 12) hour += 12;
+                        if (match12[3].toUpperCase() === 'AM' && hour === 12) hour = 0;
+                    } else if (match24) {
+                        hour = parseInt(match24[1]);
+                    }
+                    if (hour >= 0) {
+                        hourBuckets[hour] += (m.calories ?? 0);
+                        mealsWithTime++;
+                    }
+                });
+            });
+
+            // Find peak calorie hours
+            const peakHour = hourBuckets.indexOf(Math.max(...hourBuckets));
+            const peakLabel = peakHour > 12 ? (peakHour - 12) + 'pm' : (peakHour === 0 ? '12am' : peakHour + 'am');
+
+            // Heatmap color based on adherence rate
+            const heatColor = (rate) => {
+                if (rate >= 80) return 'rgba(16,185,129,0.3)';
+                if (rate >= 60) return 'rgba(59,130,246,0.25)';
+                if (rate >= 40) return 'rgba(245,158,11,0.25)';
+                return 'rgba(239,68,68,0.2)';
+            };
+
+            // Strategic refeed suggestion
+            let refeedSuggestion = '';
+            if (worstDay && worstDay.rate < 50) {
+                refeedSuggestion = `<div style="font-size:0.78em;color:var(--text-secondary);padding:8px;background:var(--bg-tertiary);border-radius:8px;margin-top:10px;">
+                    Consider scheduling refeeds on ${worstDay.day}s when adherence is lowest (${worstDay.rate}%). A planned higher-calorie day reduces uncontrolled overeating.
+                </div>`;
+            }
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">Which days/times challenge your deficit the most?</div>
+
+                    <div style="font-size:0.82em;font-weight:500;margin-bottom:8px;">Day-of-Week Adherence</div>
+                    <div class="dow-heatmap" style="margin-bottom:14px;">
+                        ${dayAdherence.map(d => `
+                            <div class="dow-cell" style="background:${heatColor(d.rate)};">
+                                <div style="font-weight:600;font-size:0.85em;">${d.day}</div>
+                                <div style="font-size:1.1em;font-weight:700;margin:2px 0;">${d.rate}%</div>
+                                <div style="font-size:0.65em;color:var(--text-muted);">${d.avgDeficit > 0 ? '+' : ''}${d.avgDeficit}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                        ${bestDay ? `<div style="background:rgba(16,185,129,0.1);padding:10px;border-radius:8px;border:1px solid rgba(16,185,129,0.2);">
+                            <div style="font-size:0.72em;color:var(--text-muted);">Best Day</div>
+                            <div style="font-weight:600;color:var(--accent-green);">${bestDay.day} (${bestDay.rate}%)</div>
+                        </div>` : ''}
+                        ${worstDay ? `<div style="background:rgba(239,68,68,0.1);padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);">
+                            <div style="font-size:0.72em;color:var(--text-muted);">Weakest Day</div>
+                            <div style="font-weight:600;color:var(--accent-red);">${worstDay.day} (${worstDay.rate}%)</div>
+                        </div>` : ''}
+                    </div>
+
+                    ${mealsWithTime >= 10 ? `
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Peak Calorie Time</div>
+                        <div style="font-size:0.78em;color:var(--text-secondary);margin-bottom:4px;">Most calories logged around <strong>${peakLabel}</strong></div>
+                    ` : ''}
+
+                    ${refeedSuggestion}
+
+                    <div class="research-citation">Pattern-based analytics: Identifying adherence trends helps pre-empt overeating by scheduling refeeds and adjusting strategies for weak days.</div>
+                </div>
+            `;
+        }
+
+        // 6. Training Volume & Recovery
+        // Research: Schoenfeld et al. 2017 — dose-response for training volume
+        function renderTrainingVolume() {
+            const container = document.getElementById('trainingVolume');
+            if (!container) return;
+
+            const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
+            if (allLogs.length < 14) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 14+ days of tracking to analyze training volume trends.</div>
+                </div>`;
+                return;
+            }
+
+            // Gather weekly volumes
+            const weeklyVolume = [];
+            let weekStart = null;
+            let weekDuration = 0;
+            let weekSessions = 0;
+            let weekCalsBurned = 0;
+
+            allLogs.forEach(([dateStr, log]) => {
+                const date = parseLocalDate(dateStr);
+                if (!weekStart || (date - weekStart) >= 7 * 24 * 60 * 60 * 1000) {
+                    if (weekStart !== null) {
+                        weeklyVolume.push({ duration: weekDuration, sessions: weekSessions, calories: weekCalsBurned });
+                    }
+                    weekStart = date;
+                    weekDuration = 0;
+                    weekSessions = 0;
+                    weekCalsBurned = 0;
+                }
+                if (log.workedOut) {
+                    weekSessions++;
+                    const workouts = log.workouts ? (Array.isArray(log.workouts) ? log.workouts : Object.values(log.workouts)) : [];
+                    workouts.forEach(w => {
+                        weekDuration += (w.duration ?? 0);
+                        weekCalsBurned += (w.calories ?? w.caloriesBurned ?? 0);
+                    });
+                }
+            });
+            // Push last week
+            if (weekStart !== null) {
+                weeklyVolume.push({ duration: weekDuration, sessions: weekSessions, calories: weekCalsBurned });
+            }
+
+            if (weeklyVolume.length < 2) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need 2+ weeks of workout data to show volume trends.</div>
+                </div>`;
+                return;
+            }
+
+            // Current vs previous week
+            const currentWeek = weeklyVolume[weeklyVolume.length - 1];
+            const prevWeek = weeklyVolume[weeklyVolume.length - 2];
+            const volumeChange = prevWeek.duration > 0 ? ((currentWeek.duration - prevWeek.duration) / prevWeek.duration) * 100 : 0;
+
+            // Trend analysis
+            let trendIcon, trendLabel, trendColor;
+            if (volumeChange > 20) {
+                trendIcon = '\u26A0\uFE0F';
+                trendLabel = 'Volume Spike (+' + Math.round(volumeChange) + '%)';
+                trendColor = 'var(--accent-red)';
+            } else if (volumeChange > 0) {
+                trendIcon = '\u{1F4C8}';
+                trendLabel = 'Progressive Overload (+' + Math.round(volumeChange) + '%)';
+                trendColor = 'var(--accent-green)';
+            } else if (volumeChange > -20) {
+                trendIcon = '\u{1F4C9}';
+                trendLabel = 'Slight Decrease (' + Math.round(volumeChange) + '%)';
+                trendColor = 'var(--accent-yellow)';
+            } else {
+                trendIcon = '\u{1F6CC}';
+                trendLabel = 'Deload Week (' + Math.round(volumeChange) + '%)';
+                trendColor = 'var(--accent-blue)';
+            }
+
+            // Deload recommendation
+            const weeksSinceDeload = (() => {
+                let count = 0;
+                for (let i = weeklyVolume.length - 1; i >= 1; i--) {
+                    const prev = weeklyVolume[i - 1];
+                    const curr = weeklyVolume[i];
+                    if (prev.duration > 0 && ((curr.duration - prev.duration) / prev.duration) < -0.3) break;
+                    count++;
+                }
+                return count;
+            })();
+            const deloadNeeded = weeksSinceDeload >= 5;
+
+            // Volume trend bars (last 6 weeks)
+            const recentWeeks = weeklyVolume.slice(-6);
+            const maxDuration = Math.max(...recentWeeks.map(w => w.duration), 1);
+
+            container.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:12px;">${weeklyVolume.length} weeks of training data</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
+                        <div style="font-size:1.5em;">${trendIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.82em;font-weight:600;color:${trendColor};">${trendLabel}</div>
+                            <div style="font-size:0.75em;color:var(--text-muted);margin-top:2px;">
+                                ${deloadNeeded ? 'Consider a deload week (' + weeksSinceDeload + ' weeks since last)' : weeksSinceDeload + ' weeks since last deload'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Weekly Volume (last ${recentWeeks.length} weeks)</div>
+                    <div class="volume-trend-bar" style="margin-bottom:14px;">
+                        ${recentWeeks.map((w, i) => {
+                            const h = Math.max(2, (w.duration / maxDuration) * 55);
+                            const isLast = i === recentWeeks.length - 1;
+                            return `<div class="volume-bar" style="height:${h}px;background:${isLast ? 'var(--accent-blue)' : 'rgba(59,130,246,0.4)'};" title="Week ${i + 1}: ${w.duration}m, ${w.sessions} sessions"></div>`;
+                        }).join('')}
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${currentWeek.duration}m</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">this week</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${currentWeek.sessions}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">sessions</div>
+                        </div>
+                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.1em;font-weight:600;">${formatNumber(currentWeek.calories)}</div>
+                            <div style="font-size:0.7em;color:var(--text-muted);">cal burned</div>
+                        </div>
+                    </div>
+
+                    ${deloadNeeded ? `
+                        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-top:12px;font-size:0.78em;">
+                            <strong style="color:var(--accent-red);">Deload Recommended</strong><br>
+                            ${weeksSinceDeload} weeks of consistent loading. Reduce volume by 40-60% for 1 week to allow recovery and prevent overtraining.
+                        </div>
+                    ` : ''}
+
+                    <div class="research-citation">Schoenfeld et al. 2017, J Sports Sci: Higher training volumes produce greater muscle hypertrophy, but jumps >20% week-over-week increase injury/overtraining risk. Deload every 4-6 weeks.</div>
+                </div>
+            `;
+        }
+
+        // ============================================
         // PROGRESS TAB RENDERING
         // ============================================
 
         function renderProgressTab() {
-            renderBodyCompTrend();
-            renderRefeedTracker();
+            // Render all sub-modules
+            renderDailySnapshot();
+            renderWeeklyReportCard();
+            renderConsistencyScore();
             renderSummerProgress();
             renderWeightChart();
             renderDeficitTracking();
             renderWeeklySummary();
-            // Task 3: New sections
-            renderWeeklyReportCard();
-            renderPersonalRecords();
-            renderConsistencyScore();
-            renderDailySnapshot();
-            renderWorkoutStats();
-            renderMacroTimingAnalysis();
+            renderBodyCompTrend();
+            renderRefeedTracker();
             renderDeficitSustainability();
             renderRecompPredictor();
+            // New analytics modules
+            renderRateOfWeightLoss();
+            renderMetabolicAdaptation();
+            renderProteinEfficiency();
+            renderRecompTrajectory();
+            renderDeficitAdherence();
+            renderTrainingVolume();
+            renderMacroTimingAnalysis();
+            renderWorkoutStats();
+            renderPersonalRecords();
             renderSleepPerformanceInsight();
-            renderAchievementProgress();
             renderLifetimeStats();
+            // Achievements at the very bottom
+            renderAchievementProgress();
+            // Wrap all modules in collapsible containers
+            wrapProgressModules();
+        }
+
+        // ============================================
+        // COLLAPSIBLE MODULE SYSTEM
+        // ============================================
+        function getProgressModuleStates() {
+            try {
+                return JSON.parse(localStorage.getItem('progressModuleStates') || '{}');
+            } catch { return {}; }
+        }
+
+        function saveProgressModuleStates(states) {
+            try {
+                localStorage.setItem('progressModuleStates', JSON.stringify(states));
+            } catch { /* ignore */ }
+        }
+
+        function toggleProgressModule(moduleId) {
+            const wrapper = document.getElementById('pm_' + moduleId);
+            if (!wrapper) return;
+            wrapper.classList.toggle('collapsed');
+            const states = getProgressModuleStates();
+            states[moduleId] = wrapper.classList.contains('collapsed');
+            saveProgressModuleStates(states);
+        }
+
+        function wrapProgressModules() {
+            // Module definitions: [containerId, title, defaultCollapsed]
+            const modules = [
+                ['dailySnapshot', 'Today\'s Progress', false],
+                ['weeklyReportCard', 'Weekly Report Card', false],
+                ['consistencyScore', '30-Day Analytics', false],
+                ['bodyCompTrend', 'Body Composition', true],
+                ['refeedTracker', 'Refeed Tracker', true],
+                ['deficitSustainability', 'Deficit Sustainability', false],
+                ['recompPredictor', 'Recomp Predictor', false],
+                ['rateOfWeightLoss', 'Rate of Weight Loss', false],
+                ['metabolicAdaptation', 'Metabolic Adaptation', true],
+                ['proteinEfficiency', 'Protein Efficiency', false],
+                ['recompTrajectory', 'Body Recomp Trajectory', true],
+                ['deficitAdherence', 'Deficit Adherence Patterns', true],
+                ['trainingVolume', 'Training Volume & Recovery', true],
+                ['macroTimingAnalysis', 'Macro Timing', true],
+                ['workoutStats', 'Workout Stats', true],
+                ['personalRecords', 'Personal Records', true],
+                ['sleepPerformanceInsight', 'Sleep vs Performance', true],
+                ['lifetimeStats', 'All-Time Stats', true],
+                ['achievementProgress', 'Achievement Progress', true],
+            ];
+
+            const savedStates = getProgressModuleStates();
+
+            modules.forEach(([id, title, defaultCollapsed]) => {
+                const container = document.getElementById(id);
+                if (!container || container.innerHTML.trim() === '' || container.closest('.progress-module')) return;
+
+                const isCollapsed = savedStates.hasOwnProperty(id) ? savedStates[id] : defaultCollapsed;
+
+                const wrapper = document.createElement('div');
+                wrapper.id = 'pm_' + id;
+                wrapper.className = 'progress-module' + (isCollapsed ? ' collapsed' : '');
+
+                const header = document.createElement('div');
+                header.className = 'progress-module-header';
+                header.onclick = function() { toggleProgressModule(id); };
+                header.innerHTML = '<span class="module-title">' + title + '</span><span class="module-chevron">&#9660;</span>';
+
+                const body = document.createElement('div');
+                body.className = 'progress-module-body';
+
+                container.parentNode.insertBefore(wrapper, container);
+                body.appendChild(container);
+                wrapper.appendChild(header);
+                wrapper.appendChild(body);
+            });
         }
 
         // Body Composition Trend Card
@@ -17561,6 +19047,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
             }
 
+            // Include today's live data if not in dailyLogs yet
+            const todayStr = getLocalDateString();
+            if (!state.dailyLogs[todayStr] && state.today?.setupComplete) {
+                const todayTotals = getTodayTotals();
+                if (todayTotals.calories > 0) {
+                    daysWithData++;
+                    const todayDeficit = getCurrentDeficit();
+                    weeklyDeficit += todayDeficit;
+                }
+            }
+
             // Update UI
             const cumulativeEl = document.getElementById('cumulativeDeficit');
             const avgDailyEl = document.getElementById('avgDailyDeficit');
@@ -17624,7 +19121,23 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     if (dayDeficit !== undefined) totalDeficit += dayDeficit;
                     if (dayProtein !== undefined) totalProtein += dayProtein;
-                    if (log.perfect || (dayDeficit > 0 && dayProtein >= (log.targetProtein || 150) * 0.9)) {
+                    if (log.perfect || (dayDeficit > 0 && dayProtein >= (log.targetProtein ?? 172) * 0.9)) {
+                        daysOnTrack++;
+                    }
+                }
+            }
+
+            // Include today's live data if not in dailyLogs yet
+            const todayStr = getLocalDateString();
+            if (!state.dailyLogs[todayStr] && state.today?.setupComplete) {
+                const todayTotals = getTodayTotals();
+                if (todayTotals.calories > 0) {
+                    daysWithData++;
+                    const todayDeficit = getCurrentDeficit();
+                    totalDeficit += todayDeficit;
+                    totalProtein += todayTotals.protein;
+                    const todayTargetProtein = state.today.targets?.protein ?? 172;
+                    if (todayDeficit > 0 && todayTotals.protein >= todayTargetProtein * 0.9) {
                         daysOnTrack++;
                     }
                 }
@@ -17786,6 +19299,54 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 current.setDate(current.getDate() + 1);
             }
 
+            // Include today's live data if it's in the range and not yet in dailyLogs
+            const todayStr = getLocalDateString();
+            if (!state.dailyLogs?.[todayStr] && state.today?.setupComplete) {
+                const todayDate = parseLocalDate(todayStr);
+                if (todayDate >= start && todayDate <= end) {
+                    const totals = getTodayTotals();
+                    if (totals.calories > 0 || totals.protein > 0) {
+                        daysWithData++;
+                        totalCalories += totals.calories;
+                        totalProtein += totals.protein;
+                        totalCarbs += totals.carbs;
+                        const deficit = getCurrentDeficit();
+                        totalDeficit += deficit;
+
+                        const targets = state.today.targets || { calories: 1900, protein: 172, floor: 1615 };
+                        const isWorkedOut = state.today.workedOut || getCount(state.today.workouts) > 0;
+                        const { status, calHit, proteinHit, perfect } = determineDayStatus(
+                            totals.calories, totals.protein, targets.calories, targets.floor,
+                            targets.protein, deficit, isWorkedOut
+                        );
+
+                        if (calHit) calHitDays++;
+                        if (proteinHit) proteinHitDays++;
+                        if (perfect) perfectDays++;
+
+                        totalCalScore += calculateDayCalScore(totals.calories, targets.calories, targets.floor);
+                        totalProScore += calculateDayProteinScore(totals.protein, targets.protein);
+
+                        if (isWorkedOut) {
+                            gymDays++;
+                            getValues(state.today.workouts).forEach(w => {
+                                totalWorkouts++;
+                                totalWorkoutDuration += (w.duration || 0);
+                                totalWorkoutCalories += (w.calories || w.caloriesBurned || 0);
+                                const wType = w.type || 'Unknown';
+                                workoutTypes[wType] = (workoutTypes[wType] || 0) + 1;
+                            });
+                        }
+
+                        if (statusCounts.hasOwnProperty(status)) {
+                            statusCounts[status]++;
+                        }
+
+                        days.push({ dateStr: todayStr, ...state.today, calories: totals.calories, protein: totals.protein, carbs: totals.carbs, deficit, status, calHit, proteinHit, perfect });
+                    }
+                }
+            }
+
             const weeks = Math.max(1, Math.ceil(daysWithData / 7));
 
             return {
@@ -17824,12 +19385,32 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // Helper: Get all dailyLogs for a week as array
         function getWeekLogs(weekStart) {
             const logs = [];
+            const todayStr = getLocalDateString();
             for (let i = 0; i < 7; i++) {
                 const d = new Date(weekStart);
                 d.setDate(weekStart.getDate() + i);
                 const dateStr = getLocalDateString(d);
                 const log = state.dailyLogs[dateStr];
-                if (log) logs.push(log);
+                if (log) {
+                    logs.push(log);
+                } else if (dateStr === todayStr && state.today?.setupComplete) {
+                    // Include today's live data
+                    const totals = getTodayTotals();
+                    if (totals.calories > 0) {
+                        logs.push({
+                            ...state.today,
+                            calories: totals.calories,
+                            protein: totals.protein,
+                            carbs: totals.carbs,
+                            deficit: getCurrentDeficit(),
+                            workedOut: state.today.workedOut || getCount(state.today.workouts) > 0,
+                            target: state.today.targets?.calories,
+                            floor: state.today.targets?.floor,
+                            targetProtein: state.today.targets?.protein,
+                            mode: state.today.mode
+                        });
+                    }
+                }
             }
             return logs;
         }
@@ -18013,16 +19594,28 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if ((log.deficit || 0) > biggestDeficit.value) {
                     biggestDeficit = { value: Math.round(log.deficit), date: dateStr };
                 }
-                // Consecutive perfect
-                if (log.perfect || log.status === 'perfect') {
-                    currentPerfect++;
-                    if (currentPerfect > consecutivePerfect.value) {
-                        consecutivePerfect.value = currentPerfect;
-                    }
-                } else {
-                    currentPerfect = 0;
-                }
             });
+
+            // FIX: Consecutive perfect — iterate ALL calendar dates so gaps break streak
+            const perfLogDates = sortedLogs.map(l => l[0]);
+            if (perfLogDates.length > 0) {
+                const startPerf = parseLocalDate(perfLogDates[0]);
+                const endPerf = parseLocalDate(perfLogDates[perfLogDates.length - 1]);
+                const curPerf = new Date(startPerf);
+                while (curPerf <= endPerf) {
+                    const ds = getLocalDateString(curPerf);
+                    const log = state.dailyLogs[ds];
+                    if (log && (log.perfect || log.status === 'perfect')) {
+                        currentPerfect++;
+                        if (currentPerfect > consecutivePerfect.value) {
+                            consecutivePerfect.value = currentPerfect;
+                        }
+                    } else {
+                        currentPerfect = 0;
+                    }
+                    curPerf.setDate(curPerf.getDate() + 1);
+                }
+            }
 
             // Calculate best weekly deficit (sliding 7-day window)
             const logDates = sortedLogs.map(l => l[0]);
@@ -18045,17 +19638,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
             });
 
-            // Longest gym streak
+            // Longest gym streak — iterate ALL calendar dates (not just logs) so gaps break streak
             let longestGymStreak = 0;
             let currentGymStreak = 0;
-            sortedLogs.forEach(([dateStr, log]) => {
-                if (log.workedOut) {
-                    currentGymStreak++;
-                    if (currentGymStreak > longestGymStreak) longestGymStreak = currentGymStreak;
-                } else {
-                    currentGymStreak = 0;
+            const gymLogDates = sortedLogs.map(l => l[0]);
+            if (gymLogDates.length > 0) {
+                const startGym = parseLocalDate(gymLogDates[0]);
+                const endGym = parseLocalDate(gymLogDates[gymLogDates.length - 1]);
+                const curGym = new Date(startGym);
+                while (curGym <= endGym) {
+                    const ds = getLocalDateString(curGym);
+                    const log = state.dailyLogs[ds];
+                    if (log && log.workedOut) {
+                        currentGymStreak++;
+                        if (currentGymStreak > longestGymStreak) longestGymStreak = currentGymStreak;
+                    } else {
+                        currentGymStreak = 0;
+                    }
+                    curGym.setDate(curGym.getDate() + 1);
                 }
-            });
+            }
 
             const formatDate = (d) => {
                 if (!d) return '';
@@ -18130,10 +19732,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 legendItems += `<span style="display:inline-flex; align-items:center; gap:3px; font-size:0.72em; color:var(--text-secondary);"><span style="width:8px;height:8px;border-radius:2px;background:${statusColors[status]};display:inline-block;"></span>${statusLabels[status]} ${count}</span>`;
             }
 
-            // Section B: Nutrition averages with progress bars
-            const avgCalTarget = 1900;
-            const avgProTarget = 172;
-            const avgDefTarget = 500;
+            // Section B: Nutrition averages with progress bars — use actual targets, not hardcoded
+            const avgCalTarget = state.today?.targets?.calories ?? 1900;
+            const avgProTarget = state.today?.targets?.protein ?? 172;
+            const modeDefaults = { GREEN: 500, YELLOW: 300, ORANGE: 0 };
+            const avgDefTarget = modeDefaults[state.today?.mode] ?? 500;
             const nutBar = (label, value, target, unit, color) => {
                 const pct = Math.min(Math.round((value / target) * 100), 120);
                 return `<div style="margin-bottom:8px;">
@@ -18146,13 +19749,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 </div>`;
             };
 
-            // Section C: Gym consistency
+            // Section C: Gym consistency — FIX: use state.today for today's workout status
             const gymStreak = (() => {
                 let streak = 0;
                 const d = new Date(today);
                 for (let i = 0; i < 30; i++) {
                     const ds = getLocalDateString(d);
-                    const log = state.dailyLogs?.[ds];
+                    // For today (i===0), check live state.today since dailyLogs may not have it yet
+                    const log = i === 0
+                        ? { workedOut: state.today?.workedOut || getCount(state.today?.workouts) > 0 }
+                        : state.dailyLogs?.[ds];
                     if (log?.workedOut) { streak++; } else if (i > 0) { break; }
                     d.setDate(d.getDate() - 1);
                 }
@@ -18172,19 +19778,38 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Section E: Previous 7 days at-a-glance
             let dayCards = '';
             const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const todayStr7d = getLocalDateString();
             for (let i = 6; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
                 const ds = getLocalDateString(d);
-                const log = state.dailyLogs?.[ds];
+                // FIX: For today, use live state.today since dailyLogs may not have it yet
+                let log = state.dailyLogs?.[ds];
+                let dispCal = log ? (log.calories || 0) : 0;
+                let dispPro = log ? (log.protein || 0) : 0;
+                let dispStatus = log?.status;
+                let dispWorkedOut = log?.workedOut;
+                let hasData = !!log;
+                if (ds === todayStr7d && !log && state.today?.setupComplete) {
+                    const liveTotals = getTodayTotals();
+                    if (liveTotals.calories > 0 || liveTotals.protein > 0) {
+                        hasData = true;
+                        dispCal = liveTotals.calories;
+                        dispPro = liveTotals.protein;
+                        const targets = state.today.targets || { calories: 1900, floor: 1615, protein: 172 };
+                        const liveDeficit = getCurrentDeficit();
+                        dispWorkedOut = state.today.workedOut || getCount(state.today.workouts) > 0;
+                        dispStatus = determineDayStatus(dispCal, dispPro, targets.calories, targets.floor, targets.protein, liveDeficit, dispWorkedOut).status;
+                    }
+                }
                 const dayName = dayNames[d.getDay()];
-                const dotColor = log?.status ? (statusColors[log.status] || 'rgba(107,114,128,0.4)') : 'rgba(107,114,128,0.4)';
+                const dotColor = dispStatus ? (statusColors[dispStatus] || 'rgba(107,114,128,0.4)') : 'rgba(107,114,128,0.4)';
                 dayCards += `<div onclick="showDayDetails('${ds}')" style="flex:1;min-width:42px;text-align:center;padding:6px 2px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:${i===0?'1px solid var(--accent-blue)':'1px solid transparent'};">
                     <div style="font-size:0.65em;color:var(--text-muted);">${dayName}</div>
                     <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};margin:4px auto;"></div>
-                    <div style="font-size:0.7em;font-weight:600;">${log ? (log.calories || 0) : '—'}</div>
-                    <div style="font-size:0.6em;color:var(--text-muted);">${log ? (log.protein || 0) + 'g' : ''}</div>
-                    ${log?.workedOut ? '<div style="font-size:0.6em;">💪</div>' : ''}
+                    <div style="font-size:0.7em;font-weight:600;">${hasData ? dispCal : '—'}</div>
+                    <div style="font-size:0.6em;color:var(--text-muted);">${hasData ? dispPro + 'g' : ''}</div>
+                    ${dispWorkedOut ? '<div style="font-size:0.6em;">💪</div>' : ''}
                 </div>`;
             }
 
@@ -18347,12 +19972,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Sort logs by date for streak calc
             const sortedLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
 
+            // Gather workout totals from existing logs
             sortedLogs.forEach(([dateStr, log]) => {
                 if (log.workedOut) {
                     gymDaysTotal++;
-                    currentStreak++;
-                    if (currentStreak > longestGymStreak) longestGymStreak = currentStreak;
-
                     const workoutsArr = Array.isArray(log.workouts) ? log.workouts : (log.workouts ? Object.values(log.workouts) : []);
                     workoutsArr.forEach(w => {
                         totalWorkouts++;
@@ -18361,10 +19984,27 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         const wType = w.type || 'General';
                         workoutTypes[wType] = (workoutTypes[wType] || 0) + 1;
                     });
-                } else {
-                    currentStreak = 0;
                 }
             });
+
+            // FIX: Longest gym streak — iterate ALL calendar dates so gaps break streak
+            const wsLogDates = sortedLogs.map(l => l[0]);
+            if (wsLogDates.length > 0) {
+                const wsStart = parseLocalDate(wsLogDates[0]);
+                const wsEnd = parseLocalDate(wsLogDates[wsLogDates.length - 1]);
+                const wsCur = new Date(wsStart);
+                while (wsCur <= wsEnd) {
+                    const ds = getLocalDateString(wsCur);
+                    const log = state.dailyLogs[ds];
+                    if (log && log.workedOut) {
+                        currentStreak++;
+                        if (currentStreak > longestGymStreak) longestGymStreak = currentStreak;
+                    } else {
+                        currentStreak = 0;
+                    }
+                    wsCur.setDate(wsCur.getDate() + 1);
+                }
+            }
 
             if (totalWorkouts === 0) {
                 // FIX: Show friendly empty state instead of hiding
@@ -18970,7 +20610,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             const avg = (arr, key) => {
-                const vals = arr.map(l => l[key] || 0);
+                const vals = arr.map(l => l[key] ?? 0);
                 return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
             };
             const pct = (arr, fn) => {
@@ -19045,26 +20685,30 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const weightLost = Math.max(startWeight - currentWeight, 0);
             const halfwayTarget = (startWeight - (state.profile?.goalWeight_lbs || 170)) / 2;
 
-            // Consecutive protein days
+            // FIX: Iterate ALL calendar dates so gaps break streaks (same fix as renderPersonalRecords)
             let proteinStreak = 0, tempProStreak = 0;
-            allLogs.forEach(([d, l]) => {
-                if (l.proteinHit) { tempProStreak++; proteinStreak = Math.max(proteinStreak, tempProStreak); }
-                else { tempProStreak = 0; }
-            });
-
-            // Consecutive deficit days
             let deficitStreak = 0, tempDefStreak = 0;
-            allLogs.forEach(([d, l]) => {
-                if ((l.deficit || 0) > 0) { tempDefStreak++; deficitStreak = Math.max(deficitStreak, tempDefStreak); }
-                else { tempDefStreak = 0; }
-            });
-
-            // Consecutive perfect days
             let perfectStreak = 0, tempPerfStreak = 0;
-            allLogs.forEach(([d, l]) => {
-                if (l.perfect || l.status === 'perfect') { tempPerfStreak++; perfectStreak = Math.max(perfectStreak, tempPerfStreak); }
-                else { tempPerfStreak = 0; }
-            });
+            const achLogDates = allLogs.map(l => l[0]);
+            if (achLogDates.length > 0) {
+                const achStart = parseLocalDate(achLogDates[0]);
+                const achEnd = parseLocalDate(achLogDates[achLogDates.length - 1]);
+                const achCur = new Date(achStart);
+                while (achCur <= achEnd) {
+                    const ds = getLocalDateString(achCur);
+                    const log = state.dailyLogs[ds];
+                    // Protein streak
+                    if (log && log.proteinHit) { tempProStreak++; proteinStreak = Math.max(proteinStreak, tempProStreak); }
+                    else { tempProStreak = 0; }
+                    // Deficit streak
+                    if (log && (log.deficit || 0) > 0) { tempDefStreak++; deficitStreak = Math.max(deficitStreak, tempDefStreak); }
+                    else { tempDefStreak = 0; }
+                    // Perfect streak
+                    if (log && (log.perfect || log.status === 'perfect')) { tempPerfStreak++; perfectStreak = Math.max(perfectStreak, tempPerfStreak); }
+                    else { tempPerfStreak = 0; }
+                    achCur.setDate(achCur.getDate() + 1);
+                }
+            }
 
             // Early bird count (meals before 9am)
             let earlyBirdCount = 0;
@@ -19093,7 +20737,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 { id: 'perfect_week', icon: '✨', name: 'Perfect Week', desc: 'All targets for 7 days', current: perfectStreak, target: 7, xp: 400 },
             ];
 
-            const isUnlocked = (id) => state.achievements && state.achievements[id];
+            const isUnlocked = (id) => state.achievements?.[id]?.unlocked;
 
             container.innerHTML = `
                 <div class="achievement-progress-section">
@@ -19607,7 +21251,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Update stats
             if (streakEl) streakEl.textContent = state.gamification.streak;
             if (perfectEl) perfectEl.textContent = state.gamification.perfectDays;
-            if (totalEl) totalEl.textContent = state.gamification.totalDaysTracked;
+            // FIX: Calculate actual days tracked from dailyLogs (not over-counted stored value)
+            if (totalEl) {
+                const todayStr = getLocalDateString();
+                const logsCount = Object.keys(state.dailyLogs || {}).length;
+                const todayHasData = state.today?.setupComplete || getCount(state.today?.meals) > 0;
+                totalEl.textContent = logsCount + (todayHasData && !state.dailyLogs[todayStr] ? 1 : 0);
+            }
 
             // Render achievements
             let html = '';
