@@ -95,7 +95,7 @@ Switches between 4 tabs:
 
 ### `renderProgressTab()` — Line 16980
 
-Dispatches to 12 sub-renderers:
+Dispatches to 15+ sub-renderers (expanded in V2):
 
 ```javascript
 function renderProgressTab() {
@@ -105,13 +105,19 @@ function renderProgressTab() {
     renderWeightChart();             // Weight trend over time
     renderDeficitTracking();         // Weekly deficit trend
     renderWeeklySummary();           // This week's daily breakdown
-    // Enhanced sections:
-    renderWeeklyReportCard();        // A/B/C/D/F grade for the week
+    // V2 Enhanced sections:
+    renderWeeklyReportCard();        // V2: Margin-based 0-100 scoring (was A-F)
     renderPersonalRecords();         // Best day, best streak, etc.
-    renderConsistencyScore();        // % of days on track
+    renderConsistencyScore();        // V2: Rich analytics (5 sections, replaces simple %)
     renderSleepPerformanceInsight(); // Sleep quality vs performance correlation
     renderAchievementProgress();     // Next achievement and progress
     renderLifetimeStats();           // Total calories, meals, workouts
+    // V2 New renderers:
+    renderDailySnapshot();           // Today's real-time progress vs yesterday
+    renderWorkoutStats();            // All-time workout analytics
+    renderMacroTimingAnalysis();     // Protein timing across 4 windows (ISSN)
+    renderDeficitSustainability();   // Deficit consistency via CV, yo-yo detection
+    renderRecompPredictor();         // Fat/lean projection at 4/8 weeks, June 1 goal
 }
 ```
 
@@ -125,26 +131,53 @@ function renderProgressTab() {
 | `renderWeightChart()` | ~17180 | Weight data points over time (text-based, no D3) |
 | `renderDeficitTracking()` | ~17250 | Weekly deficit totals, estimated fat loss |
 | `renderWeeklySummary()` | ~17320 | 7-day breakdown: cal, protein, deficit, workout per day |
-| `renderWeeklyReportCard()` | ~17530 | Grades based on: deficit adherence, protein, consistency, workouts |
+| `renderWeeklyReportCard()` | ~17530 | **V2**: Weighted 0-100 scoring — Deficit 25%, Protein 25%, Cal 20%, Gym 15%, Tracking 15% |
 | `renderPersonalRecords()` | ~17620 | Best deficit day, highest protein day, longest streak |
-| `renderConsistencyScore()` | ~17700 | % of tracked days that met targets |
+| `renderConsistencyScore()` | ~17700 | **V2**: Replaced with 5-section rich analytics (see below) |
 | `renderSleepPerformanceInsight()` | ~17780 | Correlation between sleep hours and deficit adherence |
 | `renderAchievementProgress()` | ~17860 | Next unlockable achievement + progress bar |
 | `renderLifetimeStats()` | ~17940 | Total: calories logged, meals, workouts, weigh-ins, days tracked |
+| `renderDailySnapshot()` | 18243 | **V2**: Today's real-time progress with yesterday comparison |
+| `renderWorkoutStats()` | 18317 | **V2**: All-time workout analytics (total, avg/week, avg duration, best streak) |
+| `renderMacroTimingAnalysis()` | 18400 | **V2**: Protein distribution across 4 time windows, evenness 0-100 (ISSN research) |
+| `renderDeficitSustainability()` | 18554 | **V2**: Deficit consistency via coefficient of variation, yo-yo detection, sparkline |
+| `renderRecompPredictor()` | 18693 | **V2**: Fat/lean loss projection at 4/8 weeks, June 1 goal (Longland et al., Mifflin-St Jeor) |
+
+### V2 Rich Analytics (renderConsistencyScore replacement)
+
+The old `renderConsistencyScore()` (simple % days on track) was replaced with 5 sections:
+- **Section A**: Status distribution stacked bar (30 days) — shows perfect/deficit_gym/good/gym_only/partial/over/missed
+- **Section B**: 30-day nutrition averages with progress bars (avg cal, protein, deficit)
+- **Section C**: Gym consistency — gym days, weekly avg, avg duration, gym streak
+- **Section D**: Trend comparison — this week vs 30-day average
+- **Section E**: Previous 7 days at-a-glance mini cards
+
+### V2 Aggregation Layer
+
+`aggregateDailyLogs(startDateStr, endDateStr)` at line 17712 — shared data source for calendar + progress sync. Returns aggregated stats over any date range.
+
+### V2 Auto-Refresh
+
+`refreshProgressIfActive()` at line 18914 — auto-refreshes progress tab after data changes (meal logging, workout logging, etc.) if the progress tab is currently active.
 
 ## Calendar Heatmap
 
 ### `renderCalendarHeatmap()` — Line 18056
 
-Monthly calendar showing day status colors:
+Monthly calendar showing day status colors (V2: 8 statuses):
 
 | Status | Color | Meaning |
 |--------|-------|---------|
 | `perfect` | Green | Hit both calorie and protein targets |
+| `deficit_gym` | Teal | **V2**: In deficit + worked out (protein not hit) |
 | `good` | Blue | In deficit + protein hit |
-| `partial` | Yellow | In deficit but protein missed |
+| `gym_only` | Purple | **V2**: Worked out but not in deficit |
+| `partial` | Yellow | In deficit but protein missed, no workout |
 | `over` | Red | Over calorie target |
-| `missed` | Gray | No data or failed |
+| `missed` | Gray | Tracked but failed targets |
+| `no_data` | Dark gray | No data logged |
+
+All 8 statuses determined by shared `determineDayStatus()` function (line 8387).
 
 Navigation: Previous/next month buttons. Clicking a day opens `showDayDetails(dateStr)`.
 
@@ -231,8 +264,15 @@ Detailed metabolic breakdown:
 | `renderQuickStats()` | ~8810 | Quick stat cards |
 | `renderSimpleWorkoutSummary()` | ~8840 | Workout display |
 | `switchDashboardTab(tab, e)` | 16677 | Tab switching |
-| `renderProgressTab()` | 16980 | Progress tab dispatcher (12 sub-renders) |
-| `renderCalendarHeatmap()` | 18056 | Monthly calendar |
+| `renderProgressTab()` | 16980 | Progress tab dispatcher (15+ sub-renders, V2) |
+| `aggregateDailyLogs(start, end)` | 17712 | V2 shared data source for calendar + progress |
+| `renderDailySnapshot()` | 18243 | V2 today's real-time progress |
+| `renderWorkoutStats()` | 18317 | V2 all-time workout analytics |
+| `renderMacroTimingAnalysis()` | 18400 | V2 protein timing (ISSN) |
+| `renderDeficitSustainability()` | 18554 | V2 deficit consistency (CV) |
+| `renderRecompPredictor()` | 18693 | V2 fat/lean projection |
+| `refreshProgressIfActive()` | 18914 | V2 auto-refresh progress tab |
+| `renderCalendarHeatmap()` | 18056 | Monthly calendar (V2: 8 statuses) |
 | `showDayDetails(dateStr)` | ~18200 | Day detail modal |
 | `renderAchievements()` | ~18350 | Badges gallery |
 | `renderXPBar()` | 16704 | XP/level display |

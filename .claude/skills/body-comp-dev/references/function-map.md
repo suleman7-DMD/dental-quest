@@ -1,6 +1,6 @@
 # Function Map
 
-Complete function index organized by category. Line numbers verified against body-comp-tracker.html (19,034 lines).
+Complete function index organized by category. Line numbers verified against body-comp-tracker.html (20,158 lines).
 
 ## Table of Contents
 - [State Management (7311-7654)](#state-management-7311-7654)
@@ -80,6 +80,18 @@ Complete function index organized by category. Line numbers verified against bod
 | `getModeDisplay(mode)` | 8223 | `(mode)` | Mode emoji/label/class |
 | `getTodayTotals()` | 8236 | `()` | Sum calories/protein/carbs from today's meals |
 | `getCurrentDeficit()` | 8246 | `()` | TDEE - calories eaten |
+| `getTDEEForDate(dateStr)` | 8328 | `(dateStr)` | TDEE for historical date (operator precedence fixed in V2) |
+
+## V2 Shared Infrastructure (8387-8615)
+
+| Function | Line | Signature | Purpose |
+|----------|------|-----------|---------|
+| `determineDayStatus(cal, pro, target, floor, targetPro, deficit, workedOut)` | 8387 | `(calories, protein, target, floor, targetProtein, deficit, workedOut)` | **Single source of truth** for 8 day statuses: perfect, deficit_gym, good, gym_only, partial, over, missed, no_data |
+| `calculateDayCalScore(cal, target, floor)` | 8416 | `(calories, target, floor)` | Margin-based 0-100 calorie score (USDA HEI methodology) |
+| `calculateDayProteinScore(pro, target)` | 8440 | `(protein, target)` | Margin-based 0-100 protein score |
+| `calculateDayDeficitScore(deficit, targetDeficit)` | 8457 | `(deficit, targetDeficit)` | Margin-based 0-100 deficit score |
+| `recalculateDayLog(dateStr)` | ~8500 | `(dateStr)` | Recalculate single historical day log with V2 fields |
+| `recalculateAllDayLogs()` | 8561 | `()` | Batch V2 migration for all historical dailyLogs |
 
 ## Date-Based Calculations (8257-8552)
 
@@ -268,40 +280,58 @@ Complete function index organized by category. Line numbers verified against bod
 
 | Function | Line | Signature | Purpose |
 |----------|------|-----------|---------|
-| `renderProgressTab()` | 16980 | `()` | Dispatch to 12 sub-renderers |
+| `renderProgressTab()` | 16980 | `()` | Dispatch to 15+ sub-renderers (V2 expanded) |
 | `renderBodyCompTrend()` | 16997 | `()` | Fat vs lean mass trend |
 | `renderRefeedTracker()` | ~17060 | `()` | Cumulative deficit + refeed |
 | `renderSummerProgress()` | ~17120 | `()` | June 1 goal countdown |
 | `renderWeightChart()` | ~17180 | `()` | Weight trend display |
 | `renderDeficitTracking()` | ~17250 | `()` | Weekly deficit totals |
 | `renderWeeklySummary()` | ~17320 | `()` | 7-day daily breakdown |
-| `renderWeeklyReportCard()` | ~17530 | `()` | A-F weekly grade |
+| `renderWeeklyReportCard()` | ~17530 | `()` | **V2**: Margin-based 0-100 scoring (was A-F) with weighted categories |
 | `renderPersonalRecords()` | ~17620 | `()` | Best day/streak/etc |
-| `renderConsistencyScore()` | ~17700 | `()` | % days on track |
+| `renderConsistencyScore()` | ~17700 | `()` | **V2**: Replaced with rich analytics (status distribution, nutrition avgs, gym consistency, trends, 7-day mini cards) |
 | `renderSleepPerformanceInsight()` | ~17780 | `()` | Sleep vs performance |
 | `renderAchievementProgress()` | ~17860 | `()` | Next achievement progress |
 | `renderLifetimeStats()` | ~17940 | `()` | Lifetime totals |
+
+## V2 Aggregation Layer (17712-18051)
+
+| Function | Line | Signature | Purpose |
+|----------|------|-----------|---------|
+| `aggregateDailyLogs(start, end)` | 17712 | `(startDateStr, endDateStr)` | Shared data source for calendar + progress sync |
 
 ## Calendar & Badges (18052-18529)
 
 | Function | Line | Signature | Purpose |
 |----------|------|-----------|---------|
-| `renderCalendarHeatmap()` | 18056 | `()` | Monthly heatmap calendar |
+| `renderCalendarHeatmap()` | 18056 | `()` | Monthly heatmap (V2: 8 statuses incl. deficit_gym, gym_only) |
+| `showDayDetails(dateStr)` | ~18200 | `(dateStr)` | Day detail drill-down modal |
 | `renderAchievements()` | ~18350 | `()` | Badges gallery tab |
 
-## Initialization (18530-18912)
+## V2 Progress Enhancements (18243-18913)
 
 | Function | Line | Signature | Purpose |
 |----------|------|-----------|---------|
-| `initializeUI()` | 18534 | `async ()` | Main UI init + day rollover |
-| `autoStartDay()` | 18583 | `async ()` | Auto-setup using ecosystem |
-| `showManualSetup()` | 18641 | `()` | Manual setup override |
-| `checkAndResetDayIfNeeded()` | ~18730 | `()` | Midnight day change |
+| `renderDailySnapshot()` | 18243 | `()` | Today's real-time progress vs yesterday comparison |
+| `renderWorkoutStats()` | 18317 | `()` | All-time workout analytics (total, avg/week, avg duration, best streak) |
+| `renderMacroTimingAnalysis()` | 18400 | `()` | Protein distribution across 4 time windows, evenness 0-100 (ISSN) |
+| `renderDeficitSustainability()` | 18554 | `()` | Deficit consistency via coefficient of variation, yo-yo detection, sparkline |
+| `renderRecompPredictor()` | 18693 | `()` | Fat/lean projection at 4/8 weeks, June 1 goal (Longland et al., Mifflin-St Jeor) |
+| `refreshProgressIfActive()` | 18914 | `()` | Auto-refresh progress tab after data changes |
 
-## Data Integrity (18913-19031)
+## Initialization (18931-20000)
 
 | Function | Line | Signature | Purpose |
 |----------|------|-----------|---------|
-| `checkStorageHealth()` | ~18915 | `()` | Verify localStorage integrity |
-| `verifyDayLogIntegrity()` | ~18950 | `()` | Check dailyLog structure |
-| `auditRecentDailyLogs()` | ~18990 | `()` | Audit last 7 days of logs |
+| `initializeUI()` | ~18940 | `async ()` | Main UI init + day rollover |
+| `autoStartDay()` | ~18990 | `async ()` | Auto-setup using ecosystem |
+| `showManualSetup()` | ~19050 | `()` | Manual setup override |
+| `checkAndResetDayIfNeeded()` | ~19140 | `()` | Midnight day change |
+
+## Data Integrity (19300-20158)
+
+| Function | Line | Signature | Purpose |
+|----------|------|-----------|---------|
+| `checkStorageHealth()` | ~19300 | `()` | Verify localStorage integrity |
+| `verifyDayLogIntegrity()` | ~19350 | `()` | Check dailyLog structure |
+| `auditRecentDailyLogs()` | ~19400 | `()` | V2: Cross-checks status against determineDayStatus() |

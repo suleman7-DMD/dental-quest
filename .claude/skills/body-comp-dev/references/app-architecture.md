@@ -1,7 +1,7 @@
 # App Architecture
 
 ## Table of Contents
-- [File: `body-comp-tracker.html` (19,034 lines)](#file-body-comp-trackerhtml-19034-lines)
+- [File: `body-comp-tracker.html` (20,158 lines)](#file-body-comp-trackerhtml-19034-lines)
 - [File Layout](#file-layout)
 - [Initialization Sequence](#initialization-sequence)
 - [Global Variables](#global-variables)
@@ -12,7 +12,7 @@
   - [Save Chain](#save-chain)
   - [Deep Copy for Daily Logs](#deep-copy-for-daily-logs)
 
-## File: `body-comp-tracker.html` (19,034 lines)
+## File: `body-comp-tracker.html` (20,158 lines)
 
 Single-file HTML app with no build system. Dark theme, responsive mobile-first design.
 
@@ -49,12 +49,17 @@ Single-file HTML app with no build system. Dark theme, responsive mobile-first d
 | 16110-16209 | Firebase init, PIN auth (`initFirebase`, `setupUserAuth`, `promptForPin`, `skipPin`) |
 | 16211-16635 | Ecosystem data integration (`loadEcosystemData`, stim calc reader, dental quest reader, d3 roadmap reader, sleep debt calculator, stimulant effect calculator) |
 | 16636-16975 | Gamification system (LEVEL_THRESHOLDS, XP_REWARDS, ACTIVITY_MULTIPLIERS, renderXPBar, awardXP, updateStreak, checkDayCompletion, checkAchievements, unlockAchievement, showCelebration, triggerConfetti) |
-| 16976-17527 | Progress tab (renderProgressTab dispatches to 12 sub-renderers) |
-| 17528-18051 | Progress enhancements (renderWeeklyReportCard, renderPersonalRecords, renderConsistencyScore, renderSleepPerformanceInsight, renderAchievementProgress, renderLifetimeStats) |
-| 18052-18529 | Calendar heatmap + badges tab (renderCalendarHeatmap, renderAchievements) |
-| 18530-18650 | Initialization (initializeUI, autoStartDay, showManualSetup) |
-| 18651-18912 | Event listeners (beforeunload, visibilitychange, keydown, modal clicks, end-of-day auto-save) |
-| 18913-19031 | Data integrity checks (checkStorageHealth, verifyDayLogIntegrity, auditRecentDailyLogs) + DOMContentLoaded |
+| 16976-17527 | Progress tab (renderProgressTab dispatches to 15+ sub-renderers, V2 expanded) |
+| 17528-17711 | Progress enhancements (renderWeeklyReportCard V2 margin scoring, renderPersonalRecords, renderConsistencyScore V2 rich analytics, renderSleepPerformanceInsight, renderAchievementProgress, renderLifetimeStats) |
+| 17712-18051 | **V2**: aggregateDailyLogs() shared data source |
+| 18052-18242 | Calendar heatmap (V2: 8 statuses incl. deficit_gym, gym_only) + badges tab |
+| 18243-18399 | **V2**: renderDailySnapshot(), renderWorkoutStats() |
+| 18400-18553 | **V2**: renderMacroTimingAnalysis() (ISSN protein timing) |
+| 18554-18692 | **V2**: renderDeficitSustainability() (CV, yo-yo detection) |
+| 18693-18913 | **V2**: renderRecompPredictor() (Longland et al., Mifflin-St Jeor) |
+| 18914-18930 | **V2**: refreshProgressIfActive() |
+| 18931-19100 | Initialization (initializeUI, autoStartDay, showManualSetup), event listeners |
+| 19100-20158 | Data integrity checks (V2: enhanced audit with determineDayStatus cross-check) + DOMContentLoaded |
 
 ## Initialization Sequence
 

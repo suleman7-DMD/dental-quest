@@ -17,10 +17,10 @@ globs:
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
 metadata:
   author: Sully
-  version: 1.0.0
+  version: 2.0.0
   file: body-comp-tracker.html
-  lines: ~19034
-  last-verified: 2026-02-13
+  lines: ~20158
+  last-verified: 2026-02-14
 ---
 
 # Body Comp Tracker Development Patterns
@@ -62,7 +62,7 @@ Read the APP OVERVIEW and KEY CONCEPTS below. Determine which subsystem is relev
 
 ### Step 2: Find the exact function and line number
 Use the QUICK REFERENCE table below or [references/function-map.md](references/function-map.md) for the full 237-function index.
-All line numbers are verified against the actual 19,034-line file.
+All line numbers are verified against the actual 20,158-line file.
 
 ### Step 3: Read the code before changing it
 This is a single 19,034-line HTML file. Always read the target function and 50 lines of surrounding context before editing. Never write blind.
@@ -229,7 +229,7 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Track calories, protein, workouts, weight, and body composition for a dental student's cut to 170 lbs by June 2026. Integrates with 3 other apps via Firebase for stimulant-aware eating guidance.
 
-**File:** `body-comp-tracker.html` (19,034 lines, single file, no build system)
+**File:** `body-comp-tracker.html` (20,158 lines, single file, no build system)
 
 **File Layout:**
 | Range | Content |
@@ -241,6 +241,7 @@ This app uses the same Firebase patterns as all Sully apps.
 | 7877-8079 | Utility functions, Eastern timezone helpers |
 | 8080-8256 | Core algorithms (TDEE, mode, targets) |
 | 8257-8552 | Date-based calculations, UI helpers |
+| 8387-8560 | **V2 shared infrastructure**: determineDayStatus(), calculateDayCalScore/ProteinScore/DeficitScore(), recalculateAllDayLogs() |
 | 8553-9363 | Simple View rendering, schedule/exam cards |
 | 9364-10163 | Stimulant modeling, nudges, status |
 | 10164-11174 | Meal/workout rendering and editing |
@@ -254,11 +255,16 @@ This app uses the same Firebase patterns as all Sully apps.
 | 15562-16109 | Checkpoint system (create/restore/export/import) |
 | 16110-16635 | Firebase init, PIN auth, ecosystem data integration |
 | 16636-16975 | Gamification (XP, levels, streaks, achievements) |
-| 16976-17527 | Progress tab (12 sub-renderers) |
-| 17528-18051 | Progress enhancements (report card, records, consistency) |
-| 18052-18529 | Calendar heatmap, badges tab |
-| 18530-18912 | Initialization, day management, event listeners |
-| 18913-19031 | Data integrity checks, DOMContentLoaded |
+| 16976-17711 | Progress tab (12 sub-renderers + aggregateDailyLogs) |
+| 17712-18051 | **V2 aggregation**: aggregateDailyLogs(start, end) |
+| 18052-18242 | Calendar heatmap (8 statuses including deficit_gym, gym_only) |
+| 18243-18399 | **V2 progress**: renderDailySnapshot(), renderWorkoutStats() |
+| 18400-18553 | **V2 analytics**: renderMacroTimingAnalysis() (ISSN protein timing) |
+| 18554-18692 | **V2 analytics**: renderDeficitSustainability() (CV, yo-yo detection) |
+| 18693-18913 | **V2 analytics**: renderRecompPredictor() (Longland et al., Mifflin-St Jeor) |
+| 18914-18930 | refreshProgressIfActive() |
+| 18931-19100 | Initialization, day management, event listeners |
+| 19100-20158 | Data integrity checks (enhanced audit), badges tab, DOMContentLoaded |
 
 ---
 
@@ -350,8 +356,20 @@ let pinValidated = false;        // line 7634
 | `loadEcosystemData(pin)` | 16211 | Cross-app reads from stim calc, dental quest, d3 roadmap |
 | `autoStartDay()` | 18583 | Auto-setup day from ecosystem data |
 | `initializeUI()` | 18534 | Main UI init, handles day rollover |
-| `renderProgressTab()` | 16980 | Renders all 12 progress sub-sections |
-| `renderCalendarHeatmap()` | 18056 | Monthly calendar with day status colors |
+| `determineDayStatus(...)` | 8387 | **V2** Shared status logic (8 statuses), single source of truth |
+| `calculateDayCalScore(...)` | 8416 | **V2** Margin-based calorie score 0-100 (USDA HEI) |
+| `calculateDayProteinScore(...)` | 8440 | **V2** Margin-based protein score 0-100 |
+| `calculateDayDeficitScore(...)` | 8457 | **V2** Margin-based deficit score 0-100 |
+| `recalculateAllDayLogs()` | 8561 | **V2** Batch migration for historical dailyLogs |
+| `aggregateDailyLogs(start, end)` | 17712 | **V2** Shared data source for calendar + progress |
+| `renderDailySnapshot()` | 18243 | **V2** Today's real-time progress vs yesterday |
+| `renderWorkoutStats()` | 18317 | **V2** All-time workout analytics |
+| `renderMacroTimingAnalysis()` | 18400 | **V2** Protein distribution across 4 time windows (ISSN) |
+| `renderDeficitSustainability()` | 18554 | **V2** Deficit consistency via coefficient of variation |
+| `renderRecompPredictor()` | 18693 | **V2** Fat/lean projection (Longland et al., Mifflin-St Jeor) |
+| `refreshProgressIfActive()` | 18914 | **V2** Auto-refresh progress tab after data changes |
+| `renderProgressTab()` | 16980 | Renders all progress sub-sections (V2: 15+ renderers) |
+| `renderCalendarHeatmap()` | 18056 | Monthly calendar (V2: 8 statuses incl. deficit_gym, gym_only) |
 | `awardXP(amount, reason)` | 16753 | XP award with level-up check |
 | `updateStreak()` | 16772 | Daily completion streak |
 | `checkDayCompletion()` | 16808 | Check calorie/protein targets, award XP |

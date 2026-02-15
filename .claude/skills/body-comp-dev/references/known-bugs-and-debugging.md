@@ -26,6 +26,16 @@
   - [`verifyDayLogIntegrity()` -- Line ~18950](#verifydaylogintegrity--line-18950)
   - [`auditRecentDailyLogs()` -- Line ~18990](#auditrecentdailylogs--line-18990)
 
+## Fixed Bugs (V2)
+
+### Bug Fixed: `getTDEEForDate()` Operator Precedence — Line 8328
+**Fixed in V2.** Parentheses were missing around addition, causing incorrect TDEE calculation for historical dates.
+
+### Bug Fixed: Status Divergence Across 3 Code Paths
+**Fixed in V2.** `saveDayLog()`, `recalculateDayLog()`, and `saveDayLogWithSnapshot()` had divergent inline status logic. All 3 now use shared `determineDayStatus()` (line 8387).
+
+---
+
 ## Known Bugs (Unpatched)
 
 ### Bug 1: `skipPin()` Missing Guard Flags — Line 16624

@@ -268,10 +268,14 @@ state = {
     tdee: 2500,
     deficit: 650,
     perfect: false,
-    status: 'good',           // 'perfect' | 'good' | 'partial' | 'over' | 'missed'
+    status: 'good',           // V2: 'perfect' | 'deficit_gym' | 'good' | 'gym_only' | 'partial' | 'over' | 'missed' | 'no_data'
     calHit: true,
     proteinHit: true,
     carbsHit: false,
+    // V2 fields (added by determineDayStatus + scoring functions):
+    calScore: 85,              // 0-100 margin-based score (USDA HEI)
+    proteinScore: 92,          // 0-100 margin-based score
+    deficitScore: 78,          // 0-100 margin-based score
     // Context
     mode: 'GREEN',
     sleepHours: 7,
