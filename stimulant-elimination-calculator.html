@@ -4301,9 +4301,6 @@
             const hoursUntilClearance = (sleepTime - now) / 60;
             const applyCircadianConstraints = hoursUntilClearance < 18;
 
-            // DEBUG: Log to verify fix is active
-            console.log('🔧 CIRCADIAN FIX v2: sleepTime=' + sleepTime + ', now=' + now + ', hoursUntil=' + hoursUntilClearance.toFixed(1) + ', applyCircadian=' + applyCircadianConstraints);
-
             let sleepTimeNormalized = sleepTime;
             if (sleepTime < timeToMinutes(state.wakeTime)) {
                 sleepTimeNormalized = sleepTime + 24 * 60;
@@ -5922,7 +5919,6 @@
             // Values above this indicate calculation error or edge case
             const MAX_REALISTIC_SLEEP = 14;
             if (sleepHours > MAX_REALISTIC_SLEEP) {
-                console.warn(`Sleep hours (${sleepHours.toFixed(1)}) exceeds realistic cap, capping to ${MAX_REALISTIC_SLEEP}`);
                 sleepHours = MAX_REALISTIC_SLEEP;
             }
 
@@ -9410,7 +9406,6 @@
             })
             .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
-                console.log('✅ Saved to Firebase, version:', state._version);
             })
             .catch(error => {
                 console.error('❌ Firebase save error:', error);
@@ -9492,17 +9487,14 @@
 
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
-                        console.log('✅ Loaded real data from Firebase');
                     } else {
                         // No Firebase data - check if we have local data
                         const hasLocalData = hasRealData(state);
                         if (hasLocalData) {
                             state._dataLoaded = true;
-                            console.log('✅ Have local data, using it');
                         } else {
                             // Fresh start - no data anywhere
                             state._dataLoaded = true;  // Allow saves after user starts entering data
-                            console.log('ℹ️ Fresh start - no data anywhere');
                         }
                         updateSyncStatus('connected', 'Connected');
                     }
@@ -9515,7 +9507,6 @@
 
                     // NOW we can allow saves
                     isInitialLoad = false;
-                    console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
@@ -9527,7 +9518,6 @@
                         state._dataLoaded = true;
                         hasLoadedFromCloud = true;  // Allow saves with local data
                         isInitialLoad = false;
-                        console.log('⚠️ Firebase failed but have local data - allowing saves');
                     }
                 });
         }
@@ -9592,7 +9582,6 @@
 
                 // Skip during initial load (we handle this separately)
                 if (isInitialLoad) {
-                    console.log('⏭️ Realtime: Skipping during initial load');
                     return;
                 }
 
@@ -9600,7 +9589,6 @@
 
                 // Skip if cloud data is empty
                 if (!data || !data.state || isEmptyState(data.state)) {
-                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
                     return;
                 }
 
@@ -10287,7 +10275,6 @@
 
                             // GUARD: Skip empty cloud data
                             if (!data || !data.state || isEmptyState(data.state)) {
-                                console.warn('⚠️ Visibility refresh: Ignoring empty cloud data');
                                 return;
                             }
 
@@ -11192,7 +11179,6 @@ Current status at ${currentTime}:
             setTimeout(() => {
                 if (state.projectedSleepTime) {
                     saveState();
-                    console.log('💾 Initial projectedSleepTime saved:', state.projectedSleepTime);
                 }
             }, 1000);
 

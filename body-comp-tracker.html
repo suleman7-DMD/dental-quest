@@ -8807,7 +8807,6 @@
         function calculateMode(sleepHours, isBrainDay) {
             // All-nighter mode forces ORANGE (maintenance) regardless of sleep
             if (state.ecosystemContext?.stimulant?.allNighterMode === true) {
-                console.log('⚠️ All-nighter mode active - forcing ORANGE');
                 return 'ORANGE';
             }
 
@@ -9175,7 +9174,6 @@
             if (migratedCount > 0) {
                 state._v2StatusMigrated = true;
                 saveState();
-                console.log(`✅ V2 status migration: recalculated ${migratedCount} daily logs`);
                 showToast(`Upgraded ${migratedCount} days with new scoring system`);
             }
         }
@@ -9311,7 +9309,6 @@
             const freshTDEE = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
             const freshTargets = calculateTargets(mode, freshTDEE, state.profile.currentWeight_lbs, state.today.isBrainDay);
             if (Math.abs(freshTargets.calories - targets.calories) > 100) {
-                console.warn(`⚠️ Stale targets detected: ${targets.calories} → ${freshTargets.calories} (TDEE: ${freshTDEE})`);
                 state.today.targets = freshTargets;
                 targets = freshTargets;
                 saveState();
@@ -10005,7 +10002,6 @@
                     severity
                 };
 
-                console.log('😴 Sleep debt calculated:', state.ecosystemContext.sleepDebt);
                 return state.ecosystemContext.sleepDebt;
 
             } catch (error) {
@@ -10099,7 +10095,6 @@
                     dismissed: false
                 };
 
-                console.log(`⚠️ Sleep debt warning set (${sleepDebt.severity}):`, state.today.sleepDebtWarning.message);
             }
 
             // Note: Mode is NO LONGER forced. User's last night sleep determines mode.
@@ -10154,7 +10149,6 @@
                 state.today.targets.calories = Math.round(baseCalories * multiplier);
                 state.today.targets.calorieMultiplier = multiplier;
                 state.today.targets.multiplierReason = reason;
-                console.log(`📝 Exam stress multiplier applied: ${multiplier}x (${reason})`);
             }
         }
 
@@ -15641,7 +15635,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             if (!hasRemote && !hasLocal) {
                 // Both empty - return defaults from state initialization
-                console.warn('⚠️ Both local and remote frequentFoods empty - using defaults');
                 return getDefaultFrequentFoods();
             }
             if (!hasRemote) return localObj;
@@ -15990,7 +15983,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             })
             .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
-                console.log('✅ Saved to Firebase, version:', state._version);
             })
             .catch(error => {
                 console.error('Firebase save error:', error);
@@ -16057,7 +16049,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                         // FIX: If frequentFoods is empty after merge, populate with defaults
                         if (getCount(state.frequentFoods) === 0) {
-                            console.warn('⚠️ frequentFoods empty after Firebase merge - populating defaults');
                             state.frequentFoods = getDefaultFrequentFoods();
                         }
 
@@ -16101,19 +16092,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
-                        console.log('✅ Loaded real data from Firebase');
                     } else {
                         // No Firebase data - check if we have local data
                         const hasLocalData = hasRealData(state);
                         if (hasLocalData) {
                             // We have local data but no cloud data - push to cloud
                             state._dataLoaded = true;
-                            console.log('✅ Have local data, pushing to cloud');
                             updateSyncStatus('connected', 'Connected');
                             // Don't call saveToFirebase here - let user actions trigger it
                         } else {
                             // Fresh start - no data anywhere
-                            console.log('ℹ️ Fresh start - no data anywhere');
                             state._dataLoaded = true;  // Allow saves after user starts entering data
                             updateSyncStatus('connected', 'Connected');
                         }
@@ -16128,7 +16116,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     // NOW we can allow saves
                     isInitialLoad = false;
-                    console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
                     console.error('Firebase load error:', error);
@@ -16152,17 +16139,14 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // Retry Firebase connection after 5 seconds
                     setTimeout(() => {
                         if (firebaseSyncEnabled && database && userPath) {
-                            console.log('🔄 Retrying Firebase connection...');
                             database.ref(userPath).once('value')
                                 .then(snapshot => {
                                     const data = snapshot.val();
                                     if (data && data.state && !isEmptyState(data.state)) {
-                                        console.log('✅ Firebase reconnected - merging cloud data');
-                                        // Re-run the full load to merge properly
+                                                    // Re-run the full load to merge properly
                                         loadFromFirebase();
                                     } else {
                                         updateSyncStatus('connected', 'Connected');
-                                        console.log('✅ Firebase reconnected - no cloud data to merge');
                                         setupRealtimeSync();
                                     }
                                 })
@@ -16192,7 +16176,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 // Skip during initial load (we handle this separately)
                 if (isInitialLoad) {
-                    console.log('⏭️ Realtime: Skipping during initial load');
                     return;
                 }
 
@@ -16200,7 +16183,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                 // Skip if cloud data is empty
                 if (!data || !data.state || isEmptyState(data.state)) {
-                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
                     return;
                 }
 
@@ -16218,7 +16200,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     const cloudVersion = firebaseState._version || 0;
 
                     if (localVersion > cloudVersion) {
-                        console.log('Realtime sync: local version newer, skipping merge');
                         return;
                     }
 
@@ -16298,7 +16279,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     if (localVersion > cloudVersion) {
                         // Local is newer - push to cloud
-                        console.log('Local version newer, pushing to cloud');
                         saveToFirebase();
                         updateSyncStatus('connected', 'Pushed local ✓');
                         return;
@@ -16418,7 +16398,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     list: checkpoints,
                     lastUpdated: new Date().toISOString()
                 });
-                console.log('✅ Checkpoints synced to Firebase');
             } catch (err) {
                 console.error('Checkpoint sync failed:', err);
             }
@@ -16447,7 +16426,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     const final = merged.slice(0, 10);
 
                     safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(final));
-                    console.log('✅ Checkpoints loaded from Firebase');
                 }
             } catch (err) {
                 console.error('Failed to load checkpoints from Firebase:', err);
@@ -17051,16 +17029,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // FIX: Check if all-nighter mode is active
                     const isAllNighterMode = stimData.allNighterMode === true;
 
-                    // Log for debugging
-                    console.log('📊 Stimulant data loaded:', {
-                        sleepHours: stimData.hoursSleptLastNight,
-                        wakeTime: stimData.wakeTime,
-                        projectedSleepTime: projectedSleep,
-                        totalDose: totalDose,
-                        totalCaffeine: totalCaffeine,
-                        allNighterMode: isAllNighterMode
-                    });
-
                     state.ecosystemContext.stimulant = {
                         sleepHours: stimData.hoursSleptLastNight || null,
                         wakeTime: stimData.wakeTime || null,
@@ -17093,14 +17061,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     const refill30 = questMeds.adderall30?.refillDate || questMeds['30mg']?.refillDate || null;
                     const refill20 = questMeds.adderall20?.refillDate || questMeds['20mg']?.refillDate || null;
 
-                    // Log for debugging
-                    console.log('💊 Dental Quest medications loaded:', {
-                        pills30mg: pills30,
-                        pills20mg: pills20,
-                        refill30mg: refill30,
-                        refill20mg: refill20,
-                        rawData: questMeds
-                    });
+
 
                     // Use whichever refill date is set (usually the same)
                     const refillDate = refill30 || refill20;
@@ -17175,8 +17136,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     applyExamStressMultiplier();
                 }
 
-                console.log('✅ Ecosystem data loaded:', state.ecosystemContext);
-
                 // Ecosystem data is now loaded - UI will be rendered by loadFromFirebase callback
 
             } catch (error) {
@@ -17202,7 +17161,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Refresh every 60 seconds
             ecosystemRefreshInterval = setInterval(async () => {
                 if (document.visibilityState === 'visible') {
-                    console.log('🔄 Periodic ecosystem refresh...');
                     await loadEcosystemData(hashedPin);
                     // Re-render if on simple view
                     const simpleView = document.getElementById('simpleView');
@@ -17212,7 +17170,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
             }, 60000); // 60 seconds
 
-            console.log('✅ Ecosystem refresh started (60s interval)');
         }
 
         function stopEcosystemRefresh() {
@@ -17243,7 +17200,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (oldProjected && newProjected && newProjected !== oldProjected) {
                     // Sleep time changed - show warning
                     showToast(`⚠️ Sleep pushed: ${oldProjected} → ${newProjected}`);
-                    console.log(`⚠️ Stim calc update: Sleep ${oldProjected} → ${newProjected}`);
                 }
 
                 // Check for new all-nighter mode activation
@@ -17281,13 +17237,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 // Re-render if on simple view
                 const simpleView = document.getElementById('simpleView');
                 if (simpleView && simpleView.classList.contains('active')) {
-                    console.log('🔄 Re-rendering simple view due to stim calc update');
                     renderSimpleView();
                 }
             });
 
             stimulantRealtimeListenerActive = true;
-            console.log('✅ Stimulant realtime listener active');
         }
 
         // Helper: Parse date string as local date (avoid UTC issues)
@@ -17308,7 +17262,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const plannerData = plannerSnapshot.val();
 
                 if (!plannerData) {
-                    console.log('📅 No monthly planner data found');
                     return;
                 }
 
@@ -17376,8 +17329,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     scheduleIntensity,
                     lastSynced: now
                 };
-
-                console.log('📅 Schedule loaded:', state.ecosystemContext.schedule);
 
             } catch (error) {
                 console.error('❌ Error loading schedule:', error);
@@ -21087,7 +21038,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 deficit = tdee - calories;
 
                 // Auto-fix the stored log
-                console.log(`Auto-fixing dailyLog for ${dateStr}: calories=${calories}, protein=${protein}`);
                 recalculateDayLog(dateStr);
             }
 
@@ -21479,12 +21429,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Save state
             saveState();
 
-            console.log('✅ Auto-started day:', {
-                date: state.today.date,
-                sleepHours: state.today.sleepHours,
-                mode: state.today.mode,
-                targets: state.today.targets
-            });
         }
 
         // Show manual setup screen (optional override)
@@ -21591,8 +21535,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 msUntilEndOfDay = endOfDay - now;
             }
 
-            console.log(`📅 End-of-day save scheduled in ${Math.round(msUntilEndOfDay / 60000)} minutes`);
-
             setTimeout(() => {
                 // Save comprehensive day log at end of day
                 saveDayLogWithSnapshot();
@@ -21613,8 +21555,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Only reset if date has actually changed
             if (state.today.date && state.today.date !== todayStr) {
-                console.log('🌅 Midnight detected - auto-resetting for new day');
-
                 // Reset today's data for new day
                 state.today = {
                     date: todayStr,
@@ -21658,8 +21598,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const todayStr = getLocalDateString();
 
             if (state.today.date && state.today.date !== todayStr) {
-                console.log('📅 Date mismatch detected:', state.today.date, '→', todayStr);
-
                 const previousDate = state.today.date;
 
                 // Save yesterday's data if setup was complete and has meals
@@ -21670,7 +21608,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 // 1c. Verify the previous day's log was actually saved
                 // If dailyLogs is empty for previousDate but state.today had data, force save
                 if (previousDate && !state.dailyLogs[previousDate] && (getCount(state.today.meals) > 0 || state.today.setupComplete)) {
-                    console.warn(`🔧 Previous day ${previousDate} log missing — forcing save`);
                     saveDayLogWithSnapshot();
                 }
 
@@ -21749,7 +21686,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             };
 
             saveStateImmediate();
-            console.log(`✅ End-of-day snapshot saved for ${todayStr}`);
         }
 
         // ============================================
@@ -21771,17 +21707,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
                 const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
 
-                console.log(`💾 Storage Health: Body Comp = ${stateSizeMB}MB (${stateSizeKB}KB), Total localStorage = ${totalMB}MB / 5MB`);
-
                 // Warn at 4MB total usage
                 if (totalBytes > 4 * 1024 * 1024) {
-                    console.warn('⚠️ localStorage approaching 5MB limit!');
                     showToast('⚠️ Storage nearly full — consider exporting a backup', 5000);
                 }
 
                 // Log daily log count for diagnostics
                 const logCount = Object.keys(state.dailyLogs || {}).length;
-                console.log(`📊 Daily logs stored: ${logCount} days`);
 
                 return { stateSizeKB, totalMB: parseFloat(totalMB), logCount };
             } catch (e) {
@@ -21805,7 +21737,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const proMismatch = Math.abs((log.protein || 0) - recalcProtein) > 1;
 
             if (calMismatch || proMismatch) {
-                console.warn(`🔧 Data integrity mismatch for ${dateStr}: stored cal=${log.calories} vs meals=${recalcCalories}, stored pro=${log.protein} vs meals=${recalcProtein}`);
                 recalculateDayLog(dateStr);
                 return false; // Was corrected
             }
@@ -21838,7 +21769,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         );
 
                         if (log.status !== recalcStatus || log.calHit !== recalcCalHit || log.proteinHit !== recalcProteinHit) {
-                            console.log(`🔧 Status mismatch for ${dateStr}: stored=${log.status} vs calc=${recalcStatus}, calHit: ${log.calHit}→${recalcCalHit}, proteinHit: ${log.proteinHit}→${recalcProteinHit}`);
                             recalculateDayLog(dateStr);
                             fixCount++;
                         }
@@ -21852,7 +21782,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     // If has meals but calories=0, recalculate
                     if (mealsArr.length > 0 && (!log.calories || log.calories === 0)) {
-                        console.log(`🔧 Auto-fixing empty totals for ${dateStr} (${mealsArr.length} meals found)`);
                         recalculateDayLog(dateStr);
                         fixCount++;
                     }
@@ -21891,7 +21820,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             setInterval(() => {
                 if (state.today?.setupComplete && !isInitialLoad && hasLoadedFromCloud && state._dataLoaded) {
                     saveDayLog();
-                    console.log('⏰ Periodic auto-save completed');
                 }
             }, 5 * 60 * 1000);
 

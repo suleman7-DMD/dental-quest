@@ -9175,17 +9175,14 @@ CHAIR: 9F
                 isFirebaseConnected = snapshot.val() === true;
 
                 if (isFirebaseConnected) {
-                    console.log('🟢 Firebase connected');
                     updateSyncStatus('connected', 'Connected');
 
                     // If we just reconnected (NOT initial load), sync data
                     // FIX: Added !isInitialLoad guard to prevent auto-sync racing with loadFromFirebase()
                     if (!wasConnected && firebaseSyncEnabled && userPath && !isInitialLoad) {
-                        console.log('🔄 Reconnected - syncing data...');
                         forceCloudSync();
                     }
                 } else {
-                    console.log('🔴 Firebase disconnected');
                     updateSyncStatus('offline', 'Offline');
                 }
             });
@@ -9223,7 +9220,6 @@ CHAIR: 9F
 
             try {
                 safeLocalStorageSet(BACKUP_STORAGE_KEY, JSON.stringify(backups));
-                console.log('📦 Backup created:', reason, backup.id);
                 return backup.id;
             } catch (e) {
                 console.error('Failed to save backup:', e);
@@ -9440,8 +9436,7 @@ CHAIR: 9F
         function initFirebase() {
             // FALLBACK: Ensure UI loads within 3 seconds no matter what
             const fallbackTimer = setTimeout(() => {
-                console.warn('⚠️ Firebase timeout - forcing UI init');
-                if (!document.getElementById('currentDateDisplay').textContent || 
+                if (!document.getElementById('currentDateDisplay').textContent ||
                     document.getElementById('currentDateDisplay').textContent === 'Loading...') {
                     loadFromLocalStorage();
                 }
@@ -9493,7 +9488,6 @@ CHAIR: 9F
 
             // CRITICAL: Mark PIN as validated BEFORE any Firebase operations
             pinValidated = true;
-            console.log('✅ PIN validated - Firebase path:', userPath);
 
             updateSyncStatus('syncing', 'Syncing...');
 
@@ -9589,7 +9583,6 @@ CHAIR: 9F
                                 }
                                 delete data[field][key];
                                 migrated = true;
-                                console.log(`🔧 Migrated invalid key in ${field}: "${key}" → "${safeKey}"`);
                             }
                         }
                     });
@@ -9840,7 +9833,6 @@ CHAIR: 9F
                 hasLoadedFromCloud = true;  // We've "checked" cloud (or decided not to use it)
                 isInitialLoad = false;      // Initial load is complete
                 lastSyncTimestamp = Date.now(); // FIX: Initialize so conflict detection works on first Sync click
-                console.log('✅ Loaded from localStorage (finalized) - saves now allowed');
                 initUI();
             }
         }
@@ -9897,12 +9889,10 @@ CHAIR: 9F
                         // Also save to localStorage as backup
                         safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
                         updateSyncStatus('connected', 'Synced');
-                        console.log('✅ Loaded real data from Firebase');
                     } else {
                         // No Firebase data - check if we have local data
                         // Pass false to skip finalize - we handle flags/initUI below
                         loadFromLocalStorage(false);
-                        console.log('ℹ️ No Firebase data, using localStorage (if any)');
                         updateSyncStatus('connected', 'Synced');
                     }
 
@@ -9920,7 +9910,6 @@ CHAIR: 9F
                     // NOW we can allow saves
                     isInitialLoad = false;
                     lastSyncTimestamp = Date.now(); // FIX: Initialize so conflict detection works on first Sync click
-                    console.log('✅ Initial load complete - saves now allowed');
                 })
                 .catch(error => {
                     console.error('❌ Firebase load error:', error);
@@ -9950,26 +9939,22 @@ CHAIR: 9F
 
                 // FIX 4: Skip processing if this is a local update
                 if (isLocalUpdate) {
-                    console.log('⏭️ Skipping realtime update (local save in progress)');
                     return;
                 }
 
                 // FIX: Skip during "Keep This Device" grace period to prevent
                 // cloud echo from overwriting local data before write completes
                 if (Date.now() - lastKeepLocalTime < KEEP_LOCAL_GRACE_MS) {
-                    console.log('⏭️ Skipping realtime update (Keep This Device grace period)');
                     return;
                 }
 
                 // Skip during initial load (we handle this separately)
                 if (isInitialLoad) {
-                    console.log('⏭️ Realtime: Skipping during initial load');
                     return;
                 }
 
                 // Skip if cloud data is empty
                 if (isEmptyState(data)) {
-                    console.warn('⚠️ Realtime: Ignoring empty cloud update');
                     return;
                 }
 
@@ -10391,16 +10376,12 @@ CHAIR: 9F
                     delete cleanCheckpoint.data._dataLoaded;
                 }
                 database.ref(cloudCheckpointPath).set(cleanCheckpoint)
-                    .then(() => {
-                        console.log('☁️ Checkpoint saved to cloud:', checkpoint.id);
-                    })
                     .catch(err => {
                         console.error('Failed to save checkpoint to cloud:', err);
                     });
             }
 
             showToast(`✅ Checkpoint created: ${name}`);
-            console.log('Checkpoint created:', checkpoint.id, checkpoint.dataCount);
 
             return checkpoint;
         }
@@ -10576,9 +10557,6 @@ CHAIR: 9F
             // FIXED: Also delete from Firebase
             if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
                 database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
-                    .then(() => {
-                        console.log('☁️ Checkpoint deleted from cloud:', checkpoint.id);
-                    })
                     .catch(err => console.error('Failed to delete cloud checkpoint:', err));
             }
 
@@ -10907,14 +10885,6 @@ CHAIR: 9F
             updateSyncStatus('syncing', 'Uploading...');
 
             try {
-                // Enhanced connection diagnostics
-                console.log('Force upload diagnostics:', {
-                    firebaseSyncEnabled,
-                    hasDatabase: !!database,
-                    userPath,
-                    pinValidated
-                });
-
                 if (!firebaseSyncEnabled) {
                     throw new Error('Firebase sync not enabled. Try refreshing the page.');
                 }
@@ -10933,8 +10903,6 @@ CHAIR: 9F
                 // CRITICAL FIX: Sanitize ALL keys to prevent Firebase InvalidKey throws
                 cleanData = sanitizeFirebaseData(cleanData);
 
-                console.log('Force upload data size:', JSON.stringify(cleanData).length, 'bytes');
-
                 // Set local update flag to prevent realtime listener from processing our own write
                 setLocalUpdateFlag();
 
@@ -10943,12 +10911,8 @@ CHAIR: 9F
                 safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('✅ Force upload complete!');
-                console.log('Force upload complete:', roadmapData._version);
             } catch (err) {
                 console.error('Force upload failed:', err);
-                console.error('Error code:', err.code);
-                console.error('Error message:', err.message);
-                console.error('Data size:', JSON.stringify(roadmapData).length, 'bytes');
                 updateSyncStatus('error', 'Upload failed');
                 // More specific error message
                 const errorMsg = err.message || 'Unknown error';
@@ -10976,13 +10940,6 @@ CHAIR: 9F
 
             try {
                 // Enhanced connection diagnostics
-                console.log('Force pull diagnostics:', {
-                    firebaseSyncEnabled,
-                    hasDatabase: !!database,
-                    userPath,
-                    pinValidated
-                });
-
                 if (!firebaseSyncEnabled) {
                     throw new Error('Firebase sync not enabled. Try refreshing the page.');
                 }
@@ -11007,7 +10964,6 @@ CHAIR: 9F
 
                 updateSyncStatus('connected', 'Pulled ✓');
                 showToast(`✅ Force pull complete! ${getDataCountForCheckpoint(roadmapData)}`);
-                console.log('Force pull complete:', roadmapData._version);
             } catch (err) {
                 console.error('Force pull failed:', err);
                 updateSyncStatus('error', 'Pull failed');
@@ -11024,16 +10980,6 @@ CHAIR: 9F
             // ============================================
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
             // ============================================
-
-            // Diagnostic logging for debugging save issues
-            console.log('💾 saveData() called - Guard status:', {
-                isInitialLoad,
-                hasLoadedFromCloud,
-                _dataLoaded: roadmapData._dataLoaded,
-                firebaseSyncEnabled,
-                pinValidated,
-                isEmpty: isEmptyState(roadmapData)
-            });
 
             // GUARD A: Never save during initial load
             if (isInitialLoad) {
@@ -11112,12 +11058,9 @@ CHAIR: 9F
                         database.ref(userPath).set(cleanData)
                             .then(() => {
                                 updateSyncStatus('connected', 'Synced');
-                                console.log('✅ Saved to Firebase, version:', roadmapData._version);
                             })
                             .catch(error => {
                                 console.error('❌ Firebase save error:', error);
-                                console.error('Error code:', error.code);
-                                console.error('Error message:', error.message);
                                 updateSyncStatus('error', 'Save failed - retrying...');
                                 // Retry once after 2 seconds
                                 setTimeout(() => {
@@ -15812,7 +15755,6 @@ CHAIR: 9F
 
                                 // GUARD: Skip empty cloud data
                                 if (isEmptyState(data)) {
-                                    console.warn('⚠️ Visibility refresh: Ignoring empty cloud data');
                                     return;
                                 }
 
@@ -15875,7 +15817,6 @@ CHAIR: 9F
         setTimeout(() => {
             const dateEl = document.getElementById('currentDateDisplay');
             if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
-                console.warn('⚠️ Forcing UI initialization via fallback');
                 try {
                     initUI();
                 } catch(e) {
@@ -15891,7 +15832,6 @@ CHAIR: 9F
             setTimeout(() => {
                 const dateEl = document.getElementById('currentDateDisplay');
                 if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
-                    console.warn('⚠️ DOMContentLoaded fallback triggered');
                     try { initUI(); } catch(e) { console.error('DOMContentLoaded initUI failed:', e); }
                 }
             }, 1000);

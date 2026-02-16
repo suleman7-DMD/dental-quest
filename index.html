@@ -12748,7 +12748,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     }
 
                     safeLocalStorageSet('dentalquest_backups', JSON.stringify(backups));
-                    console.log('💾 Backup created');
                 } catch (e) {
                     console.error('Backup failed:', e);
                 }
@@ -13347,7 +13346,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 const cloudCheckpointPath = 'users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id;
                 database.ref(cloudCheckpointPath).set(checkpoint)
                     .then(() => {
-                        console.log('✅ Checkpoint saved to cloud:', checkpoint.id);
                         showToast(`Checkpoint saved: ${name}`, '☁️');
                     })
                     .catch(err => {
@@ -13548,7 +13546,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (firebaseInitialized && currentUser && database && checkpoint.id) {
                 try {
                     await database.ref('users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id).remove();
-                    console.log('Deleted checkpoint from cloud:', checkpoint.id);
                 } catch (err) {
                     console.error('Failed to delete checkpoint from cloud:', err);
                 }
@@ -14131,7 +14128,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         // CRITICAL: Mark initial load as complete - now saves are allowed
                         markInitialLoadComplete();
-                        console.log('✅ Initial load complete - saves now allowed');
 
                         showToast('Data loaded from cloud ☁️', '✅');
                         updateSyncStatus('connected', `Synced (${getCount(tasks)} tasks)`);
@@ -14145,7 +14141,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         updateSyncStatus('connected', 'No cloud data yet');
                         // Mark load complete after localStorage load
                         markInitialLoadComplete();
-                        console.log('✅ Initial load complete (no cloud data) - saves now allowed');
                     }
                 })
                 .catch((error) => {
@@ -14366,7 +14361,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         // Handle coming back online - sync any pending changes
         window.addEventListener('online', function() {
-            console.log('🌐 Back online - checking for pending sync');
             if (localStorage.getItem('dentalQuestOfflineSyncPending') === 'true' || offlineSyncPending) {
                 showToast('📤 Syncing offline changes...', '🔄');
                 // Force a fresh save which will push all current data to Firebase
@@ -14393,14 +14387,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         // Handle going offline
         window.addEventListener('offline', function() {
-            console.log('📴 Gone offline');
             updateSyncStatus('offline', 'Offline - changes saved locally');
         });
 
         // Check on load if there are pending syncs from previous session
         if (localStorage.getItem('dentalQuestOfflineSyncPending') === 'true') {
             offlineSyncPending = true;
-            console.log('⚠️ Pending offline sync detected from previous session');
         }
 
         // Periodic heartbeat save every 2 minutes to ensure data is synced
@@ -14704,7 +14696,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     med.pills -= reduceAmount;
                     med.lastAutoReduceDate = today;
                     changed = true;
-                    console.log(`Auto-reduced ${medType} by ${reduceAmount} pills (${daysDiff} days)`);
                 } else if (daysDiff > 0) {
                     med.lastAutoReduceDate = today;
                     changed = true;
@@ -21231,18 +21222,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         // BULLETPROOF REORDER: Move a task to a specific position (replaces the target position)
         function moveTaskToPosition(draggedId, targetId) {
-            console.log('📦 moveTaskToPosition called:', { draggedId, targetId, isReorderingLocked });
             if (isReorderingLocked) {
-                console.log('⚠️ moveTaskToPosition: Reordering is locked!');
                 return;
             }
             isReorderingLocked = true;
 
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const draggedIndex = scheduledTasks.findIndex(t => String(t.id) === String(draggedId));
             const targetIndex = scheduledTasks.findIndex(t => String(t.id) === String(targetId));
-            console.log('📍 Indices:', { draggedIndex, targetIndex });
 
             if (draggedIndex === -1 || targetIndex === -1) {
                 console.warn('moveTaskToPosition: Invalid task IDs', { draggedId, targetId });
@@ -21251,7 +21238,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 return;
             }
             if (draggedIndex === targetIndex) {
-                console.log('⚠️ Same position - no action needed');
                 isReorderingLocked = false;
                 return;
             }
@@ -21262,8 +21248,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 swapAdjacentTasks(draggedId, targetId);
                 return;
             }
-
-            console.log(`✅ Moving task from position ${draggedIndex} to position ${targetIndex}`);
 
             try {
                 // Create new order array by removing dragged and inserting at target
@@ -21298,9 +21282,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         // SWAP two adjacent tasks (for up/down buttons)
         function swapAdjacentTasks(taskId1, taskId2) {
-            console.log('🔄 swapAdjacentTasks called:', { taskId1, taskId2, isReorderingLocked });
             if (isReorderingLocked) {
-                console.log('⚠️ swapAdjacentTasks: Reordering is locked!');
                 return;
             }
             isReorderingLocked = true;
@@ -21309,12 +21291,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const index1 = scheduledTasks.findIndex(t => String(t.id) === String(taskId1));
             const index2 = scheduledTasks.findIndex(t => String(t.id) === String(taskId2));
 
-            console.log('📍 Indices found:', { index1, index2 });
-
             if (index1 === -1 || index2 === -1) {
-                console.log('❌ swapAdjacentTasks: One or both tasks not found in scheduledTasks');
-                console.log('Tasks object has key taskId1?', tasks.hasOwnProperty(taskId1));
-                console.log('Tasks object has key taskId2?', tasks.hasOwnProperty(taskId2));
                 isReorderingLocked = false;
                 showToast('Error: Task not found', '❌');
                 return;
@@ -21323,12 +21300,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             // Swap the crashOutOrder values
             const order1 = tasks[taskId1]?.crashOutOrder;
             const order2 = tasks[taskId2]?.crashOutOrder;
-            console.log('📊 Current orders:', { order1, order2 });
 
             if (tasks[taskId1] === undefined || tasks[taskId2] === undefined) {
-                console.log('❌ Task objects not found in tasks object!');
-                console.log('tasks[taskId1]:', tasks[taskId1]);
-                console.log('tasks[taskId2]:', tasks[taskId2]);
                 isReorderingLocked = false;
                 showToast('Error: Task data missing', '❌');
                 return;
@@ -21337,10 +21310,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             try {
                 tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
                 tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
-                console.log('✅ Orders swapped:', {
-                    task1NewOrder: tasks[taskId1].crashOutOrder,
-                    task2NewOrder: tasks[taskId2].crashOutOrder
-                });
 
                 recalculateScheduledTimes();
                 renderCrashOutMode();
@@ -21355,70 +21324,52 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         }
 
         function moveTaskUp(taskId) {
-            console.log('🔼 moveTaskUp called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
-            console.log('📍 Task index in scheduledTasks:', index);
             if (index <= 0) {
-                console.log('⚠️ moveTaskUp: Task already at top or not found (index:', index, ')');
                 if (index === -1) showToast('Task not found in schedule', '⚠️');
                 return;
             }
 
             // Swap with previous task
             const targetTaskId = scheduledTasks[index - 1].id;
-            console.log('🔄 Swapping with task:', targetTaskId);
             swapAdjacentTasks(taskId, targetTaskId);
         }
 
         function moveTaskDown(taskId) {
-            console.log('🔽 moveTaskDown called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            console.log('📋 scheduledTasks:', scheduledTasks.map(t => ({ id: t.id, order: t.crashOutOrder })));
             const index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
-            console.log('📍 Task index in scheduledTasks:', index);
             if (index === -1 || index >= scheduledTasks.length - 1) {
-                console.log('⚠️ moveTaskDown: Task already at bottom or not found (index:', index, ', total:', scheduledTasks.length, ')');
                 if (index === -1) showToast('Task not found in schedule', '⚠️');
                 return;
             }
 
             // Swap with next task
             const targetTaskId = scheduledTasks[index + 1].id;
-            console.log('🔄 Swapping with task:', targetTaskId);
             swapAdjacentTasks(taskId, targetTaskId);
         }
 
         // Move task to top of schedule (first position)
         function moveTaskToTop(taskId) {
-            console.log('⬆️⬆️ moveTaskToTop called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            console.log('📋 scheduledTasks count:', scheduledTasks.length);
             if (scheduledTasks.length < 2) {
-                console.log('⚠️ Not enough tasks to reorder');
                 return;
             }
 
             const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
-            console.log('📍 Current index:', currentIndex);
             if (currentIndex <= 0) {
-                console.log('⚠️ Already at top or not found');
                 return;
             }
 
             const firstTaskId = scheduledTasks[0].id;
-            console.log('🔄 Moving to position of first task:', firstTaskId);
             moveTaskToPosition(taskId, firstTaskId);
         }
 
         // Move task to bottom of schedule (last position)
         function moveTaskToBottom(taskId) {
-            console.log('⬇️⬇️ moveTaskToBottom called with taskId:', taskId);
             if (isReorderingLocked) return;
             isReorderingLocked = true;
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-            console.log('📋 scheduledTasks count:', scheduledTasks.length);
             if (scheduledTasks.length < 2) {
                 isReorderingLocked = false;
                 return;
@@ -21472,7 +21423,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         // Prompt user for position
         function promptTaskPosition(taskId) {
-            console.log('# promptTaskPosition called with taskId:', taskId);
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             const currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
             const totalTasks = scheduledTasks.length;
@@ -21503,14 +21453,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         window.handleTimelineDragLeave = handleTimelineDragLeave;
         window.handleTimelineDrop = handleTimelineDrop;
         window.handleTimelineDragEnd = handleTimelineDragEnd;
-        console.log('✅ Crash Out reorder functions registered globally:', {
-            moveTaskUp: typeof window.moveTaskUp,
-            moveTaskDown: typeof window.moveTaskDown,
-            moveTaskToTop: typeof window.moveTaskToTop,
-            moveTaskToBottom: typeof window.moveTaskToBottom,
-            promptTaskPosition: typeof window.promptTaskPosition
-        });
-
         // Helper to parse crash out time string back to Date
         function parseCrashOutTime(timeStr) {
             if (!timeStr) return null;
