@@ -215,6 +215,17 @@ EOD Reset at 5 AM: clears mustComplete flags, resets Focus Mode daily tasks.
 - 2-row task layout with explicit DOM (iOS Safari fix — no flex-wrap)
 - Breakpoints: 1024px, 768px, 480px
 
+### Focus Mode Chrome Hiding
+- `body.focus-active` class added/removed by `switchToFocusMode()`/`switchToFullView()`
+- Hides: cross-app nav, app title, toolbar icons, stat labels
+- Focused-view CSS overrides at ~6145-6700 use `!important`
+
+### Drag-Drop Performance
+- `setTaskTier()` does TARGETED column re-renders, not full `renderFocusMode()`
+- Must call `invalidateTriageCache()` + `_renderFrame++` before targeted renders
+- `getTodayTriageTasks()` uses frame-level cache (`_renderFrame` counter)
+- `escapeHtml()` uses string replacement (no DOM allocation)
+
 ### Historical: Crash Out & Task Ordering
 - Up/down buttons = `swapAdjacentTasks()` (SWAP). Drag-drop = `moveTaskToPosition()` (INSERT).
 - `skipTask()` = dismisses prompt (3-min cooldown). `removeTaskFromSchedule()` = actually removes.
