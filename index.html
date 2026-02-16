@@ -6338,7 +6338,7 @@
         .cc-task-item {
             background: transparent !important;
             border: none !important;
-            border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.10) !important;
             border-radius: 0 !important;
             padding: 5px 4px !important;
             margin-bottom: 0 !important;
@@ -6673,17 +6673,18 @@
 
         .triage-action-btns {
             display: flex !important;
-            gap: 8px !important;
+            gap: 6px !important;
+            margin-top: 4px !important;
         }
 
         .triage-action-btn {
             flex: 1 !important;
             background: transparent !important;
-            border: 1px solid var(--border) !important;
-            color: var(--text-secondary) !important;
-            padding: 8px 12px !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            color: var(--text-muted) !important;
+            padding: 6px 10px !important;
             border-radius: 6px !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             cursor: pointer !important;
             transition: all 0.15s ease !important;
         }
@@ -20262,7 +20263,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const task = tasks[taskId];
             if (!task) return;
 
-            // No limit on LOCKED IN - users can add unlimited tasks
+            const oldTier = task.triageTier || 'today';
 
             // Use spread operator to preserve existing properties
             tasks[taskId] = {
@@ -20278,9 +20279,15 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 delete tasks[taskId].crashOutDuration;
             }
 
-            renderFocusMode();
+            // Targeted re-render: only affected columns + progress
+            invalidateTriageCache();
+            _renderFrame++;
+            renderTriageColumn(tier);
+            if (oldTier !== tier) renderTriageColumn(oldTier);
+            renderScheduledSection();
+            updateAllTriageProgress();
+            updateOverallProgress();
             saveData();
-            showToast(`Moved to ${tier.toUpperCase()}`, '✓');
         }
 
         function sendToCrashOut(taskId) {
@@ -20500,7 +20507,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 tasks[task.id] = { ...tasks[task.id], triageOrder: newOrder };
             });
 
-            renderFocusMode();
+            // Targeted re-render: only the affected column
+            invalidateTriageCache();
+            _renderFrame++;
+            renderTriageColumn(tier);
             saveData();
         }
 
