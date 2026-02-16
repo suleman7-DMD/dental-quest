@@ -10858,7 +10858,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     <div class="container">
         <div class="header" style="padding: 12px 0;">
             <!-- Compact Header Row -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap;">
                 <h1 style="margin: 0; font-size: 1.4em;">🦷 Dental Student Quest</h1>
 
                 <!-- Compact Sync Status -->
@@ -10870,10 +10870,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <button onclick="forcePullFromCloud()" style="padding: 2px 6px; background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; color: #c4b5fd; font-size: 0.8em; cursor: pointer;" title="Force Pull from Cloud">⬇️</button>
                 </div>
 
-                <!-- Compact View Toggle -->
-                <div style="display: flex; gap: 4px;">
-                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.85em; cursor: pointer;" aria-label="Focus Mode">🎯 Focus</button>
-                    <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 6px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.85em; cursor: pointer;" aria-label="Full View">📋 Tasks</button>
+                <!-- Quick App Links + View Toggle (centered) -->
+                <div style="display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center;">
+                    <a href="d3-roadmap.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="D3 Roadmap">📚 Roadmap</a>
+                    <a href="stimulant-elimination-calculator.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Sleep Calc">💊 Sleep</a>
+                    <a href="body-comp-tracker.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Body Comp">🏋️ Body</a>
+                    <span style="color: rgba(255,255,255,0.15); font-size: 0.8em; margin: 0 2px;">│</span>
+                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Focus Mode">🎯 Focus</button>
+                    <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Full View">📋 Tasks</button>
                 </div>
             </div>
 
