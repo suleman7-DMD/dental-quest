@@ -20356,19 +20356,17 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         }
 
         // Recalculate all scheduled task times based on their order
+        // Uses direct mutation to keep cache references valid
         function recalculateScheduledTimes() {
+            invalidateTriageCache();
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             if (scheduledTasks.length === 0) return;
 
             let currentTime = new Date();
 
             scheduledTasks.forEach((task, index) => {
-                // Update crashOutOrder to ensure it's sequential
-                tasks[task.id] = {
-                    ...tasks[task.id],
-                    crashOutOrder: index,
-                    crashOutTime: currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-                };
+                task.crashOutOrder = index;
+                task.crashOutTime = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
                 // Calculate next task's start time (current task's end time)
                 const duration = task.crashOutDuration || 30;
@@ -20385,14 +20383,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 commandCenterData.crashOut.warningDismissed = false;
             }
 
-            // Use spread operator, remove crash out properties
-            tasks[taskId] = {
-                ...task,
-                crashOutScheduled: false
-            };
-            delete tasks[taskId].crashOutTime;
-            delete tasks[taskId].crashOutDuration;
-            delete tasks[taskId].crashOutOrder;
+            // Direct mutation to keep cache references valid
+            task.crashOutScheduled = false;
+            delete task.crashOutTime;
+            delete task.crashOutDuration;
+            delete task.crashOutOrder;
 
             // Recalculate times for remaining tasks (they shift up)
             recalculateScheduledTimes();
@@ -20510,7 +20505,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 } else if (draggedIndex > targetIndex && i >= targetIndex && i < draggedIndex) {
                     newOrder = i + 1;
                 }
-                tasks[task.id] = { ...tasks[task.id], triageOrder: newOrder };
+                task.triageOrder = newOrder;
             });
 
             // Targeted re-render: only the affected column
@@ -20805,15 +20800,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
             undoState = scheduledTasks.map(t => ({ id: t.id, time: t.crashOutTime }));
 
-            // Add minutes to all scheduled tasks
+            // Add minutes to all scheduled tasks (direct mutation keeps cache valid)
             scheduledTasks.forEach(task => {
                 if (task.crashOutTime) {
                     const parsedTime = parseCrashOutTime(task.crashOutTime);
                     if (!parsedTime) return;
                     const newTime = new Date(parsedTime.getTime() + minutes * 60 * 1000);
-                    const newTimeStr = newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-                    tasks[task.id] = { ...tasks[task.id], crashOutTime: newTimeStr };
+                    task.crashOutTime = newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                 }
             });
 
@@ -20884,7 +20877,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             undoState.forEach(({ id, time }) => {
                 if (tasks[id]) {
-                    tasks[id] = { ...tasks[id], crashOutTime: time };
+                    tasks[id].crashOutTime = time;
                 }
             });
 
@@ -21484,8 +21477,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 taskIds.splice(insertIndex, 0, draggedTaskId);
 
                 // Update crashOutOrder for ALL tasks based on new array order
+                // Direct mutation keeps cache references valid
                 taskIds.forEach((id, newIndex) => {
-                    tasks[id] = { ...tasks[id], crashOutOrder: newIndex };
+                    tasks[id].crashOutOrder = newIndex;
                 });
 
                 recalculateScheduledTimes();
@@ -21533,8 +21527,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             }
 
             try {
-                tasks[taskId1] = { ...tasks[taskId1], crashOutOrder: order2 };
-                tasks[taskId2] = { ...tasks[taskId2], crashOutOrder: order1 };
+                // Direct mutation keeps cache references valid
+                tasks[taskId1].crashOutOrder = order2;
+                tasks[taskId2].crashOutOrder = order1;
 
                 recalculateScheduledTimes();
                 renderCrashOutMode();
@@ -21708,8 +21703,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const task = tasks[taskId];
             if (!task) return;
 
-            // Update the task's duration
-            tasks[taskId] = { ...task, crashOutDuration: parseInt(newDuration) };
+            // Direct mutation keeps cache references valid
+            task.crashOutDuration = parseInt(newDuration);
 
             // Recalculate all times based on new durations (maintains order, fixes cascading)
             recalculateScheduledTimes();
