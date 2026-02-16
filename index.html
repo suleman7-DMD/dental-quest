@@ -7754,14 +7754,12 @@
             z-index: 5 !important;
             border: 1px solid rgba(59, 130, 246, 0.15) !important;
             border-left: 3px solid rgba(96, 165, 250, 0.7) !important;
-            background: rgba(30, 58, 138, 0.15) !important;
+            background: rgba(30, 58, 138, 0.35) !important;
             transition: all 0.2s ease !important;
             overflow: hidden !important;
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
         }
 
         .gcal-task:hover {
@@ -7777,7 +7775,7 @@
 
         .gcal-task.locked-in {
             border-left-color: rgba(251, 191, 36, 0.7) !important;
-            background: rgba(120, 53, 15, 0.15) !important;
+            background: rgba(120, 53, 15, 0.35) !important;
             border-color: rgba(245, 158, 11, 0.15) !important;
         }
 
@@ -7944,7 +7942,7 @@
             position: absolute !important;
             left: 0 !important;
             right: 0 !important;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.04)) !important;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.08)) !important;
             border: 1px solid rgba(139, 92, 246, 0.12) !important;
             border-left: 3px solid rgba(167, 139, 250, 0.5) !important;
             border-radius: 10px !important;
@@ -7954,8 +7952,6 @@
             padding: 10px 14px !important;
             gap: 10px !important;
             overflow: hidden !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
         }
 
         .gcal-winddown::before {
@@ -10752,7 +10748,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     </style>
 </head>
-<body class="focus-active">
+<body>
     <!-- Loading overlay - shown until Firebase data loads -->
     <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
         <div style="font-size: 4em; margin-bottom: 20px;">🦷</div>
@@ -12181,7 +12177,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         // Hide loading overlay and mark initial load complete
         function markInitialLoadComplete() {
             initialLoadComplete = true;
-            
+
+            // Apply focus-active class if starting in focus view
+            if (currentView === 'focus') {
+                document.body.classList.add('focus-active');
+            }
+
             // Hide loading overlay with fade
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
@@ -20292,6 +20293,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             updateAllTriageProgress();
             updateOverallProgress();
             saveData();
+            showToast(`Moved to ${tier === 'lockedIn' ? 'LOCKED IN' : tier.toUpperCase()}`, '✓');
         }
 
         function sendToCrashOut(taskId) {
