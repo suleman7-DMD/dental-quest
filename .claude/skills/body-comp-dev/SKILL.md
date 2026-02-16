@@ -1,17 +1,9 @@
 ---
 name: body-comp-dev
-user-invocable: false
 description: |
-  Development patterns for Body Comp Tracker — a calorie/protein tracking app with cross-app Firebase integration.
-  Single HTML file (~21,850 lines) with Firebase sync, dark theme UI, ecosystem reads from 3 other apps.
-  Use when: debugging meal/workout tracking, modifying calorie calculations, working on TDEE/mode system,
-  weigh-ins, body composition, progress tab, gamification, ecosystem integration, or any body comp feature.
-  Trigger phrases: "body comp", "body comp tracker", "calorie tracking", "protein tracking",
-  "meal logging", "workout tracking", "weigh-in", "TDEE", "deficit", "mode system",
-  "gym streak", "eating nudge", "weekly export", "logic log", "refeed", "body fat",
-  "frequent foods", "Navy method", "progress tab", "calendar heatmap".
-  Do NOT use for: dental quest index.html, d3-roadmap, stimulant-elimination-calculator, or lecture-prompt-transformer.
-  Those apps have their own skills.
+  Develop and debug the Body Comp Tracker app (body-comp-tracker.html) — a calorie/protein tracking app with cross-app Firebase integration, mode system, and V3 analytics.
+  Use this skill when the user asks to modify, fix, or add features to body-comp-tracker.html. Trigger phrases: "body comp", "body comp tracker", "body-comp-tracker.html", "calorie tracking", "protein tracking", "meal logging", "workout tracking", "weigh-in", "TDEE", "deficit", "mode system", "gym streak", "eating nudge", "weekly export", "logic log", "refeed", "body fat", "frequent foods", "Navy method", "progress tab", "calendar heatmap", "calories", "protein", "macros", "food", "eating", "weight", "scale", "BMR", "bulk", "cut", "maintenance", "surplus", "meals", "workout log", "gym", "exercise", "nutrition", "diet", "fitness", "weight loss", "training volume", "achievements", "heatmap", "day log", "simple view", "import from claude".
+  Do NOT use this skill for dental quest index.html, d3-roadmap.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
   - "body-comp-tracker.html"
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).

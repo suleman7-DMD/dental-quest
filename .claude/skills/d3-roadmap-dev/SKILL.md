@@ -1,17 +1,9 @@
 ---
 name: d3-roadmap-dev
-user-invocable: false
 description: |
-  Development patterns for D3 Roadmap — an academic tracking app for a D3 dental student.
-  Single HTML file (~17,575 lines) with Firebase sync, dark theme UI, 11 tabs.
-  Use when: debugging grade calculations, modifying deadlines, working on clinical tracking,
-  competencies, monthly planner, daily planner, exam content, checkpoint system, or any D3 roadmap feature.
-  Trigger phrases: "d3 roadmap", "roadmap app", "deadlines", "clinical tracking",
-  "competencies", "dental school", "academic tracker", "grade calculator",
-  "monthly planner", "daily planner", "exam content", "mandatory items",
-  "checkpoint", "course grades", "peds exam", "perio final".
-  Do NOT use for: dental quest index.html, body-comp-tracker, stimulant-elimination-calculator,
-  or lecture-prompt-transformer. Those apps have their own skills.
+  Develop and debug the D3 Roadmap app (d3-roadmap.html) — an academic tracking app for a D3 dental student with grades, deadlines, clinical tracking, planners, and exam content.
+  Use this skill when the user asks to modify, fix, or add features to d3-roadmap.html. Trigger phrases: "d3 roadmap", "d3-roadmap.html", "roadmap app", "deadlines", "clinical tracking", "competencies", "dental school", "academic tracker", "grade calculator", "monthly planner", "daily planner", "exam content", "mandatory items", "checkpoint", "course grades", "peds exam", "perio final", "roadmap", "grades", "GPA", "courses", "classes", "school", "academic", "clinic", "patients", "appointments", "exams", "studying", "schedule", "planner", "tabs", "dashboard", "oral medicine", "pain control", "perio", "peds", "critical thinking", "ortho", "classmates", "share", "do today", "always remember".
+  Do NOT use this skill for dental quest index.html, body-comp-tracker.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
   - "d3-roadmap.html"
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).

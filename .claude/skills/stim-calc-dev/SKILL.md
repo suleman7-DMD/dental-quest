@@ -1,18 +1,9 @@
 ---
 name: stim-calc-dev
-user-invocable: false
 description: |
-  Development patterns for Stimulant Elimination Calculator — a pharmacokinetic sleep prediction app.
-  Single HTML file (~11,500 lines) with Firebase sync, dark theme UI.
-  Use when: debugging sleep predictions, modifying drug calculations, working on XR delayed-release,
-  VitC interactions, circadian rhythm, threshold modifiers, ghost load, workout planner, nicotine tracking,
-  sauna decay, or any stim calc feature.
-  Trigger phrases: "stim calc", "stimulant calculator", "sleep prediction", "pharmacokinetic",
-  "amphetamine", "caffeine", "half-life", "threshold", "forbidden zone", "circadian",
-  "XR", "delayed release", "ghost load", "all-nighter", "VitC", "vitamin C",
-  "workout planner", "nicotine", "sauna bonus".
-  Do NOT use for: body-comp-tracker, dental quest index.html, d3-roadmap, or lecture-prompt-transformer.
-  Those apps have their own skills.
+  Develop and debug the Stimulant Elimination Calculator app (stimulant-elimination-calculator.html) — a pharmacokinetic sleep prediction app with XR modeling, circadian rhythm, and workout planning.
+  Use this skill when the user asks to modify, fix, or add features to stimulant-elimination-calculator.html. Trigger phrases: "stim calc", "stimulant calculator", "stimulant-elimination-calculator.html", "sleep prediction", "pharmacokinetic", "amphetamine", "caffeine", "half-life", "threshold", "forbidden zone", "circadian", "XR", "delayed release", "ghost load", "all-nighter", "VitC", "vitamin C", "workout planner", "nicotine", "sauna bonus", "adderall", "sleep", "meds", "medication timing", "when will I sleep", "sleep time", "drug levels", "elimination", "decay", "clearance", "stimulant", "sleep calculator", "wake time", "sleep debt", "graph", "curves", "what-if", "scenarios", "recommendations", "forecast", "accordion", "recalculate", "split plan".
+  Do NOT use this skill for dental quest index.html, d3-roadmap.html, body-comp-tracker.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
   - "stimulant-elimination-calculator.html"
   - "js/stimcalc/**"

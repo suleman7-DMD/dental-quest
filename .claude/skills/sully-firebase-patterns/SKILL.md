@@ -1,7 +1,8 @@
 ---
 name: sully-firebase-patterns
-description: Firebase sync, save/load guards, checkpoint system, and cross-app data persistence for all 4 Dental Quest HTML apps. Use when editing save functions, sync logic, realtime listeners, checkpoint code, force upload/pull, adding new data fields, fixing data wipe or persistence bugs, debugging blocked saves, working on cross-device sync, or modifying PIN authentication in index.html, d3-roadmap.html, stimulant-elimination-calculator.html, or body-comp-tracker.html.
-user-invocable: false
+description: |
+  Firebase sync, save/load guards, checkpoint system, and cross-app data persistence for all 4 Dental Quest HTML apps.
+  Use this skill when the user works on save functions, sync logic, realtime listeners, checkpoint code, force upload/pull, adding new data fields, fixing data wipe or persistence bugs, debugging blocked saves, cross-device sync, or PIN authentication. Trigger phrases: "firebase", "sync", "save", "load", "cloud", "realtime", "PIN", "auth", "checkpoint", "backup", "restore", "force upload", "force pull", "data wipe", "guards", "persistence", "cross-device", "offline", "saveData", "saveState", "loadFromFirebase", "isEmptyState", "sync flags", "debounce", "blocked save", "data loss", "cross-app", "ecosystem".
 globs:
   - "index.html"
   - "d3-roadmap.html"
@@ -67,9 +68,17 @@ Consult `references/sync-and-realtime.md` for:
 | stim-calc | `lastUpdated` timestamp comparison |
 | body-comp | `_version` number comparison (higher wins) |
 
+### Step 3.5: localStorage writes MUST use safeLocalStorageSet()
+
+All 4 apps now have a `safeLocalStorageSet(key, value)` wrapper (added Feb 2026). **NEVER use raw `localStorage.setItem()`** — it will throw `QuotaExceededError` when storage is full, crashing the UI.
+
+The wrapper: tries write → on quota error, clears backups and retries → clears checkpoints and retries → shows toast warning → returns false. Firebase saves are unaffected.
+
+Current limits: **5 checkpoints, 3 backups** per app. Body-comp prunes dailyLogs to 90 days in localStorage. Stim-calc prunes history to 180 days.
+
 ### Step 4: Before modifying checkpoint or force-sync code
 
-Checkpoints are localStorage-only (not Firebase). Each app has different limits and import formats.
+Checkpoints are localStorage-only (not Firebase). Each app has a limit of **5 checkpoints** and **3 backups**.
 
 Consult `references/checkpoint-system.md` for:
 - All checkpoint functions per app
@@ -98,6 +107,8 @@ Consult `references/bugs-and-debugging.md` for:
 7. **Always call `saveDayLog()` after meal/workout changes** in body-comp
 8. **Strip `ecosystemContext` before Firebase save** in body-comp
 9. **Preserve `_dataLoaded = true` after realtime merges** — cloud data may not include the flag
+10. **Never use raw `localStorage.setItem()`** — always use `safeLocalStorageSet()` to prevent QuotaExceededError UI freeze
+11. **Checkpoint limit is 5, backup limit is 3** — do not increase these (localStorage is ~5MB shared across all 4 apps)
 
 ## Guard System Overview
 
