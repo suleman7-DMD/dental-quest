@@ -9193,7 +9193,7 @@ CHAIR: 9F
 
         // ==================== FIX 6: BACKUP SYSTEM ====================
         const BACKUP_STORAGE_KEY = 'd3RoadmapBackup';
-        const MAX_BACKUPS = 5;
+        const MAX_BACKUPS = 3;
 
         function createBackup(reason = 'manual') {
             const backup = {
@@ -9222,7 +9222,7 @@ CHAIR: 9F
             }
 
             try {
-                localStorage.setItem(BACKUP_STORAGE_KEY, JSON.stringify(backups));
+                safeLocalStorageSet(BACKUP_STORAGE_KEY, JSON.stringify(backups));
                 console.log('📦 Backup created:', reason, backup.id);
                 return backup.id;
             } catch (e) {
@@ -9231,7 +9231,7 @@ CHAIR: 9F
                 if (e.name === 'QuotaExceededError') {
                     backups = backups.slice(0, 2);
                     try {
-                        localStorage.setItem(BACKUP_STORAGE_KEY, JSON.stringify(backups));
+                        safeLocalStorageSet(BACKUP_STORAGE_KEY, JSON.stringify(backups));
                         return backup.id;
                     } catch (e2) {
                         console.error('Still cannot save backup:', e2);
@@ -9505,7 +9505,7 @@ CHAIR: 9F
             const pin = prompt('Enter your Dental Quest PIN to sync data across devices:\n\n(Use the same PIN as your main Dental Quest app)');
             
             if (pin && pin.length >= 4) {
-                localStorage.setItem('dentalQuestPin', pin);
+                safeLocalStorageSet('dentalQuestPin', pin);
                 setupUserAuth(pin);
             } else {
                 firebaseSyncEnabled = false;
@@ -9606,6 +9606,37 @@ CHAIR: 9F
             if (!obj) return 0;
             if (Array.isArray(obj)) return obj.length;
             return Object.keys(obj).length;
+        }
+
+        // Safe localStorage write with quota handling
+        // Progressively clears backups, then checkpoints if quota exceeded
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('localStorage quota exceeded, clearing backups...');
+                    try {
+                        localStorage.removeItem('d3RoadmapBackup');
+                        localStorage.setItem(key, value);
+                        return true;
+                    } catch (e2) {
+                        try {
+                            const pinHash = localStorage.getItem('dentalQuestPin');
+                            if (pinHash) localStorage.removeItem('d3roadmap_checkpoints_' + pinHash);
+                            localStorage.setItem(key, value);
+                            return true;
+                        } catch (e3) {
+                            console.error('Storage full even after cleanup');
+                            if (typeof showToast === 'function') showToast('⚠️ Storage full - data saved to cloud only', 'warning');
+                            return false;
+                        }
+                    }
+                }
+                console.error('localStorage write error:', e);
+                return false;
+            }
         }
 
         // Convert array to object with unique IDs (for migration)
@@ -9864,7 +9895,7 @@ CHAIR: 9F
                         migrateInvalidFirebaseKeys(roadmapData);
 
                         // Also save to localStorage as backup
-                        localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
                         updateSyncStatus('connected', 'Synced');
                         console.log('✅ Loaded real data from Firebase');
                     } else {
@@ -9988,7 +10019,7 @@ CHAIR: 9F
                     };
 
                     migrateInvalidFirebaseKeys(roadmapData);
-                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
 
                     // Re-render tabs based on which one is active
                     const activeTab = document.querySelector('.tab-btn.active');
@@ -10297,7 +10328,7 @@ CHAIR: 9F
             };
 
             migrateInvalidFirebaseKeys(roadmapData);
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             initUI();
         }
 
@@ -10344,12 +10375,12 @@ CHAIR: 9F
             let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
             checkpoints.unshift(checkpoint);
 
-            // Keep max 50 checkpoints
-            if (checkpoints.length > 50) {
-                checkpoints.splice(50);
+            // Keep max 5 checkpoints
+            if (checkpoints.length > 5) {
+                checkpoints.splice(5);
             }
 
-            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
             // FIXED: Also save to Firebase for cross-device access
             if (firebaseSyncEnabled && database && userPath) {
@@ -10395,7 +10426,7 @@ CHAIR: 9F
                         // Sort by timestamp descending
                         checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                         // Save merged list back to localStorage (keep max 50)
-                        localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+                        safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 5)));
                     }
                 } catch (err) {
                     console.error('Failed to load cloud checkpoints:', err);
@@ -10519,7 +10550,7 @@ CHAIR: 9F
             migrateInvalidFirebaseKeys(roadmapData);
 
             // Save everywhere
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
 
             // Set local update flag to prevent realtime listener from processing our own write
             setLocalUpdateFlag();
@@ -10540,7 +10571,7 @@ CHAIR: 9F
             const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
             const checkpoint = checkpoints[index];
             checkpoints.splice(index, 1);
-            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
             // FIXED: Also delete from Firebase
             if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
@@ -10714,9 +10745,9 @@ CHAIR: 9F
                             throw new Error('Unrecognized file format. Check console for details.');
                         }
 
-                        // Keep max 20 checkpoints
-                        checkpoints = checkpoints.slice(0, 20);
-                        localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+                        // Keep max 5 checkpoints
+                        checkpoints = checkpoints.slice(0, 5);
+                        safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
                         document.querySelector('.checkpoint-modal-overlay')?.remove();
                         showCheckpointManager();
@@ -10807,7 +10838,7 @@ CHAIR: 9F
 
                     // FIX: Save to localStorage BEFORE saveData() so data persists even if guards block
                     // This matches restoreCheckpoint() pattern (line 10421)
-                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
 
                     // Set local update flag to prevent realtime listener from processing our own write
                     setLocalUpdateFlag();
@@ -10909,7 +10940,7 @@ CHAIR: 9F
 
                 // Attempt the upload
                 await database.ref(userPath).set(cleanData);
-                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('✅ Force upload complete!');
                 console.log('Force upload complete:', roadmapData._version);
@@ -11047,7 +11078,7 @@ CHAIR: 9F
 
             // Always save to localStorage IMMEDIATELY
             try {
-                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             } catch (e) {
                 console.error('localStorage save failed:', e);
             }
@@ -11721,7 +11752,7 @@ CHAIR: 9F
             };
 
             // Save immediately
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             saveData();
 
             // Re-render
@@ -11775,7 +11806,7 @@ CHAIR: 9F
             };
 
             // Save immediately
-            localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             saveData();
 
             // Re-render
@@ -15755,7 +15786,7 @@ CHAIR: 9F
                 // Tab is being hidden - ensure data is saved immediately
                 // GUARD: Only save if we have real data and passed initial load
                 if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
-                    localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
                     if (firebaseSyncEnabled && database && userPath) {
                         // FIX: Set local update flag to prevent realtime listener from re-processing this write
                         setLocalUpdateFlag();
@@ -15833,7 +15864,7 @@ CHAIR: 9F
         window.addEventListener('beforeunload', function() {
             // Only save if we have real data and passed initial load
             if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
-                localStorage.setItem('d3RoadmapData', JSON.stringify(roadmapData));
+                safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             }
         });
 

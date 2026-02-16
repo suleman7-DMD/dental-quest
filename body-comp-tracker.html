@@ -8310,7 +8310,7 @@
 
         // Backup Manager
         const BackupManager = {
-            maxBackups: 5,
+            maxBackups: 3,
             createBackup() {
                 try {
                     const backups = JSON.parse(localStorage.getItem('bodycomp_backups') || '[]');
@@ -8318,19 +8318,52 @@
                     if (!currentData) return;
                     backups.unshift({ timestamp: Date.now(), data: currentData });
                     while (backups.length > this.maxBackups) backups.pop();
-                    localStorage.setItem('bodycomp_backups', JSON.stringify(backups));
+                    safeLocalStorageSet('bodycomp_backups', JSON.stringify(backups));
                 } catch (e) { console.error('Backup failed:', e); }
             },
             restoreBackup(timestamp) {
                 const backups = JSON.parse(localStorage.getItem('bodycomp_backups') || '[]');
                 const backup = backups.find(b => b.timestamp === timestamp);
                 if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
-                    localStorage.setItem('bodyCompTrackerState', backup.data);
+                    safeLocalStorageSet('bodyCompTrackerState', backup.data);
                     location.reload();
                 }
             }
         };
         setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
+
+        // ============================================
+        // SAFE LOCALSTORAGE WRITE (Quota Protection)
+        // ============================================
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('localStorage quota exceeded, clearing backups...');
+                    try {
+                        localStorage.removeItem('bodycomp_backups');
+                        localStorage.setItem(key, value);
+                        console.log('Save succeeded after clearing backups');
+                        return true;
+                    } catch (e2) {
+                        try {
+                            localStorage.removeItem('bodyCompCheckpoints');
+                            localStorage.setItem(key, value);
+                            console.log('Save succeeded after clearing checkpoints');
+                            return true;
+                        } catch (e3) {
+                            console.error('Storage full even after cleanup');
+                            if (typeof showToast === 'function') showToast('⚠️ Storage full - data saved to cloud only', 'warning');
+                            return false;
+                        }
+                    }
+                }
+                console.error('localStorage write error:', e);
+                return false;
+            }
+        }
 
         // ============================================
         // CONNECTION MONITOR
@@ -15509,7 +15542,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 // Save collapsed state to localStorage
                 const collapsedCards = JSON.parse(localStorage.getItem('bodyComp_collapsedCards') || '{}');
                 collapsedCards[cardId] = card.classList.contains('collapsed');
-                localStorage.setItem('bodyComp_collapsedCards', JSON.stringify(collapsedCards));
+                safeLocalStorageSet('bodyComp_collapsedCards', JSON.stringify(collapsedCards));
             }
         }
 
@@ -15704,7 +15737,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state._lastModified = new Date().toISOString();
 
             // ALWAYS save to localStorage immediately (no throttle - this was causing data loss)
-            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            // Prune dailyLogs for localStorage (full history stays in Firebase)
+            const stateForLocal = JSON.parse(JSON.stringify(state));
+            if (stateForLocal.dailyLogs && typeof stateForLocal.dailyLogs === 'object') {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 90);
+                const cutoffStr = cutoff.toISOString().split('T')[0];
+                Object.keys(stateForLocal.dailyLogs).forEach(key => {
+                    if (key < cutoffStr) delete stateForLocal.dailyLogs[key];
+                });
+            }
+            safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(stateForLocal));
 
             // Debounce Firebase saves (2 seconds to batch rapid changes)
             if (firebaseSaveTimeout) {
@@ -15757,7 +15800,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state._version = Date.now();
             state._lastModified = new Date().toISOString();
 
-            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            // Prune dailyLogs for localStorage (full history stays in Firebase)
+            const stateForLocal = JSON.parse(JSON.stringify(state));
+            if (stateForLocal.dailyLogs && typeof stateForLocal.dailyLogs === 'object') {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 90);
+                const cutoffStr = cutoff.toISOString().split('T')[0];
+                Object.keys(stateForLocal.dailyLogs).forEach(key => {
+                    if (key < cutoffStr) delete stateForLocal.dailyLogs[key];
+                });
+            }
+            safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(stateForLocal));
 
             if (firebaseSaveTimeout) {
                 clearTimeout(firebaseSaveTimeout);
@@ -16044,7 +16097,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         // Mark that we have real data loaded
                         state._dataLoaded = true;
 
-                        localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                        safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
 
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
@@ -16209,7 +16262,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // Preserve _dataLoaded flag after merge so saves aren't blocked
                     state._dataLoaded = true;
 
-                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                    safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
 
                     // Re-render Simple View (the default view in v3)
                     renderSimpleView();
@@ -16288,7 +16341,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         }
                     });
 
-                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                    safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
 
                     initializeUI();
                     updateSyncStatus('connected', 'Synced ✓');
@@ -16341,12 +16394,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Add new checkpoint at the beginning
             checkpoints.unshift(checkpoint);
 
-            // Keep only last 10 checkpoints
-            if (checkpoints.length > 10) {
-                checkpoints = checkpoints.slice(0, 10);
+            // Keep only last 5 checkpoints
+            if (checkpoints.length > 5) {
+                checkpoints = checkpoints.slice(0, 5);
             }
 
-            localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+            safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
 
             // Also sync to Firebase for cross-device restore
             saveCheckpointsToFirebase();
@@ -16393,7 +16446,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     const final = merged.slice(0, 10);
 
-                    localStorage.setItem('bodyCompCheckpoints', JSON.stringify(final));
+                    safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(final));
                     console.log('✅ Checkpoints loaded from Firebase');
                 }
             } catch (err) {
@@ -16492,7 +16545,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state._dataLoaded = true;
 
             // Save to localStorage and Firebase
-            localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+            safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
             saveToFirebase();
 
             // Refresh UI
@@ -16507,7 +16560,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
             checkpoints.splice(index, 1);
-            localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+            safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
 
             showToast('🗑️ Checkpoint deleted');
             document.getElementById('checkpoint-modal')?.remove();
@@ -16652,7 +16705,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     // Keep max 20 checkpoints
                     checkpoints = checkpoints.slice(0, 20);
-                    localStorage.setItem('bodyCompCheckpoints', JSON.stringify(checkpoints));
+                    safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
 
                     document.getElementById('checkpoint-modal')?.remove();
                     showCheckpointManager();
@@ -16722,7 +16775,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     state.bodyCompHistory = migrateArrayToObject(state.bodyCompHistory, 'bodycomp');
 
                     // Save
-                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                    safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
                     saveToFirebase();
 
                     showToast('✅ Data restored from file');
@@ -16780,7 +16833,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 lastUpdated: saveTime
             })
             .then(() => {
-                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('⬆️ Force uploaded to cloud');
                 document.getElementById('checkpoint-modal')?.remove();
@@ -16837,7 +16890,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
                     state.bodyCompHistory = migrateArrayToObject(state.bodyCompHistory, 'bodycomp');
 
-                    localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                    safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
 
                     // Reload ecosystem data (it's stripped from Firebase, need fresh pull)
                     const hashedPin = userPath ? userPath.split('/')[1] : null;
@@ -17370,7 +17423,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             if (pin) {
                 waitingForPin = false;  // Clear the flag
-                localStorage.setItem('dentalQuestPin', pin);
+                safeLocalStorageSet('dentalQuestPin', pin);
                 setupUserAuth(pin);
                 showToast('✅ Connected with PIN!');
             } else {
@@ -18605,7 +18658,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function saveProgressModuleStates(states) {
             try {
-                localStorage.setItem('progressModuleStates', JSON.stringify(states));
+                safeLocalStorageSet('progressModuleStates', JSON.stringify(states));
             } catch { /* ignore */ }
         }
 
@@ -21454,7 +21507,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         window.addEventListener('beforeunload', function() {
             // Only save if we have real data and passed initial load
             if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
-                localStorage.setItem('bodyCompTrackerState', JSON.stringify(state));
+                safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
             }
         });
 

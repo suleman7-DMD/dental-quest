@@ -12470,7 +12470,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             let deviceId = localStorage.getItem('deviceId');
             if (!deviceId) {
                 deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-                localStorage.setItem('deviceId', deviceId);
+                safeLocalStorageSet('deviceId', deviceId);
             }
             return deviceId;
         }
@@ -12698,9 +12698,39 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             return {};
         }
 
+        // ==================== SAFE LOCALSTORAGE ====================
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('localStorage quota exceeded, clearing backups...');
+                    try {
+                        localStorage.removeItem('dentalquest_backups');
+                        localStorage.setItem(key, value);
+                        return true;
+                    } catch (e2) {
+                        try {
+                            const pinHash = localStorage.getItem('dentalQuestPin');
+                            if (pinHash) localStorage.removeItem('dentalQuest_checkpoints_' + pinHash);
+                            localStorage.setItem(key, value);
+                            return true;
+                        } catch (e3) {
+                            console.error('Storage full even after cleanup');
+                            if (typeof showToast === 'function') showToast('⚠️ Storage full - data saved to cloud only', 'warning');
+                            return false;
+                        }
+                    }
+                }
+                console.error('localStorage write error:', e);
+                return false;
+            }
+        }
+
         // ==================== BACKUP MANAGER ====================
         const BackupManager = {
-            maxBackups: 5,
+            maxBackups: 3,
 
             createBackup() {
                 try {
@@ -12717,7 +12747,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         backups.pop();
                     }
 
-                    localStorage.setItem('dentalquest_backups', JSON.stringify(backups));
+                    safeLocalStorageSet('dentalquest_backups', JSON.stringify(backups));
                     console.log('💾 Backup created');
                 } catch (e) {
                     console.error('Backup failed:', e);
@@ -12736,7 +12766,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 const backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
                 const backup = backups.find(b => b.timestamp === timestamp);
                 if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
-                    localStorage.setItem('dentalStudentQuestData', backup.data);
+                    safeLocalStorageSet('dentalStudentQuestData', backup.data);
                     location.reload();
                     return true;
                 }
@@ -12962,7 +12992,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 console.warn('⚠️ BLOCKED: Refusing to save empty state to Firebase');
                 // Still save to localStorage as it might be a legitimate clear
                 try {
-                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                    safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
                 } catch (e) {
                     console.error('❌ localStorage save failed:', e);
                 }
@@ -12978,7 +13008,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             
             // Always save to localStorage IMMEDIATELY as backup
             try {
-                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
             } catch (e) {
                 console.error('❌ localStorage save failed:', e);
             }
@@ -13053,7 +13083,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                         updateSyncStatus('offline', 'Pending sync');
                                         // Mark for sync when back online
                                         offlineSyncPending = true;
-                                        localStorage.setItem('dentalQuestOfflineSyncPending', 'true');
+                                        safeLocalStorageSet('dentalQuestOfflineSyncPending', 'true');
                                         setTimeout(() => {
                                             if (savingToast && savingToast.parentNode) {
                                                 savingToast.remove();
@@ -13112,7 +13142,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             
             // Save to localStorage
             try {
-                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
             } catch (e) {
                 console.error('localStorage save failed:', e);
             }
@@ -13306,11 +13336,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 checkpoints = [];
             }
             checkpoints.unshift(checkpoint);
-            // Keep max 50 checkpoints
-            if (checkpoints.length > 50) {
-                checkpoints.splice(50);
+            // Keep max 5 checkpoints
+            if (checkpoints.length > 5) {
+                checkpoints.splice(5);
             }
-            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
             // Save to Firebase for cross-device access
             if (firebaseInitialized && currentUser && database) {
@@ -13355,8 +13385,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         });
                         // Sort by timestamp descending
                         checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                        // Save merged list back to localStorage (keep max 50)
-                        localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+                        // Save merged list back to localStorage (keep max 5)
+                        safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 5)));
                     }
                 } catch (err) {
                     console.error('Failed to load cloud checkpoints:', err);
@@ -13512,7 +13542,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             // Remove from array
             checkpoints.splice(index, 1);
-            localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints));
+            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
             // Also delete from Firebase
             if (firebaseInitialized && currentUser && database && checkpoint.id) {
@@ -13583,7 +13613,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     }
 
                     checkpoints.unshift(checkpoint);
-                    localStorage.setItem(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 50)));
+                    safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 5)));
 
                     showToast(`Imported: ${checkpoint.name}`, '✅');
                     showCheckpointManager(); // Refresh modal
@@ -13879,7 +13909,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     const oldPin = localStorage.getItem('dentalAppPin');
                     if (oldPin) {
                         userPin = oldPin;
-                        localStorage.setItem('dentalQuestPin', userPin);
+                        safeLocalStorageSet('dentalQuestPin', userPin);
                         // Keep old key for backwards compatibility but new key is source of truth
                     }
                 }
@@ -13897,8 +13927,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     }
                     
                     // Save to BOTH keys for full compatibility
-                    localStorage.setItem('dentalQuestPin', userPin);
-                    localStorage.setItem('dentalAppPin', userPin);
+                    safeLocalStorageSet('dentalQuestPin', userPin);
+                    safeLocalStorageSet('dentalAppPin', userPin);
                 }
                 
                 // Create a consistent user ID from the PIN
@@ -14077,7 +14107,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         if (data.lastCriticalEODReset) {
                             lastCriticalEODReset = data.lastCriticalEODReset;
                             // Also sync to localStorage for consistency
-                            localStorage.setItem('lastCriticalEODReset', lastCriticalEODReset);
+                            safeLocalStorageSet('lastCriticalEODReset', lastCriticalEODReset);
                         }
                         
                         // Check for daily reset of Critical/EOD flags
@@ -14171,7 +14201,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     };
                     // Don't save empty data
                     if (!isEmptyState(finalData)) {
-                        localStorage.setItem('dentalStudentQuestData', JSON.stringify(finalData));
+                        safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(finalData));
                     }
                 } catch (e) {}
             }
@@ -14316,7 +14346,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                 }
 
                                 // Save to localStorage as backup
-                                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                                safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
                                 
                                 // Re-render ALL UI
                                 updateStats();
@@ -16572,7 +16602,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 
                 // Update BOTH the global variable AND localStorage
                 lastCriticalEODReset = todayStr;
-                localStorage.setItem('lastCriticalEODReset', todayStr);
+                safeLocalStorageSet('lastCriticalEODReset', todayStr);
                 
                 if (resetCount > 0) {
                     saveData();
@@ -16635,7 +16665,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
         function saveDailyPlanner() {
             // Save to localStorage immediately for responsiveness
-            localStorage.setItem('dailyPlanner', JSON.stringify(dailyPlanner));
+            safeLocalStorageSet('dailyPlanner', JSON.stringify(dailyPlanner));
 
             // Debounce Firebase save (200ms) to prevent rapid successive writes
             if (plannerSaveTimer) {
@@ -17341,7 +17371,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             }
 
             // Save to localStorage as backup
-            localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+            safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
 
             // Re-render ALL UI
             updateStats();
@@ -17404,7 +17434,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             database.ref('users/' + currentUser.uid + '/appData').set(data)
                 .then(() => {
-                    localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                    safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
                     updateSyncStatus('connected', 'Force uploaded ✓');
                     showToast('⬆️ Force uploaded to cloud', '☁️');
                 })
@@ -17479,8 +17509,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const newPin = prompt('Enter your sync PIN:\n\n⚠️ Use the SAME PIN on ALL devices!\n\nCurrent PIN ends with: ' + (currentPin ? currentPin.slice(-2) : 'N/A'));
             
             if (newPin && newPin.length >= 4) {
-                localStorage.setItem('dentalQuestPin', newPin);
-                localStorage.setItem('dentalAppPin', newPin);
+                safeLocalStorageSet('dentalQuestPin', newPin);
+                safeLocalStorageSet('dentalAppPin', newPin);
                 alert('PIN updated! The page will now reload to connect with your new PIN.');
                 window.location.reload();
             } else {
@@ -17640,11 +17670,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 // Sync lastCriticalEODReset to prevent duplicate resets
                 if (data.lastCriticalEODReset) {
                     lastCriticalEODReset = data.lastCriticalEODReset;
-                    localStorage.setItem('lastCriticalEODReset', lastCriticalEODReset);
+                    safeLocalStorageSet('lastCriticalEODReset', lastCriticalEODReset);
                 }
                 
                 // Save to localStorage
-                localStorage.setItem('dentalStudentQuestData', JSON.stringify(data));
+                safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
                 
                 // Re-render ALL UI
                 updateStats();
@@ -19545,7 +19575,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            localStorage.setItem('focusViewWelcomeSeen', 'true');
+            safeLocalStorageSet('focusViewWelcomeSeen', 'true');
         }
 
         function getCurrentCommandCenterMode() {
@@ -22255,7 +22285,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 }
             });
 
-            localStorage.setItem('lastRolloverCheck', today);
+            safeLocalStorageSet('lastRolloverCheck', today);
             saveData();
         }
 
@@ -22270,7 +22300,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 const today = getTodayDateString();
                 const lastPerfectDay = localStorage.getItem('lastPerfectDayAward');
                 if (lastPerfectDay !== today) {
-                    localStorage.setItem('lastPerfectDayAward', today);
+                    safeLocalStorageSet('lastPerfectDayAward', today);
                     awardCommandCenterXP(200, 'Perfect Day');
                     showPerfectDayBadge();
                 }
@@ -22326,7 +22356,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 } else {
                     commandCenterData.focusStats.dailyStreak = 1;
                 }
-                localStorage.setItem('lastActiveDay', today);
+                safeLocalStorageSet('lastActiveDay', today);
             }
 
             // LOCKED IN streak - all LOCKED IN tasks done today
@@ -22335,7 +22365,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 const lastLockedInComplete = localStorage.getItem('lastLockedInComplete');
                 if (lastLockedInComplete !== today) {
                     commandCenterData.focusStats.lockedInStreak = (commandCenterData.focusStats.lockedInStreak || 0) + 1;
-                    localStorage.setItem('lastLockedInComplete', today);
+                    safeLocalStorageSet('lastLockedInComplete', today);
                 }
             }
 
@@ -22546,7 +22576,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     function selectQACategory(cat) {
         qaSelectedCategory = cat;
-        localStorage.setItem('qaLastCategory', cat);
+        safeLocalStorageSet('qaLastCategory', cat);
         document.querySelectorAll('#qaCategoryPills .qa-pill').forEach(p => {
             p.classList.toggle('selected', p.getAttribute('data-cat') === cat);
         });

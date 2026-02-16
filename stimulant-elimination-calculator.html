@@ -3336,7 +3336,7 @@
 
         // Backup Manager with export/import
         const BackupManager = {
-            maxBackups: 5,
+            maxBackups: 3,
             createBackup() {
                 try {
                     const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
@@ -7767,6 +7767,24 @@
                         delete state.history[id];
                     }
                 });
+            }
+
+            // Prune entries older than 180 days
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 180);
+            const cutoffStr = cutoffDate.toISOString().split('T')[0];
+            let pruned = false;
+            const remainingValues = getValues(state.history);
+            remainingValues.forEach(entry => {
+                if (entry.date && entry.date < cutoffStr) {
+                    if (state.history && state.history[entry.id]) {
+                        delete state.history[entry.id];
+                        pruned = true;
+                    }
+                }
+            });
+
+            if (idsToRemove.length > 0 || pruned) {
                 saveState();
             }
         }
@@ -9731,12 +9749,12 @@
             // Add new checkpoint at the beginning
             checkpoints.unshift(checkpoint);
 
-            // Keep only last 10 checkpoints
-            if (checkpoints.length > 10) {
-                checkpoints = checkpoints.slice(0, 10);
+            // Keep only last 5 checkpoints
+            if (checkpoints.length > 5) {
+                checkpoints = checkpoints.slice(0, 5);
             }
 
-            localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints));
+            safeLocalStorageSet('stimCalcCheckpoints', JSON.stringify(checkpoints));
             showToast('✅ Checkpoint created: ' + checkpointName);
             return checkpoint;
         }
@@ -9848,7 +9866,7 @@
 
             let checkpoints = JSON.parse(localStorage.getItem('stimCalcCheckpoints') || '[]');
             checkpoints.splice(index, 1);
-            localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints));
+            safeLocalStorageSet('stimCalcCheckpoints', JSON.stringify(checkpoints));
 
             showToast('🗑️ Checkpoint deleted');
             document.getElementById('checkpoint-modal')?.remove();
@@ -9990,9 +10008,9 @@
                         throw new Error('Unrecognized file format. Check console for details.');
                     }
 
-                    // Keep max 20 checkpoints
-                    checkpoints = checkpoints.slice(0, 20);
-                    localStorage.setItem('stimCalcCheckpoints', JSON.stringify(checkpoints));
+                    // Keep max 5 checkpoints
+                    checkpoints = checkpoints.slice(0, 5);
+                    safeLocalStorageSet('stimCalcCheckpoints', JSON.stringify(checkpoints));
 
                     document.getElementById('checkpoint-modal')?.remove();
                     showCheckpointManager();
@@ -11236,7 +11254,7 @@ Current status at ${currentTime}:
                 section.classList.toggle('open');
                 const openSections = JSON.parse(localStorage.getItem('stimCalcAccordions') || '{}');
                 openSections[sectionName] = section.classList.contains('open');
-                localStorage.setItem('stimCalcAccordions', JSON.stringify(openSections));
+                safeLocalStorageSet('stimCalcAccordions', JSON.stringify(openSections));
             }
         }
 
