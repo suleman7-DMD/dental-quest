@@ -1224,11 +1224,20 @@
         }
 
         .task-card .task-checkbox {
-            width: 18px;
-            height: 18px;
-            margin-top: 2px;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            margin-top: 1px;
             cursor: pointer;
-            accent-color: #667eea;
+            border: 1.5px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            background: transparent;
+            flex-shrink: 0;
+        }
+        .task-card .task-checkbox:checked {
+            background: #667eea;
+            border-color: #667eea;
         }
 
         .task-card .task-text {
@@ -6157,35 +6166,38 @@
         .cc-today,
         .cc-tomorrow,
         [data-tier] {
-            background: var(--bg-card) !important;
-            border: 1px solid rgba(255,255,255,0.06) !important;
-            border-radius: 12px !important;
-            padding: 10px 10px 8px !important;
-            min-height: 180px !important;
+            background: rgba(22, 27, 34, 0.6) !important;
+            border: 1px solid rgba(255,255,255,0.04) !important;
+            border-radius: 10px !important;
+            padding: 8px 8px 6px !important;
+            min-height: 120px !important;
             max-height: 550px !important;
             display: flex !important;
             flex-direction: column !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-            transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
+            box-shadow: none !important;
+            transition: border-color 0.2s ease !important;
         }
 
         .triage-column.locked-in,
         .cc-locked-in,
         [data-tier="lockedIn"] {
-            border-left: 3px solid var(--accent-amber) !important;
-            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.03) 100%) !important;
+            border-top: 2px solid var(--accent-amber) !important;
+            border-left: none !important;
+            background: rgba(22, 27, 34, 0.6) !important;
         }
 
         .triage-column.today,
         [data-tier="today"] {
-            border-left: 3px solid var(--accent-blue) !important;
-            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(59, 130, 246, 0.03) 100%) !important;
+            border-top: 2px solid var(--accent-blue) !important;
+            border-left: none !important;
+            background: rgba(22, 27, 34, 0.6) !important;
         }
 
         .triage-column.tomorrow,
         [data-tier="tomorrow"] {
-            border-left: 3px solid var(--accent-teal) !important;
-            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(20, 184, 166, 0.02) 100%) !important;
+            border-top: 2px solid var(--accent-teal) !important;
+            border-left: none !important;
+            background: rgba(22, 27, 34, 0.6) !important;
         }
 
         .triage-section.scheduled,
@@ -6201,9 +6213,9 @@
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            padding-bottom: 8px !important;
-            margin-bottom: 8px !important;
-            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 4px !important;
+            border-bottom: none !important;
         }
 
         .column-name,
@@ -6266,62 +6278,55 @@
         /* === TASK CARDS === */
         .task-card,
         .cc-task-item {
-            background: rgba(255,255,255,0.02) !important;
-            border: 1px solid rgba(255,255,255,0.06) !important;
-            border-radius: 6px !important;
-            padding: 6px 10px !important;
-            margin-bottom: 3px !important;
-            transition: all 0.15s ease !important;
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+            border-radius: 0 !important;
+            padding: 6px 4px !important;
+            margin-bottom: 0 !important;
+            transition: background 0.15s ease !important;
             position: relative !important;
         }
 
         .task-card:hover,
         .cc-task-item:hover {
-            border-color: rgba(255,255,255,0.12) !important;
+            background: rgba(255,255,255,0.03) !important;
             transform: none !important;
-            background: rgba(255,255,255,0.04) !important;
             box-shadow: none !important;
         }
 
-        /* Tier-specific left accent on task cards */
-        .triage-column.locked-in .task-card {
-            border-left: 2px solid rgba(245, 158, 11, 0.35) !important;
+        .task-card:last-child {
+            border-bottom: none !important;
         }
+
+        /* Tier-specific — no left accents, just subtle hover tint */
         .triage-column.locked-in .task-card:hover {
-            border-left-color: var(--accent-amber) !important;
-            border-color: rgba(245, 158, 11, 0.2) !important;
-            background: rgba(245, 158, 11, 0.03) !important;
-            box-shadow: none !important;
-        }
-        .triage-column.today .task-card {
-            border-left: 2px solid rgba(59, 130, 246, 0.25) !important;
+            background: rgba(245, 158, 11, 0.04) !important;
         }
         .triage-column.today .task-card:hover {
-            border-left-color: var(--accent-blue) !important;
-            background: rgba(59, 130, 246, 0.03) !important;
-        }
-        .triage-column.tomorrow .task-card {
-            border-left: 2px solid rgba(20, 184, 166, 0.25) !important;
+            background: rgba(59, 130, 246, 0.04) !important;
         }
         .triage-column.tomorrow .task-card:hover {
-            border-left-color: var(--accent-teal) !important;
-            border-color: rgba(20, 184, 166, 0.2) !important;
-            background: rgba(20, 184, 166, 0.03) !important;
+            background: rgba(20, 184, 166, 0.04) !important;
         }
 
-        /* Drag handle */
+        /* Drag handle — hidden by default */
         .drag-handle {
             color: var(--text-muted) !important;
             cursor: grab !important;
-            margin-right: 2px !important;
-            font-size: 10px !important;
-            opacity: 0.15 !important;
+            margin-right: 0 !important;
+            font-size: 9px !important;
+            opacity: 0 !important;
             transition: opacity 0.15s !important;
             user-select: none !important;
+            width: 0 !important;
+            overflow: hidden !important;
         }
 
         .task-card:hover .drag-handle {
-            opacity: 0.5 !important;
+            opacity: 0.35 !important;
+            width: auto !important;
+            margin-right: 2px !important;
         }
 
         /* === TASK TEXT — READABLE === */
@@ -6329,33 +6334,58 @@
         .cc-task-item span:not([style]):not([class*="badge"]),
         .cc-task-item > div:first-child > span:last-child {
             font-size: 13px !important;
-            line-height: 1.45 !important;
-            color: var(--text-primary) !important;
+            line-height: 1.35 !important;
+            color: rgba(230, 237, 243, 0.9) !important;
             display: inline !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
-            letter-spacing: -0.1px !important;
+            letter-spacing: -0.15px !important;
         }
 
-        /* === CHECKBOX (scoped to Focus View) === */
+        /* === CHECKBOX — custom circle === */
         .task-card input[type="checkbox"],
         .cc-task-item input[type="checkbox"],
         #focusModeContainer .task-checkbox {
-            width: 15px !important;
-            height: 15px !important;
-            accent-color: var(--accent-blue) !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            width: 16px !important;
+            height: 16px !important;
+            border: 1.5px solid rgba(255,255,255,0.2) !important;
+            border-radius: 50% !important;
+            background: transparent !important;
             cursor: pointer !important;
             flex-shrink: 0 !important;
-            transition: transform 0.15s ease !important;
-            border-radius: 3px !important;
+            transition: all 0.15s ease !important;
+            position: relative !important;
         }
         .task-card input[type="checkbox"]:hover,
         #focusModeContainer .task-checkbox:hover {
-            transform: scale(1.1) !important;
+            border-color: rgba(255,255,255,0.4) !important;
+            transform: none !important;
         }
         .task-card input[type="checkbox"]:checked,
         #focusModeContainer .task-checkbox:checked {
-            animation: checkPop 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            background: var(--accent-blue) !important;
+            border-color: var(--accent-blue) !important;
+        }
+        .task-card input[type="checkbox"]:checked::after,
+        #focusModeContainer .task-checkbox:checked::after {
+            content: '✓' !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            font-size: 10px !important;
+            color: white !important;
+            font-weight: 700 !important;
+        }
+        .triage-column.locked-in .task-card input[type="checkbox"]:checked {
+            background: var(--accent-amber) !important;
+            border-color: var(--accent-amber) !important;
+        }
+        .triage-column.tomorrow .task-card input[type="checkbox"]:checked {
+            background: var(--accent-teal) !important;
+            border-color: var(--accent-teal) !important;
         }
 
         /* === TASK BUTTONS === */
@@ -6655,12 +6685,12 @@
             color: var(--text-muted) !important;
             background: transparent !important;
             text-align: center !important;
-            padding: 24px 12px !important;
+            padding: 16px 8px !important;
             font-size: 11px !important;
-            line-height: 1.5 !important;
-            opacity: 0.4 !important;
-            border: 1px dashed rgba(100, 116, 139, 0.12) !important;
-            border-radius: 8px !important;
+            line-height: 1.4 !important;
+            opacity: 0.3 !important;
+            border: 1px dashed rgba(100, 116, 139, 0.08) !important;
+            border-radius: 6px !important;
             margin: 6px 4px !important;
             transition: border-color 0.2s ease, opacity 0.2s ease !important;
         }
