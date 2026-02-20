@@ -554,6 +554,9 @@ function updateStreakBadge() {
     if (hour >= 21 && !completedToday && streak > 0) {
         badge.classList.add('streak-at-risk');
     }
+
+    // Update compact header streak count
+    if (typeof updateCompactHeader === 'function') updateCompactHeader();
 }
 
 function adjustFocusTimer(seconds) {

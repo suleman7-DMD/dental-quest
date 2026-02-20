@@ -1466,6 +1466,9 @@ function updateSyncStatus(status, message) {
             text.textContent = message || 'Connecting...';
             text.style.color = 'white';
     }
+
+    // Update compact header sync dot
+    if (typeof updateSyncDot === 'function') updateSyncDot(status);
 }
 
 // ============================================

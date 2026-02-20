@@ -686,6 +686,9 @@ function updateStats() {
 
     // Update current category XP display
     updateCategoryXPDisplay();
+
+    // Update compact header (mirrors Do Today + streak counts)
+    if (typeof updateCompactHeader === 'function') updateCompactHeader();
 }
 
 // ============================================
@@ -702,6 +705,12 @@ function switchToFocusMode() {
     document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.1)';
     document.getElementById('fullViewBtn').style.color = 'white';
     renderFocusMode();
+
+    // Update compact header view toggle
+    var fb = document.getElementById('compactFocusBtn');
+    var tb = document.getElementById('compactFullBtn');
+    if (fb) fb.classList.add('active');
+    if (tb) tb.classList.remove('active');
 }
 
 function switchToFullView() {
@@ -715,6 +724,12 @@ function switchToFullView() {
     document.getElementById('fullViewBtn').style.color = '#667eea';
     // Re-render tasks so Full View shows current data
     if (typeof renderTasks === 'function') renderTasks();
+
+    // Update compact header view toggle
+    var fb = document.getElementById('compactFocusBtn');
+    var tb = document.getElementById('compactFullBtn');
+    if (fb) fb.classList.remove('active');
+    if (tb) tb.classList.add('active');
 }
 
 // _renderFrame extracted to state.js
