@@ -164,9 +164,16 @@ function initApp() {
                 overlay.style.display = 'none';
                 if (!initialLoadComplete) {
                     loadData();
-                    initialLoadComplete = true;
-                    updateStats();
-                    renderTasks();
+                    // CRITICAL: Set ALL sync flags so saves work with localStorage data
+                    hasLoadedFromCloud = true;
+                    markInitialLoadComplete();
+                    updateSyncStatus('offline', 'Loaded locally (timeout)');
+                    try {
+                        updateStats();
+                        renderTasks();
+                    } catch (e) {
+                        console.error('Failsafe render error:', e);
+                    }
                 }
             }
         }, 10000);

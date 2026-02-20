@@ -138,7 +138,9 @@ var commandCenterData = {
         taskId: null,
         checklist: {},
         timerMinutes: 25,
-        timerRemaining: null
+        timerRemaining: null,
+        confirmedStarted: false,
+        startedAt: null
     }
 };
 var editingTaskId = null;

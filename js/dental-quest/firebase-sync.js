@@ -39,12 +39,12 @@ function buildSaveData(saveTimestamp) {
             crashOut: commandCenterData.crashOut,
             focusStats: commandCenterData.focusStats,
             currentSession: {
-                taskId: commandCenterData.currentSession.taskId,
-                checklist: commandCenterData.currentSession.checklist,
-                timerMinutes: commandCenterData.currentSession.timerMinutes,
-                timerRemaining: commandCenterData.currentSession.timerRemaining,
-                confirmedStarted: commandCenterData.currentSession.confirmedStarted,
-                startedAt: commandCenterData.currentSession.startedAt
+                taskId: commandCenterData.currentSession.taskId ?? null,
+                checklist: commandCenterData.currentSession.checklist || {},
+                timerMinutes: commandCenterData.currentSession.timerMinutes ?? 25,
+                timerRemaining: commandCenterData.currentSession.timerRemaining ?? null,
+                confirmedStarted: commandCenterData.currentSession.confirmedStarted ?? false,
+                startedAt: commandCenterData.currentSession.startedAt ?? null
             }
         },
         lastCriticalEODReset: lastCriticalEODReset,
@@ -185,7 +185,9 @@ function loadData() {
                     taskId: data.commandCenterData.currentSession?.taskId || null,
                     checklist: data.commandCenterData.currentSession?.checklist || {},
                     timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
-                    timerRemaining: null
+                    timerRemaining: null,
+                    confirmedStarted: data.commandCenterData.currentSession?.confirmedStarted ?? false,
+                    startedAt: data.commandCenterData.currentSession?.startedAt ?? null
                 }
             };
         }
@@ -1317,7 +1319,9 @@ function loadDataFromFirebase() {
                             taskId: data.commandCenterData.currentSession?.taskId || null,
                             checklist: data.commandCenterData.currentSession?.checklist || {},
                             timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
-                            timerRemaining: null
+                            timerRemaining: null,
+                            confirmedStarted: data.commandCenterData.currentSession?.confirmedStarted ?? false,
+                            startedAt: data.commandCenterData.currentSession?.startedAt ?? null
                         }
                     };
                 }
@@ -1628,7 +1632,9 @@ function applyRemoteData(data) {
                 taskId: data.commandCenterData.currentSession?.taskId || null,
                 checklist: data.commandCenterData.currentSession?.checklist || {},
                 timerMinutes: data.commandCenterData.currentSession?.timerMinutes || 25,
-                timerRemaining: null
+                timerRemaining: null,
+                confirmedStarted: data.commandCenterData.currentSession?.confirmedStarted ?? false,
+                startedAt: data.commandCenterData.currentSession?.startedAt ?? null
             }
         };
     }
