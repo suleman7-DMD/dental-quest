@@ -143,6 +143,19 @@ function updateCompactHeader() {
 
 function initApp() {
     try {
+        // Initialize Firebase (or fall back to localStorage)
+        // This must run here (not at firebase-sync.js parse time) because
+        // initializeFirebase() calls functions defined in later-loaded modules
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+            initializeFirebase();
+        } else {
+            loadData();
+            markInitialLoadComplete();
+        }
+
+        // Set up initial category display (matches original monolith line 1933)
+        updateCategoryDisplay();
+
         // Failsafe: Hide loading overlay after 10 seconds no matter what
         setTimeout(function() {
             var overlay = document.getElementById('loadingOverlay');

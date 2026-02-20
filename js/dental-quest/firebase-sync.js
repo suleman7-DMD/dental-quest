@@ -1916,18 +1916,6 @@ setInterval(() => {
 // ============================================
 // FIREBASE INIT EXECUTION
 // ============================================
-
-// Check if Firebase config is set, otherwise use localStorage
-if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-    initializeFirebase();
-} else {
-    loadData();
-    markInitialLoadComplete();
-    updateCategoryDisplay();
-}
-
-// DON'T call loadData() again here - it will overwrite Firebase data!
-// loadData() is already called in initializeFirebase() -> loadDataFromFirebase()
-
-// Only set up category display
-updateCategoryDisplay();
+// NOTE: Firebase initialization is triggered from initApp() in init.js
+// (after DOMContentLoaded, when all modules are loaded).
+// Do NOT add auto-execution code here — it runs before later modules load.

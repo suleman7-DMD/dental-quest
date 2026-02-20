@@ -4,7 +4,7 @@
 
 ### Never Rebuild Entire Files
 - Most files are 11,000-22,000+ lines. Use surgical `Edit` tool only. Read section first.
-- **Exception**: Stim calc is now 10 separate JS modules (200-1,900 lines each) — still use surgical edits.
+- **Exception**: Stim calc (10 JS modules, 200-1,900 lines each) and index.html (12 JS modules, 230-1,600 lines each) — still use surgical edits on individual modules.
 
 ### Date Parsing (COMMON BUG)
 ```javascript
@@ -28,7 +28,8 @@ const date = new Date(year, month - 1, day);
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | ~22,700 | Main app: Command Center (Triage/Crash Out/Focus), tasks, financials, calendar, meds, notebook |
+| `index.html` | ~12,186 | Main app: CSS + HTML only (zero inline JS) |
+| `js/dental-quest/*.js` (12 modules) | ~10,762 | Main app JS: state, firebase-sync, medications, financials, calendar, daily-planner, notebook, tasks, triage, crash-out, focus-pomodoro, init |
 | `d3-roadmap.html` | ~17,575 | Academic tracker: 11 tabs (grades, deadlines, clinical, competencies, planners, exams) |
 | `stimulant-elimination-calculator.html` | ~2,632 | Sleep prediction app — CSS + HTML only (zero inline JS) |
 | `js/stimcalc/*.js` (10 modules) | ~8,224 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
@@ -36,7 +37,7 @@ const date = new Date(year, month - 1, day);
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
-- **Pattern**: Single-file HTML apps (except stim calc: 10 JS modules), no build system. Push to `main` → live in ~30s.
+- **Pattern**: Single-file HTML apps (except index.html: 12 JS modules, stim calc: 10 JS modules), no build system. Push to `main` → live in ~30s.
 
 ---
 
@@ -127,7 +128,7 @@ Default `_version: Date.now()` caused fresh browser to overwrite cloud with empt
 ### Per-App Save Guards
 | App | Function | Flag Name | Guards | Notes |
 |-----|----------|-----------|--------|-------|
-| index.html | `saveData()` | `initialLoadComplete` | 4 | Guards behind `firebaseInitialized`. No `_dataLoaded` check. |
+| index.html | `saveData()` in `firebase-sync.js` | `initialLoadComplete` | 5/5 | Both `saveData()` and `saveDataImmediate()` have 5 guards behind `firebaseInitialized`. Uses `buildSaveData()` shared helper. |
 | d3-roadmap | `saveData()` | `isInitialLoad` | 5 | PIN guard last. |
 | stim-calc | `saveState()` in `firebase-sync.js` | `isInitialLoad` | 5 | Both save fns have identical guards. |
 | body-comp | `saveState()` | `isInitialLoad` | 5/5 | Both save fns have all 5 guards (PIN bug fixed Feb 2026). |
@@ -140,12 +141,12 @@ if (!hasLoadedFromCloud) return false;
 if (isEmptyState(data)) return false;
 if (!data._dataLoaded) return false;
 ```
-Index.html differs: uses `initialLoadComplete`, 4 guards behind `firebaseInitialized` check, no `_dataLoaded`.
+Index.html now matches the standard pattern (5 guards behind `firebaseInitialized` check) after the Feb 2026 split.
 
 ### isEmptyState() Checks
 | App | Empty If Missing ALL Of |
 |-----|------------------------|
-| index.html | tasks, calendarNotes, calendarEvents, notebook.entries, stats.totalXPGained, focusModeData, commandCenterData |
+| index.html | tasks, calendarNotes, calendarEvents, notebook.pages, stats.totalXPGained, focusModeData, commandCenterData |
 | d3-roadmap | customDeadlines, customTasks, appointments, blocks, notes, patients, completedDeadlines, examStudyProgress, grades, exams |
 | stim-calc | medications, caffeine, history, sleepHistory, allNighterMode, _dataLoaded |
 | body-comp | weighIns, today.meals, today.workouts, dailyLogs, bodyCompHistory, today.setupComplete |
@@ -158,35 +159,61 @@ Import accepts 6 flexible formats (full backup, single checkpoint, raw data, nes
 
 ---
 
-## INDEX.HTML (DENTAL QUEST MAIN APP)
+## INDEX.HTML (DENTAL QUEST MAIN APP — Split Feb 2026)
 
-### File Layout (~22,700 lines)
+### Architecture: Multi-File (Split from 22,900-line monolith)
+```
+index.html                              (12,186 lines — CSS + HTML only, ZERO inline JS)
+js/dental-quest/
+├── state.js              (1,076 lines) - Globals, defaults, utilities, time helpers, Firebase config
+├── firebase-sync.js      (1,922 lines) - Auth, save/load, sync, checkpoints, buildSaveData
+├── medications.js          (337 lines) - Pill tracking, med settings, daily auto-reduce
+├── financials.js         (1,180 lines) - Financial Cockpit (7 render functions), credit cards
+├── calendar.js             (768 lines) - Master calendar, countdowns, calendar events
+├── daily-planner.js        (674 lines) - Daily planner, Critical EOD Reset
+├── notebook.js             (252 lines) - Multi-page notebook CRUD
+├── tasks.js              (1,599 lines) - Task CRUD, rendering, Command Center core, focus planning
+├── triage.js               (770 lines) - Triage mode (tiers, columns, drag-drop)
+├── crash-out.js          (1,224 lines) - Crash Out timeline, scheduling, reordering
+├── focus-pomodoro.js       (720 lines) - Pomodoro timer, gamification, streaks, rollovers
+└── init.js                 (237 lines) - DOMContentLoaded bootstrap, Quick Add FAB, compact header
+```
+
+### Script Loading Order (ORDER MATTERS — dependencies flow downward)
+state → firebase-sync → medications → financials → calendar → daily-planner → notebook → tasks → triage → crash-out → focus-pomodoro → init
+
+### Key Module Map
+| What to change | File to edit |
+|---------------|-------------|
+| State defaults, globals, utilities, Firebase config | `state.js` |
+| Save guards, Firebase load/sync, checkpoints, PIN auth | `firebase-sync.js` |
+| Pill tracking, med settings, auto-reduce | `medications.js` |
+| Financial Cockpit, bills, projections, credit cards | `financials.js` |
+| Master calendar, countdowns, events | `calendar.js` |
+| Daily planner, Critical EOD Reset | `daily-planner.js` |
+| Notebook pages CRUD | `notebook.js` |
+| Task CRUD, rendering, Command Center core, focus planning | `tasks.js` |
+| Triage mode (tiers, columns, drag-drop) | `triage.js` |
+| Crash Out timeline, scheduling, reordering | `crash-out.js` |
+| Pomodoro timer, gamification, XP, streaks, rollovers | `focus-pomodoro.js` |
+| App bootstrap, Quick Add FAB, compact header | `init.js` |
+
+### Bootstrap Sequence (init.js)
+```
+DOMContentLoaded → initApp() → initializeFirebase() → loadDataFromFirebase() (async)
+  → .then() callback → updateStats(), renderTasks(), initFocusMode(), etc.
+  → 10-second failsafe: force-show UI if Firebase hangs
+```
+Firebase init is called from `initApp()` in init.js (NOT at firebase-sync.js parse time).
+All cross-module function calls are safe because init.js loads LAST after all modules.
+
+### index.html File Layout (~12,186 lines — CSS + HTML only)
 | Range | Content |
 |-------|---------|
-| 1-10,580 | **CSS** |
-| 10,582-11,947 | **HTML** |
-| 11,949-22,705 | **JavaScript** |
-
-### Key JS Locations
-| Range | Content |
-|-------|---------|
-| 11,949-12,000 | Firebase config, sync flags, `isEmptyState()` |
-| 12,034-12,454 | App variables (tasks, stats, medications, financials) |
-| 12,455-12,700 | Data integrity (`generateId`, `getValues`, migrations) |
-| 12,901-13,080 | `saveData()` with 4 sync guards |
-| 13,850-14,140 | Firebase init, `loadDataFromFirebase()`, PIN |
-| 14,425-14,740 | Medication tracking (`updateMedCard`, `takeMed`, pill auto-reduce) |
-| 14,740-15,940 | Financial Cockpit (7 render functions) |
-| 15,940-16,540 | Master Calendar + Countdowns |
-| 16,540-17,160 | Daily Planner + Critical EOD Reset |
-| 17,160-17,660 | Realtime sync, force upload/pull |
-| 18,090-18,520 | Task rendering (2-row layout), `addTask()`, drag-drop |
-| 19,515-19,685 | Command Center core, tab switching |
-| 19,685-20,310 | Triage Mode (tiers, columns, drag-drop) |
-| 20,670-21,680 | Crash Out timeline + Google Calendar grid + reordering |
-| 21,680-22,100 | Focus/Pomodoro (timer, checklist, completion) |
-| 22,100-22,350 | Gamification, rollover, streaks |
-| 22,475-22,610 | Quick Add FAB |
+| 1-10,749 | **CSS** |
+| 10,751-12,121 | **HTML body** (structure, modals, tabs) |
+| 12,122-12,133 | **Script tags** (12 module `<script src>` tags) |
+| 12,135-12,186 | **Quick Add FAB HTML** + closing tags |
 
 ### Two Views
 - **Full View** (`currentView = 'full'`): 8 category tabs. Task list + add form + medication tracker.
@@ -205,7 +232,7 @@ Crash Out: `crashOutScheduled`, `crashOutTime`, `crashOutDuration`, `crashOutOrd
 Other: `rolledOver` ({ fromDate, wasTier }), `xp`, `completedAt`
 
 ### 4 Task Creation Sites (MUST update all when adding fields)
-1. `addTask()` ~18,265 | 2. `triageQuickAddTask()` ~20,176 | 3. `quickAddFromFocus()` ~19,343 | 4. `submitQuickAdd()` ~22,572
+1. `addTask()` in tasks.js | 2. `triageQuickAddTask()` in triage.js | 3. `quickAddFromFocus()` in tasks.js | 4. `submitQuickAdd()` in init.js
 
 ### XP & Gamification
 Levels = 500 XP each. Awards: lockedIn=50, crashOut=75, rolledOver=40, default=25. Perfect Day=200 bonus.

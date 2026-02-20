@@ -1570,10 +1570,10 @@ function initFocusMode() {
         }
 
         // Check for rolled over tasks from previous day
-        checkAndProcessRollovers();
+        if (typeof checkAndProcessRollovers === 'function') checkAndProcessRollovers();
 
         // Start the time prompt checker for Crash Out
-        startTimePromptChecker();
+        if (typeof startTimePromptChecker === 'function') startTimePromptChecker();
 
         // Handle responsive layout on resize
         window.addEventListener('resize', handleResponsiveLayout);
