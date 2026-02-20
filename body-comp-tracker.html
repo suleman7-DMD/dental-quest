@@ -18752,7 +18752,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         </div>
                     ` : ''}
                     <div class="comp-footer">
-                        Since ${new Date(first.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        Since ${parseLocalDate(first.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         (${weighInsWithBF.length} weigh-ins)
                     </div>
                 </div>
@@ -18835,7 +18835,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     ${lastRefeed ? `
                         <div class="refeed-last">
-                            Last refeed: ${new Date(lastRefeed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            Last refeed: ${parseLocalDate(lastRefeed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                     ` : ''}
                 </div>

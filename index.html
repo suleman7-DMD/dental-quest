@@ -15636,7 +15636,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
                     return priorityOrder[a.priority] - priorityOrder[b.priority];
                 }
-                return new Date(a.deadline) - new Date(b.deadline);
+                return parseLocalDate(a.deadline) - parseLocalDate(b.deadline);
             });
             
             const incomplete = sorted.filter(item => !item.completed);
@@ -15651,7 +15651,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     </div>
                     
                     ${sorted.map(item => {
-                        const deadline = new Date(item.deadline);
+                        const deadline = parseLocalDate(item.deadline);
                         const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
                         
                         let deadlineClass = 'ok';
@@ -18748,10 +18748,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 // Set completion timestamp
                 task.completedAt = Date.now();
                 
-                // When completed, remove from "Do Today"
-                if (task.doToday) {
-                    task.doToday = false;
-                }
+                // When completed, preserve doToday so completed tasks stay in triage progress count
                 
                 updateStats();
                 
@@ -20363,6 +20360,18 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             if (scheduledTasks.length === 0) return;
 
             let currentTime = new Date();
+            
+            // Fix: Anchor to the first task's scheduled time if it exists, to prevent time drift
+            if (scheduledTasks[0] && scheduledTasks[0].crashOutTime) {
+                const firstTaskTime = parseCrashOutTime(scheduledTasks[0].crashOutTime);
+                if (firstTaskTime) {
+                    currentTime = firstTaskTime;
+                    
+                    // But if the anchor is massively in the past (e.g. >1 hour ago and not active), maybe warn or snap to now.
+                    // For now, we just respect the user's explicit anchor.
+                }
+            }
+
 
             scheduledTasks.forEach((task, index) => {
                 task.crashOutOrder = index;
@@ -21472,9 +21481,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 const taskIds = scheduledTasks.map(t => t.id);
                 const [draggedTaskId] = taskIds.splice(draggedIndex, 1);
 
-                // Insert at target position (adjusted for removal if dragging down)
-                const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-                taskIds.splice(insertIndex, 0, draggedTaskId);
+                // Insert at target position (no adjustment needed since we removed dragged first)
+                taskIds.splice(targetIndex, 0, draggedTaskId);
+
 
                 // Update crashOutOrder for ALL tasks based on new array order
                 // Direct mutation keeps cache references valid
@@ -21933,6 +21942,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             const task = tasks[currentFocusTaskId];
             if (!task) return;
 
+            // Restore ephemeral timer state if pulled from another device and not currently ticking
+            if (!focusTimerRunning && commandCenterData.currentSession.timerRemaining != null) {
+                focusTimerSecondsRemaining = commandCenterData.currentSession.timerRemaining;
+                focusTimerDuration = commandCenterData.currentSession.timerMinutes || 25;
+            }
+
+
             // Update task info
             const taskTextEl = document.getElementById('focusCurrentTaskText');
             const taskTierEl = document.getElementById('focusCurrentTaskTier');
@@ -22022,6 +22038,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             focusTimerRunning = true;
             focusTimerInterval = setInterval(() => {
                 focusTimerSecondsRemaining--;
+                if (commandCenterData.currentSession) {
+                    commandCenterData.currentSession.timerRemaining = focusTimerSecondsRemaining;
+                    // Debounced save in saveData is safe to call rapidly
+                    saveData(); 
+                }
+
                 updateFocusTimerDisplay();
 
                 if (focusTimerSecondsRemaining <= 0) {
@@ -22066,6 +22088,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
             if (commandCenterData.currentSession) {
                 commandCenterData.currentSession.timerMinutes = minutes;
+                commandCenterData.currentSession.timerRemaining = focusTimerSecondsRemaining;
+                saveData();
+
             }
 
             updateFocusTimerDisplay();
@@ -22212,6 +22237,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 commandCenterData.currentSession.checklist = {};
                 commandCenterData.currentSession.confirmedStarted = false;
                 commandCenterData.currentSession.startedAt = null;
+                commandCenterData.currentSession.timerRemaining = null;
+
             }
             currentFocusTaskId = null;
 
