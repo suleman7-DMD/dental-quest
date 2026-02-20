@@ -13156,8 +13156,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     currentSession: {
                         taskId: commandCenterData.currentSession.taskId,
                         checklist: commandCenterData.currentSession.checklist,
-                        timerMinutes: commandCenterData.currentSession.timerMinutes
-                        // Don't save timerRemaining - it's ephemeral
+                        timerMinutes: commandCenterData.currentSession.timerMinutes,
+                        timerRemaining: commandCenterData.currentSession.timerRemaining,
+                        confirmedStarted: commandCenterData.currentSession.confirmedStarted,
+                        startedAt: commandCenterData.currentSession.startedAt
                     }
                 },
                 lastCriticalEODReset, // Sync reset date across devices
@@ -17597,8 +17599,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     currentSession: {
                         taskId: commandCenterData.currentSession.taskId,
                         checklist: commandCenterData.currentSession.checklist,
-                        timerMinutes: commandCenterData.currentSession.timerMinutes
-                        // Don't save timerRemaining - it's ephemeral
+                        timerMinutes: commandCenterData.currentSession.timerMinutes,
+                        timerRemaining: commandCenterData.currentSession.timerRemaining,
+                        confirmedStarted: commandCenterData.currentSession.confirmedStarted,
+                        startedAt: commandCenterData.currentSession.startedAt
                     }
                 },
                 lastCriticalEODReset,
