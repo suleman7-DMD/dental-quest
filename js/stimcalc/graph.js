@@ -1,0 +1,733 @@
+// ============================================
+// GRAPH & CANVAS (Phase 4)
+// ============================================
+
+function drawGraph() {
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 40;
+    canvas.height = rect.height - 40;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const padding = { left: 50, right: 20, top: 20, bottom: 30 };
+    const graphWidth = width - padding.left - padding.right;
+    const graphHeight = height - padding.top - padding.bottom;
+
+    // Clear
+    ctx.clearRect(0, 0, width, height);
+
+    // Time range: 6am to 3am next day (21 hours)
+    const startTime = 6 * 60; // 6am
+    const endTime = 27 * 60; // 3am next day
+    const timeRange = endTime - startTime;
+
+    // Find max values for scaling
+    const effectiveThreshold = getEffectiveThreshold();
+    let maxAmp = effectiveThreshold * 2;
+    let maxCaff = state.settings.caffThreshold * 2;
+
+    for (let t = startTime; t <= endTime; t += 15) {
+        maxAmp = Math.max(maxAmp, calculateAmpLoad(t));
+        maxCaff = Math.max(maxCaff, calculateCaffLoad(t));
+    }
+
+    const maxY = Math.max(maxAmp, maxCaff, 50);
+
+    // Draw Forbidden Zone band (red, semi-transparent)
+    const forbiddenZone = getForbiddenZone();
+    let fzStart = forbiddenZone.start;
+    let fzEnd = forbiddenZone.end;
+    // Removed buggy > 24*60 wrapping that made zones disappear
+
+    // Adjust for graph coordinates
+    if (fzStart >= startTime && fzStart <= endTime) {
+        const fzStartX = padding.left + ((fzStart - startTime) / timeRange) * graphWidth;
+        const fzEndX = padding.left + ((Math.min(fzEnd, endTime) - startTime) / timeRange) * graphWidth;
+
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+        ctx.fillRect(fzStartX, padding.top, fzEndX - fzStartX, graphHeight);
+
+        // Label
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
+        ctx.fillText('ZONE', (fzStartX + fzEndX) / 2, padding.top + 22);
+    }
+
+    // Draw Sleep Gate band (green, semi-transparent)
+    const sleepGate = getSleepGate();
+    let sgStart = sleepGate.start;
+    let sgEnd = sleepGate.end;
+    // Removed buggy > 24*60 wrapping that made zones disappear
+
+    if (sgStart >= startTime && sgStart <= endTime) {
+        const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
+        const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
+
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+        ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
+
+        // Label
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
+        ctx.fillText('GATE', (sgStartX + sgEndX) / 2, padding.top + 22);
+    }
+
+    // Draw grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+
+    // Horizontal grid lines
+    for (let i = 0; i <= 5; i++) {
+        const y = padding.top + (graphHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        // Y-axis labels
+        const value = Math.round(maxY * (1 - i / 5));
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(value + 'mg', padding.left - 8, y + 4);
+    }
+
+    // Vertical grid lines and time labels
+    const timeLabels = ['6am', '9am', '12pm', '3pm', '6pm', '9pm', '12am', '3am'];
+    const timePoints = [6, 9, 12, 15, 18, 21, 24, 27];
+
+    timePoints.forEach((hour, i) => {
+        const x = padding.left + ((hour * 60 - startTime) / timeRange) * graphWidth;
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.moveTo(x, padding.top);
+        ctx.lineTo(x, height - padding.bottom);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(timeLabels[i], x, height - 8);
+    });
+
+    // Draw threshold line (using effective threshold)
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    const thresholdY = padding.top + graphHeight * (1 - effectiveThreshold / maxY);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, thresholdY);
+    ctx.lineTo(width - padding.right, thresholdY);
+    ctx.stroke();
+
+    // Label threshold
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${effectiveThreshold.toFixed(0)}mg threshold`, padding.left + 5, thresholdY - 5);
+
+    ctx.setLineDash([]);
+
+    // Draw "Stimulant Blockade" shading (area between amp curve and threshold)
+    // This visually shows when drugs are blocking sleep
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+    ctx.beginPath();
+    ctx.moveTo(padding.left, thresholdY);
+
+    for (let t = startTime; t <= endTime; t += 5) {
+        const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+        const load = calculateAmpLoad(t);
+        const y = padding.top + graphHeight * (1 - load / maxY);
+
+        // Only shade if above threshold
+        if (load > effectiveThreshold) {
+            ctx.lineTo(x, y);
+        } else {
+            ctx.lineTo(x, thresholdY);
+        }
+    }
+
+    // Close the path back along the threshold line
+    ctx.lineTo(width - padding.right, thresholdY);
+    ctx.lineTo(padding.left, thresholdY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Add "Stimulant Blockade" label in the shaded area
+    const medsForPeak = getValues(state.medications);
+    const peakTime = medsForPeak.length > 0 ?
+        Math.min(...medsForPeak.map(m => timeToMinutes(m.time))) + 180 : // ~3 hrs after first dose
+        startTime + 360;
+
+    if (peakTime >= startTime && peakTime <= endTime) {
+        const peakLoad = calculateAmpLoad(peakTime);
+        if (peakLoad > effectiveThreshold) {
+            const labelX = padding.left + ((peakTime - startTime) / timeRange) * graphWidth;
+            const labelY = padding.top + graphHeight * (1 - (effectiveThreshold + (peakLoad - effectiveThreshold) / 2) / maxY);
+
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('STIMULANT', labelX, labelY - 5);
+            ctx.fillText('BLOCKADE', labelX, labelY + 5);
+        }
+    }
+
+    // Draw amphetamine curve
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let firstPoint = true;
+
+    for (let t = startTime; t <= endTime; t += 5) {
+        const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+        const load = calculateAmpLoad(t);
+        const y = padding.top + graphHeight * (1 - load / maxY);
+
+        if (firstPoint) {
+            ctx.moveTo(x, y);
+            firstPoint = false;
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+
+    // Draw caffeine curve
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    firstPoint = true;
+
+    for (let t = startTime; t <= endTime; t += 5) {
+        const x = padding.left + ((t - startTime) / timeRange) * graphWidth;
+        const load = calculateCaffLoad(t);
+        const y = padding.top + graphHeight * (1 - load / maxY);
+
+        if (firstPoint) {
+            ctx.moveTo(x, y);
+            firstPoint = false;
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+
+    // Draw "now" line
+    const now = getCurrentMinutes();
+    if (now >= startTime && now <= endTime) {
+        const nowX = padding.left + ((now - startTime) / timeRange) * graphWidth;
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(nowX, padding.top);
+        ctx.lineTo(nowX, height - padding.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('NOW', nowX, padding.top - 5);
+    }
+
+    // Draw projected sleep time marker
+    const { sleepTime } = calculateSleepTime();
+    let displaySleepTime = sleepTime;
+    if (displaySleepTime < 0) displaySleepTime += 24 * 60;
+    if (displaySleepTime > 24 * 60) displaySleepTime -= 24 * 60;
+
+    // Adjust for graph (which shows 6am to 3am next day)
+    let graphSleepTime = displaySleepTime;
+    if (displaySleepTime < startTime) graphSleepTime += 24 * 60; // Next day
+
+    if (graphSleepTime >= startTime && graphSleepTime <= endTime) {
+        const sleepX = padding.left + ((graphSleepTime - startTime) / timeRange) * graphWidth;
+
+        // Draw sleep time line
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(sleepX, padding.top);
+        ctx.lineTo(sleepX, height - padding.bottom);
+        ctx.stroke();
+
+        // Sleep time arrow at bottom
+        ctx.fillStyle = '#a855f7';
+        ctx.beginPath();
+        ctx.moveTo(sleepX, height - padding.bottom + 5);
+        ctx.lineTo(sleepX - 6, height - padding.bottom + 12);
+        ctx.lineTo(sleepX + 6, height - padding.bottom + 12);
+        ctx.closePath();
+        ctx.fill();
+
+        // Label
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SLEEP', sleepX, height - padding.bottom + 24);
+        ctx.fillText(minutesToTime(displaySleepTime), sleepX, height - padding.bottom + 35);
+    }
+}
+
+// ============================================
+// GRAPH TOOLTIP
+// ============================================
+
+function setupGraphTooltip() {
+    const canvas = document.getElementById('graphCanvas');
+    const tooltip = document.getElementById('graphTooltip');
+    const container = document.getElementById('graphContainer');
+
+    if (!canvas || !tooltip || !container) return;
+
+    canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Graph dimensions (must match drawGraph)
+        const padding = { left: 50, right: 20, top: 20, bottom: 30 };
+        const graphWidth = canvas.width - padding.left - padding.right;
+        const graphHeight = canvas.height - padding.top - padding.bottom;
+
+        // Check if within graph area
+        if (x < padding.left || x > canvas.width - padding.right ||
+            y < padding.top || y > canvas.height - padding.bottom) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        // Time range (must match drawGraph)
+        const startTime = 6 * 60; // 6am
+        const endTime = 27 * 60; // 3am next day
+        const timeRange = endTime - startTime;
+
+        // Calculate time at mouse position
+        const timeAtMouse = startTime + ((x - padding.left) / graphWidth) * timeRange;
+
+        // Calculate drug loads at this time
+        const ampLoad = calculateAmpLoad(timeAtMouse);
+        const caffLoad = calculateCaffLoad(timeAtMouse);
+        const effectiveThreshold = getEffectiveThreshold();
+
+        // Format time
+        let displayTime = timeAtMouse;
+        if (displayTime >= 24 * 60) displayTime -= 24 * 60;
+        const timeStr = minutesToTime(displayTime);
+
+        // Check zones
+        const inForbidden = isInForbiddenZone(timeAtMouse);
+        const inSleepGate = isInSleepGate(timeAtMouse);
+
+        let zoneText = '';
+        if (inForbidden) {
+            zoneText = '<div style="color: #ef4444; font-size: 0.85em; margin-top: 6px;">Warning: Forbidden Zone</div>';
+        } else if (inSleepGate) {
+            zoneText = '<div style="color: #10b981; font-size: 0.85em; margin-top: 6px;">Sleep Gate</div>';
+        }
+
+        // Status indicators
+        const ampStatus = ampLoad < effectiveThreshold ? 'OK' : 'pending';
+        const caffStatus = caffLoad < state.settings.caffThreshold ? 'OK' : 'pending';
+
+        tooltip.innerHTML = `
+            <div class="tooltip-time">${timeStr}</div>
+            <div class="tooltip-row">
+                <span class="tooltip-label">Amphetamine:</span>
+                <span class="tooltip-value amp">${ampLoad.toFixed(1)}mg ${ampStatus}</span>
+            </div>
+            <div class="tooltip-row">
+                <span class="tooltip-label">Caffeine:</span>
+                <span class="tooltip-value caff">${caffLoad.toFixed(1)}mg ${caffStatus}</span>
+            </div>
+            <div class="tooltip-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <span class="tooltip-label">Threshold:</span>
+                <span class="tooltip-value" style="color: #ef4444;">${effectiveThreshold.toFixed(1)}mg</span>
+            </div>
+            ${zoneText}
+        `;
+
+        // Position tooltip
+        const containerRect = container.getBoundingClientRect();
+        let tooltipX = e.clientX - containerRect.left + 15;
+        let tooltipY = e.clientY - containerRect.top - 10;
+
+        // Keep tooltip within container
+        const tooltipWidth = 170;
+        const tooltipHeight = 120;
+
+        if (tooltipX + tooltipWidth > containerRect.width - 20) {
+            tooltipX = e.clientX - containerRect.left - tooltipWidth - 15;
+        }
+        if (tooltipY + tooltipHeight > containerRect.height - 20) {
+            tooltipY = containerRect.height - tooltipHeight - 20;
+        }
+        if (tooltipY < 10) tooltipY = 10;
+
+        tooltip.style.left = tooltipX + 'px';
+        tooltip.style.top = tooltipY + 'px';
+        tooltip.style.display = 'block';
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+    });
+}
+
+// ============================================
+// SLEEP PERFORMANCE GRAPH UTILITIES
+// ============================================
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+}
+
+// Cardinal spline interpolation for smooth curves
+// Extracted from drawSleepPerformanceGraph to module level
+function getCardinalSplinePoints(points, tension) {
+    if (tension === undefined) tension = 0.4;
+    if (points.length < 2) return points;
+
+    const result = [];
+    for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[Math.max(0, i - 1)];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[Math.min(points.length - 1, i + 2)];
+
+        for (let t = 0; t <= 1; t += 0.05) {
+            const t2 = t * t;
+            const t3 = t2 * t;
+
+            const x = 0.5 * ((2 * p1.x) +
+                (-p0.x + p2.x) * t +
+                (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+                (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+            const y = 0.5 * ((2 * p1.y) +
+                (-p0.y + p2.y) * t +
+                (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+                (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+            result.push({ x, y });
+        }
+    }
+    result.push(points[points.length - 1]);
+    return result;
+}
+
+function setupSleepGraphTooltip(data, avg) {
+    const canvas = document.getElementById('sleepPerformanceGraph');
+    const tooltip = document.getElementById('sleepGraphTooltip');
+    if (!canvas || !tooltip) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const padding = { top: 25, right: 15, bottom: 35, left: 35 };
+    const graphWidth = rect.width - padding.left - padding.right;
+    const graphHeight = 220 - padding.top - padding.bottom;
+    const pointSpacing = graphWidth / (data.length - 1);
+
+    canvas.onmousemove = function(e) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const x = e.clientX - canvasRect.left;
+        const y = e.clientY - canvasRect.top;
+
+        // Find closest data point
+        let closestPoint = null;
+        let closestDist = Infinity;
+
+        data.forEach((d, i) => {
+            if (d.hoursSlept === null) return;
+
+            const px = padding.left + i * pointSpacing;
+            const py = padding.top + graphHeight - (Math.min(d.hoursSlept, 12) / 12) * graphHeight;
+            const dist = Math.sqrt(Math.pow(x - px, 2) + Math.pow(y - py, 2));
+
+            if (dist < closestDist && dist < 30) {
+                closestDist = dist;
+                closestPoint = { ...d, px, py };
+            }
+        });
+
+        if (closestPoint) {
+            tooltip.style.display = 'block';
+
+            // Position tooltip
+            let tooltipX = closestPoint.px + 15;
+            let tooltipY = closestPoint.py - 60;
+
+            // Adjust if too far right
+            if (tooltipX + 150 > rect.width) {
+                tooltipX = closestPoint.px - 160;
+            }
+            // Adjust if too high
+            if (tooltipY < 10) {
+                tooltipY = closestPoint.py + 20;
+            }
+
+            tooltip.style.left = tooltipX + 'px';
+            tooltip.style.top = tooltipY + 'px';
+
+            // Fill tooltip content
+            const fullDate = closestPoint.date.toLocaleDateString('en-US', {
+                weekday: 'long', month: 'short', day: 'numeric'
+            });
+
+            let statusText, statusColor;
+            if (closestPoint.hoursSlept >= 8) {
+                statusText = 'Excellent recovery';
+                statusColor = '#10b981';
+            } else if (closestPoint.hoursSlept >= 7) {
+                statusText = 'Good night';
+                statusColor = '#10b981';
+            } else if (closestPoint.hoursSlept >= 5.5) {
+                statusText = 'Functional';
+                statusColor = '#60a5fa';
+            } else if (closestPoint.hoursSlept >= 4.5) {
+                statusText = 'Sleep deprived';
+                statusColor = '#f59e0b';
+            } else {
+                statusText = 'Severe deficit';
+                statusColor = '#ef4444';
+            }
+
+            const vsAvg = closestPoint.hoursSlept - avg;
+            const vsAvgText = vsAvg >= 0 ? `+${vsAvg.toFixed(1)}h vs avg` : `${vsAvg.toFixed(1)}h vs avg`;
+
+            document.getElementById('tooltipDate').textContent = fullDate;
+            document.getElementById('tooltipHours').innerHTML = `<span style="color: ${statusColor}">${closestPoint.hoursSlept.toFixed(1)}h</span>`;
+            document.getElementById('tooltipStatus').innerHTML = `<span style="color: ${statusColor}">${statusText}</span>`;
+            document.getElementById('tooltipVsAvg').textContent = vsAvgText;
+
+        } else {
+            tooltip.style.display = 'none';
+        }
+    };
+
+    canvas.onmouseleave = function() {
+        tooltip.style.display = 'none';
+    };
+}
+
+function drawSleepPerformanceGraph(data) {
+    const canvas = document.getElementById('sleepPerformanceGraph');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    // Set canvas size
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 220 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = 220;
+    const padding = { top: 25, right: 15, bottom: 35, left: 35 };
+    const graphWidth = width - padding.left - padding.right;
+    const graphHeight = height - padding.top - padding.bottom;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Collect valid data points for the curve
+    const validPoints = [];
+    const pointSpacing = graphWidth / (data.length - 1);
+
+    data.forEach((d, i) => {
+        const x = padding.left + i * pointSpacing;
+        if (d.hoursSlept !== null) {
+            const y = padding.top + graphHeight - (Math.min(d.hoursSlept, 12) / 12) * graphHeight;
+            validPoints.push({ x, y, hours: d.hoursSlept, isToday: d.isToday, dayLabel: d.dayLabel, index: i });
+        }
+    });
+
+    // Draw subtle horizontal reference lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    [4, 6, 8, 10].forEach(hours => {
+        const y = padding.top + graphHeight - (hours / 12) * graphHeight;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+    });
+
+    // Y-axis labels (minimal)
+    ctx.font = '10px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.textAlign = 'right';
+    [4, 8, 12].forEach(hours => {
+        const y = padding.top + graphHeight - (hours / 12) * graphHeight;
+        ctx.fillText(hours + 'h', padding.left - 8, y + 3);
+    });
+
+    if (validPoints.length >= 2) {
+        const smoothPoints = getCardinalSplinePoints(validPoints);
+
+        // Draw gradient fill under the curve
+        const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');   // Indigo at top
+        gradient.addColorStop(0.3, 'rgba(139, 92, 246, 0.25)'); // Purple
+        gradient.addColorStop(0.6, 'rgba(59, 130, 246, 0.15)'); // Blue
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');   // Fade to transparent
+
+        ctx.beginPath();
+        ctx.moveTo(smoothPoints[0].x, padding.top + graphHeight);
+        ctx.lineTo(smoothPoints[0].x, smoothPoints[0].y);
+
+        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+
+        ctx.lineTo(smoothPoints[smoothPoints.length - 1].x, padding.top + graphHeight);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw the main line with glow effect
+        // Outer glow
+        ctx.beginPath();
+        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Inner glow
+        ctx.beginPath();
+        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Main line
+        ctx.beginPath();
+        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+
+        // Gradient stroke
+        const lineGradient = ctx.createLinearGradient(padding.left, 0, width - padding.right, 0);
+        lineGradient.addColorStop(0, '#6366f1');    // Indigo
+        lineGradient.addColorStop(0.5, '#8b5cf6');  // Purple
+        lineGradient.addColorStop(1, '#60a5fa');    // Blue
+
+        ctx.strokeStyle = lineGradient;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Draw data points with glow
+        validPoints.forEach((p, idx) => {
+            // Determine color based on hours
+            let pointColor, glowColor;
+            if (p.hours >= 7) {
+                pointColor = '#10b981';
+                glowColor = 'rgba(16, 185, 129, 0.6)';
+            } else if (p.hours >= 5.5) {
+                pointColor = '#60a5fa';
+                glowColor = 'rgba(96, 165, 250, 0.6)';
+            } else if (p.hours >= 4.5) {
+                pointColor = '#fbbf24';
+                glowColor = 'rgba(251, 191, 36, 0.6)';
+            } else {
+                pointColor = '#ef4444';
+                glowColor = 'rgba(239, 68, 68, 0.6)';
+            }
+
+            const radius = p.isToday ? 7 : 5;
+
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius + 4, 0, Math.PI * 2);
+            ctx.fillStyle = glowColor.replace('0.6', '0.2');
+            ctx.fill();
+
+            // Inner glow
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius + 2, 0, Math.PI * 2);
+            ctx.fillStyle = glowColor.replace('0.6', '0.4');
+            ctx.fill();
+
+            // Main point
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = pointColor;
+            ctx.fill();
+
+            // White center dot
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.fill();
+
+            // Today indicator ring
+            if (p.isToday) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, radius + 6, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(88, 166, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        });
+    }
+
+    // Draw reference lines (8h optimal, 4.5h danger) - subtle
+    const optimalY = padding.top + graphHeight - (8 / 12) * graphHeight;
+    const dangerY = padding.top + graphHeight - (4.5 / 12) * graphHeight;
+
+    // Optimal line (8h) - subtle green
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, optimalY);
+    ctx.lineTo(width - padding.right, optimalY);
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Danger line (4.5h) - subtle red
+    ctx.beginPath();
+    ctx.moveTo(padding.left, dangerY);
+    ctx.lineTo(width - padding.right, dangerY);
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // X-axis labels (minimal - only every 7 days + today)
+    ctx.font = '9px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+
+    data.forEach((d, i) => {
+        const x = padding.left + i * pointSpacing;
+
+        // Show label every 7 days or if today
+        if (i === 0 || i === 7 || i === 14 || i === 21 || i === 29 || d.isToday) {
+            ctx.fillStyle = d.isToday ? '#60a5fa' : 'rgba(255,255,255,0.35)';
+            ctx.font = d.isToday ? 'bold 10px system-ui' : '9px system-ui';
+            ctx.fillText(d.isToday ? 'Today' : d.dayLabel, x, height - 10);
+
+            // Tick mark
+            if (!d.isToday) {
+                ctx.beginPath();
+                ctx.moveTo(x, padding.top + graphHeight);
+                ctx.lineTo(x, padding.top + graphHeight + 4);
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+    });
+}
