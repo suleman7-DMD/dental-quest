@@ -3104,610 +3104,16 @@
         </div>
     </div>
 
+    <script src="js/stimcalc/state.js"></script>
+    <script src="js/stimcalc/circadian.js"></script>
     <script>
         // ============================================
-        // STATE MANAGEMENT
-        // ============================================
-        // ============================================
-        // DEFAULT STATE FACTORY (for restore/reset operations)
-        // ============================================
-        function getDefaultState() {
-            return {
-                wakeTime: '06:45',
-                hoursSleptLastNight: 8,
-                medications: {},
-                caffeine: {},
-                allNighterMode: false,
-                modifiers: {
-                    vitaminC: { active: false, time: '17:00', date: null },
-                    heavyLift: { active: false },
-                    sauna: { active: false, time: '18:00', date: null }
-                },
-                nicotine: {
-                    active: false,
-                    type: 'vape',
-                    lastHitTime: null
-                },
-                workoutPlan: {
-                    active: false,
-                    time: null,
-                    duration: 45,
-                    type: 'lifting',
-                    intensity: 'medium',
-                    fasted: false,
-                    coldShower: false,
-                    applied: false,
-                    adenosineBonus: 0,
-                    cortisolDelay: 0,
-                    thermalDelay: 0,
-                    cooldownComplete: null
-                },
-                settings: {
-                    ampHalfLife: 11,
-                    sleepThreshold: 14,
-                    caffHalfLife: 5,
-                    caffThreshold: 25,
-                    weight: 190
-                },
-                history: {},
-                _version: 0,
-                sleepHistory: {},
-                _dataLoaded: false
-            };
-        }
-
-        let state = {
-            wakeTime: '06:45',
-            hoursSleptLastNight: 8,
-            // OBJECTS with ID keys (not arrays) - prevents Firebase corruption
-            medications: {},  // { 'med_123_abc': { id, dose, time, date } }
-            caffeine: {},     // { 'caf_123_abc': { id, amount, time, date } }
-            // All-Nighter Mode: enables 48-hour view with yesterday's ghost load
-            allNighterMode: false,
-            modifiers: {
-                vitaminC: { active: false, time: '17:00', date: null },
-                heavyLift: { active: false },
-                sauna: { active: false, time: '18:00', date: null }
-            },
-            // Nicotine tracking - cardiovascular stimulant effects
-            nicotine: {
-                active: false,
-                type: 'vape', // 'vape' or 'pouch'
-                lastHitTime: null // 'HH:MM' format
-            },
-            // Workout plan - integrated into main calculation
-            workoutPlan: {
-                active: false,
-                time: null,
-                duration: 45,
-                type: 'lifting',
-                intensity: 'medium',
-                fasted: false,
-                coldShower: false,
-                applied: false,
-                // Calculated impacts (stored when applied)
-                adenosineBonus: 0,
-                cortisolDelay: 0,
-                thermalDelay: 0,
-                cooldownComplete: null
-            },
-            settings: {
-                ampHalfLife: 11,
-                sleepThreshold: 14,
-                caffHalfLife: 5,
-                caffThreshold: 25,
-                weight: 190
-            },
-            // OBJECT with ID keys - prevents Firebase corruption
-            history: {},  // { 'hist_123_abc': { id, date, predictedSleep, actualSleep, ... } }
-            _version: 0,  // Incremented on every save for conflict detection
-            // Enhanced sleep history: stores hours slept AND wake time for each day
-            // { 'YYYY-MM-DD': { hoursSlept: number, wakeTime: 'HH:MM' } }
-            sleepHistory: {},
-            _dataLoaded: false  // Flag to track if real data was loaded
-        };
-
-        // ============================================
-        // SYNC PROTECTION FLAGS - PREVENTS DATA WIPE
-        // ============================================
-        let isInitialLoad = true;      // Block ALL saves until data loaded
-        let hasLoadedFromCloud = false; // Track if we've checked Firebase
-        let pinValidated = false;      // Track if PIN has been validated (prevents race condition)
-
-        // Auto-save prediction throttle state
-        let lastAutoSavePredictionTime = 0;
-        let lastAutoSavePredictionMinutes = null;
-
-        // Check if state has real user data (not just defaults)
-        function isEmptyState(data) {
-            if (!data) return true;
-
-            // Stimulant Calculator specific checks - must have at least ONE of these
-            const hasMedications = getCount(data.medications) > 0;
-            const hasCaffeine = getCount(data.caffeine) > 0;
-            const hasHistory = getCount(data.history) > 0;
-            const hasSleepHistory = getCount(data.sleepHistory) > 0;
-
-            // FIX: Allow saving when allNighterMode is ON or when data has been loaded
-            // This fixes the bug where toggling allNighterMode wouldn't persist
-            const hasAllNighterMode = data.allNighterMode === true;
-            const dataWasLoaded = data._dataLoaded === true;
-
-            // Empty if NONE of these exist
-            return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory && !hasAllNighterMode && !dataWasLoaded;
-        }
-
-        function hasRealData(data) {
-            return !isEmptyState(data);
-        }
-
-        // ============================================
-        // DATA INTEGRITY UTILITIES
-        // ============================================
-        // Firebase converts arrays to objects - this converts them back
-        function ensureArray(val, fallback = []) {
-            if (!val) return fallback;
-            if (Array.isArray(val)) return val;
-            if (typeof val === 'object') {
-                return Object.values(val);
-            }
-            return fallback;
-        }
-
-        // Generate unique IDs
-        function generateId(prefix = 'item') {
-            return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-        }
-
-        // Convert array to object with unique IDs (migration helper)
-        // This PREVENTS Firebase's array→object corruption by using objects from the start
-        function migrateArrayToObject(arr, prefix = 'item') {
-            if (!arr) return {};
-            // Already an object with string keys? Return as-is
-            if (!Array.isArray(arr) && typeof arr === 'object') {
-                // Check if it looks like our ID-keyed object
-                const keys = Object.keys(arr);
-                if (keys.length === 0) return {};
-                if (keys.every(k => typeof k === 'string' && k.includes('_'))) {
-                    return arr; // Already migrated
-                }
-                // Firebase-corrupted sparse object (numeric keys) - convert to proper object
-                arr = Object.values(arr).filter(v => v !== null && v !== undefined);
-            }
-            if (!Array.isArray(arr)) return {};
-
-            const obj = {};
-            arr.forEach((item, index) => {
-                if (item === null || item === undefined) return;
-                // Use existing ID if present, otherwise generate one
-                // Add small offset to ensure uniqueness even if items have same timestamp
-                const id = item.id && typeof item.id === 'string' && item.id.includes('_')
-                    ? item.id
-                    : generateId(prefix) + '_' + index;
-                obj[id] = { ...item, id };
-            });
-            return obj;
-        }
-
-        // Get values from object as array (for iteration)
-        function getValues(obj) {
-            if (!obj) return [];
-            if (Array.isArray(obj)) return obj; // Backwards compat during migration
-            return Object.values(obj).filter(v => v !== null && v !== undefined);
-        }
-
-        // Get count of items in object
-        function getCount(obj) {
-            if (!obj) return 0;
-            if (Array.isArray(obj)) return obj.length;
-            return Object.keys(obj).length;
-        }
-
-        // Safe localStorage wrapper with quota handling
-        function safeLocalStorageSet(key, value) {
-            try {
-                localStorage.setItem(key, value);
-                return true;
-            } catch (e) {
-                if (e.name === 'QuotaExceededError' || e.code === 22) {
-                    console.error('localStorage quota exceeded - clearing old backups');
-                    // Try to free space by clearing old backups
-                    try {
-                        localStorage.removeItem('stimcalc_backups');
-                        localStorage.setItem(key, value);
-                        return true;
-                    } catch (e2) {
-                        console.error('Still cannot save after clearing backups:', e2);
-                        showToast('⚠️ Storage full - data may not persist');
-                        return false;
-                    }
-                }
-                console.error('localStorage error:', e);
-                return false;
-            }
-        }
-
-        // Escape HTML to prevent XSS in innerHTML
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // Backup Manager with export/import
-        const BackupManager = {
-            maxBackups: 3,
-            createBackup() {
-                try {
-                    const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
-                    const currentData = localStorage.getItem('stimulantCalculatorState');
-                    if (!currentData) return;
-                    backups.unshift({ timestamp: Date.now(), data: currentData });
-                    while (backups.length > this.maxBackups) backups.pop();
-                    safeLocalStorageSet('stimcalc_backups', JSON.stringify(backups));
-                } catch (e) { console.error('Backup failed:', e); }
-            },
-            restoreBackup(timestamp) {
-                const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
-                const backup = backups.find(b => b.timestamp === timestamp);
-                if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
-                    safeLocalStorageSet('stimulantCalculatorState', backup.data);
-                    location.reload();
-                }
-            },
-            exportData() {
-                const data = {
-                    exportDate: new Date().toISOString(),
-                    appVersion: '3.0',
-                    state: state
-                };
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `stimulant-calc-backup-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showToast('📥 Backup downloaded');
-            },
-            importData(file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const imported = JSON.parse(e.target.result);
-                        if (!imported.state) {
-                            showToast('❌ Invalid backup file');
-                            return;
-                        }
-                        // Create backup of current state before import
-                        this.createBackup();
-                        // Apply imported state with migration
-                        state = {
-                            ...state,
-                            ...imported.state,
-                            medications: migrateArrayToObject(imported.state.medications, 'med'),
-                            caffeine: migrateArrayToObject(imported.state.caffeine, 'caf'),
-                            history: migrateArrayToObject(imported.state.history, 'hist'),
-                            _version: (imported.state._version || state._version || 0) + 1
-                        };
-                        safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
-                        saveToFirebase();
-                        // Re-render
-                        document.getElementById('wakeTime').value = state.wakeTime;
-                        document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-                        renderMedEntries();
-                        renderCaffeineEntries();
-                        renderSleepCalendar();
-                        renderSleepPerformance();
-                        renderHistory();
-                        recalculate();
-                        showToast('✅ Backup imported successfully');
-                    } catch (err) {
-                        console.error('Import failed:', err);
-                        showToast('❌ Failed to import backup');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        };
-        setInterval(() => BackupManager.createBackup(), 5 * 60 * 1000);
-
-        // ============================================
-        // CIRCADIAN PHASE DETECTION
-        // ============================================
-        
-        function analyzeCircadianPhase() {
-            // Collect wake times from last 7 days
-            const today = new Date();
-            const todayStr = getLocalDateString(today);
-            const wakeTimes = [];
-            
-            // ALWAYS include today first with current inputs
-            wakeTimes.push({
-                date: todayStr,
-                wakeMinutes: timeToMinutes(state.wakeTime),
-                hoursSlept: state.hoursSleptLastNight
-            });
-            
-            // Then check history for past 6 days (not including today since we added it above)
-            for (let i = 1; i <= 6; i++) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                const dateStr = getLocalDateString(date);
-                
-                const entry = state.sleepHistory[dateStr];
-                if (entry) {
-                    // Handle both old format (just number) and new format (object)
-                    if (typeof entry === 'object' && entry.wakeTime) {
-                        const h = Number(entry.hoursSlept);
-                        wakeTimes.push({
-                            date: dateStr,
-                            wakeMinutes: timeToMinutes(entry.wakeTime),
-                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                        });
-                    } else if (typeof entry === 'number') {
-                        // Old format - only has hours, no wake time
-                        const h = Number(entry);
-                        wakeTimes.push({
-                            date: dateStr,
-                            wakeMinutes: null,
-                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                        });
-                    } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
-                        // New format but no wake time yet
-                        const h = Number(entry.hoursSlept);
-                        wakeTimes.push({
-                            date: dateStr,
-                            wakeMinutes: null,
-                            hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                        });
-                    }
-                }
-            }
-            
-            // Filter to only entries with wake times for phase calculation
-            const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null);
-            
-            // Calculate average sleep from ALL entries (even without wake time)
-            const allSleepData = wakeTimes.filter(w => w.hoursSlept > 0);
-            const avgSleep = allSleepData.length > 0 
-                ? allSleepData.reduce((sum, w) => sum + w.hoursSlept, 0) / allSleepData.length 
-                : state.hoursSleptLastNight;
-            
-            if (wakeTimesWithData.length < 1) {
-                return {
-                    phase: 'unknown',
-                    label: 'Insufficient Data',
-                    color: '#8b949e',
-                    icon: '❓',
-                    avgWakeTime: timeToMinutes(state.wakeTime),
-                    avgSleep: avgSleep,
-                    consistency: 0,
-                    stdDev: 0,
-                    dataPoints: allSleepData.length,
-                    recommendation: 'Log wake times in the calendar to detect your circadian phase. Click any day to add data.'
-                };
-            }
-            
-            // Calculate average wake time using circular mean (handles midnight crossing)
-            const sinSum = wakeTimesWithData.reduce((s, w) => s + Math.sin(w.wakeMinutes * 2 * Math.PI / 1440), 0);
-            const cosSum = wakeTimesWithData.reduce((s, w) => s + Math.cos(w.wakeMinutes * 2 * Math.PI / 1440), 0);
-            let avgWakeMinutes = Math.atan2(sinSum, cosSum) * 1440 / (2 * Math.PI);
-            if (avgWakeMinutes < 0) avgWakeMinutes += 1440;
-
-            // Calculate consistency (standard deviation using circular distance)
-            let stdDev = 0;
-            if (wakeTimesWithData.length >= 2) {
-                const variance = wakeTimesWithData.reduce((sum, w) => {
-                    const diff = w.wakeMinutes - avgWakeMinutes;
-                    const circDist = Math.min(Math.abs(diff), 1440 - Math.abs(diff));
-                    return sum + (circDist * circDist);
-                }, 0) / wakeTimesWithData.length;
-                stdDev = Math.sqrt(variance);
-            }
-            
-            // Detect phase based on average wake time
-            let phase, label, color, icon, recommendation;
-            
-            // Normal: wake 5am-8am (300-480 minutes)
-            // Early Bird: wake before 5am (<300 minutes)
-            // Night Owl: wake after 10am (>600 minutes)
-            // Extreme Night Owl: wake after noon (>720 minutes) - DANGER
-            
-            if (avgWakeMinutes >= 300 && avgWakeMinutes <= 480) {
-                phase = 'normal';
-                label = 'Normal Phase';
-                color = '#10b981';
-                icon = '✅';
-                recommendation = 'Your circadian rhythm is well-aligned. Maintain consistent wake times to preserve this.';
-            } else if (avgWakeMinutes < 300) {
-                // Early bird (before 5am)
-                if (avgWakeMinutes < 180) {
-                    // Extreme early (before 3am)
-                    phase = 'extreme-early';
-                    label = 'Extreme Early Bird';
-                    color = '#f59e0b';
-                    icon = '🌅';
-                    recommendation = 'Waking before 3am consistently may indicate Advanced Sleep Phase Disorder. Consider light therapy in evening and avoiding morning light to shift later.';
-                } else {
-                    phase = 'early';
-                    label = 'Early Bird';
-                    color = '#06b6d4';
-                    icon = '🐦';
-                    recommendation = 'Early wake pattern. This is generally healthy if intentional. Ensure you\'re getting enough total sleep hours.';
-                }
-            } else if (avgWakeMinutes > 720) {
-                // Extreme night owl (after noon) - DANGER ZONE
-                phase = 'danger-delayed';
-                label = 'SEVERELY DELAYED';
-                color = '#ef4444';
-                icon = '🚨';
-                recommendation = 'DANGER: Waking after noon indicates severely delayed circadian phase. This pattern correlates with depression, metabolic dysfunction, and cognitive impairment. You need aggressive light therapy (10,000 lux) immediately upon waking and strict light avoidance after 8pm.';
-            } else if (avgWakeMinutes > 600) {
-                // Night owl (after 10am)
-                phase = 'delayed';
-                label = 'Delayed Phase';
-                color = '#f59e0b';
-                icon = '🦉';
-                recommendation = 'Your circadian rhythm is delayed. To shift earlier: get bright light immediately upon waking, avoid screens after 8pm, and gradually wake 15-30 min earlier every few days.';
-            } else {
-                // Slightly late (8am-10am)
-                phase = 'slightly-late';
-                label = 'Slightly Late';
-                color = '#eab308';
-                icon = '⏰';
-                recommendation = 'Wake time is slightly later than ideal. Consider morning light exposure to anchor your rhythm earlier.';
-            }
-            
-            // Check consistency (only if we have multiple wake times)
-            let consistencyWarning = '';
-            if (wakeTimesWithData.length >= 3 && stdDev > 120) {
-                // More than 2 hour variation
-                consistencyWarning = '\n\n⚠️ HIGH VARIABILITY: Your wake times vary by over 2 hours. Inconsistent sleep schedules cause "social jet lag" which impairs cognitive function and metabolism.';
-            } else if (wakeTimesWithData.length >= 3 && stdDev > 60) {
-                consistencyWarning = '\n\n⚠️ MODERATE VARIABILITY: Try to keep wake times within 1 hour of each other, even on weekends.';
-            }
-            
-            // Check sleep debt accumulation (use allSleepData which includes entries without wake times)
-            let debtWarning = '';
-            if (allSleepData.length >= 3) {
-                const recentDays = allSleepData.slice(0, 3);
-                const recentAvgSleep = recentDays.reduce((sum, w) => sum + w.hoursSlept, 0) / recentDays.length;
-                if (recentAvgSleep < 5) {
-                    debtWarning = '\n\n🚨 CRITICAL SLEEP DEBT: Averaging less than 5 hours over recent days. Hyperarousal risk is extremely high.';
-                } else if (recentAvgSleep < 6.5) {
-                    debtWarning = '\n\n⚠️ ACCUMULATING DEBT: Averaging less than 6.5 hours. This compounds cognitive impairment.';
-                }
-            }
-            
-            return {
-                phase,
-                label,
-                color,
-                icon,
-                avgWakeTime: avgWakeMinutes,
-                avgSleep,
-                consistency: wakeTimesWithData.length >= 2 ? Math.max(0, 100 - (stdDev / 2)) : 0,
-                stdDev,
-                recommendation: recommendation + consistencyWarning + debtWarning,
-                dataPoints: allSleepData.length
-            };
-        }
-
-        // ============================================
-        // PHARMACOKINETIC CALCULATIONS
+        // CIRCADIAN PHASE DETECTION (moved to js/stimcalc/circadian.js)
         // ============================================
 
-        // Helper to get local date string (avoids UTC timezone issues)
-        function getLocalDateString(date = new Date()) {
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-        }
-
-        // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
-        function parseLocalDate(dateStr) {
-            if (!dateStr) return null;
-            const [y, m, d] = dateStr.split('-').map(Number);
-            return new Date(y, m - 1, d);
-        }
-
-        function timeToMinutes(timeStr) {
-            if (!timeStr || typeof timeStr !== 'string') return 0;
-            const parts = timeStr.split(':');
-            if (parts.length !== 2) return 0;
-            const [hours, mins] = parts.map(Number);
-            if (isNaN(hours) || isNaN(mins)) return 0;
-            return hours * 60 + mins;
-        }
-
-        function minutesToTime(mins) {
-            mins = ((mins % 1440) + 1440) % 1440;
-            const hours = Math.floor(mins / 60) % 24;
-            const minutes = Math.floor(mins % 60);
-            const period = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-        }
-
-        // Day-aware time formatter: appends "(tomorrow)" when clearance is next day
-        function minutesToTimeWithDay(mins) {
-            const timeStr = minutesToTime(mins);
-            if (mins >= 1440) return timeStr + ' (tomorrow)';
-            return timeStr;
-        }
-
-        function minutesToTimeValue(mins) {
-            const hours = Math.floor(mins / 60) % 24;
-            const minutes = Math.floor(mins % 60);
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-
-        // Compute signed sleep time delta handling midnight crossing
-        // Returns minutes: positive = actual later than predicted, negative = earlier
-        function computeSleepDelta(predicted, actual) {
-            const p = ((predicted % 1440) + 1440) % 1440;
-            const a = ((actual % 1440) + 1440) % 1440;
-            let diff = a - p;
-            if (diff > 720) diff -= 1440;
-            if (diff < -720) diff += 1440;
-            return diff;
-        }
-
-        function snapshotPredictionInputs() {
-            const now = getCurrentMinutes();
-            return {
-                wakeTime: state.wakeTime,
-                hoursSleptLastNight: state.hoursSleptLastNight,
-                ampLoadAtPrediction: parseFloat(calculateAmpLoad(now).toFixed(1)),
-                caffLoadAtPrediction: parseFloat(calculateCaffLoad(now).toFixed(1)),
-                effectiveThreshold: parseFloat(getEffectiveThreshold().toFixed(1)),
-                sleepDebtBonus: parseFloat(calculateSleepDebtBonus().toFixed(1)),
-                baseThreshold: state.settings.sleepThreshold,
-                ampHalfLife: state.settings.ampHalfLife,
-                caffHalfLife: state.settings.caffHalfLife,
-                totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
-                totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
-                hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
-                hasSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
-                hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
-                allNighterMode: !!state.allNighterMode
-            };
-        }
-
-        function migrateHistoryEntries() {
-            const entries = getValues(state.history);
-            let changed = false;
-            entries.forEach(entry => {
-                if (entry.deltaMinutes === undefined) {
-                    if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
-                        entry.deltaMinutes = entry.actualSleep - entry.predictedSleep;
-                        entry.absError = Math.abs(entry.deltaMinutes);
-                    } else {
-                        entry.deltaMinutes = null;
-                        entry.absError = null;
-                    }
-                    changed = true;
-                }
-                if (entry.autoSaved === undefined) { entry.autoSaved = false; changed = true; }
-                if (entry.inputs === undefined) { entry.inputs = null; changed = true; }
-                if (entry.predictedAt === undefined) {
-                    const idParts = entry.id ? entry.id.split('_') : [];
-                    const ts = idParts.length >= 2 ? parseInt(idParts[1]) : null;
-                    entry.predictedAt = (ts && !isNaN(ts) && ts > 1000000000000) ? new Date(ts).toISOString() : null;
-                    changed = true;
-                }
-                if (state.history[entry.id]) state.history[entry.id] = entry;
-            });
-            return changed;
-        }
-
         // ============================================
-        // PROCESS S: Sleep Debt / Adenosine Pressure
+        // PHARMACOKINETIC CALCULATIONS (time helpers moved to js/stimcalc/state.js)
         // ============================================
-        
-        // Global hyperarousal flag
-        let hyperarousalMode = false;
         
         // ============================================
         // PROCESS S: Sleep Debt / Adenosine Pressure
@@ -3938,49 +3344,7 @@
             return hyperarousalMode;
         }
 
-        // ============================================
-        // PROCESS C: Circadian Rhythm
-        // ============================================
-        
-        function getForbiddenZone() {
-            // Forbidden Zone: 13-15 hours after wake time
-            const wakeMinutes = timeToMinutes(state.wakeTime);
-            const start = wakeMinutes + (13 * 60); // 13 hours after wake
-            const end = wakeMinutes + (15 * 60);   // 15 hours after wake
-            return { start, end };
-        }
-
-        function getSleepGate() {
-            // Sleep Gate: 15-17 hours after wake time (optimal window)
-            const wakeMinutes = timeToMinutes(state.wakeTime);
-            const start = wakeMinutes + (15 * 60); // 15 hours after wake
-            const end = wakeMinutes + (17 * 60);   // 17 hours after wake
-            return { start, end };
-        }
-
-        function isInForbiddenZone(timeMinutes) {
-            const { start, end } = getForbiddenZone();
-            // Handle day rollover
-            let checkTime = timeMinutes;
-            if (checkTime < timeToMinutes(state.wakeTime)) {
-                checkTime += 24 * 60; // Next day
-            }
-            return checkTime >= start && checkTime < end;
-        }
-
-        function isInSleepGate(timeMinutes) {
-            const { start, end } = getSleepGate();
-            let checkTime = timeMinutes;
-            if (checkTime < timeToMinutes(state.wakeTime)) {
-                checkTime += 24 * 60;
-            }
-            return checkTime >= start && checkTime <= end;
-        }
-
-        function getForbiddenZoneEnd() {
-            const { end } = getForbiddenZone();
-            return end > 24 * 60 ? end - 24 * 60 : end;
-        }
+        // PROCESS C: Circadian Rhythm (moved to js/stimcalc/circadian.js)
 
         // Calculate drug decay with proper 3-segment Vitamin C handling
         // Segments: before VitC (base HL) → during VitC 8h window (reduced HL) → after VitC expiry (base HL)
@@ -4515,11 +3879,6 @@
             return { sleepTime, blockingFactors, pharmacokineticFloor };
         }
 
-        function getCurrentMinutes() {
-            const now = new Date();
-            return now.getHours() * 60 + now.getMinutes();
-        }
-
         // ============================================
         // UI FUNCTIONS
         // ============================================
@@ -4814,17 +4173,6 @@
                 recalculate();
                 saveState();
             }
-        }
-
-        function formatTime12(time24) {
-            if (!time24 || typeof time24 !== 'string') return '--:--';
-            const parts = time24.split(':');
-            if (parts.length !== 2) return '--:--';
-            const [hours, mins] = parts.map(Number);
-            if (isNaN(hours) || isNaN(mins)) return '--:--';
-            const period = hours >= 12 ? 'PM' : 'AM';
-            const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-            return `${hours12}:${mins.toString().padStart(2, '0')} ${period}`;
         }
 
         function toggleModifier(element, modifierName) {
@@ -6804,62 +6152,6 @@
             return null;
         }
         
-        function showToast(message) {
-            const existing = document.querySelector('.toast-notification');
-            if (existing) existing.remove();
-
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 8px; z-index: 10000; font-size: 0.9em; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 2500);
-        }
-
-        // Custom Alert Modal (replaces blocking alert())
-        function showCustomAlert(message, title = 'Notice', callback = null) {
-            const modal = document.createElement('div');
-            modal.className = 'custom-modal-overlay';
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-            modal.innerHTML = `
-                <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
-                    <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
-                    <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
-                        style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            window._customAlertCallback = callback;
-            modal.querySelector('button').focus();
-        }
-
-        // Custom Confirm Modal (replaces blocking confirm())
-        function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
-            const modal = document.createElement('div');
-            modal.className = 'custom-modal-overlay';
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-            modal.innerHTML = `
-                <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
-                    <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-                    <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
-                    <div style="display:flex;gap:12px;justify-content:center;">
-                        <button id="confirmBtn" style="flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
-                        <button id="cancelBtn" style="flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.querySelector('#confirmBtn').onclick = () => { modal.remove(); if (onConfirm) onConfirm(); };
-            modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
-            modal.querySelector('#confirmBtn').focus();
-        }
-
         // ============================================
         // WHAT-IF SCENARIOS
         // ============================================
@@ -7918,9 +7210,6 @@
             `;
         }
         
-        // Global variable to track which date we're editing
-        let currentEditingDate = null;
-        
         function openSleepEditModal(dateStr) {
             currentEditingDate = dateStr;
             
@@ -8040,8 +7329,6 @@
         // 30-DAY SLEEP PERFORMANCE TRACKING
         // ============================================
         
-        let sleepPerfExpanded = true;
-        
         function toggleSleepPerformance() {
             sleepPerfExpanded = !sleepPerfExpanded;
             const content = document.getElementById('sleepPerformanceContent');
@@ -8054,8 +7341,6 @@
                 icon.textContent = sleepPerfExpanded ? '▼' : '▶';
             }
         }
-
-        let accuracyDashExpanded = true;
 
         function toggleAccuracyDashboard() {
             accuracyDashExpanded = !accuracyDashExpanded;
@@ -8470,8 +7755,6 @@
                 getAction: (s) => s.avg >= 7 ? 'The most important achievement - you\'ve built sustainable habits!' : 'Small consistent improvements compound over time.'
             }
         };
-        
-        let explainerTimeout = null;
         
         function showExplainer(key) {
             clearTimeout(explainerTimeout);
@@ -10323,10 +9606,6 @@
         // STORAGE (Local + Firebase)
         // ============================================
         
-        // Debounce timer for Firebase saves
-        let firebaseSaveTimeout = null;
-        let lastLocalSave = 0;
-        
         function saveState() {
             // ============================================
             // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
@@ -10589,18 +9868,9 @@
             }
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
         // ============================================
         // TODAY'S FORECAST LOGIC - EXPLAINER SECTION
         // ============================================
-        
-        let forecastExpanded = false;
         
         function toggleForecastLogic() {
             forecastExpanded = !forecastExpanded;
@@ -11118,19 +10388,7 @@ Current status at ${currentTime}:
         // ============================================
         // INITIALIZATION
         // ============================================
-        
-        // Helper function to safely set element value
-        function safeSetValue(id, value) {
-            const el = document.getElementById(id);
-            if (el) el.value = value;
-        }
-        
-        // Helper function to safely get element value
-        function safeGetValue(id, defaultValue) {
-            const el = document.getElementById(id);
-            return el ? el.value : defaultValue;
-        }
-        
+
         function init() {
             loadState();
             
@@ -11216,8 +10474,6 @@ Current status at ${currentTime}:
         // UNIFIED VIEW — ACCORDION FUNCTIONS
         // ============================================
 
-        let focusMode = false; // Disabled — unified view replaces focus mode
-        
         function setViewMode(mode) {
             // No-op: unified view replaces dual-view system
             return;
