@@ -9,28 +9,32 @@
 
 ---
 
-## index.html — saveData() (line 12902)
+## index.html — saveData() (firebase-sync.js:218)
+
+**Architecture:** Post-split (Feb 2026). Save logic in `js/dental-quest/firebase-sync.js`. Payload built by `buildSaveData()` helper (shared by both save functions). All fields use `?? null` / `?? false` to prevent Firebase undefined rejection.
 
 **Debounce:** 200ms via `clearTimeout(saveTimeout); saveTimeout = setTimeout(..., 200)`
-**Guards (4):**
+**Guards (5):** Behind `if (!firebaseInitialized)` early return:
 ```javascript
 if (!pinValidated) { console.warn('⚠️ BLOCKED: PIN not validated'); return false; }
 if (!initialLoadComplete) { console.warn('⚠️ BLOCKED: Initial load not complete'); return false; }
 if (!hasLoadedFromCloud) { console.warn('⚠️ BLOCKED: Cloud load incomplete'); return false; }
-if (isEmptyState(state)) { console.warn('⚠️ BLOCKED: Empty state'); return false; }
+if (isEmptyState(buildSaveData())) { console.warn('⚠️ BLOCKED: Empty state'); return false; }
+if (!_dataLoaded) { console.warn('⚠️ BLOCKED: Data not loaded'); return false; }
 ```
-**Note:** Does NOT have `_dataLoaded` guard (only app without it).
 
-**Payload saved:**
+**Payload via buildSaveData():**
 ```javascript
 { tasks, stats, medications, calendarNotes, calendarEvents, notebook,
-  focusModeData, commandCenterData, financials, pillAssignments,
-  dailyPlanner, pomodoroSettings, lastUpdated }
+  focusModeData, commandCenterData (with currentSession fields ?? null/false),
+  financials, pillAssignments, dailyPlanner, pomodoroSettings, lastUpdated }
 ```
 
-**saveDataImmediate() (line 13080):** Same 4 guards, no debounce, calls `database.ref(userPath).set()` directly.
+**saveDataImmediate() (firebase-sync.js:376):** Same 5 guards, no debounce, calls `database.ref(userPath).set(buildSaveData())` directly.
 
-**Guard vars declared:** line 11970-11972 (`initialLoadComplete=false`, `hasLoadedFromCloud=false`, `pinValidated=false`)
+**Guard vars declared:** state.js (`initialLoadComplete=false`, `hasLoadedFromCloud=false`, `pinValidated=false`, `_dataLoaded=false`)
+
+**CRITICAL:** `buildSaveData()` must null-coalesce every field. `confirmedStarted` and `startedAt` in `commandCenterData.currentSession` caused silent save failures when undefined (fixed Feb 2026, commit `280b3f6`).
 
 ---
 

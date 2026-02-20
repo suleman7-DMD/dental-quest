@@ -43,6 +43,8 @@ Consult `references/guard-system.md` for:
 
 Use object-based storage with `generateId()` keys — never arrays. Add the field to the save payload, the realtime merge, and the default state. After any realtime merge, preserve `state._dataLoaded = true`.
 
+**CRITICAL: Firebase rejects `undefined` values.** Every field in a save payload must use `?? null` (for nullable values) or `?? false` / `?? 0` (for typed values). If ANY field is `undefined`, the entire `.set()` call fails silently — no data saves at all. For index.html, all fields go through `buildSaveData()` in firebase-sync.js — always null-coalesce there.
+
 Consult `references/auth-and-data-patterns.md` for:
 - Complete Firebase data structure tree
 - generateId(), getValues(), getCount(), ensureArray() helpers
@@ -109,6 +111,7 @@ Consult `references/bugs-and-debugging.md` for:
 9. **Preserve `_dataLoaded = true` after realtime merges** — cloud data may not include the flag
 10. **Never use raw `localStorage.setItem()`** — always use `safeLocalStorageSet()` to prevent QuotaExceededError UI freeze
 11. **Checkpoint limit is 5, backup limit is 3** — do not increase these (localStorage is ~5MB shared across all 4 apps)
+12. **Firebase `.set()` rejects `undefined`** — every field in save payloads must use `?? null` or `?? false`. One undefined field crashes ALL saves silently. For index.html, audit `buildSaveData()` in firebase-sync.js after adding any field.
 
 ## Guard System Overview
 
@@ -193,6 +196,10 @@ Result: Data recovered, root cause prevented from recurring.
 ### Error: Offline mode can't save (body-comp)
 **Cause:** `skipPin()` at line 16624 doesn't set guard flags. All saves blocked by guards.
 **Solution:** Add `pinValidated=true`, `hasLoadedFromCloud=true`, `isInitialLoad=false`, `state._dataLoaded=true` to `skipPin()`. Reference: stim-calc's correct implementation at line 9350.
+
+### Error: "set failed: value argument contains undefined in property"
+**Cause:** A field in the save payload is `undefined`. Firebase Realtime Database rejects undefined values in `.set()` calls. The ENTIRE save fails — no partial write.
+**Solution:** Find which field is undefined (error message includes the property path). Add `?? null` or `?? false` to that field in the save payload builder. For index.html, fix in `buildSaveData()` (firebase-sync.js). Also add the field with a default value to: (1) state defaults, (2) `loadData()`, (3) `loadDataFromFirebase()`, (4) `applyRemoteData()`. This was a critical post-split bug in index.html — `confirmedStarted` and `startedAt` fields in `commandCenterData.currentSession` were undefined after page load (fixed Feb 2026, commit `280b3f6`).
 
 ### Error: Realtime listener overwrites local changes
 **Cause:** Missing echo prevention or conflict resolution. Own Firebase write bounces back via realtime listener.

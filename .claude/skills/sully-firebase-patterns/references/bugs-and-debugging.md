@@ -173,6 +173,22 @@ function skipPin() {
 }
 ```
 
+### 11. Undefined Values in Firebase Save Payloads
+```javascript
+// WRONG — undefined crashes entire .set() call
+currentSession: {
+    taskId: commandCenterData.currentSession.taskId,
+    confirmedStarted: commandCenterData.currentSession.confirmedStarted,  // undefined!
+}
+
+// CORRECT — null-coalesce every field
+currentSession: {
+    taskId: commandCenterData.currentSession.taskId ?? null,
+    confirmedStarted: commandCenterData.currentSession.confirmedStarted ?? false,
+}
+```
+**Impact:** Firebase `.set()` rejects ANY undefined in the payload tree. The ENTIRE save fails silently — no partial write, no error in save guards. Only visible as `Uncaught Error: set failed: value argument contains undefined in property '...'` in console. This was the root cause of index.html saves crashing post-split (Feb 2026, commit `280b3f6`).
+
 ---
 
 ## Debugging Sync Issues
@@ -259,7 +275,7 @@ Audits last 7 days of logs on app load. Auto-fixes missing calorie/protein total
 
 | Check | index.html | d3-roadmap | stim-calc | body-comp |
 |-------|-----------|-----------|-----------|-----------|
-| Guard block in save | 4 guards | 5 guards | 5 guards | 5 guards (saveState) |
+| Guard block in save | 5 guards | 5 guards | 5 guards | 5 guards (saveState) |
 | saveImmediate guard parity | OK | N/A | OK | MISSING PIN guard |
 | skipPin sets all flags | N/A | Implicit via load | OK | MISSING all 4 |
 | _version=0 in defaults | OK | OK | OK | OK |
