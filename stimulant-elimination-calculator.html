@@ -4317,7 +4317,7 @@
                     type: 'circadian',
                     note: 'Pre-forbidden zone - circadian alerting prevents sleep onset'
                 });
-                sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
+                sleepTime = forbiddenEnd;
             }
             // Check if in Forbidden Zone - push to after it ends
             else if (applyCircadianConstraints && sleepTimeNormalized >= forbiddenZone.start && sleepTimeNormalized < forbiddenZone.end) {
@@ -4328,7 +4328,7 @@
                     type: 'circadian',
                     note: 'Peak alertness period - your body strongly resists sleep'
                 });
-                sleepTime = forbiddenEnd > 24 * 60 ? forbiddenEnd - 24 * 60 : forbiddenEnd;
+                sleepTime = forbiddenEnd;
             }
             
             // =============================================
@@ -4388,7 +4388,7 @@
                         }
                         
                         if (normalizedCooldown > normalizedSleep) {
-                            sleepTime = cooldownTime > 24 * 60 ? cooldownTime - 24 * 60 : cooldownTime;
+                            sleepTime = cooldownTime;
                             blockingFactors.push({
                                 name: 'Thermal Cooldown',
                                 clearsAt: sleepTime,
@@ -4451,7 +4451,7 @@
             // FIX: Gate on applyCircadianConstraints (same as Phase 2) to prevent
             // overriding pharmacokinetic floor when clearance is >18h away
             if (applyCircadianConstraints && normalizedFinalSleep >= wakeMaintenanceStart && normalizedFinalSleep < forbiddenZone.end) {
-                sleepTime = forbiddenZone.end > 24 * 60 ? forbiddenZone.end - 24 * 60 : forbiddenZone.end;
+                sleepTime = forbiddenZone.end;
 
                 // Add blocking factor if not already present
                 const hasCircadianBlocker = blockingFactors.some(f => f.type === 'circadian');
@@ -4474,7 +4474,7 @@
             let sleepNorm = sleepTime < wakeMin ? sleepTime + 1440 : sleepTime;
             let floorNorm = pharmacokineticFloor < wakeMin ? pharmacokineticFloor + 1440 : pharmacokineticFloor;
             if (sleepNorm < floorNorm) {
-                sleepTime = pharmacokineticFloor >= 1440 ? pharmacokineticFloor - 1440 : pharmacokineticFloor;
+                sleepTime = pharmacokineticFloor;
             }
 
             // =============================================
@@ -4482,10 +4482,10 @@
             // =============================================
             // Confirm both substances are actually below threshold at the predicted sleep time.
             // Uses raw minutes for accurate load calculation.
-            const verifyTime = sleepTime < getCurrentMinutes() ? sleepTime + 1440 : sleepTime;
+            const verifyTime = sleepTime;
             if (calculateAmpLoad(verifyTime) >= effectiveThreshold) {
                 // Drugs haven't cleared — fall back to pharmacokinetic floor
-                sleepTime = pharmacokineticFloor >= 1440 ? pharmacokineticFloor - 1440 : pharmacokineticFloor;
+                sleepTime = pharmacokineticFloor;
             }
             const caffThresh = state.settings.caffThreshold;
             if (calculateCaffLoad(verifyTime) >= caffThresh) {
@@ -4494,7 +4494,7 @@
                     const caffClearNorm = caffClearCheck < wakeMin ? caffClearCheck + 1440 : caffClearCheck;
                     const curSleepNorm = sleepTime < wakeMin ? sleepTime + 1440 : sleepTime;
                     if (caffClearNorm > curSleepNorm) {
-                        sleepTime = caffClearCheck >= 1440 ? caffClearCheck - 1440 : caffClearCheck;
+                        sleepTime = caffClearCheck;
                     }
                 }
             }
@@ -5043,22 +5043,27 @@
 
         // Calculate remaining load from a yesterday dose
         // FIX: Now uses XR IR/DR split for accuracy and consistent with calculateAmpLoad()
+        // FIX: Calculates real elapsed time using Date objects to handle DST transitions (23h or 25h days)
         function calculateYesterdayDoseRemaining(dose, doseTimeMinutes, halfLifeHours, isXR = true) {
-            const now = getCurrentMinutes();
+            const now = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(Math.floor(doseTimeMinutes / 60), doseTimeMinutes % 60, 0, 0);
+            
+            const realElapsed = (now.getTime() - yesterday.getTime()) / 60000;
             const halfLifeMinutes = halfLifeHours * 60;
 
             // FIX: Handle XR formulation (50% immediate, 50% delayed at T+4)
             if (isXR && halfLifeHours >= 10) {  // Only XR for amphetamines (long half-life)
                 const immediateRelease = dose * 0.5;
                 const delayedRelease = dose * 0.5;
-                const delayedReleaseTime = doseTimeMinutes + 240;  // T+4 hours
 
-                // IR elapsed = time since dose to now (crossing midnight)
-                const irElapsed = (24 * 60 - doseTimeMinutes) + now;
+                // IR elapsed = exact time since yesterday's dose
+                const irElapsed = realElapsed;
                 const irRemaining = immediateRelease * Math.pow(0.5, irElapsed / halfLifeMinutes);
 
-                // DR elapsed = time since T+4 to now
-                const drElapsed = (24 * 60 - delayedReleaseTime) + now;
+                // DR elapsed = exact time since yesterday's dose + 4 hours
+                const drElapsed = realElapsed - 240;
                 const drRemaining = drElapsed > 0
                     ? delayedRelease * Math.pow(0.5, drElapsed / halfLifeMinutes)
                     : 0;  // DR not yet released — still in capsule, not in bloodstream
@@ -5067,7 +5072,7 @@
             }
 
             // Simple decay for caffeine or non-XR
-            const effectiveElapsed = (24 * 60 - doseTimeMinutes) + now;
+            const effectiveElapsed = realElapsed;
             return dose * Math.pow(0.5, effectiveElapsed / halfLifeMinutes);
         }
 
@@ -5657,11 +5662,11 @@
             const caffThresholdEl = document.getElementById('caffThreshold');
             const weightEl = document.getElementById('weight');
             
-            if (ampHalfLifeEl) state.settings.ampHalfLife = parseFloat(ampHalfLifeEl.value) || state.settings.ampHalfLife;
-            if (sleepThresholdEl) state.settings.sleepThreshold = parseFloat(sleepThresholdEl.value) || state.settings.sleepThreshold;
-            if (caffHalfLifeEl) state.settings.caffHalfLife = parseFloat(caffHalfLifeEl.value) || state.settings.caffHalfLife;
-            if (caffThresholdEl) state.settings.caffThreshold = parseFloat(caffThresholdEl.value) || state.settings.caffThreshold;
-            if (weightEl) state.settings.weight = parseFloat(weightEl.value) || state.settings.weight;
+            if (ampHalfLifeEl) { const p = parseFloat(ampHalfLifeEl.value); state.settings.ampHalfLife = isNaN(p) ? state.settings.ampHalfLife : p; }
+            if (sleepThresholdEl) { const p = parseFloat(sleepThresholdEl.value); state.settings.sleepThreshold = isNaN(p) ? state.settings.sleepThreshold : p; }
+            if (caffHalfLifeEl) { const p = parseFloat(caffHalfLifeEl.value); state.settings.caffHalfLife = isNaN(p) ? state.settings.caffHalfLife : p; }
+            if (caffThresholdEl) { const p = parseFloat(caffThresholdEl.value); state.settings.caffThreshold = isNaN(p) ? state.settings.caffThreshold : p; }
+            if (weightEl) { const p = parseFloat(weightEl.value); state.settings.weight = isNaN(p) ? state.settings.weight : p; }
             
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
                 const vitCTimeEl = document.getElementById('vitaminCTime');
@@ -6894,7 +6899,7 @@
             const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
 
             const tempId = 'temp_simulation_999999';
-            const tempCaff = { id: tempId, amount, name: 'Simulated', time: nowTime };
+            const tempCaff = { id: tempId, amount, name: 'Simulated', time: nowTime, date: getLocalDateString() };
             if (!state.caffeine || Array.isArray(state.caffeine)) {
                 state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
             }
@@ -7108,8 +7113,7 @@
             const forbiddenZone = getForbiddenZone();
             let fzStart = forbiddenZone.start;
             let fzEnd = forbiddenZone.end;
-            if (fzStart > 24 * 60) fzStart -= 24 * 60;
-            if (fzEnd > 24 * 60) fzEnd -= 24 * 60;
+            // Removed buggy > 24*60 wrapping that made zones disappear
             
             // Adjust for graph coordinates
             if (fzStart >= startTime && fzStart <= endTime) {
@@ -7131,8 +7135,7 @@
             const sleepGate = getSleepGate();
             let sgStart = sleepGate.start;
             let sgEnd = sleepGate.end;
-            if (sgStart > 24 * 60) sgStart -= 24 * 60;
-            if (sgEnd > 24 * 60) sgEnd -= 24 * 60;
+            // Removed buggy > 24*60 wrapping that made zones disappear
             
             if (sgStart >= startTime && sgStart <= endTime) {
                 const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
