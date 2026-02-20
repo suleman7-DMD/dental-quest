@@ -198,17 +198,27 @@ function loadData() {
         // BUG FIX #5: Set _dataLoaded after successful localStorage load
         _dataLoaded = true;
 
-        updateStats();
-        renderTasks();
-        updateMedicationDisplay();
-        // Check and apply daily pill auto-reduce
-        checkAndApplyDailyPillReduce();
+        // Rendering wrapped in try/catch so errors never leave app in broken state
+        try {
+            updateStats();
+            renderTasks();
+            updateMedicationDisplay();
+            // Check and apply daily pill auto-reduce
+            checkAndApplyDailyPillReduce();
+        } catch (e) {
+            console.error('loadData render error (saves still enabled):', e);
+        }
+    } else {
+        // No localStorage data — still mark as loaded (defaults are valid data)
+        _dataLoaded = true;
     }
-    // Check for daily reset of Critical/EOD flags
-    checkCriticalEODReset();
-
-    // Always init focus mode
-    initFocusMode();
+    // Check for daily reset of Critical/EOD flags — outside try/catch (non-critical)
+    try {
+        checkCriticalEODReset();
+        initFocusMode();
+    } catch (e) {
+        console.error('loadData post-render error:', e);
+    }
 }
 
 // ============================================
@@ -1319,39 +1329,39 @@ function loadDataFromFirebase() {
                     safeLocalStorageSet('lastCriticalEODReset', lastCriticalEODReset);
                 }
 
-                // Check for daily reset of Critical/EOD flags
-                checkCriticalEODReset();
-
-                updateStats();
-                renderTasks();
-                updateMedicationDisplay();
-
-                // Check for daily pill auto-reduce (Firebase path)
-                checkAndApplyDailyPillReduce();
-
-                // Initialize Focus Mode after data loads
-                initFocusMode();
+                // CRITICAL: Set sync flags BEFORE rendering so saves are never blocked
+                // by a rendering exception. Data is loaded — saves must be allowed.
+                hasLoadedFromCloud = true;
+                _dataLoaded = true;
 
                 // Setup real-time sync for ALL data (includes planner)
                 setupMainDataRealtimeSync();
 
-                // Mark that we've loaded from cloud
-                hasLoadedFromCloud = true;
-
-                // BUG FIX #5: Set _dataLoaded after successful Firebase load
-                _dataLoaded = true;
-
                 // CRITICAL: Mark initial load as complete - now saves are allowed
                 markInitialLoadComplete();
+
+                // Rendering and UI updates — wrapped in try/catch so a render
+                // error never blocks the save system
+                try {
+                    checkCriticalEODReset();
+                    updateStats();
+                    renderTasks();
+                    updateMedicationDisplay();
+                    checkAndApplyDailyPillReduce();
+                    initFocusMode();
+                } catch (renderErr) {
+                    console.error('Post-load render error (saves still enabled):', renderErr);
+                }
 
                 showToast('Data loaded from cloud \u2601\ufe0f', '\u2705');
                 updateSyncStatus('connected', `Synced (${getCount(tasks)} tasks)`);
             } else {
                 // No cloud data, check localStorage
-                loadData();
+                try { loadData(); } catch (e) { console.error('loadData fallback error:', e); }
 
-                // Mark that we've loaded from cloud (even though empty)
+                // CRITICAL: Set flags even if loadData() rendering fails
                 hasLoadedFromCloud = true;
+                _dataLoaded = true;
 
                 updateSyncStatus('connected', 'No cloud data yet');
                 // Mark load complete after localStorage load
@@ -1361,7 +1371,10 @@ function loadDataFromFirebase() {
         .catch((error) => {
             console.error('Firebase load error:', error);
             updateSyncStatus('error', 'Load failed: ' + error.message);
-            loadData(); // Fallback
+            try { loadData(); } catch (e) { console.error('loadData error-fallback error:', e); }
+
+            // CRITICAL: Set flags even if loadData() rendering fails
+            _dataLoaded = true;
 
             // If we have local data, allow saves
             const localData = {
