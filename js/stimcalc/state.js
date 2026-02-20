@@ -5,7 +5,7 @@
 // ============================================
 // GLOBAL VARIABLE DECLARATIONS
 // ============================================
-var state = null;
+var state = getDefaultState();
 var isInitialLoad = true;
 var hasLoadedFromCloud = false;
 var pinValidated = false;
