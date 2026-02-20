@@ -11,10 +11,10 @@ globs:
   - ".claude/skills/stim-calc-dev/**"
 metadata:
   author: Sully
-  version: 2.1.0
-  file: stimulant-elimination-calculator.html
-  lines: ~11526
-  last-verified: 2026-02-13
+  version: 3.0.0
+  file: stimulant-elimination-calculator.html + js/stimcalc/*.js (10 modules)
+  lines: ~10,856 total (2,632 HTML + 8,224 JS)
+  last-verified: 2026-02-20
 ---
 
 # Stimulant Elimination Calculator Development Patterns
@@ -53,25 +53,38 @@ Read the APP OVERVIEW and KEY CONCEPTS below. Determine which subsystem is relev
 - Firebase/sync? -> Check the 5 FIREBASE GUARDS section below
 - UI rendering? -> See function map for render functions
 
-### Step 2: Find the exact function and line number
-Use the QUICK REFERENCE table below or `references/function-map.md` for the full list.
-All line numbers are verified against the actual 11,526-line file.
+### Step 2: Find the right module file
+The app is split into 10 JS modules. Use the MODULE MAP below to identify which file to edit:
+| What to change | File |
+|---------------|------|
+| State defaults, utilities, time helpers | `js/stimcalc/state.js` (450 lines) |
+| Circadian zones, forbidden zone, sleep gate | `js/stimcalc/circadian.js` (229 lines) |
+| Drug decay, threshold, VitC, clearance search | `js/stimcalc/pharma-engine.js` (657 lines) |
+| Sleep prediction algorithm (7 phases) | `js/stimcalc/sleep-prediction.js` (284 lines) |
+| Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (1,404 lines) |
+| Add/remove medications or caffeine | `js/stimcalc/med-caffeine.js` (295 lines) |
+| Nicotine, modifiers, workout, what-if, forecast | `js/stimcalc/ui-sections.js` (1,911 lines) |
+| History, calibration, sleep calendar, accuracy | `js/stimcalc/history-calendar.js` (1,196 lines) |
+| Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
+| recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,065 lines) |
+| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,632 lines, zero JS) |
 
 ### Step 3: Read the code before changing it
-This is a single 11,526-line HTML file. Always read the target function and 50 lines of surrounding context before editing. Never write blind.
+Each module is 200-1,900 lines. Read the target function and surrounding context before editing. Never write blind.
 
 ### Step 4: Make the change surgically
-Use the Edit tool for targeted changes. NEVER rewrite the whole file.
+Use the Edit tool for targeted changes.
 After editing, verify:
-- Brace/paren balance is intact
-- No sync guards were removed or weakened
+- Brace/paren balance is intact: `python3 -c "c=open('FILE').read(); print(c.count('{'), c.count('}'))"`
+- No sync guards were removed or weakened (check `firebase-sync.js`)
 - `_dataLoaded: true` is preserved in any state reconstruction
-- `saveState()` and `saveStateImmediate()` still have identical guards
+- `saveState()` and `saveStateImmediate()` still have identical guards in `firebase-sync.js`
 
 ### Step 5: Verify nothing broke
-Check that `recalculate()` still works (it runs every 5 seconds).
+Check that `recalculate()` still works (it runs every 5 seconds via setInterval in init.js).
+recalculate() has try/catch — errors show "Calc Error" for 5s then self-heal, but still fix them.
 If you touched Firebase code, verify all 5 guards are still present in both save functions.
-If you touched the prediction algorithm, verify all 6 phases are intact.
+If you touched the prediction algorithm, verify all 7 phases are intact.
 
 ---
 
@@ -82,7 +95,7 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
 **User says:** "The prediction says I can sleep at 10:30 PM but I know I can't sleep until way later"
 
 **Actions:**
-1. Read `calculateSleepTime()` at ~line 4242 and check each phase's output
+1. Read `calculateSleepTime()` in `js/stimcalc/sleep-prediction.js` and check each phase's output
 2. Run diagnostic in console:
    ```javascript
    const now = getCurrentMinutes();
@@ -92,9 +105,9 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
    const fz = getForbiddenZone();
    console.log('Forbidden Zone:', minutesToTime(fz.start), '-', minutesToTime(fz.end));
    ```
-3. Check if DR spike is being missed — look at `findAmpClearTime()` (~line 4145) and verify future DR release times are collected
-4. Check if sauna/workout bonus is decaying properly in `getEffectiveThreshold()` (~line 3848)
-5. Check if VitC is active when it shouldn't be: `isVitaminCEffective()` (~line 4960)
+3. Check if DR spike is being missed — look at `findAmpClearTime()` in `pharma-engine.js` and verify future DR release times are collected
+4. Check if sauna/workout bonus is decaying properly in `getEffectiveThreshold()` in `pharma-engine.js`
+5. Check if VitC is active when it shouldn't be: `isVitaminCEffective()` in `pharma-engine.js`
 
 **Result:** Root cause found — e.g., sauna bonus was added 7 hours ago but not decaying, artificially raising the threshold and making clearance too early.
 
@@ -104,11 +117,11 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
 
 **Actions:**
 1. Read `references/state-structure.md` to understand the `modifiers` object
-2. Add `melatonin: { active: false, time: null, date: null }` to the modifiers section in `getDefaultState()` (~line 3114)
-3. Read `getEffectiveThreshold()` (~line 3848) to see how existing modifiers (sauna, workout) are applied
+2. Add `melatonin: { active: false, time: null, date: null }` to the modifiers section in `getDefaultState()` in `state.js`
+3. Read `getEffectiveThreshold()` in `pharma-engine.js` to see how existing modifiers (sauna, workout) are applied
 4. Add melatonin bonus logic INSIDE `getEffectiveThreshold()`, following the sauna decay pattern (peak then decay)
-5. Add UI toggle — read `renderAll()` (~line 10170) and existing modifier UI for patterns
-6. Verify: `saveState()` guards still have all 5 checks, brace balance intact, `_dataLoaded` preserved
+5. Add UI toggle — read `renderAll()` in `firebase-sync.js` and existing modifier UI in `ui-sections.js` for patterns
+6. Verify: `saveState()` guards still have all 5 checks in `firebase-sync.js`, brace balance intact, `_dataLoaded` preserved
 
 **Result:** Melatonin modifier added. Threshold increases by +2mg when active, with time-based decay matching existing modifier patterns.
 
@@ -121,10 +134,10 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
    ```javascript
    console.log({ pinValidated, isInitialLoad, hasLoadedFromCloud, _dataLoaded: state._dataLoaded, isEmpty: isEmptyState(state) });
    ```
-2. If `hasLoadedFromCloud` is false — check `loadFromFirebase()` (~line 9403) and `skipPin()` (~line 9350)
-3. If `isEmptyState()` is true — check `isEmptyState()` (~line 3222) conditions. Does the state have meds? All 6 conditions must fail for non-empty.
-4. Read both `saveState()` (~line 10322) and `saveStateImmediate()` (~line 10381) — verify both have IDENTICAL 5 guards
-5. Check `setupRealtimeSync()` (~line 9557) — verify `_dataLoaded: true` is preserved when merging incoming state
+2. If `hasLoadedFromCloud` is false — check `loadFromFirebase()` and `skipPin()` in `firebase-sync.js`
+3. If `isEmptyState()` is true — check `isEmptyState()` in `state.js`. Does the state have meds? All 6 conditions must fail for non-empty.
+4. Read both `saveState()` and `saveStateImmediate()` in `firebase-sync.js` — verify both have IDENTICAL 5 guards
+5. Check `setupRealtimeSync()` in `firebase-sync.js` — verify `mergeRemoteState()` preserves `_dataLoaded: true`
 
 **Result:** Guard identified as blocking — e.g., `skipPin()` wasn't setting all 4 flags, so offline mode blocked all saves.
 
@@ -134,11 +147,11 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
 
 ### Error: Sleep prediction shows "already clear" when user just took medication
 **Cause:** `findAmpClearTime()` binary search didn't account for future DR spike at T+4h. The initial search found clearance before the DR release, but didn't verify load stays below threshold after DR hits.
-**Solution:** Check that `findAmpClearTime()` (~line 4145) collects ALL future DR release times and re-verifies after each. See Pattern 2 in CRITICAL PATTERNS. The iterative loop should run up to 10 times.
+**Solution:** Check that `findAmpClearTime()` in `pharma-engine.js` collects ALL future DR release times and re-verifies after each. See Pattern 2 in CRITICAL PATTERNS. The iterative loop should run up to 10 times.
 
 ### Error: Threshold shows wrong value (too high or too low)
 **Cause:** A modifier (sauna, workout, sleep debt) isn't decaying properly, or `isHyperarousalMode()` isn't zeroing the sleep debt bonus.
-**Solution:** Read `getEffectiveThreshold()` (~line 3848). Check sauna decay (peak 2h, decay 4h more — 6h total). Check workout `adenosineBonus`. Check `calculateSleepDebtBonus()` (~line 3719) returns 0 when `isHyperarousalMode()` is true. Cap is base + 8mg max.
+**Solution:** Read `getEffectiveThreshold()` in `pharma-engine.js`. Check sauna decay (peak 2h, decay 4h more — 6h total). Check workout `adenosineBonus`. Check `calculateSleepDebtBonus()` in `pharma-engine.js` returns 0 when `isHyperarousalMode()` is true. Cap is base + 8mg max.
 
 ### Error: VitC has no effect on prediction
 **Cause:** VitC modifier is set but `isVitaminCEffective()` returns false because VitC time/date combination puts it outside the 8-hour TTL window, OR the VitC date doesn't match today.
@@ -170,7 +183,7 @@ If you touched the prediction algorithm, verify all 6 phases are intact.
 - If you touched `saveState()`, verify `saveStateImmediate()` still matches (5 identical guards)
 - If you touched state reconstruction (realtime sync, loadFromFirebase), verify `_dataLoaded: true` is preserved
 - If you touched `isEmptyState()`, verify all 6 conditions are still checked
-- Run `recalculate()` mentally — it fires every 5 seconds, so any runtime error will crash the app repeatedly
+- Run `recalculate()` mentally — it fires every 5 seconds. It has try/catch so errors won't crash the app, but fix them anyway.
 
 ### If something breaks:
 1. Check the browser console for the exact error and line number
@@ -203,7 +216,8 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Predict when a user can fall asleep based on stimulant and caffeine intake, using real pharmacokinetic models.
 
-**File:** `stimulant-elimination-calculator.html` (11,526 lines, single file)
+**Files:** `stimulant-elimination-calculator.html` (2,632 lines CSS+HTML) + `js/stimcalc/*.js` (10 modules, 8,224 lines total)
+**Split Feb 2026**: Was 11,526-line monolith → now 10 separate JS modules loaded via `<script src>` tags. Zero inline JS.
 
 **Core Algorithm:**
 ```
@@ -270,103 +284,50 @@ When user sleeps < 4 hours:
 ## THE 5 FIREBASE GUARDS
 
 ```javascript
-// In BOTH saveState() (~line 10322) and saveStateImmediate() (~line 10381):
+// In BOTH saveState() and saveStateImmediate() in firebase-sync.js:
 
 if (!pinValidated) return false;        // Guard 0: PIN not validated
 if (isInitialLoad) return false;        // Guard A: Still loading
 if (!hasLoadedFromCloud) return false;  // Guard B: Haven't loaded yet
-if (!state._dataLoaded) return false;   // Guard D: State not ready
 if (isEmptyState(state)) return false;  // Guard C: Would wipe data
+if (!state._dataLoaded) return false;   // Guard D: State not ready
 ```
 
 **Both functions have IDENTICAL guards.** Never modify one without the other.
 
 ---
 
-## QUICK REFERENCE: KEY FUNCTIONS
+## QUICK REFERENCE: KEY FUNCTIONS BY MODULE
 
-| Function | Actual Line | Purpose |
-|----------|-------------|---------|
-| `getDefaultState()` | ~3114 | Factory for default state object |
-| `isEmptyState(data)` | ~3222 | Checks 6 conditions (meds, caff, history, sleepHistory, allNighterMode, _dataLoaded) |
-| `generateId(prefix)` | ~3258 | Generate unique IDs like `med_170740...` |
-| `getValues(obj)` | ~3293 | Safe object-to-array iteration |
-| `getCount(obj)` | ~3300 | Safe object key count |
-| `escapeHtml(str)` | ~3331 | XSS protection |
-| `analyzeCircadianPhase()` | ~3421 | Full circadian analysis with circular mean wake averaging |
-| `getLocalDateString()` | ~3604 | Today's date as YYYY-MM-DD |
-| `parseLocalDate(str)` | ~3609 | Parse date string to local Date |
-| `timeToMinutes(time)` | ~3615 | "14:30" -> 870 |
-| `minutesToTime(mins)` | ~3624 | 870 -> "14:30" |
-| `minutesToTimeWithDay(mins)` | ~3634 | Adds "(tomorrow)" suffix if >= 1440 |
-| `computeSleepDelta()` | ~3648 | Handles midnight crossing with +/-720 wrapping |
-| `migrateHistoryEntries()` | ~3678 | Backfill deltaMinutes/absError for old entries |
-| `calculateSleepDebtBonus()` | ~3719 | 3-day weighted deficit -> 0-6mg bonus |
-| `getEffectiveThreshold()` | ~3848 | Full threshold with all modifiers + sauna decay |
-| `isHyperarousalMode()` | ~3937 | Check if < 4h sleep |
-| `getForbiddenZone()` | ~3945 | Returns {start, end} in minutes |
-| `getSleepGate()` | ~3953 | Returns {start, end} in minutes |
-| `isInForbiddenZone()` | ~3961 | Boolean check |
-| `isInSleepGate()` | ~3971 | Boolean check |
-| `getForbiddenZoneEnd()` | ~3980 | Normalized FZ end time |
-| `calculateDecayWithVitC()` | ~3988 | Core 3-segment VitC-aware decay |
-| `calculateAmpLoad(atMinutes)` | ~4036 | Sum all amp contributions (XR split + VitC) |
-| `calculateCaffLoad(atMinutes)` | ~4102 | Sum all caffeine contributions |
-| `findAmpClearTime()` | ~4145 | Iterative binary search with DR spike verification |
-| `findCaffClearTime()` | ~4209 | Caffeine clearance search |
-| `calculateSleepTime()` | ~4242 | Main 6-phase prediction algorithm |
-| `addMedEntry(dose, time)` | ~4530 | Add medication |
-| `removeMedEntry(id)` | ~4579 | Remove medication |
-| `renderMedEntries()` | ~4613 | Render medication list |
-| `addCaffeine(amount, name)` | ~4726 | Add caffeine entry |
-| `removeCaffeine(id)` | ~4753 | Remove caffeine entry |
-| `renderCaffeineEntries()` | ~4764 | Render caffeine list |
-| `updateVitaminCDate()` | ~4879 | VitC date management |
-| `getVitaminCTimeMinutes()` | ~4898 | VitC time in minutes |
-| `isVitaminCEffective()` | ~4960 | Is VitC currently active |
-| `toggleAllNighterMode()` | ~4994 | Toggle all-nighter |
-| `calculateYesterdayDoseRemaining()` | ~5049 | Ghost load calculation (mirrors XR split logic) |
-| `renderGhostLoad()` | ~5078 | Ghost load display (uses ghostMedEntries + ghostLoadTotal DOM IDs) |
-| `initWorkoutPlanner()` | ~5186 | Initialize workout system |
-| `calculateWorkoutImpact()` | ~5241 | Workout effect on threshold |
-| `applyWorkoutPlan()` | ~5533 | Apply workout to state |
-| `recalculate()` | ~5637 | Main recalc + render (called every 5 seconds via setInterval) |
-| `logNicotine(type)` | ~6483 | Log nicotine use |
-| `simulateVitaminC()` | ~6918 | VitC scenario simulation |
-| `simulateSauna()` | ~6948 | Sauna scenario simulation |
-| `saveDay()` | ~7516 | Save today's prediction to history |
-| `autoPopulateFeedback()` | ~7567 | Auto-fill actual sleep from sleep history |
-| `renderHistory()` | ~7626 | Render prediction history |
-| `renderSleepCalendar()` | ~7778 | Sleep calendar view |
-| `renderCircadianPhase()` | ~7856 | Circadian display |
-| `renderAccuracyDashboard()` | ~8051 | Prediction accuracy stats |
-| `renderSleepPerformance()` | ~8160 | Sleep quality metrics |
-| `renderSleepAchievements()` | ~8482 | Achievement display |
-| `renderSleepHistoryList()` | ~8862 | History list view |
-| `calculateAccuracyStats(days)` | ~8968 | Returns totalEntries, avgError, within30min, within60min, trend, recentBias |
-| `getCalibrationRecommendation()` | ~9045 | Detailed calibration suggestions |
-| `suggestCalibration()` | ~9093 | Threshold adjustment tips (bias > +/-30 min) |
-| `initFirebase()` | ~9227 | Firebase initialization |
-| `promptForPin()` | ~9297 | PIN modal |
-| `submitPin()` | ~9332 | PIN validation |
-| `skipPin()` | ~9350 | Offline mode (sets all 4 guard flags) |
-| `saveToFirebase(state)` | ~9364 | Actual Firebase write |
-| `loadFromFirebase()` | ~9403 | Initial data load from cloud |
-| `setupRealtimeSync()` | ~9557 | Cross-device sync listener |
-| `forceCloudSync()` | ~9655 | Force upload to cloud |
-| `createCheckpoint(name)` | ~9717 | Save state snapshot |
-| `showCheckpointManager()` | ~9744 | Checkpoint modal |
-| `restoreCheckpoint(index)` | ~9814 | Restore from checkpoint |
-| `exportAllCheckpoints()` | ~9880 | Export full backup |
-| `importCheckpoint(event)` | ~9924 | Import checkpoint |
-| `forcePullFromCloud()` | ~10116 | Force download from cloud |
-| `renderAll()` | ~10170 | Master render function |
-| `saveState()` | ~10322 | Debounced save with 5 guards |
-| `saveStateImmediate()` | ~10381 | Immediate save with 5 guards |
-| `loadState()` | ~10433 | Load from localStorage |
-| `updateForecastLogic()` | ~11103 | Diagnostic forecast panel |
-| `init()` | ~11126 | Main entry point (DOMContentLoaded) |
-| `initUnifiedView()` | ~11504 | Unified accordion view setup |
+### state.js — Globals, Defaults, Utilities
+`getDefaultState()`, `isEmptyState()`, `hasRealData()`, `generateId()`, `getValues()`, `getCount()`, `escapeHtml()`, `safeLocalStorageSet()`, `BackupManager`, `getLocalDateString()`, `parseLocalDate()`, `timeToMinutes()`, `minutesToTime()`, `minutesToTimeWithDay()`, `computeSleepDelta()`, `snapshotPredictionInputs()`, `migrateHistoryEntries()`, `getCurrentMinutes()`, `formatTime12()`, `showToast()`, `showCustomAlert()`, `showCustomConfirm()`
+
+### circadian.js — Circadian Analysis
+`analyzeCircadianPhase()`, `getForbiddenZone()`, `getSleepGate()`, `isInForbiddenZone()`, `isInSleepGate()`, `getForbiddenZoneEnd()`
+
+### pharma-engine.js — Drug Calculations
+`getVitaminCTimeMinutes()`, `isVitaminCEffective()`, `getVitaminCStatus()`, `calculateSleepDebtBonus()`, `getSleepDebtBreakdown()`, `getEffectiveThreshold()`, `isHyperarousalMode()`, `calculateDecayWithVitC()`, `calculateAmpLoad()`, `calculateCaffLoad()`, `findAmpClearTime()`, `findCaffClearTime()`, `getYesterdayMedications()`, `calculateYesterdayDoseRemaining()`
+
+### sleep-prediction.js — Sleep Prediction
+`calculateSleepTime()` — the 7-phase algorithm (~284 lines)
+
+### firebase-sync.js — Persistence & Sync
+`mergeRemoteState()` (NEW), `initFirebase()`, `submitPin()`, `skipPin()`, `saveToFirebase()`, `loadFromFirebase()`, `setupRealtimeSync()`, `createCheckpoint()`, `showCheckpointManager()`, `restoreCheckpoint()`, `forceUploadToCloud()`, `forcePullFromCloud()`, `renderAll()`, `saveState()` (5 guards), `saveStateImmediate()` (5 guards), `loadState()`
+
+### med-caffeine.js — Medication & Caffeine CRUD
+`addMedEntry()`, `removeMedEntry()`, `renderMedEntries()`, `addCaffeine()`, `removeCaffeine()`, `renderCaffeineEntries()`
+
+### ui-sections.js — UI Panels
+`logNicotine()`, `updateNicotineDisplay()`, `checkRLSRisk()`, `toggleModifier()`, `toggleAllNighterMode()`, `renderGhostLoad()`, `initWorkoutPlanner()`, `calculateWorkoutImpact()`, `applyWorkoutPlan()`, `updateScenarios()`, `updateForecastLogic()`
+
+### history-calendar.js — History & Calibration
+`saveDay()`, `renderHistory()`, `renderSleepCalendar()`, `renderCircadianPhase()`, `renderAccuracyDashboard()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`
+
+### graph.js — Canvas Rendering
+`drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`
+
+### init.js — App Bootstrap & Heartbeat
+`syncStateFromDOM()`, `runCalculations()`, `updateUI()`, `recalculate()` (try/catch wrapper), `init()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`
 
 ---
 
@@ -421,24 +382,30 @@ if (daysDiff > 3) return; // Skip very old regardless
 
 ---
 
-## SPLIT PLAN
+## SPLIT COMPLETE (Feb 20, 2026)
 
-When user says **"execute split plan"**, read `SPLIT-PLAN-V2.md` in the repo root and follow it phase by phase.
-This plan splits the 11,526-line single file into 10 separate JS modules, fixes 16 bugs during extraction,
-and refactors `recalculate()` from a 400-line god function into 3 clean phases with error isolation.
+The monolith was split into 10 JS modules via a 6-phase, 6-agent operation. 16 bugs fixed during extraction.
+`SPLIT-PLAN-V2.md` in repo root documents the full plan (now historical reference).
+
+Key architectural changes:
+- `recalculate()` split into `syncStateFromDOM()` + `runCalculations()` + `updateUI(vm)` with try/catch (in `init.js`)
+- 4 duplicated Firebase merge blocks → 1 `mergeRemoteState()` (in `firebase-sync.js`)
+- Circadian zones now use 7-day average wake time (in `circadian.js`)
+- Ghost load uses VitC-aware decay (in `pharma-engine.js`)
+- All midnight-crossing deltas use `computeSleepDelta()` (in `state.js`)
 
 ## CONSULT REFERENCES FOR
 
 - **Full architecture details** -> `references/app-architecture.md`
 - **Drug decay math** -> `references/pharmacokinetics.md`
-- **Sleep prediction algorithm (6 phases)** -> `references/sleep-prediction-algorithm.md`
+- **Sleep prediction algorithm (7 phases)** -> `references/sleep-prediction-algorithm.md`
 - **Circadian rhythm system** -> `references/circadian-system.md`
 - **Complete state structure** -> `references/state-structure.md`
-- **All functions with verified line numbers** -> `references/function-map.md`
+- **All functions with verified line numbers** -> `references/function-map.md` (NOTE: line numbers are from pre-split; use module file names instead)
 - **Bugs we've fixed** -> `references/known-bugs-and-fixes.md`
 - **Prediction accuracy tracking** -> `references/calibration-system.md`
 - **Debugging issues** -> `references/debugging-guide.md`
-- **App split execution plan** -> `SPLIT-PLAN-V2.md` (repo root)
+- **Original split plan** -> `SPLIT-PLAN-V2.md` (repo root, historical)
 
 ---
 

@@ -3,7 +3,8 @@
 ## CRITICAL RULES
 
 ### Never Rebuild Entire Files
-- Files are 11,000-22,000+ lines. Use surgical `Edit` tool only. Read section first.
+- Most files are 11,000-22,000+ lines. Use surgical `Edit` tool only. Read section first.
+- **Exception**: Stim calc is now 10 separate JS modules (200-1,900 lines each) — still use surgical edits.
 
 ### Date Parsing (COMMON BUG)
 ```javascript
@@ -29,12 +30,13 @@ const date = new Date(year, month - 1, day);
 |------|-------|---------|
 | `index.html` | ~22,700 | Main app: Command Center (Triage/Crash Out/Focus), tasks, financials, calendar, meds, notebook |
 | `d3-roadmap.html` | ~17,575 | Academic tracker: 11 tabs (grades, deadlines, clinical, competencies, planners, exams) |
-| `stimulant-elimination-calculator.html` | ~11,526 | Sleep prediction, pharmacokinetic modeling (amphetamine/caffeine/nicotine) |
+| `stimulant-elimination-calculator.html` | ~2,632 | Sleep prediction app — CSS + HTML only (zero inline JS) |
+| `js/stimcalc/*.js` (10 modules) | ~8,224 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
 | `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
-- **Pattern**: Single-file HTML apps, no build system. Push to `main` → live in ~30s.
+- **Pattern**: Single-file HTML apps (except stim calc: 10 JS modules), no build system. Push to `main` → live in ~30s.
 
 ---
 
@@ -127,7 +129,7 @@ Default `_version: Date.now()` caused fresh browser to overwrite cloud with empt
 |-----|----------|-----------|--------|-------|
 | index.html | `saveData()` | `initialLoadComplete` | 4 | Guards behind `firebaseInitialized`. No `_dataLoaded` check. |
 | d3-roadmap | `saveData()` | `isInitialLoad` | 5 | PIN guard last. |
-| stim-calc | `saveState()` | `isInitialLoad` | 5 | Both save fns have identical guards. |
+| stim-calc | `saveState()` in `firebase-sync.js` | `isInitialLoad` | 5 | Both save fns have identical guards. |
 | body-comp | `saveState()` | `isInitialLoad` | 5/5 | Both save fns have all 5 guards (PIN bug fixed Feb 2026). |
 
 ### Standard Guard Pattern (d3/stim/body-comp)
@@ -372,34 +374,52 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ---
 
-## STIMULANT CALCULATOR (stimulant-elimination-calculator.html)
+## STIMULANT CALCULATOR (10 JS Modules — Split Feb 2026)
 
-### File Layout (~11,526 lines)
-| Range | Content |
-|-------|---------|
-| 1-2,481 | **CSS** |
-| 2,485-3,105 | **HTML** — hero, 10 accordion sections, modals |
-| 3,107-11,526 | **JavaScript** |
+### Architecture: Multi-File (Split from 11,526-line monolith)
+```
+stimulant-elimination-calculator.html  (2,632 lines — CSS + HTML only, ZERO inline JS)
+js/stimcalc/
+├── state.js              (450 lines)  - Globals, defaults, utilities, time helpers
+├── circadian.js          (229 lines)  - Circadian analysis, forbidden zone, sleep gate
+├── pharma-engine.js      (657 lines)  - Drug decay, VitC model, threshold, clearance
+├── sleep-prediction.js   (284 lines)  - 7-phase sleep prediction algorithm
+├── firebase-sync.js    (1,404 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
+├── med-caffeine.js       (295 lines)  - Medication + caffeine CRUD
+├── ui-sections.js      (1,911 lines)  - Nicotine, modifiers, workout, what-if, forecast
+├── history-calendar.js (1,196 lines)  - History, calibration, sleep calendar, accuracy
+├── graph.js              (733 lines)  - Canvas graphs, tooltips, spline interpolation
+└── init.js             (1,065 lines)  - recalculate() (3 phases + try/catch), init, accordion
+```
 
-### Key JS Locations
-| Range | Content |
-|-------|---------|
-| 3,107-3,240 | `getDefaultState()`, sync flags, `isEmptyState()` |
-| 3,417-3,600 | `analyzeCircadianPhase()` (7-day phase detection) |
-| 3,840-3,985 | `getEffectiveThreshold()` (base + debt + modifiers, 8mg cap) |
-| 3,985-4,240 | Decay/load calculations, `findAmpClearTime()` |
-| 4,240-4,530 | `calculateSleepTime()` — 7-phase prediction |
-| 5,180-5,625 | Workout planner (adenosine/cortisol/thermal) |
-| 5,625-6,000 | `recalculate()` main loop (runs every 5s — errors crash repeatedly) |
-| 6,450-6,810 | Nicotine tracking, RLS risk |
-| 6,810-7,070 | What-If scenarios (6 simulations) |
-| 7,070-7,460 | Graph (canvas: amp/caff curves, zones) |
-| 9,110-9,660 | Firebase init, PIN, save/load, realtime sync |
-| 10,310-10,540 | `saveState()` + `saveStateImmediate()` (5 identical guards each) |
-| 11,110-11,526 | `init()`, unified view, accordions |
+### Script Loading Order (ORDER MATTERS — dependencies flow downward)
+state → circadian → pharma-engine → sleep-prediction → firebase-sync → med-caffeine → ui-sections → history-calendar → graph → init
 
-### 10 Accordion Sections
-Hero (projected sleep), Graph, Sleep & Wake, Medications, Caffeine, Modifiers, Nicotine, Workout, What-If, Circadian, Sleep Calendar, Recommendations, Forecast Logic
+### Key Module Map
+| What to change | File to edit |
+|---------------|-------------|
+| State defaults, utilities, time helpers | `state.js` |
+| Circadian zones, forbidden zone, sleep gate | `circadian.js` |
+| Drug decay, threshold, VitC, clearance search | `pharma-engine.js` |
+| Sleep prediction algorithm (7 phases) | `sleep-prediction.js` |
+| Firebase, save guards, sync, checkpoints | `firebase-sync.js` |
+| Add/remove medications or caffeine | `med-caffeine.js` |
+| Nicotine, modifiers, workout, what-if, forecast | `ui-sections.js` |
+| History, calibration, sleep calendar, accuracy | `history-calendar.js` |
+| Canvas graphs, tooltips | `graph.js` |
+| recalculate(), init, accordion, hero UI | `init.js` |
+
+### recalculate() — Refactored (init.js)
+```javascript
+recalculate() → try {
+    syncStateFromDOM()    // Read ~20 DOM inputs → state
+    runCalculations()     // Pure math → returns viewModel
+    updateUI(vm)          // viewModel → 50+ DOM elements
+} catch (e) { hero shows "Calc Error", self-heals next 5s cycle }
+```
+
+### mergeRemoteState() — Consolidated (firebase-sync.js)
+Previously 4 duplicated merge blocks → now 1 function called by loadFromFirebase, setupRealtimeSync, visibilitychange handler.
 
 ### XR Pharmacokinetics (ALL doses are XR — DON'T CHANGE)
 ```javascript
@@ -408,7 +428,7 @@ Hero (projected sleep), Graph, Sleep & Wake, Medications, Caffeine, Modifiers, N
 // Creates NON-MONOTONIC curves — load spikes UP at DR release
 ```
 
-### 7-Phase Sleep Prediction
+### 7-Phase Sleep Prediction (sleep-prediction.js)
 1. Pharmacokinetic Floor (drugs clear threshold)
 2. Circadian Constraints (Forbidden Zone + Wake Maintenance Zone)
 3. Time-Based Blockers (cortisol/thermal from workouts)
@@ -426,8 +446,8 @@ Hero (projected sleep), Graph, Sleep & Wake, Medications, Caffeine, Modifiers, N
 | Caff threshold | 25mg |
 
 ### Vitamin C: Reduces amp half-life to 70%, 8h TTL, 3-segment decay model.
-### Circadian: Wake Maintenance 11-13h, Forbidden Zone 13-15h, Sleep Gate 15-17h after wake.
-### All-Nighter: Ghost load (yesterday's doses), hyperarousal negates sleep debt bonus.
+### Circadian: Uses 7-day avg wake time (not raw daily). WMZ 11-13h, FZ 13-15h, Sleep Gate 15-17h.
+### All-Nighter: Ghost load (yesterday's doses via VitC-aware decay), hyperarousal negates sleep debt bonus.
 ### Cross-app: Writes `projectedSleepTime` + `projectedSleepMinutes` to Firebase for Body Comp.
 
 ---
