@@ -91,6 +91,9 @@ DOMContentLoaded → initApp() →
 
 Both functions use `buildSaveData()` shared helper to ensure data consistency (especially `commandCenterData`).
 
+### CRITICAL: Flags Before Rendering Pattern
+In `loadDataFromFirebase()`, sync flags (`hasLoadedFromCloud`, `_dataLoaded`, `markInitialLoadComplete()`) are set BEFORE rendering calls. Post-load rendering is wrapped in try/catch. This prevents a rendering error from permanently blocking all saves. **Never move flag-setting to after rendering calls.**
+
 ### Date Parsing
 Always parse dates in local timezone to avoid off-by-one errors:
 ```javascript

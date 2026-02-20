@@ -30,8 +30,8 @@ Consult `references/guard-system.md` for:
 
 | App | Function | Line | Debounce | Guards |
 |-----|----------|------|----------|--------|
-| index.html | `saveData()` | 12902 | 200ms | 4 (no `_dataLoaded`) |
-| index.html | `saveDataImmediate()` | 13080 | 0ms | 4 |
+| index.html | `saveData()` | firebase-sync.js:218 | 200ms | 5 |
+| index.html | `saveDataImmediate()` | firebase-sync.js:376 | 0ms | 5 |
 | d3-roadmap | `saveData()` | 10992 | 0-300ms smart | 5 |
 | stim-calc | `saveState()` | 10322 | 2000ms | 5 |
 | stim-calc | `saveStateImmediate()` | 10381 | 0ms | 5 |
@@ -118,9 +118,12 @@ Consult `references/bugs-and-debugging.md` for:
 | Initial load done | `initialLoadComplete` | `!isInitialLoad` | `!isInitialLoad` | `!isInitialLoad` |
 | Cloud loaded | `hasLoadedFromCloud` | `hasLoadedFromCloud` | `hasLoadedFromCloud` | `hasLoadedFromCloud` |
 | Not empty | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` |
-| Data loaded | _(not used)_ | `roadmapData._dataLoaded` | `state._dataLoaded` | `state._dataLoaded` |
+| Data loaded | `_dataLoaded` | `roadmapData._dataLoaded` | `state._dataLoaded` | `state._dataLoaded` |
 
 Note: index.html uses inverted naming (`initialLoadComplete=true` means done) vs others (`isInitialLoad=false` means done).
+
+**CRITICAL PATTERN: Flags Before Rendering**
+In `loadDataFromFirebase()`, sync flags (`hasLoadedFromCloud`, `_dataLoaded`, `markInitialLoadComplete()`) MUST be set BEFORE rendering calls (`updateStats`, `renderTasks`, `initFocusMode`, etc.). Post-load rendering MUST be wrapped in try/catch. If a rendering error occurs before flags are set, ALL saves are permanently blocked. This was a critical post-split bug in index.html (fixed Feb 2026, commit `29ba742`).
 
 ## Known Bugs (Unpatched)
 

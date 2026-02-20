@@ -201,11 +201,14 @@ state → firebase-sync → medications → financials → calendar → daily-pl
 ### Bootstrap Sequence (init.js)
 ```
 DOMContentLoaded → initApp() → initializeFirebase() → loadDataFromFirebase() (async)
-  → .then() callback → updateStats(), renderTasks(), initFocusMode(), etc.
+  → .then() callback:
+      1. Set sync flags (hasLoadedFromCloud, _dataLoaded, markInitialLoadComplete) — FIRST
+      2. try { updateStats(), renderTasks(), initFocusMode(), etc. } catch — AFTER flags
   → 10-second failsafe: force-show UI if Firebase hangs
 ```
 Firebase init is called from `initApp()` in init.js (NOT at firebase-sync.js parse time).
 All cross-module function calls are safe because init.js loads LAST after all modules.
+**CRITICAL**: Sync flags MUST be set BEFORE rendering calls. Post-load rendering MUST be in try/catch. This prevents a rendering error from permanently blocking all saves (bug fixed Feb 2026, commit `29ba742`).
 
 ### index.html File Layout (~12,186 lines — CSS + HTML only)
 | Range | Content |
