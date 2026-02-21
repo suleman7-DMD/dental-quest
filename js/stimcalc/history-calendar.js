@@ -55,6 +55,7 @@ function autoSavePrediction(sleepTimeMinutes) {
 
     lastAutoSavePredictionTime = now;
     lastAutoSavePredictionMinutes = sleepTimeMinutes;
+    saveDailyLogicLog();
     saveState();
 }
 
