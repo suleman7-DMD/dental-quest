@@ -13,8 +13,8 @@ metadata:
   author: Sully
   version: 3.0.0
   file: stimulant-elimination-calculator.html + js/stimcalc/*.js (10 modules)
-  lines: ~10,856 total (2,632 HTML + 8,224 JS)
-  last-verified: 2026-02-20
+  lines: ~11,855 total (2,833 HTML + 9,022 JS)
+  last-verified: 2026-02-21
 ---
 
 # Stimulant Elimination Calculator Development Patterns
@@ -57,17 +57,17 @@ Read the APP OVERVIEW and KEY CONCEPTS below. Determine which subsystem is relev
 The app is split into 10 JS modules. Use the MODULE MAP below to identify which file to edit:
 | What to change | File |
 |---------------|------|
-| State defaults, utilities, time helpers | `js/stimcalc/state.js` (450 lines) |
+| State defaults, utilities, time helpers | `js/stimcalc/state.js` (463 lines) |
 | Circadian zones, forbidden zone, sleep gate | `js/stimcalc/circadian.js` (229 lines) |
 | Drug decay, threshold, VitC, clearance search | `js/stimcalc/pharma-engine.js` (657 lines) |
 | Sleep prediction algorithm (7 phases) | `js/stimcalc/sleep-prediction.js` (284 lines) |
 | Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (1,404 lines) |
 | Add/remove medications or caffeine | `js/stimcalc/med-caffeine.js` (295 lines) |
 | Nicotine, modifiers, workout, what-if, forecast | `js/stimcalc/ui-sections.js` (1,911 lines) |
-| History, calibration, sleep calendar, accuracy | `js/stimcalc/history-calendar.js` (1,196 lines) |
+| History, calibration, month calendar, day details, accuracy | `js/stimcalc/history-calendar.js` (1,808 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
-| recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,065 lines) |
-| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,632 lines, zero JS) |
+| recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,090 lines) |
+| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,833 lines, zero JS) |
 
 ### Step 3: Read the code before changing it
 Each module is 200-1,900 lines. Read the target function and surrounding context before editing. Never write blind.
@@ -320,14 +320,14 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 ### ui-sections.js — UI Panels
 `logNicotine()`, `updateNicotineDisplay()`, `checkRLSRisk()`, `toggleModifier()`, `toggleAllNighterMode()`, `renderGhostLoad()`, `initWorkoutPlanner()`, `calculateWorkoutImpact()`, `applyWorkoutPlan()`, `updateScenarios()`, `updateForecastLogic()`
 
-### history-calendar.js — History & Calibration
-`saveDay()`, `renderHistory()`, `renderSleepCalendar()`, `renderCircadianPhase()`, `renderAccuracyDashboard()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`
+### history-calendar.js — History, Month Calendar, Day Details & Calibration
+`saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderAccuracyDashboard()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`, `renderPredictionInsights()`, `renderCalibrationContexts()`
 
 ### graph.js — Canvas Rendering
 `drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`
 
 ### init.js — App Bootstrap & Heartbeat
-`syncStateFromDOM()`, `runCalculations()`, `updateUI()`, `recalculate()` (try/catch wrapper), `init()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`
+`syncStateFromDOM()`, `runCalculations()`, `updateUI()`, `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`
 
 ---
 

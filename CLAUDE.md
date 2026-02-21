@@ -33,8 +33,8 @@ const date = new Date(year, month - 1, day);
 | `js/dental-quest/*.js` (12 modules) | ~10,762 | Main app JS: state, firebase-sync, medications, financials, calendar, daily-planner, notebook, tasks, triage, crash-out, focus-pomodoro, init |
 | `d3-roadmap.html` | ~8,394 | Academic tracker: CSS + HTML only (zero inline JS) |
 | `js/d3-roadmap/*.js` (10 modules) | ~9,135 | D3 roadmap JS: state, firebase-sync, deadlines, grades, exam-content, clinical, import-system, daily-planner, monthly-planner, init |
-| `stimulant-elimination-calculator.html` | ~2,632 | Sleep prediction app — CSS + HTML only (zero inline JS) |
-| `js/stimcalc/*.js` (10 modules) | ~8,224 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
+| `stimulant-elimination-calculator.html` | ~2,833 | Sleep prediction app — CSS + HTML only (zero inline JS) |
+| `js/stimcalc/*.js` (10 modules) | ~9,022 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
 | `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
@@ -440,18 +440,18 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ### Architecture: Multi-File (Split from 11,526-line monolith)
 ```
-stimulant-elimination-calculator.html  (2,632 lines — CSS + HTML only, ZERO inline JS)
+stimulant-elimination-calculator.html  (2,833 lines — CSS + HTML only, ZERO inline JS)
 js/stimcalc/
-├── state.js              (450 lines)  - Globals, defaults, utilities, time helpers
+├── state.js              (463 lines)  - Globals, defaults, utilities, time helpers
 ├── circadian.js          (229 lines)  - Circadian analysis, forbidden zone, sleep gate
 ├── pharma-engine.js      (657 lines)  - Drug decay, VitC model, threshold, clearance
 ├── sleep-prediction.js   (284 lines)  - 7-phase sleep prediction algorithm
 ├── firebase-sync.js    (1,404 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
 ├── med-caffeine.js       (295 lines)  - Medication + caffeine CRUD
 ├── ui-sections.js      (1,911 lines)  - Nicotine, modifiers, workout, what-if, forecast
-├── history-calendar.js (1,196 lines)  - History, calibration, sleep calendar, accuracy
+├── history-calendar.js (1,808 lines)  - History, calibration, month calendar, day details, accuracy
 ├── graph.js              (733 lines)  - Canvas graphs, tooltips, spline interpolation
-└── init.js             (1,065 lines)  - recalculate() (3 phases + try/catch), init, accordion
+└── init.js             (1,090 lines)  - recalculate() (3 phases + try/catch), init, accordion
 ```
 
 ### Script Loading Order (ORDER MATTERS — dependencies flow downward)
@@ -467,7 +467,7 @@ state → circadian → pharma-engine → sleep-prediction → firebase-sync →
 | Firebase, save guards, sync, checkpoints | `firebase-sync.js` |
 | Add/remove medications or caffeine | `med-caffeine.js` |
 | Nicotine, modifiers, workout, what-if, forecast | `ui-sections.js` |
-| History, calibration, sleep calendar, accuracy | `history-calendar.js` |
+| History, calibration, month calendar, day details, accuracy | `history-calendar.js` |
 | Canvas graphs, tooltips | `graph.js` |
 | recalculate(), init, accordion, hero UI | `init.js` |
 
