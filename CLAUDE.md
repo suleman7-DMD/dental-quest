@@ -440,7 +440,7 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ### Architecture: Multi-File (Split from 11,526-line monolith)
 ```
-stimulant-elimination-calculator.html  (2,833 lines — CSS + HTML only, ZERO inline JS)
+stimulant-elimination-calculator.html  (2,903 lines — CSS + HTML only, ZERO inline JS)
 js/stimcalc/
 ├── state.js              (463 lines)  - Globals, defaults, utilities, time helpers
 ├── circadian.js          (229 lines)  - Circadian analysis, forbidden zone, sleep gate
@@ -449,9 +449,9 @@ js/stimcalc/
 ├── firebase-sync.js    (1,404 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
 ├── med-caffeine.js       (295 lines)  - Medication + caffeine CRUD
 ├── ui-sections.js      (1,911 lines)  - Nicotine, modifiers, workout, what-if, forecast
-├── history-calendar.js (1,808 lines)  - History, calibration, month calendar, day details, accuracy
+├── history-calendar.js (2,822 lines)  - History, calibration, calendar, analytics, accuracy
 ├── graph.js              (733 lines)  - Canvas graphs, tooltips, spline interpolation
-└── init.js             (1,090 lines)  - recalculate() (3 phases + try/catch), init, accordion
+└── init.js             (1,089 lines)  - recalculate() (3 phases + try/catch), init, accordion
 ```
 
 ### Script Loading Order (ORDER MATTERS — dependencies flow downward)
@@ -467,7 +467,7 @@ state → circadian → pharma-engine → sleep-prediction → firebase-sync →
 | Firebase, save guards, sync, checkpoints | `firebase-sync.js` |
 | Add/remove medications or caffeine | `med-caffeine.js` |
 | Nicotine, modifiers, workout, what-if, forecast | `ui-sections.js` |
-| History, calibration, month calendar, day details, accuracy | `history-calendar.js` |
+| History, calibration, calendar, analytics dashboard, accuracy transparency | `history-calendar.js` |
 | Canvas graphs, tooltips | `graph.js` |
 | recalculate(), init, accordion, hero UI | `init.js` |
 

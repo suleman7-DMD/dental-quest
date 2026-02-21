@@ -868,7 +868,6 @@ function init() {
     // Redraw graphs on resize
     window.addEventListener('resize', function() {
         drawGraph();
-        if (typeof drawAccuracyTimeline === 'function' && currentSITab === 'accuracy') drawAccuracyTimeline();
     });
 
     // Initialize Unified View (accordions, modifiers, recent nights)

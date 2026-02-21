@@ -11,9 +11,9 @@ globs:
   - ".claude/skills/stim-calc-dev/**"
 metadata:
   author: Sully
-  version: 3.0.0
+  version: 3.1.0
   file: stimulant-elimination-calculator.html + js/stimcalc/*.js (10 modules)
-  lines: ~11,855 total (2,833 HTML + 9,022 JS)
+  lines: ~12,790 total (2,903 HTML + 9,887 JS)
   last-verified: 2026-02-21
 ---
 
@@ -64,7 +64,7 @@ The app is split into 10 JS modules. Use the MODULE MAP below to identify which 
 | Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (1,404 lines) |
 | Add/remove medications or caffeine | `js/stimcalc/med-caffeine.js` (295 lines) |
 | Nicotine, modifiers, workout, what-if, forecast | `js/stimcalc/ui-sections.js` (1,911 lines) |
-| History, calibration, month calendar, day details, accuracy | `js/stimcalc/history-calendar.js` (1,808 lines) |
+| History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,822 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
 | recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,090 lines) |
 | CSS or HTML markup | `stimulant-elimination-calculator.html` (2,833 lines, zero JS) |
@@ -320,8 +320,12 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 ### ui-sections.js — UI Panels
 `logNicotine()`, `updateNicotineDisplay()`, `checkRLSRisk()`, `toggleModifier()`, `toggleAllNighterMode()`, `renderGhostLoad()`, `initWorkoutPlanner()`, `calculateWorkoutImpact()`, `applyWorkoutPlan()`, `updateScenarios()`, `updateForecastLogic()`
 
-### history-calendar.js — History, Month Calendar, Day Details & Calibration
-`saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderAccuracyDashboard()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`, `renderPredictionInsights()`, `renderCalibrationContexts()`
+### history-calendar.js — History, Calendar, Analytics Dashboard, Accuracy Transparency
+`saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`,
+**Analytics Engine:** `gatherAllDayData()` (merges 3 data sources), `toggleInsSection()`, `buildInsSection()`
+**Insights Tab (14 sections):** `renderInsightsTab()`, `renderInsKeyMetrics()`, `renderInsDoseResponse()`, `renderInsCaffeineImpact()`, `renderInsSleepPatterns()`, `renderInsModifierImpact()`, `renderInsDosingWindows()`, `renderInsCaffeineTiming()`, `renderInsSleepEfficiency()`, `renderInsPredictionReliability()`, `renderInsCircadianConsistency()`, `renderInsStimulantTrends()`, `renderInsRiskIndicators()`, `renderInsPersonalRecords()`, `renderInsResearchBenchmarks()`
+**Accuracy Tab (7 sections):** `renderAccuracyTab()`, `renderAccOverallGrade()`, `renderAccMethodology()`, `renderAccErrorDistribution()`, `renderAccDirectionalBias()`, `renderAccContextBreakdowns()`, `renderAccDataInventory()`, `renderAccInputVerification()`
+**Legacy wrappers:** `renderPredictionInsights()` → `renderInsightsTab()`, `renderAccuracyDashboard()` → `renderAccuracyTab()`, `renderCalibrationContexts()` (no-op)
 
 ### graph.js — Canvas Rendering
 `drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`
