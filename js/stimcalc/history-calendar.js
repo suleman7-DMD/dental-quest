@@ -83,6 +83,7 @@ function saveDay() {
     }
 
     saveState();
+    saveDailyLogicLog();
     renderHistory();
     showToast('Day saved! Log actual sleep time tomorrow.');
 }
@@ -510,6 +511,7 @@ function clearSleepEntry() {
     if (state.sleepDailyLogs) delete state.sleepDailyLogs[currentEditingDate];
 
     saveState();
+    autoPopulateFeedback();
 
     // If clearing today, reset main inputs to defaults
     const today = getLocalDateString();
@@ -555,6 +557,7 @@ function saveSleepEdit() {
     });
 
     saveState();
+    autoPopulateFeedback();
 
     // If editing today, also update the main inputs
     const today = getLocalDateString();
@@ -583,6 +586,7 @@ function updateTodaySleepHistory() {
     };
 
     saveSleepDayLog();
+    autoPopulateFeedback();
     renderSleepIntelligence();
 }
 
@@ -597,6 +601,7 @@ function updateTodayWakeTime() {
     };
 
     saveSleepDayLog();
+    autoPopulateFeedback();
     renderSleepIntelligence();
 }
 
@@ -701,6 +706,14 @@ function migrateSleepDailyLogs() {
             lastUpdated: entry.predictedAt || new Date().toISOString(),
             _predictedAt: entryAt
         };
+
+        // Guard: skip phantom entries with no real data
+        if ((state.sleepDailyLogs[dateStr].hoursSlept === null || state.sleepDailyLogs[dateStr].hoursSlept === undefined) &&
+            (state.sleepDailyLogs[dateStr].wakeTime === null || state.sleepDailyLogs[dateStr].wakeTime === undefined) &&
+            (!state.sleepHistory || !state.sleepHistory[dateStr])) {
+            delete state.sleepDailyLogs[dateStr];
+            return;
+        }
     });
 
     // Pass 2: Override with sleepHistory (manual entries win, adds dates not in history)
@@ -744,6 +757,21 @@ function migrateSleepDailyLogs() {
     saveState();
 }
 
+function cleanupPhantomSleepLogs() {
+    if (!state.sleepDailyLogs) return;
+    var removed = 0;
+    Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
+        var log = state.sleepDailyLogs[dateStr];
+        if (log && (log.hoursSlept === null || log.hoursSlept === undefined) &&
+            log.source === 'backfilled' &&
+            (!state.sleepHistory || !state.sleepHistory[dateStr])) {
+            delete state.sleepDailyLogs[dateStr];
+            removed++;
+        }
+    });
+    if (removed > 0) saveState();
+}
+
 function saveSleepDayLog() {
     var today = getLocalDateString();
     if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
@@ -777,11 +805,27 @@ function saveSleepDayLog() {
         lastUpdated: new Date().toISOString()
     };
 
+    // Store predicted sleep from history entry
+    var todayPrediction = getValues(state.history).find(function(h) { return h.date === today; });
+    if (todayPrediction && todayPrediction.predictedSleep !== undefined) {
+        state.sleepDailyLogs[today].predictedSleep = todayPrediction.predictedSleep;
+    }
+
     // Keep sleepHistory in sync (backward compat for autoPopulateFeedback)
     state.sleepHistory[today] = {
         hoursSlept: state.hoursSleptLastNight,
         wakeTime: state.wakeTime
     };
+}
+
+function saveDailyLogicLog() {
+    var today = getLocalDateString();
+    if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+    if (!state.sleepDailyLogs[today]) saveSleepDayLog();
+    if (typeof generateForecastLogic === 'function') {
+        state.sleepDailyLogs[today].logicLog = generateForecastLogic();
+        state.sleepDailyLogs[today].lastUpdated = new Date().toISOString();
+    }
 }
 
 // ============================================
@@ -1130,6 +1174,278 @@ function renderSleepHistoryList(data) {
     }).join('');
 }
 
+// ============================================
+// MONTH CALENDAR VIEW
+// ============================================
+
+function navigateCalendar(delta) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+    renderSleepCalendarMonth();
+}
+
+function renderSleepCalendarMonth() {
+    var daysContainer = document.getElementById('sleepCalendarDays');
+    var labelEl = document.getElementById('sleepCalendarMonthLabel');
+    if (!daysContainer) return;
+
+    var year = calendarViewDate.getFullYear();
+    var month = calendarViewDate.getMonth();
+    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if (labelEl) labelEl.textContent = monthNames[month] + ' ' + year;
+
+    var firstDay = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var todayStr = getLocalDateString();
+
+    var html = '';
+    for (var i = 0; i < firstDay; i++) {
+        html += '<div class="sleep-cal-day empty"></div>';
+    }
+
+    for (var d = 1; d <= daysInMonth; d++) {
+        var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
+        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
+        var hoursSlept = null;
+
+        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
+            hoursSlept = dailyLog.hoursSlept;
+        } else if (sleepEntry) {
+            if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
+            else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) hoursSlept = sleepEntry.hoursSlept;
+        }
+
+        var status = computeSleepStatus(hoursSlept);
+        var isToday = dateStr === todayStr;
+        var isFuture = dateStr > todayStr;
+
+        if (isFuture) {
+            html += '<div class="sleep-cal-day empty"><span class="cal-day-num" style="color:#3b4048;">' + d + '</span></div>';
+        } else {
+            html += '<div class="sleep-cal-day ' + status + (isToday ? ' today' : '') + '" onclick="showSleepDayDetails(\'' + dateStr + '\')">' +
+                '<span class="cal-day-num">' + d + '</span>' +
+                (hoursSlept !== null ? '<span class="cal-day-hours">' + hoursSlept.toFixed(1) + 'h</span>' : '') +
+                '</div>';
+        }
+    }
+
+    daysContainer.innerHTML = html;
+    renderCalendarLegend();
+    renderCalendarMonthStats(year, month, daysInMonth, todayStr);
+}
+
+function renderCalendarLegend() {
+    var el = document.getElementById('sleepCalendarLegend');
+    if (!el) return;
+    var items = [
+        { cls: 'great', label: '8h+' },
+        { cls: 'good', label: '7-8h' },
+        { cls: 'ok', label: '5.5-7h' },
+        { cls: 'poor', label: '4-5.5h' },
+        { cls: 'critical', label: '<4h' },
+        { cls: 'allnighter', label: '0h' },
+        { cls: 'no_data', label: 'No data' }
+    ];
+    el.innerHTML = items.map(function(item) {
+        return '<span style="display:inline-flex;align-items:center;gap:4px;"><span class="sleep-cal-day ' + item.cls + '" style="width:12px;height:12px;aspect-ratio:auto;border-radius:3px;cursor:default;font-size:0;"></span>' + item.label + '</span>';
+    }).join('');
+}
+
+function renderCalendarMonthStats(year, month, daysInMonth, todayStr) {
+    var el = document.getElementById('sleepCalendarStats');
+    if (!el) return;
+
+    var totalHours = 0;
+    var daysWithData = 0;
+    var statusCounts = { great: 0, good: 0, ok: 0, poor: 0, critical: 0, allnighter: 0 };
+
+    for (var d = 1; d <= daysInMonth; d++) {
+        var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        if (dateStr > todayStr) break;
+
+        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
+        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
+        var hoursSlept = null;
+
+        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
+            hoursSlept = dailyLog.hoursSlept;
+        } else if (sleepEntry) {
+            if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
+            else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) hoursSlept = sleepEntry.hoursSlept;
+        }
+
+        if (hoursSlept !== null) {
+            totalHours += hoursSlept;
+            daysWithData++;
+            var st = computeSleepStatus(hoursSlept);
+            if (statusCounts[st] !== undefined) statusCounts[st]++;
+        }
+    }
+
+    if (daysWithData === 0) {
+        el.innerHTML = '<div style="text-align:center;color:#6e7681;font-size:0.85em;padding:8px;">No sleep data for this month.</div>';
+        return;
+    }
+
+    var avg = totalHours / daysWithData;
+    var avgColor = avg >= 7 ? '#10b981' : avg >= 5.5 ? '#f59e0b' : '#ef4444';
+
+    el.innerHTML = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.82em;color:#b0b8c4;padding:8px 0;">' +
+        '<span>Avg: <strong style="color:' + avgColor + ';">' + avg.toFixed(1) + 'h</strong></span>' +
+        '<span>Days tracked: <strong style="color:#e6edf3;">' + daysWithData + '</strong></span>' +
+        (statusCounts.great > 0 ? '<span style="color:#10b981;">' + statusCounts.great + ' great</span>' : '') +
+        (statusCounts.good > 0 ? '<span style="color:#60a5fa;">' + statusCounts.good + ' good</span>' : '') +
+        ((statusCounts.poor + statusCounts.critical + statusCounts.allnighter) > 0 ? '<span style="color:#ef4444;">' + (statusCounts.poor + statusCounts.critical + statusCounts.allnighter) + ' poor</span>' : '') +
+        '</div>';
+}
+
+// ============================================
+// DAY DETAILS MODAL
+// ============================================
+
+function showSleepDayDetails(dateStr) {
+    var modal = document.getElementById('sleepDayDetailModal');
+    var titleEl = document.getElementById('dayDetailTitle');
+    var bodyEl = document.getElementById('dayDetailBody');
+    if (!modal || !bodyEl) return;
+
+    var date = parseLocalDate(dateStr);
+    if (!date) return;
+    var displayDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    if (titleEl) titleEl.textContent = displayDate;
+
+    var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
+    var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
+    var predictionEntry = getValues(state.history).find(function(h) { return h.date === dateStr; });
+
+    var hoursSlept = null;
+    var wakeTime = null;
+
+    if (dailyLog) {
+        hoursSlept = dailyLog.hoursSlept !== undefined ? dailyLog.hoursSlept : null;
+        wakeTime = dailyLog.wakeTime || null;
+    } else if (sleepEntry) {
+        if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
+        else if (typeof sleepEntry === 'object') {
+            hoursSlept = sleepEntry.hoursSlept !== undefined ? sleepEntry.hoursSlept : null;
+            wakeTime = sleepEntry.wakeTime || null;
+        }
+    }
+
+    var status = computeSleepStatus(hoursSlept);
+    var statusColors = {
+        great: '#10b981', good: '#60a5fa', ok: '#f59e0b', poor: '#ef4444',
+        critical: '#ef4444', allnighter: '#7f1d1d', no_data: '#6b7280'
+    };
+    var statusLabels = {
+        great: '8h+ Great', good: '7-8h Good', ok: '5.5-7h OK', poor: '4-5.5h Poor',
+        critical: '<4h Critical', allnighter: 'All-Nighter', no_data: 'No Data'
+    };
+    var statusColor = statusColors[status] || '#6b7280';
+
+    var html = '';
+
+    // Status badge
+    html += '<div style="text-align:center;padding:12px;margin-bottom:12px;border-radius:10px;background:rgba(' + hexToRgb(statusColor) + ',0.15);border:1px solid ' + statusColor + ';">';
+    html += '<div style="font-size:2em;font-weight:700;color:' + statusColor + ';">' + (hoursSlept !== null ? hoursSlept.toFixed(1) + 'h' : '--') + '</div>';
+    html += '<div style="font-size:0.85em;color:' + statusColor + ';">' + statusLabels[status] + '</div>';
+    if (wakeTime) html += '<div style="font-size:0.8em;color:#b0b8c4;margin-top:4px;">Wake: ' + formatTime12(wakeTime) + '</div>';
+    html += '</div>';
+
+    // Prediction accuracy
+    if (predictionEntry) {
+        var predDisplay = predictionEntry.predictedSleep !== null && predictionEntry.predictedSleep !== undefined
+            ? formatTime12(minutesToTime(predictionEntry.predictedSleep > 24*60 ? predictionEntry.predictedSleep - 24*60 : predictionEntry.predictedSleep))
+            : '--';
+        html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">';
+        html += '<div style="font-size:0.78em;color:#c084fc;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Prediction</div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="color:#e6edf3;">Predicted: <strong>' + predDisplay + '</strong></span>';
+        if (predictionEntry.actualSleep !== null && predictionEntry.actualSleep !== undefined && !isNaN(predictionEntry.actualSleep)) {
+            var actualDisplay = formatTime12(minutesToTime(predictionEntry.actualSleep > 1440 ? predictionEntry.actualSleep - 1440 : predictionEntry.actualSleep));
+            var delta = computeSleepDelta(predictionEntry.predictedSleep, predictionEntry.actualSleep);
+            var absDelta = Math.abs(Math.round(delta));
+            var deltaColor = absDelta <= 30 ? '#10b981' : absDelta <= 60 ? '#f59e0b' : '#ef4444';
+            var deltaDir = delta > 0 ? 'late' : 'early';
+            html += '<span style="color:' + deltaColor + ';font-weight:600;">' + absDelta + 'min ' + deltaDir + '</span>';
+            html += '</div>';
+            html += '<div style="font-size:0.85em;color:#b0b8c4;margin-top:4px;">Actual sleep onset: ' + actualDisplay + '</div>';
+        } else {
+            html += '<span style="color:#8b949e;font-size:0.85em;">Awaiting feedback</span>';
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // Medications and Caffeine (from daily log)
+    if (dailyLog) {
+        if (dailyLog.medications && dailyLog.medications.length > 0) {
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
+            html += '<div style="font-size:0.78em;color:#c084fc;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Medications</div>';
+            dailyLog.medications.forEach(function(m) {
+                html += '<div style="font-size:0.85em;color:#e6edf3;margin-bottom:2px;">' + escapeHtml(m.dose + 'mg at ' + (m.time || '--')) + '</div>';
+            });
+            if (dailyLog.totalAmpDose) html += '<div style="font-size:0.8em;color:#8b9cb6;margin-top:4px;">Total: ' + dailyLog.totalAmpDose + 'mg</div>';
+            html += '</div>';
+        }
+        if (dailyLog.caffeine && dailyLog.caffeine.length > 0) {
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
+            html += '<div style="font-size:0.78em;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Caffeine</div>';
+            dailyLog.caffeine.forEach(function(c) {
+                html += '<div style="font-size:0.85em;color:#e6edf3;margin-bottom:2px;">' + escapeHtml((c.amount || 0) + 'mg ' + (c.name || '') + ' at ' + (c.time || '--')) + '</div>';
+            });
+            if (dailyLog.totalCaffDose) html += '<div style="font-size:0.8em;color:#8b9cb6;margin-top:4px;">Total: ' + dailyLog.totalCaffDose + 'mg</div>';
+            html += '</div>';
+        }
+
+        // Modifiers
+        var mods = [];
+        if (dailyLog.hadVitC) mods.push('Vitamin C');
+        if (dailyLog.hadWorkout) mods.push('Workout');
+        if (dailyLog.hadSauna) mods.push('Sauna');
+        if (dailyLog.allNighterMode) mods.push('All-Nighter');
+        if (mods.length > 0) {
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
+            html += '<div style="font-size:0.78em;color:#10b981;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Modifiers</div>';
+            html += '<div style="font-size:0.85em;color:#e6edf3;">' + mods.join(' &middot; ') + '</div>';
+            html += '</div>';
+        }
+
+        // Parameters
+        if (dailyLog.effectiveThreshold || dailyLog.sleepDebtBonus || dailyLog.ampHalfLife) {
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
+            html += '<div style="font-size:0.78em;color:#60a5fa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Parameters</div>';
+            if (dailyLog.effectiveThreshold) html += '<div style="font-size:0.82em;color:#b0b8c4;">Threshold: ' + dailyLog.effectiveThreshold + 'mg</div>';
+            if (dailyLog.sleepDebtBonus) html += '<div style="font-size:0.82em;color:#b0b8c4;">Sleep debt bonus: +' + dailyLog.sleepDebtBonus + 'mg</div>';
+            if (dailyLog.ampHalfLife) html += '<div style="font-size:0.82em;color:#b0b8c4;">Amp half-life: ' + dailyLog.ampHalfLife + 'h</div>';
+            html += '</div>';
+        }
+
+        // Logic log (collapsible)
+        if (dailyLog.logicLog) {
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
+            html += '<div style="font-size:0.78em;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">Forecast Logic (tap to toggle)</div>';
+            html += '<pre style="display:none;font-size:0.72em;color:#b0b8c4;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;margin:0;">' + escapeHtml(dailyLog.logicLog) + '</pre>';
+            html += '</div>';
+        }
+    } else if (hoursSlept === null) {
+        html += '<div style="text-align:center;padding:16px;color:#6e7681;font-size:0.9em;">No data logged for this day.</div>';
+    }
+
+    // Edit button
+    html += '<div style="text-align:center;margin-top:12px;">';
+    html += '<button onclick="closeSleepDayDetailModal(); openSleepEditModal(\'' + dateStr + '\')" style="padding:10px 24px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:8px;color:#c084fc;font-weight:600;cursor:pointer;">Edit Sleep Data</button>';
+    html += '</div>';
+
+    bodyEl.innerHTML = html;
+    modal.classList.add('show');
+}
+
+function closeSleepDayDetailModal() {
+    var modal = document.getElementById('sleepDayDetailModal');
+    if (modal) modal.classList.remove('show');
+}
+
 function showFeedbackModal() {
     // Check if there's a recent entry without feedback (or auto-filled that user can correct)
     const recent = getValues(state.history).find(h => h.actualSleep === null || h.autoFilled === true);
@@ -1293,7 +1609,7 @@ function switchSITab(tab) {
     for (var i = 0; i < tabs.length; i++) {
         tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tab);
     }
-    var panels = ['siTabOverview', 'siTabInsights', 'siTabAccuracy', 'siTabHistory'];
+    var panels = ['siTabOverview', 'siTabInsights', 'siTabAccuracy', 'siTabCalendar'];
     for (var i = 0; i < panels.length; i++) {
         var el = document.getElementById(panels[i]);
         if (el) el.style.display = panels[i] === 'siTab' + tab.charAt(0).toUpperCase() + tab.slice(1) ? 'block' : 'none';
@@ -1308,10 +1624,9 @@ function switchSITab(tab) {
         renderAccuracyDashboard();
         if (typeof renderCalibrationContexts === 'function') renderCalibrationContexts();
         if (typeof drawAccuracyTimeline === 'function') drawAccuracyTimeline();
-    } else if (tab === 'history') {
+    } else if (tab === 'calendar') {
+        renderSleepCalendarMonth();
         renderHistory();
-        var data = getSleepDataForDays(30);
-        renderSleepHistoryList(data);
     }
 }
 
@@ -1328,10 +1643,9 @@ function renderSleepIntelligence() {
         renderAccuracyDashboard();
         if (typeof renderCalibrationContexts === 'function') renderCalibrationContexts();
         if (typeof drawAccuracyTimeline === 'function') drawAccuracyTimeline();
-    } else if (tab === 'history') {
+    } else if (tab === 'calendar') {
+        renderSleepCalendarMonth();
         renderHistory();
-        var data = getSleepDataForDays(30);
-        renderSleepHistoryList(data);
     }
 }
 

@@ -19,6 +19,7 @@ var firebaseSaveTimeout = null;
 var lastLocalSave = 0;
 var lastAutoSavePredictionTime = 0;
 var lastAutoSavePredictionMinutes = null;
+var calendarViewDate = new Date();
 
 // ============================================
 // DEFAULT STATE FACTORY (for restore/reset operations)

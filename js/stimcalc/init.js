@@ -771,6 +771,19 @@ function updateFeelingsTimeline() {
 // INITIALIZATION
 // ============================================
 
+function scheduleEndOfDayLogicSave() {
+    var now = new Date();
+    var midnight = new Date(now);
+    midnight.setHours(23, 59, 59, 0);
+    var msUntilMidnight = midnight - now;
+    if (msUntilMidnight > 0) {
+        setTimeout(function() {
+            saveDailyLogicLog();
+            saveState();
+        }, msUntilMidnight);
+    }
+}
+
 function init() {
     loadState();
 
@@ -834,11 +847,15 @@ function init() {
     setTimeout(function() {
         migrateHistoryEntries();
         migrateSleepDailyLogs();
+        cleanupPhantomSleepLogs();
         renderSleepIntelligence();
     }, 2500);
 
     // Update every 5 seconds
     setInterval(recalculate, 5000);
+
+    // Schedule end-of-day logic log save
+    scheduleEndOfDayLogicSave();
 
     // Redraw graphs on resize
     window.addEventListener('resize', function() {
