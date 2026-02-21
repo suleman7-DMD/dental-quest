@@ -6,13 +6,14 @@ description: |
   Do NOT use this skill for dental quest index.html, body-comp-tracker.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
   - "d3-roadmap.html"
+  - "js/d3-roadmap/*.js"
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
 metadata:
   author: Sully
-  version: 1.0.0
-  file: d3-roadmap.html
-  lines: ~17575
-  last-verified: 2026-02-14
+  version: 2.0.0
+  file: d3-roadmap.html + js/d3-roadmap/*.js (10 modules)
+  lines: ~8394 HTML + ~9135 JS
+  last-verified: 2026-02-20
 ---
 
 # D3 Roadmap Development Patterns
@@ -23,7 +24,7 @@ This skill enables 3 core workflows:
 
 **Use Case 1: Debug a grade calculation or deadline issue**
 Trigger: User says "grade is wrong" or "deadline not showing" or "peds score off"
-Steps: Read courseStructures (~line 11829) -> Grep for loadCourseGrades() -> Read calculateNeeded() (~line 12104) -> Read initUI() deadline merge (~line 15524)
+Steps: Read `courseStructures` in grades.js -> Read `loadCourseGrades()` in grades.js -> Read `calculateNeeded()` in grades.js -> Read `initUI()` deadline merge in init.js
 Result: Root cause identified (e.g., wrong component weight, deadline not in STATIC_DEADLINES, editedDeadlines not applying)
 Success criteria: Grade calculation matches manual weighted average, deadlines render correctly, completedDeadlines persist
 
@@ -35,7 +36,7 @@ Success criteria: Feature works, all 5 Firebase guards intact in saveData(), bra
 
 **Use Case 3: Fix a Firebase sync issue**
 Trigger: User says "data not saving" or "sync broken" or "changes lost"
-Steps: Read saveData() at ~line 10992 (check 5 guards) -> Grep for isInitialLoad/hasLoadedFromCloud/pinValidated flags -> Read loadFromFirebase() to verify _dataLoaded preserved
+Steps: Read `saveData()` in firebase-sync.js (check 5 guards) -> Grep for isInitialLoad/hasLoadedFromCloud/pinValidated flags in firebase-sync.js -> Read `loadFromFirebase()` to verify _dataLoaded preserved
 Result: Sync issue identified and fixed without compromising data protection
 Success criteria: saveData() returns true, data persists across refresh, all 5 guards still present
 
@@ -52,27 +53,27 @@ Read the APP OVERVIEW below. Determine which subsystem is relevant:
 - Firebase/sync? -> Check the 5 FIREBASE GUARDS section below, and see [references/sync-and-firebase.md](references/sync-and-firebase.md)
 - Tabs/UI rendering? -> See [references/tabs-and-rendering.md](references/tabs-and-rendering.md)
 
-### Step 2: Find the exact function and line number
-Use the QUICK REFERENCE table below or [references/function-index.md](references/function-index.md) for the full list.
-All line numbers are verified against the actual 17,575-line file.
+### Step 2: Find the right module and function
+Use the MODULE MAP table below or [references/function-index.md](references/function-index.md) for the full list.
+The app is split into 10 JS modules in `js/d3-roadmap/`. Use Grep across the directory to find functions.
 
 ### Step 3: Read the code before changing it
-This is a single 17,575-line HTML file. Always read the target function and 50 lines of surrounding context before editing. Never write blind.
+Read the target function and 50 lines of surrounding context in the relevant module file before editing. Never write blind.
 
 ### Step 4: Make the change surgically
-Use the Edit tool for targeted changes. NEVER rewrite the whole file.
+Use the Edit tool for targeted changes on the specific module file.
 After editing, verify:
-- Brace/paren balance is intact
+- Brace/paren balance is intact in that module
 - No sync guards were removed or weakened
 - `_dataLoaded: true` is preserved in any state reconstruction
-- `saveData()` still has all 5 guards
+- `saveData()` still has all 5 guards (in firebase-sync.js)
 
 ### Step 5: Verify the save chain
 Every state mutation must flow through: mutate `roadmapData` -> `saveData()` -> re-render.
-If you touched Firebase code, verify all 5 guards are still present in `saveData()`.
+If you touched Firebase code, verify all 5 guards are still present in `saveData()` in firebase-sync.js.
 
 ### Step 6: Validate brace balance
-After large edits: `python3 -c "c=open('d3-roadmap.html').read(); print('{:', c.count('{'), '}:', c.count('}'))"`
+After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print('{:', c.count('{'), '}:', c.count('}'))"`
 
 ---
 
@@ -81,8 +82,8 @@ After large edits: `python3 -c "c=open('d3-roadmap.html').read(); print('{:', c.
 ### Example 1: Debug wrong grade calculation
 **User says:** "My Peds grade shows wrong — I got 77% on Exam 1 but the points don't add up"
 **Actions:**
-1. Read `courseStructures.peds` at ~line 11878 — Exam 1 weight is 40%, defaultGrade is 77
-2. Read `loadCourseGrades()` at ~line 11909 — formula: `earnedPoints += (grade / 100) * comp.weight`
+1. Read `courseStructures.peds` in grades.js — Exam 1 weight is 40%, defaultGrade is 77
+2. Read `loadCourseGrades()` in grades.js — formula: `earnedPoints += (grade / 100) * comp.weight`
 3. Check `roadmapData.grades.peds` — should have `{ exam1: 77, headstart: 100 }`
 4. Verify: 77/100 * 40 = 30.8 + 100/100 * 2.5 = 2.5 = 33.3 points earned
 **Result:** Points match. If user sees wrong value, check if `roadmapData.grades` was overwritten during sync.
@@ -90,19 +91,19 @@ After large edits: `python3 -c "c=open('d3-roadmap.html').read(); print('{:', c.
 ### Example 2: Add a custom deadline
 **User says:** "Add a new assignment deadline for March 15"
 **Actions:**
-1. Read `submitNewDeadline()` at ~line 12332 — creates deadline with `generateId('custom')`
+1. Read `submitNewDeadline()` in deadlines.js — creates deadline with `generateId('custom')`
 2. New deadline is stored in `roadmapData.customDeadlines[id]` (object, not array)
-3. `initUI()` at ~line 15524 merges STATIC_DEADLINES + customDeadlines into working `deadlines` array
+3. `initUI()` in init.js merges STATIC_DEADLINES + customDeadlines into working `deadlines` array
 4. Verify `saveData()` is called after adding
 **Result:** Deadline persists across refresh and syncs to Firebase.
 
 ### Example 3: Fix sync guard issue
 **User says:** "Changes aren't saving to Firebase"
 **Actions:**
-1. Read `saveData()` at ~line 10992 — check diagnostic log output
+1. Read `saveData()` in firebase-sync.js — check diagnostic log output
 2. Check all 5 guards: `isInitialLoad`, `hasLoadedFromCloud`, `isEmptyState()`, `roadmapData._dataLoaded`, `pinValidated`
-3. If guard B (`hasLoadedFromCloud`) is false, check `loadFromFirebase()` at ~line 9817 — does it set `hasLoadedFromCloud = true`?
-4. Check `loadFromLocalStorage(finalize)` at ~line 9757 — `finalize=true` sets all flags
+3. If guard B (`hasLoadedFromCloud`) is false, check `loadFromFirebase()` in firebase-sync.js — does it set `hasLoadedFromCloud = true`?
+4. Check `loadFromLocalStorage(finalize)` in firebase-sync.js — `finalize=true` sets all flags
 **Result:** Identified which guard is blocking saves. Fix the flag that's stuck.
 
 ---
@@ -111,27 +112,27 @@ After large edits: `python3 -c "c=open('d3-roadmap.html').read(); print('{:', c.
 
 ### Error: Grade calculator shows wrong points
 **Cause:** Course component weight mismatch — `courseStructures` has wrong weight, or `loadCourseGrades()` formula not applying weight correctly.
-**Solution:** Read `courseStructures` at ~line 11829 and verify component weights sum to 100%. Read `loadCourseGrades()` at ~line 11909 and trace the `earnedPoints += (grade / 100) * comp.weight` formula manually.
+**Solution:** Read `courseStructures` in grades.js and verify component weights sum to 100%. Read `loadCourseGrades()` in grades.js and trace the `earnedPoints += (grade / 100) * comp.weight` formula manually.
 
 ### Error: Custom deadline disappears after refresh
 **Cause:** `saveData()` not called after adding to `roadmapData.customDeadlines`, or a guard is blocking saves silently.
-**Solution:** Read `submitNewDeadline()` at ~line 12332. Verify it calls `saveData()` after adding the deadline. Check console for guard block messages.
+**Solution:** Read `submitNewDeadline()` in deadlines.js. Verify it calls `saveData()` after adding the deadline. Check console for guard block messages.
 
 ### Error: Deadline shows incomplete after marking done
 **Cause:** Stable ID mismatch — `getDeadlineId()` generates a different key than what's stored in `completedDeadlines` (legacy data used array index).
-**Solution:** Read `getDeadlineId()` at ~line 9551. Check `roadmapData.completedDeadlines` keys match the stable ID format. Read `initUI()` at ~line 15524 for the legacy fallback matching logic.
+**Solution:** Read `getDeadlineId()` in state.js. Check `roadmapData.completedDeadlines` keys match the stable ID format. Read `initUI()` in init.js for the legacy fallback matching logic.
 
 ### Error: Clinical competency progress resets
-**Cause:** `getCompetenciesData()` at ~line 14372 re-initializes from `DEFAULT_COMPETENCIES` when `roadmapData.clinicalData.competencies` is null or corrupted.
-**Solution:** Read `getCompetenciesData()` and verify saved competency data structure matches expected shape. Check `migrateCompetencies()` at ~line 9637 for array-to-object migration.
+**Cause:** `getCompetenciesData()` in clinical.js re-initializes from `DEFAULT_COMPETENCIES` when `roadmapData.clinicalData.competencies` is null or corrupted.
+**Solution:** Read `getCompetenciesData()` in clinical.js and verify saved competency data structure matches expected shape. Check `migrateCompetencies()` in state.js for array-to-object migration.
 
 ### Error: Data not saving / changes lost
 **Cause:** One of the 5 guards in `saveData()` is blocking. Most common: `hasLoadedFromCloud` stuck false (Firebase load failed silently).
-**Solution:** Read `saveData()` at ~line 10992. Check console diagnostic log for which guard is blocking. Trace the flag that's stuck — see `loadFromFirebase()` at ~line 9817 and `loadFromLocalStorage()` at ~line 9757.
+**Solution:** Read `saveData()` in firebase-sync.js. Check console diagnostic log for which guard is blocking. Trace the flag that's stuck — see `loadFromFirebase()` and `loadFromLocalStorage()` in firebase-sync.js.
 
 ### Error: Data wiped on new device
 **Cause:** Default state has `_version: Date.now()` instead of `0`, causing empty local state to appear "newer" than cloud data.
-**Solution:** Verify `getDefaultRoadmapData()` at ~line 8465 has `_version: 0` and `_dataLoaded: false`. Check all 5 guards. Use `forcePullFromCloud()` to recover.
+**Solution:** Verify `getDefaultRoadmapData()` in state.js has `_version: 0` and `_dataLoaded: false`. Check all 5 guards. Use `forcePullFromCloud()` to recover.
 
 ---
 
@@ -139,8 +140,8 @@ After large edits: `python3 -c "c=open('d3-roadmap.html').read(); print('{:', c.
 
 - **Take your time with each step.** Read before editing. Verify after editing. Do not skip validation steps.
 - **Quality over speed.** A broken sync guard wipes ALL user data across devices. Verify guards are intact after every edit.
-- **Read 50+ lines of context** around any function before modifying it. Blind edits in a 17,575-line file break things silently.
-- **Do not skip brace balance checks** after edits touching more than 10 lines. One missing brace is nearly impossible to find manually.
+- **Read 50+ lines of context** around any function before modifying it. Blind edits break things silently.
+- **Do not skip brace balance checks** after edits touching more than 10 lines in any module file.
 - **Check the save chain every time.** After any `roadmapData` mutation, verify `saveData()` is called, then the appropriate render function. Missing any link causes silent data loss.
 - **Verify deadline merge logic** after touching deadline code. The 5-layer hybrid system (STATIC + custom + edited + completed + deleted) rebuilds every `initUI()` — changes to any layer can silently break others.
 
@@ -202,17 +203,17 @@ renderCompetencies();
 
 ### Pattern 3: Grade-Deadline Bidirectional Sync
 ```javascript
-// When grade entered in Grades tab:
-syncGradeToDeadline(courseId, componentId, grade);  // ~line 12020
-// When deadline marked complete with grade:
-syncDeadlineToGrades(deadline, isComplete, grade);  // ~line 12563
+// When grade entered in Grades tab (grades.js):
+syncGradeToDeadline(courseId, componentId, grade);
+// When deadline marked complete with grade (deadlines.js):
+syncDeadlineToGrades(deadline, isComplete, grade);
 ```
 
 ---
 
 ## APP OVERVIEW
 
-**File:** `d3-roadmap.html` (17,575 lines, single HTML file, no build system)
+**Files:** `d3-roadmap.html` (8,394 lines, CSS + HTML only) + `js/d3-roadmap/*.js` (10 modules, 9,135 lines)
 **URL:** https://suleman7-dmd.github.io/dental-quest/d3-roadmap.html
 
 **Purpose:** Track academic requirements, deadlines, clinical competencies, and scheduling for D3 dental school year.
@@ -221,20 +222,23 @@ syncDeadlineToGrades(deadline, isComplete, grade);  // ~line 12563
 
 **Firebase path:** `users/user_{hashedPin}/d3Roadmap`
 
+**10 Modules (load order):**
+state.js (614) -> firebase-sync.js (1,760) -> deadlines.js (804) -> grades.js (384) -> exam-content.js (1,327) -> clinical.js (1,451) -> import-system.js (543) -> daily-planner.js (573) -> monthly-planner.js (1,142) -> init.js (537)
+
 **11 Tabs:**
-| Tab | ID | Icon | Key Function |
-|-----|----|------|-------------|
-| Dashboard | `dashboard` | `renderDashboard()` ~11307 |
-| Deadlines | `deadlines` | `renderDeadlines()` ~11581 |
-| Courses | `courses` | Static HTML display |
-| Grades | `grades` | `loadCourseGrades()` ~11909 |
-| Exam Content | `examcontent` | `loadExamCourseContent()` ~12797 |
-| Classmate Share | `classmates` | Static HTML |
-| Mandatory | `mandatory` | `toggleMandatory()` ~11289 |
-| Daily Planner | `dailyplanner` | `initDailyPlanner()` ~15871 |
-| Monthly | `monthlyplanner` | `initMonthlyPlanner()` ~16577 |
-| Clinical | `clinical` | `initClinicalTab()` ~13546 |
-| Remember | `remember` | Static HTML |
+| Tab | ID | Key Function | Module |
+|-----|----|-------------|--------|
+| Dashboard | `dashboard` | `renderDashboard()` | init.js |
+| Deadlines | `deadlines` | `renderDeadlines()` | deadlines.js |
+| Courses | `courses` | Static HTML display | — |
+| Grades | `grades` | `loadCourseGrades()` | grades.js |
+| Exam Content | `examcontent` | `loadExamCourseContent()` | exam-content.js |
+| Classmate Share | `classmates` | Static HTML | — |
+| Mandatory | `mandatory` | `toggleMandatory()` | deadlines.js |
+| Daily Planner | `dailyplanner` | `initDailyPlanner()` | daily-planner.js |
+| Monthly | `monthlyplanner` | `initMonthlyPlanner()` | monthly-planner.js |
+| Clinical | `clinical` | `initClinicalTab()` | clinical.js |
+| Remember | `remember` | Static HTML | — |
 
 **Clinical Sub-tabs:** Patients, Appointments, Procedures, Competencies
 
@@ -280,7 +284,7 @@ let roadmapData = {
 ## DEADLINE SYSTEM (Hybrid Static + Dynamic)
 
 The deadline system uses a hybrid approach:
-- **STATIC_DEADLINES** (const array, ~line 11125): 50+ hardcoded deadlines for Spring 2026
+- **STATIC_DEADLINES** (const array, in deadlines.js): 50+ hardcoded deadlines for Spring 2026
 - **roadmapData.customDeadlines** (object): User-added deadlines with `generateId('custom')` keys
 - **roadmapData.editedDeadlines** (object): Overrides to static deadline fields (keyed by `getDeadlineId()`)
 - **roadmapData.completedDeadlines** (object): Completion status + grades (keyed by `getDeadlineId()`)
@@ -292,11 +296,11 @@ The deadline system uses a hybrid approach:
 { date: '2026-02-18', day: 'Wed', what: 'EXAM 2...', course: 'Peds', weight: '45%', type: 'EXAM', month: 'february', done: true }
 ```
 
-**Stable ID function:** `getDeadlineId(deadline)` at ~line 9551 — generates a stable key from deadline properties for sync safety.
+**Stable ID function:** `getDeadlineId(deadline)` in state.js — generates a stable key from deadline properties for sync safety.
 
 ---
 
-## 5 FIREBASE GUARDS in saveData() (~line 10992)
+## 5 FIREBASE GUARDS in saveData() (firebase-sync.js)
 
 ```
 GUARD A: if (isInitialLoad) return false;           // Never save during initial load
@@ -306,11 +310,11 @@ GUARD D: if (!roadmapData._dataLoaded) return false; // Data must be confirmed l
 GUARD E: if (firebaseSyncEnabled && !pinValidated) return false; // PIN must be validated
 ```
 
-**Guard flag locations:**
+**Guard flag locations (state.js):**
 ```javascript
-let isInitialLoad = true;       // ~line 8521 — cleared in loadFromFirebase/loadFromLocalStorage
-let hasLoadedFromCloud = false;  // ~line 8522 — set true after Firebase load completes
-let pinValidated = false;        // ~line 8523 — set true in setupUserAuth()
+let isInitialLoad = true;       // cleared in loadFromFirebase/loadFromLocalStorage (firebase-sync.js)
+let hasLoadedFromCloud = false;  // set true after Firebase load completes (firebase-sync.js)
+let pinValidated = false;        // set true in setupUserAuth() (firebase-sync.js)
 ```
 
 **Save flow:** mutate `roadmapData` -> `saveData()` -> localStorage IMMEDIATELY -> Firebase debounced (0-300ms) -> `setLocalUpdateFlag()` to prevent realtime echo -> retry on error
@@ -319,7 +323,7 @@ let pinValidated = false;        // ~line 8523 — set true in setupUserAuth()
 
 ## GRADE CALCULATOR
 
-**Course structures** defined in `courseStructures` at ~line 11829. Each course has `name`, `passing` threshold, and `components[]` array.
+**Course structures** defined in `courseStructures` in grades.js. Each course has `name`, `passing` threshold, and `components[]` array.
 
 **Courses (6 graded):**
 | Course Key | Name | Passing | Components |
@@ -331,7 +335,7 @@ let pinValidated = false;        // ~line 8523 — set true in setupUserAuth()
 | `perio` | Periodontology 2 | **65%** | 4 (midterm@40%, writtenAssignment@10%, discussion@5%, final@45%) |
 | `ortho` | Orthodontics | 60% | 2 (midterm@50%, final@50%) |
 
-**Grade formula** (in `loadCourseGrades()` ~line 11909):
+**Grade formula** (in `loadCourseGrades()` in grades.js):
 ```javascript
 earnedPoints += (parseFloat(grade) / 100) * comp.weight;
 completedWeight += comp.weight;
@@ -339,7 +343,7 @@ remainingWeight = 100 - completedWeight;
 currentGrade = completedWeight > 0 ? (earnedPoints / completedWeight * 100) : 0;
 ```
 
-**"What do I need" formula** (in `calculateNeeded()` ~line 12104):
+**"What do I need" formula** (in `calculateNeeded()` in grades.js):
 ```javascript
 pointsNeeded = targetGrade - earnedPoints;
 avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
@@ -347,51 +351,54 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 
 ---
 
-## QUICK REFERENCE: Key Functions
+## MODULE MAP: Key Functions
 
-| Function | Line | Description |
-|----------|------|-------------|
-| `getDefaultRoadmapData()` | ~8465 | Returns fresh default state |
-| `isEmptyState(data)` | ~8526 | Checks if state has real user data |
-| `initFirebase()` | ~9440 | Firebase initialization with 3s fallback |
-| `setupUserAuth(pin)` | ~9488 | PIN hash + Firebase path setup |
-| `getDeadlineId(deadline)` | ~9551 | Stable ID for deadline sync |
-| `loadFromLocalStorage(finalize)` | ~9757 | Load from localStorage (finalize=true sets all flags) |
-| `loadFromFirebase()` | ~9817 | Initial Firebase load |
-| `setupRealtimeSync()` | ~9906 | Cross-device realtime listener |
-| `setupMainAppTasksSync()` | ~10031 | Sync tasks from index.html |
-| `createCheckpoint(name)` | ~10323 | Save checkpoint to localStorage |
-| `showCheckpointManager()` | ~10377 | Modal with checkpoint list |
-| `restoreCheckpoint(index)` | ~10460 | Restore from checkpoint |
-| `forceUploadToCloud()` | ~10837 | Bypass guards, push to Firebase |
-| `forcePullFromCloud()` | ~10929 | Bypass guards, pull from Firebase |
-| `saveData()` | ~10992 | Main save (5 guards + localStorage + Firebase) |
-| `renderDashboard()` | ~11307 | Dashboard tab rendering |
-| `renderDeadlines()` | ~11581 | Deadlines tab rendering |
-| `loadCourseGrades()` | ~11909 | Grade calculator rendering |
-| `calculateNeeded()` | ~12104 | "What grade do I need" calculator |
-| `addNewDeadline()` | ~12259 | Show add deadline modal |
-| `submitNewDeadline()` | ~12332 | Save new custom deadline |
-| `toggleDeadlineDone(index)` | ~12396 | Toggle deadline completion |
-| `submitDeadlineGrade(index)` | ~12514 | Submit grade for deadline |
-| `syncDeadlineToGrades(d, done, grade)` | ~12563 | Sync deadline grade to courseStructures |
-| `deleteDeadline(index)` | ~12681 | Delete a deadline |
-| `loadExamCourseContent()` | ~12797 | Exam content study tracker |
-| `initClinicalTab()` | ~13546 | Initialize clinical tab |
-| `renderCompetencies()` | ~14480 | Competencies rendering |
-| `setCompItemStatus(cat, id, status)` | ~14658 | Update competency item status |
-| `adjustCompItem(cat, id, delta)` | ~14706 | Increment/decrement competency count |
-| `initUI()` | ~15524 | Main UI initialization (merges deadlines, restores state) |
-| `init()` | ~15747 | App entry point |
-| `initDailyPlanner()` | ~15871 | Daily planner initialization |
-| `initMonthlyPlanner()` | ~16577 | Monthly planner initialization |
-| `switchTab(tabId, evt)` | ~11239 | Tab navigation |
+| Function | Module | Description |
+|----------|--------|-------------|
+| `getDefaultRoadmapData()` | state.js | Returns fresh default state |
+| `isEmptyState(data)` | state.js | Checks if state has real user data |
+| `getDeadlineId(deadline)` | state.js | Stable ID for deadline sync |
+| `switchTab(tabId, evt)` | state.js | Tab navigation |
+| `escapeHtml(str)` | state.js | HTML escaping for user content |
+| `initFirebase()` | firebase-sync.js | Firebase initialization with 3s fallback |
+| `setupUserAuth(pin)` | firebase-sync.js | PIN hash + Firebase path setup |
+| `mergeRemoteState(data)` | firebase-sync.js | Consolidated merge (4 call sites) |
+| `loadFromLocalStorage(finalize)` | firebase-sync.js | Load from localStorage (finalize=true sets all flags) |
+| `loadFromFirebase()` | firebase-sync.js | Initial Firebase load |
+| `setupRealtimeSync()` | firebase-sync.js | Cross-device realtime listener |
+| `setupMainAppTasksSync()` | firebase-sync.js | Sync tasks from index.html |
+| `createCheckpoint(name)` | firebase-sync.js | Save checkpoint to localStorage |
+| `showCheckpointManager()` | firebase-sync.js | Modal with checkpoint list |
+| `restoreCheckpoint(index)` | firebase-sync.js | Restore from checkpoint |
+| `forceUploadToCloud()` | firebase-sync.js | Bypass guards, push to Firebase |
+| `forcePullFromCloud()` | firebase-sync.js | Bypass guards, pull from Firebase |
+| `saveData()` | firebase-sync.js | Main save (5 guards + localStorage + Firebase) |
+| `renderDeadlines()` | deadlines.js | Deadlines tab rendering |
+| `addNewDeadline()` | deadlines.js | Show add deadline modal |
+| `submitNewDeadline()` | deadlines.js | Save new custom deadline |
+| `toggleDeadlineDone(index)` | deadlines.js | Toggle deadline completion |
+| `submitDeadlineGrade(index)` | deadlines.js | Submit grade for deadline |
+| `syncDeadlineToGrades(d, done, grade)` | deadlines.js | Sync deadline grade to courseStructures |
+| `deleteDeadline(index)` | deadlines.js | Delete a deadline |
+| `loadCourseGrades()` | grades.js | Grade calculator rendering |
+| `calculateNeeded()` | grades.js | "What grade do I need" calculator |
+| `syncGradeToDeadline()` | grades.js | Sync grade to deadline tab |
+| `loadExamCourseContent()` | exam-content.js | Exam content study tracker |
+| `initClinicalTab()` | clinical.js | Initialize clinical tab |
+| `renderCompetencies()` | clinical.js | Competencies rendering |
+| `setCompItemStatus(cat, id, status)` | clinical.js | Update competency item status |
+| `adjustCompItem(cat, id, delta)` | clinical.js | Increment/decrement competency count |
+| `initDailyPlanner()` | daily-planner.js | Daily planner initialization |
+| `initMonthlyPlanner()` | monthly-planner.js | Monthly planner initialization |
+| `renderDashboard()` | init.js | Dashboard tab rendering |
+| `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
+| `init()` | init.js | App entry point (calls initFirebase) |
 
 ---
 
 ## COMPETENCIES SYSTEM
 
-Competencies live at `roadmapData.clinicalData.competencies` and are initialized from `DEFAULT_COMPETENCIES` (~line 14128).
+Competencies live at `roadmapData.clinicalData.competencies` and are initialized from `DEFAULT_COMPETENCIES` (in clinical.js).
 
 **10 Categories (real BU dental school requirements):**
 | Key | Name | Icon |

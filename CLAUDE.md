@@ -3,8 +3,8 @@
 ## CRITICAL RULES
 
 ### Never Rebuild Entire Files
-- Most files are 11,000-22,000+ lines. Use surgical `Edit` tool only. Read section first.
-- **Exception**: Stim calc (10 JS modules, 200-1,900 lines each) and index.html (12 JS modules, 230-1,600 lines each) — still use surgical edits on individual modules.
+- Body-comp is ~21,854 lines. Use surgical `Edit` tool only. Read section first.
+- **Split apps** (index.html: 12 modules, d3-roadmap: 10 modules, stim-calc: 10 modules) — use surgical edits on individual JS module files.
 
 ### Date Parsing (COMMON BUG)
 ```javascript
@@ -31,14 +31,15 @@ const date = new Date(year, month - 1, day);
 |------|-------|---------|
 | `index.html` | ~12,186 | Main app: CSS + HTML only (zero inline JS) |
 | `js/dental-quest/*.js` (12 modules) | ~10,762 | Main app JS: state, firebase-sync, medications, financials, calendar, daily-planner, notebook, tasks, triage, crash-out, focus-pomodoro, init |
-| `d3-roadmap.html` | ~17,575 | Academic tracker: 11 tabs (grades, deadlines, clinical, competencies, planners, exams) |
+| `d3-roadmap.html` | ~8,394 | Academic tracker: CSS + HTML only (zero inline JS) |
+| `js/d3-roadmap/*.js` (10 modules) | ~9,135 | D3 roadmap JS: state, firebase-sync, deadlines, grades, exam-content, clinical, import-system, daily-planner, monthly-planner, init |
 | `stimulant-elimination-calculator.html` | ~2,632 | Sleep prediction app — CSS + HTML only (zero inline JS) |
 | `js/stimcalc/*.js` (10 modules) | ~8,224 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
 | `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
-- **Pattern**: Single-file HTML apps (except index.html: 12 JS modules, stim calc: 10 JS modules), no build system. Push to `main` → live in ~30s.
+- **Pattern**: Multi-file JS modules (index.html: 12, d3-roadmap: 10, stim calc: 10) + single-file (body-comp, lecture-prompt). No build system. Push to `main` → live in ~30s.
 
 ---
 
@@ -268,51 +269,79 @@ EOD Reset at 5 AM: clears mustComplete flags, resets Focus Mode daily tasks.
 
 ---
 
-## D3-ROADMAP.HTML (ACADEMIC TRACKER)
+## D3-ROADMAP.HTML (ACADEMIC TRACKER — Split Feb 2026)
 
-### File Layout (~17,575 lines)
+### Architecture: Multi-File (Split from 17,575-line monolith)
+```
+d3-roadmap.html                           (8,394 lines — CSS + HTML only, ZERO inline JS)
+js/d3-roadmap/
+├── state.js              (614 lines)  - Globals, defaults, roadmapData, sync flags, utilities, date/UI helpers
+├── firebase-sync.js    (1,760 lines)  - Auth, save/load, mergeRemoteState, checkpoints, cross-app sync
+├── deadlines.js          (804 lines)  - STATIC_DEADLINES, exams, renderDeadlines, deadline CRUD
+├── grades.js             (384 lines)  - courseStructures, loadCourseGrades, calculateNeeded, grade sync
+├── exam-content.js     (1,327 lines)  - examContentData, exam study tracker, progress calculations
+├── clinical.js         (1,451 lines)  - DEFAULT_COMPETENCIES, patients, appointments, competency system
+├── import-system.js      (543 lines)  - Lecture import, clinical import, cross-tab sync
+├── daily-planner.js      (573 lines)  - Clock, pomodoro timer, timeline, daily blocks
+├── monthly-planner.js  (1,142 lines)  - Calendar grid, weeks, task CRUD, notes, keyboard shortcuts
+└── init.js               (537 lines)  - renderDashboard, initUI, init, DOMContentLoaded bootstrap
+```
+
+### Script Loading Order (ORDER MATTERS — dependencies flow downward)
+state → firebase-sync → deadlines → grades → exam-content → clinical → import-system → daily-planner → monthly-planner → init
+
+### Key Module Map
+| What to change | File to edit |
+|---------------|-------------|
+| State defaults, globals, roadmapData, sync flags, utilities | `state.js` |
+| Save guards, Firebase load/sync, mergeRemoteState, checkpoints, PIN auth | `firebase-sync.js` |
+| STATIC_DEADLINES, exams array, deadline rendering/CRUD | `deadlines.js` |
+| courseStructures, grade calculator, grade-deadline sync | `grades.js` |
+| examContentData, exam study tracker, progress | `exam-content.js` |
+| DEFAULT_COMPETENCIES, patients, appointments, competency system | `clinical.js` |
+| Lecture/clinical import, cross-tab sync | `import-system.js` |
+| Daily planner, clock, pomodoro, timeline | `daily-planner.js` |
+| Monthly planner, calendar grid, weeks, tasks | `monthly-planner.js` |
+| Dashboard rendering, initUI, app bootstrap | `init.js` |
+
+### Bootstrap Sequence (init.js)
+```
+DOMContentLoaded → init() → initFirebase() → loadFromFirebase() (async)
+  → .then() callback: mergeRemoteState(data) + initUI()
+  → 2s/3s fallback timers: force initUI() if Firebase hangs
+```
+Firebase init called from `init()` in init.js (NOT at firebase-sync.js parse time).
+All cross-module function calls safe because init.js loads LAST after all modules.
+`mergeRemoteState(data)` consolidated from 4 identical merge blocks into 1 function in firebase-sync.js.
+
+### d3-roadmap.html File Layout (~8,394 lines — CSS + HTML only)
 | Range | Content |
 |-------|---------|
 | 1-5,520 | **CSS** |
-| 5,523-8,380 | **HTML** — header, 11 tabs, 6 modals |
-| 8,383-17,575 | **JavaScript** |
-
-### Key JS Locations
-| Range | Content |
-|-------|---------|
-| 8,383-8,553 | `getDefaultRoadmapData()`, sync flags, `isEmptyState()` |
-| 8,555-9,110 | Exam content data (hardcoded courses/lectures) |
-| 9,487-9,635 | PIN auth, `generateId()`, `getDeadlineId()` |
-| 9,757-9,905 | `loadFromLocalStorage(finalize)`, `loadFromFirebase()` |
-| 10,190-10,310 | `applyRemoteData()` (explicit field merge) |
-| 10,990-11,120 | `saveData()` with 5 sync guards |
-| 11,120-11,190 | STATIC_DEADLINES (44), exams (9) |
-| 11,830-12,210 | Grade calculator (`calculateNeeded()`, `syncGradeToDeadline()`) |
-| 12,260-12,755 | Deadline management (add, toggle, grade, delete) |
-| 13,530-14,980 | Clinical tab (patients, appointments, competencies) |
-| 15,500-15,870 | `initUI()`, `init()`, visibility handlers |
-| 15,870-16,430 | Daily Planner (clock, pomodoro, 5AM-1AM timeline) |
-| 16,430-17,575 | Monthly Planner (Google Calendar grid, weeks, tasks) |
+| 5,522-8,381 | **HTML body** (header, 11 tabs, 6 modals) |
+| 8,383-8,392 | **Script tags** (10 module `<script src>` tags) |
+| 8,393-8,394 | `</body></html>` |
 
 ### 11 Tabs
 Dashboard, Deadlines, Courses, Grades, Exam Content, Classmate Share, Mandatory, Daily Planner, Monthly Planner, Clinical (3 subtabs: Patients/Appointments/Competencies), Always Remember
 
 ### Key Patterns
-- **Deadline IDs**: `getDeadlineId()` from properties (not array index) — stable IDs prevent data loss
+- **Deadline IDs**: `getDeadlineId()` in state.js — stable IDs from properties (not array index)
 - **`loadFromLocalStorage(finalize)`**: `finalize=true` terminal, `finalize=false` from loadFromFirebase
 - **Static → Custom conversion**: Editing static task creates custom + `overriddenStatic` entry
-- **Monthly Planner**: 5 base weeks, `extendWeeksIfNeeded()`, Google Calendar grid, 6 task types (lecture/clinic/exam/academic/life/mandatory)
-- **Competencies**: 12 categories, object-based, status toggles (planned→in_progress→completed), progress rings
-- **Cross-app**: Reads Do Today tasks from index.html via `setupMainAppTasksSync()` (realtime listener). Writes exams to Firebase for Body Comp.
+- **Monthly Planner**: 5 base weeks, `extendWeeksIfNeeded()`, Google Calendar grid, 6 task types
+- **Competencies**: 10 categories in clinical.js, object-based, status toggles, progress rings
+- **Cross-app**: Reads Do Today tasks from index.html via `setupMainAppTasksSync()`. Writes exams for Body Comp.
+- **mergeRemoteState()**: Single consolidated function in firebase-sync.js (replaces 4 duplicated merge blocks)
 
-### Grade Calculator (DON'T CHANGE)
+### Grade Calculator (DON'T CHANGE — in grades.js)
 ```javascript
 earnedPoints += (grade / 100) * comp.weight;  // per component with grade
 remainingWeight += comp.weight;                // per component without grade
 avgNeeded = ((targetGrade - earnedPoints) / remainingWeight) * 100;
 ```
 
-### 6 Courses
+### 6 Courses (courseStructures in grades.js)
 | Course | Key Components | Pass |
 |--------|----------------|------|
 | Oral Medicine | 10 quizzes (2.5% ea), Midterm (25%), Final (40%), Passion Project (12.5%) | 60% |
