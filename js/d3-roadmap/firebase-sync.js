@@ -32,6 +32,7 @@ let lastForceSync = 0;
 
 // Save timing
 let lastSaveTime = 0;
+let pendingSaveToast = false;
 
 // ==================== SYNC STATUS ====================
 
@@ -296,6 +297,7 @@ function showBackupManager() {
 
 function markLocalChange() {
     localChangesSinceLastSync = true;
+    pendingSaveToast = true;
 }
 
 function setLocalUpdateFlag() {
@@ -653,22 +655,11 @@ function setupRealtimeSync() {
             mergeRemoteState(data);
             safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
 
-            // Re-render tabs based on which one is active
-            const activeTab = document.querySelector('.tab-btn.active');
-            if (activeTab) {
-                const tabText = activeTab.textContent;
-                if (tabText.includes('Monthly')) {
-                    initMonthlyPlanner();
-                } else if (tabText.includes('Clinical')) {
-                    initClinicalTab();
-                } else if (tabText.includes('Deadlines')) {
-                    // Re-render deadlines tab when updated from another device
-                    renderDeadlines();
-                } else if (tabText.includes('Daily')) {
-                    // Re-render daily planner when updated from another device
-                    dpRenderTimeline();
-                    dpUpdateStats();
-                }
+            // Re-render all tabs (initUI rebuilds deadlines[] from roadmapData)
+            try {
+                initUI();
+            } catch (e) {
+                console.error('Realtime sync re-render error:', e);
             }
 
             updateSyncStatus('connected', 'Synced');
@@ -825,21 +816,21 @@ function toggleMainAppTask(taskId) {
     mainAppTasks[taskIndex].completed = newCompleted;
     renderDoTodayTasks();
 
-    // Update in Firebase (main app's data path)
+    // Update in Firebase (main app's data path) — targeted write, not full collection overwrite
     const hashedPin = userPath.split('/')[1];
-    const mainAppPath = 'users/' + hashedPin + '/appData/tasks';
+    const mainAppPath = 'users/' + hashedPin + '/appData/tasks/' + task.id + '/completed';
 
-    database.ref(mainAppPath).set(mainAppTasks)
+    database.ref(mainAppPath).set(newCompleted)
         .then(() => {
             if (newCompleted) {
-                showToast('✅ Task completed!', '🎉');
+                showToast('Task completed!');
             } else {
-                showToast('Task reopened', '↩️');
+                showToast('Task reopened');
             }
         })
         .catch(error => {
             console.error('Error updating main app task:', error);
-            showToast('Failed to save', '❌');
+            showToast('Failed to save', 'error');
             // Revert local change
             mainAppTasks[taskIndex].completed = !newCompleted;
             renderDoTodayTasks();
@@ -1668,10 +1659,15 @@ function saveData() {
                 database.ref(userPath).set(cleanData)
                     .then(() => {
                         updateSyncStatus('connected', 'Synced');
+                        if (pendingSaveToast) {
+                            pendingSaveToast = false;
+                            showToast('Saved to cloud');
+                        }
                     })
                     .catch(error => {
                         console.error('❌ Firebase save error:', error);
                         updateSyncStatus('error', 'Save failed - retrying...');
+                        showToast('Save failed — retrying...', 'error');
                         // Retry once after 2 seconds
                         setTimeout(() => {
                             try {
@@ -1686,7 +1682,10 @@ function saveData() {
                                         .then(() => {
                                             updateSyncStatus('connected', 'Synced');
                                         })
-                                        .catch(e => console.error('Retry failed:', e));
+                                        .catch(e => {
+                                            console.error('Retry failed:', e);
+                                            showToast('Save retry failed', 'error');
+                                        });
                                 }
                             } catch (retryErr) {
                                 console.error('❌ Retry threw:', retryErr);

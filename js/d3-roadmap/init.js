@@ -513,25 +513,34 @@ function init() {
 document.addEventListener('DOMContentLoaded', () => {
     init();
 
-    // BULLETPROOF FALLBACK: If UI still hasn't loaded after 2 seconds, force it
+    // FALLBACK: If Firebase hangs after 3s, load from localStorage and set ALL sync flags
     setTimeout(() => {
         const dateEl = document.getElementById('currentDateDisplay');
         if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
+            try { loadFromLocalStorage(false); } catch(e) { console.error('3s fallback localStorage load failed:', e); }
+            hasLoadedFromCloud = true;
+            isInitialLoad = false;
+            roadmapData._dataLoaded = true;
+            updateSyncStatus('offline', 'Loaded locally');
             try {
                 initUI();
             } catch(e) {
-                console.error('initUI failed, trying renderDashboard directly:', e);
+                console.error('3s fallback initUI failed:', e);
                 try { renderDashboard(); } catch(e2) { console.error('renderDashboard failed:', e2); }
                 try { renderDeadlines(); } catch(e3) { console.error('renderDeadlines failed:', e3); }
             }
         }
-    }, 2000);
-
-    // EXTRA FALLBACK: Also try after 3 seconds just in case
-    setTimeout(() => {
-        const dateEl = document.getElementById('currentDateDisplay');
-        if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
-            try { initUI(); } catch(e) { console.error('3s fallback initUI failed:', e); }
-        }
     }, 3000);
+
+    // UNCONDITIONAL FAILSAFE: If isInitialLoad is STILL true after 6s, force all flags
+    setTimeout(() => {
+        if (isInitialLoad) {
+            console.error('6s failsafe: isInitialLoad still true, forcing flags');
+            hasLoadedFromCloud = true;
+            isInitialLoad = false;
+            roadmapData._dataLoaded = true;
+            updateSyncStatus('offline', 'Loaded locally (failsafe)');
+            try { initUI(); } catch(e) { console.error('6s failsafe initUI failed:', e); }
+        }
+    }, 6000);
 });
