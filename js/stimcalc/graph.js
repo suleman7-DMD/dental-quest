@@ -731,3 +731,141 @@ function drawSleepPerformanceGraph(data) {
         }
     });
 }
+
+// ============================================
+// ACCURACY TIMELINE GRAPH (Phase 5)
+// ============================================
+
+function drawAccuracyTimeline() {
+    var canvas = document.getElementById('accuracyTimelineGraph');
+    if (!canvas) return;
+
+    var entries = getValues(state.history).filter(function(e) {
+        return e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
+               e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep);
+    });
+    entries.sort(function(a, b) { return a.date.localeCompare(b.date); });
+    entries = entries.slice(-30);
+
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 200 * dpr;
+    ctx.scale(dpr, dpr);
+
+    var width = rect.width;
+    var height = 200;
+    var padding = { top: 20, right: 15, bottom: 30, left: 40 };
+    var gw = width - padding.left - padding.right;
+    var gh = height - padding.top - padding.bottom;
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (entries.length < 2) {
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '13px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Need 2+ entries with feedback to show timeline', width / 2, height / 2);
+        return;
+    }
+
+    var maxDelta = 90; // clamp display range
+
+    // Draw colored zones
+    // Green zone: -30 to +30
+    var greenTop = padding.top + gh * (1 - (maxDelta - 30) / (2 * maxDelta));
+    var greenBot = padding.top + gh * (1 - (maxDelta - (-30)) / (2 * maxDelta));
+    // Actually: y = padding.top + gh * (1 - (val + maxDelta) / (2 * maxDelta))
+    // For val=30: y = padding.top + gh * (1 - (30+90)/180) = padding.top + gh * (1 - 0.667) = padding.top + gh*0.333
+    // For val=-30: y = padding.top + gh * (1 - (-30+90)/180) = padding.top + gh * (1 - 0.333) = padding.top + gh*0.667
+
+    function valToY(v) {
+        var clamped = Math.max(-maxDelta, Math.min(maxDelta, v));
+        return padding.top + gh * (1 - (clamped + maxDelta) / (2 * maxDelta));
+    }
+
+    // Red zone (>60 or <-60)
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.08)';
+    ctx.fillRect(padding.left, valToY(maxDelta), gw, valToY(60) - valToY(maxDelta));
+    ctx.fillRect(padding.left, valToY(-60), gw, valToY(-maxDelta) - valToY(-60));
+
+    // Yellow zone (30-60 and -60 to -30)
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+    ctx.fillRect(padding.left, valToY(60), gw, valToY(30) - valToY(60));
+    ctx.fillRect(padding.left, valToY(-30), gw, valToY(-60) - valToY(-30));
+
+    // Green zone (-30 to 30)
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+    ctx.fillRect(padding.left, valToY(30), gw, valToY(-30) - valToY(30));
+
+    // Zero line (dashed)
+    var zeroY = valToY(0);
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(padding.left, zeroY);
+    ctx.lineTo(width - padding.right, zeroY);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Y-axis labels
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '9px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    [-60, -30, 0, 30, 60].forEach(function(v) {
+        ctx.fillText((v > 0 ? '+' : '') + v + 'm', padding.left - 4, valToY(v) + 3);
+    });
+
+    // Plot points and line
+    var spacing = entries.length > 1 ? gw / (entries.length - 1) : 0;
+    var points = entries.map(function(e, i) {
+        var delta = computeSleepDelta(e.predictedSleep, e.actualSleep);
+        return { x: padding.left + i * spacing, y: valToY(delta), delta: delta, date: e.date };
+    });
+
+    // Draw spline if available, else straight lines
+    if (points.length >= 3 && typeof getCardinalSplinePoints === 'function') {
+        var spline = getCardinalSplinePoints(points, 0.3, 16);
+        ctx.beginPath();
+        ctx.moveTo(spline[0].x, spline[0].y);
+        for (var i = 1; i < spline.length; i++) ctx.lineTo(spline[i].x, spline[i].y);
+        ctx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+    } else if (points.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (var i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+        ctx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Data points with color
+    points.forEach(function(p) {
+        var absDelta = Math.abs(p.delta);
+        var color = absDelta <= 30 ? '#10b981' : absDelta <= 60 ? '#f59e0b' : '#ef4444';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    });
+
+    // X-axis date labels (sparse)
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '9px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    var labelInterval = Math.max(1, Math.floor(entries.length / 5));
+    entries.forEach(function(e, i) {
+        if (i === 0 || i === entries.length - 1 || i % labelInterval === 0) {
+            var d = parseLocalDate(e.date);
+            ctx.fillText(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), padding.left + i * spacing, height - 8);
+        }
+    });
+}

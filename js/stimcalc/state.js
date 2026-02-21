@@ -12,8 +12,7 @@ var pinValidated = false;
 var hyperarousalMode = false;
 var focusMode = false;
 var currentEditingDate = null;
-var sleepPerfExpanded = true;
-var accuracyDashExpanded = true;
+var currentSITab = 'overview';
 var explainerTimeout = null;
 var forecastExpanded = false;
 var firebaseSaveTimeout = null;
@@ -60,7 +59,8 @@ function getDefaultState() {
             sleepThreshold: 14,
             caffHalfLife: 5,
             caffThreshold: 25,
-            weight: 190
+            weight: 190,
+            sleepTarget: 8
         },
         history: {},
         _version: 0,
@@ -250,9 +250,7 @@ var BackupManager = {
                 document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
                 renderMedEntries();
                 renderCaffeineEntries();
-                renderSleepCalendar();
-                renderSleepPerformance();
-                renderHistory();
+                renderSleepIntelligence();
                 recalculate();
                 showToast('✅ Backup imported successfully');
             } catch (err) {

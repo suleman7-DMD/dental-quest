@@ -119,7 +119,8 @@ function calculateSleepDebtBonus() {
     let daysWithData = 0;
 
     // Start with today's deficit
-    const todayDeficit = Math.max(0, 8 - state.hoursSleptLastNight);
+    const sleepTarget = state.settings.sleepTarget ?? 8;
+    const todayDeficit = Math.max(0, sleepTarget - state.hoursSleptLastNight);
     totalDeficit += todayDeficit;
     daysWithData++;
 
@@ -144,7 +145,7 @@ function calculateSleepDebtBonus() {
 
         const entry = state.sleepHistory[dateStr];
         if (entry) {
-            let hoursSlept = 8; // Default assumption
+            let hoursSlept = sleepTarget; // Default assumption
 
             // Handle both old format (number) and new format (object)
             if (typeof entry === 'number') {
@@ -152,10 +153,10 @@ function calculateSleepDebtBonus() {
             } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
                 hoursSlept = entry.hoursSlept;
             }
-            // NaN guard: corrupted data defaults to 8h (no deficit assumed)
-            if (isNaN(hoursSlept) || hoursSlept < 0) hoursSlept = 8;
+            // NaN guard: corrupted data defaults to target (no deficit assumed)
+            if (isNaN(hoursSlept) || hoursSlept < 0) hoursSlept = sleepTarget;
 
-            const dayDeficit = Math.max(0, 8 - hoursSlept);
+            const dayDeficit = Math.max(0, sleepTarget - hoursSlept);
             totalDeficit += dayDeficit * weights[i - 1];
             daysWithData++;
         }
@@ -179,9 +180,10 @@ function calculateSleepDebtBonus() {
 function getSleepDebtBreakdown() {
     const today = new Date();
     const breakdown = [];
+    const sleepTarget = state.settings.sleepTarget ?? 8;
 
     // Today
-    const todayDeficit = Math.max(0, 8 - state.hoursSleptLastNight);
+    const todayDeficit = Math.max(0, sleepTarget - state.hoursSleptLastNight);
     breakdown.push({
         label: 'Today',
         hours: state.hoursSleptLastNight,
@@ -208,7 +210,7 @@ function getSleepDebtBreakdown() {
                 hoursSlept = entry.hoursSlept;
             }
 
-            const dayDeficit = Math.max(0, 8 - hoursSlept);
+            const dayDeficit = Math.max(0, sleepTarget - hoursSlept);
             breakdown.push({
                 label: labels[i - 1],
                 hours: hoursSlept,

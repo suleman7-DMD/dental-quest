@@ -836,6 +836,188 @@
             opacity: 0.9;
         }
 
+        /* ============================================
+           SLEEP INTELLIGENCE CSS
+           ============================================ */
+
+        /* Tab navigation */
+        .si-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 3px;
+            margin-bottom: 14px;
+            gap: 2px;
+        }
+        .si-tab {
+            flex: 1;
+            padding: 10px 6px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #8b949e;
+            font-size: 0.78em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .si-tab:hover { background: rgba(255,255,255,0.06); color: #c9d1d9; }
+        .si-tab.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c084fc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .si-tab-content { animation: siFadeIn 0.2s ease; }
+        @keyframes siFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Calendar day cards */
+        .si-cal-day {
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .si-cal-day:hover { transform: scale(1.05); }
+        .si-cal-day--today { box-shadow: 0 0 10px rgba(88, 166, 255, 0.5); }
+        .si-cal-day--green { background: rgba(16, 185, 129, 0.2); border-color: #10b981; }
+        .si-cal-day--yellow { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; }
+        .si-cal-day--red { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+        .si-cal-day__name { font-size: 0.75em; color: #b0b8c4; margin-bottom: 4px; }
+        .si-cal-day__num { font-size: 1.1em; font-weight: 600; color: #e6edf3; margin-bottom: 2px; }
+        .si-cal-day__hours { font-size: 0.85em; font-weight: 600; }
+        .si-cal-day__wake { font-size: 0.65em; color: #b0b8c4; margin-top: 2px; }
+        .si-cal-day__badge { font-size: 0.65em; color: #58a6ff; margin-top: 2px; }
+
+        /* Stat cards */
+        .si-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .si-stat {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .si-stat:hover { transform: scale(1.02); }
+        .si-stat:active { transform: scale(0.98); }
+        .si-stat__label { font-size: 0.75em; margin-bottom: 2px; }
+        .si-stat__value { font-size: 1.4em; font-weight: 700; color: #e6edf3; }
+
+        /* Achievement badges */
+        .si-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+        .si-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+            padding: 8px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .si-badge--locked { opacity: 0.4; }
+        .si-badge__icon { font-size: 1.4em; }
+        .si-badge__name { font-size: 0.55em; margin-top: 4px; text-align: center; white-space: nowrap; }
+
+        /* History list items */
+        .si-history-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .si-history-row:hover { transform: scale(1.01); }
+        .si-history-row--today { border: 1px solid rgba(88, 166, 255, 0.5); }
+        .si-history-row--green { background: rgba(16, 185, 129, 0.15); }
+        .si-history-row--blue { background: rgba(96, 165, 250, 0.15); }
+        .si-history-row--yellow { background: rgba(245, 158, 11, 0.15); }
+        .si-history-row--red { background: rgba(239, 68, 68, 0.15); }
+        .si-history-row--none { background: rgba(0,0,0,0.2); }
+
+        /* Prediction insight cards */
+        .si-insight-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 3px solid #8b5cf6;
+        }
+        .si-insight-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .si-insight-card__delta {
+            font-weight: 700;
+            font-size: 0.9em;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .si-insight-card__pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .si-insight-pill {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: rgba(255,255,255,0.06);
+            color: #b0b8c4;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Accuracy timeline graph */
+        .si-accuracy-graph {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        /* Calibration context cards */
+        .si-cal-context {
+            background: rgba(0,0,0,0.15);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #8b949e;
+        }
+        .si-cal-context__title { font-weight: 600; font-size: 0.9em; color: #e6edf3; margin-bottom: 4px; }
+        .si-cal-context__stat { font-size: 0.82em; color: #b0b8c4; }
+
+        /* Explainer (tap-to-toggle) */
+        .si-explainer {
+            display: none;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border-left: 3px solid #8b5cf6;
+            animation: siFadeIn 0.2s ease;
+        }
+        .si-explainer.show { display: block; }
+
         /* Buttons */
         .btn {
             padding: 12px 24px;
@@ -1786,20 +1968,7 @@
             color: #c9d1d9;
         }
 
-        /* Sleep performance stays mostly the same but gets unified container treatment */
-        .unified-perf-section {
-            background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .unified-perf-section h3 {
-            margin: 0 0 12px;
-            font-size: 0.95em;
-            color: #e6edf3;
-        }
+        /* (unified-perf-section removed — replaced by si-* classes) */
 
         /* Action buttons */
         .unified-actions {
@@ -2350,142 +2519,129 @@
             </div>
         </div>
 
-        <!-- ======= ACCORDION: 7-Day Sleep Calendar ======= -->
-        <div class="accordion-section" data-section="calendar">
-            <div class="accordion-header" onclick="toggleAccordion('calendar')">
-                📅 7-Day Sleep Pattern
+        <!-- ======= ACCORDION: Sleep Intelligence (Unified) ======= -->
+        <div class="accordion-section" data-section="sleepIntel">
+            <div class="accordion-header" onclick="toggleAccordion('sleepIntel')">
+                🧠 Sleep Intelligence
+                <span id="sleepIntelSummary" class="accordion-summary"></span>
                 <span class="accordion-arrow">▼</span>
             </div>
             <div class="accordion-body">
-                <div id="circadianPhaseDisplay" style="margin-bottom:10px;"></div>
-                <div id="sleepCalendar" style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;"></div>
-                <div style="display:flex; gap:12px; justify-content:center; margin-top:8px; font-size:0.75em; color:#6e7681;">
-                    <span>🟢 >6.5h</span>
-                    <span>🟡 4.5-6.5h</span>
-                    <span>🔴 <4.5h</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ======= 30-Day Sleep Performance (Visible) ======= -->
-        <div class="unified-perf-section">
-            <h3 onclick="toggleSleepPerformance()" style="cursor:pointer; user-select:none;">
-                📈 30-Day Sleep Performance
-                <span id="sleepPerfToggleIcon" style="float:right; font-size:0.7em;">▼</span>
-            </h3>
-
-            <div id="sleepPerformanceContent">
-                <!-- Interactive explainer panel -->
-                <div id="sleepExplainer" style="display:none; margin-bottom:12px; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px; border-left:3px solid #8b5cf6;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span id="explainerIcon" style="font-size:1.4em;"></span>
-                        <span id="explainerTitle" style="font-weight:600; color:#e6edf3;"></span>
-                    </div>
-                    <div id="explainerDesc" style="font-size:0.85em; color:#b0b8c4; line-height:1.5;"></div>
-                    <div id="explainerAction" style="font-size:0.8em; color:#8b5cf6; margin-top:6px;"></div>
+                <!-- 4 Tabs -->
+                <div class="si-tabs" id="siTabs">
+                    <button class="si-tab active" onclick="switchSITab('overview')">Overview</button>
+                    <button class="si-tab" onclick="switchSITab('insights')">Insights</button>
+                    <button class="si-tab" onclick="switchSITab('accuracy')">Accuracy</button>
+                    <button class="si-tab" onclick="switchSITab('history')">History</button>
                 </div>
 
-                <!-- Stats Grid -->
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
-                    <div class="perf-stat" onmouseenter="showExplainer('avgSleep')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#60a5fa;">Average Sleep</div>
-                        <div id="sleepStatAvg" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                <!-- Overview Tab -->
+                <div id="siTabOverview" class="si-tab-content">
+                    <div id="circadianPhaseDisplay" style="margin-bottom:10px;"></div>
+                    <div id="sleepCalendar" style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;"></div>
+                    <div style="display:flex; gap:12px; justify-content:center; margin-top:8px; font-size:0.75em; color:#6e7681;">
+                        <span>🟢 >6.5h</span>
+                        <span>🟡 4.5-6.5h</span>
+                        <span>🔴 <4.5h</span>
                     </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('bestNight')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#34d399;">Best Night</div>
-                        <div id="sleepStatBest" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+
+                    <!-- Explainer panel (tap-to-toggle) -->
+                    <div id="sleepExplainer" class="si-explainer">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                            <span id="explainerIcon" style="font-size:1.4em;"></span>
+                            <span id="explainerTitle" style="font-weight:600; color:#e6edf3;"></span>
+                        </div>
+                        <div id="explainerDesc" style="font-size:0.85em; color:#b0b8c4; line-height:1.5;"></div>
+                        <div id="explainerAction" style="font-size:0.8em; color:#8b5cf6; margin-top:6px;"></div>
                     </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('worstNight')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#f87171;">Worst Night</div>
-                        <div id="sleepStatWorst" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+
+                    <!-- Stats Grid (dynamically rendered) -->
+                    <div id="siStatsGrid" class="si-stats-grid"></div>
+
+                    <!-- Sleep Performance Graph -->
+                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:8px; margin-bottom:12px; position:relative;">
+                        <canvas id="sleepPerformanceGraph" style="width:100%; height:220px;"></canvas>
+                        <div id="sleepGraphTooltip" style="display:none; position:absolute; background:rgba(0,0,0,0.95); color:#e6edf3; padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid rgba(255,255,255,0.1); min-width:140px;">
+                            <div id="tooltipDate" style="font-weight:600; margin-bottom:4px;"></div>
+                            <div id="tooltipHours" style="font-size:1.2em; margin-bottom:2px;"></div>
+                            <div id="tooltipStatus" style="font-size:0.9em; margin-bottom:2px;"></div>
+                            <div id="tooltipVsAvg" style="font-size:0.85em; color:#8b9cb6;"></div>
+                        </div>
                     </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('trend')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#c084fc;">Trend</div>
-                        <div id="sleepStatTrend" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
+
+                    <!-- Sleep Achievements -->
+                    <div id="sleepAchievements" class="si-badges"></div>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
-                    <div class="perf-stat" onmouseenter="showExplainer('streak')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#fbbf24;">🔥 Streak</div>
-                        <div id="sleepStatStreak" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('debt')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#f87171;">Sleep Debt</div>
-                        <div id="sleepStatDebt" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('consistency')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#60a5fa;">Sleep Score</div>
-                        <div id="sleepStatScore" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div class="perf-stat" onmouseenter="showExplainer('improvement')" onmouseleave="hideExplainer()" style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:8px; text-align:center; cursor:pointer;">
-                        <div style="font-size:0.75em; color:#34d399;">Recovery</div>
-                        <div id="sleepStatRecovery" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+
+                <!-- Insights Tab -->
+                <div id="siTabInsights" class="si-tab-content" style="display:none">
+                    <div id="siInsightsList">
+                        <p style="color:#b0b8c4; text-align:center; padding:20px;">Save predictions and log actual sleep to see insights.</p>
                     </div>
                 </div>
 
-                <!-- Sleep Performance Graph -->
-                <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:8px; margin-bottom:12px; position:relative;">
-                    <canvas id="sleepPerformanceGraph" style="width:100%; height:220px;"></canvas>
-                    <div id="sleepGraphTooltip" style="display:none; position:absolute; background:rgba(0,0,0,0.95); color:#e6edf3; padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid rgba(255,255,255,0.1); min-width:140px;">
-                        <div id="tooltipDate" style="font-weight:600; margin-bottom:4px;"></div>
-                        <div id="tooltipHours" style="font-size:1.2em; margin-bottom:2px;"></div>
-                        <div id="tooltipStatus" style="font-size:0.9em; margin-bottom:2px;"></div>
-                        <div id="tooltipVsAvg" style="font-size:0.85em; color:#8b9cb6;"></div>
+                <!-- Accuracy Tab -->
+                <div id="siTabAccuracy" class="si-tab-content" style="display:none">
+                    <div id="accuracyGradeBanner" style="text-align:center; padding:12px; margin-bottom:12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
+                        <div style="font-size:0.75em; color:#8b9cb6; text-transform:uppercase; letter-spacing:1px;">Overall Accuracy</div>
+                        <div id="accuracyGradeValue" style="font-size:2em; font-weight:700; color:#10b981;">--</div>
+                        <div id="accuracyGradeLabel" style="font-size:0.82em; color:#b0b8c4;">Need 3+ days with feedback</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
+                        <div style="padding:10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15); border-radius:8px; text-align:center;">
+                            <div style="font-size:0.75em; color:#60a5fa;">Days Tracked</div>
+                            <div id="accStatDaysTracked" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                        </div>
+                        <div style="padding:10px; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.15); border-radius:8px; text-align:center;">
+                            <div style="font-size:0.75em; color:#c084fc;">Avg Error</div>
+                            <div id="accStatAvgError" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                        </div>
+                        <div style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:8px; text-align:center;">
+                            <div style="font-size:0.75em; color:#34d399;">Within 30 min</div>
+                            <div id="accStatWithin30" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                        </div>
+                        <div style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15); border-radius:8px; text-align:center;">
+                            <div style="font-size:0.75em; color:#fbbf24;">Within 1 hour</div>
+                            <div id="accStatWithin60" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px;">
+                            <span>Within 30 min</span><span id="accBar30Label">0%</span>
+                        </div>
+                        <div class="accuracy-progress-bar">
+                            <div class="accuracy-progress-fill accuracy-fill-green" id="accBar30Fill" style="width:0%;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px; margin-top:8px;">
+                            <span>Within 1 hour</span><span id="accBar60Label">0%</span>
+                        </div>
+                        <div class="accuracy-progress-bar">
+                            <div class="accuracy-progress-fill accuracy-fill-blue" id="accBar60Fill" style="width:0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Accuracy Timeline Graph (NEW) -->
+                    <div class="si-accuracy-graph">
+                        <canvas id="accuracyTimelineGraph" style="width:100%; height:180px;"></canvas>
+                    </div>
+
+                    <!-- Calibration Contexts (NEW) -->
+                    <div id="siCalibrationContexts"></div>
+
+                    <div id="accuracyTrendBox" style="padding:10px 12px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid #10b981;">
+                        <div id="accuracyTrendText" style="font-size:0.85em; color:#b0b8c4;">
+                            Track 3+ days to see accuracy analysis
+                        </div>
                     </div>
                 </div>
 
-                <!-- Sleep Achievements -->
-                <div id="sleepAchievements" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-            </div>
-        </div>
-
-        <!-- ======= Prediction Accuracy Dashboard ======= -->
-        <div class="unified-perf-section">
-            <h3 onclick="toggleAccuracyDashboard()" style="cursor:pointer; user-select:none;">
-                📊 Prediction Accuracy
-                <span id="accuracyToggleIcon" style="float:right; font-size:0.7em;">▼</span>
-            </h3>
-            <div id="accuracyDashboardContent">
-                <div id="accuracyGradeBanner" style="text-align:center; padding:12px; margin-bottom:12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
-                    <div style="font-size:0.75em; color:#8b9cb6; text-transform:uppercase; letter-spacing:1px;">Overall Accuracy</div>
-                    <div id="accuracyGradeValue" style="font-size:2em; font-weight:700; color:#10b981;">--</div>
-                    <div id="accuracyGradeLabel" style="font-size:0.82em; color:#b0b8c4;">Need 3+ days with feedback</div>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
-                    <div style="padding:10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15); border-radius:8px; text-align:center;">
-                        <div style="font-size:0.75em; color:#60a5fa;">Days Tracked</div>
-                        <div id="accStatDaysTracked" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div style="padding:10px; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.15); border-radius:8px; text-align:center;">
-                        <div style="font-size:0.75em; color:#c084fc;">Avg Error</div>
-                        <div id="accStatAvgError" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:8px; text-align:center;">
-                        <div style="font-size:0.75em; color:#34d399;">Within 30 min</div>
-                        <div id="accStatWithin30" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                    <div style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15); border-radius:8px; text-align:center;">
-                        <div style="font-size:0.75em; color:#fbbf24;">Within 1 hour</div>
-                        <div id="accStatWithin60" style="font-size:1.4em; font-weight:700; color:#e6edf3;">--</div>
-                    </div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px;">
-                        <span>Within 30 min</span><span id="accBar30Label">0%</span>
-                    </div>
-                    <div class="accuracy-progress-bar">
-                        <div class="accuracy-progress-fill accuracy-fill-green" id="accBar30Fill" style="width:0%;"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px; margin-top:8px;">
-                        <span>Within 1 hour</span><span id="accBar60Label">0%</span>
-                    </div>
-                    <div class="accuracy-progress-bar">
-                        <div class="accuracy-progress-fill accuracy-fill-blue" id="accBar60Fill" style="width:0%;"></div>
-                    </div>
-                </div>
-                <div id="accuracyTrendBox" style="padding:10px 12px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid #10b981;">
-                    <div id="accuracyTrendText" style="font-size:0.85em; color:#b0b8c4;">
-                        💡 Track 3+ days to see accuracy analysis
+                <!-- History Tab -->
+                <div id="siTabHistory" class="si-tab-content" style="display:none">
+                    <div id="sleepHistoryList" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    <div style="margin-top:16px;">
+                        <h4 style="color:#c9d1d9; margin-bottom:8px; font-size:0.9em;">Prediction Log</h4>
+                        <span id="historyAccuracySummary" style="font-size:0.75em; color:#8b9cb6;"></span>
+                        <div id="historyList" style="margin-top:8px;"></div>
                     </div>
                 </div>
             </div>
@@ -2546,31 +2702,11 @@
                         <label>Body Weight (lbs)</label>
                         <input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()">
                     </div>
-                    <div class="input-group"></div>
+                    <div class="input-group">
+                        <label>Sleep Target (hrs)</label>
+                        <input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();">
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- ======= ACCORDION: Sleep History Log ======= -->
-        <div class="accordion-section" data-section="sleephistory">
-            <div class="accordion-header" onclick="toggleAccordion('sleephistory')">
-                📋 Sleep History Log
-                <span class="accordion-arrow">▼</span>
-            </div>
-            <div class="accordion-body">
-                <div id="sleepHistoryList" style="display:flex; flex-direction:column; gap:6px;"></div>
-            </div>
-        </div>
-
-        <!-- ======= ACCORDION: Prediction History ======= -->
-        <div class="accordion-section" data-section="predictionHistory">
-            <div class="accordion-header" onclick="toggleAccordion('predictionHistory')">
-                🎯 Prediction History
-                <span id="historyAccuracySummary" style="font-size:0.75em; color:#8b9cb6; margin-left:auto; margin-right:8px;"></span>
-                <span class="accordion-arrow">▼</span>
-            </div>
-            <div class="accordion-body">
-                <div id="historyList"></div>
             </div>
         </div>
 

@@ -379,9 +379,7 @@ function loadFromFirebase() {
 
                 renderMedEntries();
                 renderCaffeineEntries();
-                renderSleepCalendar();
-                renderSleepPerformance();
-                renderHistory();
+                renderSleepIntelligence();
 
                 // Restore modifier checkbox states + time rows
                 restoreModifierUI();
@@ -493,9 +491,7 @@ function setupRealtimeSync() {
             renderMedEntries();
             renderCaffeineEntries();
             renderFocusCaffeineList(); // FIX: Also sync Focus Mode caffeine list
-            renderSleepCalendar();
-            renderSleepPerformance();
-            renderHistory();
+            renderSleepIntelligence();
 
             // Restore modifier checkbox states + time rows
             restoreModifierUI();
@@ -1056,12 +1052,11 @@ function renderAll() {
     document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
     document.getElementById('caffThreshold').value = state.settings.caffThreshold;
     document.getElementById('weight').value = state.settings.weight;
+    safeSetValue('sleepTarget', state.settings.sleepTarget ?? 8);
 
     renderMedEntries();
     renderCaffeineEntries();
-    renderSleepCalendar();
-    renderSleepPerformance();
-    renderHistory();
+    renderSleepIntelligence();
 
     if (state.workoutPlan && state.workoutPlan.applied) {
         restoreWorkoutPlanUI();
@@ -1114,9 +1109,7 @@ function applyRemoteState(firebaseState) {
 
     renderMedEntries();
     renderCaffeineEntries();
-    renderSleepCalendar();
-    renderSleepPerformance();
-    renderHistory();
+    renderSleepIntelligence();
 
     if (state.workoutPlan && state.workoutPlan.applied) {
         restoreWorkoutPlanUI();

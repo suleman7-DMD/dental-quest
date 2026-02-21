@@ -45,6 +45,8 @@ function syncStateFromDOM() {
     if (caffHalfLifeEl) { const p = parseFloat(caffHalfLifeEl.value); state.settings.caffHalfLife = !isNaN(p) ? p : state.settings.caffHalfLife; }
     if (caffThresholdEl) { const p = parseFloat(caffThresholdEl.value); state.settings.caffThreshold = !isNaN(p) ? p : state.settings.caffThreshold; }
     if (weightEl) { const p = parseFloat(weightEl.value); state.settings.weight = !isNaN(p) ? p : state.settings.weight; }
+    const sleepTargetEl = document.getElementById('sleepTarget');
+    if (sleepTargetEl) { const p = parseFloat(sleepTargetEl.value); state.settings.sleepTarget = !isNaN(p) ? p : (state.settings.sleepTarget ?? 8); }
 
     if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) {
         const vitCTimeEl = document.getElementById('vitaminCTime');
@@ -786,15 +788,14 @@ function init() {
     safeSetValue('caffHalfLife', state.settings.caffHalfLife);
     safeSetValue('caffThreshold', state.settings.caffThreshold);
     safeSetValue('weight', state.settings.weight);
+    safeSetValue('sleepTarget', state.settings.sleepTarget ?? 8);
     safeSetValue('vitaminCTime', state.modifiers.vitaminC.time || '17:00');
     safeSetValue('saunaTime', state.modifiers.sauna.time || '18:00');
 
     // Render existing entries
     renderMedEntries();
     renderCaffeineEntries();
-    renderHistory();
-    renderSleepCalendar();
-    renderSleepPerformance();
+    renderSleepIntelligence();
 
     // Initialize today's sleep in calendar
     updateTodaySleepHistory();
@@ -828,19 +829,19 @@ function init() {
         autoPopulateFeedback();
     }, 2000);
 
-    // Migrate history entries and render accuracy dashboard
+    // Migrate history entries and render accuracy
     setTimeout(function() {
         migrateHistoryEntries();
-        renderHistory();
-        renderAccuracyDashboard();
+        renderSleepIntelligence();
     }, 2500);
 
     // Update every 5 seconds
     setInterval(recalculate, 5000);
 
-    // Redraw graph on resize
+    // Redraw graphs on resize
     window.addEventListener('resize', function() {
         drawGraph();
+        if (typeof drawAccuracyTimeline === 'function' && currentSITab === 'accuracy') drawAccuracyTimeline();
     });
 
     // Initialize Unified View (accordions, modifiers, recent nights)
@@ -873,9 +874,9 @@ function restoreAccordionStates() {
     var openSections = JSON.parse(localStorage.getItem('stimCalcAccordions') || '{}');
     var defaults = {
         sleep: true, meds: false, caffeine: false, modifiers: false,
-        nicotine: false, workout: false, circadian: false, calendar: false,
-        recs: false, forecast: false, settings: false, sleephistory: false,
-        predictionHistory: false
+        nicotine: false, workout: false, circadian: false,
+        sleepIntel: true,
+        recs: false, forecast: false, settings: false
     };
     var merged = Object.assign({}, defaults, openSections);
 
@@ -974,6 +975,11 @@ function updateAccordionSummaries() {
             circSummary.textContent = 'Normal';
             circSummary.style.color = '#7d8590';
         }
+    }
+
+    // Sleep Intelligence summary
+    if (typeof updateSleepIntelSummary === 'function') {
+        updateSleepIntelSummary();
     }
 }
 
