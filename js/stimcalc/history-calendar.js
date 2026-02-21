@@ -95,7 +95,8 @@ function autoPopulateFeedback() {
     let yesterdayFeedback = null;
 
     historyValues.forEach(entry => {
-        if (entry.actualSleep !== null && entry.actualSleep !== undefined) return;
+        // Skip manually-entered feedback, but allow recomputation of auto-filled values
+        if (entry.actualSleep !== null && entry.actualSleep !== undefined && !entry.autoFilled) return;
         if (!entry.date || !entry.predictedSleep) return;
 
         const entryDate = parseLocalDate(entry.date);
@@ -104,12 +105,13 @@ function autoPopulateFeedback() {
         const nextDayStr = getLocalDateString(nextDay);
 
         const sleepEntry = state.sleepHistory[nextDayStr];
-        if (!sleepEntry) return;
+        const hoursSlept = !sleepEntry ? null :
+            typeof sleepEntry === 'number' ? sleepEntry : (sleepEntry && sleepEntry.hoursSlept);
+        const wakeTime = (sleepEntry && typeof sleepEntry === 'object') ? sleepEntry.wakeTime : null;
 
-        const hoursSlept = typeof sleepEntry === 'number' ? sleepEntry : (sleepEntry && sleepEntry.hoursSlept);
-        const wakeTime = typeof sleepEntry === 'object' ? sleepEntry.wakeTime : null;
-
-        if (hoursSlept != null && !isNaN(hoursSlept) && wakeTime) {
+        // BUG FIX: Require hoursSlept > 0 — 0h entries are all-nighters/no-data
+        // and produce garbage values (wakeTime - 0 = wakeTime treated as sleep onset)
+        if (hoursSlept != null && !isNaN(hoursSlept) && hoursSlept > 0 && wakeTime) {
             let wakeMinutes = timeToMinutes(wakeTime);
             let actualSleep = wakeMinutes - (hoursSlept * 60);
             if (actualSleep < 0) actualSleep += 24 * 60;
@@ -140,6 +142,21 @@ function autoPopulateFeedback() {
                     diffMinutes: Math.round(Math.abs(diff)),
                     direction: diff > 0 ? 'later' : 'earlier'
                 };
+            }
+        } else if (entry.autoFilled) {
+            // Previously auto-filled but data is now invalid (0h sleep, missing data, etc.)
+            // Clear the stale value so it shows "Awaiting feedback" instead of garbage
+            state.history[entry.id].actualSleep = null;
+            state.history[entry.id].autoFilled = false;
+            state.history[entry.id].deltaMinutes = null;
+            state.history[entry.id].absError = null;
+            updated = true;
+
+            // Also clear from sleepDailyLogs
+            if (state.sleepDailyLogs && state.sleepDailyLogs[entry.date]) {
+                state.sleepDailyLogs[entry.date].actualSleep = null;
+                state.sleepDailyLogs[entry.date].deltaMinutes = null;
+                state.sleepDailyLogs[entry.date].absError = null;
             }
         }
     });
@@ -1137,6 +1154,7 @@ function submitFeedback() {
     if (recent && state.history[recent.id]) {
         const actualMinutes = timeToMinutes(actualTime);
         state.history[recent.id].actualSleep = actualMinutes;
+        state.history[recent.id].autoFilled = false; // Manual feedback — don't allow auto-recompute
         state.history[recent.id].deltaMinutes = computeSleepDelta(recent.predictedSleep, actualMinutes);
         state.history[recent.id].absError = Math.abs(state.history[recent.id].deltaMinutes);
         saveState();
