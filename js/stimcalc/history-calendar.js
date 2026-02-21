@@ -121,13 +121,12 @@ function autoPopulateFeedback() {
             updated = true;
 
             // Also update sleepDailyLogs with prediction accuracy data
-            var entryDate = entry.date;
-            if (state.sleepDailyLogs && state.sleepDailyLogs[entryDate]) {
-                state.sleepDailyLogs[entryDate].sleepOnsetMinutes = actualSleep;
-                state.sleepDailyLogs[entryDate].predictedSleep = entry.predictedSleep;
-                state.sleepDailyLogs[entryDate].actualSleep = actualSleep;
-                state.sleepDailyLogs[entryDate].deltaMinutes = state.history[entry.id].deltaMinutes;
-                state.sleepDailyLogs[entryDate].absError = state.history[entry.id].absError;
+            if (state.sleepDailyLogs && state.sleepDailyLogs[entry.date]) {
+                state.sleepDailyLogs[entry.date].sleepOnsetMinutes = actualSleep;
+                state.sleepDailyLogs[entry.date].predictedSleep = entry.predictedSleep;
+                state.sleepDailyLogs[entry.date].actualSleep = actualSleep;
+                state.sleepDailyLogs[entry.date].deltaMinutes = state.history[entry.id].deltaMinutes;
+                state.sleepDailyLogs[entry.date].absError = state.history[entry.id].absError;
             }
 
             // Track yesterday's feedback for toast
