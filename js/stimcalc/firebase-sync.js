@@ -115,9 +115,11 @@ function mergeRemoteState(remoteData) {
         modifiers: { ...state.modifiers, ...(remote.modifiers || {}) },
         settings: { ...state.settings, ...(remote.settings || {}) },
         sleepHistory: { ...state.sleepHistory, ...(remote.sleepHistory || {}) },
+        sleepDailyLogs: { ...state.sleepDailyLogs, ...(remote.sleepDailyLogs || {}) },
         workoutPlan: { ...state.workoutPlan, ...(remote.workoutPlan || {}) },
         nicotine: { ...state.nicotine, ...(remote.nicotine || {}) },
-        _version: (remote._version || 0) + 1
+        _version: (remote._version || 0) + 1,
+        _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false
     };
 
     // CRITICAL: Always preserve _dataLoaded
@@ -1319,6 +1321,7 @@ function loadState() {
             },
             settings: { ...state.settings, ...(loaded.settings || {}) },
             sleepHistory: { ...state.sleepHistory, ...(loaded.sleepHistory || {}) },
+            sleepDailyLogs: { ...state.sleepDailyLogs, ...(loaded.sleepDailyLogs || {}) },
             workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) },
             nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) }
         };
@@ -1379,6 +1382,18 @@ function loadState() {
                 delete state.sleepHistory[dateStr];
             }
         });
+
+        // Prune old sleepDailyLogs entries (keep last 180 days for localStorage, full history in Firebase)
+        if (state.sleepDailyLogs) {
+            var sixMonthsAgo = new Date();
+            sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+            var dailyLogCutoff = getLocalDateString(sixMonthsAgo);
+            Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
+                if (dateStr < dailyLogCutoff) {
+                    delete state.sleepDailyLogs[dateStr];
+                }
+            });
+        }
 
         // Remove corrupted sleep history entries (null, undefined, NaN)
         Object.keys(state.sleepHistory).forEach(key => {

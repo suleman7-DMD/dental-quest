@@ -65,6 +65,8 @@ function getDefaultState() {
         history: {},
         _version: 0,
         sleepHistory: {},
+        sleepDailyLogs: {},
+        _sleepDailyLogsMigrated: false,
         _dataLoaded: false
     };
 }
@@ -78,6 +80,7 @@ function isEmptyState(data) {
     const hasCaffeine = getCount(data.caffeine) > 0;
     const hasHistory = getCount(data.history) > 0;
     const hasSleepHistory = getCount(data.sleepHistory) > 0;
+    const hasSleepDailyLogs = getCount(data.sleepDailyLogs) > 0;
 
     // FIX: Allow saving when allNighterMode is ON or when data has been loaded
     // This fixes the bug where toggling allNighterMode wouldn't persist
@@ -85,7 +88,7 @@ function isEmptyState(data) {
     const dataWasLoaded = data._dataLoaded === true;
 
     // Empty if NONE of these exist
-    return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory && !hasAllNighterMode && !dataWasLoaded;
+    return !hasMedications && !hasCaffeine && !hasHistory && !hasSleepHistory && !hasSleepDailyLogs && !hasAllNighterMode && !dataWasLoaded;
 }
 
 function hasRealData(data) {
@@ -339,6 +342,16 @@ function snapshotPredictionInputs() {
         hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode
     };
+}
+
+function computeSleepStatus(hours) {
+    if (hours === null || hours === undefined || isNaN(hours)) return 'no_data';
+    if (hours === 0) return 'allnighter';
+    if (hours < 4) return 'critical';
+    if (hours < 5.5) return 'poor';
+    if (hours < 7) return 'ok';
+    if (hours < 8) return 'good';
+    return 'great';
 }
 
 // BUG FIX: Use computeSleepDelta for midnight-crossing-safe delta calculation

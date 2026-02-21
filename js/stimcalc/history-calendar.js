@@ -120,6 +120,16 @@ function autoPopulateFeedback() {
             state.history[entry.id].absError = Math.abs(state.history[entry.id].deltaMinutes);
             updated = true;
 
+            // Also update sleepDailyLogs with prediction accuracy data
+            var entryDate = entry.date;
+            if (state.sleepDailyLogs && state.sleepDailyLogs[entryDate]) {
+                state.sleepDailyLogs[entryDate].sleepOnsetMinutes = actualSleep;
+                state.sleepDailyLogs[entryDate].predictedSleep = entry.predictedSleep;
+                state.sleepDailyLogs[entryDate].actualSleep = actualSleep;
+                state.sleepDailyLogs[entryDate].deltaMinutes = state.history[entry.id].deltaMinutes;
+                state.sleepDailyLogs[entryDate].absError = state.history[entry.id].absError;
+            }
+
             // Track yesterday's feedback for toast
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -340,7 +350,8 @@ function renderSleepCalendar() {
     }
 
     container.innerHTML = days.map(day => {
-        const entry = state.sleepHistory[day.dateStr];
+        const dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[day.dateStr] : null;
+        const entry = dailyLog || state.sleepHistory[day.dateStr];
         // Handle both old format (just number) and new format (object)
         const hoursSlept = entry ? (typeof entry === 'object' ? entry.hoursSlept : entry) : undefined;
         const wakeTime = entry && typeof entry === 'object' ? entry.wakeTime : undefined;
@@ -480,6 +491,7 @@ function clearSleepEntry() {
 
     // Remove the entry entirely (null = unlogged)
     delete state.sleepHistory[currentEditingDate];
+    if (state.sleepDailyLogs) delete state.sleepDailyLogs[currentEditingDate];
 
     saveState();
 
@@ -513,6 +525,19 @@ function saveSleepEdit() {
         wakeTime: wakeTime
     };
 
+    // Also update sleepDailyLogs
+    if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+    var existingLog = state.sleepDailyLogs[currentEditingDate] || {};
+    state.sleepDailyLogs[currentEditingDate] = Object.assign({}, existingLog, {
+        date: currentEditingDate,
+        hoursSlept: hours,
+        wakeTime: wakeTime,
+        status: computeSleepStatus(hours),
+        sleepDeficit: Math.max(0, (state.settings.sleepTarget ?? 8) - hours),
+        source: 'manual_edit',
+        lastUpdated: new Date().toISOString()
+    });
+
     saveState();
 
     // If editing today, also update the main inputs
@@ -541,6 +566,7 @@ function updateTodaySleepHistory() {
         wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime
     };
 
+    saveSleepDayLog();
     renderSleepIntelligence();
 }
 
@@ -554,7 +580,163 @@ function updateTodayWakeTime() {
         wakeTime: state.wakeTime
     };
 
+    saveSleepDayLog();
     renderSleepIntelligence();
+}
+
+// ============================================
+// SLEEP DAILY LOGS — Migration & Daily Snapshot
+// ============================================
+
+function migrateSleepDailyLogs() {
+    if (state._sleepDailyLogsMigrated) return;
+    if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+
+    var entries = getValues(state.history).slice().sort(function(a, b) {
+        if (!a.date || !b.date) return 0;
+        return a.date.localeCompare(b.date);
+    });
+
+    // Pass 1: Populate from history entries
+    entries.forEach(function(entry) {
+        if (!entry.date) return;
+        var inp = entry.inputs || {};
+
+        // hoursSleptLastNight belongs to the PREVIOUS day's log
+        if (inp.hoursSleptLastNight !== undefined && inp.hoursSleptLastNight !== null) {
+            var entryDate = parseLocalDate(entry.date);
+            if (!entryDate) return;
+            var prevDay = new Date(entryDate);
+            prevDay.setDate(prevDay.getDate() - 1);
+            var prevDayStr = getLocalDateString(prevDay);
+
+            var existing = state.sleepDailyLogs[prevDayStr] || {};
+            // Latest entry wins (by predictedAt)
+            var existingAt = existing._predictedAt || '';
+            var entryAt = entry.predictedAt || '';
+            if (!existing.hoursSlept || entryAt >= existingAt) {
+                state.sleepDailyLogs[prevDayStr] = {
+                    date: prevDayStr,
+                    hoursSlept: inp.hoursSleptLastNight ?? null,
+                    wakeTime: inp.wakeTime ?? null,
+                    sleepOnsetMinutes: existing.sleepOnsetMinutes ?? null,
+                    totalAmpDose: inp.totalAmpDose ?? null,
+                    totalCaffDose: inp.totalCaffDose ?? null,
+                    medications: existing.medications ?? null,
+                    caffeine: existing.caffeine ?? null,
+                    hadWorkout: inp.hasWorkout ?? false,
+                    hadSauna: inp.hasSauna ?? false,
+                    hadVitC: inp.hasVitC ?? false,
+                    allNighterMode: inp.allNighterMode ?? false,
+                    predictedSleep: existing.predictedSleep ?? null,
+                    actualSleep: existing.actualSleep ?? null,
+                    deltaMinutes: existing.deltaMinutes ?? null,
+                    absError: existing.absError ?? null,
+                    effectiveThreshold: inp.effectiveThreshold ?? null,
+                    sleepDebtBonus: inp.sleepDebtBonus ?? null,
+                    baseThreshold: inp.baseThreshold ?? null,
+                    ampHalfLife: inp.ampHalfLife ?? null,
+                    sleepTarget: 8,
+                    sleepDeficit: Math.max(0, 8 - (inp.hoursSleptLastNight ?? 0)),
+                    status: computeSleepStatus(inp.hoursSleptLastNight),
+                    source: 'backfilled',
+                    lastUpdated: entry.predictedAt || new Date().toISOString(),
+                    _predictedAt: entryAt
+                };
+            }
+        }
+
+        // actualSleep belongs to the entry's own date
+        if (entry.actualSleep !== null && entry.actualSleep !== undefined && !isNaN(entry.actualSleep)) {
+            var dateLog = state.sleepDailyLogs[entry.date] || {};
+            dateLog.date = entry.date;
+            dateLog.sleepOnsetMinutes = entry.actualSleep;
+            dateLog.predictedSleep = entry.predictedSleep ?? null;
+            dateLog.actualSleep = entry.actualSleep;
+            dateLog.deltaMinutes = entry.deltaMinutes ?? null;
+            dateLog.absError = entry.absError ?? null;
+            if (!dateLog.source) dateLog.source = 'backfilled';
+            if (!dateLog.lastUpdated) dateLog.lastUpdated = entry.predictedAt || new Date().toISOString();
+            state.sleepDailyLogs[entry.date] = dateLog;
+        }
+    });
+
+    // Pass 2: Override with sleepHistory (manual entries win)
+    if (state.sleepHistory) {
+        Object.keys(state.sleepHistory).forEach(function(dateStr) {
+            var sleepEntry = state.sleepHistory[dateStr];
+            if (!sleepEntry) return;
+
+            var hours = null;
+            var wakeTime = null;
+            if (typeof sleepEntry === 'number') {
+                hours = sleepEntry;
+            } else if (typeof sleepEntry === 'object') {
+                hours = sleepEntry.hoursSlept ?? null;
+                wakeTime = sleepEntry.wakeTime ?? null;
+            }
+
+            if (hours === null && wakeTime === null) return;
+
+            var existing = state.sleepDailyLogs[dateStr] || {};
+            existing.date = dateStr;
+            if (hours !== null) existing.hoursSlept = hours;
+            if (wakeTime !== null) existing.wakeTime = wakeTime;
+            existing.status = computeSleepStatus(existing.hoursSlept ?? null);
+            existing.sleepDeficit = Math.max(0, (state.settings.sleepTarget ?? 8) - (existing.hoursSlept ?? 0));
+            existing.source = existing.source === 'backfilled' ? 'backfilled' : 'manual_edit';
+            if (!existing.lastUpdated) existing.lastUpdated = new Date().toISOString();
+            state.sleepDailyLogs[dateStr] = existing;
+        });
+    }
+
+    // Clean up internal tracking field
+    Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
+        delete state.sleepDailyLogs[dateStr]._predictedAt;
+    });
+
+    state._sleepDailyLogsMigrated = true;
+    saveState();
+}
+
+function saveSleepDayLog() {
+    var today = getLocalDateString();
+    if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+    var existing = state.sleepDailyLogs[today] || {};
+
+    state.sleepDailyLogs[today] = {
+        date: today,
+        hoursSlept: state.hoursSleptLastNight ?? null,
+        wakeTime: state.wakeTime ?? null,
+        sleepOnsetMinutes: existing.sleepOnsetMinutes ?? null,
+        totalAmpDose: getValues(state.medications).reduce(function(s, m) { return s + (m.dose || 0); }, 0),
+        totalCaffDose: getValues(state.caffeine).reduce(function(s, c) { return s + (c.amount || 0); }, 0),
+        medications: JSON.parse(JSON.stringify(getValues(state.medications))),
+        caffeine: JSON.parse(JSON.stringify(getValues(state.caffeine))),
+        hadWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
+        hadSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
+        hadVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
+        allNighterMode: !!state.allNighterMode,
+        predictedSleep: existing.predictedSleep ?? null,
+        actualSleep: existing.actualSleep ?? null,
+        deltaMinutes: existing.deltaMinutes ?? null,
+        absError: existing.absError ?? null,
+        effectiveThreshold: typeof getEffectiveThreshold === 'function' ? parseFloat(getEffectiveThreshold().toFixed(1)) : null,
+        sleepDebtBonus: typeof calculateSleepDebtBonus === 'function' ? parseFloat(calculateSleepDebtBonus().toFixed(1)) : null,
+        baseThreshold: state.settings.sleepThreshold ?? 14,
+        ampHalfLife: state.settings.ampHalfLife ?? 11,
+        sleepTarget: state.settings.sleepTarget ?? 8,
+        sleepDeficit: Math.max(0, (state.settings.sleepTarget ?? 8) - (state.hoursSleptLastNight ?? 0)),
+        status: computeSleepStatus(state.hoursSleptLastNight),
+        source: existing.source || 'live',
+        lastUpdated: new Date().toISOString()
+    };
+
+    // Keep sleepHistory in sync (backward compat for autoPopulateFeedback)
+    state.sleepHistory[today] = {
+        hoursSlept: state.hoursSleptLastNight,
+        wakeTime: state.wakeTime
+    };
 }
 
 // ============================================
@@ -639,22 +821,26 @@ function renderAccuracyHeroHint(stats) {
 }
 
 function getSleepDataForDays(numDays) {
-    const today = new Date();
-    const data = [];
+    var today = new Date();
+    var data = [];
 
-    for (let i = numDays - 1; i >= 0; i--) {
-        const date = new Date(today);
+    for (var i = numDays - 1; i >= 0; i--) {
+        var date = new Date(today);
         date.setDate(date.getDate() - i);
-        const dateStr = getLocalDateString(date);
+        var dateStr = getLocalDateString(date);
 
-        const entry = state.sleepHistory[dateStr];
-        let hoursSlept = null;
+        // Try sleepDailyLogs first (richer data), fall back to sleepHistory
+        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
+        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
+        var hoursSlept = null;
 
-        if (entry) {
-            if (typeof entry === 'number') {
-                hoursSlept = entry;
-            } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
-                hoursSlept = entry.hoursSlept;
+        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
+            hoursSlept = dailyLog.hoursSlept;
+        } else if (sleepEntry) {
+            if (typeof sleepEntry === 'number') {
+                hoursSlept = sleepEntry;
+            } else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) {
+                hoursSlept = sleepEntry.hoursSlept;
             }
         }
 

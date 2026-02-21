@@ -814,9 +814,10 @@ function init() {
     // Initial calculation
     recalculate();
 
-    // Save projectedSleepTime to Firebase after initial calculation
+    // Save projectedSleepTime to Firebase and snapshot today's sleep log
     setTimeout(function() {
         if (state.projectedSleepTime) {
+            saveSleepDayLog();
             saveState();
         }
     }, 1000);
@@ -829,9 +830,10 @@ function init() {
         autoPopulateFeedback();
     }, 2000);
 
-    // Migrate history entries and render accuracy
+    // Migrate history entries, sleep daily logs, and render accuracy
     setTimeout(function() {
         migrateHistoryEntries();
+        migrateSleepDailyLogs();
         renderSleepIntelligence();
     }, 2500);
 
