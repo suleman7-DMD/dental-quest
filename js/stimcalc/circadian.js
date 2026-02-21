@@ -21,33 +21,15 @@ function analyzeCircadianPhase() {
         date.setDate(date.getDate() - i);
         const dateStr = getLocalDateString(date);
 
-        const entry = state.sleepHistory[dateStr];
-        if (entry) {
-            // Handle both old format (just number) and new format (object)
-            if (typeof entry === 'object' && entry.wakeTime) {
-                const h = Number(entry.hoursSlept);
-                wakeTimes.push({
-                    date: dateStr,
-                    wakeMinutes: timeToMinutes(entry.wakeTime),
-                    hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                });
-            } else if (typeof entry === 'number') {
-                // Old format - only has hours, no wake time
-                const h = Number(entry);
-                wakeTimes.push({
-                    date: dateStr,
-                    wakeMinutes: null,
-                    hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                });
-            } else if (typeof entry === 'object' && entry.hoursSlept !== undefined) {
-                // New format but no wake time yet
-                const h = Number(entry.hoursSlept);
-                wakeTimes.push({
-                    date: dateStr,
-                    wakeMinutes: null,
-                    hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
-                });
-            }
+        // Use unified helper (checks sleepDailyLogs then sleepHistory)
+        const sleepData = (typeof getSleepForDate === 'function') ? getSleepForDate(dateStr) : null;
+        if (sleepData) {
+            const h = Number(sleepData.hoursSlept);
+            wakeTimes.push({
+                date: dateStr,
+                wakeMinutes: sleepData.wakeTime ? timeToMinutes(sleepData.wakeTime) : null,
+                hoursSlept: (!isNaN(h) && h >= 0) ? h : 0
+            });
         }
     }
 

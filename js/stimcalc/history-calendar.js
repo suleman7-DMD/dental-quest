@@ -381,28 +381,36 @@ function getSleepForDate(dateStr) {
 }
 
 // Returns the total count of unique dates with sleep data across both sources.
+// Uses getSleepForDate() for consistent logic with all tabs.
 function getTotalDaysTracked() {
     var dateSet = {};
+    // Collect all candidate date keys from both sources
     if (state.sleepDailyLogs) {
-        Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
-            var log = state.sleepDailyLogs[dateStr];
-            if (log && log.hoursSlept !== undefined && log.hoursSlept !== null) {
-                dateSet[dateStr] = true;
-            }
-        });
+        Object.keys(state.sleepDailyLogs).forEach(function(k) { dateSet[k] = true; });
     }
     if (state.sleepHistory) {
-        Object.keys(state.sleepHistory).forEach(function(dateStr) {
-            if (dateSet[dateStr]) return; // already counted
-            var entry = state.sleepHistory[dateStr];
-            if (!entry) return;
-            if (typeof entry === 'number') { dateSet[dateStr] = true; return; }
-            if (typeof entry === 'object' && (entry.hoursSlept !== undefined && entry.hoursSlept !== null)) {
-                dateSet[dateStr] = true;
-            }
-        });
+        Object.keys(state.sleepHistory).forEach(function(k) { dateSet[k] = true; });
     }
-    return Object.keys(dateSet).length;
+    var count = 0;
+    Object.keys(dateSet).forEach(function(dateStr) {
+        var data = getSleepForDate(dateStr);
+        if (data && data.hoursSlept !== null && data.hoursSlept !== undefined) count++;
+    });
+    return count;
+}
+
+// Count days with sleep data in a specific month (matches calendar tab counting).
+function countDaysTrackedInMonth(year, month) {
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var todayStr = getLocalDateString();
+    var count = 0;
+    for (var d = 1; d <= daysInMonth; d++) {
+        var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        if (dateStr > todayStr) break;
+        var data = getSleepForDate(dateStr);
+        if (data && data.hoursSlept !== null && data.hoursSlept !== undefined) count++;
+    }
+    return count;
 }
 
 // ============================================
@@ -429,12 +437,10 @@ function renderSleepCalendar() {
     }
 
     container.innerHTML = days.map(day => {
-        const dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[day.dateStr] : null;
-        const entry = dailyLog || state.sleepHistory[day.dateStr];
-        // Handle both old format (just number) and new format (object)
-        const hoursSlept = entry ? (typeof entry === 'object' ? entry.hoursSlept : entry) : undefined;
-        const wakeTime = entry && typeof entry === 'object' ? entry.wakeTime : undefined;
-        const hasData = hoursSlept !== undefined;
+        const sleepData = getSleepForDate(day.dateStr);
+        const hoursSlept = sleepData ? sleepData.hoursSlept : undefined;
+        const wakeTime = sleepData ? sleepData.wakeTime : undefined;
+        const hasData = hoursSlept !== undefined && hoursSlept !== null;
 
         let bgColor, borderColor, textColor, statusText, wakeTimeDisplay;
 
@@ -1009,10 +1015,13 @@ function renderAccuracyDashboard() {
         gradeVal.style.color = gradeColor;
     }
     const gradeLabel = document.getElementById('accuracyGradeLabel');
-    if (gradeLabel) gradeLabel.textContent = hasData ? stats.entriesWithFeedback + ' predictions tracked (' + stats.totalDaysTracked + ' days total)' : 'Need 3+ days with feedback';
+    if (gradeLabel) gradeLabel.textContent = hasData ? stats.entriesWithFeedback + ' predictions tracked' : 'Need 3+ days with feedback';
 
+    // Show current month days tracked (matches calendar tab exactly)
+    const now = new Date();
+    const monthDaysTracked = countDaysTrackedInMonth(now.getFullYear(), now.getMonth());
     const daysEl = document.getElementById('accStatDaysTracked');
-    if (daysEl) daysEl.textContent = hasData ? stats.totalDaysTracked : '--';
+    if (daysEl) daysEl.textContent = monthDaysTracked > 0 ? monthDaysTracked : '--';
 
     const avgEl = document.getElementById('accStatAvgError');
     if (avgEl) { avgEl.textContent = hasEnough ? '\u00b1' + avgErr + 'm' : '--'; avgEl.style.color = gradeColor; }
@@ -1073,20 +1082,9 @@ function getSleepDataForDays(numDays) {
         date.setDate(date.getDate() - i);
         var dateStr = getLocalDateString(date);
 
-        // Try sleepDailyLogs first (richer data), fall back to sleepHistory
-        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
-        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
-        var hoursSlept = null;
-
-        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
-            hoursSlept = dailyLog.hoursSlept;
-        } else if (sleepEntry) {
-            if (typeof sleepEntry === 'number') {
-                hoursSlept = sleepEntry;
-            } else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) {
-                hoursSlept = sleepEntry.hoursSlept;
-            }
-        }
+        // Use unified helper for consistent data across all tabs
+        var sleepInfo = getSleepForDate(dateStr);
+        var hoursSlept = (sleepInfo && sleepInfo.hoursSlept !== null && sleepInfo.hoursSlept !== undefined) ? sleepInfo.hoursSlept : null;
 
         data.push({
             date: date,
@@ -1359,16 +1357,8 @@ function renderSleepCalendarMonth() {
 
     for (var d = 1; d <= daysInMonth; d++) {
         var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
-        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
-        var hoursSlept = null;
-
-        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
-            hoursSlept = dailyLog.hoursSlept;
-        } else if (sleepEntry) {
-            if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
-            else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) hoursSlept = sleepEntry.hoursSlept;
-        }
+        var sleepData = getSleepForDate(dateStr);
+        var hoursSlept = (sleepData && sleepData.hoursSlept !== null && sleepData.hoursSlept !== undefined) ? sleepData.hoursSlept : null;
 
         var status = computeSleepStatus(hoursSlept);
         var isToday = dateStr === todayStr;
@@ -1418,16 +1408,8 @@ function renderCalendarMonthStats(year, month, daysInMonth, todayStr) {
         var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
         if (dateStr > todayStr) break;
 
-        var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
-        var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
-        var hoursSlept = null;
-
-        if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
-            hoursSlept = dailyLog.hoursSlept;
-        } else if (sleepEntry) {
-            if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
-            else if (typeof sleepEntry === 'object' && sleepEntry.hoursSlept !== undefined) hoursSlept = sleepEntry.hoursSlept;
-        }
+        var sleepData = getSleepForDate(dateStr);
+        var hoursSlept = (sleepData && sleepData.hoursSlept !== null && sleepData.hoursSlept !== undefined) ? sleepData.hoursSlept : null;
 
         if (hoursSlept !== null) {
             totalHours += hoursSlept;
@@ -1470,22 +1452,12 @@ function showSleepDayDetails(dateStr) {
     if (titleEl) titleEl.textContent = displayDate;
 
     var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
-    var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
     var predictionEntry = getValues(state.history).find(function(h) { return h.date === dateStr; });
 
-    var hoursSlept = null;
-    var wakeTime = null;
-
-    if (dailyLog) {
-        hoursSlept = dailyLog.hoursSlept !== undefined ? dailyLog.hoursSlept : null;
-        wakeTime = dailyLog.wakeTime || null;
-    } else if (sleepEntry) {
-        if (typeof sleepEntry === 'number') hoursSlept = sleepEntry;
-        else if (typeof sleepEntry === 'object') {
-            hoursSlept = sleepEntry.hoursSlept !== undefined ? sleepEntry.hoursSlept : null;
-            wakeTime = sleepEntry.wakeTime || null;
-        }
-    }
+    // Use unified helper for consistent hours/wakeTime
+    var sleepData = getSleepForDate(dateStr);
+    var hoursSlept = sleepData ? (sleepData.hoursSlept ?? null) : null;
+    var wakeTime = sleepData ? (sleepData.wakeTime ?? null) : null;
 
     var status = computeSleepStatus(hoursSlept);
     var statusColors = {
@@ -1653,12 +1625,8 @@ function calculateAccuracyStats(days) {
     if (days === undefined) days = 30;
     const entries = getValues(state.history);
 
-    // Count total days tracked from BOTH sources (unified count)
-    const totalDaysTracked = getTotalDaysTracked();
-
     const emptyResult = {
         totalEntries: 0, entriesWithFeedback: 0,
-        totalDaysTracked: totalDaysTracked,
         avgError: null, avgAbsError: null,
         within30min: null, within60min: null,
         trend: null, recentBias: null
@@ -1697,7 +1665,6 @@ function calculateAccuracyStats(days) {
     return {
         totalEntries: inRange.length,
         entriesWithFeedback: withFeedback.length,
-        totalDaysTracked: totalDaysTracked,
         avgError: Math.round(avgError),
         avgAbsError: Math.round(avgAbsError),
         within30min: Math.round(within30 * 100),
@@ -1826,10 +1793,11 @@ function updateSleepIntelSummary() {
         var avg = valid.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / valid.length;
         parts.push(avg.toFixed(1) + 'h avg');
     }
-    // Show total days tracked from unified count
-    var totalDays = getTotalDaysTracked();
-    if (totalDays > 0) {
-        parts.push(totalDays + ' days tracked');
+    // Show current month days tracked (consistent with calendar + accuracy tabs)
+    var now = new Date();
+    var monthDays = countDaysTrackedInMonth(now.getFullYear(), now.getMonth());
+    if (monthDays > 0) {
+        parts.push(monthDays + ' days tracked');
     }
     var accStats = calculateAccuracyStats(30);
     if (accStats && accStats.entriesWithFeedback >= 3) {
