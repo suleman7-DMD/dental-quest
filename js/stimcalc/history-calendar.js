@@ -125,13 +125,15 @@ function autoPopulateFeedback() {
             updated = true;
 
             // Also update sleepDailyLogs with prediction accuracy data
-            if (state.sleepDailyLogs && state.sleepDailyLogs[entry.date]) {
-                state.sleepDailyLogs[entry.date].sleepOnsetMinutes = actualSleep;
-                state.sleepDailyLogs[entry.date].predictedSleep = entry.predictedSleep;
-                state.sleepDailyLogs[entry.date].actualSleep = actualSleep;
-                state.sleepDailyLogs[entry.date].deltaMinutes = state.history[entry.id].deltaMinutes;
-                state.sleepDailyLogs[entry.date].absError = state.history[entry.id].absError;
+            if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+            if (!state.sleepDailyLogs[entry.date]) {
+                state.sleepDailyLogs[entry.date] = { date: entry.date, source: 'auto_feedback' };
             }
+            state.sleepDailyLogs[entry.date].sleepOnsetMinutes = actualSleep;
+            state.sleepDailyLogs[entry.date].predictedSleep = entry.predictedSleep;
+            state.sleepDailyLogs[entry.date].actualSleep = actualSleep;
+            state.sleepDailyLogs[entry.date].deltaMinutes = state.history[entry.id].deltaMinutes;
+            state.sleepDailyLogs[entry.date].absError = state.history[entry.id].absError;
 
             // Track yesterday's feedback for toast
             const yesterday = new Date();
@@ -342,6 +344,65 @@ function cleanupHistory() {
     if (idsToRemove.length > 0 || pruned) {
         saveState();
     }
+}
+
+// ============================================
+// UNIFIED SLEEP DATA HELPER
+// ============================================
+
+// Returns consistent {hoursSlept, wakeTime, source} for any date,
+// checking sleepDailyLogs first, then sleepHistory as fallback.
+function getSleepForDate(dateStr) {
+    // Check sleepDailyLogs first (richer data)
+    var dailyLog = state.sleepDailyLogs ? state.sleepDailyLogs[dateStr] : null;
+    if (dailyLog && dailyLog.hoursSlept !== undefined && dailyLog.hoursSlept !== null) {
+        return {
+            hoursSlept: dailyLog.hoursSlept,
+            wakeTime: dailyLog.wakeTime ?? null,
+            source: dailyLog.source || 'daily_log'
+        };
+    }
+
+    // Fall back to sleepHistory
+    var sleepEntry = state.sleepHistory ? state.sleepHistory[dateStr] : null;
+    if (!sleepEntry) return null;
+
+    if (typeof sleepEntry === 'number') {
+        return { hoursSlept: sleepEntry, wakeTime: null, source: 'sleep_history' };
+    }
+    if (typeof sleepEntry === 'object') {
+        var hours = sleepEntry.hoursSlept ?? null;
+        var wake = sleepEntry.wakeTime ?? null;
+        if (hours === null && wake === null) return null;
+        return { hoursSlept: hours, wakeTime: wake, source: 'sleep_history' };
+    }
+
+    return null;
+}
+
+// Returns the total count of unique dates with sleep data across both sources.
+function getTotalDaysTracked() {
+    var dateSet = {};
+    if (state.sleepDailyLogs) {
+        Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
+            var log = state.sleepDailyLogs[dateStr];
+            if (log && log.hoursSlept !== undefined && log.hoursSlept !== null) {
+                dateSet[dateStr] = true;
+            }
+        });
+    }
+    if (state.sleepHistory) {
+        Object.keys(state.sleepHistory).forEach(function(dateStr) {
+            if (dateSet[dateStr]) return; // already counted
+            var entry = state.sleepHistory[dateStr];
+            if (!entry) return;
+            if (typeof entry === 'number') { dateSet[dateStr] = true; return; }
+            if (typeof entry === 'object' && (entry.hoursSlept !== undefined && entry.hoursSlept !== null)) {
+                dateSet[dateStr] = true;
+            }
+        });
+    }
+    return Object.keys(dateSet).length;
 }
 
 // ============================================
@@ -718,6 +779,7 @@ function migrateSleepDailyLogs() {
     });
 
     // Pass 2: Override with sleepHistory (manual entries win, adds dates not in history)
+    // Creates COMPLETE entries for dates only in sleepHistory (not just partial updates)
     if (state.sleepHistory) {
         Object.keys(state.sleepHistory).forEach(function(dateStr) {
             var sleepEntry = state.sleepHistory[dateStr];
@@ -734,17 +796,47 @@ function migrateSleepDailyLogs() {
 
             if (hours === null && wakeTime === null) return;
 
-            var existing = state.sleepDailyLogs[dateStr] || {};
-            existing.date = dateStr;
-            if (hours !== null) existing.hoursSlept = hours;
-            if (wakeTime !== null) existing.wakeTime = wakeTime;
-            existing.status = computeSleepStatus(existing.hoursSlept ?? null);
-            existing.sleepDeficit = existing.hoursSlept !== null ? Math.max(0, (state.settings.sleepTarget ?? 8) - existing.hoursSlept) : null;
-            if (!existing.source || existing.source === 'backfilled') {
-                existing.source = 'manual_edit';
+            var existing = state.sleepDailyLogs[dateStr];
+            if (existing) {
+                // Update existing entry with sleepHistory data
+                if (hours !== null) existing.hoursSlept = hours;
+                if (wakeTime !== null) existing.wakeTime = wakeTime;
+                existing.status = computeSleepStatus(existing.hoursSlept ?? null);
+                existing.sleepDeficit = existing.hoursSlept !== null ? Math.max(0, (state.settings.sleepTarget ?? 8) - existing.hoursSlept) : null;
+                if (!existing.source || existing.source === 'backfilled') {
+                    existing.source = 'manual_edit';
+                }
+                if (!existing.lastUpdated) existing.lastUpdated = new Date().toISOString();
+            } else {
+                // Create a COMPLETE new entry for sleepHistory-only dates
+                state.sleepDailyLogs[dateStr] = {
+                    date: dateStr,
+                    hoursSlept: hours,
+                    wakeTime: wakeTime,
+                    sleepOnsetMinutes: null,
+                    totalAmpDose: null,
+                    totalCaffDose: null,
+                    medications: null,
+                    caffeine: null,
+                    hadWorkout: false,
+                    hadSauna: false,
+                    hadVitC: false,
+                    allNighterMode: false,
+                    predictedSleep: null,
+                    actualSleep: null,
+                    deltaMinutes: null,
+                    absError: null,
+                    effectiveThreshold: null,
+                    sleepDebtBonus: null,
+                    baseThreshold: null,
+                    ampHalfLife: null,
+                    sleepTarget: state.settings.sleepTarget ?? 8,
+                    sleepDeficit: hours !== null ? Math.max(0, (state.settings.sleepTarget ?? 8) - hours) : null,
+                    status: computeSleepStatus(hours),
+                    source: 'backfilled_from_sleep_history',
+                    lastUpdated: new Date().toISOString()
+                };
             }
-            if (!existing.lastUpdated) existing.lastUpdated = new Date().toISOString();
-            state.sleepDailyLogs[dateStr] = existing;
         });
     }
 
@@ -758,13 +850,74 @@ function migrateSleepDailyLogs() {
     saveState();
 }
 
+// V3 migration: backfill sleepHistory-only dates into sleepDailyLogs
+// This runs for V2-migrated users who already have _sleepDailyLogsMigratedV2 = true
+// but whose sleepDailyLogs is missing entries that only exist in sleepHistory.
+function migrateSleepDailyLogsV3() {
+    if (state._sleepDailyLogsMigratedV3) return;
+    if (!state.sleepHistory) { state._sleepDailyLogsMigratedV3 = true; return; }
+    if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+
+    var added = 0;
+    Object.keys(state.sleepHistory).forEach(function(dateStr) {
+        // Skip if already has a sleepDailyLogs entry
+        if (state.sleepDailyLogs[dateStr]) return;
+
+        var sleepEntry = state.sleepHistory[dateStr];
+        if (!sleepEntry) return;
+
+        var hours = null;
+        var wakeTime = null;
+        if (typeof sleepEntry === 'number') {
+            hours = sleepEntry;
+        } else if (typeof sleepEntry === 'object') {
+            hours = sleepEntry.hoursSlept ?? null;
+            wakeTime = sleepEntry.wakeTime ?? null;
+        }
+
+        if (hours === null && wakeTime === null) return;
+
+        state.sleepDailyLogs[dateStr] = {
+            date: dateStr,
+            hoursSlept: hours,
+            wakeTime: wakeTime,
+            sleepOnsetMinutes: null,
+            totalAmpDose: null,
+            totalCaffDose: null,
+            medications: null,
+            caffeine: null,
+            hadWorkout: false,
+            hadSauna: false,
+            hadVitC: false,
+            allNighterMode: false,
+            predictedSleep: null,
+            actualSleep: null,
+            deltaMinutes: null,
+            absError: null,
+            effectiveThreshold: null,
+            sleepDebtBonus: null,
+            baseThreshold: null,
+            ampHalfLife: null,
+            sleepTarget: state.settings.sleepTarget ?? 8,
+            sleepDeficit: hours !== null ? Math.max(0, (state.settings.sleepTarget ?? 8) - hours) : null,
+            status: computeSleepStatus(hours),
+            source: 'backfilled_from_sleep_history',
+            lastUpdated: new Date().toISOString()
+        };
+        added++;
+    });
+
+    state._sleepDailyLogsMigratedV3 = true;
+    if (added > 0) saveState();
+}
+
 function cleanupPhantomSleepLogs() {
     if (!state.sleepDailyLogs) return;
     var removed = 0;
     Object.keys(state.sleepDailyLogs).forEach(function(dateStr) {
         var log = state.sleepDailyLogs[dateStr];
         if (log && (log.hoursSlept === null || log.hoursSlept === undefined) &&
-            log.source === 'backfilled' &&
+            (log.source === 'backfilled' || log.source === 'backfilled_from_sleep_history') &&
             (!state.sleepHistory || !state.sleepHistory[dateStr])) {
             delete state.sleepDailyLogs[dateStr];
             removed++;
@@ -802,6 +955,7 @@ function saveSleepDayLog() {
         sleepTarget: state.settings.sleepTarget ?? 8,
         sleepDeficit: Math.max(0, (state.settings.sleepTarget ?? 8) - (state.hoursSleptLastNight ?? 0)),
         status: computeSleepStatus(state.hoursSleptLastNight),
+        logicLog: existing.logicLog ?? null,
         source: existing.source || 'live',
         lastUpdated: new Date().toISOString()
     };
@@ -855,10 +1009,10 @@ function renderAccuracyDashboard() {
         gradeVal.style.color = gradeColor;
     }
     const gradeLabel = document.getElementById('accuracyGradeLabel');
-    if (gradeLabel) gradeLabel.textContent = hasData ? stats.entriesWithFeedback + ' predictions tracked' : 'Need 3+ days with feedback';
+    if (gradeLabel) gradeLabel.textContent = hasData ? stats.entriesWithFeedback + ' predictions tracked (' + stats.totalDaysTracked + ' days total)' : 'Need 3+ days with feedback';
 
     const daysEl = document.getElementById('accStatDaysTracked');
-    if (daysEl) daysEl.textContent = hasData ? stats.entriesWithFeedback : '--';
+    if (daysEl) daysEl.textContent = hasData ? stats.totalDaysTracked : '--';
 
     const avgEl = document.getElementById('accStatAvgError');
     if (avgEl) { avgEl.textContent = hasEnough ? '\u00b1' + avgErr + 'm' : '--'; avgEl.style.color = gradeColor; }
@@ -1474,6 +1628,17 @@ function submitFeedback() {
         state.history[recent.id].autoFilled = false; // Manual feedback — don't allow auto-recompute
         state.history[recent.id].deltaMinutes = computeSleepDelta(recent.predictedSleep, actualMinutes);
         state.history[recent.id].absError = Math.abs(state.history[recent.id].deltaMinutes);
+
+        // Also update sleepDailyLogs with accuracy data
+        if (!state.sleepDailyLogs) state.sleepDailyLogs = {};
+        if (!state.sleepDailyLogs[recent.date]) {
+            state.sleepDailyLogs[recent.date] = { date: recent.date, source: 'manual_feedback' };
+        }
+        state.sleepDailyLogs[recent.date].predictedSleep = recent.predictedSleep;
+        state.sleepDailyLogs[recent.date].actualSleep = actualMinutes;
+        state.sleepDailyLogs[recent.date].deltaMinutes = state.history[recent.id].deltaMinutes;
+        state.sleepDailyLogs[recent.date].absError = state.history[recent.id].absError;
+
         saveState();
         renderSleepIntelligence();
         closeFeedbackModal();
@@ -1487,8 +1652,13 @@ function submitFeedback() {
 function calculateAccuracyStats(days) {
     if (days === undefined) days = 30;
     const entries = getValues(state.history);
+
+    // Count total days tracked from BOTH sources (unified count)
+    const totalDaysTracked = getTotalDaysTracked();
+
     const emptyResult = {
         totalEntries: 0, entriesWithFeedback: 0,
+        totalDaysTracked: totalDaysTracked,
         avgError: null, avgAbsError: null,
         within30min: null, within60min: null,
         trend: null, recentBias: null
@@ -1527,6 +1697,7 @@ function calculateAccuracyStats(days) {
     return {
         totalEntries: inRange.length,
         entriesWithFeedback: withFeedback.length,
+        totalDaysTracked: totalDaysTracked,
         avgError: Math.round(avgError),
         avgAbsError: Math.round(avgAbsError),
         within30min: Math.round(within30 * 100),
@@ -1586,7 +1757,7 @@ function getCalibrationRecommendation() {
 
 // BUG FIX 2: Use computeSleepDelta instead of raw subtraction
 function suggestCalibration() {
-    const withFeedback = getValues(state.history).filter(h => h.actualSleep !== null).slice(0, 5);
+    const withFeedback = getValues(state.history).filter(h => h.actualSleep !== null && h.actualSleep !== undefined && !isNaN(h.actualSleep)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
     if (withFeedback.length < 3) return;
 
     const avgDiff = withFeedback.reduce((sum, h) => sum + computeSleepDelta(h.predictedSleep, h.actualSleep), 0) / withFeedback.length;
@@ -1633,21 +1804,16 @@ function switchSITab(tab) {
 
 function renderSleepIntelligence() {
     updateSleepIntelSummary();
-    // Only render the active tab's content
-    var tab = currentSITab || 'overview';
-    if (tab === 'overview') {
-        renderSleepCalendar();
-        renderSleepPerformance();
-    } else if (tab === 'insights') {
-        if (typeof renderPredictionInsights === 'function') renderPredictionInsights();
-    } else if (tab === 'accuracy') {
-        renderAccuracyDashboard();
-        if (typeof renderCalibrationContexts === 'function') renderCalibrationContexts();
-        if (typeof drawAccuracyTimeline === 'function') drawAccuracyTimeline();
-    } else if (tab === 'calendar') {
-        renderSleepCalendarMonth();
-        renderHistory();
-    }
+    // Render ALL tabs so data is fresh when user switches
+    // (Hidden tabs render to offscreen DOM — cheap since they're display:none)
+    renderSleepCalendar();
+    renderSleepPerformance();
+    if (typeof renderPredictionInsights === 'function') renderPredictionInsights();
+    renderAccuracyDashboard();
+    if (typeof renderCalibrationContexts === 'function') renderCalibrationContexts();
+    if (typeof drawAccuracyTimeline === 'function') drawAccuracyTimeline();
+    renderSleepCalendarMonth();
+    renderHistory();
 }
 
 function updateSleepIntelSummary() {
@@ -1659,6 +1825,11 @@ function updateSleepIntelSummary() {
     if (valid.length > 0) {
         var avg = valid.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / valid.length;
         parts.push(avg.toFixed(1) + 'h avg');
+    }
+    // Show total days tracked from unified count
+    var totalDays = getTotalDaysTracked();
+    if (totalDays > 0) {
+        parts.push(totalDays + ' days tracked');
     }
     var accStats = calculateAccuracyStats(30);
     if (accStats && accStats.entriesWithFeedback >= 3) {

@@ -157,7 +157,7 @@
         }
 
         .header p {
-            color: #b0b8c4;
+            color: #9ca3af;
             font-size: 1em;
         }
 
@@ -175,10 +175,12 @@
         }
 
         .card {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.06);
             border-radius: 16px;
             padding: 24px;
             border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .card h2 {
@@ -204,7 +206,7 @@
 
         .countdown-label {
             font-size: 0.9em;
-            color: #b0b8c4;
+            color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 10px;
@@ -224,7 +226,7 @@
 
         .countdown-remaining {
             font-size: 1.3em;
-            color: #b0b8c4;
+            color: #9ca3af;
             margin-bottom: 20px;
         }
 
@@ -767,7 +769,7 @@
 
         .setting-hint {
             font-size: 0.75em;
-            color: #6e7681;
+            color: #8b949e;
         }
 
         /* History */
@@ -831,7 +833,7 @@
         .history-delta.delta-late { color: #ef4444; }
         .accuracy-hero-hint {
             font-size: 0.72em;
-            color: #8b9cb6;
+            color: #9ca3af;
             margin-top: 4px;
             opacity: 0.9;
         }
@@ -853,13 +855,14 @@
             flex: 1;
             padding: 10px 6px;
             border: none;
+            border-bottom: 2px solid transparent;
             border-radius: 8px;
             background: transparent;
             color: #8b949e;
             font-size: 0.78em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             text-align: center;
             min-height: 44px;
             display: flex;
@@ -869,11 +872,12 @@
         .si-tab:hover { background: rgba(255,255,255,0.06); color: #c9d1d9; }
         .si-tab.active {
             background: rgba(139, 92, 246, 0.2);
-            color: #c084fc;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            color: #e0c3fc;
+            border-bottom-color: #8b5cf6;
+            box-shadow: 0 1px 6px rgba(139,92,246,0.25);
         }
-        .si-tab-content { animation: siFadeIn 0.2s ease; }
-        @keyframes siFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .si-tab-content { animation: siFadeIn 0.25s ease; }
+        @keyframes siFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Calendar day cards */
         .si-cal-day {
@@ -1624,14 +1628,15 @@
             padding: 24px 16px 20px;
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(16, 185, 129, 0.12));
             border-radius: 16px;
-            border: 1px solid rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.2);
             margin-bottom: 12px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .unified-hero .hero-label {
             font-size: 0.8em;
-            color: #8b9cb6;
+            color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 4px;
@@ -1653,9 +1658,18 @@
         .hero-quality.red { background: rgba(239,68,68,0.15) !important; color: #ef4444 !important; }
 
         .unified-hero .hero-countdown {
-            font-size: 0.9em;
-            color: #8b9cb6;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #10b981;
             margin-bottom: 8px;
+        }
+        .unified-hero .hero-countdown.urgent {
+            animation: heroPulse 2s ease-in-out infinite;
+            color: #ef4444;
+        }
+        @keyframes heroPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .unified-hero .hero-quality {
@@ -1685,9 +1699,14 @@
             display: flex;
             gap: 8px;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             margin-bottom: 12px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
         }
+        .status-pills::-webkit-scrollbar { display: none; }
 
         .status-pill {
             padding: 6px 14px;
@@ -1697,6 +1716,10 @@
             border: 1px solid rgba(255,255,255,0.1);
             color: #c9d1d9;
             transition: border-color 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .unified-graph-wrap {
@@ -1705,6 +1728,9 @@
             padding: 10px;
             margin-bottom: 12px;
             position: relative;
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .unified-graph-wrap canvas {
@@ -1719,12 +1745,23 @@
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.06);
             overflow: hidden;
-            background: rgba(255,255,255,0.025);
-            transition: border-color 0.2s;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: border-color 0.2s, background 0.2s;
         }
 
         .accordion-section:hover {
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .accordion-section.open {
             border-color: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .accordion-section.has-content {
+            border-left: 3px solid rgba(139, 92, 246, 0.4);
         }
 
         .accordion-header {
@@ -1747,7 +1784,7 @@
         .accordion-summary {
             margin-left: auto;
             font-size: 0.8em;
-            color: #7d8590;
+            color: #9ca3af;
             font-weight: 400;
             white-space: nowrap;
         }
@@ -1755,17 +1792,18 @@
         .accordion-arrow {
             font-size: 0.65em;
             transition: transform 0.25s ease;
-            color: #484f58;
+            color: #6e7681;
         }
 
         .accordion-section.open .accordion-arrow {
             transform: rotate(180deg);
+            color: #8b949e;
         }
 
         .accordion-body {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.35s ease;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 0 16px;
         }
 
@@ -1787,7 +1825,7 @@
         .accordion-body .input-group label {
             display: block;
             font-size: 0.78em;
-            color: #8b9cb6;
+            color: #9ca3af;
             margin-bottom: 3px;
         }
 
@@ -1842,7 +1880,7 @@
             border-radius: 8px;
             border: 1px dashed rgba(255,255,255,0.15);
             background: transparent;
-            color: #8b9cb6;
+            color: #9ca3af;
             cursor: pointer;
             font-size: 0.85em;
             margin-top: 8px;
@@ -2041,19 +2079,23 @@
         .action-btn-primary {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             color: white;
+            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+        }
+        .action-btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.45);
         }
 
         .action-btn-secondary {
             background: rgba(255,255,255,0.06);
-            color: #b0b8c4;
-            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: #9ca3af;
+            border: 1px solid rgba(255,255,255,0.12) !important;
         }
 
         .action-btn-small {
             padding: 6px 12px !important;
             font-size: 0.8em !important;
             background: rgba(255,255,255,0.04);
-            color: #7d8590;
+            color: #8b949e;
             border: 1px solid rgba(255,255,255,0.08) !important;
         }
 
@@ -2105,7 +2147,7 @@
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
             font-size: 0.85em;
-            color: #8b9cb6;
+            color: #9ca3af;
         }
 
         /* Stacking warning */
@@ -2179,6 +2221,12 @@
         }
 
         /* Mobile optimizations for unified view */
+        @media (max-width: 380px) {
+            .scenario-compact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 500px) {
             .unified-container {
                 padding: 8px;
@@ -2250,10 +2298,10 @@
                 <button onclick="forceCloudSync()" style="padding: 2px 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Sync">🔄</button>
             </div>
             <div class="checkpoint-controls">
-                <button onclick="createCheckpoint()" title="Save checkpoint">💾</button>
-                <button onclick="showCheckpointManager()" title="Restore checkpoint">📂</button>
-                <button onclick="forceUploadToCloud()" title="Force upload to cloud">☁️⬆️</button>
-                <button onclick="forcePullFromCloud()" title="Force pull from cloud">☁️⬇️</button>
+                <button onclick="createCheckpoint()" title="Save checkpoint" aria-label="Save checkpoint">💾</button>
+                <button onclick="showCheckpointManager()" title="Restore checkpoint" aria-label="Restore checkpoint">📂</button>
+                <button onclick="forceUploadToCloud()" title="Force upload to cloud" aria-label="Force upload to cloud">☁️⬆️</button>
+                <button onclick="forcePullFromCloud()" title="Force pull from cloud" aria-label="Force pull from cloud">☁️⬇️</button>
             </div>
         </div>
 
@@ -2365,7 +2413,7 @@
                 <div id="caffeineEntries">
                     <!-- Populated by renderCaffeineEntries() -->
                 </div>
-                <div id="coffeeStatus" style="font-size:0.82em; color:#8b9cb6; margin-top:6px;"></div>
+                <div id="coffeeStatus" style="font-size:0.82em; color:#9ca3af; margin-top:6px;"></div>
             </div>
         </div>
 
@@ -2426,7 +2474,7 @@
                         <span id="lastNicotineDisplay" style="color:#b0b8c4;"></span>
                         <span id="nicotineTypeDisplay" style="font-weight:600;"></span>
                     </div>
-                    <div id="nicotineClearDisplay" style="font-size:0.8em; color:#8b9cb6; margin-top:4px;"></div>
+                    <div id="nicotineClearDisplay" style="font-size:0.8em; color:#9ca3af; margin-top:4px;"></div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
                         <input type="time" id="nicotineTimeInput" style="flex:1; padding:5px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); color:#e6edf3; font-size:0.85em;" onchange="state.nicotine.active = true; state.nicotine.lastHitTime = this.value; updateNicotineDisplay(); recalculate(); saveState();">
                         <button onclick="clearNicotine()" style="padding:5px 10px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:#f87171; cursor:pointer; font-size:0.82em;">Clear</button>
@@ -2607,7 +2655,7 @@
                             <div id="tooltipDate" style="font-weight:600; margin-bottom:4px;"></div>
                             <div id="tooltipHours" style="font-size:1.2em; margin-bottom:2px;"></div>
                             <div id="tooltipStatus" style="font-size:0.9em; margin-bottom:2px;"></div>
-                            <div id="tooltipVsAvg" style="font-size:0.85em; color:#8b9cb6;"></div>
+                            <div id="tooltipVsAvg" style="font-size:0.85em; color:#9ca3af;"></div>
                         </div>
                     </div>
 
@@ -2625,7 +2673,7 @@
                 <!-- Accuracy Tab -->
                 <div id="siTabAccuracy" class="si-tab-content" style="display:none">
                     <div id="accuracyGradeBanner" style="text-align:center; padding:12px; margin-bottom:12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
-                        <div style="font-size:0.75em; color:#8b9cb6; text-transform:uppercase; letter-spacing:1px;">Overall Accuracy</div>
+                        <div style="font-size:0.75em; color:#9ca3af; text-transform:uppercase; letter-spacing:1px;">Overall Accuracy</div>
                         <div id="accuracyGradeValue" style="font-size:2em; font-weight:700; color:#10b981;">--</div>
                         <div id="accuracyGradeLabel" style="font-size:0.82em; color:#b0b8c4;">Need 3+ days with feedback</div>
                     </div>
@@ -2648,13 +2696,13 @@
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#9ca3af; margin-bottom:4px;">
                             <span>Within 30 min</span><span id="accBar30Label">0%</span>
                         </div>
                         <div class="accuracy-progress-bar">
                             <div class="accuracy-progress-fill accuracy-fill-green" id="accBar30Fill" style="width:0%;"></div>
                         </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#8b9cb6; margin-bottom:4px; margin-top:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#9ca3af; margin-bottom:4px; margin-top:8px;">
                             <span>Within 1 hour</span><span id="accBar60Label">0%</span>
                         </div>
                         <div class="accuracy-progress-bar">
@@ -2690,11 +2738,11 @@
                         </div>
                         <div id="sleepCalendarDays" class="sleep-cal-grid"></div>
                     </div>
-                    <div id="sleepCalendarLegend" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:0.72em;color:#8b9cb6;"></div>
+                    <div id="sleepCalendarLegend" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:0.72em;color:#9ca3af;"></div>
                     <div id="sleepCalendarStats" style="margin-top:12px;"></div>
                     <div style="margin-top:16px;">
                         <h4 style="color:#c9d1d9; margin-bottom:8px; font-size:0.9em;">Prediction Log</h4>
-                        <span id="historyAccuracySummary" style="font-size:0.75em; color:#8b9cb6;"></span>
+                        <span id="historyAccuracySummary" style="font-size:0.75em; color:#9ca3af;"></span>
                         <div id="historyList" style="margin-top:8px;"></div>
                     </div>
                 </div>
@@ -2777,8 +2825,8 @@
 
         <!-- Action Buttons -->
         <div class="unified-actions" style="margin-top:16px;">
-            <button class="action-btn action-btn-secondary" onclick="clearToday()">🗑️ Clear Today</button>
-            <button class="action-btn action-btn-primary" onclick="saveDay()">💾 Save & Log</button>
+            <button class="action-btn action-btn-secondary" onclick="clearToday()">Reset Inputs</button>
+            <button class="action-btn action-btn-primary" onclick="saveDay()">Save Prediction</button>
         </div>
         <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
             <button class="action-btn action-btn-small" onclick="BackupManager.exportData()">📤 Export</button>

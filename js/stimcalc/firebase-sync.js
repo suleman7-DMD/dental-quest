@@ -120,7 +120,8 @@ function mergeRemoteState(remoteData) {
         nicotine: { ...state.nicotine, ...(remote.nicotine || {}) },
         _version: (remote._version || 0) + 1,
         _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
-        _sleepDailyLogsMigratedV2: remote._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false
+        _sleepDailyLogsMigratedV2: remote._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false,
+        _sleepDailyLogsMigratedV3: remote._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false
     };
 
     // CRITICAL: Always preserve _dataLoaded
@@ -1089,9 +1090,14 @@ function applyRemoteState(firebaseState) {
         modifiers: firebaseState.modifiers || {},
         settings: firebaseState.settings || {},
         sleepHistory: firebaseState.sleepHistory || {},
+        sleepDailyLogs: firebaseState.sleepDailyLogs || {},
         workoutPlan: firebaseState.workoutPlan || {},
         nicotine: firebaseState.nicotine || {},
-        _version: (firebaseState._version || state._version || 0) + 1
+        _version: (firebaseState._version || state._version || 0) + 1,
+        _sleepDailyLogsMigrated: firebaseState._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
+        _sleepDailyLogsMigratedV2: firebaseState._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false,
+        _sleepDailyLogsMigratedV3: firebaseState._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false,
+        _dataLoaded: true
     });
 
     // Ensure objects are valid (belt + suspenders)
@@ -1163,6 +1169,7 @@ document.addEventListener('visibilitychange', function() {
 
                         renderMedEntries();
                         renderCaffeineEntries();
+                        renderSleepIntelligence();
                         recalculate();
                         if (focusMode) renderFocusMode();
                     }

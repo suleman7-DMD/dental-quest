@@ -69,6 +69,7 @@ function getDefaultState() {
         sleepDailyLogs: {},
         _sleepDailyLogsMigrated: false,
         _sleepDailyLogsMigratedV2: false,
+        _sleepDailyLogsMigratedV3: false,
         _dataLoaded: false
     };
 }

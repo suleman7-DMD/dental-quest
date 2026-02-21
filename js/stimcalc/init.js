@@ -295,7 +295,14 @@ function updateUI(vm) {
     var sleepQualityEl = document.getElementById('sleepQuality');
 
     if (sleepTimeDisplay) sleepTimeDisplay.textContent = minutesToTime(vm.displaySleepTime);
-    if (timeRemainingEl) timeRemainingEl.textContent = vm.remainingHours + 'h ' + vm.remainingMins + 'm';
+    if (timeRemainingEl) {
+        timeRemainingEl.textContent = vm.remainingHours + 'h ' + vm.remainingMins + 'm remaining';
+        if (vm.remainingHours < 2 && vm.remainingHours >= 0) {
+            timeRemainingEl.classList.add('urgent');
+        } else {
+            timeRemainingEl.classList.remove('urgent');
+        }
+    }
     if (sleepTimeDisplay) sleepTimeDisplay.className = 'hero-time ' + vm.colorClass;
     if (sleepQualityEl) {
         sleepQualityEl.className = 'hero-quality ' + vm.colorClass;
@@ -847,6 +854,7 @@ function init() {
     setTimeout(function() {
         migrateHistoryEntries();
         migrateSleepDailyLogs();
+        migrateSleepDailyLogsV3();
         cleanupPhantomSleepLogs();
         renderSleepIntelligence();
     }, 2500);
@@ -925,7 +933,7 @@ function updateAccordionSummaries() {
             medsSummary.style.color = '#7d8590';
         } else {
             var totalDose = getValues(state.medications).reduce(function(sum, m) { return sum + m.dose; }, 0);
-            medsSummary.textContent = totalDose + 'mg total';
+            medsSummary.textContent = medCount + (medCount === 1 ? ' dose' : ' doses') + ' \u2022 ' + totalDose + 'mg';
             medsSummary.style.color = '#c084fc';
         }
     }
@@ -939,7 +947,7 @@ function updateAccordionSummaries() {
             caffSummary.style.color = '#7d8590';
         } else {
             var totalCaff = getValues(state.caffeine).reduce(function(sum, c) { return sum + c.amount; }, 0);
-            caffSummary.textContent = totalCaff + 'mg total';
+            caffSummary.textContent = totalCaff + 'mg' + (caffCount > 1 ? ' \u2022 ' + caffCount + ' drinks' : '');
             caffSummary.style.color = '#f59e0b';
         }
     }
@@ -1000,6 +1008,28 @@ function updateAccordionSummaries() {
     if (typeof updateSleepIntelSummary === 'function') {
         updateSleepIntelSummary();
     }
+
+    // Update has-content indicators on accordion sections
+    var sections = {
+        meds: getCount(state.medications) > 0,
+        caffeine: getCount(state.caffeine) > 0,
+        modifiers: (state.modifiers.vitaminC && state.modifiers.vitaminC.active) ||
+                   (state.modifiers.heavyLift && state.modifiers.heavyLift.active) ||
+                   (state.modifiers.sauna && state.modifiers.sauna.active) ||
+                   state.allNighterMode,
+        nicotine: state.nicotine && state.nicotine.active,
+        workout: state.workoutPlan && state.workoutPlan.applied
+    };
+    Object.keys(sections).forEach(function(key) {
+        var el = document.querySelector('.accordion-section[data-section="' + key + '"]');
+        if (el) {
+            if (sections[key]) {
+                el.classList.add('has-content');
+            } else {
+                el.classList.remove('has-content');
+            }
+        }
+    });
 }
 
 function updateHeroProgressBar() {
