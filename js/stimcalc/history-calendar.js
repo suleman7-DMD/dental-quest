@@ -2021,67 +2021,133 @@ function buildInsSection(id, icon, title, bodyHtml, startOpen) {
 // Master data collector — merges sleepDailyLogs + history + sleepHistory
 function gatherAllDayData() {
     var dayMap = {};
-    // Source 1: sleepDailyLogs (richest)
-    var logs = state.sleepDailyLogs || {};
-    Object.keys(logs).forEach(function(date) {
-        var log = logs[date];
-        if (!log || !date) return;
-        dayMap[date] = {
-            date: date,
-            hoursSlept: log.hoursSlept ?? null,
-            wakeTime: log.wakeTime ?? null,
-            sleepOnsetMinutes: log.sleepOnsetMinutes ?? null,
-            totalAmpDose: log.totalAmpDose ?? 0,
-            totalCaffDose: log.totalCaffDose ?? 0,
-            medications: log.medications || [],
-            caffeine: log.caffeine || [],
-            hadWorkout: !!log.hadWorkout,
-            hadSauna: !!log.hadSauna,
-            hadVitC: !!log.hadVitC,
-            allNighterMode: !!log.allNighterMode,
-            predictedSleep: log.predictedSleep ?? null,
-            actualSleep: log.actualSleep ?? null,
-            deltaMinutes: log.deltaMinutes ?? null,
-            absError: log.absError ?? null,
-            effectiveThreshold: log.effectiveThreshold ?? null,
-            sleepDebtBonus: log.sleepDebtBonus ?? null,
-            baseThreshold: log.baseThreshold ?? null,
-            status: log.status ?? null,
-            source: 'dailyLog'
-        };
-    });
-    // Source 2: history (predictions)
+
+    // Build history lookup by date (most recently updated entry per date)
+    var historyByDate = {};
     getValues(state.history).forEach(function(h) {
-        if (!h.date) return;
-        var existing = dayMap[h.date] || {};
-        if (!dayMap[h.date]) {
-            dayMap[h.date] = { date: h.date, source: 'history' };
-        }
-        var d = dayMap[h.date];
-        if (h.predictedSleep != null) d.predictedSleep = h.predictedSleep;
-        if (h.actualSleep != null) d.actualSleep = h.actualSleep;
-        if (h.inputs) {
-            if (!d.totalAmpDose && h.inputs.totalAmpDose) d.totalAmpDose = h.inputs.totalAmpDose;
-            if (!d.totalCaffDose && h.inputs.totalCaffDose) d.totalCaffDose = h.inputs.totalCaffDose;
-            if (d.hoursSlept == null && h.inputs.hoursSleptLastNight != null) d.hoursSlept = h.inputs.hoursSleptLastNight;
-            if (!d.hadWorkout && h.inputs.hasWorkout) d.hadWorkout = true;
-            if (!d.hadSauna && h.inputs.hasSauna) d.hadSauna = true;
-            if (!d.hadVitC && h.inputs.hasVitC) d.hadVitC = true;
-            if (h.inputs.allNighterMode) d.allNighterMode = true;
-            if (h.inputs.sleepDebtBonus != null) d.sleepDebtBonus = h.inputs.sleepDebtBonus;
-            if (h.inputs.effectiveThreshold != null) d.effectiveThreshold = h.inputs.effectiveThreshold;
+        if (!h.date || h.date.length !== 10) return;
+        if (!historyByDate[h.date] || (h.lastUpdated || '') > (historyByDate[h.date].lastUpdated || '')) {
+            historyByDate[h.date] = h;
         }
     });
-    // Source 3: sleepHistory (basic)
-    var sh = state.sleepHistory || {};
-    Object.keys(sh).forEach(function(date) {
-        if (!dayMap[date]) {
-            dayMap[date] = { date: date, source: 'sleepHistory' };
+
+    // Collect all unique dates from all 3 sources
+    var allDates = {};
+    if (state.sleepDailyLogs) {
+        Object.keys(state.sleepDailyLogs).forEach(function(k) { if (k && k.length === 10) allDates[k] = true; });
+    }
+    Object.keys(historyByDate).forEach(function(k) { allDates[k] = true; });
+    if (state.sleepHistory) {
+        Object.keys(state.sleepHistory).forEach(function(k) { if (k && k.length === 10) allDates[k] = true; });
+    }
+
+    // For each date, build unified day object using getSleepForDate() as
+    // the single source of truth for sleep data (consistent with Calendar tab)
+    Object.keys(allDates).forEach(function(date) {
+        var sleepData = getSleepForDate(date);
+        var hoursSlept = sleepData ? (sleepData.hoursSlept ?? null) : null;
+        var wakeTime = sleepData ? (sleepData.wakeTime ?? null) : null;
+
+        var dailyLog = (state.sleepDailyLogs && state.sleepDailyLogs[date]) ? state.sleepDailyLogs[date] : null;
+        var histEntry = historyByDate[date] || null;
+
+        var day = {
+            date: date,
+            hoursSlept: hoursSlept,
+            wakeTime: wakeTime,
+            sleepOnsetMinutes: null,
+            totalAmpDose: null,
+            totalCaffDose: null,
+            medications: [],
+            caffeine: [],
+            hadWorkout: false,
+            hadSauna: false,
+            hadVitC: false,
+            allNighterMode: false,
+            predictedSleep: null,
+            actualSleep: null,
+            deltaMinutes: null,
+            absError: null,
+            effectiveThreshold: null,
+            sleepDebtBonus: null,
+            baseThreshold: null,
+            status: null,
+            source: 'merged'
+        };
+
+        // Fill from dailyLog first (richest source — end-of-day snapshot)
+        if (dailyLog) {
+            day.sleepOnsetMinutes = dailyLog.sleepOnsetMinutes ?? null;
+            day.totalAmpDose = dailyLog.totalAmpDose ?? 0;
+            day.totalCaffDose = dailyLog.totalCaffDose ?? 0;
+            day.medications = dailyLog.medications || [];
+            day.caffeine = dailyLog.caffeine || [];
+            day.hadWorkout = !!dailyLog.hadWorkout;
+            day.hadSauna = !!dailyLog.hadSauna;
+            day.hadVitC = !!dailyLog.hadVitC;
+            day.predictedSleep = dailyLog.predictedSleep ?? null;
+            day.actualSleep = dailyLog.actualSleep ?? null;
+            day.deltaMinutes = dailyLog.deltaMinutes ?? null;
+            day.absError = dailyLog.absError ?? null;
+            day.effectiveThreshold = dailyLog.effectiveThreshold ?? null;
+            day.sleepDebtBonus = dailyLog.sleepDebtBonus ?? null;
+            day.baseThreshold = dailyLog.baseThreshold ?? null;
+            day.status = dailyLog.status ?? null;
+            day.source = 'dailyLog';
         }
-        var d = dayMap[date];
-        if (d.hoursSlept == null && sh[date].hoursSlept != null) d.hoursSlept = sh[date].hoursSlept;
-        if (d.wakeTime == null && sh[date].wakeTime != null) d.wakeTime = sh[date].wakeTime;
+
+        // Fill gaps from history entry (predictions, dose data when dailyLog missing)
+        if (histEntry) {
+            if (day.predictedSleep == null && histEntry.predictedSleep != null) {
+                day.predictedSleep = histEntry.predictedSleep;
+            }
+            if (day.actualSleep == null && histEntry.actualSleep != null) {
+                day.actualSleep = histEntry.actualSleep;
+            }
+            if (day.deltaMinutes == null && histEntry.deltaMinutes != null) {
+                day.deltaMinutes = histEntry.deltaMinutes;
+                day.absError = histEntry.absError ?? null;
+            }
+            if (histEntry.inputs) {
+                // Only use history inputs for fields dailyLog didn't provide
+                if (day.totalAmpDose == null && histEntry.inputs.totalAmpDose != null) {
+                    day.totalAmpDose = histEntry.inputs.totalAmpDose;
+                }
+                if (day.totalCaffDose == null && histEntry.inputs.totalCaffDose != null) {
+                    day.totalCaffDose = histEntry.inputs.totalCaffDose;
+                }
+                if (!day.hadWorkout && histEntry.inputs.hasWorkout) day.hadWorkout = true;
+                if (!day.hadSauna && histEntry.inputs.hasSauna) day.hadSauna = true;
+                if (!day.hadVitC && histEntry.inputs.hasVitC) day.hadVitC = true;
+                if (day.effectiveThreshold == null && histEntry.inputs.effectiveThreshold != null) {
+                    day.effectiveThreshold = histEntry.inputs.effectiveThreshold;
+                }
+                if (day.sleepDebtBonus == null && histEntry.inputs.sleepDebtBonus != null) {
+                    day.sleepDebtBonus = histEntry.inputs.sleepDebtBonus;
+                }
+            }
+            // Use history medications/caffeine arrays only if dailyLog has none
+            if (day.medications.length === 0 && histEntry.medications && histEntry.medications.length > 0) {
+                day.medications = histEntry.medications;
+            }
+            if (day.caffeine.length === 0 && histEntry.caffeine && histEntry.caffeine.length > 0) {
+                day.caffeine = histEntry.caffeine;
+            }
+            if (day.source === 'merged') day.source = 'history';
+        }
+
+        // Determine allNighterMode from ACTUAL sleep data, not the mode toggle
+        // hoursSlept === 0 = all-nighter (consistent with computeSleepStatus)
+        day.allNighterMode = (hoursSlept !== null && hoursSlept <= 0);
+
+        // Only include dates with at least some meaningful data
+        var hasAnyData = hoursSlept != null || wakeTime != null ||
+                         day.totalAmpDose != null || day.predictedSleep != null;
+        if (hasAnyData) {
+            dayMap[date] = day;
+        }
     });
+
     var result = Object.keys(dayMap).map(function(k) { return dayMap[k]; });
     result.sort(function(a, b) { return b.date.localeCompare(a.date); });
     return result;
@@ -2153,11 +2219,12 @@ function renderInsKeyMetrics(days) {
     var el = document.getElementById('insKeyMetrics');
     if (!el) return;
     var withSleep = days.filter(function(d) { return d.hoursSlept != null && d.hoursSlept > 0; });
+    var withAnySleep = days.filter(function(d) { return d.hoursSlept != null; });
     var withOnset = days.filter(function(d) { return d.actualSleep != null; });
     var withWake = days.filter(function(d) { return d.wakeTime != null; });
-    var withAmp = days.filter(function(d) { return d.totalAmpDose > 0; });
-    var withCaff = days.filter(function(d) { return d.totalCaffDose > 0; });
-    var allNighters = days.filter(function(d) { return d.allNighterMode; });
+    var withAmp = days.filter(function(d) { return d.totalAmpDose != null && d.totalAmpDose > 0; });
+    var withCaff = days.filter(function(d) { return d.totalCaffDose != null && d.totalCaffDose > 0; });
+    var allNighters = withAnySleep.filter(function(d) { return d.hoursSlept <= 0; });
 
     var avgSleep = withSleep.length > 0 ? (withSleep.reduce(function(s, d) { return s + d.hoursSlept; }, 0) / withSleep.length).toFixed(1) : '--';
     var avgOnset = '--';
@@ -2172,7 +2239,7 @@ function renderInsKeyMetrics(days) {
     }
     var avgAmp = withAmp.length > 0 ? Math.round(withAmp.reduce(function(s, d) { return s + d.totalAmpDose; }, 0) / withAmp.length) : 0;
     var avgCaff = withCaff.length > 0 ? Math.round(withCaff.reduce(function(s, d) { return s + d.totalCaffDose; }, 0) / withCaff.length) : 0;
-    var allNighterPct = days.length > 0 ? Math.round(allNighters.length / days.length * 100) : 0;
+    var allNighterPct = withAnySleep.length > 0 ? Math.round(allNighters.length / withAnySleep.length * 100) : 0;
 
     var earliest = days[days.length - 1] ? days[days.length - 1].date : '';
     var latest = days[0] ? days[0].date : '';
@@ -2184,8 +2251,8 @@ function renderInsKeyMetrics(days) {
         ['Avg Wake Time', avgWake],
         ['Avg Adderall/Day', avgAmp + 'mg'],
         ['Avg Caffeine/Day', avgCaff + 'mg'],
-        ['All-Nighter Ratio', allNighters.length + '/' + days.length + ' (' + allNighterPct + '%)'],
-        ['Total Days Tracked', days.length + (rangeStr ? ' &middot; ' + rangeStr : '')]
+        ['All-Nighter Ratio', allNighters.length + '/' + withAnySleep.length + ' (' + allNighterPct + '%)'],
+        ['Total Days Tracked', withAnySleep.length + (rangeStr ? ' &middot; ' + rangeStr : '')]
     ];
     var body = rows.map(function(r) {
         return '<div class="ins-metric-row"><span class="ins-metric-label">' + r[0] + '</span><span class="ins-metric-value">' + r[1] + '</span></div>';
