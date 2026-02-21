@@ -119,7 +119,8 @@ function mergeRemoteState(remoteData) {
         workoutPlan: { ...state.workoutPlan, ...(remote.workoutPlan || {}) },
         nicotine: { ...state.nicotine, ...(remote.nicotine || {}) },
         _version: (remote._version || 0) + 1,
-        _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false
+        _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
+        _sleepDailyLogsMigratedV2: remote._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false
     };
 
     // CRITICAL: Always preserve _dataLoaded
