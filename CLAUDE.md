@@ -34,7 +34,7 @@ const date = new Date(year, month - 1, day);
 | `d3-roadmap.html` | ~8,394 | Academic tracker: CSS + HTML only (zero inline JS) |
 | `js/d3-roadmap/*.js` (10 modules) | ~9,135 | D3 roadmap JS: state, firebase-sync, deadlines, grades, exam-content, clinical, import-system, daily-planner, monthly-planner, init |
 | `stimulant-elimination-calculator.html` | ~2,833 | Sleep prediction app — CSS + HTML only (zero inline JS) |
-| `js/stimcalc/*.js` (10 modules) | ~9,022 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
+| `js/stimcalc/*.js` (10 modules) | ~10,122 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
 | `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
@@ -449,7 +449,7 @@ js/stimcalc/
 ├── firebase-sync.js    (1,404 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
 ├── med-caffeine.js       (295 lines)  - Medication + caffeine CRUD
 ├── ui-sections.js      (1,911 lines)  - Nicotine, modifiers, workout, what-if, forecast
-├── history-calendar.js (2,822 lines)  - History, calibration, calendar, analytics, accuracy
+├── history-calendar.js (2,888 lines)  - History, calibration, calendar, analytics, accuracy
 ├── graph.js              (733 lines)  - Canvas graphs, tooltips, spline interpolation
 └── init.js             (1,089 lines)  - recalculate() (3 phases + try/catch), init, accordion
 ```

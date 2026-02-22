@@ -64,7 +64,7 @@ The app is split into 10 JS modules. Use the MODULE MAP below to identify which 
 | Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (1,404 lines) |
 | Add/remove medications or caffeine | `js/stimcalc/med-caffeine.js` (295 lines) |
 | Nicotine, modifiers, workout, what-if, forecast | `js/stimcalc/ui-sections.js` (1,911 lines) |
-| History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,822 lines) |
+| History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,888 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
 | recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,090 lines) |
 | CSS or HTML markup | `stimulant-elimination-calculator.html` (2,833 lines, zero JS) |
@@ -322,7 +322,7 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 
 ### history-calendar.js — History, Calendar, Analytics Dashboard, Accuracy Transparency
 `saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`,
-**Analytics Engine:** `gatherAllDayData()` (merges 3 data sources), `toggleInsSection()`, `buildInsSection()`
+**Analytics Engine:** `gatherAllDayData()` (unified with Calendar tab via `getSleepForDate()`, builds history lookup by date, uses dailyLogs as primary source, derives allNighterMode from actual sleep hours), `toggleInsSection()`, `buildInsSection()`
 **Insights Tab (14 sections):** `renderInsightsTab()`, `renderInsKeyMetrics()`, `renderInsDoseResponse()`, `renderInsCaffeineImpact()`, `renderInsSleepPatterns()`, `renderInsModifierImpact()`, `renderInsDosingWindows()`, `renderInsCaffeineTiming()`, `renderInsSleepEfficiency()`, `renderInsPredictionReliability()`, `renderInsCircadianConsistency()`, `renderInsStimulantTrends()`, `renderInsRiskIndicators()`, `renderInsPersonalRecords()`, `renderInsResearchBenchmarks()`
 **Accuracy Tab (7 sections):** `renderAccuracyTab()`, `renderAccOverallGrade()`, `renderAccMethodology()`, `renderAccErrorDistribution()`, `renderAccDirectionalBias()`, `renderAccContextBreakdowns()`, `renderAccDataInventory()`, `renderAccInputVerification()`
 **Legacy wrappers:** `renderPredictionInsights()` → `renderInsightsTab()`, `renderAccuracyDashboard()` → `renderAccuracyTab()`, `renderCalibrationContexts()` (no-op)
