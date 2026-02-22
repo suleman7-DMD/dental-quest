@@ -498,7 +498,7 @@ function removeFromCrashOut(taskId) {
 
     renderFocusMode();
     saveData();
-    showToast('Removed from schedule', '✓');
+    showToast('Removed from schedule', 'ok');
 }
 
 function editTriageTaskText(taskId) {
@@ -540,7 +540,7 @@ function triageQuickAddTask() {
     renderFocusMode();
     renderTasks();
     saveData();
-    showToast('Task added to TODAY', '✓');
+    showToast('Task added to TODAY', 'ok');
 }
 
 // Triage Drag & Drop
@@ -766,5 +766,5 @@ function unflagFromToday(taskId) {
     renderFocusMode();
     renderTasks();
     saveData();
-    showToast('Removed from today', '✓');
+    showToast('Removed from today', 'ok');
 }
