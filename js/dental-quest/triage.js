@@ -109,7 +109,7 @@ function renderScheduledSection() {
                 <span class="scheduled-time">${task.crashOutTime || 'TBD'}</span>
                 <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                 <span class="task-text" style="flex: 1;">${escapeHtml(task.text)}</span>
-                <span style="color: #8b949e; font-size: 12px;">${task.crashOutDuration || 30}m</span>
+                <span style="color: var(--fg-tertiary); font-size: 12px;">${task.crashOutDuration || 30}m</span>
                 <button class="btn-start" onclick="startFocusSession('${task.id}')">${icon('play')}</button>
                 <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">${icon('x')}</button>
             </div>
@@ -141,7 +141,7 @@ function renderRolledOverSection() {
                     <span style="color: #f59e0b; font-size: 12px;">${icon('alert-triangle')}</span>
                     <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                     <span class="task-text">${escapeHtml(task.text)}</span>
-                    <span style="font-size: 11px; color: #8b949e;">from ${task.rolledOver.fromDate}</span>
+                    <span style="font-size: 11px; color: var(--fg-tertiary);">from ${task.rolledOver.fromDate}</span>
                     <div class="task-card-actions">
                         <button class="btn-start" onclick="startFocusSession('${task.id}')">${icon('play')}</button>
                         <button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>

@@ -33,8 +33,8 @@ function openFinancials() {
             dashboard.innerHTML = `
                 <div style="padding: 40px; text-align: center; color: #f87171;">
                     <h2>Error Loading Financial Dashboard</h2>
-                    <p style="margin: 20px 0; color: #b0b8c4;">${error.message}</p>
-                    <p style="color: #b0b8c4;">Check the console for details.</p>
+                    <p style="margin: 20px 0; color: var(--fg-secondary);">${error.message}</p>
+                    <p style="color: var(--fg-secondary);">Check the console for details.</p>
                     <button onclick="closeFinancials()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
                         Close
                     </button>
@@ -56,7 +56,7 @@ function calculateFinancialStatus() {
             currentLiquid: 0, oneTimeExpenses: 0, oneTimeIncome: 0,
             availableCash: 0, monthlyDetails: [], totalUnpaidMonthly: 0,
             daysRemaining: 0, projectedBalance: 0, targetCushion: 2285,
-            healthStatus: 'unknown', healthColor: '#8b949e', healthMessage: 'DATA NOT LOADED'
+            healthStatus: 'unknown', healthColor: 'var(--fg-tertiary)', healthMessage: 'DATA NOT LOADED'
         };
     }
 
@@ -148,7 +148,7 @@ function renderFinancialCockpit() {
             renderCreditCards();
     } catch (error) {
         console.error('Error in renderFinancialCockpit:', error);
-        dashboard.innerHTML = '<div style="padding: 40px; color: #f87171; background: #161b22; border-radius: 12px; margin: 20px;"><h3>Rendering Error</h3><p style="margin-top: 15px; color: #b0b8c4;">' + escapeHtml(error.message) + '</p></div>';
+        dashboard.innerHTML = '<div style="padding: 40px; color: #f87171; background: var(--surface-primary); border-radius: 12px; margin: 20px;"><h3>Rendering Error</h3><p style="margin-top: 15px; color: var(--fg-secondary);">' + escapeHtml(error.message) + '</p></div>';
     }
 }
 
@@ -265,7 +265,7 @@ function renderOneTimeBills() {
                 '<button onclick="addOneTimeBill()" class="fin-add-btn">+ Add</button>' +
             '</div>' +
             '<div style="text-align: right;">' +
-                '<div style="font-size: 0.85em; color: #b0b8c4;">Unpaid</div>' +
+                '<div style="font-size: 0.85em; color: var(--fg-secondary);">Unpaid</div>' +
                 '<div style="font-size: 1.3em; font-weight: 700; color: #f87171;">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
                 (totalUnpaidIncome > 0 ? '<div style="font-size: 1em; color: #4ade80;">+$' + totalUnpaidIncome.toLocaleString() + '</div>' : '') +
             '</div>' +
@@ -321,8 +321,8 @@ function addOneTimeBill() {
         '<h3>Add One-Time Bill</h3>' +
         '<div class="edit-field"><label>Description</label><input type="text" id="new_otb_desc" placeholder="e.g., New textbook"></div>' +
         '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_otb_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Type</label><select id="new_otb_type" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="expense">Expense</option><option value="income">Income</option></select></div>' +
-        '<div class="edit-field"><label>Due Date</label><input type="date" id="new_otb_date" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"></div>' +
+        '<div class="edit-field"><label>Type</label><select id="new_otb_type" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="expense">Expense</option><option value="income">Income</option></select></div>' +
+        '<div class="edit-field"><label>Due Date</label><input type="date" id="new_otb_date" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"></div>' +
         '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="new_otb_notes" placeholder="Any notes..."></div>' +
         '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewOneTimeBill()">Add Bill</button></div></div>';
     document.body.appendChild(overlay);
@@ -354,7 +354,7 @@ function editOneTimeBill(billId) {
         '<h3>Edit Bill</h3>' +
         '<div class="edit-field"><label>Description</label><input type="text" id="edit_otb_desc" value="' + escapeHtml(bill.description) + '"></div>' +
         '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_otb_amount" value="' + bill.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Due Date</label><input type="date" id="edit_otb_date" value="' + (bill.dueDate || '') + '" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"></div>' +
+        '<div class="edit-field"><label>Due Date</label><input type="date" id="edit_otb_date" value="' + (bill.dueDate || '') + '" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"></div>' +
         '<div class="edit-field"><label>Notes</label><textarea id="edit_otb_notes" rows="2">' + escapeHtml(bill.notes || '') + '</textarea></div>' +
         '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveOneTimeBillEdit(\'' + billId + '\')">Save</button></div></div>';
     document.body.appendChild(overlay);
@@ -395,7 +395,7 @@ function renderMonthlyExpenses() {
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
             '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0;">Monthly Expenses</h3></div>' +
             '<div style="text-align: right;">' +
-                '<div style="font-size: 0.85em; color: #b0b8c4;">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
+                '<div style="font-size: 0.85em; color: var(--fg-secondary);">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
                 '<div style="font-size: 1.3em; font-weight: 700; color: #fbbf24;">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
             '</div></div>' +
         '<div style="margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 0.9em; color: #93c5fd;">Tap a month header to expand/collapse. Check individual expenses or use "Pay All" for the entire month.</div>';
@@ -416,15 +416,15 @@ function renderMonthlyExpenses() {
         var shouldExpand = monthKey === currentMonthKey || collapsedMonths[monthKey] === false;
         var collapsed = !shouldExpand && collapsedMonths[monthKey] !== false;
 
-        html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? '#16a34a' : '#30363d') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
-            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'rgba(22, 163, 74, 0.15)' : '#21262d') + '; cursor: pointer; user-select: none;">' +
+        html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? '#16a34a' : 'var(--border-default)') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
+            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'rgba(22, 163, 74, 0.15)' : 'var(--canvas-subtle)') + '; cursor: pointer; user-select: none;">' +
                 '<div style="display: flex; align-items: center; gap: 12px;">' +
-                    '<span id="arrow_' + monthKey + '" style="color: #b0b8c4; font-size: 0.9em; font-family: monospace; min-width: 14px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
-                    '<div><div style="font-weight: 700; color: ' + (allPaid ? '#4ade80' : '#e6edf3') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
-                    '<div style="font-size: 0.8em; color: #8b949e;">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
+                    '<span id="arrow_' + monthKey + '" style="color: var(--fg-secondary); font-size: 0.9em; font-family: monospace; min-width: 14px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
+                    '<div><div style="font-weight: 700; color: ' + (allPaid ? '#4ade80' : 'var(--fg-primary)') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
+                    '<div style="font-size: 0.8em; color: var(--fg-tertiary);">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
                 '<div style="display: flex; align-items: center; gap: 12px;">' +
                     '<div style="text-align: right;"><div style="font-size: 1.1em; font-weight: 700; color: ' + (allPaid ? '#4ade80' : '#f87171') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
-                    (!allPaid ? '<div style="font-size: 0.75em; color: #8b949e;">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
+                    (!allPaid ? '<div style="font-size: 0.75em; color: var(--fg-tertiary);">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
                     (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
                 '</div></div>';
 
@@ -434,8 +434,8 @@ function renderMonthlyExpenses() {
             html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; background: ' + (exp.paid ? 'rgba(22, 163, 74, 0.1)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
                 '<div style="display: flex; align-items: center; gap: 10px;">' +
                     '<div class="action-checkbox ' + (exp.paid ? 'checked' : '') + '" style="width: 22px; height: 22px; min-width: 22px;" onclick="event.stopPropagation(); toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')"></div>' +
-                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? '#4ade80' : '#e6edf3') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
-                    '<div style="font-size: 0.75em; color: #8b949e;">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
+                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? '#4ade80' : 'var(--fg-primary)') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
+                    '<div style="font-size: 0.75em; color: var(--fg-tertiary);">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
                 '<div style="display: flex; align-items: center; gap: 8px;">' +
                     '<div style="font-weight: 700; color: ' + (exp.paid ? '#4ade80' : '#f87171') + '; font-size: 1em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
                     (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button>' : '') +
@@ -491,7 +491,7 @@ function editMonthExpense(monthKey, expenseKey) {
         '<h3>Edit ' + escapeHtml(exp.name) + ' - ' + escapeHtml(month.label) + '</h3>' +
         '<div class="edit-field"><label>Name</label><input type="text" id="edit_mexp_name" value="' + escapeHtml(exp.name) + '"></div>' +
         '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_mexp_amount" value="' + exp.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="edit_mexp_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">' +
+        '<div class="edit-field"><label>Category</label><select id="edit_mexp_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;">' +
             '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
             '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
             '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
@@ -537,7 +537,7 @@ function addExpenseToMonth(monthKey) {
         '<h3>Add Expense to ' + escapeHtml(month.label) + '</h3>' +
         '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_mexp_name" placeholder="e.g., Insurance"></div>' +
         '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_mexp_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="new_mexp_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+        '<div class="edit-field"><label>Category</label><select id="new_mexp_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
         '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewMonthExpense(\'' + monthKey + '\')">Add</button></div></div>';
     document.body.appendChild(overlay);
 }
@@ -565,7 +565,7 @@ function renderExpenseTemplate() {
     var html = '<div class="fin-section" style="border-color: #6366f1;">' +
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
             '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0; color: #a78bfa;">Expense Template</h3></div>' +
-            '<div style="text-align: right;"><div style="font-size: 0.85em; color: #b0b8c4;">Template Total</div>' +
+            '<div style="text-align: right;"><div style="font-size: 0.85em; color: var(--fg-secondary);">Template Total</div>' +
             '<div style="font-size: 1.2em; font-weight: 700; color: #a78bfa;">$' + total.toLocaleString() + '/mo</div></div></div>' +
         '<div style="margin-bottom: 12px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 6px; font-size: 0.85em; color: #a5b4fc;">Edit this template to change what gets created for future months. Existing months are NOT affected.</div>' +
         '<div class="fin-expense-list">';
@@ -594,7 +594,7 @@ function editTemplateExpense(expKey) {
         '<h3>Edit Template: ' + escapeHtml(exp.name || expKey) + '</h3>' +
         '<div class="edit-field"><label>Name</label><input type="text" id="edit_tpl_name" value="' + escapeHtml(exp.name || expKey) + '"></div>' +
         '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="edit_tpl_amount" value="' + exp.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="edit_tpl_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;">' +
+        '<div class="edit-field"><label>Category</label><select id="edit_tpl_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;">' +
             '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
             '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
             '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
@@ -632,7 +632,7 @@ function addTemplateExpense() {
         '<h3>Add to Expense Template</h3>' +
         '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_tpl_name" placeholder="e.g., Insurance"></div>' +
         '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="new_tpl_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="new_tpl_category" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+        '<div class="edit-field"><label>Category</label><select id="new_tpl_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
         '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewTemplateExpense()">Add</button></div></div>';
     document.body.appendChild(overlay);
 }
@@ -789,9 +789,9 @@ function renderCreditCards() {
                     </button>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 0.9em; color: #b0b8c4;">Total Balance</div>
+                    <div style="font-size: 0.9em; color: var(--fg-secondary);">Total Balance</div>
                     <div style="font-size: 1.4em; font-weight: 700; color: #f87171;">$${totalBalance.toLocaleString()}</div>
-                    <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 4px;">Target minimums: $${totalMinimums}/mo</div>
+                    <div style="font-size: 0.85em; color: var(--fg-secondary); margin-top: 4px;">Target minimums: $${totalMinimums}/mo</div>
                 </div>
             </div>
 
@@ -825,7 +825,7 @@ function renderCreditCards() {
                     </div>
 
                     ${card.negotiationNotes ? `
-                        <div style="margin-top: 12px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 0.9em; color: #b0b8c4;">
+                        <div style="margin-top: 12px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 0.9em; color: var(--fg-secondary);">
                             ${card.negotiationNotes}
                         </div>
                     ` : ''}

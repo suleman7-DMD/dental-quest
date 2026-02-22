@@ -701,7 +701,7 @@ function switchToFocusMode() {
     document.getElementById('focusModeContainer').style.display = 'block';
     document.getElementById('fullViewContainer').style.display = 'none';
     document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.95)';
-    document.getElementById('focusModeBtn').style.color = '#667eea';
+    document.getElementById('focusModeBtn').style.color = 'var(--accent)';
     document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.1)';
     document.getElementById('fullViewBtn').style.color = 'white';
     renderFocusMode();
@@ -721,7 +721,7 @@ function switchToFullView() {
     document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.1)';
     document.getElementById('focusModeBtn').style.color = 'white';
     document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.95)';
-    document.getElementById('fullViewBtn').style.color = '#667eea';
+    document.getElementById('fullViewBtn').style.color = 'var(--accent)';
     // Re-render tasks so Full View shows current data
     if (typeof renderTasks === 'function') renderTasks();
 
@@ -774,10 +774,10 @@ function renderOneThingCard() {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px 20px;">
                 <div style="font-size: 4em; margin-bottom: 15px;">${icon('target', 48)}</div>
-                <div style="color: #b0b8c4; font-size: 1.1em; margin-bottom: 20px;">
+                <div style="color: var(--fg-secondary); font-size: 1.1em; margin-bottom: 20px;">
                     What's the ONE thing that would make today a success?
                 </div>
-                <button onclick="openOneThingPicker()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; padding: 14px 28px; color: white; font-weight: 700; font-size: 1.1em; cursor: pointer;">
+                <button onclick="openOneThingPicker()" style="background: var(--accent); border: none; border-radius: 12px; padding: 14px 28px; color: white; font-weight: 700; font-size: 1.1em; cursor: pointer;">
                     Choose Your ONE Thing
                 </button>
             </div>
@@ -799,35 +799,35 @@ function renderOneThingCard() {
             </div>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-            <div style="color: #e6edf3; font-size: 1.3em; font-weight: 600; margin-bottom: 8px;">${escapeHtml(oneThingTask.text)}</div>
-            <div style="display: flex; gap: 15px; font-size: 0.85em; color: #b0b8c4;">
+        <div style="background: rgba(0,0,0,0.03); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+            <div style="color: var(--fg-primary); font-size: 1.3em; font-weight: 600; margin-bottom: 8px;">${escapeHtml(oneThingTask.text)}</div>
+            <div style="display: flex; gap: 15px; font-size: 0.85em; color: var(--fg-secondary);">
                 <span style="padding: 2px 8px; border-radius: 6px; background: ${catInfo.color}20; color: ${catInfo.color};">${catInfo.emoji} ${catInfo.name}</span>
                 <span>${sizeIcon} ${oneThingTask.size || 'Medium'}</span>
             </div>
         </div>
 
         <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px;">
-            <div style="color: #b0b8c4; font-size: 0.9em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <div style="color: var(--fg-secondary); font-size: 0.9em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                 Break it down (micro-steps):
             </div>
             <div id="microStepsList">${renderMicroSteps()}</div>
             <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
                 <input type="text" id="newMicroStep" placeholder="Add a tiny next step..."
                        onkeypress="if(event.key==='Enter')addMicroStep()"
-                       style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #e6edf3; font-size: 0.95em;">
-                <button onclick="addMicroStep()" style="background: #667eea; border: none; border-radius: 8px; padding: 10px 16px; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
+                       style="flex: 1; background: var(--canvas-subtle); border: 1px solid var(--border-default); border-radius: 8px; padding: 10px 14px; color: var(--fg-primary); font-size: 0.95em;">
+                <button onclick="addMicroStep()" style="background: var(--accent); border: none; border-radius: 8px; padding: 10px 16px; color: white; font-weight: 600; cursor: pointer;">+ Add</button>
             </div>
         </div>
 
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; flex-wrap: wrap;">
-            <div id="oneThingTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: #e6edf3;">
+            <div id="oneThingTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: var(--fg-primary);">
                 ${formatFocusTimer(focusModeData.focusTimerSeconds)}
             </div>
             <button id="oneThingTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                 ${focusModeData.focusTimerRunning ? icon('pause') + ' Pause' : icon('play') + ' Start Focus'}
             </button>
-            <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: var(--accent); color: white;">
                 ${icon('check')} Complete
             </button>
         </div>
@@ -841,8 +841,8 @@ function renderMicroSteps() {
     }
 
     return steps.map(step => `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; ${step.completed ? 'opacity: 0.6;' : ''}">
-            <div onclick="toggleMicroStep('${step.id}')" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? '#10b981' : '#667eea'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? '#10b981' : 'transparent'}; color: white; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; ${step.completed ? 'opacity: 0.6;' : ''}">
+            <div onclick="toggleMicroStep('${step.id}')" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? '#10b981' : 'var(--accent)'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? '#10b981' : 'transparent'}; color: white; flex-shrink: 0;">
                 ${step.completed ? icon('check') : ''}
             </div>
             <div style="flex: 1; color: #c9d1d9; ${step.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">${escapeHtml(step.text)}</div>
@@ -947,7 +947,7 @@ function openOneThingPicker() {
                     Choose the task that would make today a success if completed:
                 </div>
                 ${sortedTasks.length === 0 ?
-                    '<div style="color: #b0b8c4; padding: 20px; text-align: center;">No tasks yet. Add some in Full View first!</div>' :
+                    '<div style="color: var(--fg-secondary); padding: 20px; text-align: center;">No tasks yet. Add some in Full View first!</div>' :
                     sortedTasks.map(task => renderPlanningTaskOption(task)).join('')
                 }
             </div>
@@ -979,7 +979,7 @@ function openAddTasksModal(size) {
                     Select tasks to add to today's ${size} tasks:
                 </div>
                 ${sizeTasks.length === 0 ?
-                    `<div style="color: #b0b8c4; padding: 20px; text-align: center;">No ${size} tasks available.</div>` :
+                    `<div style="color: var(--fg-secondary); padding: 20px; text-align: center;">No ${size} tasks available.</div>` :
                     sizeTasks.map(task => renderPlanningTaskOption(task)).join('')
                 }
             </div>
@@ -994,13 +994,13 @@ function renderPlanningTaskOption(task) {
     const isSelected = selectedPlanningTaskId === task.id;
 
     return `
-        <div onclick="selectPlanningTask('${task.id}', this)" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: ${isSelected ? 'rgba(102, 126, 234, 0.15)' : '#21262d'}; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid ${isSelected ? '#667eea' : 'transparent'};">
-            <div style="width: 20px; height: 20px; border: 2px solid ${isSelected ? '#667eea' : '#6e7681'}; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ${isSelected ? '#667eea' : 'transparent'};">
+        <div onclick="selectPlanningTask('${task.id}', this)" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: ${isSelected ? 'rgba(107, 124, 94, 0.15)' : 'var(--canvas-subtle)'}; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid ${isSelected ? 'var(--accent)' : 'transparent'};">
+            <div style="width: 20px; height: 20px; border: 2px solid ${isSelected ? 'var(--accent)' : 'var(--fg-muted)'}; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ${isSelected ? 'var(--accent)' : 'transparent'};">
                 ${isSelected ? '<div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>' : ''}
             </div>
             <div style="flex: 1;">
-                <div style="color: #e6edf3; font-weight: 500; margin-bottom: 4px;">${escapeHtml(task.text)}</div>
-                <div style="font-size: 0.85em; color: #b0b8c4; display: flex; gap: 12px;">
+                <div style="color: var(--fg-primary); font-weight: 500; margin-bottom: 4px;">${escapeHtml(task.text)}</div>
+                <div style="font-size: 0.85em; color: var(--fg-secondary); display: flex; gap: 12px;">
                     <span>${catInfo.emoji} ${catInfo.name}</span>
                     <span>${sizeLabel}</span>
                     ${task.highLeverage ? '<span style="color: #fbbf24;">' + icon('activity') + ' High Leverage</span>' : ''}
@@ -1013,17 +1013,17 @@ function renderPlanningTaskOption(task) {
 function selectPlanningTask(taskId, element) {
     selectedPlanningTaskId = taskId;
     document.querySelectorAll('#planningModalBody > div > div[onclick]').forEach(opt => {
-        opt.style.background = '#21262d';
+        opt.style.background = 'var(--canvas-subtle)';
         opt.style.borderColor = 'transparent';
-        opt.querySelector('div > div:first-child').style.borderColor = '#6e7681';
+        opt.querySelector('div > div:first-child').style.borderColor = 'var(--fg-muted)';
         opt.querySelector('div > div:first-child').style.background = 'transparent';
         opt.querySelector('div > div:first-child').innerHTML = '';
     });
     if (element) {
-        element.style.background = 'rgba(102, 126, 234, 0.15)';
-        element.style.borderColor = '#667eea';
-        element.querySelector('div:first-child').style.borderColor = '#667eea';
-        element.querySelector('div:first-child').style.background = '#667eea';
+        element.style.background = 'rgba(107, 124, 94, 0.15)';
+        element.style.borderColor = 'var(--accent)';
+        element.querySelector('div:first-child').style.borderColor = 'var(--accent)';
+        element.querySelector('div:first-child').style.background = 'var(--accent)';
         element.querySelector('div:first-child').innerHTML = '<div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>';
     }
 }
@@ -1198,7 +1198,7 @@ function renderTaskSizeSection(size, containerId) {
         container.innerHTML = `
             <div style="color: #9ca3af; font-size: 0.9em; padding: 15px; text-align: center; background: #f9fafb; border-radius: 8px;">
                 No ${size} tasks for today.
-                <button onclick="openAddTasksModal('${size}')" style="background: none; border: none; color: #667eea; cursor: pointer; text-decoration: underline;">Add some →</button>
+                <button onclick="openAddTasksModal('${size}')" style="background: none; border: none; color: var(--accent); cursor: pointer; text-decoration: underline;">Add some →</button>
             </div>
         `;
         return;
@@ -1512,8 +1512,8 @@ function selectTaskSize(size) {
 function updateSizeSelection() {
     document.querySelectorAll('.size-option').forEach(opt => {
         const isSelected = opt.dataset.size === editingTaskSize;
-        opt.style.borderColor = isSelected ? '#667eea' : '#30363d';
-        opt.style.background = isSelected ? 'rgba(102, 126, 234, 0.2)' : '#21262d';
+        opt.style.borderColor = isSelected ? 'var(--accent)' : 'var(--border-default)';
+        opt.style.background = isSelected ? 'rgba(107, 124, 94, 0.2)' : 'var(--canvas-subtle)';
     });
 }
 
@@ -1525,7 +1525,7 @@ function toggleLeverage() {
 function updateLeverageToggle() {
     const toggle = document.getElementById('leverageSwitch');
     if (toggle) {
-        toggle.style.background = editingTaskLeverage ? '#fbbf24' : '#30363d';
+        toggle.style.background = editingTaskLeverage ? '#fbbf24' : 'var(--border-default)';
         toggle.querySelector('div').style.left = editingTaskLeverage ? '23px' : '3px';
     }
 }

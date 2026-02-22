@@ -502,7 +502,7 @@ function showCelebration(size) {
     container.className = 'confetti-container';
     document.body.appendChild(container);
 
-    var colors = ['#ff6b35', '#f7931e', '#ffd700', '#667eea', '#10b981', '#ec4899'];
+    var colors = ['#ff6b35', '#f7931e', '#ffd700', '#6B7C5E', '#10b981', '#ec4899'];
     var count = size === 'big' ? 100 : size === 'medium' ? 50 : 20;
 
     for (var i = 0; i < count; i++) {
