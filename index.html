@@ -129,12 +129,12 @@
         /* overflow-x: hidden on body only — having it on BOTH html+body causes iOS Safari clipping bugs */
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: var(--font-body);
+            background: var(--canvas);
             min-height: 100vh;
             min-height: 100dvh;
             padding: 12px;
-            color: #333;
+            color: var(--fg-primary);
             font-size: 14px;
             -webkit-text-size-adjust: 100%;
             overflow-x: hidden;
@@ -162,29 +162,29 @@
             justify-content: center;
             gap: 6px;
             padding: 8px 16px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 14px;
+            background: var(--surface-primary);
+            border-radius: 0;
             margin-bottom: 15px;
             flex-wrap: wrap;
-            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-default);
         }
         .cross-app-nav .nav-link {
             padding: 8px 14px;
-            color: rgba(255,255,255,0.65);
+            color: var(--fg-tertiary);
             text-decoration: none;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             font-size: 0.88em;
             font-weight: 500;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.15s ease;
             white-space: nowrap;
         }
         .cross-app-nav .nav-link:hover {
-            background: rgba(255,255,255,0.12);
-            color: white;
+            background: var(--canvas-subtle);
+            color: var(--fg-primary);
         }
         .cross-app-nav .nav-link.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
+            background: var(--accent-light);
+            color: var(--accent);
             font-weight: 600;
         }
         @media (max-width: 480px) {
@@ -205,20 +205,23 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: var(--fg-primary);
             margin-bottom: 30px;
-            animation: fadeIn 1s ease-in;
         }
 
         .header h1 {
-            font-size: 3em;
+            font-size: 1.6em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: none;
+            font-family: var(--font-heading);
+            color: var(--fg-primary);
+            font-weight: 700;
         }
 
         .header p {
             font-size: 1.2em;
             opacity: 0.9;
+            color: var(--fg-secondary);
         }
 
         .data-controls {
@@ -231,21 +234,19 @@
 
         .data-btn {
             padding: 10px 20px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.12);
-            color: white;
-            font-weight: 600;
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--fg-secondary);
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
+            transition: all 0.15s ease;
             font-size: 0.95em;
         }
 
         .data-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: var(--canvas-subtle);
+            color: var(--fg-primary);
         }
 
         .stats-container {
@@ -258,27 +259,27 @@
         }
 
         .stat-card {
-            background: white;
-            border-radius: 14px;
+            background: var(--surface-primary);
+            border-radius: var(--radius-md);
             padding: 12px 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-sm);
             animation: slideUp 0.5s ease-out;
             flex: 0 0 auto;
             width: 150px;
-            border: 1px solid rgba(0,0,0,0.04);
+            border: 1px solid var(--border-subtle);
         }
 
         .stat-card.clickable-card {
             cursor: pointer;
             position: relative;
-            border: 1px solid rgba(0,0,0,0.06);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-subtle);
+            transition: all 0.15s ease;
         }
 
         .stat-card.clickable-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-            border-color: rgba(102, 126, 234, 0.25);
+            background: var(--canvas-subtle);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-default);
         }
 
         .stat-card.clickable-card::after {
@@ -303,9 +304,9 @@
             transform: translate(-50%, -50%);
             width: 400px;
             max-width: 90vw;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.1);
+            background: var(--surface-overlay);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-overlay);
             z-index: 2000;
             max-height: 70vh;
             overflow: hidden;
@@ -318,18 +319,20 @@
 
         .expansion-header {
             padding: 12px 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--canvas-subtle);
+            color: var(--fg-primary);
             font-weight: 600;
+            font-family: var(--font-heading);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--border-default);
         }
 
         .expansion-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            color: var(--fg-secondary);
             width: 28px;
             height: 28px;
             border-radius: 50%;
@@ -338,7 +341,8 @@
         }
 
         .expansion-close:hover {
-            background: rgba(255,255,255,0.3);
+            background: var(--canvas-inset);
+            color: var(--fg-primary);
         }
 
         .expansion-content {
@@ -353,15 +357,15 @@
             gap: 10px;
             padding: 10px 12px;
             margin-bottom: 6px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: var(--canvas-subtle);
+            border-radius: var(--radius-md);
             font-size: 0.9em;
-            border-left: 3px solid #667eea;
-            transition: background 0.2s ease;
+            border-left: 3px solid var(--accent);
+            transition: background 0.15s ease;
         }
 
         .expansion-task:hover {
-            background: #e9ecef;
+            background: var(--canvas-inset);
         }
 
         .expansion-task-check {
@@ -370,18 +374,18 @@
             min-width: 18px;
             cursor: pointer;
             margin-top: 2px;
-            accent-color: #667eea;
+            accent-color: var(--accent);
         }
 
         .expansion-task-text {
             flex: 1;
             line-height: 1.4;
-            color: #333;
+            color: var(--fg-primary);
         }
 
         .expansion-task-category {
             font-size: 0.75em;
-            color: #a3a3a3;
+            color: var(--fg-tertiary);
             font-weight: 600;
             display: block;
             margin-top: 4px;
@@ -389,12 +393,12 @@
 
         .expansion-empty, .empty-state {
             text-align: center;
-            color: #b0b8c4;
+            color: var(--fg-tertiary);
             padding: 30px;
             font-size: 1em;
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            border: 1px dashed rgba(255,255,255,0.1);
+            background: var(--canvas-subtle);
+            border-radius: var(--radius-lg);
+            border: 1px dashed var(--border-default);
         }
 
         .empty-state-icon {
@@ -414,9 +418,9 @@
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid var(--border-default);
             border-radius: 50%;
-            border-top-color: #667eea;
+            border-top-color: var(--accent);
             animation: spin 0.8s linear infinite;
         }
 
@@ -438,9 +442,9 @@
             transform: translateY(-50%);
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid var(--border-default);
             border-radius: 50%;
-            border-top-color: white;
+            border-top-color: var(--accent);
             animation: spin 0.8s linear infinite;
         }
 
@@ -451,22 +455,21 @@
             justify-content: center;
             width: 18px;
             height: 18px;
-            background: rgba(102, 126, 234, 0.15);
-            color: #667eea;
+            background: var(--accent-light);
+            color: var(--accent);
             border-radius: 50%;
             font-size: 11px;
             font-weight: bold;
             cursor: help;
             margin-left: 6px;
             position: relative;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            transition: all 0.2s ease;
+            border: 1px solid var(--border-default);
+            transition: all 0.15s ease;
         }
 
         .help-icon:hover {
-            background: #667eea;
-            color: white;
-            transform: scale(1.1);
+            background: var(--accent);
+            color: var(--accent-fg);
         }
 
         .help-icon .tooltip-content {
@@ -477,15 +480,15 @@
             width: max-content;
             max-width: 300px;
             padding: 12px 16px;
-            background: #1a1a2e;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            color: #e6edf3;
+            background: var(--fg-primary);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-md);
+            color: #F5F2ED;
             font-size: 0.85em;
             line-height: 1.5;
             font-weight: normal;
             text-align: left;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: var(--shadow-lg);
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
@@ -500,7 +503,7 @@
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: #30363d;
+            border-top-color: var(--fg-primary);
         }
 
         .help-icon:hover .tooltip-content {
@@ -515,7 +518,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
             z-index: 1999;
         }
 
@@ -524,7 +527,7 @@
         }
 
         .stat-card h3 {
-            color: #667eea;
+            color: var(--fg-tertiary);
             margin-bottom: 4px;
             font-size: 0.75em;
             text-transform: uppercase;
@@ -546,7 +549,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: var(--accent);
             border-radius: 15px;
             transition: width 0.5s ease;
             position: relative;
@@ -572,7 +575,7 @@
         .level-display {
             font-size: 1.8em;
             font-weight: bold;
-            color: #667eea;
+            color: var(--accent);
             text-align: center;
             margin: 2px 0;
             line-height: 1.1;
@@ -580,7 +583,7 @@
 
         .xp-text {
             text-align: center;
-            color: #a3a3a3;
+            color: var(--fg-tertiary);
             font-size: 0.7em;
             line-height: 1.2;
         }
@@ -1725,7 +1728,7 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid var(--border-default);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2109,7 +2112,7 @@
             min-width: 44px;
             min-height: 44px;
             cursor: pointer;
-            accent-color: #667eea;
+            accent-color: var(--accent);
             transition: transform 0.2s ease;
         }
 
@@ -9590,25 +9593,24 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
+    background: var(--accent);
+    color: var(--accent-fg);
     font-weight: 800;
     font-size: 0.75em;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-    animation: levelBadgePulse 3s ease-in-out infinite;
+    box-shadow: none;
 }
 
 .xp-level-bar {
     width: 60px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--canvas-inset);
     border-radius: 2px;
     overflow: hidden;
 }
 
 .xp-level-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    background: var(--accent);
     border-radius: 2px;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -9620,8 +9622,8 @@
     transform: translateX(-50%);
     font-weight: 800;
     font-size: 1.1em;
-    color: #22c55e;
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+    color: var(--accent);
+    text-shadow: none;
     pointer-events: none;
     z-index: 100;
     animation: xpFloat 1.2s ease-out forwards;
@@ -9650,18 +9652,17 @@
 .level-up-overlay .level-up-text {
     font-size: 2.5em;
     font-weight: 900;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+    font-family: var(--font-heading);
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
 }
 
 .level-up-overlay .level-number {
     font-size: 4em;
     font-weight: 900;
-    color: white;
-    text-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    font-family: var(--font-mono);
+    color: var(--fg-primary);
+    text-shadow: none;
     margin-top: -5px;
 }
 
@@ -9670,36 +9671,34 @@
     align-items: center;
     gap: 4px;
     padding: 4px 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-weight: 700;
     font-size: 0.95em;
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
 
 .streak-badge.streak-cold {
-    background: rgba(100, 116, 139, 0.2);
-    border: 1px solid rgba(100, 116, 139, 0.3);
-    color: #94a3b8;
+    background: var(--canvas-subtle);
+    border: 1px solid var(--border-default);
+    color: var(--fg-tertiary);
 }
 
 .streak-badge.streak-warm {
-    background: rgba(251, 146, 60, 0.15);
-    border: 1px solid rgba(251, 146, 60, 0.3);
-    color: #fb923c;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    color: var(--accent);
 }
 
 .streak-badge.streak-hot {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+    background: var(--accent-light);
+    border: 1px solid var(--accent-hover);
+    color: var(--accent-hover);
 }
 
 .streak-badge.streak-blazing {
-    background: rgba(251, 191, 36, 0.15);
-    border: 1px solid rgba(251, 191, 36, 0.4);
-    color: #fbbf24;
-    box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+    background: var(--accent);
+    border: 1px solid var(--accent-hover);
+    color: var(--accent-fg);
 }
 
 .streak-fire {
@@ -10106,11 +10105,9 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(20px) saturate(1.2);
-    -webkit-backdrop-filter: blur(20px) saturate(1.2);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 1px 8px rgba(0,0,0,0.15);
+    background: var(--surface-primary);
+    border-bottom: 1px solid var(--border-default);
+    box-shadow: var(--shadow-sm);
     padding: 0 16px;
     padding-top: env(safe-area-inset-top, 0px);
     height: calc(48px + env(safe-area-inset-top, 0px));
@@ -10132,14 +10129,13 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #22c55e;
+    background: var(--success);
     flex-shrink: 0;
-    transition: background 0.3s, box-shadow 0.3s;
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    transition: background 0.3s;
 }
-.sync-dot.syncing { background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.4); animation: syncPulse 1s infinite; }
-.sync-dot.offline { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.4); }
-.sync-dot.error { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+.sync-dot.syncing { background: var(--info); animation: syncPulse 1s infinite; }
+.sync-dot.offline { background: var(--destructive); }
+.sync-dot.error { background: var(--warning); }
 @keyframes syncPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
@@ -10160,43 +10156,43 @@
     transform: scale(0.95);
 }
 .today-pill {
-    background: rgba(239, 68, 68, 0.12);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: var(--destructive-light);
+    color: var(--destructive);
+    border: 1px solid var(--destructive);
 }
 .streak-pill {
-    background: rgba(251, 191, 36, 0.08);
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.15);
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent);
 }
 .streak-fire-mini { font-size: 0.9em; }
 .header-center { flex-shrink: 0; }
 .view-toggle-compact {
     display: flex;
-    background: rgba(255,255,255,0.04);
-    border-radius: 10px;
+    background: var(--canvas-subtle);
+    border-radius: var(--radius-md);
     padding: 2px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border-default);
 }
 .vtc-btn {
     padding: 6px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 0.8em;
     font-weight: 600;
     cursor: pointer;
     background: transparent;
-    color: rgba(255,255,255,0.45);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--fg-tertiary);
+    transition: all 0.15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 .vtc-btn:hover {
-    color: rgba(255,255,255,0.7);
+    color: var(--fg-primary);
 }
 .vtc-btn.active {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
-    color: white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.35);
+    background: var(--accent);
+    color: var(--accent-fg);
+    box-shadow: none;
 }
 .header-right { flex-shrink: 0; }
 .menu-btn {
@@ -10205,18 +10201,17 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.6);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--fg-secondary);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 .menu-btn:hover, .menu-btn:active {
-    background: rgba(255,255,255,0.1);
-    color: white;
-    border-color: rgba(255,255,255,0.2);
+    background: var(--canvas-subtle);
+    color: var(--fg-primary);
 }
 
 /* Slide-down hamburger menu */
@@ -10226,16 +10221,14 @@
     top: 48px;
     left: 0;
     right: 0;
-    background: rgba(15, 23, 42, 0.98);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: var(--surface-primary);
+    border-bottom: 1px solid var(--border-default);
     z-index: 999;
     padding: 16px 20px;
     max-height: 70vh;
     overflow-y: auto;
     animation: menuSlideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-lg);
 }
 .header-menu-panel.open { display: block; }
 @keyframes menuSlideDown {
@@ -10259,7 +10252,7 @@
     font-size: 0.65em;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: rgba(255,255,255,0.35);
+    color: var(--fg-tertiary);
     margin-bottom: 8px;
     font-weight: 600;
 }
@@ -10273,22 +10266,23 @@
     flex-direction: column;
     align-items: center;
     padding: 8px 14px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--canvas-subtle);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
     min-width: 65px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
 }
-.menu-stat:active { background: rgba(255,255,255,0.1); transform: scale(0.97); }
+.menu-stat:active { background: var(--canvas-inset); transform: scale(0.97); }
 .menu-stat-val {
     font-size: 1.2em;
     font-weight: 700;
-    color: white;
+    color: var(--fg-primary);
+    font-family: var(--font-mono);
 }
 .menu-stat-label {
     font-size: 0.6em;
-    color: rgba(255,255,255,0.45);
+    color: var(--fg-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-top: 2px;
@@ -10301,16 +10295,16 @@
 .menu-tools-grid button,
 .menu-tools-grid a {
     padding: 10px 12px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    color: rgba(255,255,255,0.75);
+    background: var(--canvas-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--fg-secondary);
     font-size: 0.8em;
     font-weight: 500;
     cursor: pointer;
     text-align: center;
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.15s ease;
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -10321,8 +10315,8 @@
 .menu-tools-grid a:hover,
 .menu-tools-grid button:active,
 .menu-tools-grid a:active {
-    background: rgba(255,255,255,0.12);
-    color: white;
+    background: var(--accent-light);
+    color: var(--accent);
 }
 
 /* Hide old header elements on mobile when compact header is active */
@@ -10710,7 +10704,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         min-height: 22px !important;
         flex-shrink: 0;
         margin-top: 2px;
-        accent-color: #667eea;
+        accent-color: var(--accent);
         order: 0;
     }
 
@@ -10855,16 +10849,46 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     }
 }
 
+/* ============================================
+   WARM THEME OVERRIDES (inline style overrides)
+   ============================================ */
+.header h1 { color: var(--fg-primary) !important; font-family: var(--font-heading) !important; font-size: 1.4em !important; text-shadow: none !important; }
+#syncStatusBar { background: var(--surface-primary) !important; border: 1px solid var(--border-default) !important; color: var(--fg-secondary) !important; }
+#syncStatusText { color: var(--fg-secondary) !important; }
+#syncStatusBar button { background: transparent !important; border: 1px solid var(--border-default) !important; color: var(--fg-secondary) !important; border-radius: var(--radius-sm) !important; }
+#syncStatusBar button:hover { background: var(--canvas-subtle) !important; }
+.header a[href] { background: transparent !important; border: 1px solid var(--border-default) !important; color: var(--fg-secondary) !important; border-radius: var(--radius-sm) !important; }
+.header a[href]:hover { background: var(--canvas-subtle) !important; color: var(--fg-primary) !important; }
+.view-toggle-btn, #focusModeBtn, #fullViewBtn { border: 1px solid var(--border-default) !important; border-radius: var(--radius-full) !important; transition: all 0.15s ease !important; }
+.view-toggle-btn.active, #focusModeBtn.active { background: var(--accent) !important; color: var(--accent-fg) !important; border-color: var(--accent) !important; }
+.view-toggle-btn:not(.active) { background: transparent !important; color: var(--fg-secondary) !important; }
+#focusModeBtn:not(.active) { background: transparent !important; color: var(--fg-secondary) !important; }
+#fullViewBtn.active { background: var(--accent) !important; color: var(--accent-fg) !important; border-color: var(--accent) !important; }
+#fullViewBtn:not(.active) { background: transparent !important; color: var(--fg-secondary) !important; }
+.data-controls button, .data-controls a { background: transparent !important; border: 1px solid var(--border-default) !important; color: var(--fg-secondary) !important; border-radius: var(--radius-sm) !important; }
+.data-controls button:hover, .data-controls a:hover { background: var(--canvas-subtle) !important; color: var(--fg-primary) !important; }
+.data-controls > span { color: var(--border-default) !important; }
+.stats-container .stat-card { background: var(--surface-primary) !important; border: 1px solid var(--border-subtle) !important; border-radius: var(--radius-md) !important; box-shadow: var(--shadow-sm) !important; }
+.stats-container .stat-card.clickable-card:hover { background: var(--canvas-subtle) !important; }
+.stats-container .stat-card span[style*="text-transform"] { color: var(--fg-tertiary) !important; font-size: var(--text-xs) !important; }
+#totalXPGained { color: var(--fg-primary) !important; font-family: var(--font-mono) !important; }
+#totalXPAvailable { color: var(--fg-primary) !important; font-family: var(--font-mono) !important; }
+#tasksToDoToday { color: var(--destructive) !important; font-family: var(--font-mono) !important; }
+#tasksRemaining { color: var(--fg-primary) !important; font-family: var(--font-mono) !important; }
+#totalTasks { color: var(--success) !important; font-family: var(--font-mono) !important; }
+.stats-container .streak-badge { border: 1px solid var(--border-default) !important; }
+.stats-container .xp-display-enhanced { background: var(--surface-primary) !important; border: 1px solid var(--border-subtle) !important; }
+
     </style>
 </head>
 <body>
     <!-- Loading overlay - shown until Firebase data loads -->
-    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
-        <div style="font-size: 4em; margin-bottom: 20px;">🦷</div>
-        <div style="color: #e6edf3; font-size: 1.5em; font-weight: 600;">Dental Student Quest</div>
-        <div style="color: #b0b8c4; font-size: 1em; margin-top: 10px;">Loading your data...</div>
-        <div style="margin-top: 20px; width: 200px; height: 4px; background: #21262d; border-radius: 2px; overflow: hidden;">
-            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6); animation: loading 1.5s infinite;"></div>
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #FAF8F5; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
+        <div style="font-size: 1.8em; margin-bottom: 20px; font-family: 'Source Serif 4', Georgia, serif; color: #2C2825; font-weight: 700;">DQ</div>
+        <div style="color: #2C2825; font-size: 1.5em; font-weight: 600; font-family: 'Source Serif 4', Georgia, serif;">Dental Student Quest</div>
+        <div style="color: #9C948B; font-size: 1em; margin-top: 10px;">Loading your data...</div>
+        <div style="margin-top: 20px; width: 200px; height: 4px; background: #EFECE6; border-radius: 2px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #6B7C5E, #8A9A7B, #6B7C5E); animation: loading 1.5s infinite;"></div>
         </div>
     </div>
     <style>
@@ -10874,7 +10898,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         }
     </style>
     <div class="toast-notification" id="toast">
-        <span class="toast-icon" id="toastIcon">✅</span>
+        <span class="toast-icon" id="toastIcon"><i data-lucide="check-circle" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i></span>
         <span class="toast-message" id="toastMessage">Success!</span>
     </div>
 
@@ -10887,7 +10911,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <span id="headerDoToday">0</span> today
                 </span>
                 <span class="header-stat-pill streak-pill" id="headerStreakPill">
-                    <span class="streak-fire-mini">&#x1F525;</span><span id="headerStreakCount">0</span>
+                    <span class="streak-fire-mini"><i data-lucide="flame" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i></span><span id="headerStreakCount">0</span>
                 </span>
             </div>
             <div class="header-center">
@@ -10953,52 +10977,52 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     <!-- Cross-App Navigation -->
     <nav class="cross-app-nav">
-        <a href="index.html" class="nav-link active">🦷 Quest</a>
-        <a href="d3-roadmap.html" class="nav-link">📚 Roadmap</a>
-        <a href="stimulant-elimination-calculator.html" class="nav-link">💊 Sleep Calc</a>
-        <a href="body-comp-tracker.html" class="nav-link">🏋️ Body Comp</a>
-        <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
+        <a href="index.html" class="nav-link active">DQ Quest</a>
+        <a href="d3-roadmap.html" class="nav-link"><i data-lucide="book-open" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Roadmap</a>
+        <a href="stimulant-elimination-calculator.html" class="nav-link"><i data-lucide="pill" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Sleep Calc</a>
+        <a href="body-comp-tracker.html" class="nav-link"><i data-lucide="activity" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Body Comp</a>
+        <a href="lecture-prompt-transformer.html" class="nav-link"><i data-lucide="edit" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Lectures</a>
     </nav>
 
     <div class="container">
         <div class="header" style="padding: 12px 0;">
             <!-- Compact Header Row -->
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap;">
-                <h1 style="margin: 0; font-size: 1.4em;">🦷 Dental Student Quest</h1>
+                <h1 style="margin: 0; font-size: 1.4em;">Dental Student Quest</h1>
 
                 <!-- Compact Sync Status -->
                 <div id="syncStatusBar" style="display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: rgba(0,0,0,0.3); border-radius: 20px; font-size: 0.8em;">
-                    <span id="syncStatusIcon">⏳</span>
+                    <span id="syncStatusIcon"><i data-lucide="loader" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                     <span id="syncStatusText" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Connecting...</span>
-                    <button onclick="forceCloudSync()" style="padding: 2px 8px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 0.85em; cursor: pointer;" title="Sync Now">🔄</button>
-                    <button onclick="forceUploadToCloud()" style="padding: 2px 6px; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 8px; color: #fcd34d; font-size: 0.8em; cursor: pointer;" title="Force Upload to Cloud">⬆️</button>
-                    <button onclick="forcePullFromCloud()" style="padding: 2px 6px; background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; color: #c4b5fd; font-size: 0.8em; cursor: pointer;" title="Force Pull from Cloud">⬇️</button>
+                    <button onclick="forceCloudSync()" style="padding: 2px 8px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 0.85em; cursor: pointer;" title="Sync Now"><i data-lucide="refresh-cw" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                    <button onclick="forceUploadToCloud()" style="padding: 2px 6px; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 8px; color: #fcd34d; font-size: 0.8em; cursor: pointer;" title="Force Upload to Cloud"><i data-lucide="upload" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                    <button onclick="forcePullFromCloud()" style="padding: 2px 6px; background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; color: #c4b5fd; font-size: 0.8em; cursor: pointer;" title="Force Pull from Cloud"><i data-lucide="download" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
                 </div>
 
                 <!-- Quick App Links + View Toggle (centered) -->
                 <div style="display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center;">
-                    <a href="d3-roadmap.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="D3 Roadmap">📚 Roadmap</a>
-                    <a href="stimulant-elimination-calculator.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Sleep Calc">💊 Sleep</a>
-                    <a href="body-comp-tracker.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Body Comp">🏋️ Body</a>
+                    <a href="d3-roadmap.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="D3 Roadmap"><i data-lucide="book-open" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Roadmap</a>
+                    <a href="stimulant-elimination-calculator.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Sleep Calc"><i data-lucide="pill" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Sleep</a>
+                    <a href="body-comp-tracker.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Body Comp"><i data-lucide="activity" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Body</a>
                     <span style="color: rgba(255,255,255,0.15); font-size: 0.8em; margin: 0 2px;">│</span>
-                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Focus Mode">🎯 Focus</button>
-                    <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Full View">📋 Tasks</button>
+                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Focus Mode"><i data-lucide="target" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Focus</button>
+                    <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Full View"><i data-lucide="list" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tasks</button>
                 </div>
             </div>
 
             <!-- Slim Toolbar -->
             <div class="data-controls" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
-                <button onclick="createCheckpoint()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Create Checkpoint">💾</button>
-                <button onclick="showCheckpointManager()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Checkpoint Manager">📂</button>
-                <button onclick="clearAllData()" style="padding: 4px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Clear All Data">🗑️</button>
+                <button onclick="createCheckpoint()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Create Checkpoint"><i data-lucide="save" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <button onclick="showCheckpointManager()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Checkpoint Manager"><i data-lucide="folder-open" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <button onclick="clearAllData()" style="padding: 4px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Clear All Data"><i data-lucide="trash-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
                 <span style="color: rgba(255,255,255,0.2); font-size: 0.8em;">│</span>
-                <button onclick="openNotebook()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Notebook">📓</button>
-                <button onclick="openDailyPlanner()" style="padding: 4px 10px; background: rgba(220,38,38,0.3); border: 1px solid rgba(220,38,38,0.5); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Daily Planner">📋</button>
-                <button onclick="openCalendar()" style="padding: 4px 10px; background: rgba(16,185,129,0.3); border: 1px solid rgba(16,185,129,0.5); border-radius: 12px; color: #6ee7b7; font-size: 0.75em; cursor: pointer;" title="Calendar">📅</button>
-                <button onclick="openFinancials()" style="padding: 4px 10px; background: rgba(59,130,246,0.3); border: 1px solid rgba(59,130,246,0.5); border-radius: 12px; color: #93c5fd; font-size: 0.75em; cursor: pointer;" title="Financials">💰</button>
-                <a href="stimulant-elimination-calculator.html" style="padding: 4px 10px; background: rgba(168,85,247,0.3); border: 1px solid rgba(168,85,247,0.5); border-radius: 12px; color: #d8b4fe; font-size: 0.75em; cursor: pointer; text-decoration: none;" title="Sleep Tracker">💊</a>
-                <button onclick="showHelp()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Help">❓</button>
-                <a href="d3-roadmap.html" style="padding: 4px 10px; background: rgba(220,38,38,0.4); border: 1px solid #fca5a5; border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer; text-decoration: none; font-weight: 600;" title="D3 Roadmap">📚</a>
+                <button onclick="openNotebook()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Notebook"><i data-lucide="notebook" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <button onclick="openDailyPlanner()" style="padding: 4px 10px; background: rgba(220,38,38,0.3); border: 1px solid rgba(220,38,38,0.5); border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer;" title="Daily Planner"><i data-lucide="list-todo" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <button onclick="openCalendar()" style="padding: 4px 10px; background: rgba(16,185,129,0.3); border: 1px solid rgba(16,185,129,0.5); border-radius: 12px; color: #6ee7b7; font-size: 0.75em; cursor: pointer;" title="Calendar"><i data-lucide="calendar" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <button onclick="openFinancials()" style="padding: 4px 10px; background: rgba(59,130,246,0.3); border: 1px solid rgba(59,130,246,0.5); border-radius: 12px; color: #93c5fd; font-size: 0.75em; cursor: pointer;" title="Financials"><i data-lucide="wallet" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <a href="stimulant-elimination-calculator.html" style="padding: 4px 10px; background: rgba(168,85,247,0.3); border: 1px solid rgba(168,85,247,0.5); border-radius: 12px; color: #d8b4fe; font-size: 0.75em; cursor: pointer; text-decoration: none;" title="Sleep Tracker"><i data-lucide="pill" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></a>
+                <button onclick="showHelp()" style="padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 0.75em; cursor: pointer;" title="Help"><i data-lucide="help-circle" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
+                <a href="d3-roadmap.html" style="padding: 4px 10px; background: rgba(220,38,38,0.4); border: 1px solid #fca5a5; border-radius: 12px; color: #fca5a5; font-size: 0.75em; cursor: pointer; text-decoration: none; font-weight: 600;" title="D3 Roadmap"><i data-lucide="book-open" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></a>
                 <input type="file" id="checkpointFile" accept=".dent,.json" style="display: none;" onchange="restoreCheckpoint(event)">
             </div>
         </div>
@@ -11021,29 +11045,29 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             <div class="stat-card" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
                 <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Available</span>
                 <span id="totalXPAvailable" style="font-size: 1.1em; font-weight: 700; color: #60a5fa; margin-left: 6px;">0</span>
-                <span style="font-size: 0.7em; margin-left: 2px;">💎</span>
+                <span style="font-size: 0.7em; margin-left: 2px;">XP</span>
             </div>
 
             <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('doToday')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
                 <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Do Today</span>
                 <span id="tasksToDoToday" style="font-size: 1.1em; font-weight: 700; color: #f87171; margin-left: 6px;">0</span>
-                <span style="font-size: 0.7em; margin-left: 2px;">🔴</span>
+                <span style="font-size: 0.7em; margin-left: 2px;"><i data-lucide="circle-dot" style="width:10px;height:10px;display:inline-block;vertical-align:middle;color:#f87171"></i></span>
             </div>
 
             <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('remaining')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
                 <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Remaining</span>
                 <span id="tasksRemaining" style="font-size: 1.1em; font-weight: 700; color: #fbbf24; margin-left: 6px;">0</span>
-                <span style="font-size: 0.7em; margin-left: 2px;">💪</span>
+                <span style="font-size: 0.7em; margin-left: 2px;"><i data-lucide="list" style="width:10px;height:10px;display:inline-block;vertical-align:middle"></i></span>
             </div>
 
             <div class="stat-card clickable-card" onclick="toggleDashboardExpansion('completed')" style="padding: 8px 16px; min-width: auto; flex: 0 1 auto; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; text-align: center; cursor: pointer;">
                 <span style="font-size: 0.7em; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Completed</span>
                 <span id="totalTasks" style="font-size: 1.1em; font-weight: 700; color: #4ade80; margin-left: 6px;">0</span>
-                <span style="font-size: 0.7em; margin-left: 2px;">🏆</span>
+                <span style="font-size: 0.7em; margin-left: 2px;"><i data-lucide="trophy" style="width:10px;height:10px;display:inline-block;vertical-align:middle"></i></span>
             </div>
 
             <div class="streak-badge streak-cold" id="streakBadge" style="padding: 8px 12px; min-width: auto; flex: 0 1 auto;">
-                <span class="streak-fire">&#x1F525;</span>
+                <span class="streak-fire"><i data-lucide="flame" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i></span>
                 <span id="streakCount">0</span>
                 <span style="font-size: 0.7em; color: inherit; opacity: 0.8;">day streak</span>
             </div>
@@ -11054,7 +11078,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         
         <div class="dashboard-expansion" id="expansionDoToday">
             <div class="expansion-header">
-                <span>🔴 Do Today Tasks</span>
+                <span>Do Today Tasks</span>
                 <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
             </div>
             <div class="expansion-content" id="contentDoToday"></div>
@@ -11062,7 +11086,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         
         <div class="dashboard-expansion" id="expansionRemaining">
             <div class="expansion-header">
-                <span>💪 Remaining Tasks</span>
+                <span>Remaining Tasks</span>
                 <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
             </div>
             <div class="expansion-content" id="contentRemaining"></div>
@@ -11070,7 +11094,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         
         <div class="dashboard-expansion" id="expansionCompleted">
             <div class="expansion-header">
-                <span>🏆 Completed Tasks</span>
+                <span>Completed Tasks</span>
                 <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
             </div>
             <div class="expansion-content" id="contentCompleted"></div>
@@ -11081,7 +11105,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             <!-- Welcome Overlay for First-Time Users -->
             <div id="focusViewWelcomeOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 20000; align-items: center; justify-content: center; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 24px; padding: 40px; max-width: 520px; text-align: center; border: 2px solid rgba(102,126,234,0.3); animation: slideUp 0.4s ease;">
-                    <div style="font-size: 3em; margin-bottom: 15px;">👋</div>
+                    <div style="font-size: 3em; margin-bottom: 15px;"><i data-lucide="hand" style="width:48px;height:48px;display:inline-block"></i></div>
                     <div style="font-size: 1.5em; font-weight: 700; color: white; margin-bottom: 20px;">Welcome to Focus View!</div>
                     <div style="color: #9ca3af; font-size: 1em; line-height: 1.6; margin-bottom: 30px;">
                         This is your command center for crushing today's tasks.
@@ -11089,21 +11113,21 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                     <div style="text-align: left; background: rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; margin-bottom: 30px;">
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-                            <span style="font-size: 1.5em;">📋</span>
+                            <span style="font-size: 1.5em;"><i data-lucide="list" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: #667eea; font-weight: 700; font-size: 1em;">TRIAGE</div>
                                 <div style="color: #9ca3af; font-size: 0.9em;">Organize tasks by priority: LOCKED IN, TODAY, or TOMORROW</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-                            <span style="font-size: 1.5em;">🔥</span>
+                            <span style="font-size: 1.5em;"><i data-lucide="flame" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: #ff6b35; font-weight: 700; font-size: 1em;">CRASH OUT</div>
                                 <div style="color: #9ca3af; font-size: 0.9em;">Time-block your tasks on an hourly timeline until sleep</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: flex-start; gap: 12px;">
-                            <span style="font-size: 1.5em;">🎯</span>
+                            <span style="font-size: 1.5em;"><i data-lucide="target" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: #10b981; font-weight: 700; font-size: 1em;">FOCUS</div>
                                 <div style="color: #9ca3af; font-size: 0.9em;">Pomodoro timer with session checklists for deep work</div>
@@ -11121,9 +11145,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                 <!-- Mode Tabs - Dark Theme -->
                 <div class="cc-mode-tabs" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; padding-top: 16px;">
-                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 10px 20px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; color: #f1f5f9; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">📋 TRIAGE</button>
-                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">🔥 CRASH OUT</button>
-                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">🎯 FOCUS</button>
+                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 10px 20px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; color: #f1f5f9; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> TRIAGE</button>
+                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> CRASH OUT</button>
+                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="target" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> FOCUS</button>
                 </div>
 
                 <!-- ==================== TRIAGE MODE ==================== -->
@@ -11166,7 +11190,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div class="triage-column locked-in" data-tier="lockedIn" id="lockedInColumn">
                             <div class="column-header">
                                 <div class="column-title">
-                                    <span class="column-icon">🔥</span>
+                                    <span class="column-icon"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span class="column-name">LOCKED IN</span>
                                     <span class="column-count" id="lockedInCount">(0)</span>
                                 </div>
@@ -11186,7 +11210,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div class="triage-column today" data-tier="today" id="todayColumn">
                             <div class="column-header">
                                 <div class="column-title">
-                                    <span class="column-icon">📋</span>
+                                    <span class="column-icon"><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span class="column-name">TODAY</span>
                                     <span class="column-count" id="todayCount">(0)</span>
                                 </div>
@@ -11206,7 +11230,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div class="triage-column tomorrow" data-tier="tomorrow" id="tomorrowColumn">
                             <div class="column-header">
                                 <div class="column-title">
-                                    <span class="column-icon">📅</span>
+                                    <span class="column-icon"><i data-lucide="calendar" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span class="column-name">TOMORROW</span>
                                     <span class="column-count" id="tomorrowCount">(0)</span>
                                 </div>
@@ -11227,7 +11251,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <!-- SCHEDULED Section (full width) -->
                     <div class="triage-section scheduled" id="scheduledSection" style="display: none;">
                         <div class="section-header">
-                            <span class="section-title">⏰ SCHEDULED</span>
+                            <span class="section-title"><i data-lucide="clock" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> SCHEDULED</span>
                             <span class="section-subtitle">(in Crash Out)</span>
                             <span class="section-count" id="scheduledCount">0 tasks</span>
                         </div>
@@ -11239,7 +11263,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <!-- ROLLED OVER Section (full width) -->
                     <div class="triage-section rolled-over" id="rolledOverSection" style="display: none;">
                         <div class="section-header">
-                            <span class="section-title">🔁 ROLLED OVER</span>
+                            <span class="section-title"><i data-lucide="rotate-ccw" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> ROLLED OVER</span>
                             <span class="section-subtitle">(was LOCKED IN yesterday)</span>
                             <span class="section-count" id="rolledOverCount">0 tasks</span>
                         </div>
@@ -11256,8 +11280,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <button class="triage-quick-add-btn" onclick="triageQuickAddTask()">+ Add</button>
                         </div>
                         <div class="triage-action-btns">
-                            <button class="triage-action-btn" onclick="switchToFullView()">📋 Full Task View</button>
-                            <button class="triage-action-btn primary" onclick="switchCommandCenterMode('crashout')">🔥 Plan in Crash Out</button>
+                            <button class="triage-action-btn" onclick="switchToFullView()"><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Full Task View</button>
+                            <button class="triage-action-btn primary" onclick="switchCommandCenterMode('crashout')"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Plan in Crash Out</button>
                         </div>
                     </div>
 
@@ -11270,27 +11294,27 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <div id="crashOutSetup" class="crash-out-setup">
                         <div class="setup-icon-container">
                             <div class="setup-icon-ring"></div>
-                            <div class="setup-icon">🌙</div>
+                            <div class="setup-icon"><i data-lucide="moon" style="width:32px;height:32px;display:inline-block"></i></div>
                         </div>
                         <h2 class="setup-title">Set Your Crash Time</h2>
-                        <p class="setup-date" id="crashOutSetupDate">📅 Thursday, Jan 29 • 5:01 PM</p>
+                        <p class="setup-date" id="crashOutSetupDate">Thursday, Jan 29 - 5:01 PM</p>
                         <p class="setup-question">How long can you push tonight?</p>
 
                         <div class="sleep-options">
                             <button class="sleep-option sleep-option-tonight" onclick="setCrashOutSleep('tonight')">
-                                <span class="option-icon">🌆</span>
+                                <span class="option-icon"><i data-lucide="sunset" style="width:20px;height:20px;display:inline-block"></i></span>
                                 <span class="option-label">TONIGHT</span>
                                 <span class="option-time">11:00 PM</span>
                                 <span class="option-tag">~Standard</span>
                             </button>
                             <button class="sleep-option sleep-option-late" onclick="setCrashOutSleep('latenight')">
-                                <span class="option-icon">🌃</span>
+                                <span class="option-icon"><i data-lucide="moon-star" style="width:20px;height:20px;display:inline-block"></i></span>
                                 <span class="option-label">LATE NIGHT</span>
                                 <span class="option-time">2:00 AM</span>
                                 <span class="option-tag">~Extended</span>
                             </button>
                             <button class="sleep-option sleep-option-custom" onclick="showCustomSleepPicker()">
-                                <span class="option-icon">⚙️</span>
+                                <span class="option-icon"><i data-lucide="settings" style="width:20px;height:20px;display:inline-block"></i></span>
                                 <span class="option-label">CUSTOM</span>
                                 <span class="option-time">Pick Time</span>
                                 <span class="option-tag">~Your call</span>
@@ -11307,7 +11331,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
 
                         <p class="setup-hint">
-                            ℹ️ This sets your available hours. Tasks will be scheduled between now and 1 hour before sleep.
+                            This sets your available hours. Tasks will be scheduled between now and 1 hour before sleep.
                         </p>
                     </div>
 
@@ -11316,7 +11340,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <!-- Header -->
                         <div class="timeline-header">
-                            <h2>🔥 CRASH OUT</h2>
+                            <h2><i data-lucide="flame" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> CRASH OUT</h2>
                             <div class="sleep-time-adjuster">
                                 <button class="btn-adjust-sleep" onclick="adjustSleepTime(-30)" title="30 min earlier">-30m</button>
                                 <button class="btn-adjust-sleep" onclick="adjustSleepTime(-15)" title="15 min earlier">-15m</button>
@@ -11330,7 +11354,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <!-- Time Summary -->
                         <div class="time-summary">
                             <div class="time-until-sleep">
-                                <span class="time-icon">⏰</span>
+                                <span class="time-icon"><i data-lucide="clock" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                 <span id="timeUntilSleep">5h 59m until sleep (11:00 PM)</span>
                             </div>
                             <div class="time-progress">
@@ -11343,7 +11367,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <!-- Overscheduled Warning (hidden by default) -->
                         <div class="overscheduled-warning hidden" id="overscheduledWarning">
-                            <span class="warning-icon">⚠️</span>
+                            <span class="warning-icon"><i data-lucide="alert-triangle" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i></span>
                             <span class="warning-text">Tasks end <strong id="overByAmount">1.5h</strong> into wind-down hour! Consider shortening or moving tasks.</span>
                             <button class="btn-dismiss" onclick="dismissOverscheduledWarning()">Dismiss</button>
                         </div>
@@ -11370,7 +11394,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <!-- Reset Button -->
                         <div class="reset-container">
-                            <button class="btn-reset" onclick="resetCrashOutDay()">🔄 Reset Day</button>
+                            <button class="btn-reset" onclick="resetCrashOutDay()"><i data-lucide="refresh-cw" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Reset Day</button>
                         </div>
 
                     </div>
@@ -11383,7 +11407,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <div id="focusNoTask" class="focus-empty-state">
                         <div class="focus-empty-icon">
                             <div class="focus-empty-ring"></div>
-                            <span>🎯</span>
+                            <span><i data-lucide="target" style="width:32px;height:32px;display:inline-block"></i></span>
                         </div>
                         <div class="focus-empty-title">Ready to focus?</div>
                         <div class="focus-empty-desc">Pick a task from Triage or Crash Out to start a deep work session.</div>
@@ -11463,7 +11487,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <!-- Session Checklist -->
                         <div class="focus-checklist-card">
-                            <div class="focus-checklist-title">📋 Session Checklist</div>
+                            <div class="focus-checklist-title"><i data-lucide="list-checks" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Session Checklist</div>
                             <div id="focusSessionChecklist" style="margin-bottom: 15px;">
                                 <!-- Checklist items will be rendered here -->
                             </div>
@@ -11503,19 +11527,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <div class="focus-confetti-wrap" id="focusConfettiContainer"></div>
                             <div class="focus-complete-flash"></div>
                             <div class="focus-complete-emoji">
-                                <span class="focus-complete-bounce">&#127881;</span>
+                                <span class="focus-complete-bounce"><i data-lucide="award" style="width:36px;height:36px;display:inline-block"></i></span>
                             </div>
                             <div class="focus-complete-title" id="focusCompleteTitle">CRUSHED IT!</div>
                             <div class="focus-xp-float" id="focusXpFloat">+20 XP</div>
                             <div class="focus-complete-stats">
                                 <div class="focus-stat-row" id="focusXpEarned">
-                                    <span class="focus-stat-icon">&#11088;</span> +20 XP earned
+                                    <span class="focus-stat-icon"><i data-lucide="star" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span> +20 XP earned
                                 </div>
                                 <div class="focus-stat-row" id="focusStreakDisplay">
-                                    <span class="focus-stat-icon">&#128293;</span> Focus streak: 4 sessions
+                                    <span class="focus-stat-icon"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span> Focus streak: 4 sessions
                                 </div>
                                 <div class="focus-stat-row" id="focusTodayProgress">
-                                    <span class="focus-stat-icon">&#128202;</span> Today: 3/12 tasks done
+                                    <span class="focus-stat-icon"><i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span> Today: 3/12 tasks done
                                 </div>
                             </div>
                             <div class="focus-complete-checklist" id="focusChecklistSummary">Session checklist: 3/4 completed</div>
@@ -11539,14 +11563,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         <div class="main-content">
             <div class="tasks-section">
                 <div class="category-tabs">
-                    <button class="category-tab dotoday active" data-category="dotoday">🔴 Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
-                    <button class="category-tab financial" data-category="financial">💰 Financial <span class="task-count" id="count-financial">(0)</span></button>
-                    <button class="category-tab clinic" data-category="clinic">🦷 Clinic Requirements <span class="task-count" id="count-clinic">(0)</span></button>
-                    <button class="category-tab health" data-category="health">❤️ Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
-                    <button class="category-tab school" data-category="school">📋 School Maintenance <span class="task-count" id="count-school">(0)</span></button>
-                    <button class="category-tab academic" data-category="academic">📚 Academic & Didactic <span class="task-count" id="count-academic">(0)</span></button>
-                    <button class="category-tab future" data-category="future">🚀 Future Job & Life <span class="task-count" id="count-future">(0)</span></button>
-                    <button class="category-tab life" data-category="life">🏡 General Life Maintenance <span class="task-count" id="count-life">(0)</span></button>
+                    <button class="category-tab dotoday active" data-category="dotoday">Critical Must Do Today <span class="task-count" id="count-dotoday">(0)</span></button>
+                    <button class="category-tab financial" data-category="financial"><i data-lucide="wallet" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Financial <span class="task-count" id="count-financial">(0)</span></button>
+                    <button class="category-tab clinic" data-category="clinic"><i data-lucide="cross" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Clinic Requirements <span class="task-count" id="count-clinic">(0)</span></button>
+                    <button class="category-tab health" data-category="health"><i data-lucide="heart" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Health & Wellbeing <span class="task-count" id="count-health">(0)</span></button>
+                    <button class="category-tab school" data-category="school"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> School Maintenance <span class="task-count" id="count-school">(0)</span></button>
+                    <button class="category-tab academic" data-category="academic"><i data-lucide="book-open" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Academic & Didactic <span class="task-count" id="count-academic">(0)</span></button>
+                    <button class="category-tab future" data-category="future"><i data-lucide="rocket" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Future Job & Life <span class="task-count" id="count-future">(0)</span></button>
+                    <button class="category-tab life" data-category="life"><i data-lucide="home" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> General Life Maintenance <span class="task-count" id="count-life">(0)</span></button>
                 </div>
 
                 <div class="add-task-form">
@@ -11556,7 +11580,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                 <div class="category-xp-bar" id="categoryXPBar">
                     <div class="category-xp-header">
-                        <span class="category-xp-label" id="categoryXPLabel">💰 Financial Progress</span>
+                        <span class="category-xp-label" id="categoryXPLabel">Financial Progress</span>
                         <span class="category-xp-text" id="categoryXPText">0 / 100 XP</span>
                     </div>
                     <div class="progress-bar" style="height: 20px; margin-top: 8px;">
@@ -11566,13 +11590,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                 <!-- Medication Tracker for Health Category -->
                 <div class="medication-tracker" id="medicationTracker" style="display: none;">
-                    <h3 style="color: #30cfd0; margin-bottom: 20px; text-align: center;">💊 Medication Management</h3>
+                    <h3 style="color: #30cfd0; margin-bottom: 20px; text-align: center;"><i data-lucide="pill" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Medication Management</h3>
                     
                     <!-- 30mg XR Tracker -->
                     <div class="med-card">
                         <div class="med-header">
                             <h4>30mg XR Adderall</h4>
-                            <button class="med-settings-btn" onclick="openMedSettings('30mg')">⚙️</button>
+                            <button class="med-settings-btn" onclick="openMedSettings('30mg')"><i data-lucide="settings" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
                         </div>
                         
                         <div class="med-info">
@@ -11599,7 +11623,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                 <span class="expand-icon" id="expandIcon30mg">▼</span>
                             </div>
                             <div class="calendar-breakdown" id="calendar30mg">
-                                <div class="calendar-header">📅 Medication Schedule</div>
+                                <div class="calendar-header"><i data-lucide="calendar" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Medication Schedule</div>
                                 <div id="calendarContent30mg"></div>
                             </div>
                         </div>
@@ -11608,7 +11632,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <button class="med-take-btn" onclick="takeMed('30mg')">✓ Took 30mg</button>
                             <button class="med-adjust-btn" onclick="adjustMed('30mg', 1)">+ Add Pill</button>
                             <button class="med-adjust-btn" onclick="adjustMed('30mg', -1)">- Remove Pill</button>
-                            <button class="med-adjust-btn" onclick="resetPillAssignments('30mg')" style="background: #f59e0b;">🔄 Reset Calendar</button>
+                            <button class="med-adjust-btn" onclick="resetPillAssignments('30mg')" style="background: #f59e0b;"><i data-lucide="refresh-cw" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Reset Calendar</button>
                         </div>
                     </div>
 
@@ -11616,7 +11640,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <div class="med-card">
                         <div class="med-header">
                             <h4>20mg XR Adderall</h4>
-                            <button class="med-settings-btn" onclick="openMedSettings('20mg')">⚙️</button>
+                            <button class="med-settings-btn" onclick="openMedSettings('20mg')"><i data-lucide="settings" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></button>
                         </div>
                         
                         <div class="med-info">
@@ -11643,7 +11667,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                 <span class="expand-icon" id="expandIcon20mg">▼</span>
                             </div>
                             <div class="calendar-breakdown" id="calendar20mg">
-                                <div class="calendar-header">📅 Medication Schedule</div>
+                                <div class="calendar-header"><i data-lucide="calendar" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Medication Schedule</div>
                                 <div id="calendarContent20mg"></div>
                             </div>
                         </div>
@@ -11652,7 +11676,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <button class="med-take-btn" onclick="takeMed('20mg')">✓ Took 20mg</button>
                             <button class="med-adjust-btn" onclick="adjustMed('20mg', 1)">+ Add Pill</button>
                             <button class="med-adjust-btn" onclick="adjustMed('20mg', -1)">- Remove Pill</button>
-                            <button class="med-adjust-btn" onclick="resetPillAssignments('20mg')" style="background: #f59e0b;">🔄 Reset Calendar</button>
+                            <button class="med-adjust-btn" onclick="resetPillAssignments('20mg')" style="background: #f59e0b;"><i data-lucide="refresh-cw" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Reset Calendar</button>
                         </div>
                     </div>
 
@@ -11673,7 +11697,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             </div>
 
             <div class="timer-section">
-                <h3 style="text-align: center; margin-bottom: 12px; color: #60a5fa; font-size: 1em; font-weight: 600;">⏱️ Pomodoro Timer</h3>
+                <h3 style="text-align: center; margin-bottom: 12px; color: #60a5fa; font-size: 1em; font-weight: 600;"><i data-lucide="timer" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Pomodoro Timer</h3>
                 
                 <div class="pomodoro-options">
                     <div class="pomodoro-option active" onclick="selectPomodoro(25, 5)">
@@ -11761,7 +11785,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 <div class="modal-overlay" id="addCountdownModal" onclick="safeModalClose(closeAddCountdown, event)">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
                         <button class="modal-close-x" onclick="closeAddCountdown()" title="Close">×</button>
-                        <h2 style="color: #58a6ff; margin-bottom: 20px;">➕ Add New Countdown</h2>
+                        <h2 style="color: #58a6ff; margin-bottom: 20px;">+ Add New Countdown</h2>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Description</label>
@@ -11771,13 +11795,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Category</label>
                             <select id="countdownCategory" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
-                                <option value="financial">💰 Financial</option>
-                                <option value="academic">🎓 Academic & Didactic</option>
-                                <option value="clinic">🏥 Clinic Requirements</option>
-                                <option value="health">❤️ Health & Wellbeing</option>
-                                <option value="school">📚 School Maintenance</option>
-                                <option value="future">🚀 Future Job & Life</option>
-                                <option value="life">🌟 General Life Maintenance</option>
+                                <option value="financial">Financial</option>
+                                <option value="academic">Academic & Didactic</option>
+                                <option value="clinic">Clinic Requirements</option>
+                                <option value="health">Health & Wellbeing</option>
+                                <option value="school">School Maintenance</option>
+                                <option value="future">Future Job & Life</option>
+                                <option value="life">General Life Maintenance</option>
                             </select>
                         </div>
                         
@@ -11799,7 +11823,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         
                         <div id="countdownDeleteBtn" style="display: none; margin-bottom: 15px;">
                             <button onclick="deleteCountdown(editingCountdownId)" style="width: 100%; background: #dc2626; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
-                                🗑️ Delete Countdown
+                                <i data-lucide="trash-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Delete Countdown
                             </button>
                         </div>
                         
@@ -11816,12 +11840,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 <div class="modal-overlay" id="helpModal" onclick="safeModalClose(closeHelp, event)">
                     <div class="modal-content help-modal" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeHelp()" title="Close">×</button>
-                        <h3>📖 Quick Reference Guide</h3>
+                        <h3>Quick Reference Guide</h3>
                         <div class="modal-body">
                             <div class="help-section">
-                                <h4>💾 Data Backup & Sync</h4>
+                                <h4><i data-lucide="save" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Data Backup & Sync</h4>
                                 <div class="help-warning">
-                                    <strong>⚠️ Important:</strong> Your data does NOT sync automatically between devices!
+                                    <strong>Important:</strong> Your data does NOT sync automatically between devices!
                                 </div>
                                 <p>MacBook Chrome and iPhone Chrome have separate data. To sync:</p>
                                 <ul>
@@ -11831,41 +11855,41 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                     <li>Both devices now have same data!</li>
                                 </ul>
                                 <div class="help-tip">
-                                    <strong>💡 Pro Tip:</strong> Create checkpoints every Sunday! Set a phone reminder.
+                                    <strong>Pro Tip:</strong> Create checkpoints every Sunday! Set a phone reminder.
                                 </div>
                             </div>
 
                             <div class="help-section">
-                                <h4>🔄 Future Updates</h4>
+                                <h4><i data-lucide="refresh-cw" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Future Updates</h4>
                                 <p>When you need new features:</p>
                                 <ul>
                                     <li><strong>Before</strong> using new version: Create checkpoint</li>
                                     <li>Get the updated app from Claude</li>
                                     <li><strong>Restore your checkpoint</strong> - data migrates automatically!</li>
-                                    <li>All your data works perfectly ✅</li>
+                                    <li>All your data works perfectly</li>
                                 </ul>
                             </div>
 
                             <div class="help-section">
-                                <h4>💊 Medication Tracker</h4>
+                                <h4><i data-lucide="pill" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Medication Tracker</h4>
                                 <p><strong>Click the status message</strong> to expand calendar view!</p>
                                 <ul>
-                                    <li>🟢 <strong>Green</strong> = Have pill for this day</li>
-                                    <li>🔴 <strong>Red</strong> = No pill (weekday - critical!)</li>
-                                    <li>🟡 <strong>Yellow</strong> = No pill (weekend)</li>
-                                    <li>🔵 <strong>Blue</strong> = Extra pill (surplus)</li>
-                                    <li>🟣 <strong>Purple</strong> = Refill day</li>
+                                    <li><span style="color:#22c55e">Green</span> = Have pill for this day</li>
+                                    <li><span style="color:#ef4444">Red</span> = No pill (weekday - critical!)</li>
+                                    <li><span style="color:#eab308">Yellow</span> = No pill (weekend)</li>
+                                    <li><span style="color:#3b82f6">Blue</span> = Extra pill (surplus)</li>
+                                    <li><span style="color:#a855f7">Purple</span> = Refill day</li>
                                 </ul>
                                 <p><strong>Buttons:</strong></p>
                                 <ul>
-                                    <li>"✓ Took Daily Dose" = Take both pills at once</li>
+                                    <li>"Took Daily Dose" = Take both pills at once</li>
                                     <li>"+ Add Pill" / "- Remove Pill" = Manual adjustments</li>
-                                    <li>"⚙️" = Settings (set pill count & refill date)</li>
+                                    <li>Gear icon = Settings (set pill count & refill date)</li>
                                 </ul>
                             </div>
 
                             <div class="help-section">
-                                <h4>✅ Tasks & XP</h4>
+                                <h4><i data-lucide="check-circle" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Tasks & XP</h4>
                                 <ul>
                                     <li>Each task = <strong>20 XP</strong></li>
                                     <li>Track 7 categories of tasks</li>
@@ -11873,15 +11897,15 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                                     <li>Use Pomodoro timer for focus sessions</li>
                                 </ul>
                                 <div class="help-tip">
-                                    <strong>🔴 Do Today Feature:</strong> Mark critical tasks with "Do Today" button. They'll appear in both their original category AND the "Critical Must Do Today" category. When completed, they disappear from "Do Today" but stay in original category. XP only counted once!
+                                    <strong>Do Today Feature:</strong> Mark critical tasks with "Do Today" button. They'll appear in both their original category AND the "Critical Must Do Today" category. When completed, they disappear from "Do Today" but stay in original category. XP only counted once!
                                 </div>
                             </div>
 
                             <div class="help-section">
-                                <h4>🆘 Emergency Recovery</h4>
+                                <h4><i data-lucide="life-buoy" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Emergency Recovery</h4>
                                 <p>If data disappears:</p>
                                 <ul>
-                                    <li>Click <strong>📂 Restore Checkpoint</strong></li>
+                                    <li>Click <strong>Restore Checkpoint</strong></li>
                                     <li>Select your most recent <code>.dent</code> file</li>
                                     <li>All data restored instantly!</li>
                                 </ul>
@@ -11891,7 +11915,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             </div>
 
                             <div class="help-section">
-                                <h4>📱 Recommended Setup</h4>
+                                <h4><i data-lucide="smartphone" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Recommended Setup</h4>
                                 <ul>
                                     <li><strong>Primary device:</strong> MacBook (easier to type)</li>
                                     <li><strong>Backup location:</strong> iCloud Drive folder</li>
@@ -11901,7 +11925,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             </div>
 
                             <div class="help-section">
-                                <h4>🎯 Quick Commands</h4>
+                                <h4><i data-lucide="target" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Quick Commands</h4>
                                 <p><strong>Keyboard shortcuts:</strong> None needed - just click!</p>
                                 <p><strong>Best workflow:</strong></p>
                                 <ul>
@@ -11924,7 +11948,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div style="position: sticky; top: 0; background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 25px; border-bottom: 3px solid #30363d; z-index: 100; border-radius: 12px 12px 0 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <div>
-                                    <h2 style="color: white; margin: 0; font-size: 2.5em;">📅 MASTER CALENDAR</h2>
+                                    <h2 style="color: white; margin: 0; font-size: 2.5em;"><i data-lucide="calendar" style="width:24px;height:24px;display:inline-block;vertical-align:middle"></i> MASTER CALENDAR</h2>
                                     <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 1.2em;" id="calendarTodayDate">Today: Loading...</p>
                                 </div>
                                 <button onclick="closeCalendar()" style="background: #dc2626; color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-size: 1.2em; font-weight: 600;">✕ Close</button>
@@ -11954,7 +11978,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             
                             <!-- Countdowns Section -->
                             <div style="background: #161b22; padding: 25px; border-radius: 12px;">
-                                <h3 style="color: #58a6ff; font-size: 2em; margin-bottom: 20px;">⏰ UPCOMING COUNTDOWNS</h3>
+                                <h3 style="color: #58a6ff; font-size: 2em; margin-bottom: 20px;"><i data-lucide="clock" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> UPCOMING COUNTDOWNS</h3>
                                 <div id="countdownsList">
                                     <!-- Countdowns will be rendered here -->
                                 </div>
@@ -11968,7 +11992,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div class="fin-modal-header">
                             <div class="fin-modal-header-top">
                                 <div class="fin-modal-title-section">
-                                    <h2 class="fin-modal-title">💰 Finances</h2>
+                                    <h2 class="fin-modal-title"><i data-lucide="wallet" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Finances</h2>
                                     <p class="fin-modal-subtitle">D3 Spring 2026</p>
                                 </div>
                                 <button onclick="closeFinancials()" class="fin-modal-close">✕</button>
@@ -12012,7 +12036,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 <div class="modal-overlay" id="notebookModal" onclick="safeModalClose(closeNotebook, event)">
                     <div class="modal-content notebook-modal" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeNotebook()" title="Close">×</button>
-                        <h3>📓 My Notebook</h3>
+                        <h3><i data-lucide="notebook" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> My Notebook</h3>
                         
                         <div class="notebook-tabs" id="notebookTabs">
                             <!-- Tabs will be inserted here -->
@@ -12050,7 +12074,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <!-- Header with live time -->
                         <div class="planner-header">
                             <div class="planner-header-left">
-                                <h3>📋 Daily Planner</h3>
+                                <h3><i data-lucide="list-todo" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i> Daily Planner</h3>
                                 <div class="planner-date" id="plannerDate">Loading...</div>
                             </div>
                             <div class="planner-header-right" style="display: flex; align-items: center;">
@@ -12065,13 +12089,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <div class="planner-input-panel">
                                 <!-- Task Input -->
                                 <div class="planner-input-section">
-                                    <label class="planner-input-label">📝 Task</label>
+                                    <label class="planner-input-label"><i data-lucide="edit" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Task</label>
                                     <textarea class="planner-task-input" id="plannerNewTask" rows="2" placeholder="What do you need to do?" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();addPlannerEvent();}"></textarea>
                                 </div>
 
                                 <!-- Or Select from Tasks -->
                                 <div class="planner-input-section">
-                                    <label class="planner-input-label">📋 Or pick from your tasks</label>
+                                    <label class="planner-input-label"><i data-lucide="list" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Or pick from your tasks</label>
                                     <select class="planner-task-dropdown" id="plannerTaskDropdown" onchange="selectTaskFromDropdown()">
                                         <option value="">-- Select a task --</option>
                                     </select>
@@ -12079,16 +12103,16 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                                 <!-- Start Time -->
                                 <div class="planner-input-section">
-                                    <label class="planner-input-label">⏰ Start Time</label>
+                                    <label class="planner-input-label"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Start Time</label>
                                     <div class="planner-time-row">
                                         <input type="time" class="planner-time-input" id="plannerNewTime" value="09:00">
-                                        <button class="planner-now-btn" onclick="setTimeToNow()">⚡ NOW</button>
+                                        <button class="planner-now-btn" onclick="setTimeToNow()"><i data-lucide="zap" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> NOW</button>
                                     </div>
                                 </div>
 
                                 <!-- Duration -->
                                 <div class="planner-input-section">
-                                    <label class="planner-input-label">⏱️ Duration</label>
+                                    <label class="planner-input-label"><i data-lucide="timer" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Duration</label>
                                     <div class="planner-duration-grid" id="plannerDurationGrid">
                                         <button class="planner-duration-btn" data-duration="5" onclick="selectDuration(5)">5m</button>
                                         <button class="planner-duration-btn" data-duration="10" onclick="selectDuration(10)">10m</button>
@@ -12114,7 +12138,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                                 <!-- Add Button -->
                                 <button class="planner-add-btn" onclick="addPlannerEvent()">
-                                    ➕ Add to Schedule
+                                    + Add to Schedule
                                 </button>
                             </div>
 
@@ -12130,20 +12154,20 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div class="planner-footer">
                             <div class="planner-footer-stats" id="plannerFooterStats">
                                 <div class="planner-footer-stat">
-                                    <span>📋</span>
+                                    <span><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span><strong id="plannerTaskCount">0</strong> tasks</span>
                                 </div>
                                 <div class="planner-footer-stat">
-                                    <span>⏱️</span>
+                                    <span><i data-lucide="timer" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span><strong id="plannerTotalTime">0h</strong> planned</span>
                                 </div>
                                 <div class="planner-footer-stat">
-                                    <span>✅</span>
+                                    <span><i data-lucide="check-circle" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span>
                                     <span><strong id="plannerCompletedCount">0</strong> done</span>
                                 </div>
                             </div>
                             <div class="planner-footer-buttons">
-                                <button class="planner-clear-btn" onclick="clearDailyPlanner()">🗑️ Clear All</button>
+                                <button class="planner-clear-btn" onclick="clearDailyPlanner()"><i data-lucide="trash-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Clear All</button>
                                 <button class="planner-close-btn" onclick="closeDailyPlanner()">Done</button>
                             </div>
                         </div>
@@ -12155,7 +12179,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
         <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; color: #e6edf3;">
             <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">🎯 Select Your ONE THING for Today</div>
+                <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: #58a6ff;"><i data-lucide="target" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Select Your ONE THING for Today</div>
                 <button onclick="closePlanningModal()" style="background: none; border: none; color: #b0b8c4; font-size: 1.5em; cursor: pointer;">✕</button>
             </div>
             <div id="planningModalBody" style="padding: 25px 30px;">
@@ -12172,7 +12196,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     <div id="taskEditModal" onclick="closeTaskEditModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
         <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 500px; width: 100%; color: #e6edf3;">
             <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 1.5em; font-weight: 700; color: #58a6ff;">✏️ Edit Task</div>
+                <div style="font-size: 1.5em; font-weight: 700; color: #58a6ff;"><i data-lucide="edit" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Edit Task</div>
                 <button onclick="closeTaskEditModal()" style="background: none; border: none; color: #b0b8c4; font-size: 1.5em; cursor: pointer;">✕</button>
             </div>
             <div style="padding: 25px 30px;">
@@ -12185,17 +12209,17 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Size (How long will this take?)</label>
                     <div style="display: flex; gap: 10px;">
                         <div class="size-option" data-size="big" onclick="selectTaskSize('big')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;">🔴</div>
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#ef4444"></span></div>
                             <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Big</div>
                             <div style="font-size: 0.75em; color: #b0b8c4;">1+ hour</div>
                         </div>
                         <div class="size-option selected" data-size="medium" onclick="selectTaskSize('medium')" style="flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 10px; text-align: center; cursor: pointer; background: rgba(102, 126, 234, 0.2);">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;">🟡</div>
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#eab308"></span></div>
                             <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Medium</div>
                             <div style="font-size: 0.75em; color: #b0b8c4;">15-45 min</div>
                         </div>
                         <div class="size-option" data-size="small" onclick="selectTaskSize('small')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;">🟢</div>
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#22c55e"></span></div>
                             <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Small</div>
                             <div style="font-size: 0.75em; color: #b0b8c4;">2-15 min</div>
                         </div>
@@ -12209,7 +12233,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <div style="position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s ease;"></div>
                         </div>
                         <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #e6edf3; margin-bottom: 2px;">📊 High Leverage Task</div>
+                            <div style="font-weight: 600; color: #e6edf3; margin-bottom: 2px;"><i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> High Leverage Task</div>
                             <div style="font-size: 0.85em; color: #b0b8c4;">20% effort → 80% impact on your goals</div>
                         </div>
                     </div>
@@ -12224,7 +12248,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     <div class="achievement-popup" id="achievementPopup">
         <h2>Level Up!</h2>
-        <div class="achievement-icon">🎉</div>
+        <div class="achievement-icon"><i data-lucide="award" style="width:48px;height:48px;display:inline-block"></i></div>
         <p style="font-size: 1.2em; color: #666;">You've reached Level <span id="newLevel"></span>!</p>
     </div>
 
@@ -12267,13 +12291,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         <div class="qa-section">
             <label class="qa-label">Category</label>
             <div class="qa-pills" id="qaCategoryPills">
-                <button class="qa-pill" data-cat="financial" onclick="selectQACategory('financial')"><span class="qa-pill-icon">💰</span><span class="qa-pill-text">Financial</span></button>
-                <button class="qa-pill" data-cat="clinic" onclick="selectQACategory('clinic')"><span class="qa-pill-icon">🦷</span><span class="qa-pill-text">Clinic</span></button>
-                <button class="qa-pill" data-cat="health" onclick="selectQACategory('health')"><span class="qa-pill-icon">❤️</span><span class="qa-pill-text">Health</span></button>
-                <button class="qa-pill" data-cat="school" onclick="selectQACategory('school')"><span class="qa-pill-icon">📋</span><span class="qa-pill-text">School</span></button>
-                <button class="qa-pill" data-cat="academic" onclick="selectQACategory('academic')"><span class="qa-pill-icon">📚</span><span class="qa-pill-text">Academic</span></button>
-                <button class="qa-pill" data-cat="future" onclick="selectQACategory('future')"><span class="qa-pill-icon">🚀</span><span class="qa-pill-text">Future</span></button>
-                <button class="qa-pill" data-cat="life" onclick="selectQACategory('life')"><span class="qa-pill-icon">🏡</span><span class="qa-pill-text">Life</span></button>
+                <button class="qa-pill" data-cat="financial" onclick="selectQACategory('financial')"><span class="qa-pill-icon"><i data-lucide="wallet" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Financial</span></button>
+                <button class="qa-pill" data-cat="clinic" onclick="selectQACategory('clinic')"><span class="qa-pill-icon"><i data-lucide="cross" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Clinic</span></button>
+                <button class="qa-pill" data-cat="health" onclick="selectQACategory('health')"><span class="qa-pill-icon"><i data-lucide="heart" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Health</span></button>
+                <button class="qa-pill" data-cat="school" onclick="selectQACategory('school')"><span class="qa-pill-icon"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">School</span></button>
+                <button class="qa-pill" data-cat="academic" onclick="selectQACategory('academic')"><span class="qa-pill-icon"><i data-lucide="book-open" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Academic</span></button>
+                <button class="qa-pill" data-cat="future" onclick="selectQACategory('future')"><span class="qa-pill-icon"><i data-lucide="rocket" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Future</span></button>
+                <button class="qa-pill" data-cat="life" onclick="selectQACategory('life')"><span class="qa-pill-icon"><i data-lucide="home" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i></span><span class="qa-pill-text">Life</span></button>
             </div>
         </div>
         <div class="qa-section">

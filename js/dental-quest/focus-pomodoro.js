@@ -288,11 +288,11 @@ function showFocusCompleteModal() {
         var checklistEl = document.getElementById('focusChecklistSummary');
 
         if (xpEl) xpEl.textContent = `+${commandCenterData?.focusStats?.lastXPGained || 20} XP`;
-        if (streakEl) streakEl.textContent = `🔥 Focus streak: ${commandCenterData.focusStats?.focusStreak || 1} sessions`;
+        if (streakEl) streakEl.textContent = `Focus streak: ${commandCenterData.focusStats?.focusStreak || 1} sessions`;
 
         var todayTasks = getTodayTriageTasks();
         var completed = todayTasks.filter(t => t.completed).length;
-        if (progressEl) progressEl.textContent = `📊 Today: ${completed}/${todayTasks.length} tasks done`;
+        if (progressEl) progressEl.textContent = `Today: ${completed}/${todayTasks.length} tasks done`;
 
         // Checklist summary
         if (commandCenterData.currentSession && commandCenterData.currentSession.checklist) {
@@ -327,14 +327,14 @@ function startNextFocusTask() {
     if (nextTask) {
         startTaskInFocus(nextTask.id);
     } else {
-        showToast('No more tasks! Great work!', '🎉');
+        showToast('No more tasks! Great work!', 'ok');
         exitFocusMode();
     }
 }
 
 function takeBreak() {
     hideFocusCompleteModal();
-    showToast('Take a 5 minute break!', '☕');
+    showToast('Take a 5 minute break!', 'ok');
     // Reset timer for break
     focusTimerSecondsRemaining = 5 * 60;
     focusTimerDuration = 5;
@@ -393,7 +393,7 @@ function renderFocusChecklist() {
             <div class="focus-checklist-item">
                 <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleFocusChecklistItem('${item.id}')">
                 <span class="item-text ${item.completed ? 'completed' : ''}">${escapeHtml(item.text)}</span>
-                <button class="delete-item" onclick="deleteFocusChecklistItem('${item.id}')">✕</button>
+                <button class="delete-item" onclick="deleteFocusChecklistItem('${item.id}')">${icon('x')}</button>
             </div>
         `).join('');
     }
@@ -458,7 +458,7 @@ function awardCommandCenterXP(amount, reason) {
         stats.totalXPGained = (stats.totalXPGained || 0) + amount;
     }
 
-    showToast(`+${amount} XP (${reason})`, '⭐');
+    showToast(`+${amount} XP (${reason})`, 'ok');
 
     // Floating XP text
     var xpContainer = document.querySelector('.xp-display-enhanced');

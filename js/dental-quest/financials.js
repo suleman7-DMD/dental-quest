@@ -32,7 +32,7 @@ function openFinancials() {
         if (dashboard) {
             dashboard.innerHTML = `
                 <div style="padding: 40px; text-align: center; color: #f87171;">
-                    <h2>⚠️ Error Loading Financial Dashboard</h2>
+                    <h2>Error Loading Financial Dashboard</h2>
                     <p style="margin: 20px 0; color: #b0b8c4;">${error.message}</p>
                     <p style="color: #b0b8c4;">Check the console for details.</p>
                     <button onclick="closeFinancials()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
@@ -198,7 +198,7 @@ function updateMasterLiquidity() {
 
     overlay.innerHTML = `
         <div class="edit-panel" onclick="event.stopPropagation()" style="max-width: 400px;">
-            <h3 style="text-align: center;">💰 Update Cash Balance</h3>
+            <h3 style="text-align: center;">Update Cash Balance</h3>
 
             <div class="edit-field">
                 <label>Actual Cash in Checking ($)</label>
@@ -207,7 +207,7 @@ function updateMasterLiquidity() {
             </div>
 
             <div style="margin: 15px 0; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 0.9em; color: #93c5fd;">
-                💡 Enter your actual bank balance to get accurate projections.
+                Enter your actual bank balance to get accurate projections.
             </div>
 
             <div class="edit-actions">
@@ -714,7 +714,7 @@ function renderActionItems() {
     return `
         <div class="fin-section">
             <div class="fin-section-header">
-                <h3>✅ Action Checklist</h3>
+                <h3>Action Checklist</h3>
                 <span class="fin-badge ${incomplete.length > 5 ? 'urgent' : incomplete.length > 0 ? 'high' : 'success'}">
                     ${incomplete.length} remaining
                 </span>
@@ -727,16 +727,16 @@ function renderActionItems() {
                 let deadlineClass = 'ok';
                 let deadlineText = '';
                 if (item.completed) {
-                    deadlineText = '✓ Completed';
+                    deadlineText = 'Completed';
                     deadlineClass = 'ok';
                 } else if (daysUntil < 0) {
-                    deadlineText = `⚠️ ${Math.abs(daysUntil)} days overdue`;
+                    deadlineText = `${Math.abs(daysUntil)} days overdue`;
                     deadlineClass = 'overdue';
                 } else if (daysUntil === 0) {
-                    deadlineText = '🔥 DUE TODAY';
+                    deadlineText = 'DUE TODAY';
                     deadlineClass = 'overdue';
                 } else if (daysUntil <= 3) {
-                    deadlineText = `⏰ ${daysUntil} days until deadline`;
+                    deadlineText = `${daysUntil} days until deadline`;
                     deadlineClass = 'soon';
                 } else {
                     deadlineText = `Due ${deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
@@ -769,7 +769,7 @@ function toggleActionItem(itemId) {
         updateCockpitStats();
 
         if (item.completed) {
-            showToast(`✅ ${item.title}`, '✓');
+            showToast(`${item.title}`, 'ok');
         }
     }
 }
@@ -783,9 +783,9 @@ function renderCreditCards() {
         <div class="fin-section">
             <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <h3 style="margin: 0;">💳 Credit Cards (7 Cards)</h3>
+                    <h3 style="margin: 0;">Credit Cards (7 Cards)</h3>
                     <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('negotiation')" style="background: rgba(34, 197, 94, 0.2); border-color: #22c55e; color: #4ade80;">
-                        📞 How To Negotiate
+                        How To Negotiate
                     </button>
                 </div>
                 <div style="text-align: right;">
@@ -826,7 +826,7 @@ function renderCreditCards() {
 
                     ${card.negotiationNotes ? `
                         <div style="margin-top: 12px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 0.9em; color: #b0b8c4;">
-                            📝 ${card.negotiationNotes}
+                            ${card.negotiationNotes}
                         </div>
                     ` : ''}
                 </div>
@@ -905,7 +905,7 @@ function saveCreditCardEdit(cardId) {
     updateCockpitStats();
     document.querySelector('.edit-overlay').remove();
 
-    showToast(`Updated ${card.name}`, '✓');
+    showToast(`Updated ${card.name}`, 'ok');
 }
 
 // ============================================
@@ -928,10 +928,10 @@ function showFinancialHelp(topic) {
 
     const helpTopics = {
         masterLiquidity: `
-            <h2>💰 Master Liquidity Control - How To Use</h2>
+            <h2>Master Liquidity Control - How To Use</h2>
 
             <div class="help-tip">
-                <strong>💡 TIP:</strong> Update this EVERY time you check your bank account. The more accurate this number, the better your projections!
+                <strong>TIP:</strong> Update this EVERY time you check your bank account. The more accurate this number, the better your projections!
             </div>
 
             <h3>Step-by-Step Instructions:</h3>
@@ -952,15 +952,15 @@ function showFinancialHelp(topic) {
 
             <div class="help-section">
                 <p><strong>4. Watch everything recalculate!</strong></p>
-                <p>✅ Projected May 14 balance updates<br>
-                ✅ Available cash after bills recalculates<br>
-                ✅ Health status changes (Green/Yellow/Red)<br>
-                ✅ Progress bar adjusts</p>
+                <p>Projected May 14 balance updates<br>
+                Available cash after bills recalculates<br>
+                Health status changes (Green/Yellow/Red)<br>
+                Progress bar adjusts</p>
             </div>
 
             <h3>When To Update:</h3>
             <div class="help-tip">
-                📅 <strong>Update on these key dates:</strong><br>
+                <strong>Update on these key dates:</strong><br>
                 • Jan 10 - When loan hits ($18,447)<br>
                 • After EVERY payment you make<br>
                 • Weekly check-ins (every Sunday)<br>
@@ -969,29 +969,29 @@ function showFinancialHelp(topic) {
         `,
 
         committedBills: `
-            <h2>📋 One-Time Bills & Monthly Expenses</h2>
+            <h2>One-Time Bills &amp; Monthly Expenses</h2>
 
             <div class="help-tip">
-                <strong>💡 KEY CONCEPT:</strong> One-time bills are things you pay ONCE (not monthly). Think of them as special payments that happen on specific dates.
+                <strong>KEY CONCEPT:</strong> One-time bills are things you pay ONCE (not monthly). Think of them as special payments that happen on specific dates.
             </div>
 
             <h3>Types of One-Time Items:</h3>
             <div class="help-section">
-                <p><strong>💸 Expenses (Red):</strong> Money going OUT</p>
+                <p><strong>Expenses (Red):</strong> Money going OUT</p>
                 <p>Examples: Pay back brother ($200), textbook purchase, etc.</p>
             </div>
 
             <div class="help-section">
-                <p><strong>💚 Income (Green):</strong> Money coming IN</p>
+                <p><strong>Income (Green):</strong> Money coming IN</p>
                 <p>Examples: Loan disbursement ($18,447), tax refund, etc.</p>
             </div>
 
             <h3>How To Use:</h3>
             <div class="help-section">
-                <p>✅ <strong>Check off</strong> items as you pay/receive them</p>
-                <p>📝 <strong>Edit</strong> to update amounts or dates</p>
-                <p>➕ <strong>Add</strong> new one-time bills as they come up</p>
-                <p>🗑️ <strong>Delete</strong> items that no longer apply</p>
+                <p><strong>Check off</strong> items as you pay/receive them</p>
+                <p><strong>Edit</strong> to update amounts or dates</p>
+                <p><strong>Add</strong> new one-time bills as they come up</p>
+                <p><strong>Delete</strong> items that no longer apply</p>
             </div>
 
             <h3>Impact on Projections:</h3>
@@ -1002,10 +1002,10 @@ function showFinancialHelp(topic) {
         `,
 
         negotiation: `
-            <h2>📞 Credit Card Negotiation Guide</h2>
+            <h2>Credit Card Negotiation Guide</h2>
 
             <div class="help-tip">
-                <strong>💡 KEY INSIGHT:</strong> Credit card companies would rather get SOMETHING than send you to collections. You have more leverage than you think!
+                <strong>KEY INSIGHT:</strong> Credit card companies would rather get SOMETHING than send you to collections. You have more leverage than you think!
             </div>
 
             <h3>The Script:</h3>
@@ -1051,10 +1051,10 @@ function showFinancialHelp(topic) {
         `,
 
         projections: `
-            <h2>📊 Understanding Your Projections</h2>
+            <h2>Understanding Your Projections</h2>
 
             <div class="help-tip">
-                <strong>💡 KEY CONCEPT:</strong> This shows your projected balance on May 14, 2026 (next loan disbursement) based on actual expenses you still need to pay.
+                <strong>KEY CONCEPT:</strong> This shows your projected balance on May 14, 2026 (next loan disbursement) based on actual expenses you still need to pay.
             </div>
 
             <h3>How The Math Works:</h3>
@@ -1086,37 +1086,37 @@ function showFinancialHelp(topic) {
                 <p>This is what you'll have when the next disbursement arrives!</p>
             </div>
 
-            <h3>🚦 What The Colors Mean:</h3>
+            <h3>What The Colors Mean:</h3>
             <div class="help-section">
-                <p><strong style="color: #4ade80;">🟢 GREEN - "ON TRACK":</strong></p>
+                <p><strong style="color: #4ade80;">GREEN - "ON TRACK":</strong></p>
                 <p>You'll have MORE than your $2,285 target cushion. Great shape!</p>
             </div>
 
             <div class="help-section">
-                <p><strong style="color: #fbbf24;">🟡 YELLOW - "BELOW TARGET":</strong></p>
+                <p><strong style="color: #fbbf24;">YELLOW - "BELOW TARGET":</strong></p>
                 <p>You'll have SOME cushion but less than $2,285. Tight but okay.</p>
             </div>
 
             <div class="help-section">
-                <p><strong style="color: #f87171;">🔴 RED - "DEFICIT PROJECTED":</strong></p>
+                <p><strong style="color: #f87171;">RED - "DEFICIT PROJECTED":</strong></p>
                 <p>You're projected to RUN OUT before May 14. Adjust spending!</p>
             </div>
 
             <h3>How To Improve Your Projection:</h3>
             <div class="help-tip">
-                ✅ Check off individual expenses as you pay them<br>
-                ✅ Use "Pay All" when you've paid an entire month<br>
-                ✅ Negotiate credit card minimums down (update template + months)<br>
-                ✅ Delete unnecessary expenses from specific months<br>
-                ✅ Update actual cash (might be higher than you thought!)
+                Check off individual expenses as you pay them<br>
+                Use "Pay All" when you've paid an entire month<br>
+                Negotiate credit card minimums down (update template + months)<br>
+                Delete unnecessary expenses from specific months<br>
+                Update actual cash (might be higher than you thought!)
             </div>
         `,
 
         recurringExpenses: `
-            <h2>🔄 Per-Month Expenses - How To Use</h2>
+            <h2>Per-Month Expenses - How To Use</h2>
 
             <div class="help-tip">
-                <strong>💡 KEY:</strong> Each month has its OWN independent set of expenses. Editing one month does NOT affect any other month!
+                <strong>KEY:</strong> Each month has its OWN independent set of expenses. Editing one month does NOT affect any other month!
             </div>
 
             <h3>How It Works:</h3>
@@ -1151,10 +1151,10 @@ function showFinancialHelp(topic) {
         `,
 
         expenseTemplate: `
-            <h2>📝 Expense Template - How To Use</h2>
+            <h2>Expense Template - How To Use</h2>
 
             <div class="help-tip">
-                <strong>💡 KEY:</strong> The template defines the DEFAULT expenses that each new month starts with. Editing the template does NOT retroactively change existing months.
+                <strong>KEY:</strong> The template defines the DEFAULT expenses that each new month starts with. Editing the template does NOT retroactively change existing months.
             </div>
 
             <h3>What's In The Template:</h3>
@@ -1170,7 +1170,7 @@ function showFinancialHelp(topic) {
             </div>
 
             <div class="help-warning">
-                <strong>⚠️ NOTE:</strong> If you want to change an expense for a SPECIFIC month (e.g., March only), edit it in the monthly expenses section instead. The template is only for setting defaults.
+                <strong>NOTE:</strong> If you want to change an expense for a SPECIFIC month (e.g., March only), edit it in the monthly expenses section instead. The template is only for setting defaults.
             </div>
         `
     };
