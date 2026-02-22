@@ -144,27 +144,12 @@ function renderTasks() {
 
     taskList.innerHTML = filteredTasks.map((task, index) => {
         const isDoTodayView = currentCategory === 'dotoday';
-        const categoryIcons = {
-            financial: icon('wallet'),
-            clinic: icon('heart'),
-            health: icon('heart'),
-            school: icon('clipboard-list'),
-            academic: icon('graduation-cap'),
-            future: icon('rocket'),
-            life: icon('home')
-        };
         const categoryNames = {
-            financial: 'Financial',
-            clinic: 'Clinic',
-            health: 'Health',
-            school: 'School',
-            academic: 'Academic',
-            future: 'Future',
-            life: 'Life'
+            financial: 'FIN', clinic: 'CLI', health: 'HTH',
+            school: 'SCH', academic: 'ACA', future: 'FUT', life: 'LIF'
         };
 
-        const sizeIcon = task.size === 'big' ? '<span class="size-dot size-big"></span>' : task.size === 'small' ? '<span class="size-dot size-small"></span>' : '<span class="size-dot size-medium"></span>';
-        const leverageIcon = task.highLeverage ? icon('activity') : '';
+        const sizeLabel = task.size === 'big' ? 'L' : task.size === 'small' ? 'S' : 'M';
 
         return `
             <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}"
@@ -176,26 +161,25 @@ function renderTasks() {
                  ondragleave="handleDragLeave(event)"
                  ondrop="handleDrop(event, '${task.id}')"
                  ondragend="handleDragEnd(event)">
-                <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
                 <div class="task-row-top">
                     <input type="checkbox"
                            class="task-checkbox"
                            ${task.completed ? 'checked' : ''}
                            onchange="toggleTask('${task.id}')">
-                    ${isDoTodayView ? `<span class="category-label">${categoryIcons[task.category]} ${categoryNames[task.category]}</span>` : ''}
-                    <span style="font-size: 0.8em; flex-shrink: 0;" title="${task.size || 'medium'} task${task.highLeverage ? ' - High Leverage' : ''}">${sizeIcon}${leverageIcon}</span>
                     <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
+                    ${task.highLeverage ? '<span class="task-meta-tag leverage" title="High leverage">' + icon('zap') + '</span>' : ''}
+                    <span class="task-meta-tag size" title="${task.size || 'medium'}">${sizeLabel}</span>
+                    ${isDoTodayView ? '<span class="task-meta-tag cat">' + (categoryNames[task.category] || '') + '</span>' : ''}
+                    ${task.doToday && !isDoTodayView ? '<span class="task-meta-tag today">TODAY</span>' : ''}
                 </div>
+                ${!task.completed && !isDoTodayView ? `
+                    <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')" title="${task.doToday ? 'Remove from today' : 'Do today'}">
+                        ${task.doToday ? icon('check') : icon('sun')}
+                    </button>
+                ` : ''}
                 <div class="task-actions">
-                    ${task.doToday && !isDoTodayView ? '<span class="today-badge"><span class="do-today-dot"></span> TODAY</span>' : ''}
-                    ${!task.completed && !isDoTodayView ? `
-                        <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')">
-                            ${task.doToday ? icon('check') + ' Today' : '<span class="do-today-dot"></span> Today'}
-                        </button>
-                    ` : ''}
-                    ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">${icon('timer')}</button>` : ''}
-                    ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">${icon('edit')}</button>` : ''}
-                    <button class="task-delete-btn" onclick="deleteTask('${task.id}')">${icon('trash-2')}</button>
+                    ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" title="Edit">${icon('edit')}</button>` : ''}
+                    <button class="task-delete-btn" onclick="deleteTask('${task.id}')" title="Delete">${icon('trash-2')}</button>
                 </div>
             </div>
         `;
@@ -910,7 +894,11 @@ function renderKanbanBoard() {
     today.sort(sortFn);
     tomorrow.sort(sortFn);
     completed.sort(function(a, b) {
-        return (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || '');
+        var bTime = b.completedAt || b.createdAt || 0;
+        var aTime = a.completedAt || a.createdAt || 0;
+        // Handle both string ISO dates and numeric timestamps
+        if (typeof bTime === 'string' && typeof aTime === 'string') return bTime.localeCompare(aTime);
+        return (typeof bTime === 'number' ? bTime : new Date(bTime).getTime()) - (typeof aTime === 'number' ? aTime : new Date(aTime).getTime());
     });
 
     // Render columns — uses escapeHtml() for all user content (XSS-safe)
@@ -1119,8 +1107,9 @@ function updateSidebarStats() {
                 doTodayCount++;
                 if (t.triageTier === 'lockedIn') lockedInCount++;
             }
-        } else if (t.completedAt && t.completedAt.slice(0, 10) === todayStr) {
-            completedToday++;
+        } else if (t.completedAt) {
+            var catStr = typeof t.completedAt === 'string' ? t.completedAt : new Date(t.completedAt).toISOString();
+            if (catStr.slice(0, 10) === todayStr) completedToday++;
         }
     }
 
@@ -1146,8 +1135,6 @@ function updateSidebarStats() {
     // Metrics row
     el = document.getElementById('metricDoToday');
     if (el) el.textContent = doTodayCount;
-    el = document.getElementById('metricDoTodaySub');
-    if (el) el.textContent = lockedInCount + ' locked in';
     el = document.getElementById('metricRemaining');
     if (el) el.textContent = remaining;
     el = document.getElementById('metricCompleted');

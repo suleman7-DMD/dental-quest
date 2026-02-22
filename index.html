@@ -743,10 +743,10 @@
         .task-item {
             background: var(--surface-primary);
             border-radius: 0;
-            padding: 12px 16px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             transition: background 0.15s ease;
             border-left: 3px solid transparent;
             border-bottom: 1px solid var(--border-subtle);
@@ -769,14 +769,20 @@
         .task-item .task-row-top {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
             flex: 1;
+            min-width: 0;
         }
         .task-item .task-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        .task-item:hover .task-actions {
+            opacity: 1;
         }
 
         /* ==================== COMMAND CENTER STYLES ==================== */
@@ -2039,68 +2045,81 @@
         }
 
         .task-item .drag-handle {
-            cursor: grab;
+            display: none;
+        }
+
+        /* Compact inline meta tags for task rows */
+        .task-meta-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
             color: var(--fg-muted);
-            padding: 0 8px;
-            font-size: 1.2em;
+            background: var(--canvas-inset);
+            flex-shrink: 0;
+            line-height: 1.4;
         }
-
-        .task-item .drag-handle:hover {
-            color: var(--accent);
-        }
-
-        .today-badge {
+        .task-meta-tag.today {
             background: var(--destructive-light);
             color: var(--destructive);
-            padding: 3px 8px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75em;
-            font-weight: 600;
-            margin-left: 8px;
+        }
+        .task-meta-tag.leverage {
+            color: var(--warning);
+            background: transparent;
+            padding: 0;
+        }
+        .task-meta-tag.leverage svg { width: 13px; height: 13px; }
+
+        .today-badge {
+            display: none;
         }
 
         .category-label {
             background: var(--canvas-inset);
             color: var(--fg-tertiary);
-            padding: 3px 8px;
-            border-radius: var(--radius-sm);
-            font-size: var(--text-xs);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
             font-weight: 600;
-            margin-right: 8px;
         }
 
         .do-today-btn {
-            padding: 8px 15px;
-            background: var(--destructive-light);
-            color: var(--destructive);
-            border: 1px solid var(--destructive);
+            padding: 4px 8px;
+            background: transparent;
+            color: var(--fg-muted);
+            border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 500;
             transition: all 0.15s ease;
         }
 
         .do-today-btn:hover {
-            background: var(--destructive);
-            color: white;
+            background: var(--destructive-light);
+            color: var(--destructive);
+            border-color: var(--destructive);
         }
 
         .do-today-btn.active {
-            background: var(--success);
-            color: white;
+            background: var(--success-light, rgba(107,124,94,0.1));
+            color: var(--success);
             border-color: var(--success);
         }
 
         .do-today-btn.active:hover {
             background: var(--accent-hover);
+            color: white;
         }
 
         .task-checkbox {
-            width: 18px;
-            height: 18px;
-            min-width: 18px;
-            min-height: 18px;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
             cursor: pointer;
             -webkit-appearance: none;
             appearance: none;
@@ -2135,9 +2154,12 @@
 
         .task-text {
             flex: 1;
-            font-size: var(--text-base);
+            font-size: 13px;
             color: var(--fg-primary);
-            line-height: 1.5;
+            line-height: 1.4;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .task-text.completed {
@@ -2147,36 +2169,37 @@
         }
 
         .task-timer-btn {
-            padding: 10px 16px;
-            min-height: 44px;
-            background: var(--accent);
-            color: var(--accent-fg);
+            padding: 4px 6px;
+            background: transparent;
+            color: var(--fg-muted);
             border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.15s ease;
+            font-size: 13px;
+            transition: all 0.15s ease;
+            line-height: 1;
         }
 
         .task-timer-btn:hover {
-            background: var(--accent-hover);
+            background: var(--canvas-inset);
+            color: var(--accent);
         }
 
         .task-delete-btn {
-            padding: 10px 16px;
-            min-height: 44px;
-            background: var(--destructive-light);
-            color: var(--destructive);
-            border: 1px solid var(--destructive);
+            padding: 4px 6px;
+            background: transparent;
+            color: var(--fg-muted);
+            border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 13px;
             transition: all 0.15s ease;
+            line-height: 1;
         }
 
         .task-delete-btn:hover {
-            background: var(--destructive);
-            color: white;
+            background: var(--destructive-light);
+            color: var(--destructive);
         }
 
         .timer-display {
@@ -10672,11 +10695,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         gap: 0;
     }
 
-    /* TASK ITEMS: warm list items — 2-row layout */
+    /* TASK ITEMS: clean minimal rows */
     #fullViewContainer .task-item {
-        padding: 10px 10px 8px;
+        padding: 8px 10px;
         gap: 6px;
-        flex-wrap: wrap;
         align-items: center;
         border-radius: 0 !important;
         overflow: visible;
@@ -10685,20 +10707,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         border-bottom: 1px solid var(--border-subtle) !important;
         border-left: 3px solid transparent !important;
         box-shadow: none;
-        animation: slideInTask 0.25s ease-out backwards;
         -webkit-user-drag: none;
     }
-    /* Stagger delays */
-    #fullViewContainer .task-item:nth-child(1) { animation-delay: 0ms; }
-    #fullViewContainer .task-item:nth-child(2) { animation-delay: 30ms; }
-    #fullViewContainer .task-item:nth-child(3) { animation-delay: 60ms; }
-    #fullViewContainer .task-item:nth-child(4) { animation-delay: 90ms; }
-    #fullViewContainer .task-item:nth-child(5) { animation-delay: 120ms; }
-    #fullViewContainer .task-item:nth-child(6) { animation-delay: 150ms; }
-    #fullViewContainer .task-item:nth-child(7) { animation-delay: 180ms; }
-    #fullViewContainer .task-item:nth-child(8) { animation-delay: 210ms; }
-    #fullViewContainer .task-item:nth-child(9) { animation-delay: 240ms; }
-    #fullViewContainer .task-item:nth-child(10) { animation-delay: 270ms; }
 
     /* Category color tints on task items */
     #fullViewContainer .task-item.financial { border-left-color: var(--cat-financial) !important; }
@@ -10714,110 +10724,32 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         background: var(--canvas-subtle) !important;
     }
 
-    /* Disable hover lift on mobile */
-    #fullViewContainer .task-item:hover {
-        transform: none !important;
-    }
-
-    /* Checkbox: circle style, stays row 1 */
-    #fullViewContainer .task-item .task-checkbox {
-        width: 18px !important;
-        height: 18px !important;
-        min-width: 18px !important;
-        min-height: 18px !important;
-        flex-shrink: 0;
-        margin-top: 2px;
-        order: 0;
-    }
-
-    /* TASK ITEM: 2-row layout using explicit DOM structure */
-    #fullViewContainer .task-item {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 6px;
-    }
-
-    /* Row 1: checkbox + icon + text in a horizontal strip */
+    /* Row 1: single-line horizontal strip */
     #fullViewContainer .task-item .task-row-top {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 8px;
         width: 100%;
     }
 
-    /* Task text: fills remaining space on row 1 */
+    /* Task text: fills remaining space */
     #fullViewContainer .task-item .task-text {
         flex: 1 1 auto;
         min-width: 0;
-        font-size: 0.88em;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.4;
         word-wrap: break-word;
         overflow-wrap: break-word;
         white-space: normal;
         color: var(--fg-primary);
     }
 
-    /* Size icon in row 1 */
-    #fullViewContainer .task-item .task-row-top > span[title] {
-        font-size: 0.72em;
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    /* Category label in row 1 (doToday view) */
-    #fullViewContainer .task-item .task-row-top .category-label {
-        font-size: 0.72em;
-        padding: 2px 6px;
-        flex-shrink: 0;
-        border-radius: 4px;
-    }
-
-    /* Row 2: actions strip — badges + buttons */
+    /* Mobile: always show actions (no hover) */
     #fullViewContainer .task-item .task-actions {
         display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
+        gap: 4px;
         align-items: center;
-        padding-left: 30px;
-    }
-
-    /* Today badge in action row */
-    #fullViewContainer .task-item .task-actions .today-badge {
-        font-size: 0.7em;
-        padding: 3px 8px;
-        background: var(--destructive-light);
-        color: var(--destructive);
-        border-radius: var(--radius-sm);
-        font-weight: 600;
-    }
-
-    /* ACTION BUTTONS: compact warm pills */
-    #fullViewContainer .task-item .task-actions .do-today-btn {
-        padding: 4px 10px;
-        font-size: 0.7em;
-        min-height: 28px;
-        border-radius: var(--radius-sm);
-        background: var(--destructive-light);
-        border: 1px solid var(--destructive);
-        color: var(--destructive);
-    }
-    #fullViewContainer .task-item .task-actions .task-timer-btn {
-        padding: 4px 10px;
-        font-size: 0.7em;
-        min-height: 28px;
-        border-radius: var(--radius-sm);
-        background: var(--accent-lighter);
-        border: 1px solid var(--accent);
-        color: var(--accent);
-    }
-    #fullViewContainer .task-item .task-actions .task-delete-btn {
-        padding: 4px 10px;
-        font-size: 0.7em;
-        min-height: 28px;
-        border-radius: var(--radius-sm);
-        background: var(--destructive-light);
-        border: 1px solid var(--destructive);
-        color: var(--destructive);
+        opacity: 1;
     }
 
     /* Timer section: hide on mobile */
@@ -11298,51 +11230,58 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     flex: 1;
 }
 
-/* --- Metrics Row --- */
+/* --- Metrics Bar (compact inline) --- */
 .metrics-row {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-.metric-card {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 16px;
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    cursor: default;
-    transition: box-shadow 0.15s ease;
+    padding: 0;
+    overflow: hidden;
 }
+.metric-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    cursor: default;
+    transition: background 0.15s ease;
+    border-right: 1px solid var(--border-subtle);
+    flex: 1;
+    min-width: 0;
+}
+.metric-card:last-child { border-right: none; }
 .metric-card:hover {
-    box-shadow: var(--shadow-sm);
+    background: var(--canvas-subtle);
 }
 .metric-card.clickable {
     cursor: pointer;
 }
 .metric-card.clickable:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-default);
+    background: var(--canvas-inset);
 }
 .metric-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: var(--fg-muted);
+    white-space: nowrap;
 }
 .metric-value {
-    font-size: 24px;
+    font-size: 16px;
     font-weight: 700;
     font-family: var(--font-mono);
     color: var(--fg-primary);
-    line-height: 1.2;
+    line-height: 1;
 }
 .metric-sub {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--fg-tertiary);
+    white-space: nowrap;
 }
 .metric-card.streak .metric-value {
     color: var(--warning);
@@ -11650,7 +11589,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     .sidebar-stats { align-items: center; }
     .sidebar-sync-status { justify-content: center; }
     .kanban-board { grid-template-columns: repeat(2, 1fr); }
-    .metrics-row { grid-template-columns: repeat(3, 1fr); }
+    .metrics-row { flex-wrap: wrap; }
+    .metric-card { min-width: 80px; }
     .top-bar { padding: 10px 20px; }
     .content-area { padding: 20px; }
 }
@@ -11689,9 +11629,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     .sidebar-sync-status { justify-content: flex-start; }
 
     .kanban-board { grid-template-columns: 1fr 1fr; }
-    .metrics-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .metric-card { padding: 10px 12px; }
-    .metric-value { font-size: 20px; }
+    .metrics-row { flex-wrap: wrap; }
+    .metric-card { padding: 6px 10px; }
+    .metric-value { font-size: 14px; }
+    .metric-label { font-size: 9px; }
+    .metric-sub { display: none; }
     .content-area { padding: 16px 12px; }
     .top-bar { padding: 10px 16px; }
     .view-controls { gap: 10px; }
@@ -11699,10 +11641,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
 @media (max-width: 480px) {
     .kanban-board { grid-template-columns: 1fr; }
-    .metrics-row { grid-template-columns: repeat(2, 1fr); }
-    .metric-card:last-child:nth-child(odd) {
-        grid-column: 1 / -1;
-    }
+    .metrics-row { gap: 0; }
+    .metric-card { padding: 5px 8px; }
+    /* Show actions always on mobile (no hover) */
+    .task-item .task-actions { opacity: 1; }
 }
 
 /* Hide old elements when sidebar layout is active */
@@ -11728,6 +11670,17 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     padding: 0;
     margin: 0;
 }
+
+/* Hide old elements — replaced by new sidebar layout components */
+.has-sidebar #fullViewContainer .category-tabs { display: none !important; }
+.has-sidebar #fullViewContainer .category-xp-bar { display: none !important; }
+.has-sidebar #fullViewContainer .add-task-form { display: none !important; }
+.has-sidebar #fullViewContainer .timer-section { display: none !important; }
+.has-sidebar #fullViewContainer .main-content { grid-template-columns: 1fr !important; }
+.has-sidebar #fullViewContainer .tasks-section { border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; }
+.has-sidebar #fullViewContainer .task-list { gap: 0 !important; }
+.has-sidebar #fullViewContainer .medication-tracker { display: none !important; }
+.has-sidebar #fullViewContainer .task-item .task-text { white-space: nowrap !important; }
 
     </style>
 </head>
@@ -11856,28 +11809,25 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
             <!-- Dashboard Metrics Row -->
             <div class="metrics-row" id="metricsRow">
                 <div class="metric-card clickable" onclick="toggleDashboardExpansion('doToday')">
-                    <span class="metric-label">DO TODAY</span>
+                    <span class="metric-label">TODAY</span>
                     <span class="metric-value" id="metricDoToday">0</span>
-                    <span class="metric-sub" id="metricDoTodaySub">0 locked in</span>
                 </div>
                 <div class="metric-card">
                     <span class="metric-label">REMAINING</span>
                     <span class="metric-value" id="metricRemaining">0</span>
                 </div>
                 <div class="metric-card clickable" onclick="toggleDashboardExpansion('completed')">
-                    <span class="metric-label">COMPLETED</span>
+                    <span class="metric-label">DONE</span>
                     <span class="metric-value" id="metricCompleted">0</span>
-                    <span class="metric-sub">today</span>
                 </div>
                 <div class="metric-card">
-                    <span class="metric-label">XP TODAY</span>
+                    <span class="metric-label">XP</span>
                     <span class="metric-value" id="metricXPToday">+0</span>
-                    <span class="metric-sub">Level <span id="metricLevel">1</span></span>
+                    <span class="metric-sub">Lv<span id="metricLevel">1</span></span>
                 </div>
                 <div class="metric-card streak">
                     <span class="metric-label">STREAK</span>
                     <span class="metric-value" id="metricStreak">0</span>
-                    <span class="metric-sub">days</span>
                 </div>
             </div>
 
