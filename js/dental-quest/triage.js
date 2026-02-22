@@ -80,7 +80,7 @@ function renderTaskCard(task, tier) {
                 <span class="task-text">${escapeHtml(task.text)}</span>
                 ${scheduledTime}
                 <div class="task-card-actions">
-                    <button class="btn-start" onclick="startFocusSession('${task.id}')" title="Start">▶</button>
+                    <button class="btn-start" onclick="startFocusSession('${task.id}')" title="Start">${icon('play')}</button>
                     ${actionBtn}
                 </div>
             </div>
@@ -110,8 +110,8 @@ function renderScheduledSection() {
                 <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                 <span class="task-text" style="flex: 1;">${escapeHtml(task.text)}</span>
                 <span style="color: #8b949e; font-size: 12px;">${task.crashOutDuration || 30}m</span>
-                <button class="btn-start" onclick="startFocusSession('${task.id}')">▶</button>
-                <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">✕</button>
+                <button class="btn-start" onclick="startFocusSession('${task.id}')">${icon('play')}</button>
+                <button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">${icon('x')}</button>
             </div>
         `).join('');
     }
@@ -138,12 +138,12 @@ function renderRolledOverSection() {
         container.innerHTML = rolledOverTasks.map(task => `
             <div class="task-card" data-task-id="${task.id}" style="border-left: 3px solid #f59e0b;">
                 <div class="task-card-main">
-                    <span style="color: #f59e0b; font-size: 12px;">⚠️</span>
+                    <span style="color: #f59e0b; font-size: 12px;">${icon('alert-triangle')}</span>
                     <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                     <span class="task-text">${escapeHtml(task.text)}</span>
                     <span style="font-size: 11px; color: #8b949e;">from ${task.rolledOver.fromDate}</span>
                     <div class="task-card-actions">
-                        <button class="btn-start" onclick="startFocusSession('${task.id}')">▶</button>
+                        <button class="btn-start" onclick="startFocusSession('${task.id}')">${icon('play')}</button>
                         <button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>
                     </div>
                 </div>
@@ -385,7 +385,7 @@ function setTaskTier(taskId, tier) {
     updateAllTriageProgress();
     updateOverallProgress();
     saveData();
-    showToast(`Moved to ${tier === 'lockedIn' ? 'LOCKED IN' : tier.toUpperCase()}`, '✓');
+    showToast(`Moved to ${tier === 'lockedIn' ? 'LOCKED IN' : tier.toUpperCase()}`, 'ok');
 }
 
 function sendToCrashOut(taskId) {
@@ -395,7 +395,7 @@ function sendToCrashOut(taskId) {
     // If no sleep time set, switch to Crash Out mode for setup
     if (!commandCenterData.crashOut.sleepTime) {
         switchCommandCenterMode('crashout');
-        showToast('Set your sleep time first', '⏰');
+        showToast('Set your sleep time first', '!');
         return;
     }
 
@@ -444,7 +444,7 @@ function sendToCrashOut(taskId) {
 
     renderFocusMode();
     saveData();
-    showToast(`Scheduled for ${timeStr}`, '⏰');
+    showToast(`Scheduled for ${timeStr}`, 'ok');
 }
 
 // Recalculate all scheduled task times based on their order
@@ -517,7 +517,7 @@ function editTriageTaskText(taskId) {
 function triageQuickAddTask() {
     const input = document.getElementById('triageQuickAdd');
     if (!input || !input.value.trim()) {
-        showToast('Please enter a task', '⚠️');
+        showToast('Please enter a task', '!');
         return;
     }
 
@@ -681,10 +681,10 @@ function showTaskDetailsModal(taskId) {
     if (!task) return;
 
     const tierLabels = {
-        lockedIn: '🔥 LOCKED IN',
-        today: '📋 TODAY',
-        scheduled: '⏰ SCHEDULED',
-        tomorrow: '📅 TOMORROW'
+        lockedIn: 'LOCKED IN',
+        today: 'TODAY',
+        scheduled: 'SCHEDULED',
+        tomorrow: 'TOMORROW'
     };
     const tierLabel = tierLabels[task.triageTier] || tierLabels.today;
     const catInfo = getCategoryInfo(task.category);
@@ -727,16 +727,16 @@ function showTaskDetailsModal(taskId) {
             </div>
             <div class="task-details-actions">
                 <button onclick="startTaskInFocus('${taskId}'); closeTaskDetailsModal();">
-                    <span>▶</span> Start Focus Session
+                    <span>${icon('play')}</span> Start Focus Session
                 </button>
                 <button onclick="sendToCrashOut('${taskId}'); closeTaskDetailsModal();">
-                    <span>🔥</span> Send to Crash Out
+                    <span>${icon('flame')}</span> Send to Crash Out
                 </button>
                 <button onclick="editTriageTaskText('${taskId}'); closeTaskDetailsModal();">
-                    <span>✏️</span> Edit Task Text
+                    <span>${icon('edit')}</span> Edit Task Text
                 </button>
                 <button class="danger-btn" onclick="unflagFromToday('${taskId}'); closeTaskDetailsModal();">
-                    <span>🚫</span> Remove from Today (unflag)
+                    <span>${icon('x')}</span> Remove from Today (unflag)
                 </button>
             </div>
         </div>

@@ -140,15 +140,15 @@ function updateMedCard(medType) {
             if (daysUntilRefill <= 0) {
                 // Refill date has passed or is today
                 statusElement.classList.add('on-track');
-                statusElement.innerHTML = '✓ Refill date reached! <span class="expand-icon" id="expandIcon' + medType + '">▼</span>';
+                statusElement.innerHTML = 'Refill date reached! <span class="expand-icon" id="expandIcon' + medType + '">' + icon('chevron-down') + '</span>';
             } else if (difference >= 0) {
                 // On track or ahead
                 if (difference === 0) {
                     statusElement.classList.add('on-track');
-                    statusElement.innerHTML = `✓ On track - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">▼</span>`;
+                    statusElement.innerHTML = `On track - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">${icon('chevron-down')}</span>`;
                 } else {
                     statusElement.classList.add('ahead');
-                    statusElement.innerHTML = `↑ ${difference} pill${difference > 1 ? 's' : ''} ahead - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">▼</span>`;
+                    statusElement.innerHTML = `${icon('arrow-up')} ${difference} pill${difference > 1 ? 's' : ''} ahead - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">${icon('chevron-down')}</span>`;
                 }
             } else {
                 // Behind schedule (deficit)
@@ -156,10 +156,10 @@ function updateMedCard(medType) {
 
                 if (deficit <= 3) {
                     statusElement.classList.add('slightly-behind');
-                    statusElement.innerHTML = `⚠ ${deficit} pill${deficit > 1 ? 's' : ''} behind - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">▼</span>`;
+                    statusElement.innerHTML = `${icon('alert-triangle')} ${deficit} pill${deficit > 1 ? 's' : ''} behind - ${actualPills} pills for ${daysFromTomorrow} days (${totalWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">${icon('chevron-down')}</span>`;
                 } else {
                     statusElement.classList.add('behind');
-                    statusElement.innerHTML = `🚨 ${deficit} pill${deficit > 1 ? 's' : ''} behind - You have ${daysUntilRefill} day${daysUntilRefill > 1 ? 's' : ''} until refill (${totalWeekdays} weekdays), and you will be ${daysWithoutMeds} day${daysWithoutMeds > 1 ? 's' : ''} without medication (${deficitWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">▼</span>`;
+                    statusElement.innerHTML = `${icon('alert-circle')} ${deficit} pill${deficit > 1 ? 's' : ''} behind - You have ${daysUntilRefill} day${daysUntilRefill > 1 ? 's' : ''} until refill (${totalWeekdays} weekdays), and you will be ${daysWithoutMeds} day${daysWithoutMeds > 1 ? 's' : ''} without medication (${deficitWeekdays} weekdays) <span class="expand-icon" id="expandIcon${medType}">${icon('chevron-down')}</span>`;
                 }
             }
         }
@@ -201,9 +201,9 @@ function takeMed(medType) {
 
         updateMedicationDisplay();
         saveData();
-        showToast(`Logged ${medType} dose`, '💊');
+        showToast(`Logged ${medType} dose`, 'ok');
     } else {
-        showToast('No pills remaining!', '⚠️');
+        showToast('No pills remaining!', '!');
     }
 }
 
@@ -230,9 +230,9 @@ function takeBothMeds() {
         // Update display once for both
         updateMedicationDisplay();
         saveData();
-        showToast('Logged daily dose (both pills)', '✅');
+        showToast('Logged daily dose (both pills)', 'ok');
     } else {
-        showToast('Not enough pills remaining for both doses', '⚠️');
+        showToast('Not enough pills remaining for both doses', '!');
     }
 }
 
@@ -247,9 +247,9 @@ function adjustMed(medType, amount) {
         med.lastManualChangeType = amount > 0 ? 'up' : 'down';
         updateMedicationDisplay();
         saveData();
-        showToast(amount > 0 ? 'Pill added' : 'Pill removed', '💊');
+        showToast(amount > 0 ? 'Pill added' : 'Pill removed', 'ok');
     } else {
-        showToast('Invalid pill count', '⚠️');
+        showToast('Invalid pill count', '!');
     }
 }
 
@@ -329,7 +329,7 @@ function saveMedSettings() {
     updateMedicationDisplay();
     saveData();
     closeMedModal();
-    showToast('Settings saved', '✅');
+    showToast('Settings saved', 'ok');
 }
 
 

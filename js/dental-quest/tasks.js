@@ -61,13 +61,13 @@ function addTask() {
 // Update category XP display
 function updateCategoryXPDisplay() {
     const categoryNames = {
-        financial: '💰 Financial Progress',
-        clinic: '🦷 Clinic Requirements Progress',
-        health: '❤️ Health & Wellbeing Progress',
-        school: '📋 School Maintenance Progress',
-        academic: '📚 Academic & Didactic Progress',
-        future: '🚀 Future Job & Life Progress',
-        life: '🏡 General Life Maintenance Progress'
+        financial: 'Financial Progress',
+        clinic: 'Clinic Requirements Progress',
+        health: 'Health & Wellbeing Progress',
+        school: 'School Maintenance Progress',
+        academic: 'Academic & Didactic Progress',
+        future: 'Future Job & Life Progress',
+        life: 'General Life Maintenance Progress'
     };
 
     // Get tasks for current category
@@ -128,7 +128,7 @@ function renderTasks() {
     if (filteredTasks.length === 0) {
         let emptyMessage = 'No tasks yet. Add one above to get started!';
         if (currentCategory === 'dotoday') {
-            emptyMessage = 'No critical tasks for today. Mark tasks with "🔴 Today" to see them here!';
+            emptyMessage = 'No critical tasks for today. Mark tasks with "Today" to see them here!';
         }
 
         taskList.innerHTML = `
@@ -145,13 +145,13 @@ function renderTasks() {
     taskList.innerHTML = filteredTasks.map((task, index) => {
         const isDoTodayView = currentCategory === 'dotoday';
         const categoryIcons = {
-            financial: '💰',
-            clinic: '🦷',
-            health: '❤️',
-            school: '📋',
-            academic: '📚',
-            future: '🚀',
-            life: '🏡'
+            financial: icon('wallet'),
+            clinic: icon('heart'),
+            health: icon('heart'),
+            school: icon('clipboard-list'),
+            academic: icon('graduation-cap'),
+            future: icon('rocket'),
+            life: icon('home')
         };
         const categoryNames = {
             financial: 'Financial',
@@ -163,8 +163,8 @@ function renderTasks() {
             life: 'Life'
         };
 
-        const sizeIcon = task.size === 'big' ? '🔴' : task.size === 'small' ? '🟢' : '🟡';
-        const leverageIcon = task.highLeverage ? '📊' : '';
+        const sizeIcon = task.size === 'big' ? '<span class="size-dot size-big"></span>' : task.size === 'small' ? '<span class="size-dot size-small"></span>' : '<span class="size-dot size-medium"></span>';
+        const leverageIcon = task.highLeverage ? icon('activity') : '';
 
         return `
             <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}"
@@ -187,15 +187,15 @@ function renderTasks() {
                     <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
                 </div>
                 <div class="task-actions">
-                    ${task.doToday && !isDoTodayView ? '<span class="today-badge">🔴 TODAY</span>' : ''}
+                    ${task.doToday && !isDoTodayView ? '<span class="today-badge"><span class="do-today-dot"></span> TODAY</span>' : ''}
                     ${!task.completed && !isDoTodayView ? `
                         <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')">
-                            ${task.doToday ? '✓ Today' : '🔴 Today'}
+                            ${task.doToday ? icon('check') + ' Today' : '<span class="do-today-dot"></span> Today'}
                         </button>
                     ` : ''}
-                    ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">⏱️</button>` : ''}
-                    ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">✏️</button>` : ''}
-                    <button class="task-delete-btn" onclick="deleteTask('${task.id}')">🗑️</button>
+                    ${!task.completed ? `<button class="task-timer-btn" onclick="startTaskTimer('${task.id}')">${icon('timer')}</button>` : ''}
+                    ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" style="background: #6366f1;">${icon('edit')}</button>` : ''}
+                    <button class="task-delete-btn" onclick="deleteTask('${task.id}')">${icon('trash-2')}</button>
                 </div>
             </div>
         `;
@@ -267,7 +267,7 @@ function handleDrop(event, targetTaskId) {
 
     renderTasks();
     saveData();
-    showToast('Tasks reordered!', '↕️');
+    showToast('Tasks reordered!', 'ok');
 }
 
 function handleDragEnd(event) {
@@ -345,7 +345,7 @@ function toggleDoToday(id) {
     saveData();
 
     const message = task.doToday ? 'Marked as critical for today!' : 'Removed from today\'s list';
-    showToast(message, task.doToday ? '🔴' : 'ℹ️');
+    showToast(message, task.doToday ? '!' : 'i');
 }
 
 // Delete task
@@ -392,7 +392,7 @@ function startTaskTimer(id) {
 
     resetTimer();
     startTimer();
-    showToast('Timer started!', '⏱️');
+    showToast('Timer started!', 'ok');
 }
 
 // Pomodoro selection
@@ -460,10 +460,10 @@ function completeSession() {
         // Switch to break
         isWorkSession = false;
         currentSeconds = breakMinutes * 60;
-        document.getElementById('timerMode').textContent = 'Break Time! 🎉';
+        document.getElementById('timerMode').textContent = 'Break Time!';
         updateTimerDisplay();
 
-        alert('Great work! Time for a break! 🎉');
+        alert('Great work! Time for a break!');
     } else {
         // Break completed
         isWorkSession = true;
@@ -471,7 +471,7 @@ function completeSession() {
         document.getElementById('timerMode').textContent = 'Work Session';
         updateTimerDisplay();
 
-        alert('Break over! Ready for another session? 💪');
+        alert('Break over! Ready for another session?');
     }
 
     document.getElementById('startBtn').style.display = 'inline-block';
@@ -556,19 +556,19 @@ function updateDashboardExpansion(type) {
     if (tasksToShow.length === 0) {
         const emptyMessage = type === 'completed'
             ? 'No completed tasks yet. Complete a task to see it here!'
-            : 'No tasks here! 🎉';
+            : 'No tasks here!';
         content.innerHTML = `<div class="expansion-empty">${emptyMessage}</div>`;
         return;
     }
 
     const categoryIcons = {
-        financial: '💰',
-        clinic: '🦷',
-        health: '❤️',
-        school: '📋',
-        academic: '📚',
-        future: '🚀',
-        life: '🏡'
+        financial: icon('wallet'),
+        clinic: icon('heart'),
+        health: icon('heart'),
+        school: icon('clipboard-list'),
+        academic: icon('graduation-cap'),
+        future: icon('rocket'),
+        life: icon('home')
     };
 
     const categoryNames = {
@@ -592,7 +592,7 @@ function updateDashboardExpansion(type) {
                        title="Click to mark as incomplete">
                 <span class="expansion-task-text" style="text-decoration: line-through; opacity: 0.7;">
                     ${escapeHtml(task.text)}
-                    <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || 'Task'}</span>
+                    <span class="expansion-task-category">${categoryIcons[task.category] || icon('clipboard-list')} ${categoryNames[task.category] || 'Task'}</span>
                 </span>
             </div>
         `).join('');
@@ -606,7 +606,7 @@ function updateDashboardExpansion(type) {
                        ${task.completed ? 'checked' : ''}>
                 <span class="expansion-task-text">
                     ${escapeHtml(task.text)}
-                    <span class="expansion-task-category">${categoryIcons[task.category] || '📋'} ${categoryNames[task.category] || task.category || 'Task'}</span>
+                    <span class="expansion-task-category">${categoryIcons[task.category] || icon('clipboard-list')} ${categoryNames[task.category] || task.category || 'Task'}</span>
                 </span>
             </div>
         `).join('');
@@ -630,7 +630,7 @@ function uncompleteTaskFromDashboard(taskId) {
         updateStats();
         renderTasks();
         updateDashboardExpansion('completed');
-        showToast('Task marked as incomplete', '↩️');
+        showToast('Task marked as incomplete', 'ok');
     }
 }
 
@@ -752,10 +752,10 @@ function renderFocusMode() {
 
 function updateFocusGreeting() {
     const hour = new Date().getHours();
-    let greeting = '☀️ Good morning';
-    if (hour >= 12 && hour < 17) greeting = '🌤️ Good afternoon';
-    if (hour >= 17 && hour < 21) greeting = '🌆 Good evening';
-    if (hour >= 21 || hour < 5) greeting = '🌙 Good night';
+    let greeting = 'Good morning';
+    if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+    if (hour >= 17 && hour < 21) greeting = 'Good evening';
+    if (hour >= 21 || hour < 5) greeting = 'Good night';
 
     const el = document.getElementById('focusGreeting');
     if (el) el.textContent = `${greeting}, Sully`;
@@ -773,7 +773,7 @@ function renderOneThingCard() {
     if (!oneThingTask) {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 4em; margin-bottom: 15px;">🎯</div>
+                <div style="font-size: 4em; margin-bottom: 15px;">${icon('target', 48)}</div>
                 <div style="color: #b0b8c4; font-size: 1.1em; margin-bottom: 20px;">
                     What's the ONE thing that would make today a success?
                 </div>
@@ -786,16 +786,16 @@ function renderOneThingCard() {
     }
 
     const catInfo = getCategoryInfo(oneThingTask.category);
-    const sizeIcon = oneThingTask.size === 'big' ? '🔴' : oneThingTask.size === 'small' ? '🟢' : '🟡';
+    const sizeIcon = oneThingTask.size === 'big' ? '<span class="size-dot size-big"></span>' : oneThingTask.size === 'small' ? '<span class="size-dot size-small"></span>' : '<span class="size-dot size-medium"></span>';
 
     container.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-            <div style="font-size: 2em;">🔥</div>
+            <div style="font-size: 2em;">${icon('flame', 24)}</div>
             <div style="color: #fbbf24; font-size: 1.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">THE ONE THING</div>
-            ${oneThingTask.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">📊 HIGH LEVERAGE</div>' : ''}
+            ${oneThingTask.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">' + icon('activity') + ' HIGH LEVERAGE</div>' : ''}
             <div style="margin-left: auto; display: flex; gap: 8px;">
-                <button onclick="openOneThingPicker()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Change to different task">🔄 Change</button>
-                <button onclick="clearOneThing()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Clear and pick later">✕</button>
+                <button onclick="openOneThingPicker()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Change to different task">${icon('refresh-cw')} Change</button>
+                <button onclick="clearOneThing()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Clear and pick later">${icon('x')}</button>
             </div>
         </div>
 
@@ -809,7 +809,7 @@ function renderOneThingCard() {
 
         <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px;">
             <div style="color: #b0b8c4; font-size: 0.9em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                🧩 Break it down (micro-steps):
+                Break it down (micro-steps):
             </div>
             <div id="microStepsList">${renderMicroSteps()}</div>
             <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
@@ -825,10 +825,10 @@ function renderOneThingCard() {
                 ${formatFocusTimer(focusModeData.focusTimerSeconds)}
             </div>
             <button id="oneThingTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                ${focusModeData.focusTimerRunning ? '⏸ Pause' : '▶ Start Focus'}
+                ${focusModeData.focusTimerRunning ? icon('pause') + ' Pause' : icon('play') + ' Start Focus'}
             </button>
             <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                ✓ Complete
+                ${icon('check')} Complete
             </button>
         </div>
     `;
@@ -843,10 +843,10 @@ function renderMicroSteps() {
     return steps.map(step => `
         <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; ${step.completed ? 'opacity: 0.6;' : ''}">
             <div onclick="toggleMicroStep('${step.id}')" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? '#10b981' : '#667eea'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? '#10b981' : 'transparent'}; color: white; flex-shrink: 0;">
-                ${step.completed ? '✓' : ''}
+                ${step.completed ? icon('check') : ''}
             </div>
             <div style="flex: 1; color: #c9d1d9; ${step.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">${escapeHtml(step.text)}</div>
-            <button onclick="removeMicroStep('${step.id}')" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 5px;">✕</button>
+            <button onclick="removeMicroStep('${step.id}')" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 5px;">${icon('x')}</button>
         </div>
     `).join('');
 }
@@ -902,7 +902,7 @@ function toggleFocusTimer() {
         }, 1000);
     }
     const btn = document.getElementById('focusTimerBtn');
-    if (btn) btn.textContent = focusModeData.focusTimerRunning ? '⏸ Pause' : '▶ Start Focus Session';
+    if (btn) btn.innerHTML = focusModeData.focusTimerRunning ? icon('pause') + ' Pause' : icon('play') + ' Start Focus Session';
 }
 
 function completeOneThing() {
@@ -919,7 +919,7 @@ function completeOneThing() {
         }
         renderFocusMode();
         saveData();
-        showToast('🎉 ONE THING completed! Great work!', '🏆');
+        showToast('ONE THING completed! Great work!', 'ok');
     }
 }
 
@@ -930,7 +930,7 @@ function openOneThingPicker() {
     const title = document.getElementById('planningModalTitle');
     const body = document.getElementById('planningModalBody');
 
-    if (title) title.textContent = '🎯 Select Your ONE THING for Today';
+    if (title) title.textContent = 'Select Your ONE THING for Today';
 
     const incompleteTasks = getValues(tasks).filter(t => !t.completed);
     const sortedTasks = incompleteTasks.sort((a, b) => {
@@ -963,7 +963,7 @@ function openAddTasksModal(size) {
     const title = document.getElementById('planningModalTitle');
     const body = document.getElementById('planningModalBody');
 
-    const sizeLabels = { big: '🔴 Big Tasks', medium: '🟡 Medium Tasks', small: '🟢 Small Tasks' };
+    const sizeLabels = { big: 'Big Tasks', medium: 'Medium Tasks', small: 'Small Tasks' };
     if (title) title.textContent = `Add ${sizeLabels[size]} to Today`;
 
     const sizeTasks = getValues(tasks).filter(t =>
@@ -990,7 +990,7 @@ function openAddTasksModal(size) {
 
 function renderPlanningTaskOption(task) {
     const catInfo = getCategoryInfo(task.category);
-    const sizeLabel = task.size === 'big' ? '🔴 Big' : task.size === 'small' ? '🟢 Small' : '🟡 Medium';
+    const sizeLabel = task.size === 'big' ? 'Big' : task.size === 'small' ? 'Small' : 'Medium';
     const isSelected = selectedPlanningTaskId === task.id;
 
     return `
@@ -1003,7 +1003,7 @@ function renderPlanningTaskOption(task) {
                 <div style="font-size: 0.85em; color: #b0b8c4; display: flex; gap: 12px;">
                     <span>${catInfo.emoji} ${catInfo.name}</span>
                     <span>${sizeLabel}</span>
-                    ${task.highLeverage ? '<span style="color: #fbbf24;">📊 High Leverage</span>' : ''}
+                    ${task.highLeverage ? '<span style="color: #fbbf24;">' + icon('activity') + ' High Leverage</span>' : ''}
                 </div>
             </div>
         </div>
@@ -1029,7 +1029,7 @@ function selectPlanningTask(taskId, element) {
 }
 
 function confirmPlanningSelection() {
-    if (!selectedPlanningTaskId) { showToast('Please select a task first', '⚠️'); return; }
+    if (!selectedPlanningTaskId) { showToast('Please select a task first', '!'); return; }
 
     const task = getValues(tasks).find(t => t.id === selectedPlanningTaskId);
 
@@ -1039,7 +1039,7 @@ function confirmPlanningSelection() {
         focusModeData.focusTimerSeconds = 0;
         if (task && !task.doToday) task.doToday = true;
         // DON'T add to todaysTasks - ONE Thing is tracked separately
-        showToast('✅ ONE THING set! Let\'s crush it!', '🎯');
+        showToast('ONE THING set! Let\'s crush it!', 'ok');
     } else {
         const size = planningMode;
         // Don't add if it's already the ONE thing
@@ -1049,7 +1049,7 @@ function confirmPlanningSelection() {
                 focusModeData.todaysTasks[size][selectedPlanningTaskId] = true;
             }
         }
-        showToast(`✅ Added to ${size} tasks!`, '📋');
+        showToast(`Added to ${size} tasks!`, 'ok');
     }
 
     closePlanningModal();
@@ -1121,13 +1121,13 @@ function updateTimeEstimate(counts) {
         if (totalMinutes === 0) {
             contextEl.textContent = 'Add tasks to plan your day';
         } else if (totalMinutes <= 120) {
-            contextEl.textContent = '✨ Light day - room for deep work';
+            contextEl.textContent = 'Light day - room for deep work';
         } else if (totalMinutes <= 240) {
-            contextEl.textContent = '👍 Balanced workload';
+            contextEl.textContent = 'Balanced workload';
         } else if (totalMinutes <= 360) {
-            contextEl.textContent = '⚡ Full day ahead';
+            contextEl.textContent = 'Full day ahead';
         } else {
-            contextEl.textContent = '⚠️ Heavy - consider trimming';
+            contextEl.textContent = 'Heavy - consider trimming';
         }
     }
 }
@@ -1138,7 +1138,7 @@ function quickAddFromFocus() {
     const categorySelect = document.getElementById('focusQuickAddCategory');
 
     if (!input || !input.value.trim()) {
-        showToast('Please enter a task', '⚠️');
+        showToast('Please enter a task', '!');
         return;
     }
 
@@ -1166,7 +1166,7 @@ function quickAddFromFocus() {
     input.value = '';
     renderFocusMode();
     saveData();
-    showToast(`Added to ${task.size} tasks!`, '✅');
+    showToast(`Added to ${task.size} tasks!`, 'ok');
 }
 
 function renderBudgetBar(containerId, filled, total, color) {
@@ -1209,12 +1209,12 @@ function renderTaskSizeSection(size, containerId) {
         return `
             <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
                 <div onclick="toggleFocusTask('${task.id}')" style="width: 24px; height: 24px; border: 2px solid #10b981; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
-                    <span style="color: #10b981; font-size: 14px;">✓</span>
+                    <span style="color: #10b981; font-size: 14px;">${icon('check')}</span>
                 </div>
                 <div style="flex: 1; color: #374151; font-size: 0.95em;">${escapeHtml(task.text)}</div>
-                ${task.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">📊</div>' : ''}
+                ${task.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">' + icon('activity') + '</div>' : ''}
                 <div style="color: #9ca3af; font-size: 0.85em; white-space: nowrap;">${size === 'small' ? '~5 min' : '~20 min'}</div>
-                <button onclick="removeFromToday('${task.id}', '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">✕</button>
+                <button onclick="removeFromToday('${task.id}', '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">${icon('x')}</button>
             </div>
         `;
     }).join('');
@@ -1227,7 +1227,7 @@ function removeFromToday(taskId, size) {
     }
     renderFocusMode();
     saveData();
-    showToast('Removed from today\'s tasks', '👋');
+    showToast('Removed from today\'s tasks', 'ok');
 }
 
 function clearOneThing() {
@@ -1241,7 +1241,7 @@ function clearOneThing() {
     }
     renderFocusMode();
     saveData();
-    showToast('ONE Thing cleared - pick a new one!', '🔄');
+    showToast('ONE Thing cleared - pick a new one!', 'ok');
 }
 
 function toggleFocusTask(taskId) {
@@ -1270,24 +1270,24 @@ function updateBacklogCount() {
 
 function getCategoryInfo(category) {
     const cats = {
-        financial: { name: 'Financial', emoji: '💰', color: '#22c55e' },
-        clinic: { name: 'Clinic', emoji: '🦷', color: '#ef4444' },
-        health: { name: 'Health', emoji: '❤️', color: '#ec4899' },
-        school: { name: 'School', emoji: '📋', color: '#6b7280' },
-        academic: { name: 'Academic', emoji: '📚', color: '#f59e0b' },
-        future: { name: 'Future', emoji: '🚀', color: '#3b82f6' },
-        life: { name: 'Life', emoji: '🏡', color: '#8b5cf6' }
+        financial: { name: 'Financial', emoji: icon('wallet'), color: '#22c55e' },
+        clinic: { name: 'Clinic', emoji: icon('heart'), color: '#ef4444' },
+        health: { name: 'Health', emoji: icon('heart'), color: '#ec4899' },
+        school: { name: 'School', emoji: icon('clipboard-list'), color: '#6b7280' },
+        academic: { name: 'Academic', emoji: icon('graduation-cap'), color: '#f59e0b' },
+        future: { name: 'Future', emoji: icon('rocket'), color: '#3b82f6' },
+        life: { name: 'Life', emoji: icon('home'), color: '#8b5cf6' }
     };
-    return cats[category] || { name: 'Task', emoji: '📌', color: '#6b7280' };
+    return cats[category] || { name: 'Task', emoji: icon('clipboard-list'), color: '#6b7280' };
 }
 
 // escapeHtml extracted to state.js
 
 function doRandomSmallTask() {
     const smallTasks = getValues(tasks).filter(t => !t.completed && (t.size === 'small' || (!t.size && t.text && t.text.length < 50)));
-    if (smallTasks.length === 0) { showToast('No small tasks found!', '⚠️'); return; }
+    if (smallTasks.length === 0) { showToast('No small tasks found!', '!'); return; }
     const randomTask = smallTasks[Math.floor(Math.random() * smallTasks.length)];
-    showToast(`🎲 Try: "${randomTask.text.substring(0, 40)}..."`, '⚡');
+    showToast(`Try: "${randomTask.text.substring(0, 40)}..."`, 'ok');
     if (!hasTaskId(focusModeData.todaysTasks.small, randomTask.id)) {
         if (!focusModeData.todaysTasks.small) focusModeData.todaysTasks.small = {};
         focusModeData.todaysTasks.small[randomTask.id] = true;
@@ -1297,7 +1297,7 @@ function doRandomSmallTask() {
 }
 
 function start5MinSprint() {
-    showToast('⏱️ 5-minute sprint! GO GO GO!', '🏃');
+    showToast('5-minute sprint! GO GO GO!', 'ok');
 }
 
 // ============================================
@@ -1434,10 +1434,10 @@ function updateOverallProgress() {
     const prevPercent = parseInt(ringPercent?.dataset?.prev || '0');
     if (ringPercent) ringPercent.dataset.prev = percent;
 
-    if (prevPercent < 25 && percent >= 25) { if (typeof showCelebration === 'function') showCelebration('small'); if (typeof showToast === 'function') showToast('25% done! Keep going!', '🎯'); }
-    if (prevPercent < 50 && percent >= 50) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('HALFWAY THERE!', '🔥'); }
-    if (prevPercent < 75 && percent >= 75) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('75%! Almost there!', '💪'); }
-    if (prevPercent < 100 && percent >= 100) { if (typeof showCelebration === 'function') showCelebration('big'); if (typeof showToast === 'function') showToast('ALL TASKS DONE!', '🏆'); }
+    if (prevPercent < 25 && percent >= 25) { if (typeof showCelebration === 'function') showCelebration('small'); if (typeof showToast === 'function') showToast('25% done! Keep going!', 'ok'); }
+    if (prevPercent < 50 && percent >= 50) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('HALFWAY THERE!', 'ok'); }
+    if (prevPercent < 75 && percent >= 75) { if (typeof showCelebration === 'function') showCelebration('medium'); if (typeof showToast === 'function') showToast('75%! Almost there!', 'ok'); }
+    if (prevPercent < 100 && percent >= 100) { if (typeof showCelebration === 'function') showCelebration('big'); if (typeof showToast === 'function') showToast('ALL TASKS DONE!', 'ok'); }
 }
 
 // ==================== TRIAGE CACHE ====================
@@ -1549,7 +1549,7 @@ function saveTaskEdit() {
     renderTasks();
     if (currentView === 'focus') renderFocusMode();
     saveData();
-    showToast('Task updated!', '✅');
+    showToast('Task updated!', 'ok');
 }
 
 // ==================== INIT FOCUS MODE ====================

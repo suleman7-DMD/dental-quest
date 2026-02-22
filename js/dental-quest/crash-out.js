@@ -108,7 +108,7 @@ function startTaskFromPrompt(taskId) {
     closeTimePrompt();
     // Auto-start timer when task is confirmed from crash out prompt
     startTaskInFocus(taskId, true);
-    showToast('Task started! Timer running.', '▶️');
+    showToast('Task started! Timer running.', 'ok');
 }
 
 function closeTimePrompt() {
@@ -225,21 +225,21 @@ function undoPush() {
         renderCrashOutMode();
     }
     saveData();
-    showToast('Undone!', '↩️');
+    showToast('Undone!', 'ok');
 }
 
 function skipTask(taskId) {
     closeTimePrompt();
     // Set 3-minute cooldown before this task can prompt again
     dismissedUntil[taskId] = Date.now() + 3 * 60 * 1000;
-    showToast('Dismissed for 3 min - task stays in schedule', '⏭️');
+    showToast('Dismissed for 3 min - task stays in schedule', 'ok');
 }
 
 function removeTaskFromSchedule(taskId) {
     // Use this to actually remove from crash out (renamed from old skipTask behavior)
     closeTimePrompt();
     removeFromCrashOut(taskId);
-    showToast('Task removed from schedule', '🗑️');
+    showToast('Task removed from schedule', 'ok');
 }
 
 // ==================== CRASH OUT MODE ====================
@@ -297,7 +297,7 @@ function updateCrashOutSetupDate() {
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const monthName = monthNames[now.getMonth()];
         const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-        el.textContent = `📅 It's ${dayName}, ${monthName} ${now.getDate()} • ${timeStr}`;
+        el.textContent = `It's ${dayName}, ${monthName} ${now.getDate()} \u00B7 ${timeStr}`;
     }
 }
 
@@ -339,13 +339,13 @@ function hideCustomSleepPicker() {
 function setCustomSleepTime() {
     const input = document.getElementById('customSleepTime');
     if (!input || !input.value) {
-        showToast('Please select a time', '⚠️');
+        showToast('Please select a time', '!');
         return;
     }
 
     const [hours, minutes] = input.value.split(':').map(Number);
     if (isNaN(hours) || isNaN(minutes)) {
-        showToast('Invalid time format', '⚠️');
+        showToast('Invalid time format', '!');
         return;
     }
 
@@ -364,7 +364,7 @@ function setCustomSleepTime() {
     renderCrashOutMode();
 
     const timeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    showToast(`Sleep time set: ${timeStr}`, '✓');
+    showToast(`Sleep time set: ${timeStr}`, 'ok');
 }
 
 function changeSleepTime() {
@@ -381,7 +381,7 @@ function adjustSleepTime(minutesDelta) {
 
     // Don't allow sleep time to be in the past
     if (newSleep <= new Date()) {
-        showToast('Sleep time cannot be in the past', '⚠️');
+        showToast('Sleep time cannot be in the past', '!');
         return;
     }
 
@@ -392,7 +392,7 @@ function adjustSleepTime(minutesDelta) {
     renderCrashOutTimeline();
 
     const timeStr = newSleep.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    showToast('Sleep time: ' + timeStr, '✓');
+    showToast('Sleep time: ' + timeStr, 'ok');
 }
 window.adjustSleepTime = adjustSleepTime;
 
@@ -607,14 +607,14 @@ function renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownSta
     // --- Task blocks ---
     if (scheduledTasks.length === 0) {
         html += '<div class="gcal-empty" style="top: ' + (nowTop + 20) + 'px;">';
-        html += '<div class="gcal-empty-icon">📋</div>';
+        html += '<div class="gcal-empty-icon">' + icon('clipboard-list', 24) + '</div>';
         html += '<div class="gcal-empty-text">No tasks scheduled yet</div>';
         html += '<div class="gcal-empty-hint">Send tasks from Triage or add from below</div>';
         html += '</div>';
     } else {
         scheduledTasks.forEach(function(task, index) {
             var isLockedIn = task.triageTier === 'lockedIn';
-            var tierIcon = isLockedIn ? '🔥' : '📋';
+            var tierIcon = isLockedIn ? icon('flame') : icon('clipboard-list');
             var duration = task.crashOutDuration || 30;
             var isFirst = index === 0;
             var isLast = index === scheduledTasks.length - 1;
@@ -655,13 +655,13 @@ function renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownSta
             html += '</div>';
             html += '<div class="gcal-task-actions">';
             html += '<div class="reorder-buttons">';
-            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToTop(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move to top">⬆⬆</button>';
-            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move up">▲</button>';
-            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move down">▼</button>';
-            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToBottom(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move to bottom">⬇⬇</button>';
+            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToTop(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move to top">' + icon('chevron-up') + icon('chevron-up') + '</button>';
+            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskUp(\'' + task.id + '\')" ' + (isFirst ? 'disabled' : '') + ' title="Move up">' + icon('chevron-up') + '</button>';
+            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskDown(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move down">' + icon('chevron-down') + '</button>';
+            html += '<button class="btn-reorder" onclick="event.stopPropagation(); moveTaskToBottom(\'' + task.id + '\')" ' + (isLast ? 'disabled' : '') + ' title="Move to bottom">' + icon('chevron-down') + icon('chevron-down') + '</button>';
             html += '<button class="btn-reorder" onclick="event.stopPropagation(); promptTaskPosition(\'' + task.id + '\')" title="Set position">#</button>';
             html += '</div>';
-            html += '<button class="btn-start" onclick="startTaskInFocus(\'' + task.id + '\')" title="Start">▶</button>';
+            html += '<button class="btn-start" onclick="startTaskInFocus(\'' + task.id + '\')" title="Start">' + icon('play') + '</button>';
             html += '<select class="duration-select" onchange="setDurationDirect(\'' + task.id + '\', this.value)">';
             html += '<option value="15"' + (duration === 15 ? ' selected' : '') + '>15m</option>';
             html += '<option value="30"' + (duration === 30 ? ' selected' : '') + '>30m</option>';
@@ -670,8 +670,8 @@ function renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownSta
             html += '<option value="90"' + (duration === 90 ? ' selected' : '') + '>90m</option>';
             html += '<option value="120"' + (duration === 120 ? ' selected' : '') + '>2h</option>';
             html += '</select>';
-            html += '<button class="btn-edit" onclick="openTaskEditModal(\'' + task.id + '\')" title="Edit">✎</button>';
-            html += '<button class="btn-remove" onclick="removeFromCrashOut(\'' + task.id + '\')" title="Remove">✕</button>';
+            html += '<button class="btn-edit" onclick="openTaskEditModal(\'' + task.id + '\')" title="Edit">' + icon('edit') + '</button>';
+            html += '<button class="btn-remove" onclick="removeFromCrashOut(\'' + task.id + '\')" title="Remove">' + icon('x') + '</button>';
             html += '</div>';
             html += '</div>';
         });
@@ -682,14 +682,14 @@ function renderCrashOutTimelineTasks(scheduledTasks, now, sleepTime, windDownSta
     var windDownStartStr = windDownStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     var sleepTimeStr = sleepTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     html += '<div class="gcal-winddown" style="top: ' + windDownTop + 'px; height: ' + PX_PER_HOUR + 'px;">';
-    html += '<div class="gcal-winddown-label">🌙 Wind Down</div>';
+    html += '<div class="gcal-winddown-label">' + icon('moon') + ' Wind Down</div>';
     html += '<div class="gcal-winddown-time">' + windDownStartStr + ' – ' + sleepTimeStr + '</div>';
     html += '</div>';
 
     // --- Sleep marker ---
     var sleepTop = timeToPx(sleepTime);
     html += '<div class="gcal-sleep" style="top: ' + sleepTop + 'px;">';
-    html += '<span class="gcal-sleep-icon">😴</span>';
+    html += '<span class="gcal-sleep-icon">' + icon('moon') + '</span>';
     html += '<span class="gcal-sleep-label">Sleep ' + sleepTimeStr + '</span>';
     html += '<div class="gcal-sleep-line"></div>';
     html += '</div>';
@@ -780,7 +780,7 @@ function moveTaskToPosition(draggedId, targetId) {
 
     if (draggedIndex === -1 || targetIndex === -1) {
         console.warn('moveTaskToPosition: Invalid task IDs', { draggedId, targetId });
-        showToast('Error: Task not found', '❌');
+        showToast('Error: Task not found', '!');
         isReorderingLocked = false;
         return;
     }
@@ -814,10 +814,10 @@ function moveTaskToPosition(draggedId, targetId) {
         recalculateScheduledTimes();
         renderCrashOutMode();
         saveData();
-        showToast('Task moved!', '↕️');
+        showToast('Task moved!', 'ok');
     } catch (e) {
         console.error('Reorder error:', e);
-        showToast('Error reordering', '❌');
+        showToast('Error reordering', '!');
     } finally {
         setTimeout(() => { isReorderingLocked = false; }, 200);
     }
@@ -841,7 +841,7 @@ function swapAdjacentTasks(taskId1, taskId2) {
 
     if (index1 === -1 || index2 === -1) {
         isReorderingLocked = false;
-        showToast('Error: Task not found', '❌');
+        showToast('Error: Task not found', '!');
         return;
     }
 
@@ -851,7 +851,7 @@ function swapAdjacentTasks(taskId1, taskId2) {
 
     if (tasks[taskId1] === undefined || tasks[taskId2] === undefined) {
         isReorderingLocked = false;
-        showToast('Error: Task data missing', '❌');
+        showToast('Error: Task data missing', '!');
         return;
     }
 
@@ -863,10 +863,10 @@ function swapAdjacentTasks(taskId1, taskId2) {
         recalculateScheduledTimes();
         renderCrashOutMode();
         saveData();
-        showToast('Tasks swapped!', '↕️');
+        showToast('Tasks swapped!', 'ok');
     } catch (e) {
         console.error('Swap error:', e);
-        showToast('Error swapping', '❌');
+        showToast('Error swapping', '!');
     } finally {
         setTimeout(() => { isReorderingLocked = false; }, 200);
     }
@@ -876,7 +876,7 @@ function moveTaskUp(taskId) {
     var scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
     var index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
     if (index <= 0) {
-        if (index === -1) showToast('Task not found in schedule', '⚠️');
+        if (index === -1) showToast('Task not found in schedule', '!');
         return;
     }
 
@@ -889,7 +889,7 @@ function moveTaskDown(taskId) {
     var scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
     var index = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
     if (index === -1 || index >= scheduledTasks.length - 1) {
-        if (index === -1) showToast('Task not found in schedule', '⚠️');
+        if (index === -1) showToast('Task not found in schedule', '!');
         return;
     }
 
@@ -940,10 +940,10 @@ function moveTaskToBottom(taskId) {
         recalculateScheduledTimes();
         renderCrashOutMode();
         saveData();
-        showToast('Task moved to bottom!', '⬇️');
+        showToast('Task moved to bottom!', 'ok');
     } catch (e) {
         console.error('moveTaskToBottom error:', e);
-        showToast('Error moving task', '❌');
+        showToast('Error moving task', '!');
     } finally {
         setTimeout(() => { isReorderingLocked = false; }, 200);
     }
@@ -956,7 +956,7 @@ function setTaskPosition(taskId, newPosition) {
 
     // Validate position
     if (newPosition < 1 || newPosition > totalTasks) {
-        showToast(`Position must be between 1 and ${totalTasks}`, '⚠️');
+        showToast(`Position must be between 1 and ${totalTasks}`, '!');
         return;
     }
 
@@ -981,7 +981,7 @@ function promptTaskPosition(taskId) {
 
     var newPosition = parseInt(input, 10);
     if (isNaN(newPosition)) {
-        showToast('Please enter a valid number', '⚠️');
+        showToast('Please enter a valid number', '!');
         return;
     }
 
@@ -1048,7 +1048,7 @@ function renderUnscheduledPool() {
 
     container.innerHTML = unscheduledTasks.map(task => {
         var isLockedIn = task.triageTier === 'lockedIn';
-        var tierIcon = isLockedIn ? '🔥' : '📋';
+        var tierIcon = isLockedIn ? icon('flame') : icon('clipboard-list');
         var defaultDuration = task.size === 'big' ? 60 : task.size === 'small' ? 15 : 30;
 
         return `
@@ -1074,7 +1074,7 @@ function openDurationModal(taskId) {
     modal.onclick = (e) => { if (e.target === modal) closeDurationModal(); };
     modal.innerHTML = `
         <div class="duration-modal-content-dark">
-            <div class="duration-modal-title">⏱️ Adjust: ${escapeHtml(task.text.substring(0, 35))}${task.text.length > 35 ? '...' : ''}</div>
+            <div class="duration-modal-title">Adjust: ${escapeHtml(task.text.substring(0, 35))}${task.text.length > 35 ? '...' : ''}</div>
             <div class="duration-current">
                 Current: <strong id="currentDuration">${task.crashOutDuration || 30}m</strong>
             </div>
@@ -1182,7 +1182,7 @@ function resetCrashOutDay() {
 
     renderCrashOutMode();
     saveData();
-    showToast('Crash Out reset', '🔄');
+    showToast('Crash Out reset', 'ok');
 }
 
 // ==================== WINDOW BINDINGS ====================
