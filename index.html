@@ -4923,7 +4923,7 @@
 
         /* Cash Flow */
         .cash-flow-item {
-            background: #21262d;
+            background: var(--canvas-subtle);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
@@ -4931,26 +4931,26 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .cash-flow-item.income {
-            border-left: 4px solid #16a34a;
+            border-left: 4px solid var(--success);
         }
-        
+
         .cash-flow-item.expense {
-            border-left: 4px solid #dc2626;
+            border-left: 4px solid var(--destructive);
         }
-        
+
         .cash-amount {
             font-family: 'Monaco', monospace;
             font-weight: 700;
             font-size: 1.1em;
         }
-        
-        .cash-amount.positive { color: #4ade80; }
-        .cash-amount.negative { color: #f87171; }
-        
+
+        .cash-amount.positive { color: var(--success); }
+        .cash-amount.negative { color: var(--destructive); }
+
         .progress-container {
-            background: #30363d;
+            background: var(--canvas-inset);
             height: 24px;
             border-radius: 12px;
             overflow: hidden;
@@ -5263,7 +5263,7 @@
         }
 
         .planner-event.completed {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: var(--success);
             text-decoration: line-through;
             opacity: 0.85;
         }
@@ -5309,8 +5309,8 @@
 
         .planner-footer {
             padding: 12px 20px;
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
+            background: var(--canvas-subtle);
+            border-top: 1px solid var(--border-default);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -5320,7 +5320,7 @@
             display: flex;
             gap: 20px;
             font-size: 0.85em;
-            color: #6b7280;
+            color: var(--fg-secondary);
         }
 
         .planner-footer-stat {
@@ -5330,7 +5330,7 @@
         }
 
         .planner-footer-stat strong {
-            color: #374151;
+            color: var(--fg-primary);
         }
 
         .planner-footer-buttons {
@@ -5340,8 +5340,8 @@
 
         .planner-clear-btn {
             padding: 8px 16px;
-            background: #fee2e2;
-            color: #dc2626;
+            background: rgba(184, 92, 92, 0.1);
+            color: var(--destructive);
             border: none;
             border-radius: 6px;
             font-weight: 600;
@@ -5349,12 +5349,12 @@
         }
 
         .planner-clear-btn:hover {
-            background: #fecaca;
+            background: rgba(184, 92, 92, 0.15);
         }
 
         .planner-close-btn {
             padding: 8px 24px;
-            background: #667eea;
+            background: var(--accent);
             color: white;
             border: none;
             border-radius: 6px;
@@ -5364,7 +5364,7 @@
         }
 
         .planner-close-btn:hover {
-            background: #5568d3;
+            background: var(--accent-hover);
             transform: scale(1.02);
         }
 
@@ -5665,13 +5665,13 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: var(--fg-primary);
         }
 
         .modal-input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-default);
             border-radius: 8px;
             font-size: 1em;
         }
@@ -5692,7 +5692,7 @@
         }
 
         .modal-btn.primary {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            background: var(--accent);
             color: white;
         }
 
@@ -5701,18 +5701,18 @@
         }
 
         .modal-btn.secondary {
-            background: #f0f0f0;
-            color: #333;
+            background: var(--canvas-subtle);
+            color: var(--fg-primary);
         }
 
         .modal-btn.secondary:hover {
-            background: #e0e0e0;
+            background: var(--canvas-inset);
         }
 
         /* Expandable Calendar Styles */
         .calendar-breakdown {
             margin-top: 15px;
-            background: #f8f9fa;
+            background: var(--canvas-subtle);
             border-radius: 10px;
             padding: 15px;
             display: none;
@@ -5737,8 +5737,9 @@
         .calendar-header {
             font-weight: 600;
             margin-bottom: 10px;
-            color: #30cfd0;
+            color: var(--accent);
             font-size: 1.05em;
+            font-family: var(--font-heading);
         }
 
         .calendar-grid {
@@ -5755,7 +5756,7 @@
             text-align: center;
             font-size: 0.8em;
             font-weight: 700;
-            color: #667eea;
+            color: var(--accent);
             padding: 8px 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -5806,36 +5807,36 @@
         }
 
         .calendar-day.has-pill {
-            background: #d4edda;
-            border: 2px solid #28a745;
-            color: #155724;
+            background: var(--success-light);
+            border: 2px solid var(--success);
+            color: #2d4a2d;
             font-weight: 600;
         }
 
         .calendar-day.no-pill-weekend {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            color: #856404;
+            background: var(--warning-light);
+            border: 2px solid var(--warning);
+            color: #6b5520;
             font-weight: 600;
         }
 
         .calendar-day.no-pill-weekday {
-            background: #f8d7da;
-            border: 2px solid #dc3545;
-            color: #721c24;
+            background: var(--destructive-light);
+            border: 2px solid var(--destructive);
+            color: #5c2828;
             font-weight: 600;
         }
 
         .calendar-day.surplus {
-            background: #d1ecf1;
-            border: 2px solid #17a2b8;
-            color: #0c5460;
+            background: var(--info-light);
+            border: 2px solid var(--info);
+            color: #2d4a52;
             font-weight: 600;
         }
 
         .calendar-day.refill {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: 2px solid #5568d3;
+            background: var(--accent);
+            border: 2px solid var(--accent-hover);
             color: white;
             font-weight: 700;
         }
@@ -5876,11 +5877,11 @@
         .calendar-day:hover .day-note-btn {
             opacity: 1;
             transform: scale(1.1);
-            background: rgba(102, 126, 234, 0.95);
+            background: rgba(107, 124, 94, 0.95);
         }
 
         .day-note-btn:hover {
-            background: #667eea !important;
+            background: var(--accent) !important;
             transform: scale(1.2) !important;
         }
 
@@ -5897,10 +5898,10 @@
         }
 
         .calendar-legend::before {
-            content: '📋 Legend';
+            content: 'Legend';
             width: 100%;
             font-weight: 700;
-            color: #667eea;
+            color: var(--accent);
             margin-bottom: 5px;
             font-size: 0.9em;
         }
@@ -5923,28 +5924,28 @@
         }
 
         .legend-box.has-pill {
-            background: #d4edda;
-            border-color: #28a745;
+            background: var(--success-light);
+            border-color: var(--success);
         }
 
         .legend-box.no-pill-weekend {
-            background: #fff3cd;
-            border-color: #ffc107;
+            background: var(--warning-light);
+            border-color: var(--warning);
         }
 
         .legend-box.no-pill-weekday {
-            background: #f8d7da;
-            border-color: #dc3545;
+            background: var(--destructive-light);
+            border-color: var(--destructive);
         }
 
         .legend-box.surplus {
-            background: #d1ecf1;
-            border-color: #17a2b8;
+            background: var(--info-light);
+            border-color: var(--info);
         }
 
         .legend-box.refill {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #5568d3;
+            background: var(--accent);
+            border-color: var(--accent-hover);
         }
 
         .expand-icon {
@@ -7490,7 +7491,7 @@
             transform: scale(1.02) !important;
         }
         .timeline-task.timeline-drag-over {
-            border-top: 3px solid #667eea !important;
+            border-top: 3px solid var(--accent) !important;
             margin-top: -3px !important;
         }
         .timeline-task.cascade-shift {
@@ -7934,7 +7935,7 @@
         }
 
         .gcal-task.gcal-drag-over {
-            box-shadow: 0 -3px 0 0 #667eea, 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 -3px 0 0 var(--accent), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
         }
 
         .gcal-task-content {
@@ -11027,7 +11028,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     <a href="stimulant-elimination-calculator.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Sleep Calc"><i data-lucide="pill" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Sleep</a>
                     <a href="body-comp-tracker.html" style="padding: 3px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: rgba(255,255,255,0.8); font-size: 0.72em; text-decoration: none; white-space: nowrap; transition: all 0.15s;" title="Body Comp"><i data-lucide="activity" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Body</a>
                     <span style="color: rgba(255,255,255,0.15); font-size: 0.8em; margin: 0 2px;">│</span>
-                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Focus Mode"><i data-lucide="target" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Focus</button>
+                    <button class="view-toggle-btn active" id="focusModeBtn" onclick="switchToFocusMode()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.9); color: var(--accent); font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Focus Mode"><i data-lucide="target" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Focus</button>
                     <button class="view-toggle-btn" id="fullViewBtn" onclick="switchToFullView()" style="padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 14px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 0.8em; cursor: pointer;" aria-label="Full View"><i data-lucide="list" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tasks</button>
                 </div>
             </div>
@@ -11137,7 +11138,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
                             <span style="font-size: 1.5em;"><i data-lucide="list" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
-                                <div style="color: #667eea; font-weight: 700; font-size: 1em;">TRIAGE</div>
+                                <div style="color: var(--accent); font-weight: 700; font-size: 1em;">TRIAGE</div>
                                 <div style="color: #9ca3af; font-size: 0.9em;">Organize tasks by priority: LOCKED IN, TODAY, or TOMORROW</div>
                             </div>
                         </div>
@@ -11157,7 +11158,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         </div>
                     </div>
 
-                    <button onclick="dismissFocusViewWelcome()" style="padding: 16px 40px; border: none; border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 700; font-size: 1.1em; cursor: pointer; transition: all 0.2s;">
+                    <button onclick="dismissFocusViewWelcome()" style="padding: 16px 40px; border: none; border-radius: 12px; background: var(--accent); color: white; font-weight: 700; font-size: 1.1em; cursor: pointer; transition: all 0.2s;">
                         Got it, let's go!
                     </button>
                 </div>
@@ -11612,7 +11613,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                 <!-- Medication Tracker for Health Category -->
                 <div class="medication-tracker" id="medicationTracker" style="display: none;">
-                    <h3 style="color: #30cfd0; margin-bottom: 20px; text-align: center;"><i data-lucide="pill" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Medication Management</h3>
+                    <h3 style="color: var(--accent); margin-bottom: 20px; text-align: center;"><i data-lucide="pill" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Medication Management</h3>
                     
                     <!-- 30mg XR Tracker -->
                     <div class="med-card">
@@ -11638,7 +11639,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <div class="med-progress">
                             <div class="progress-bar" style="height: 25px;">
-                                <div class="progress-fill" id="progress30mg" style="background: linear-gradient(90deg, #30cfd0, #330867);"></div>
+                                <div class="progress-fill" id="progress30mg" style="background: linear-gradient(90deg, var(--accent), var(--accent-hover));"></div>
                             </div>
                             <div class="med-status" id="status30mg" onclick="toggleCalendar('30mg')">
                                 Set your refill date to track
@@ -11682,7 +11683,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                         <div class="med-progress">
                             <div class="progress-bar" style="height: 25px;">
-                                <div class="progress-fill" id="progress20mg" style="background: linear-gradient(90deg, #30cfd0, #330867);"></div>
+                                <div class="progress-fill" id="progress20mg" style="background: linear-gradient(90deg, var(--accent), var(--accent-hover));"></div>
                             </div>
                             <div class="med-status" id="status20mg" onclick="toggleCalendar('20mg')">
                                 Set your refill date to track
@@ -11807,16 +11808,16 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 <div class="modal-overlay" id="addCountdownModal" onclick="safeModalClose(closeAddCountdown, event)">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
                         <button class="modal-close-x" onclick="closeAddCountdown()" title="Close">×</button>
-                        <h2 style="color: #58a6ff; margin-bottom: 20px;">+ Add New Countdown</h2>
+                        <h2 style="color: var(--accent); margin-bottom: 20px; font-family: var(--font-heading);">+ Add New Countdown</h2>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Description</label>
-                            <input type="text" id="countdownDescription" placeholder="e.g., Chase Sapphire Payment" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
+                            <input type="text" id="countdownDescription" placeholder="e.g., Chase Sapphire Payment" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                         </div>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Category</label>
-                            <select id="countdownCategory" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
+                            <select id="countdownCategory" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                                 <option value="financial">Financial</option>
                                 <option value="academic">Academic & Didactic</option>
                                 <option value="clinic">Clinic Requirements</option>
@@ -11830,17 +11831,17 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
                             <div>
                                 <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Date</label>
-                                <input type="date" id="countdownDate" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
+                                <input type="date" id="countdownDate" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                             </div>
                             <div>
                                 <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Time (optional)</label>
-                                <input type="time" id="countdownTime" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
+                                <input type="time" id="countdownTime" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Quick Notes (one line)</label>
-                            <input type="text" id="countdownNotes" placeholder="e.g., $1,482 payment scheduled" maxlength="100" style="width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 1em;">
+                            <input type="text" id="countdownNotes" placeholder="e.g., $1,482 payment scheduled" maxlength="100" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                         </div>
                         
                         <div id="countdownDeleteBtn" style="display: none; margin-bottom: 15px;">
