@@ -1021,9 +1021,9 @@ function showCustomAlert(message, title, callback) {
     modal.className = 'custom-modal-overlay';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
     modal.innerHTML =
-        '<div style="background:#161b22;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">' +
+        '<div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid var(--border-default);text-align:center;">' +
             '<h3 style="color:#58a6ff;margin:0 0 16px 0;font-size:1.2em;">' + title + '</h3>' +
-            '<p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
+            '<p style="color:var(--fg-primary);margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
             '<button onclick="this.closest(\'.custom-modal-overlay\').remove(); window._customAlertCallback && window._customAlertCallback();"' +
                 ' style="padding:12px 32px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>' +
         '</div>';
@@ -1040,12 +1040,12 @@ function showCustomConfirm(message, onConfirm, onCancel, title) {
     modal.className = 'custom-modal-overlay';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
     modal.innerHTML =
-        '<div style="background:#161b22;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">' +
+        '<div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid var(--border-default);text-align:center;">' +
             '<h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">' + title + '</h3>' +
-            '<p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
+            '<p style="color:var(--fg-primary);margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
             '<div style="display:flex;gap:12px;justify-content:center;">' +
                 '<button id="confirmBtn" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>' +
-                '<button id="cancelBtn" style="flex:1;padding:12px;background:#6e7681;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>' +
+                '<button id="cancelBtn" style="flex:1;padding:12px;background:var(--fg-muted);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>' +
             '</div>' +
         '</div>';
     document.body.appendChild(modal);

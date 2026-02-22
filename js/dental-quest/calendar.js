@@ -65,7 +65,7 @@ function renderCalendarGrid() {
 
     // Safety check for medications data
     if (!medications || !medications['30mg'] || !medications['20mg']) {
-        grid.innerHTML = '<div style="color: #b0b8c4; padding: 20px; text-align: center;">Loading medication data...</div>';
+        grid.innerHTML = '<div style="color: var(--fg-secondary); padding: 20px; text-align: center;">Loading medication data...</div>';
         return;
     }
 
@@ -93,7 +93,7 @@ function renderCalendarGrid() {
 
     // Day headers
     ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
-        html += `<div style="text-align: center; font-weight: 700; color: #b0b8c4; padding: 12px; font-size: 1.1em;">${day}</div>`;
+        html += `<div style="text-align: center; font-weight: 700; color: var(--fg-secondary); padding: 12px; font-size: 1.1em;">${day}</div>`;
     });
 
     // Empty cells before month starts
@@ -129,8 +129,8 @@ function renderCalendarGrid() {
         // Get events for this day
         const dayEvents = getValues(calendarEvents).filter(e => e.dateStr === dateStr);
 
-        let dayBg = '#0d1117';
-        let borderColor = '#30363d';
+        let dayBg = 'var(--canvas-subtle)';
+        let borderColor = 'var(--border-default)';
 
         if (isToday) {
             borderColor = '#3b82f6';
@@ -143,7 +143,7 @@ function renderCalendarGrid() {
                  onmouseout="this.style.background='${dayBg}'">
 
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px; flex-shrink: 0;">
-                    <div style="font-size: 1.1em; font-weight: 700; color: ${isToday ? '#58a6ff' : '#e6edf3'};">
+                    <div style="font-size: 1.1em; font-weight: 700; color: ${isToday ? '#58a6ff' : 'var(--fg-primary)'};">
                         ${day}
                     </div>
                     ${(needs30mg || needs20mg) ? `
@@ -161,7 +161,7 @@ function renderCalendarGrid() {
                                 <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     \u{1F389} 30mg Refill
                                 </div>
-                                <div style="font-size: 0.6em; color: #b0b8c4; margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <div style="font-size: 0.6em; color: var(--fg-secondary); margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${getMedStatus('30mg')}
                                 </div>
                             ` : ''}
@@ -169,7 +169,7 @@ function renderCalendarGrid() {
                                 <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     \u{1F389} 20mg Refill
                                 </div>
-                                <div style="font-size: 0.6em; color: #b0b8c4; margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <div style="font-size: 0.6em; color: var(--fg-secondary); margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${getMedStatus('20mg')}
                                 </div>
                             ` : ''}
@@ -179,12 +179,12 @@ function renderCalendarGrid() {
                     ${dayEvents.length > 0 ? `
                         <div style="flex: 1; overflow: hidden;">
                             ${dayEvents.slice(0, 2).map(event => `
-                                <div style="background: rgba(59, 130, 246, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
+                                <div style="background: rgba(59, 130, 246, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
                                     ${categoryIcons[event.category]} ${event.description}
                                 </div>
                             `).join('')}
                             ${dayEvents.length > 2 ? `
-                                <div style="font-size: 0.6em; color: #b0b8c4; margin-top: 2px;">
+                                <div style="font-size: 0.6em; color: var(--fg-secondary); margin-top: 2px;">
                                     +${dayEvents.length - 2} more
                                 </div>
                             ` : ''}
@@ -240,7 +240,7 @@ function renderCountdowns() {
 
     if (getCount(calendarEvents) === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #b0b8c4;">
+            <div style="text-align: center; padding: 40px; color: var(--fg-secondary);">
                 <p style="font-size: 1.2em;">No countdowns yet. Click "+ Add New Countdown" to create one!</p>
             </div>
         `;
@@ -306,17 +306,17 @@ function renderCountdowns() {
         const timeStr = event.time ? ` at ${event.time}` : '';
 
         return `
-            <div style="background: #0d1117; border-left: 4px solid ${urgencyColor}; padding: 20px; margin-bottom: 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
-                 onmouseover="this.style.background='#161b22'"
-                 onmouseout="this.style.background='#0d1117'"
+            <div style="background: var(--canvas-subtle); border-left: 4px solid ${urgencyColor}; padding: 20px; margin-bottom: 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                 onmouseover="this.style.background='var(--canvas-inset)'"
+                 onmouseout="this.style.background='var(--canvas-subtle)'"
                  onclick="editCountdown('${event.id}')">
 
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                     <div style="flex: 1;">
-                        <div style="font-size: 1.4em; font-weight: 700; color: #e6edf3; margin-bottom: 8px;">
+                        <div style="font-size: 1.4em; font-weight: 700; color: var(--fg-primary); margin-bottom: 8px;">
                             ${urgencyIcon} ${escapeHtml(event.description)}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; color: #b0b8c4; font-size: 0.95em;">
+                        <div style="display: flex; align-items: center; gap: 12px; color: var(--fg-secondary); font-size: 0.95em;">
                             <span>${categoryIcons[event.category]} ${categoryNames[event.category]}</span>
                         </div>
                     </div>
@@ -324,18 +324,18 @@ function renderCountdowns() {
                         <div style="font-size: 2em; font-weight: 700; color: ${urgencyColor}; font-family: 'Monaco', monospace;">
                             ${diffDays}
                         </div>
-                        <div style="color: #b0b8c4; font-size: 0.9em;">
+                        <div style="color: var(--fg-secondary); font-size: 0.9em;">
                             day${diffDays !== 1 ? 's' : ''}
                         </div>
                     </div>
                 </div>
 
-                <div style="color: #b0b8c4; margin-bottom: 8px;">
+                <div style="color: var(--fg-secondary); margin-bottom: 8px;">
                     \u{1F4C5} ${dateStr}${timeStr}
                 </div>
 
                 ${event.notes ? `
-                    <div style="color: #b0b8c4; font-style: italic;">
+                    <div style="color: var(--fg-secondary); font-style: italic;">
                         \u{1F4DD} ${escapeHtml(event.notes)}
                     </div>
                 ` : ''}

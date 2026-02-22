@@ -634,7 +634,7 @@ async function showCheckpointManager() {
                     `<p style="color:#888;margin-bottom:16px;">${checkpoints.length} checkpoint(s) saved</p>
                     <div style="display:flex;flex-direction:column;gap:12px;">
                         ${checkpoints.map((cp, i) => `
-                            <div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <div style="background:rgba(0,0,0,0.03);padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                                 <div style="flex:1;min-width:200px;">
                                     <strong style="color:white;">${escapeHtmlLocal(cp.name)}</strong>
                                     <div style="color:#888;font-size:0.85em;margin-top:4px;">${new Date(cp.date || cp.timestamp).toLocaleString()}</div>
@@ -1410,21 +1410,21 @@ function showSyncConflictModal(localData, remoteData, onResolve) {
     const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
 
     modal.innerHTML = `
-        <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
+        <div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid var(--border-default);">
             <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">\u26a0\ufe0f Sync Conflict Detected</h3>
-            <p style="color:#8b949e;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
+            <p style="color:var(--fg-tertiary);margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-                <div style="background:#21262d;padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepLocal">
+                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepLocal">
                     <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">\ud83d\udcf1 This Device</div>
-                    <div style="color:#8b949e;font-size:0.85em;">
+                    <div style="color:var(--fg-tertiary);font-size:0.85em;">
                         ${localTasks} active tasks<br>
                         Last saved: ${localTime}
                     </div>
                 </div>
-                <div style="background:#21262d;padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepRemote">
+                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepRemote">
                     <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">\u2601\ufe0f Cloud</div>
-                    <div style="color:#8b949e;font-size:0.85em;">
+                    <div style="color:var(--fg-tertiary);font-size:0.85em;">
                         ${remoteTasks} active tasks<br>
                         Last saved: ${remoteTime}
                     </div>
@@ -1433,9 +1433,9 @@ function showSyncConflictModal(localData, remoteData, onResolve) {
 
             <div style="display:flex;gap:10px;">
                 <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
-                <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#8957e5;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
+                <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
             </div>
-            <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Try to Merge Both</button>
+            <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:var(--canvas-subtle);border:1px solid var(--border-strong);border-radius:8px;color:var(--fg-tertiary);cursor:pointer;">Try to Merge Both</button>
         </div>
     `;
 

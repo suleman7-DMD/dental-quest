@@ -1010,8 +1010,8 @@
 
         /* Focus Timer Circle Animation */
         @keyframes focusPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
-            50% { box-shadow: 0 0 0 20px rgba(102, 126, 234, 0); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(107, 124, 94, 0.4); }
+            50% { box-shadow: 0 0 0 20px rgba(107, 124, 94, 0); }
         }
         .focus-timer-active {
             animation: focusPulse 2s infinite;
@@ -1796,7 +1796,7 @@
         /* Long press visual feedback */
         .cc-task-item.long-pressing {
             transform: scale(0.98);
-            background: rgba(102, 126, 234, 0.15) !important;
+            background: rgba(107, 124, 94, 0.15) !important;
         }
 
         /* Task details modal */
@@ -5856,7 +5856,7 @@
             position: absolute;
             top: 3px;
             right: 3px;
-            background: rgba(102, 126, 234, 0.75);
+            background: var(--accent);
             color: white;
             border: none;
             border-radius: 50%;
@@ -10902,6 +10902,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .stats-container .xp-display-enhanced { background: var(--surface-primary) !important; border: 1px solid var(--border-subtle) !important; }
 #focusModeContainer { background: var(--canvas) !important; }
 
+/* === GLOBAL POLISH === */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--canvas-inset); }
+::-webkit-scrollbar-thumb { background: var(--fg-muted); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-tertiary); }
+
+::selection { background: var(--accent-light); color: var(--fg-primary); }
+
+*:focus-visible {
+    outline: 2px solid var(--control-border-focus);
+    outline-offset: 2px;
+}
+
     </style>
 </head>
 <body>
@@ -11124,36 +11137,36 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         </div>
 
         <!-- ==================== COMMAND CENTER (Focus View) ==================== -->
-        <div id="focusModeContainer" style="background: #0f172a;">
+        <div id="focusModeContainer" style="background: var(--canvas);">
             <!-- Welcome Overlay for First-Time Users -->
-            <div id="focusViewWelcomeOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 20000; align-items: center; justify-content: center; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 24px; padding: 40px; max-width: 520px; text-align: center; border: 2px solid rgba(102,126,234,0.3); animation: slideUp 0.4s ease;">
+            <div id="focusViewWelcomeOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 20000; align-items: center; justify-content: center; padding: 20px;">
+                <div style="background: var(--surface-primary); border-radius: 24px; padding: 40px; max-width: 520px; text-align: center; border: 2px solid var(--border-default); animation: slideUp 0.4s ease;">
                     <div style="font-size: 3em; margin-bottom: 15px;"><i data-lucide="hand" style="width:48px;height:48px;display:inline-block"></i></div>
-                    <div style="font-size: 1.5em; font-weight: 700; color: white; margin-bottom: 20px;">Welcome to Focus View!</div>
-                    <div style="color: #9ca3af; font-size: 1em; line-height: 1.6; margin-bottom: 30px;">
+                    <div style="font-size: 1.5em; font-weight: 700; color: var(--fg-primary); margin-bottom: 20px;">Welcome to Focus View!</div>
+                    <div style="color: var(--fg-muted); font-size: 1em; line-height: 1.6; margin-bottom: 30px;">
                         This is your command center for crushing today's tasks.
                     </div>
 
-                    <div style="text-align: left; background: rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; margin-bottom: 30px;">
+                    <div style="text-align: left; background: var(--surface-secondary); border-radius: 16px; padding: 20px; margin-bottom: 30px;">
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
                             <span style="font-size: 1.5em;"><i data-lucide="list" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: var(--accent); font-weight: 700; font-size: 1em;">TRIAGE</div>
-                                <div style="color: #9ca3af; font-size: 0.9em;">Organize tasks by priority: LOCKED IN, TODAY, or TOMORROW</div>
+                                <div style="color: var(--fg-muted); font-size: 0.9em;">Organize tasks by priority: LOCKED IN, TODAY, or TOMORROW</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
                             <span style="font-size: 1.5em;"><i data-lucide="flame" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: #ff6b35; font-weight: 700; font-size: 1em;">CRASH OUT</div>
-                                <div style="color: #9ca3af; font-size: 0.9em;">Time-block your tasks on an hourly timeline until sleep</div>
+                                <div style="color: var(--fg-muted); font-size: 0.9em;">Time-block your tasks on an hourly timeline until sleep</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: flex-start; gap: 12px;">
                             <span style="font-size: 1.5em;"><i data-lucide="target" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
                                 <div style="color: #10b981; font-weight: 700; font-size: 1em;">FOCUS</div>
-                                <div style="color: #9ca3af; font-size: 0.9em;">Pomodoro timer with session checklists for deep work</div>
+                                <div style="color: var(--fg-muted); font-size: 0.9em;">Pomodoro timer with session checklists for deep work</div>
                             </div>
                         </div>
                     </div>
@@ -11168,9 +11181,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
                 <!-- Mode Tabs - Dark Theme -->
                 <div class="cc-mode-tabs" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; padding-top: 16px;">
-                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 10px 20px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; color: #f1f5f9; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> TRIAGE</button>
-                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> CRASH OUT</button>
-                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 10px 20px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="target" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> FOCUS</button>
+                    <button class="cc-mode-tab active" id="triageModeTab" onclick="switchCommandCenterMode('triage')" style="padding: 10px 20px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--surface-secondary); color: var(--fg-primary); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="list" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> TRIAGE</button>
+                    <button class="cc-mode-tab" id="crashOutModeTab" onclick="switchCommandCenterMode('crashout')" style="padding: 10px 20px; border: 1px solid var(--border-subtle); border-radius: 8px; background: transparent; color: var(--fg-muted); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> CRASH OUT</button>
+                    <button class="cc-mode-tab" id="focusPomodoroTab" onclick="switchCommandCenterMode('focus')" style="padding: 10px 20px; border: 1px solid var(--border-subtle); border-radius: 8px; background: transparent; color: var(--fg-muted); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;"><i data-lucide="target" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> FOCUS</button>
                 </div>
 
                 <!-- ==================== TRIAGE MODE ==================== -->
