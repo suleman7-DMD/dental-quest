@@ -1693,15 +1693,15 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
+            background: var(--fg-primary);
+            color: var(--canvas);
             padding: 12px 24px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             gap: 15px;
             z-index: 9999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             animation: slideUp 0.3s ease;
         }
         .undo-toast button {
@@ -1709,7 +1709,7 @@
             border: none;
             border-radius: 6px;
             background: var(--accent);
-            color: white;
+            color: var(--accent-fg);
             font-weight: 600;
             cursor: pointer;
         }
@@ -2195,7 +2195,7 @@
 
         .timer-mode {
             font-size: 0.85em;
-            color: #94a3b8;
+            color: var(--fg-muted);
             margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -2235,9 +2235,9 @@
         }
 
         .timer-btn.reset {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #94a3b8;
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-default);
+            color: var(--fg-secondary);
         }
 
         .pomodoro-options {
@@ -9961,8 +9961,8 @@
     padding: 14px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
+    background: var(--accent);
+    color: var(--accent-fg);
     font-weight: 700;
     font-size: 1em;
     cursor: pointer;
@@ -10427,7 +10427,7 @@
     background: none; border: none; color: var(--fg-tertiary); cursor: pointer;
     padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
 }
-.qa-close-btn:active { background: rgba(255, 255, 255, 0.05); }
+.qa-close-btn:active { background: rgba(0, 0, 0, 0.05); }
 .qa-input-row { margin-bottom: 16px; }
 .qa-input {
     width: 100%; padding: 14px 16px; background: var(--canvas-subtle);
@@ -10914,6 +10914,99 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     outline: 2px solid var(--control-border-focus);
     outline-offset: 2px;
 }
+
+/* === PHASE 11: INLINE DARK STYLE OVERRIDES === */
+
+/* 11B-1: Focus Welcome Overlay — already uses warm tokens in HTML, fix CRASH OUT / FOCUS label colors */
+#focusViewWelcomeOverlay div[style*="color: #ff6b35"] { color: var(--accent) !important; }
+#focusViewWelcomeOverlay div[style*="color: #10b981"] { color: var(--accent) !important; }
+
+/* 11B-2: CC Mode Tabs — inline styles use warm tokens already; ensure active tab styling */
+.cc-mode-tab { background: var(--surface-secondary) !important; color: var(--fg-primary) !important; border-color: var(--border-default) !important; }
+.cc-mode-tab:not(.active) { background: transparent !important; color: var(--fg-muted) !important; border-color: var(--border-subtle) !important; }
+.cc-mode-tab.active { background: var(--accent) !important; color: var(--accent-fg) !important; border-color: var(--accent) !important; }
+
+/* 11B-3: Custom Sleep Picker — dark inline styles (#1e293b, #334155, #0f172a, #f1f5f9) */
+#customSleepPicker > div[style] { background: var(--surface-secondary) !important; border-color: var(--border-default) !important; }
+#customSleepPicker label { color: var(--fg-secondary) !important; }
+#customSleepPicker input[type="time"] { background: var(--canvas-inset) !important; border-color: var(--border-default) !important; color: var(--fg-primary) !important; }
+#customSleepPicker button[onclick="setCustomSleepTime()"] { background: var(--accent) !important; color: var(--accent-fg) !important; border: none !important; }
+#customSleepPicker button[onclick="hideCustomSleepPicker()"] { background: transparent !important; border-color: var(--border-default) !important; color: var(--fg-secondary) !important; }
+
+/* 11B-4: Calendar Modal — dark bg, header gradient, month nav buttons */
+#calendarModal .modal-content { background: var(--canvas) !important; }
+#calendarModal .modal-content > div[style*="sticky"] { background: var(--accent) !important; }
+#calendarModal h2[style*="color: white"] { color: var(--accent-fg) !important; }
+#calendarModal p[style*="rgba(255,255,255"] { color: rgba(255,255,255,0.9) !important; }
+#calendarModal button[onclick="closeCalendar()"] { background: var(--destructive) !important; color: var(--accent-fg) !important; }
+#calendarModal button[onclick*="openAddCountdown"] { background: var(--surface-primary) !important; color: var(--accent) !important; box-shadow: var(--shadow-md) !important; }
+#calendarModal button[onclick="changeMonth(-1)"],
+#calendarModal button[onclick="changeMonth(1)"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#calendarModal h3[style*="color: #e6edf3"] { color: var(--fg-primary) !important; }
+#calendarModal #masterCalendarGrid { background: var(--surface-primary) !important; }
+
+/* 11B-5: Countdown Modal — delete button, save button, cancel button */
+#addCountdownModal button[onclick*="deleteCountdown"] { background: var(--destructive) !important; }
+#addCountdownModal #saveCountdownBtn { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#addCountdownModal button[onclick="closeAddCountdown()"] { background: var(--fg-tertiary) !important; }
+
+/* 11B-6: Note Modal — delete button + char count color */
+#noteModal button[style*="background: #ff4757"] { background: var(--destructive) !important; color: var(--accent-fg) !important; }
+#noteModal div[style*="color: #999"] { color: var(--fg-muted) !important; }
+
+/* 11B-7: Financial help modal + dashboard inline dark buttons */
+#financialHelpModal button[style*="background: #3b82f6"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#financialDashboard button[style*="background: #3b82f6"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#financialDashboard button[style*="background: #dc2626"] { background: var(--destructive) !important; color: var(--accent-fg) !important; }
+#financialDashboard button[style*="background: #16a34a"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#financialDashboard .help-btn { border-color: var(--accent) !important; color: var(--accent) !important; }
+#financialDashboard .fin-quick-value[style*="color: white"] { color: var(--fg-primary) !important; }
+.edit-panel div[style*="color: #93c5fd"] { color: var(--fg-secondary) !important; background: var(--accent-light) !important; }
+
+/* 11B-8: Planning Modal — already uses warm tokens from earlier phases */
+
+/* 11B-8: Task Edit Modal — already uses warm tokens from earlier phases */
+
+/* 11B-9: Achievement popup — fix dark text on light bg */
+.achievement-popup p[style*="color: #666"] { color: var(--fg-secondary) !important; }
+
+/* 11C: Undo-toast — dark bg is intentional (overlay notification) but ensure contrast */
+.undo-toast { background: var(--fg-primary) !important; color: var(--canvas) !important; }
+.undo-toast button { background: var(--accent) !important; color: var(--accent-fg) !important; }
+.undo-toast .countdown { border-color: rgba(255,255,255,0.3) !important; color: var(--canvas) !important; }
+
+/* 11C: Checkpoint manager modal — dark inline styles in JS */
+.checkpoint-modal-overlay > div { background: var(--surface-primary) !important; border-color: var(--border-default) !important; color: var(--fg-primary) !important; }
+.checkpoint-modal-overlay h2 { color: var(--fg-primary) !important; }
+.checkpoint-modal-overlay button[style*="font-size:24px"] { color: var(--fg-secondary) !important; }
+.checkpoint-modal-overlay strong { color: var(--fg-primary) !important; }
+.checkpoint-modal-overlay span[style*="color:#888"],
+.checkpoint-modal-overlay span[style*="color: #888"] { color: var(--fg-muted) !important; }
+.checkpoint-modal-overlay button[onclick*="restoreCheckpoint"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+.checkpoint-modal-overlay button[onclick*="exportCheckpoint"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+.checkpoint-modal-overlay button[onclick*="deleteCheckpoint"] { background: var(--destructive) !important; color: var(--accent-fg) !important; }
+.checkpoint-modal-overlay button[onclick*="checkpointFileImport"] { background: var(--surface-secondary) !important; border-color: var(--border-default) !important; color: var(--fg-secondary) !important; }
+.checkpoint-modal-overlay button[onclick*="createCheckpoint"] { background: var(--accent-light) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.checkpoint-modal-overlay > div > div[style*="border-top"] { border-color: var(--border-default) !important; }
+.checkpoint-modal-overlay > div > div[style*="border-bottom"] { border-color: var(--border-default) !important; }
+.checkpoint-modal-overlay div[style*="background:rgba(0,0,0,0.03)"] { background: var(--canvas-subtle) !important; }
+.checkpoint-modal-overlay p[style*="color:#888"] { color: var(--fg-muted) !important; }
+.checkpoint-modal-overlay div[style*="color:#888"] { color: var(--fg-muted) !important; }
+.checkpoint-modal-overlay div[style*="color:#666"] { color: var(--fg-tertiary) !important; }
+
+/* 11C: Firebase saving toast — JS-generated inline dark styles */
+#savingIndicator { background: var(--accent) !important; color: var(--accent-fg) !important; box-shadow: var(--shadow-md) !important; }
+
+/* 11C: Custom alert/confirm modals — JS-generated in state.js */
+.custom-modal-overlay h3[style*="color:#58a6ff"] { color: var(--accent) !important; }
+.custom-modal-overlay h3[style*="color:#f0883e"] { color: var(--warning) !important; }
+.custom-modal-overlay button[style*="background:#238636"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+
+/* 11C: Sync conflict modal — JS-generated */
+#syncConflictModal button[onclick*="resolveSyncConflict('local')"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#syncConflictModal button[onclick*="resolveSyncConflict('remote')"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+#syncConflictModal div[style*="color:#58a6ff"] { color: var(--accent) !important; }
+#syncConflictModal div[style*="color:#a371f7"] { color: var(--fg-secondary) !important; }
 
     </style>
 </head>
