@@ -147,6 +147,29 @@ Work on one task at a time with a configurable pomodoro timer. XP and streaks.
 | 12,122-12,133 | Script tags (12 module src tags) |
 | 12,135-12,186 | Quick Add FAB HTML + closing tags |
 
+## UI Redesign Plan (PLANNED — Feb 2026)
+
+Full redesign from dark purple gaming aesthetic to warm cream/olive Synchro-style interface.
+
+**Plan files** (read before any redesign work):
+- `REDESIGN-PLAN.md` — design system, 11 phases, token architecture, icon mapping, component patterns
+- `REDESIGN-EXECUTION.md` — git branch strategy, per-session prompts, emergency recovery
+- `REDESIGN-PROMPT.md` — copy-paste execution prompt for deploying agent team
+
+**Design reference**: `interface-design/` (cloned from Dammyjay93/interface-design) — design principles, craft foundations, system templates
+
+**Key decisions**:
+- Direction: Clinical Warmth (warm productivity tool, not dark gaming aesthetic)
+- Canvas: #FAF8F5 (warm cream), Surface: #FFFFFF (white cards)
+- Accent: #6B7C5E (olive/sage green)
+- Fonts: Source Serif 4 (headings) + Inter (body)
+- Emoji: ALL removed → Lucide icons or plain text
+- Depth: Subtle shadows + surface color shifts (not borders-only, not layered)
+- Density: Full View stays dense, Focus View goes minimal
+- Execution: 11 phases, git branch `redesign/warm-clinical`, commit per phase
+
+**Work happens on branch `redesign/warm-clinical`** — main is untouched until merge.
+
 ## Post-Split Notes (Feb 2026)
 
 ### Function Redistribution
