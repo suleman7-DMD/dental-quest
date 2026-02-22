@@ -4141,7 +4141,7 @@
 
         .fin-projection-label {
             font-size: 0.85em;
-            color: #b0b8c4;
+            color: var(--fg-secondary);
             margin-bottom: 8px;
         }
 
@@ -7083,13 +7083,13 @@
             align-items: center !important;
             margin-bottom: 20px !important;
             padding-bottom: 16px !important;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.15) !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
         }
 
         .timeline-header h2 {
             font-size: 18px !important;
             font-weight: 700 !important;
-            color: var(--text-primary) !important;
+            color: var(--fg-primary) !important;
             margin: 0 !important;
             letter-spacing: -0.3px !important;
         }
@@ -7098,16 +7098,16 @@
             display: flex !important;
             align-items: center !important;
             gap: 2px !important;
-            background: rgba(15, 23, 42, 0.5) !important;
+            background: var(--canvas-inset) !important;
             padding: 3px 4px !important;
             border-radius: 10px !important;
-            border: 1px solid rgba(51, 65, 85, 0.2) !important;
+            border: 1px solid var(--border-default) !important;
         }
 
         .btn-adjust-sleep {
             background: transparent !important;
             border: none !important;
-            color: var(--text-muted) !important;
+            color: var(--fg-tertiary) !important;
             padding: 4px 8px !important;
             border-radius: 6px !important;
             cursor: pointer !important;
@@ -7117,12 +7117,12 @@
         }
 
         .btn-adjust-sleep:hover {
-            background: rgba(99, 102, 241, 0.1) !important;
-            color: #a5b4fc !important;
+            background: rgba(107, 124, 94, 0.1) !important;
+            color: var(--accent) !important;
         }
 
         .current-sleep-label {
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             font-weight: 600 !important;
             font-size: 13px !important;
             padding: 0 8px !important;
@@ -7131,7 +7131,7 @@
 
         .btn-change-sleep {
             background: transparent !important;
-            border: 1px solid rgba(51, 65, 85, 0.2) !important;
+            border: 1px solid var(--border-default) !important;
             color: var(--text-muted) !important;
             padding: 4px 10px !important;
             border-radius: 6px !important;
@@ -7149,8 +7149,8 @@
         }
 
         .time-summary {
-            background: rgba(15, 23, 42, 0.4) !important;
-            border: 1px solid rgba(51, 65, 85, 0.15) !important;
+            background: var(--canvas-subtle) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: 14px !important;
             padding: 16px 20px !important;
             margin-bottom: 20px !important;
@@ -7179,7 +7179,7 @@
         .time-progress-bar {
             flex: 1 !important;
             height: 6px !important;
-            background: rgba(30, 41, 59, 0.6) !important;
+            background: var(--canvas-inset) !important;
             border-radius: 3px !important;
             overflow: hidden !important;
             position: relative !important;
@@ -7223,12 +7223,12 @@
         }
 
         .warning-icon { font-size: 18px !important; }
-        .warning-text { flex: 1 !important; color: #fca5a5 !important; font-size: 13px !important; }
+        .warning-text { flex: 1 !important; color: var(--destructive) !important; font-size: 13px !important; }
 
         .btn-dismiss {
             background: transparent !important;
             border: 1px solid rgba(239, 68, 68, 0.25) !important;
-            color: #fca5a5 !important;
+            color: var(--destructive) !important;
             padding: 4px 12px !important;
             border-radius: 6px !important;
             cursor: pointer !important;
@@ -7613,14 +7613,14 @@
         .protected-time {
             font-size: 13px !important;
             font-weight: 600 !important;
-            color: #a78bfa !important;
+            color: var(--accent) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .protected-label {
             font-size: 12px !important;
             font-weight: 700 !important;
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             letter-spacing: 1px !important;
             text-transform: uppercase !important;
         }
@@ -7637,8 +7637,8 @@
             align-items: center !important;
             gap: 10px !important;
             padding: 12px 16px !important;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08)) !important;
-            border: 1px solid rgba(99, 102, 241, 0.2) !important;
+            background: var(--accent-lighter) !important;
+            border: 1px solid rgba(107, 124, 94, 0.2) !important;
             border-radius: 10px !important;
             margin-top: 12px !important;
             position: relative !important;
@@ -7652,7 +7652,7 @@
         .sleep-time {
             font-size: 16px !important;
             font-weight: 700 !important;
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
@@ -7665,8 +7665,8 @@
 
         /* Unscheduled Pool */
         .unscheduled-pool {
-            background: rgba(15, 23, 42, 0.3) !important;
-            border: 1px solid rgba(51, 65, 85, 0.12) !important;
+            background: var(--canvas-subtle) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: 14px !important;
             padding: 20px !important;
             margin-bottom: 24px !important;
@@ -7711,8 +7711,8 @@
         }
 
         .pool-task-card {
-            background: rgba(15, 23, 42, 0.4) !important;
-            border: 1px solid rgba(51, 65, 85, 0.15) !important;
+            background: var(--surface-primary) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: 10px !important;
             padding: 10px 12px !important;
             min-width: 140px !important;
@@ -7722,9 +7722,9 @@
         }
 
         .pool-task-card:hover {
-            border-color: rgba(20, 184, 166, 0.3) !important;
+            border-color: rgba(107, 124, 94, 0.3) !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.08) !important;
+            box-shadow: 0 4px 16px rgba(107, 124, 94, 0.08) !important;
         }
 
         .pool-task-text {
@@ -7758,8 +7758,8 @@
 
         .btn-add-to-timeline {
             background: transparent !important;
-            color: rgba(94, 234, 212, 0.8) !important;
-            border: 1px solid rgba(20, 184, 166, 0.2) !important;
+            color: var(--accent) !important;
+            border: 1px solid rgba(107, 124, 94, 0.2) !important;
             padding: 5px 10px !important;
             border-radius: 8px !important;
             font-size: 11px !important;
@@ -7771,9 +7771,9 @@
         }
 
         .btn-add-to-timeline:hover {
-            background: rgba(20, 184, 166, 0.1) !important;
-            border-color: rgba(20, 184, 166, 0.4) !important;
-            color: var(--accent-teal) !important;
+            background: rgba(107, 124, 94, 0.1) !important;
+            border-color: rgba(107, 124, 94, 0.4) !important;
+            color: var(--accent) !important;
         }
 
         /* Empty Timeline State */
@@ -7805,7 +7805,7 @@
         .timeline-grid {
             position: relative !important;
             margin-left: 56px !important;
-            border-left: 1px solid rgba(51, 65, 85, 0.15) !important;
+            border-left: 1px solid var(--border-subtle) !important;
             overflow: visible !important;
         }
 
@@ -7821,7 +7821,7 @@
             left: 0 !important;
             top: -7px !important;
             font-size: 10px !important;
-            color: rgba(148, 163, 184, 0.7) !important;
+            color: var(--fg-muted) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
             width: 44px !important;
             text-align: right !important;
@@ -7834,7 +7834,7 @@
             left: 54px !important;
             right: 0 !important;
             height: 1px !important;
-            background: rgba(51, 65, 85, 0.12) !important;
+            background: var(--border-subtle) !important;
         }
 
         .gcal-half-line {
@@ -7843,7 +7843,7 @@
             right: 0 !important;
             height: 1px !important;
             background: none !important;
-            border-top: 1px dashed rgba(51, 65, 85, 0.08) !important;
+            border-top: 1px dashed rgba(0, 0, 0, 0.04) !important;
             pointer-events: none !important;
         }
 
@@ -7887,9 +7887,9 @@
             padding: 8px 12px !important;
             cursor: grab !important;
             z-index: 5 !important;
-            border: 1px solid rgba(59, 130, 246, 0.15) !important;
-            border-left: 3px solid rgba(96, 165, 250, 0.7) !important;
-            background: rgba(30, 58, 138, 0.35) !important;
+            border: 1px solid rgba(107, 124, 94, 0.15) !important;
+            border-left: 3px solid rgba(107, 124, 94, 0.6) !important;
+            background: rgba(107, 124, 94, 0.12) !important;
             transition: all 0.2s ease !important;
             overflow: hidden !important;
             display: flex !important;
@@ -7899,9 +7899,9 @@
 
         .gcal-task:hover {
             z-index: 15 !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(59, 130, 246, 0.15) !important;
-            background: rgba(30, 58, 138, 0.25) !important;
-            border-color: rgba(59, 130, 246, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(107, 124, 94, 0.15) !important;
+            background: rgba(107, 124, 94, 0.08) !important;
+            border-color: rgba(107, 124, 94, 0.3) !important;
         }
 
         .gcal-task:active {
@@ -7994,8 +7994,8 @@
         }
 
         .gcal-task-actions .duration-select {
-            background: rgba(15, 23, 42, 0.5) !important;
-            border: 1px solid rgba(51, 65, 85, 0.2) !important;
+            background: var(--canvas-inset) !important;
+            border: 1px solid var(--border-default) !important;
             color: var(--text-primary) !important;
             padding: 2px 14px 2px 4px !important;
             border-radius: 5px !important;
@@ -8035,8 +8035,8 @@
         }
 
         .gcal-task-actions .btn-reorder:hover {
-            border-color: var(--accent-blue) !important;
-            color: var(--accent-blue) !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
 
         .gcal-task-actions .btn-reorder:disabled {
@@ -8063,8 +8063,8 @@
         }
 
         .gcal-task-actions .btn-edit:hover {
-            border-color: var(--accent-blue) !important;
-            color: var(--accent-blue) !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
 
         .gcal-task-actions .btn-remove:hover {
@@ -8077,9 +8077,9 @@
             position: absolute !important;
             left: 0 !important;
             right: 0 !important;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.08)) !important;
-            border: 1px solid rgba(139, 92, 246, 0.12) !important;
-            border-left: 3px solid rgba(167, 139, 250, 0.5) !important;
+            background: rgba(107, 124, 94, 0.08) !important;
+            border: 1px solid rgba(107, 124, 94, 0.08) !important;
+            border-left: 3px solid rgba(107, 124, 94, 0.4) !important;
             border-radius: 10px !important;
             z-index: 1 !important;
             display: flex !important;
@@ -8097,8 +8097,8 @@
                 -45deg,
                 transparent,
                 transparent 10px,
-                rgba(139, 92, 246, 0.02) 10px,
-                rgba(139, 92, 246, 0.02) 20px
+                rgba(107, 124, 94, 0.02) 10px,
+                rgba(107, 124, 94, 0.02) 20px
             ) !important;
             pointer-events: none !important;
         }
@@ -8116,14 +8116,14 @@
         .gcal-winddown-time {
             font-size: 12px !important;
             font-weight: 600 !important;
-            color: #a78bfa !important;
+            color: var(--accent) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .gcal-winddown-label {
             font-size: 12px !important;
             font-weight: 600 !important;
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             letter-spacing: 0.5px !important;
         }
 
@@ -8151,13 +8151,13 @@
         .gcal-sleep-time {
             font-size: 14px !important;
             font-weight: 700 !important;
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             font-family: 'SF Mono', Monaco, monospace !important;
         }
 
         .gcal-sleep-label {
             font-size: 12px !important;
-            color: #c4b5fd !important;
+            color: var(--accent) !important;
             letter-spacing: 0.5px !important;
             font-weight: 500 !important;
         }
@@ -8165,7 +8165,7 @@
         .gcal-sleep-line {
             flex: 1 !important;
             height: 1.5px !important;
-            background: linear-gradient(90deg, rgba(139, 92, 246, 0.5), rgba(139, 92, 246, 0.05)) !important;
+            background: linear-gradient(90deg, rgba(107, 124, 94, 0.3), rgba(107, 124, 94, 0.03)) !important;
         }
 
         /* Empty state in grid */
@@ -8222,7 +8222,7 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            background: rgba(0,0,0,0.85) !important;
+            background: rgba(0,0,0,0.3) !important;
             z-index: 10000 !important;
             display: flex !important;
             align-items: center !important;
@@ -8849,7 +8849,7 @@
     height: 280px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(107, 124, 94, 0.1) 0%, transparent 70%);
     pointer-events: none;
     transition: background 0.5s ease;
 }
@@ -8872,12 +8872,12 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -55%);
-    color: #f1f5f9;
+    color: var(--fg-primary);
     font-size: 3.5em;
     font-weight: 700;
     font-family: 'SF Mono', 'Fira Code', Monaco, 'Courier New', monospace;
     letter-spacing: 2px;
-    text-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+    text-shadow: 0 0 20px rgba(107, 124, 94, 0.2);
     font-variant-numeric: tabular-nums;
     transition: text-shadow 0.5s ease;
 }
@@ -8915,8 +8915,8 @@
 }
 
 .focus-session-card {
-    background: linear-gradient(145deg, #1e293b 0%, #172033 100%);
-    border: 1px solid #334155;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
     border-radius: 24px;
     padding: 32px 28px 28px;
     text-align: center;
@@ -8934,7 +8934,7 @@
 .focus-task-name {
     font-size: 1.35em;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--fg-primary);
     margin-bottom: 10px;
     line-height: 1.3;
 }
@@ -8955,9 +8955,9 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(107, 124, 94, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(107, 124, 94, 0.25);
 }
 
 .focus-progress-badge {
@@ -8967,9 +8967,9 @@
     border-radius: 20px;
     font-size: 0.78em;
     font-weight: 600;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--fg-tertiary);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .focus-controls {
@@ -9026,9 +9026,9 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid #475569;
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
+    border: 1px solid var(--border-strong);
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--fg-tertiary);
     font-size: 0.85em;
     font-weight: 700;
     cursor: pointer;
@@ -9039,9 +9039,9 @@
 }
 
 .focus-btn-adjust:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #f1f5f9;
-    border-color: #64748b;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--fg-primary);
+    border-color: var(--fg-secondary);
     transform: scale(1.05);
 }
 
@@ -9059,10 +9059,10 @@
 
 .focus-dur-btn {
     padding: 6px 18px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-default);
     border-radius: 20px;
     background: transparent;
-    color: #64748b;
+    color: var(--fg-secondary);
     font-size: 0.85em;
     font-weight: 600;
     cursor: pointer;
@@ -9070,19 +9070,19 @@
 }
 
 .focus-dur-btn:hover {
-    color: #94a3b8;
-    border-color: #475569;
+    color: var(--fg-tertiary);
+    border-color: var(--border-strong);
 }
 
 .focus-dur-btn.active {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.3);
-    color: #60a5fa;
+    background: rgba(107, 124, 94, 0.15);
+    border-color: rgba(107, 124, 94, 0.3);
+    color: var(--accent);
 }
 
 .focus-checklist-card {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
     border-radius: 20px;
     padding: 24px;
     margin-bottom: 16px;
@@ -9090,7 +9090,7 @@
 
 .focus-checklist-title {
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--fg-primary);
     margin-bottom: 16px;
     font-size: 0.95em;
     display: flex;
@@ -9102,7 +9102,7 @@
     width: 22px;
     height: 22px;
     min-width: 22px;
-    border: 2px solid #475569;
+    border: 2px solid var(--border-strong);
     border-radius: 6px;
     cursor: pointer;
     display: flex;
@@ -9113,13 +9113,13 @@
 }
 
 .focus-checkbox:hover {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent);
+    background: rgba(107, 124, 94, 0.1);
 }
 
 .focus-checkbox.checked {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--accent);
+    border-color: var(--accent);
     color: white;
     animation: focusCheckPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -9143,13 +9143,13 @@
     padding: 10px 12px !important;
     border-radius: 10px !important;
     margin-bottom: 6px !important;
-    background: rgba(255, 255, 255, 0.02) !important;
+    background: rgba(0, 0, 0, 0.01) !important;
     transition: all 0.25s ease !important;
     border-left: 3px solid transparent !important;
 }
 
 .focus-checklist-item:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: rgba(0, 0, 0, 0.02) !important;
 }
 
 .focus-checklist-item.checked {
@@ -9159,21 +9159,21 @@
 
 .focus-checklist-item .item-text {
     flex: 1 !important;
-    color: #e2e8f0 !important;
+    color: var(--fg-primary) !important;
     font-size: 0.92em !important;
     transition: all 0.3s ease !important;
 }
 
 .focus-checklist-item .item-text.completed {
     text-decoration: line-through !important;
-    color: #64748b !important;
+    color: var(--fg-secondary) !important;
 }
 
 .focus-checklist-item .delete-item {
     opacity: 0;
     background: transparent !important;
     border: none !important;
-    color: #64748b !important;
+    color: var(--fg-secondary) !important;
     cursor: pointer !important;
     padding: 4px !important;
     border-radius: 4px !important;
@@ -9195,19 +9195,19 @@
 .focus-checklist-progress-wrap {
     margin-top: 16px;
     padding-top: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .focus-checklist-bar {
     height: 6px;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.04);
     border-radius: 3px;
     overflow: hidden;
 }
 
 .focus-checklist-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #22c55e);
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover), #22c55e);
     background-size: 200% 100%;
     border-radius: 3px;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -9222,30 +9222,30 @@
 .focus-add-input {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-default);
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.6);
-    color: #e2e8f0;
+    background: var(--canvas-inset);
+    color: var(--fg-primary);
     font-size: 0.85em;
     outline: none;
     transition: border-color 0.2s ease;
 }
 
 .focus-add-input:focus {
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-color: rgba(107, 124, 94, 0.5);
+    box-shadow: 0 0 0 2px rgba(107, 124, 94, 0.1);
 }
 
 .focus-add-input::placeholder {
-    color: #475569;
+    color: var(--fg-muted);
 }
 
 .focus-add-btn {
     padding: 8px 16px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-default);
     border-radius: 8px;
-    background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
+    background: rgba(107, 124, 94, 0.1);
+    color: var(--accent);
     font-size: 0.85em;
     font-weight: 600;
     cursor: pointer;
@@ -9253,8 +9253,8 @@
 }
 
 .focus-add-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(107, 124, 94, 0.2);
+    border-color: rgba(107, 124, 94, 0.3);
 }
 
 .focus-actions {
@@ -9296,10 +9296,10 @@
 
 .focus-btn-skip {
     padding: 10px 24px;
-    border: 1px solid #475569;
+    border: 1px solid var(--border-strong);
     border-radius: 10px;
     background: transparent;
-    color: #94a3b8;
+    color: var(--fg-tertiary);
     font-weight: 600;
     font-size: 0.9em;
     cursor: pointer;
@@ -9310,9 +9310,9 @@
 }
 
 .focus-btn-skip:hover {
-    border-color: #64748b;
-    color: #f1f5f9;
-    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--fg-secondary);
+    color: var(--fg-primary);
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .focus-btn-exit {
@@ -9320,7 +9320,7 @@
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #64748b;
+    color: var(--fg-secondary);
     font-weight: 500;
     font-size: 0.85em;
     cursor: pointer;
@@ -9328,12 +9328,12 @@
 }
 
 .focus-btn-exit:hover {
-    color: #94a3b8;
+    color: var(--fg-tertiary);
 }
 
 .focus-empty-state {
-    background: linear-gradient(145deg, #1e293b 0%, #172033 100%);
-    border: 1px solid #334155;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
     border-radius: 24px;
     padding: 60px 40px;
     text-align: center;
@@ -9358,7 +9358,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    border: 2px solid rgba(59, 130, 246, 0.2);
+    border: 2px solid rgba(107, 124, 94, 0.2);
     border-radius: 50%;
     animation: focusEmptyPulse 3s ease-in-out infinite;
 }
@@ -9366,12 +9366,12 @@
 .focus-empty-title {
     font-size: 1.6em;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--fg-primary);
     margin-bottom: 12px;
 }
 
 .focus-empty-desc {
-    color: #94a3b8;
+    color: var(--fg-tertiary);
     font-size: 1em;
     line-height: 1.5;
     margin-bottom: 30px;
@@ -9387,18 +9387,18 @@
     padding: 14px 32px;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--accent);
     color: white;
     font-weight: 700;
     font-size: 1em;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(107, 124, 94, 0.3);
 }
 
 .focus-empty-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(107, 124, 94, 0.4);
 }
 
 .focus-empty-btn:active {
@@ -9411,7 +9411,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(8px);
     z-index: 10000;
     display: flex;
@@ -9421,8 +9421,8 @@
 }
 
 .focus-complete-card {
-    background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
-    border: 1px solid #334155;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
     border-radius: 28px;
     padding: 44px 36px 36px;
     text-align: center;
@@ -9459,7 +9459,7 @@
 .focus-complete-title {
     font-size: 1.6em;
     font-weight: 800;
-    color: #f1f5f9;
+    color: var(--fg-primary);
     margin-bottom: 8px;
     letter-spacing: 1px;
     position: relative;
@@ -9477,8 +9477,8 @@
 }
 
 .focus-complete-stats {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.04);
     border-radius: 16px;
     padding: 16px 20px;
     margin-bottom: 16px;
@@ -9491,7 +9491,7 @@
     align-items: center;
     gap: 8px;
     padding: 6px 0;
-    color: #94a3b8;
+    color: var(--fg-tertiary);
     font-size: 0.92em;
 }
 
@@ -9500,7 +9500,7 @@
 }
 
 .focus-complete-checklist {
-    color: #64748b;
+    color: var(--fg-secondary);
     font-size: 0.85em;
     margin-bottom: 24px;
     position: relative;
@@ -9538,7 +9538,7 @@
 }
 
 .focus-modal-btn.secondary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--accent);
     color: white;
 }
 
@@ -9553,16 +9553,16 @@
 }
 
 .focus-modal-btn.ghost {
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
-    border: 1px solid #334155;
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--fg-tertiary);
+    border: 1px solid var(--border-default);
     padding: 10px 16px;
     font-size: 0.88em;
 }
 
 .focus-modal-btn.ghost:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f1f5f9;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--fg-primary);
 }
 
 /* CSS Confetti System */
@@ -11811,12 +11811,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         <h2 style="color: var(--accent); margin-bottom: 20px; font-family: var(--font-heading);">+ Add New Countdown</h2>
                         
                         <div style="margin-bottom: 20px;">
-                            <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Description</label>
+                            <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Description</label>
                             <input type="text" id="countdownDescription" placeholder="e.g., Chase Sapphire Payment" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                         </div>
                         
                         <div style="margin-bottom: 20px;">
-                            <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Category</label>
+                            <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Category</label>
                             <select id="countdownCategory" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                                 <option value="financial">Financial</option>
                                 <option value="academic">Academic & Didactic</option>
@@ -11830,17 +11830,17 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                         
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
                             <div>
-                                <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Date</label>
+                                <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Date</label>
                                 <input type="date" id="countdownDate" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Time (optional)</label>
+                                <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Time (optional)</label>
                                 <input type="time" id="countdownTime" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 25px;">
-                            <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Quick Notes (one line)</label>
+                            <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Quick Notes (one line)</label>
                             <input type="text" id="countdownNotes" placeholder="e.g., $1,482 payment scheduled" maxlength="100" style="width: 100%; padding: 12px; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 6px; color: var(--fg-primary); font-size: 1em;">
                         </div>
                         
@@ -11854,7 +11854,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             <button onclick="saveCountdown()" id="saveCountdownBtn" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
                                 ✓ Create Countdown
                             </button>
-                            <button onclick="closeAddCountdown()" style="flex: 1; background: #6e7681; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
+                            <button onclick="closeAddCountdown()" style="flex: 1; background: var(--fg-tertiary); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
                                 Cancel
                             </button>
                         </div>
@@ -11966,9 +11966,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                     </div>
                 </div>
                 <div class="modal-overlay" id="calendarModal" onclick="safeModalClose(closeCalendar, event)">
-                    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 98%; max-height: 98%; overflow-y: auto; background: #0f1419; padding: 0;">
+                    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 98%; max-height: 98%; overflow-y: auto; background: var(--canvas); padding: 0;">
                         <!-- Header -->
-                        <div style="position: sticky; top: 0; background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 25px; border-bottom: 3px solid #30363d; z-index: 100; border-radius: 12px 12px 0 0;">
+                        <div style="position: sticky; top: 0; background: var(--accent); padding: 25px; border-bottom: 3px solid var(--border-default); z-index: 100; border-radius: 12px 12px 0 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <div>
                                     <h2 style="color: white; margin: 0; font-size: 2.5em;"><i data-lucide="calendar" style="width:24px;height:24px;display:inline-block;vertical-align:middle"></i> MASTER CALENDAR</h2>
@@ -11995,13 +11995,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                             </div>
                             
                             <!-- Full Month Calendar -->
-                            <div id="masterCalendarGrid" style="background: #161b22; padding: 20px; border-radius: 12px; margin-bottom: 40px;">
+                            <div id="masterCalendarGrid" style="background: var(--surface-primary); padding: 20px; border-radius: 12px; margin-bottom: 40px;">
                                 <!-- Calendar will be rendered here -->
                             </div>
                             
                             <!-- Countdowns Section -->
-                            <div style="background: #161b22; padding: 25px; border-radius: 12px;">
-                                <h3 style="color: #58a6ff; font-size: 2em; margin-bottom: 20px;"><i data-lucide="clock" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> UPCOMING COUNTDOWNS</h3>
+                            <div style="background: var(--surface-primary); padding: 25px; border-radius: 12px;">
+                                <h3 style="color: var(--accent); font-family: var(--font-heading); font-size: 2em; margin-bottom: 20px;"><i data-lucide="clock" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> UPCOMING COUNTDOWNS</h3>
                                 <div id="countdownsList">
                                     <!-- Countdowns will be rendered here -->
                                 </div>
@@ -12200,71 +12200,71 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     <!-- Planning Modal for Focus Mode -->
     <div id="planningModal" onclick="closePlanningModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
-        <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; color: #e6edf3;">
-            <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: #58a6ff;"><i data-lucide="target" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Select Your ONE THING for Today</div>
-                <button onclick="closePlanningModal()" style="background: none; border: none; color: #b0b8c4; font-size: 1.5em; cursor: pointer;">✕</button>
+        <div onclick="event.stopPropagation()" style="background: var(--surface-overlay); border: 2px solid var(--border-default); border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; color: var(--fg-primary);">
+            <div style="padding: 25px 30px; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center;">
+                <div id="planningModalTitle" style="font-size: 1.5em; font-weight: 700; color: var(--accent); font-family: var(--font-heading);"><i data-lucide="target" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Select Your ONE THING for Today</div>
+                <button onclick="closePlanningModal()" style="background: none; border: none; color: var(--fg-tertiary); font-size: 1.5em; cursor: pointer;">✕</button>
             </div>
             <div id="planningModalBody" style="padding: 25px 30px;">
                 <!-- Will be populated by JS -->
             </div>
-            <div style="padding: 20px 30px; border-top: 1px solid #30363d; display: flex; gap: 12px; justify-content: flex-end;">
-                <button onclick="closePlanningModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: #30363d; color: #c9d1d9;">Cancel</button>
-                <button onclick="confirmPlanningSelection()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">Confirm Selection</button>
+            <div style="padding: 20px 30px; border-top: 1px solid var(--border-default); display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="closePlanningModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: var(--canvas-inset); color: var(--fg-secondary);">Cancel</button>
+                <button onclick="confirmPlanningSelection()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: var(--accent); color: white;">Confirm Selection</button>
             </div>
         </div>
     </div>
 
     <!-- Task Edit Modal for Focus Mode -->
     <div id="taskEditModal" onclick="closeTaskEditModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 20001; padding: 20px;">
-        <div onclick="event.stopPropagation()" style="background: #161b22; border: 2px solid #30363d; border-radius: 16px; max-width: 500px; width: 100%; color: #e6edf3;">
-            <div style="padding: 25px 30px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 1.5em; font-weight: 700; color: #58a6ff;"><i data-lucide="edit" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Edit Task</div>
-                <button onclick="closeTaskEditModal()" style="background: none; border: none; color: #b0b8c4; font-size: 1.5em; cursor: pointer;">✕</button>
+        <div onclick="event.stopPropagation()" style="background: var(--surface-overlay); border: 2px solid var(--border-default); border-radius: 16px; max-width: 500px; width: 100%; color: var(--fg-primary);">
+            <div style="padding: 25px 30px; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 1.5em; font-weight: 700; color: var(--accent); font-family: var(--font-heading);"><i data-lucide="edit" style="width:20px;height:20px;display:inline-block;vertical-align:middle"></i> Edit Task</div>
+                <button onclick="closeTaskEditModal()" style="background: none; border: none; color: var(--fg-tertiary); font-size: 1.5em; cursor: pointer;">✕</button>
             </div>
             <div style="padding: 25px 30px;">
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Task</label>
-                    <input type="text" id="editTaskText" style="width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; color: #e6edf3; font-size: 1em;">
+                    <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Task</label>
+                    <input type="text" id="editTaskText" style="width: 100%; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 8px; padding: 12px; color: var(--fg-primary); font-size: 1em;">
                 </div>
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">Size (How long will this take?)</label>
+                    <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Size (How long will this take?)</label>
                     <div style="display: flex; gap: 10px;">
-                        <div class="size-option" data-size="big" onclick="selectTaskSize('big')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#ef4444"></span></div>
-                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Big</div>
-                            <div style="font-size: 0.75em; color: #b0b8c4;">1+ hour</div>
+                        <div class="size-option" data-size="big" onclick="selectTaskSize('big')" style="flex: 1; padding: 12px; border: 2px solid var(--border-default); border-radius: 10px; text-align: center; cursor: pointer; background: var(--canvas-subtle);">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--destructive)"></span></div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: var(--fg-primary);">Big</div>
+                            <div style="font-size: 0.75em; color: var(--fg-secondary);">1+ hour</div>
                         </div>
-                        <div class="size-option selected" data-size="medium" onclick="selectTaskSize('medium')" style="flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 10px; text-align: center; cursor: pointer; background: rgba(102, 126, 234, 0.2);">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#eab308"></span></div>
-                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Medium</div>
-                            <div style="font-size: 0.75em; color: #b0b8c4;">15-45 min</div>
+                        <div class="size-option selected" data-size="medium" onclick="selectTaskSize('medium')" style="flex: 1; padding: 12px; border: 2px solid var(--accent); border-radius: 10px; text-align: center; cursor: pointer; background: var(--accent-lighter);">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--warning)"></span></div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: var(--fg-primary);">Medium</div>
+                            <div style="font-size: 0.75em; color: var(--fg-secondary);">15-45 min</div>
                         </div>
-                        <div class="size-option" data-size="small" onclick="selectTaskSize('small')" style="flex: 1; padding: 12px; border: 2px solid #30363d; border-radius: 10px; text-align: center; cursor: pointer; background: #21262d;">
-                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#22c55e"></span></div>
-                            <div style="font-weight: 600; font-size: 0.9em; color: #c9d1d9;">Small</div>
-                            <div style="font-size: 0.75em; color: #b0b8c4;">2-15 min</div>
+                        <div class="size-option" data-size="small" onclick="selectTaskSize('small')" style="flex: 1; padding: 12px; border: 2px solid var(--border-default); border-radius: 10px; text-align: center; cursor: pointer; background: var(--canvas-subtle);">
+                            <div style="font-size: 1.5em; margin-bottom: 5px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--success)"></span></div>
+                            <div style="font-weight: 600; font-size: 0.9em; color: var(--fg-primary);">Small</div>
+                            <div style="font-size: 0.75em; color: var(--fg-secondary);">2-15 min</div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #b0b8c4; margin-bottom: 8px; font-weight: 600;">High Leverage (80/20)?</label>
-                    <div id="leverageToggle" onclick="toggleLeverage()" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: #21262d; border-radius: 10px; cursor: pointer;">
-                        <div id="leverageSwitch" style="width: 44px; height: 24px; background: #30363d; border-radius: 12px; position: relative; transition: all 0.2s ease;">
+                    <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">High Leverage (80/20)?</label>
+                    <div id="leverageToggle" onclick="toggleLeverage()" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--canvas-subtle); border-radius: 10px; cursor: pointer;">
+                        <div id="leverageSwitch" style="width: 44px; height: 24px; background: var(--border-strong); border-radius: 12px; position: relative; transition: all 0.2s ease;">
                             <div style="position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s ease;"></div>
                         </div>
                         <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #e6edf3; margin-bottom: 2px;"><i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> High Leverage Task</div>
-                            <div style="font-size: 0.85em; color: #b0b8c4;">20% effort → 80% impact on your goals</div>
+                            <div style="font-weight: 600; color: var(--fg-primary); margin-bottom: 2px;"><i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> High Leverage Task</div>
+                            <div style="font-size: 0.85em; color: var(--fg-secondary);">20% effort → 80% impact on your goals</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div style="padding: 20px 30px; border-top: 1px solid #30363d; display: flex; gap: 12px; justify-content: flex-end;">
-                <button onclick="closeTaskEditModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: #30363d; color: #c9d1d9;">Cancel</button>
-                <button onclick="saveTaskEdit()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">Save Changes</button>
+            <div style="padding: 20px 30px; border-top: 1px solid var(--border-default); display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="closeTaskEditModal()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: var(--canvas-inset); color: var(--fg-secondary);">Cancel</button>
+                <button onclick="saveTaskEdit()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; font-size: 1em; cursor: pointer; background: var(--accent); color: white;">Save Changes</button>
             </div>
         </div>
     </div>
