@@ -235,6 +235,11 @@ function initApp() {
         // Compact header initial update
         updateCompactHeader();
 
+        // Initialize Lucide icons (replaces emoji with SVG icons)
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+
     } catch (e) {
         console.error('Init error:', e);
         try { loadData(); markInitialLoadComplete(); } catch (e2) { /* last resort */ }
