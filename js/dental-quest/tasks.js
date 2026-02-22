@@ -689,6 +689,9 @@ function updateStats() {
 
     // Update compact header (mirrors Do Today + streak counts)
     if (typeof updateCompactHeader === 'function') updateCompactHeader();
+
+    // Update sidebar stats + metrics row
+    if (typeof updateSidebarStats === 'function') updateSidebarStats();
 }
 
 // ============================================
@@ -700,10 +703,19 @@ function switchToFocusMode() {
     document.body.classList.add('focus-active');
     document.getElementById('focusModeContainer').style.display = 'block';
     document.getElementById('fullViewContainer').style.display = 'none';
-    document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.95)';
-    document.getElementById('focusModeBtn').style.color = 'var(--accent)';
-    document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.1)';
-    document.getElementById('fullViewBtn').style.color = 'white';
+    var focusModeBtn = document.getElementById('focusModeBtn');
+    var fullViewBtn = document.getElementById('fullViewBtn');
+    if (focusModeBtn) { focusModeBtn.style.background = 'rgba(255,255,255,0.95)'; focusModeBtn.style.color = 'var(--accent)'; }
+    if (fullViewBtn) { fullViewBtn.style.background = 'rgba(255,255,255,0.1)'; fullViewBtn.style.color = 'white'; }
+
+    // Hide kanban in focus mode
+    var kb = document.getElementById('kanbanBoard');
+    if (kb) kb.style.display = 'none';
+
+    // Hide view controls in focus mode
+    var vc = document.getElementById('viewControls');
+    if (vc) vc.style.display = 'none';
+
     renderFocusMode();
 
     // Update compact header view toggle
@@ -711,25 +723,60 @@ function switchToFocusMode() {
     var tb = document.getElementById('compactFullBtn');
     if (fb) fb.classList.add('active');
     if (tb) tb.classList.remove('active');
+
+    // Update sidebar active state
+    var sf = document.getElementById('sidebarFocusBtn');
+    var su = document.getElementById('sidebarFullBtn');
+    if (sf) sf.classList.add('active');
+    if (su) su.classList.remove('active');
+
+    // Update breadcrumb
+    var bc = document.getElementById('topBarBreadcrumb');
+    if (bc) bc.textContent = '\u203A Focus';
 }
 
 function switchToFullView() {
     currentView = 'full';
     document.body.classList.remove('focus-active');
     document.getElementById('focusModeContainer').style.display = 'none';
-    document.getElementById('fullViewContainer').style.display = 'block';
-    document.getElementById('focusModeBtn').style.background = 'rgba(255,255,255,0.1)';
-    document.getElementById('focusModeBtn').style.color = 'white';
-    document.getElementById('fullViewBtn').style.background = 'rgba(255,255,255,0.95)';
-    document.getElementById('fullViewBtn').style.color = 'var(--accent)';
-    // Re-render tasks so Full View shows current data
-    if (typeof renderTasks === 'function') renderTasks();
+
+    // Show view controls
+    var vc = document.getElementById('viewControls');
+    if (vc) vc.style.display = 'flex';
+
+    // Respect current view mode
+    if (currentViewMode === 'kanban') {
+        document.getElementById('fullViewContainer').style.display = 'none';
+        var kb = document.getElementById('kanbanBoard');
+        if (kb) kb.style.display = 'grid';
+        renderKanbanBoard();
+    } else {
+        document.getElementById('fullViewContainer').style.display = 'block';
+        var kb2 = document.getElementById('kanbanBoard');
+        if (kb2) kb2.style.display = 'none';
+        if (typeof renderTasks === 'function') renderTasks();
+    }
+
+    var focusModeBtn = document.getElementById('focusModeBtn');
+    var fullViewBtn = document.getElementById('fullViewBtn');
+    if (focusModeBtn) { focusModeBtn.style.background = 'rgba(255,255,255,0.1)'; focusModeBtn.style.color = 'white'; }
+    if (fullViewBtn) { fullViewBtn.style.background = 'rgba(255,255,255,0.95)'; fullViewBtn.style.color = 'var(--accent)'; }
 
     // Update compact header view toggle
     var fb = document.getElementById('compactFocusBtn');
     var tb = document.getElementById('compactFullBtn');
     if (fb) fb.classList.remove('active');
     if (tb) tb.classList.add('active');
+
+    // Update sidebar active state
+    var sf = document.getElementById('sidebarFocusBtn');
+    var su = document.getElementById('sidebarFullBtn');
+    if (sf) sf.classList.remove('active');
+    if (su) su.classList.add('active');
+
+    // Update breadcrumb
+    var bc = document.getElementById('topBarBreadcrumb');
+    if (bc) bc.textContent = '\u203A All Tasks';
 }
 
 // _renderFrame extracted to state.js
@@ -748,6 +795,369 @@ function renderFocusMode() {
     } else if (currentMode === 'focus') {
         renderFocusPomodoroMode();
     }
+}
+
+// ==================== SIDEBAR NAVIGATION ====================
+
+var currentViewMode = 'list'; // 'list' or 'kanban'
+
+function sidebarNavigate(view) {
+    // Update sidebar active state
+    var focusBtn = document.getElementById('sidebarFocusBtn');
+    var fullBtn = document.getElementById('sidebarFullBtn');
+    if (focusBtn) focusBtn.classList.toggle('active', view === 'focus');
+    if (fullBtn) fullBtn.classList.toggle('active', view === 'full');
+
+    // Update top bar breadcrumb
+    var bc = document.getElementById('topBarBreadcrumb');
+    if (bc) bc.textContent = view === 'focus' ? '\u203A Focus' : '\u203A All Tasks';
+
+    // Show/hide view controls (only in full view)
+    var vc = document.getElementById('viewControls');
+    if (vc) vc.style.display = view === 'full' ? 'flex' : 'none';
+
+    // Show/hide kanban (only in full view + kanban mode)
+    var kb = document.getElementById('kanbanBoard');
+    if (kb) kb.style.display = (view === 'full' && currentViewMode === 'kanban') ? 'grid' : 'none';
+
+    // Call existing view switching
+    if (view === 'focus') {
+        switchToFocusMode();
+    } else {
+        switchToFullView();
+    }
+
+    // Close mobile sidebar if open
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+        toggleSidebar();
+    }
+}
+
+function switchViewMode(mode) {
+    currentViewMode = mode;
+    var listBtn = document.getElementById('listViewBtn');
+    var kanbanBtn = document.getElementById('kanbanViewBtn');
+    if (listBtn) listBtn.classList.toggle('active', mode === 'list');
+    if (kanbanBtn) kanbanBtn.classList.toggle('active', mode === 'kanban');
+
+    var kanbanBoard = document.getElementById('kanbanBoard');
+    var fullViewContainer = document.getElementById('fullViewContainer');
+
+    if (mode === 'kanban') {
+        if (kanbanBoard) kanbanBoard.style.display = 'grid';
+        if (fullViewContainer) fullViewContainer.style.display = 'none';
+        renderKanbanBoard();
+    } else {
+        if (kanbanBoard) kanbanBoard.style.display = 'none';
+        if (fullViewContainer && currentView === 'full') fullViewContainer.style.display = 'block';
+        renderTasks();
+    }
+}
+
+function filterCategory(cat) {
+    // Update filter pills
+    document.querySelectorAll('#categoryFilters .cfp').forEach(function(p) {
+        p.classList.toggle('active', p.getAttribute('data-category') === cat);
+    });
+
+    if (cat === 'all') {
+        currentCategory = 'dotoday'; // default view
+    } else {
+        currentCategory = cat;
+    }
+
+    // Update the old category tabs too (for list view)
+    document.querySelectorAll('.category-tab').forEach(function(t) {
+        t.classList.toggle('active', t.dataset.category === currentCategory);
+    });
+
+    updateCategoryDisplay();
+    if (currentViewMode === 'kanban') {
+        renderKanbanBoard();
+    } else {
+        renderTasks();
+    }
+}
+
+// ==================== KANBAN BOARD ====================
+
+function renderKanbanBoard() {
+    var allTasks = getValues(tasks);
+    var lockedIn = [];
+    var today = [];
+    var tomorrow = [];
+    var completed = [];
+
+    for (var i = 0; i < allTasks.length; i++) {
+        var t = allTasks[i];
+        if (t.completed) {
+            completed.push(t);
+        } else if (t.triageTier === 'lockedIn') {
+            lockedIn.push(t);
+        } else if (t.triageTier === 'tomorrow') {
+            tomorrow.push(t);
+        } else if (t.doToday || t.triageTier === 'today') {
+            today.push(t);
+        } else {
+            today.push(t); // Default: unassigned goes to today
+        }
+    }
+
+    // Sort by triageOrder or sortOrder
+    var sortFn = function(a, b) { return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0); };
+    lockedIn.sort(sortFn);
+    today.sort(sortFn);
+    tomorrow.sort(sortFn);
+    completed.sort(function(a, b) {
+        return (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || '');
+    });
+
+    // Render columns — uses escapeHtml() for all user content (XSS-safe)
+    renderKanbanColumn('kanbanLockedIn', lockedIn);
+    renderKanbanColumn('kanbanToday', today);
+    renderKanbanColumn('kanbanTomorrow', tomorrow);
+    renderKanbanColumn('kanbanCompleted', completed.slice(0, 10)); // Show last 10
+
+    // Update counts
+    var el;
+    el = document.getElementById('kanbanLockedInCount');
+    if (el) el.textContent = lockedIn.length;
+    el = document.getElementById('kanbanTodayCount');
+    if (el) el.textContent = today.length;
+    el = document.getElementById('kanbanTomorrowCount');
+    if (el) el.textContent = tomorrow.length;
+    el = document.getElementById('kanbanCompletedCount');
+    if (el) el.textContent = completed.length;
+
+    // Init Lucide icons in new cards
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+    // Set up drag-drop for kanban columns
+    setupKanbanDragDrop();
+}
+
+function renderKanbanColumn(containerId, taskList) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (taskList.length === 0) {
+        container.innerHTML = '<div class="kanban-empty">No tasks</div>';
+        return;
+    }
+
+    // Build HTML using escapeHtml for all user-provided text
+    var html = '';
+    for (var i = 0; i < taskList.length; i++) {
+        html += renderKanbanCard(taskList[i]);
+    }
+    container.innerHTML = html;
+}
+
+function renderKanbanCard(task) {
+    // All user content sanitized via escapeHtml() — same pattern as existing triage card rendering
+    var catColor = getCategoryColor(task.category);
+    var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '2-15m' : '15-45m';
+    var completedClass = task.completed ? ' completed' : '';
+    var leverageHtml = task.highLeverage ?
+        '<span class="kanban-card-leverage" title="High leverage"><i data-lucide="zap"></i></span>' : '';
+
+    return '<div class="kanban-card' + completedClass + '" data-task-id="' + escapeHtml(task.id) + '" draggable="true">' +
+        '<div class="kanban-card-category">' +
+            '<span class="kanban-cat-dot" style="background:' + catColor + '"></span>' +
+            escapeHtml(task.category) +
+        '</div>' +
+        '<div class="kanban-card-title">' + escapeHtml(task.text) + '</div>' +
+        '<div class="kanban-card-meta">' +
+            '<span class="kanban-card-size"><i data-lucide="clock"></i> ' + sizeLabel + '</span>' +
+            leverageHtml +
+        '</div>' +
+        '<div class="kanban-card-footer">' +
+            '<div class="kanban-card-actions">' +
+                '<button class="kca" onclick="toggleTaskComplete(\'' + escapeHtml(task.id) + '\')" title="' + (task.completed ? 'Undo' : 'Complete') + '"><i data-lucide="' + (task.completed ? 'rotate-ccw' : 'check') + '"></i></button>' +
+                '<button class="kca" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit"><i data-lucide="edit"></i></button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+function getCategoryColor(cat) {
+    var colors = {
+        financial: 'var(--cat-financial)',
+        clinic: 'var(--cat-clinic)',
+        health: 'var(--cat-health)',
+        school: 'var(--cat-school)',
+        academic: 'var(--cat-academic)',
+        future: 'var(--cat-future)',
+        life: 'var(--cat-life)',
+        dotoday: 'var(--cat-dotoday)'
+    };
+    return colors[cat] || 'var(--fg-muted)';
+}
+
+function toggleTaskComplete(taskId) {
+    var task = tasks[taskId];
+    if (!task) return;
+    if (task.completed) {
+        task.completed = false;
+        task.completedAt = null;
+        stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+    } else {
+        task.completed = true;
+        task.completedAt = new Date().toISOString();
+        stats.totalTasks = (stats.totalTasks || 0) + 1;
+    }
+    saveData();
+    updateStats();
+    if (currentViewMode === 'kanban') renderKanbanBoard();
+    else renderTasks();
+    if (currentView === 'focus') renderFocusMode();
+}
+
+function quickAddToColumn(tier) {
+    var text = prompt('New task:');
+    if (!text || !text.trim()) return;
+    var id = generateId('task');
+    var task = {
+        id: id,
+        text: text.trim(),
+        category: 'health',
+        completed: false,
+        doToday: true,
+        createdAt: new Date().toISOString(),
+        size: 'medium',
+        highLeverage: false,
+        sortOrder: getCount(tasks),
+        triageTier: tier,
+        triageOrder: 0,
+        triageDate: getLocalDateString(new Date())
+    };
+    tasks[id] = task;
+    saveData();
+    updateStats();
+    if (currentViewMode === 'kanban') renderKanbanBoard();
+    else renderTasks();
+    if (currentView === 'focus') renderFocusMode();
+}
+
+function setupKanbanDragDrop() {
+    var cards = document.querySelectorAll('.kanban-card[draggable="true"]');
+    var columns = document.querySelectorAll('.kanban-column-body');
+
+    cards.forEach(function(card) {
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', card.getAttribute('data-task-id'));
+            card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            columns.forEach(function(col) { col.classList.remove('drag-over'); });
+        });
+    });
+
+    columns.forEach(function(col) {
+        col.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            col.classList.add('drag-over');
+        });
+        col.addEventListener('dragleave', function() {
+            col.classList.remove('drag-over');
+        });
+        col.addEventListener('drop', function(e) {
+            e.preventDefault();
+            col.classList.remove('drag-over');
+            var taskId = e.dataTransfer.getData('text/plain');
+            var targetStatus = col.parentElement.getAttribute('data-status');
+            if (!taskId || !targetStatus) return;
+            kanbanDropTask(taskId, targetStatus);
+        });
+    });
+}
+
+function kanbanDropTask(taskId, targetStatus) {
+    var task = tasks[taskId];
+    if (!task) return;
+
+    if (targetStatus === 'completed') {
+        if (!task.completed) {
+            task.completed = true;
+            task.completedAt = new Date().toISOString();
+            stats.totalTasks = (stats.totalTasks || 0) + 1;
+        }
+    } else {
+        if (task.completed) {
+            task.completed = false;
+            task.completedAt = null;
+            stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+        }
+        task.triageTier = targetStatus;
+        task.doToday = (targetStatus === 'lockedIn' || targetStatus === 'today');
+        task.triageDate = getLocalDateString(new Date());
+    }
+
+    saveData();
+    updateStats();
+    renderKanbanBoard();
+    if (currentView === 'focus') renderFocusMode();
+}
+
+// ==================== SIDEBAR STATS + METRICS ====================
+
+function updateSidebarStats() {
+    var allTasksArr = getValues(tasks);
+    var doTodayCount = 0;
+    var remaining = 0;
+    var completedToday = 0;
+    var lockedInCount = 0;
+    var todayStr = getLocalDateString(new Date());
+
+    for (var i = 0; i < allTasksArr.length; i++) {
+        var t = allTasksArr[i];
+        if (!t.completed) {
+            remaining++;
+            if (t.doToday) {
+                doTodayCount++;
+                if (t.triageTier === 'lockedIn') lockedInCount++;
+            }
+        } else if (t.completedAt && t.completedAt.slice(0, 10) === todayStr) {
+            completedToday++;
+        }
+    }
+
+    // Sidebar badges
+    var el;
+    el = document.getElementById('sidebarDoToday');
+    if (el) el.textContent = doTodayCount;
+    el = document.getElementById('sidebarTaskCount');
+    if (el) el.textContent = remaining;
+
+    // Sidebar footer stats
+    var totalXP = commandCenterData?.focusStats?.totalXP || stats.totalXPGained || 0;
+    var currentLevel = Math.floor(totalXP / 500) + 1;
+    var streak = commandCenterData?.focusStats?.streak || 0;
+
+    el = document.getElementById('sidebarStreak');
+    if (el) el.textContent = streak;
+    el = document.getElementById('sidebarXP');
+    if (el) el.textContent = totalXP;
+    el = document.getElementById('sidebarLevel');
+    if (el) el.textContent = currentLevel;
+
+    // Metrics row
+    el = document.getElementById('metricDoToday');
+    if (el) el.textContent = doTodayCount;
+    el = document.getElementById('metricDoTodaySub');
+    if (el) el.textContent = lockedInCount + ' locked in';
+    el = document.getElementById('metricRemaining');
+    if (el) el.textContent = remaining;
+    el = document.getElementById('metricCompleted');
+    if (el) el.textContent = completedToday;
+    el = document.getElementById('metricXPToday');
+    if (el) el.textContent = '+' + (completedToday * 20);
+    el = document.getElementById('metricLevel');
+    if (el) el.textContent = currentLevel;
+    el = document.getElementById('metricStreak');
+    if (el) el.textContent = streak;
 }
 
 function updateFocusGreeting() {

@@ -94,6 +94,46 @@ function closeHelp() {
     document.getElementById('helpModal').classList.remove('show');
 }
 
+// ==================== SIDEBAR TOGGLE (mobile) ====================
+
+function toggleSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    if (!sidebar) return;
+    var isOpen = sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', !isOpen);
+    if (backdrop) backdrop.classList.toggle('open', !isOpen);
+}
+
+function updateSidebarSyncStatus(status, text) {
+    var dot = document.getElementById('sidebarSyncDot');
+    var textEl = document.getElementById('sidebarSyncText');
+    var topDot = document.getElementById('topBarSyncDot');
+    var topText = document.getElementById('topBarSyncText');
+
+    if (dot) {
+        dot.classList.remove('syncing', 'offline', 'error');
+        if (status === 'syncing') dot.classList.add('syncing');
+        else if (status === 'offline') dot.classList.add('offline');
+        else if (status === 'error') dot.classList.add('error');
+    }
+    if (textEl && text) textEl.textContent = text;
+
+    if (topDot) {
+        topDot.classList.remove('syncing', 'offline', 'error');
+        if (status === 'syncing') topDot.classList.add('syncing');
+        else if (status === 'offline') topDot.classList.add('offline');
+        else if (status === 'error') topDot.classList.add('error');
+    }
+    if (topText) {
+        if (text) topText.textContent = text;
+        else if (status === 'connected') topText.textContent = 'Synced';
+        else if (status === 'syncing') topText.textContent = 'Syncing...';
+        else if (status === 'offline') topText.textContent = 'Offline';
+        else if (status === 'error') topText.textContent = 'Error';
+    }
+}
+
 // ==================== COMPACT HEADER ====================
 
 function toggleHeaderMenu() {
@@ -235,6 +275,10 @@ function initApp() {
         // Compact header initial update
         updateCompactHeader();
 
+        // Sidebar responsive setup
+        initSidebarResponsive();
+        window.addEventListener('resize', initSidebarResponsive);
+
         // Initialize Lucide icons (replaces emoji with SVG icons)
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
@@ -243,6 +287,23 @@ function initApp() {
     } catch (e) {
         console.error('Init error:', e);
         try { loadData(); markInitialLoadComplete(); } catch (e2) { /* last resort */ }
+    }
+}
+
+// ==================== SIDEBAR RESPONSIVE ====================
+
+function initSidebarResponsive() {
+    var menuBtn = document.getElementById('sidebarMenuBtn');
+    if (window.innerWidth <= 768) {
+        // Mobile: show hamburger in top bar
+        if (menuBtn) menuBtn.style.display = 'flex';
+    } else {
+        // Desktop/tablet: hide hamburger, ensure sidebar is closed (not in drawer mode)
+        if (menuBtn) menuBtn.style.display = 'none';
+        var sidebar = document.getElementById('sidebar');
+        var backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
     }
 }
 

@@ -1486,6 +1486,9 @@ function updateSyncStatus(status, message) {
 
     // Update compact header sync dot
     if (typeof updateSyncDot === 'function') updateSyncDot(status);
+
+    // Update sidebar + top bar sync indicators
+    if (typeof updateSidebarSyncStatus === 'function') updateSidebarSyncStatus(status, message);
 }
 
 // ============================================

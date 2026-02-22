@@ -11008,9 +11008,730 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 #syncConflictModal div[style*="color:#58a6ff"] { color: var(--accent) !important; }
 #syncConflictModal div[style*="color:#a371f7"] { color: var(--fg-secondary) !important; }
 
+/* ============================================
+   PHASE 2: SIDEBAR + LAYOUT GRID
+   ============================================ */
+
+/* --- App Layout Grid --- */
+.app-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    background: var(--surface-primary);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 16px 0;
+    z-index: 100;
+}
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px 20px;
+}
+.sidebar-logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 13px;
+    font-family: var(--font-heading);
+    flex-shrink: 0;
+}
+.sidebar-logo-text {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: var(--text-md);
+    color: var(--fg-primary);
+    white-space: nowrap;
+}
+.sidebar-section {
+    margin-bottom: 8px;
+}
+.sidebar-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--fg-muted);
+    padding: 12px 20px 6px;
+}
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    color: var(--fg-secondary);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.15s ease;
+    font-size: 14px;
+    font-family: var(--font-body);
+    text-decoration: none;
+    position: relative;
+}
+.sidebar-item:hover {
+    background: var(--canvas-subtle);
+    color: var(--fg-primary);
+}
+.sidebar-item.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+}
+.sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+}
+.sidebar-item i {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+.sidebar-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--canvas-inset);
+    color: var(--fg-tertiary);
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+}
+.sidebar-item.active .sidebar-badge {
+    background: var(--accent);
+    color: var(--accent-fg);
+}
+.sidebar-footer {
+    margin-top: auto;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-subtle);
+}
+.sidebar-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 10px;
+}
+.sidebar-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--fg-secondary);
+}
+.sidebar-stat i {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: middle;
+    color: var(--warning);
+}
+.sidebar-xp-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 700;
+}
+.sidebar-data-controls {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+}
+.sidebar-data-controls button {
+    flex: 1;
+    padding: 6px;
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--fg-tertiary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sidebar-data-controls button:hover {
+    background: var(--canvas-subtle);
+    color: var(--fg-primary);
+    border-color: var(--border-default);
+}
+.sidebar-data-controls button i {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+.sidebar-sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    padding-top: 6px;
+}
+.sync-dot-sidebar {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+}
+.sync-dot-sidebar.syncing { background: var(--warning); }
+.sync-dot-sidebar.offline { background: var(--fg-muted); }
+.sync-dot-sidebar.error { background: var(--destructive); }
+
+/* Sidebar backdrop for mobile drawer */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 999;
+}
+.sidebar-backdrop.open { display: block; }
+
+/* --- Main Panel --- */
+.main-panel {
+    background: var(--canvas);
+    overflow-y: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Top Bar --- */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.top-bar-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: var(--text-md);
+    color: var(--fg-primary);
+}
+.top-bar-breadcrumb {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+}
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.sync-status-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--fg-muted);
+}
+.sync-dot-mini {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+}
+.sync-dot-mini.syncing { background: var(--warning); }
+.sync-dot-mini.offline { background: var(--fg-muted); }
+.sync-dot-mini.error { background: var(--destructive); }
+
+/* --- Content Area --- */
+.content-area {
+    padding: 24px 32px;
+    max-width: 1200px;
+    width: 100%;
+    flex: 1;
+}
+
+/* --- Metrics Row --- */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.metric-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: default;
+    transition: box-shadow 0.15s ease;
+}
+.metric-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+.metric-card.clickable {
+    cursor: pointer;
+}
+.metric-card.clickable:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-default);
+}
+.metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fg-muted);
+}
+.metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--fg-primary);
+    line-height: 1.2;
+}
+.metric-sub {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+}
+.metric-card.streak .metric-value {
+    color: var(--warning);
+}
+
+/* --- View Controls --- */
+.view-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.view-toggle-pills {
+    display: flex;
+    background: var(--canvas-inset);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 2px;
+}
+.vtp {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    color: var(--fg-tertiary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-family: var(--font-body);
+}
+.vtp:hover {
+    color: var(--fg-secondary);
+    background: rgba(255,255,255,0.5);
+}
+.vtp.active {
+    background: var(--surface-primary);
+    color: var(--fg-primary);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+.vtp i {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.category-filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.cfp {
+    padding: 5px 14px;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--fg-tertiary);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: var(--font-body);
+}
+.cfp:hover {
+    border-color: var(--border-default);
+    color: var(--fg-secondary);
+}
+.cfp.active {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* --- Kanban Board --- */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+.kanban-column {
+    background: var(--canvas-subtle);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    min-height: 200px;
+}
+.kanban-column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--fg-secondary);
+}
+.kanban-col-icon {
+    display: flex;
+    align-items: center;
+}
+.kanban-col-icon i {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+.kanban-col-title {
+    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.kanban-col-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-primary);
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+}
+.kanban-col-add {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--fg-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+.kanban-col-add:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-lighter);
+}
+.kanban-column-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 60px;
+}
+.kanban-column-body.drag-over {
+    background: var(--accent-lighter);
+    border-radius: var(--radius-md);
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+}
+
+/* --- Kanban Cards --- */
+.kanban-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    cursor: grab;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.kanban-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.kanban-card.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+.kanban-card.completed {
+    opacity: 0.55;
+}
+.kanban-card.completed .kanban-card-title {
+    text-decoration: line-through;
+    color: var(--fg-tertiary);
+}
+.kanban-card-category {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg-tertiary);
+    margin-bottom: 6px;
+    text-transform: capitalize;
+}
+.kanban-cat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kanban-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+.kanban-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.kanban-card-size {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--fg-muted);
+}
+.kanban-card-size i {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+}
+.kanban-card-leverage {
+    color: var(--warning);
+    display: flex;
+    align-items: center;
+}
+.kanban-card-leverage i {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+}
+.kanban-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-subtle);
+}
+.kanban-card-actions {
+    display: flex;
+    gap: 4px;
+}
+.kca {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.kca:hover {
+    background: var(--canvas-subtle);
+    color: var(--fg-primary);
+    border-color: var(--border-default);
+}
+.kca i {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+.kanban-empty {
+    text-align: center;
+    padding: 20px 12px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-style: italic;
+}
+
+/* Column-specific kanban header colors */
+.kanban-column[data-status="lockedIn"] .kanban-col-icon { color: var(--destructive); }
+.kanban-column[data-status="today"] .kanban-col-icon { color: var(--accent); }
+.kanban-column[data-status="tomorrow"] .kanban-col-icon { color: var(--info); }
+.kanban-column[data-status="completed"] .kanban-col-icon { color: var(--success); }
+
+/* ============================================
+   PHASE 2: RESPONSIVE — Tablet Rail
+   ============================================ */
+@media (max-width: 1024px) {
+    .app-layout { grid-template-columns: 56px 1fr; }
+    .sidebar { padding: 12px 0; }
+    .sidebar-label, .sidebar-section-label, .sidebar-logo-text { display: none; }
+    .sidebar-stats > .sidebar-stat > span:not(.sidebar-xp-badge):not(i),
+    .sidebar-sync-status > span:not(.sync-dot-sidebar) { display: none; }
+    .sidebar-item { justify-content: center; padding: 10px; gap: 0; }
+    .sidebar-item.active::before { display: none; }
+    .sidebar-item.active { border-left: 3px solid var(--accent); }
+    .sidebar-badge { display: none; }
+    .sidebar-logo { justify-content: center; padding: 8px 0 16px; }
+    .sidebar-data-controls { flex-wrap: wrap; justify-content: center; padding: 8px 4px; }
+    .sidebar-data-controls button { min-width: 32px; }
+    .sidebar-footer { padding: 8px 4px; }
+    .sidebar-stats { align-items: center; }
+    .sidebar-sync-status { justify-content: center; }
+    .kanban-board { grid-template-columns: repeat(2, 1fr); }
+    .metrics-row { grid-template-columns: repeat(3, 1fr); }
+    .top-bar { padding: 10px 20px; }
+    .content-area { padding: 20px; }
+}
+
+/* ============================================
+   PHASE 2: RESPONSIVE — Mobile Drawer
+   ============================================ */
+@media (max-width: 768px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        width: 270px;
+        z-index: 1000;
+        transition: left 0.25s ease;
+        box-shadow: none;
+        height: 100vh;
+        top: 0;
+    }
+    .sidebar.open {
+        left: 0;
+        box-shadow: var(--shadow-overlay);
+    }
+    .sidebar.open ~ .sidebar-backdrop { display: block; }
+    /* Show labels again in mobile drawer */
+    .sidebar-label, .sidebar-section-label, .sidebar-logo-text { display: unset; }
+    .sidebar-stats > .sidebar-stat > span:not(.sidebar-xp-badge):not(i) { display: unset; }
+    .sidebar-sync-status > span:not(.sync-dot-sidebar) { display: unset; }
+    .sidebar-item { justify-content: flex-start; padding: 8px 20px; gap: 10px; }
+    .sidebar-item.active::before { display: block; }
+    .sidebar-badge { display: flex; }
+    .sidebar-logo { justify-content: flex-start; padding: 8px 20px 20px; }
+    .sidebar-data-controls { flex-wrap: nowrap; padding: 8px 0; }
+    .sidebar-footer { padding: 12px 16px; }
+    .sidebar-stats { align-items: flex-start; }
+    .sidebar-sync-status { justify-content: flex-start; }
+
+    .kanban-board { grid-template-columns: 1fr 1fr; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .metric-card { padding: 10px 12px; }
+    .metric-value { font-size: 20px; }
+    .content-area { padding: 16px 12px; }
+    .top-bar { padding: 10px 16px; }
+    .view-controls { gap: 10px; }
+}
+
+@media (max-width: 480px) {
+    .kanban-board { grid-template-columns: 1fr; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .metric-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Hide old elements when sidebar layout is active */
+.app-layout ~ .cross-app-nav,
+.app-layout .cross-app-nav,
+.has-sidebar .cross-app-nav { display: none !important; }
+.has-sidebar .header { display: none !important; }
+.has-sidebar .stats-container { display: none !important; }
+.has-sidebar .header-compact { display: none !important; }
+.has-sidebar .header-menu-backdrop { display: none !important; }
+.has-sidebar .header-menu-panel { display: none !important; }
+
+/* Show compact header only on mobile when sidebar is not open */
+@media (max-width: 768px) {
+    .has-sidebar .header-compact {
+        display: flex !important;
+    }
+}
+
+/* Ensure focusModeContainer and fullViewContainer work within new layout */
+.has-sidebar .container {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
     </style>
 </head>
-<body>
+<body class="has-sidebar">
     <!-- Loading overlay - shown until Firebase data loads -->
     <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #FAF8F5; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
         <div style="font-size: 1.8em; margin-bottom: 20px; font-family: 'Source Serif 4', Georgia, serif; color: #2C2825; font-weight: 700;">DQ</div>
@@ -11031,6 +11752,197 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         <span class="toast-message" id="toastMessage">Success!</span>
     </div>
 
+    <!-- Sidebar Backdrop (mobile drawer) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <!-- ==================== APP LAYOUT GRID ==================== -->
+    <div class="app-layout" id="appLayout">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <span class="sidebar-logo-icon">DQ</span>
+            <span class="sidebar-logo-text">Dental Quest</span>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">VIEWS</div>
+            <button class="sidebar-item active" id="sidebarFocusBtn" data-view="focus" onclick="sidebarNavigate('focus')">
+                <i data-lucide="target"></i><span class="sidebar-label">Focus</span>
+                <span class="sidebar-badge" id="sidebarDoToday">0</span>
+            </button>
+            <button class="sidebar-item" id="sidebarFullBtn" data-view="full" onclick="sidebarNavigate('full')">
+                <i data-lucide="list"></i><span class="sidebar-label">All Tasks</span>
+                <span class="sidebar-badge" id="sidebarTaskCount">0</span>
+            </button>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">TOOLS</div>
+            <button class="sidebar-item" onclick="openCalendar()">
+                <i data-lucide="calendar"></i><span class="sidebar-label">Calendar</span>
+            </button>
+            <button class="sidebar-item" onclick="openDailyPlanner()">
+                <i data-lucide="list-todo"></i><span class="sidebar-label">Planner</span>
+            </button>
+            <button class="sidebar-item" onclick="openNotebook()">
+                <i data-lucide="notebook"></i><span class="sidebar-label">Notebook</span>
+            </button>
+            <button class="sidebar-item" onclick="openFinancials()">
+                <i data-lucide="wallet"></i><span class="sidebar-label">Financials</span>
+            </button>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">APPS</div>
+            <a class="sidebar-item" href="d3-roadmap.html">
+                <i data-lucide="book-open"></i><span class="sidebar-label">Roadmap</span>
+            </a>
+            <a class="sidebar-item" href="stimulant-elimination-calculator.html">
+                <i data-lucide="pill"></i><span class="sidebar-label">Sleep Calc</span>
+            </a>
+            <a class="sidebar-item" href="body-comp-tracker.html">
+                <i data-lucide="activity"></i><span class="sidebar-label">Body Comp</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-stats">
+                <div class="sidebar-stat">
+                    <i data-lucide="flame"></i>
+                    <span><span id="sidebarStreak">0</span> day streak</span>
+                </div>
+                <div class="sidebar-stat">
+                    <span class="sidebar-xp-badge" id="sidebarLevel">1</span>
+                    <span><span id="sidebarXP">0</span> XP</span>
+                </div>
+            </div>
+            <div class="sidebar-data-controls">
+                <button onclick="forceCloudSync()" title="Sync"><i data-lucide="refresh-cw"></i></button>
+                <button onclick="createCheckpoint()" title="Save"><i data-lucide="save"></i></button>
+                <button onclick="showCheckpointManager()" title="Restore"><i data-lucide="folder-open"></i></button>
+                <button onclick="showHelp()" title="Help"><i data-lucide="help-circle"></i></button>
+            </div>
+            <div class="sidebar-sync-status" id="sidebarSyncStatus">
+                <span class="sync-dot-sidebar" id="sidebarSyncDot"></span>
+                <span id="sidebarSyncText">Connected</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==================== MAIN PANEL ==================== -->
+    <main class="main-panel" id="mainPanel">
+        <header class="top-bar" id="topBar">
+            <div class="top-bar-left">
+                <button class="menu-btn" id="sidebarMenuBtn" onclick="toggleSidebar()" aria-label="Menu" style="display:none; background:none; border:none; cursor:pointer; color:var(--fg-secondary); padding:4px;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect y="3" width="20" height="2" rx="1"/>
+                        <rect y="9" width="20" height="2" rx="1"/>
+                        <rect y="15" width="20" height="2" rx="1"/>
+                    </svg>
+                </button>
+                <span class="top-bar-title">Dental Quest</span>
+                <span class="top-bar-breadcrumb" id="topBarBreadcrumb">&rsaquo; Focus</span>
+            </div>
+            <div class="top-bar-right">
+                <div class="sync-status-inline" id="topBarSyncStatus">
+                    <span class="sync-dot-mini" id="topBarSyncDot"></span>
+                    <span id="topBarSyncText">Synced</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- Dashboard Metrics Row -->
+            <div class="metrics-row" id="metricsRow">
+                <div class="metric-card clickable" onclick="toggleDashboardExpansion('doToday')">
+                    <span class="metric-label">DO TODAY</span>
+                    <span class="metric-value" id="metricDoToday">0</span>
+                    <span class="metric-sub" id="metricDoTodaySub">0 locked in</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">REMAINING</span>
+                    <span class="metric-value" id="metricRemaining">0</span>
+                </div>
+                <div class="metric-card clickable" onclick="toggleDashboardExpansion('completed')">
+                    <span class="metric-label">COMPLETED</span>
+                    <span class="metric-value" id="metricCompleted">0</span>
+                    <span class="metric-sub">today</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">XP TODAY</span>
+                    <span class="metric-value" id="metricXPToday">+0</span>
+                    <span class="metric-sub">Level <span id="metricLevel">1</span></span>
+                </div>
+                <div class="metric-card streak">
+                    <span class="metric-label">STREAK</span>
+                    <span class="metric-value" id="metricStreak">0</span>
+                    <span class="metric-sub">days</span>
+                </div>
+            </div>
+
+            <!-- View Toggle + Category Filters (shown in full view) -->
+            <div class="view-controls" id="viewControls" style="display: none;">
+                <div class="view-toggle-pills">
+                    <button class="vtp active" id="listViewBtn" onclick="switchViewMode('list')">
+                        <i data-lucide="list"></i> List
+                    </button>
+                    <button class="vtp" id="kanbanViewBtn" onclick="switchViewMode('kanban')">
+                        <i data-lucide="columns-3"></i> Kanban
+                    </button>
+                </div>
+                <div class="category-filter-pills" id="categoryFilters">
+                    <button class="cfp active" data-category="all" onclick="filterCategory('all')">All</button>
+                    <button class="cfp" data-category="dotoday" onclick="filterCategory('dotoday')">Do Today</button>
+                    <button class="cfp" data-category="financial" onclick="filterCategory('financial')">Financial</button>
+                    <button class="cfp" data-category="clinic" onclick="filterCategory('clinic')">Clinic</button>
+                    <button class="cfp" data-category="health" onclick="filterCategory('health')">Health</button>
+                    <button class="cfp" data-category="school" onclick="filterCategory('school')">School</button>
+                    <button class="cfp" data-category="academic" onclick="filterCategory('academic')">Academic</button>
+                    <button class="cfp" data-category="future" onclick="filterCategory('future')">Future</button>
+                    <button class="cfp" data-category="life" onclick="filterCategory('life')">Life</button>
+                </div>
+            </div>
+
+            <!-- Kanban Board Container (hidden by default) -->
+            <div id="kanbanBoard" class="kanban-board" style="display: none;">
+                <div class="kanban-column" data-status="lockedIn">
+                    <div class="kanban-column-header">
+                        <span class="kanban-col-icon"><i data-lucide="flame"></i></span>
+                        <span class="kanban-col-title">Locked In</span>
+                        <span class="kanban-col-count" id="kanbanLockedInCount">0</span>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('lockedIn')" title="Add task">+</button>
+                    </div>
+                    <div class="kanban-column-body" id="kanbanLockedIn"></div>
+                </div>
+                <div class="kanban-column" data-status="today">
+                    <div class="kanban-column-header">
+                        <span class="kanban-col-icon"><i data-lucide="sun"></i></span>
+                        <span class="kanban-col-title">Today</span>
+                        <span class="kanban-col-count" id="kanbanTodayCount">0</span>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('today')" title="Add task">+</button>
+                    </div>
+                    <div class="kanban-column-body" id="kanbanToday"></div>
+                </div>
+                <div class="kanban-column" data-status="tomorrow">
+                    <div class="kanban-column-header">
+                        <span class="kanban-col-icon"><i data-lucide="calendar"></i></span>
+                        <span class="kanban-col-title">Tomorrow</span>
+                        <span class="kanban-col-count" id="kanbanTomorrowCount">0</span>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('tomorrow')" title="Add task">+</button>
+                    </div>
+                    <div class="kanban-column-body" id="kanbanTomorrow"></div>
+                </div>
+                <div class="kanban-column" data-status="completed">
+                    <div class="kanban-column-header">
+                        <span class="kanban-col-icon"><i data-lucide="check-circle"></i></span>
+                        <span class="kanban-col-title">Done</span>
+                        <span class="kanban-col-count" id="kanbanCompletedCount">0</span>
+                    </div>
+                    <div class="kanban-column-body" id="kanbanCompleted"></div>
+                </div>
+            </div>
+
     <!-- Compact Header (mobile) -->
     <div class="header-compact" id="compactHeader">
         <div class="header-compact-row">
@@ -11050,7 +11962,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 </div>
             </div>
             <div class="header-right">
-                <button class="menu-btn" onclick="toggleHeaderMenu()" id="headerMenuBtn" aria-label="Menu">
+                <button class="menu-btn" onclick="toggleSidebar()" id="headerMenuBtn" aria-label="Menu">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <rect y="3" width="20" height="2" rx="1"/>
                         <rect y="9" width="20" height="2" rx="1"/>
@@ -11869,6 +12781,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         </div>
     </div>
     </div> <!-- Close fullViewContainer -->
+
+        </div><!-- Close content-area -->
+    </main><!-- Close main-panel -->
+    </div><!-- Close app-layout -->
 
     <!-- ==================== MODALS (outside containers for visibility) ==================== -->
                 <div class="modal-overlay" id="medModal" onclick="safeModalClose(closeMedModal, event)">
