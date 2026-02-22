@@ -2078,8 +2078,8 @@ function gatherAllDayData() {
         // Fill from dailyLog first (richest source — end-of-day snapshot)
         if (dailyLog) {
             day.sleepOnsetMinutes = dailyLog.sleepOnsetMinutes ?? null;
-            day.totalAmpDose = dailyLog.totalAmpDose ?? 0;
-            day.totalCaffDose = dailyLog.totalCaffDose ?? 0;
+            day.totalAmpDose = dailyLog.totalAmpDose ?? null;
+            day.totalCaffDose = dailyLog.totalCaffDose ?? null;
             day.medications = dailyLog.medications || [];
             day.caffeine = dailyLog.caffeine || [];
             day.hadWorkout = !!dailyLog.hadWorkout;
