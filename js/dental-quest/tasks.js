@@ -47,6 +47,7 @@ function addTask() {
         category: taskCategory,
         completed: false,
         doToday: markDoToday,
+        urgency: markDoToday ? 'eod' : 'inbox',
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,
@@ -94,99 +95,92 @@ function updateCategoryXPDisplay() {
 // ==================== RENDER TASKS ====================
 
 function renderTasks() {
-    const taskList = document.getElementById('taskList');
-    const allTasks = getValues(tasks); // Cache once per render
-    let filteredTasks;
+    var taskList = document.getElementById('taskList');
+    var allTasks = getValues(tasks);
+    var filteredTasks;
 
     if (currentCategory === 'all') {
-        filteredTasks = allTasks.filter(t => !t.completed);
+        filteredTasks = allTasks.filter(function(t) { return !t.completed; });
     } else if (currentCategory === 'dotoday') {
-        filteredTasks = allTasks.filter(t => t.doToday && !t.completed);
+        filteredTasks = allTasks.filter(function(t) { return t.doToday && !t.completed; });
     } else {
-        filteredTasks = allTasks.filter(t => t.category === currentCategory && !t.completed);
+        filteredTasks = allTasks.filter(function(t) { return t.category === currentCategory && !t.completed; });
     }
 
-    filteredTasks.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
-    // Single-pass category counts (replaces 8 separate filter calls)
-    const categoryCounts = {};
-    let doTodayCount = 0;
-    for (let i = 0; i < allTasks.length; i++) {
-        const t = allTasks[i];
+    // Single-pass category counts
+    var categoryCounts = {};
+    var doTodayCount = 0;
+    for (var i = 0; i < allTasks.length; i++) {
+        var t = allTasks[i];
         if (!t.completed) {
             if (t.category) categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
             if (t.doToday) doTodayCount++;
         }
     }
-    const categories = ['financial', 'clinic', 'health', 'school', 'academic', 'future', 'life'];
-    categories.forEach(cat => {
-        const countElement = document.getElementById(`count-${cat}`);
-        if (countElement) countElement.textContent = `(${categoryCounts[cat] || 0})`;
+    var categories = ['financial', 'clinic', 'health', 'school', 'academic', 'future', 'life'];
+    categories.forEach(function(cat) {
+        var countElement = document.getElementById('count-' + cat);
+        if (countElement) countElement.textContent = '(' + (categoryCounts[cat] || 0) + ')';
     });
-
-    const doTodayCountElement = document.getElementById('count-dotoday');
-    if (doTodayCountElement) {
-        doTodayCountElement.textContent = `(${doTodayCount})`;
-    }
+    var doTodayCountElement = document.getElementById('count-dotoday');
+    if (doTodayCountElement) doTodayCountElement.textContent = '(' + doTodayCount + ')';
 
     if (filteredTasks.length === 0) {
-        let emptyMessage = 'No tasks yet. Add one above to get started!';
+        var emptyMessage = 'No tasks yet. Add one above to get started!';
         if (currentCategory === 'dotoday') {
             emptyMessage = 'No critical tasks for today. Mark tasks with "Today" to see them here!';
         }
-
-        taskList.innerHTML = `
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                </svg>
-                <p>${emptyMessage}</p>
-            </div>
-        `;
+        // Safe: emptyMessage is a hardcoded string, not user input
+        taskList.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg><p>' + emptyMessage + '</p></div>';
         return;
     }
 
-    taskList.innerHTML = filteredTasks.map((task, index) => {
-        const isDoTodayView = currentCategory === 'dotoday' || currentCategory === 'all';
-        const categoryNames = {
-            financial: 'Financial', clinic: 'Clinic', health: 'Health',
-            school: 'School', academic: 'Academic', future: 'Future', life: 'Life'
-        };
+    // Group by urgency
+    var urgencyOrder = ['eod', 'soon', 'week', 'month', 'inbox'];
+    var urgencyNames = { eod: 'Must Today', soon: 'Up Next', week: 'This Week', month: 'This Month', inbox: 'Someday' };
+    var urgencyColors = { eod: 'var(--destructive)', soon: 'var(--warning)', week: 'var(--accent)', month: 'var(--info)', inbox: 'var(--fg-tertiary)' };
 
-        const sizeLabel = task.size === 'big' ? 'L' : task.size === 'small' ? 'S' : 'M';
-        const sizeTitle = task.size === 'big' ? 'Large' : task.size === 'small' ? 'Small' : 'Medium';
-        const completedClass = task.completed ? ' completed' : '';
+    var groups = {};
+    urgencyOrder.forEach(function(u) { groups[u] = []; });
 
-        return '<div class="task-item' + completedClass + ' ' + (currentCategory === 'dotoday' ? 'dotoday' : (task.category || 'health')) + '"'
-            + ' draggable="true"'
-            + ' data-task-id="' + task.id + '"'
-            + ' data-index="' + index + '"'
-            + ' ondragstart="handleDragStart(event, \'' + task.id + '\')"'
-            + ' ondragover="handleDragOver(event)"'
-            + ' ondragleave="handleDragLeave(event)"'
-            + ' ondrop="handleDrop(event, \'' + task.id + '\')"'
-            + ' ondragend="handleDragEnd(event)">'
-            + '<input type="checkbox" class="task-checkbox"'
-            + (task.completed ? ' checked' : '')
-            + ' onchange="toggleTask(\'' + task.id + '\')">'
-            + '<div class="task-content">'
-            + '<span class="task-text' + completedClass + '">' + escapeHtml(task.text) + '</span>'
-            + '<div class="task-meta">'
-            + (isDoTodayView ? '<span class="task-meta-tag cat">' + (categoryNames[task.category] || '') + '</span>' : '')
-            + '<span class="task-meta-tag size" title="' + sizeTitle + '">' + sizeLabel + '</span>'
-            + (task.highLeverage ? '<span class="task-meta-tag leverage" title="High leverage">' + icon('zap', 12) + ' Leverage</span>' : '')
-            + (task.doToday && !isDoTodayView ? '<span class="task-meta-tag today">' + icon('sun', 10) + ' Today</span>' : '')
-            + '</div>'
-            + '</div>'
-            + '<div class="task-actions-row">'
-            + (!task.completed && !isDoTodayView ? '<button class="do-today-btn ' + (task.doToday ? 'active' : '') + '" onclick="toggleDoToday(\'' + task.id + '\')" title="' + (task.doToday ? 'Remove from today' : 'Do today') + '">' + (task.doToday ? icon('check', 14) : icon('sun', 14)) + '</button>' : '')
-            + '<div class="task-actions">'
-            + (!task.completed ? '<button class="task-action-btn task-edit-btn" onclick="openTaskEditModal(\'' + task.id + '\')" title="Edit">' + icon('edit', 14) + '</button>' : '')
-            + '<button class="task-action-btn task-delete-btn" onclick="deleteTask(\'' + task.id + '\')" title="Delete">' + icon('trash-2', 14) + '</button>'
-            + '</div>'
-            + '</div>'
-            + '</div>';
-    }).join('');
+    filteredTasks.forEach(function(t) {
+        var urg = getTaskUrgency(t);
+        if (!groups[urg]) groups[urg] = [];
+        groups[urg].push(t);
+    });
+
+    // Sort within groups
+    var sortFn = function(a, b) { return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0); };
+    urgencyOrder.forEach(function(u) { groups[u].sort(sortFn); });
+
+    // Render urgency sections — all user text escaped via escapeHtml() in renderSynchroCard
+    var html = '';
+    urgencyOrder.forEach(function(urg) {
+        var taskArr = groups[urg];
+        if (taskArr.length === 0) return;
+
+        var mins = getColumnMinutes(taskArr);
+        var timeStr = mins > 0 ? formatMinutes(mins) : '';
+
+        html += '<div class="urgency-section" data-urgency="' + urg + '">';
+        html += '<div class="urgency-section-header" onclick="toggleUrgencySection(this)">';
+        html += '<span class="urgency-section-dot" style="background:' + urgencyColors[urg] + '"></span>';
+        html += '<span class="urgency-section-title">' + urgencyNames[urg] + '</span>';
+        html += '<span class="urgency-section-count">' + taskArr.length + ' tasks</span>';
+        if (timeStr) html += '<span class="urgency-section-time">' + timeStr + '</span>';
+        html += '<span class="urgency-section-chevron">' + icon('chevron-down', 14) + '</span>';
+        html += '</div>';
+        html += '<div class="urgency-section-body">';
+        taskArr.forEach(function(t) { html += renderSynchroCard(t); });
+        html += '</div></div>';
+    });
+
+    taskList.innerHTML = html;
+}
+
+function toggleUrgencySection(headerEl) {
+    var section = headerEl.parentElement;
+    if (section) section.classList.toggle('collapsed');
 }
 
 // ==================== FULL VIEW DRAG & DROP ====================
@@ -327,6 +321,18 @@ function toggleDoToday(id) {
     if (!task) return;
 
     task.doToday = !task.doToday;
+
+    // Propagate urgency when doToday changes
+    if (task.doToday) {
+        task.urgency = 'eod';
+        task.triageTier = 'lockedIn';
+    } else {
+        // Only reset urgency if it was 'eod' (don't override other urgencies)
+        if (task.urgency === 'eod') {
+            task.urgency = 'inbox';
+        }
+    }
+
     renderTasks();
     updateStats();
     saveData();
@@ -863,12 +869,83 @@ function filterCategory(cat) {
     }
 }
 
+// ==================== SYNCHRO CARD (Unified Component) ====================
+
+function renderSynchroCard(task) {
+    var catNames = {
+        financial: 'Financial', clinic: 'Clinic', health: 'Health',
+        school: 'School', academic: 'Academic', future: 'Future', life: 'Life'
+    };
+    var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '15 min' : '30 min';
+    var sizePercent = task.size === 'big' ? 100 : task.size === 'small' ? 25 : 50;
+    var completedClass = task.completed ? ' completed' : '';
+    var catColor = getCategoryColor(task.category);
+    var catName = catNames[task.category] || 'Health';
+
+    // Format date
+    var dateStr = '';
+    if (task.createdAt) {
+        try {
+            var d = new Date(task.createdAt);
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            dateStr = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        } catch(e) { dateStr = ''; }
+    }
+
+    // Overdue check: was rolled over and not completed
+    var overdueClass = '';
+    if (task.rolledOver && !task.completed) {
+        overdueClass = ' overdue';
+    }
+
+    // Stale check: in month/inbox and not touched for 7+ days
+    var staleClass = '';
+    var staleDays = 0;
+    var urg = task.urgency || 'inbox';
+    if ((urg === 'month' || urg === 'inbox') && !task.completed) {
+        var lastTouched = task.completedAt || task.triageDate || task.createdAt;
+        if (lastTouched) {
+            var touchTime = typeof lastTouched === 'number' ? lastTouched : new Date(lastTouched).getTime();
+            staleDays = Math.floor((Date.now() - touchTime) / (1000 * 60 * 60 * 24));
+            if (staleDays >= 7) staleClass = ' stale';
+        }
+    }
+
+    // Badges
+    var badges = '';
+    if (task.doToday && urg !== 'eod') {
+        badges += '<span class="synchro-badge synchro-badge-today">' + icon('sun', 11) + ' Today</span>';
+    }
+    if (task.highLeverage) {
+        badges += '<span class="synchro-badge synchro-badge-leverage">' + icon('zap', 11) + ' Leverage</span>';
+    }
+    if (staleClass && staleDays > 0) {
+        badges += '<span class="synchro-card-stale-badge">' + staleDays + 'd</span>';
+    }
+
+    return '<div class="synchro-card' + completedClass + overdueClass + staleClass + '" data-task-id="' + escapeHtml(task.id) + '" draggable="true">' +
+        '<div class="synchro-card-actions">' +
+            '<button class="synchro-card-action" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit">' + icon('edit', 13) + '</button>' +
+            '<button class="synchro-card-action" onclick="deleteTask(\'' + escapeHtml(task.id) + '\')" title="Delete">' + icon('trash-2', 13) + '</button>' +
+        '</div>' +
+        '<div class="synchro-card-title">' + escapeHtml(task.text) + '</div>' +
+        '<div class="synchro-card-meta">' +
+            '<span class="synchro-card-cat-dot" style="background:' + catColor + '"></span>' +
+            '<span class="synchro-card-cat-label">' + catName + '</span>' +
+            (dateStr ? '<span class="synchro-card-date">' + dateStr + '</span>' : '') +
+        '</div>' +
+        '<div class="synchro-card-progress"><div class="synchro-card-progress-fill" style="width:' + sizePercent + '%;background:' + catColor + '"></div></div>' +
+        '<span class="synchro-card-progress-label">' + sizeLabel + '</span>' +
+        (badges ? '<div class="synchro-card-badges">' + badges + '</div>' : '') +
+    '</div>';
+}
+
 // ==================== KANBAN BOARD ====================
 
 function renderKanbanBoard() {
     var allTasks = getValues(tasks);
 
-    // Apply category filter (same as list view)
+    // Apply category filter
     if (currentCategory && currentCategory !== 'all') {
         if (currentCategory === 'dotoday') {
             allTasks = allTasks.filter(function(t) { return t.doToday && !t.completed; });
@@ -877,54 +954,89 @@ function renderKanbanBoard() {
         }
     }
 
-    // 3-column model: To Do / In Progress / Done
-    var todo = [];
-    var inprogress = [];
-    var done = [];
+    // Remove completed tasks from kanban (no Done column)
+    allTasks = allTasks.filter(function(t) { return !t.completed; });
+
+    // Sort into 5 urgency buckets
+    var buckets = { eod: [], soon: [], week: [], month: [], inbox: [] };
 
     for (var i = 0; i < allTasks.length; i++) {
         var t = allTasks[i];
-        if (t.completed) {
-            done.push(t);
-        } else if (t.triageTier === 'lockedIn' || t.doToday || t.triageTier === 'today') {
-            inprogress.push(t);
+        var urg = getTaskUrgency(t);
+        if (buckets[urg]) {
+            buckets[urg].push(t);
         } else {
-            todo.push(t);
+            buckets.inbox.push(t);
         }
     }
 
-    // Sort active tasks by triageOrder/sortOrder, completed by most recent first
+    // Sort each bucket by triageOrder/sortOrder
     var sortFn = function(a, b) { return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0); };
-    todo.sort(sortFn);
-    inprogress.sort(sortFn);
-    done.sort(function(a, b) {
-        var bTime = b.completedAt || b.createdAt || 0;
-        var aTime = a.completedAt || a.createdAt || 0;
-        // Most recent completed first (descending)
-        var bMs = typeof bTime === 'number' ? bTime : new Date(bTime).getTime();
-        var aMs = typeof aTime === 'number' ? aTime : new Date(aTime).getTime();
-        return bMs - aMs;
+    Object.keys(buckets).forEach(function(key) { buckets[key].sort(sortFn); });
+
+    // Render columns
+    var columns = ['eod', 'soon', 'week', 'month', 'inbox'];
+    var containerIds = { eod: 'kanbanEod', soon: 'kanbanSoon', week: 'kanbanWeek', month: 'kanbanMonth', inbox: 'kanbanInbox' };
+    var countIds = { eod: 'kanbanEodCount', soon: 'kanbanSoonCount', week: 'kanbanWeekCount', month: 'kanbanMonthCount', inbox: 'kanbanInboxCount' };
+
+    columns.forEach(function(key) {
+        renderKanbanColumn(containerIds[key], buckets[key]);
+        var countEl = document.getElementById(countIds[key]);
+        if (countEl) countEl.textContent = buckets[key].length;
     });
 
-    // Render 3 columns
-    renderKanbanColumn('kanbanTodo', todo);
-    renderKanbanColumn('kanbanInProgress', inprogress);
-    renderKanbanColumn('kanbanDone', done.slice(0, 15));
+    // Update capacity bars for eod and soon
+    updateCapacityBar('kanbanEodCapacity', buckets.eod, 240); // 4 hours = 240 min
+    updateCapacityBar('kanbanSoonCapacity', buckets.soon, 480); // 8 hours
 
-    // Update counts
-    var el;
-    el = document.getElementById('kanbanTodoCount');
-    if (el) el.textContent = todo.length;
-    el = document.getElementById('kanbanInProgressCount');
-    if (el) el.textContent = inprogress.length;
-    el = document.getElementById('kanbanDoneCount');
-    if (el) el.textContent = done.length;
+    // Update time estimates
+    var timeIds = { eod: 'kanbanEodTime', soon: 'kanbanSoonTime' };
+    ['eod', 'soon'].forEach(function(key) {
+        var el = document.getElementById(timeIds[key]);
+        if (el) {
+            var mins = getColumnMinutes(buckets[key]);
+            el.textContent = mins > 0 ? formatMinutes(mins) : '';
+        }
+    });
 
-    // Init Lucide icons in new cards
-    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-
-    // Set up drag-drop for kanban columns
     setupKanbanDragDrop();
+}
+
+function getTaskUrgency(task) {
+    // If task has urgency field, use it
+    if (task.urgency && task.urgency !== '') return task.urgency;
+    // Migration: infer from existing fields
+    if (task.doToday || task.triageTier === 'lockedIn') return 'eod';
+    if (task.triageTier === 'today') return 'soon';
+    if (task.triageTier === 'tomorrow') return 'week';
+    return 'inbox';
+}
+
+function getColumnMinutes(taskList) {
+    var total = 0;
+    for (var i = 0; i < taskList.length; i++) {
+        var s = taskList[i].size;
+        total += s === 'big' ? 60 : s === 'small' ? 15 : 30;
+    }
+    return total;
+}
+
+function formatMinutes(mins) {
+    if (mins < 60) return mins + 'm';
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return m > 0 ? h + 'h ' + m + 'm' : h + 'h';
+}
+
+function updateCapacityBar(elementId, taskList, maxMinutes) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    var mins = getColumnMinutes(taskList);
+    var pct = Math.min(100, (mins / maxMinutes) * 100);
+    el.style.width = pct + '%';
+    el.className = 'kanban-capacity-fill';
+    if (pct >= 100) el.classList.add('over');
+    else if (pct >= 75) el.classList.add('warn');
 }
 
 function renderKanbanColumn(containerId, taskList) {
@@ -932,37 +1044,16 @@ function renderKanbanColumn(containerId, taskList) {
     if (!container) return;
 
     if (taskList.length === 0) {
-        container.innerHTML = '<div class="kanban-empty">No tasks yet</div>';
+        container.innerHTML = '<div class="kanban-empty">Drop tasks here</div>';
         return;
     }
 
+    // All user text is escaped via escapeHtml() in renderSynchroCard
     var html = '';
     for (var i = 0; i < taskList.length; i++) {
-        html += renderKanbanCard(taskList[i]);
+        html += renderSynchroCard(taskList[i]);
     }
     container.innerHTML = html;
-}
-
-function renderKanbanCard(task) {
-    var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '5m' : '30m';
-    var completedClass = task.completed ? ' completed' : '';
-    var checkedClass = task.completed ? ' checked' : '';
-    var leverageBadge = task.highLeverage ? '<span class="kanban-badge kanban-badge-leverage">High leverage</span>' : '';
-
-    return '<div class="kanban-card' + completedClass + '" data-task-id="' + escapeHtml(task.id) + '" draggable="true">' +
-        '<div class="kanban-card-actions">' +
-            '<button class="kca" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit"><i data-lucide="pencil"></i></button>' +
-        '</div>' +
-        '<div class="kanban-card-top">' +
-            '<button class="kanban-card-check' + checkedClass + '" onclick="toggleTaskComplete(\'' + escapeHtml(task.id) + '\')" title="' + (task.completed ? 'Undo' : 'Complete') + '"></button>' +
-            '<span class="kanban-card-title">' + escapeHtml(task.text) + '</span>' +
-        '</div>' +
-        '<div class="kanban-card-badges">' +
-            '<span class="kanban-badge kanban-badge-cat">' + escapeHtml(task.category) + '</span>' +
-            '<span class="kanban-badge kanban-badge-size">' + sizeLabel + '</span>' +
-            leverageBadge +
-        '</div>' +
-    '</div>';
 }
 
 function getCategoryColor(cat) {
@@ -998,23 +1089,23 @@ function toggleTaskComplete(taskId) {
     if (currentView === 'focus') renderFocusMode();
 }
 
-function quickAddToColumn(status) {
+function quickAddToColumn(urgency) {
     var text = prompt('New task:');
     if (!text || !text.trim()) return;
     var id = generateId('task');
-    // Map kanban status to task fields
-    var isInProgress = (status === 'inprogress');
+    var isEod = (urgency === 'eod');
     var task = {
         id: id,
         text: text.trim(),
         category: 'health',
         completed: false,
-        doToday: isInProgress,
+        doToday: isEod,
+        urgency: urgency,
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,
         sortOrder: getCount(tasks),
-        triageTier: isInProgress ? 'today' : 'tomorrow',
+        triageTier: isEod ? 'lockedIn' : (urgency === 'soon' ? 'today' : 'tomorrow'),
         triageOrder: 0,
         triageDate: getLocalDateString(new Date())
     };
@@ -1027,7 +1118,7 @@ function quickAddToColumn(status) {
 }
 
 function setupKanbanDragDrop() {
-    var cards = document.querySelectorAll('.kanban-card[draggable="true"]');
+    var cards = document.querySelectorAll('.synchro-card[draggable="true"]');
     var columns = document.querySelectorAll('.kanban-column-body');
 
     cards.forEach(function(card) {
@@ -1053,36 +1144,32 @@ function setupKanbanDragDrop() {
             e.preventDefault();
             col.classList.remove('drag-over');
             var taskId = e.dataTransfer.getData('text/plain');
-            var targetStatus = col.parentElement.getAttribute('data-status');
-            if (!taskId || !targetStatus) return;
-            kanbanDropTask(taskId, targetStatus);
+            var targetUrgency = col.parentElement.getAttribute('data-urgency');
+            if (!taskId || !targetUrgency) return;
+            kanbanDropTask(taskId, targetUrgency);
         });
     });
 }
 
-function kanbanDropTask(taskId, targetStatus) {
+function kanbanDropTask(taskId, targetUrgency) {
     var task = tasks[taskId];
     if (!task) return;
 
-    if (targetStatus === 'done') {
-        if (!task.completed) {
-            task.completed = true;
-            task.completedAt = Date.now();
-            stats.totalTasks = (stats.totalTasks || 0) + 1;
-        }
+    // Set urgency
+    task.urgency = targetUrgency;
+
+    // Propagation: Must Today = doToday + lockedIn
+    if (targetUrgency === 'eod') {
+        task.doToday = true;
+        task.triageTier = 'lockedIn';
+        task.triageDate = getLocalDateString(new Date());
     } else {
-        if (task.completed) {
-            task.completed = false;
-            task.completedAt = null;
-            stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
-        }
-        if (targetStatus === 'inprogress') {
+        // Clear doToday when moved out of Must Today
+        task.doToday = false;
+        if (targetUrgency === 'soon') {
             task.triageTier = 'today';
-            task.doToday = true;
         } else {
-            // 'todo'
             task.triageTier = 'tomorrow';
-            task.doToday = false;
         }
         task.triageDate = getLocalDateString(new Date());
     }
@@ -1550,6 +1637,7 @@ function quickAddFromFocus() {
         category: categorySelect.value,
         completed: false,
         doToday: true, // Auto-mark as do today
+        urgency: 'eod',
         createdAt: new Date().toISOString(),
         size: sizeSelect.value,
         highLeverage: false,

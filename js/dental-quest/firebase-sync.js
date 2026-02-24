@@ -14,6 +14,28 @@
  */
 
 // ============================================
+// MIGRATION: Infer urgency from existing task fields
+// ============================================
+
+function migrateTaskUrgency() {
+    var taskArr = getValues(tasks);
+    for (var i = 0; i < taskArr.length; i++) {
+        var t = taskArr[i];
+        if (!t.urgency) {
+            if (t.doToday || t.triageTier === 'lockedIn') {
+                t.urgency = 'eod';
+            } else if (t.triageTier === 'today') {
+                t.urgency = 'soon';
+            } else if (t.triageTier === 'tomorrow') {
+                t.urgency = 'week';
+            } else {
+                t.urgency = 'inbox';
+            }
+        }
+    }
+}
+
+// ============================================
 // BUILD SAVE DATA — Single source of truth for save objects
 // ============================================
 
@@ -71,6 +93,7 @@ function loadData() {
         }
         // CRITICAL: Use ensureArray() to handle Firebase array->object conversion
         tasks = migrateArrayToObject(data.tasks, 'task');
+        migrateTaskUrgency();
 
         // Merge saved stats with default structure to handle new categories
         if (data.stats) {
@@ -688,7 +711,7 @@ function restoreCheckpointByIndex(index) {
     // Restore all data
     const data = checkpoint.data;
 
-    if (data.tasks) tasks = migrateArrayToObject(data.tasks, 'task');
+    if (data.tasks) { tasks = migrateArrayToObject(data.tasks, 'task'); migrateTaskUrgency(); }
     if (data.stats) stats = { ...stats, ...data.stats };
     if (data.medications) medications = { ...medications, ...data.medications };
     if (data.calendarNotes) calendarNotes = data.calendarNotes;
@@ -1196,6 +1219,7 @@ function loadDataFromFirebase() {
 
                 // Load all data with ARRAY PROTECTION (Firebase converts arrays to objects)
                 tasks = migrateArrayToObject(data.tasks, 'task');
+                migrateTaskUrgency();
 
                 if (data.stats) {
                     stats = {
@@ -1569,6 +1593,7 @@ function applyRemoteData(data) {
     lastKnownSaveTime = data.lastSaved || Date.now();
 
     tasks = migrateArrayToObject(data.tasks, 'task');
+    migrateTaskUrgency();
 
     if (data.stats) {
         stats = deepMerge(stats, {

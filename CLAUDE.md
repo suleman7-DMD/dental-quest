@@ -165,20 +165,20 @@ Import accepts 6 flexible formats (full backup, single checkpoint, raw data, nes
 
 ### Architecture: Multi-File (Split from 22,900-line monolith)
 ```
-index.html                              (12,186 lines — CSS + HTML only, ZERO inline JS)
+index.html                              (~13,716 lines — CSS + HTML only, ZERO inline JS)
 js/dental-quest/
 ├── state.js              (1,076 lines) - Globals, defaults, utilities, time helpers, Firebase config
-├── firebase-sync.js      (1,922 lines) - Auth, save/load, sync, checkpoints, buildSaveData
+├── firebase-sync.js      (1,968 lines) - Auth, save/load, sync, checkpoints, buildSaveData, migrateTaskUrgency
 ├── medications.js          (337 lines) - Pill tracking, med settings, daily auto-reduce
 ├── financials.js         (1,180 lines) - Financial Cockpit (7 render functions), credit cards
 ├── calendar.js             (768 lines) - Master calendar, countdowns, calendar events
 ├── daily-planner.js        (674 lines) - Daily planner, Critical EOD Reset
 ├── notebook.js             (252 lines) - Multi-page notebook CRUD
-├── tasks.js              (1,599 lines) - Task CRUD, rendering, Command Center core, focus planning
-├── triage.js               (770 lines) - Triage mode (tiers, columns, drag-drop)
+├── tasks.js              (2,088 lines) - Task CRUD, Synchro cards, urgency board, Command Center core
+├── triage.js               (802 lines) - Triage mode (tiers, columns, drag-drop, urgency propagation)
 ├── crash-out.js          (1,224 lines) - Crash Out timeline, scheduling, reordering
 ├── focus-pomodoro.js       (720 lines) - Pomodoro timer, gamification, streaks, rollovers
-└── init.js                 (237 lines) - DOMContentLoaded bootstrap, Quick Add FAB, compact header
+└── init.js                 (332 lines) - DOMContentLoaded bootstrap, Quick Add FAB, urgency picker
 ```
 
 ### Script Loading Order (ORDER MATTERS — dependencies flow downward)
@@ -214,26 +214,39 @@ All cross-module function calls are safe because init.js loads LAST after all mo
 **CRITICAL**: `buildSaveData()` must use `?? null`/`?? false` for ALL `currentSession` fields. Firebase `.set()` rejects `undefined` values — any missing field crashes ALL saves (bug fixed Feb 2026, commit `280b3f6`).
 **CRITICAL**: The 10-second failsafe MUST set `hasLoadedFromCloud = true` and call `markInitialLoadComplete()`. Without this, saves are permanently blocked when Firebase connection times out (bug fixed Feb 2026, commit `280b3f6`).
 
-### index.html File Layout (~12,186 lines — CSS + HTML only)
+### index.html File Layout (~13,716 lines — CSS + HTML only)
 | Range | Content |
 |-------|---------|
-| 1-10,749 | **CSS** |
-| 10,751-12,121 | **HTML body** (structure, modals, tabs) |
-| 12,122-12,133 | **Script tags** (12 module `<script src>` tags) |
-| 12,135-12,186 | **Quick Add FAB HTML** + closing tags |
+| 1-~12,200 | **CSS** (includes Synchro card, urgency board, capacity bars, mobile responsive) |
+| ~12,200-13,600 | **HTML body** (structure, modals, tabs, 5-column urgency board) |
+| ~13,600-13,616 | **Script tags** (12 module `<script src>` tags) |
+| ~13,616-13,716 | **Quick Add FAB HTML** (with urgency picker pills) + closing tags |
 
-### Two Views
-- **Full View** (`currentView = 'full'`): 8 category tabs. Task list + add form + medication tracker.
+### Two Views + View Modes
+- **Full View** (`currentView = 'full'`): Category tabs + task list/board. Toggle between list and board via `currentViewMode`.
+  - **List mode** (`currentViewMode = 'list'`): Tasks grouped by urgency sections (collapsible). `renderTasks()` in tasks.js.
+  - **Board mode** (`currentViewMode = 'kanban'`): 5-column Synchro-style urgency board. `renderKanbanBoard()` in tasks.js.
 - **Focused View** (`currentView = 'focus'`): Command Center with 3 modes (Triage → Crash Out → Focus).
+
+### Urgency System (Synchro Board — Feb 2026)
+`task.urgency`: `'eod'` | `'soon'` | `'week'` | `'month'` | `'inbox'` (default: `'inbox'`)
+- **Must Today** (eod): 4h capacity bar. Auto-propagates `doToday=true`, `triageTier='lockedIn'`.
+- **Up Next** (soon): 8h capacity bar. Maps to `triageTier='today'`.
+- **This Week** (week): Maps to `triageTier='tomorrow'`.
+- **This Month** (month): Low priority, no triage mapping.
+- **Someday** (inbox): Default for new tasks. No triage mapping.
+- `migrateTaskUrgency()` in firebase-sync.js infers urgency from existing `doToday`/`triageTier` for backward compat.
+- Unified card component: `renderSynchroCard(task)` used in both list and board views.
 
 ### Command Center Modes
 `commandCenterMode`: `'triage'` | `'crashout'` | `'focus'`
-- **Triage**: 3 columns (Locked In / Today / Tomorrow) + Scheduled + Rolled Over. Drag between columns.
+- **Triage**: 3 columns (Locked In / Today / Tomorrow) + Scheduled + Rolled Over. Drag between columns. Urgency propagation via `setTaskTier()`.
 - **Crash Out**: Sleep-time-anchored timeline. Google Calendar grid. Duration adjustment.
 - **Focus**: SVG pomodoro timer. Checklist. Duration toggles (15/25/50 min). XP + confetti.
 
 ### Task Fields
 Core: `id`, `text`, `category`, `completed`, `createdAt`, `doToday`, `size` (small/medium/big), `highLeverage`, `sortOrder`
+Urgency: `urgency` (eod/soon/week/month/inbox) — bidirectional sync with doToday + triageTier
 Triage: `triageTier` (lockedIn/today/tomorrow), `triageOrder`, `triageDate`
 Crash Out: `crashOutScheduled`, `crashOutTime`, `crashOutDuration`, `crashOutOrder`
 Other: `rolledOver` ({ fromDate, wasTier }), `xp`, `completedAt`
@@ -247,7 +260,8 @@ EOD Reset at 5 AM: clears mustComplete flags, resets Focus Mode daily tasks.
 
 ### Mobile UI
 - Compact header (sticky, blur, sync dot, streak pill, view toggle, hamburger)
-- Quick Add FAB (bottom-right purple button, bottom sheet)
+- Quick Add FAB (bottom-right button, bottom sheet with urgency picker pills)
+- Board view: CSS scroll-snap horizontal swipe, one column per screen on mobile (85vw)
 - 2-row task layout with explicit DOM (iOS Safari fix — no flex-wrap)
 - Breakpoints: 1024px, 768px, 480px
 
@@ -436,7 +450,7 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ---
 
-## STIMULANT CALCULATOR (10 JS Modules — Split Feb 2026)
+## STIMULANT CALCULATOR (10 JS Modules — Split Feb 2026, Warm Clinical Theme Feb 2026)
 
 ### Architecture: Multi-File (Split from 11,526-line monolith)
 ```
@@ -470,6 +484,14 @@ state → circadian → pharma-engine → sleep-prediction → firebase-sync →
 | History, calibration, calendar, analytics dashboard, accuracy transparency | `history-calendar.js` |
 | Canvas graphs, tooltips | `graph.js` |
 | recalculate(), init, accordion, hero UI | `init.js` |
+
+### Theme: Warm Clinical (Feb 2026)
+- 70+ CSS vars in `:root` matching index.html design system. Canvas=#FAF8F5, accent=#6B7C5E (olive), fg=#2C2825.
+- All JS-rendered colors use warm hex values (no neon). Status: success=#5E8A5E, warning=#C4923A, destructive=#B85C5C, info=#5E7A8A.
+- Circadian phase colors in `circadian.js` use warm palette. `history-calendar.js` color comparisons match.
+- Graph uses clean 2px lines with 3.5px dots (no glow/blur effects). Canvas background is transparent (inherits from CSS).
+- classList approach for status pills (`pill-safe`/`pill-danger`) and hero state (`state-green`/`state-yellow`/`state-red`).
+- When adding new JS-rendered colors, use warm hex values from the palette above — never use neon (#58a6ff, #10b981, #ef4444, etc.).
 
 ### recalculate() — Refactored (init.js)
 ```javascript

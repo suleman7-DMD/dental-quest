@@ -13,8 +13,9 @@ metadata:
   author: Sully
   version: 3.1.0
   file: stimulant-elimination-calculator.html + js/stimcalc/*.js (10 modules)
-  lines: ~12,790 total (2,903 HTML + 9,887 JS)
-  last-verified: 2026-02-21
+  lines: ~13,025 total (2,903 HTML + 10,122 JS)
+  last-verified: 2026-02-24
+  theme: warm-clinical (cream/olive, CSS vars, zero neon colors)
 ---
 
 # Stimulant Elimination Calculator Development Patterns
@@ -67,7 +68,7 @@ The app is split into 10 JS modules. Use the MODULE MAP below to identify which 
 | History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,888 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
 | recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,090 lines) |
-| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,833 lines, zero JS) |
+| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,903 lines, zero JS) |
 
 ### Step 3: Read the code before changing it
 Each module is 200-1,900 lines. Read the target function and surrounding context before editing. Never write blind.
@@ -216,8 +217,9 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Predict when a user can fall asleep based on stimulant and caffeine intake, using real pharmacokinetic models.
 
-**Files:** `stimulant-elimination-calculator.html` (2,632 lines CSS+HTML) + `js/stimcalc/*.js` (10 modules, 8,224 lines total)
+**Files:** `stimulant-elimination-calculator.html` (2,903 lines CSS+HTML) + `js/stimcalc/*.js` (10 modules, ~10,122 lines total)
 **Split Feb 2026**: Was 11,526-line monolith → now 10 separate JS modules loaded via `<script src>` tags. Zero inline JS.
+**Theme (Feb 2026)**: Warm clinical — cream canvas (#FAF8F5), olive accent (#6B7C5E), 70+ CSS vars in `:root`. All JS-rendered colors use warm hex values (no neon). Graph uses clean 2px lines (no glow effects). Status colors: success=#5E8A5E, warning=#C4923A, destructive=#B85C5C, info=#5E7A8A.
 
 **Core Algorithm:**
 ```

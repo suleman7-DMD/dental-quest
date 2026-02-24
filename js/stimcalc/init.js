@@ -4,6 +4,11 @@
 // ============================================
 
 // ============================================
+// SIDEBAR NAVIGATION STATE
+// ============================================
+var currentPage = 'dashboard';
+
+// ============================================
 // RECALCULATE — Refactored into 3 phases with error isolation
 // Runs every 5 seconds via setInterval. If it throws, app crashes every 5s.
 // The try/catch in recalculate() prevents that crash loop.
@@ -356,6 +361,7 @@ function updateUI(vm) {
     updateStatusPillColors();
     updateVitCBadge();
     updateForecastLogic();
+    updateMetricsRow(vm);
 }
 
 /**
@@ -794,6 +800,9 @@ function scheduleEndOfDayLogicSave() {
 }
 
 function init() {
+    // Add sidebar layout class to body
+    document.body.classList.add('has-sc-sidebar');
+
     loadState();
 
     // Clean up old medications to prevent phantom loads
@@ -1100,6 +1109,165 @@ function initUnifiedView() {
     restoreModifierUI();
     renderRecentNights();
     updateAccordionSummaries();
+}
+
+// ============================================
+// SIDEBAR NAVIGATION
+// ============================================
+
+function scNavigate(page) {
+    currentPage = page;
+
+    // Update sidebar active states
+    document.querySelectorAll('.sc-sidebar-item[data-page]').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.page === page);
+    });
+
+    // Update breadcrumb
+    var bc = document.getElementById('scBreadcrumb');
+    if (bc) {
+        var labels = {
+            dashboard: 'Dashboard',
+            modifiers: 'Modifiers & Timing',
+            calendar: 'Calendar',
+            insights: 'Insights',
+            accuracy: 'Accuracy',
+            settings: 'Settings'
+        };
+        bc.textContent = '\u203A ' + (labels[page] || page);
+    }
+
+    // Show/hide pages
+    document.querySelectorAll('.sc-page').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    var targetId = 'scPage' + page.charAt(0).toUpperCase() + page.slice(1);
+    var target = document.getElementById(targetId);
+    if (target) target.classList.add('active');
+
+    // Trigger renders for the target page
+    if (page === 'calendar') {
+        if (typeof renderSleepCalendarMonth === 'function') renderSleepCalendarMonth();
+        if (typeof renderHistory === 'function') renderHistory();
+        if (typeof drawSleepPerformanceGraph === 'function') drawSleepPerformanceGraph();
+        if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
+    } else if (page === 'insights') {
+        if (typeof renderInsightsTab === 'function') renderInsightsTab();
+    } else if (page === 'accuracy') {
+        if (typeof renderAccuracyTab === 'function') renderAccuracyTab();
+    } else if (page === 'dashboard') {
+        recalculate();
+        if (typeof drawGraph === 'function') drawGraph();
+    }
+
+    // Auto-close mobile sidebar
+    var sidebar = document.getElementById('scSidebar');
+    if (sidebar && sidebar.classList.contains('open')) scToggleSidebar();
+
+    // Scroll to top of content
+    var mainPanel = document.getElementById('scMainPanel');
+    if (mainPanel) mainPanel.scrollTop = 0;
+}
+
+function scToggleSidebar() {
+    var sidebar = document.getElementById('scSidebar');
+    var backdrop = document.getElementById('scSidebarBackdrop');
+    if (!sidebar) return;
+    var isOpen = sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', !isOpen);
+    if (backdrop) backdrop.classList.toggle('open', !isOpen);
+}
+
+// ============================================
+// METRICS ROW UPDATES
+// ============================================
+
+function updateMetricsRow(vm) {
+    if (!vm) return;
+
+    var el;
+
+    // Sleep time
+    el = document.getElementById('scMetricSleep');
+    if (el) {
+        el.textContent = minutesToTime(vm.predictedSleepMinutes ?? vm.displaySleepTime);
+        el.style.color = vm.colorClass === 'green' ? 'var(--success)' :
+            vm.colorClass === 'yellow' ? 'var(--warning)' : 'var(--destructive)';
+    }
+
+    // Remaining time
+    el = document.getElementById('scMetricRemaining');
+    if (el) {
+        var hrs = vm.remainingHours ?? 0;
+        var mins = vm.remainingMins ?? 0;
+        el.textContent = hrs + 'h ' + mins + 'm';
+        if (hrs < 2) el.style.color = 'var(--destructive)';
+        else el.style.color = '';
+    }
+
+    // Amp load
+    el = document.getElementById('scMetricAmp');
+    if (el) {
+        el.textContent = vm.currentAmpLoad.toFixed(1);
+        el.style.color = vm.ampOk ? 'var(--success)' : 'var(--warning)';
+    }
+
+    // Caff load
+    el = document.getElementById('scMetricCaff');
+    if (el) {
+        el.textContent = vm.currentCaffLoad.toFixed(1);
+        el.style.color = vm.caffOk ? 'var(--success)' : 'var(--warning)';
+    }
+
+    // Quality
+    el = document.getElementById('scMetricQuality');
+    if (el) {
+        var qualityLabel = vm.sleepHours >= 8 ? 'Good' :
+            vm.sleepHours >= 6 ? 'Fair' : 'Poor';
+        el.textContent = qualityLabel;
+        el.style.color = vm.colorClass === 'green' ? 'var(--success)' :
+            vm.colorClass === 'yellow' ? 'var(--warning)' : 'var(--destructive)';
+    }
+
+    // Update sidebar badges
+    updateSidebarBadges();
+}
+
+// ============================================
+// SIDEBAR BADGE UPDATES
+// ============================================
+
+function updateSidebarBadges() {
+    // Meds badge
+    var medsBadge = document.getElementById('scMedsBadge');
+    if (medsBadge) {
+        var medCount = state && state.medications ? Object.keys(state.medications).length : 0;
+        medsBadge.textContent = medCount > 0 ? medCount : '';
+        medsBadge.style.display = medCount > 0 ? 'flex' : 'none';
+    }
+
+    // Caffeine badge
+    var caffBadge = document.getElementById('scCaffBadge');
+    if (caffBadge) {
+        var caffCount = state && state.caffeine ? Object.keys(state.caffeine).length : 0;
+        caffBadge.textContent = caffCount > 0 ? caffCount : '';
+        caffBadge.style.display = caffCount > 0 ? 'flex' : 'none';
+    }
+
+    // Modifiers badge
+    var modBadge = document.getElementById('scModBadge');
+    if (modBadge) {
+        var activeCount = 0;
+        if (state && state.modifiers) {
+            if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) activeCount++;
+            if (state.modifiers.sauna && state.modifiers.sauna.active) activeCount++;
+            if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) activeCount++;
+        }
+        if (state && state.nicotine && state.nicotine.active) activeCount++;
+        if (state && state.workoutPlan && state.workoutPlan.applied) activeCount++;
+        modBadge.textContent = activeCount > 0 ? activeCount : '';
+        modBadge.style.display = activeCount > 0 ? 'flex' : 'none';
+    }
 }
 
 // ============================================

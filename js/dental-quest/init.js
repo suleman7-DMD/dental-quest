@@ -8,11 +8,18 @@ var qaSelectedCategory = localStorage.getItem('qaLastCategory') || 'health';
 var qaSelectedSize = 'medium';
 var qaDoToday = false;
 var qaHighLeverage = false;
+var quickAddUrgency = 'inbox';
 
 function openQuickAddPanel() {
     document.getElementById('quickAddBackdrop').classList.add('visible');
     document.getElementById('quickAddPanel').classList.add('open');
     document.getElementById('quickAddFAB').classList.add('panel-open');
+    // Reset urgency picker to inbox on open
+    quickAddUrgency = 'inbox';
+    var urgPills = document.querySelectorAll('.qa-urgency-pill');
+    urgPills.forEach(function(p) {
+        p.classList.toggle('active', p.getAttribute('data-urgency') === 'inbox');
+    });
     setTimeout(function() { document.getElementById('qaTaskInput').focus(); }, 300);
 }
 
@@ -59,11 +66,13 @@ function submitQuickAdd() {
         text: text,
         category: qaSelectedCategory,
         completed: false,
-        doToday: qaDoToday,
+        doToday: qaDoToday || (quickAddUrgency === 'eod'),
         createdAt: new Date().toISOString(),
         size: qaSelectedSize,
         highLeverage: qaHighLeverage,
-        sortOrder: getCount(tasks)
+        sortOrder: getCount(tasks),
+        urgency: quickAddUrgency || 'inbox',
+        triageTier: quickAddUrgency === 'eod' ? 'lockedIn' : (quickAddUrgency === 'soon' ? 'today' : 'tomorrow')
     };
 
     tasks[id] = task;
@@ -78,6 +87,14 @@ function submitQuickAdd() {
 function initQuickAddPanel() {
     selectQACategory(qaSelectedCategory);
     selectQASize(qaSelectedSize);
+}
+
+function setQuickAddUrgency(urg) {
+    quickAddUrgency = urg;
+    var pills = document.querySelectorAll('.qa-urgency-pill');
+    pills.forEach(function(p) {
+        p.classList.toggle('active', p.getAttribute('data-urgency') === urg);
+    });
 }
 
 // ==================== HELP MODAL ====================

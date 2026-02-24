@@ -60,32 +60,34 @@ function renderTaskCard(task, tier) {
 
     let actionBtn = '';
     if (isScheduled) {
-        actionBtn = `<button class="btn-remove" onclick="removeFromCrashOut('${task.id}')">← Remove</button>`;
+        actionBtn = '<button class="btn-remove" onclick="removeFromCrashOut(\'' + task.id + '\')">← Remove</button>';
     } else {
-        actionBtn = `<button class="btn-crash-out" onclick="sendToCrashOut('${task.id}')">→ Crash Out</button>`;
+        actionBtn = '<button class="btn-crash-out" onclick="sendToCrashOut(\'' + task.id + '\')">→ Schedule</button>';
     }
 
     const scheduledTime = isScheduled && task.crashOutTime ?
-        `<span class="scheduled-time">${task.crashOutTime}</span>` : '';
+        '<span class="scheduled-time">' + task.crashOutTime + '</span>' : '';
 
-    return `
-        <div class="task-card" data-task-id="${task.id}" data-tier="${tier}" draggable="true"
-             ondragstart="handleTriageDragStart(event, '${task.id}')"
-             ondragend="handleTriageDragEnd(event)">
-            <div class="task-card-main">
-                <span class="drag-handle">⋮⋮</span>
-                <input type="checkbox" class="task-checkbox"
-                       ${task.completed ? 'checked' : ''}
-                       onchange="toggleTaskComplete('${task.id}')">
-                <span class="task-text">${escapeHtml(task.text)}</span>
-                ${scheduledTime}
-                <div class="task-card-actions">
-                    <button class="btn-start" onclick="startFocusSession('${task.id}')" title="Start">${icon('play')}</button>
-                    ${actionBtn}
-                </div>
-            </div>
-        </div>
-    `;
+    const catColor = getCategoryColor(task.category);
+    const overdueClass = (task.rolledOver && !task.completed) ? ' overdue' : '';
+
+    return '<div class="task-card' + overdueClass + '" data-task-id="' + task.id + '" data-tier="' + tier + '" draggable="true"' +
+        ' ondragstart="handleTriageDragStart(event, \'' + task.id + '\')"' +
+        ' ondragend="handleTriageDragEnd(event)"' +
+        ' style="border-left: 3px solid ' + catColor + '">' +
+        '<div class="task-card-main">' +
+            '<span class="drag-handle">⋮⋮</span>' +
+            '<input type="checkbox" class="task-checkbox"' +
+                (task.completed ? ' checked' : '') +
+                ' onchange="toggleTaskComplete(\'' + task.id + '\')">' +
+            '<span class="task-text">' + escapeHtml(task.text) + '</span>' +
+            scheduledTime +
+            '<div class="task-card-actions">' +
+                '<button class="btn-start" onclick="startFocusSession(\'' + task.id + '\')" title="Start">' + icon('play') + '</button>' +
+                actionBtn +
+            '</div>' +
+        '</div>' +
+    '</div>';
 }
 
 function renderScheduledSection() {
@@ -362,11 +364,27 @@ function setTaskTier(taskId, tier) {
 
     const oldTier = task.triageTier || 'today';
 
+    // Propagate urgency based on tier
+    var newUrgency = task.urgency || 'inbox';
+    var newDoToday = task.doToday;
+    if (tier === 'lockedIn') {
+        newUrgency = 'eod';
+        newDoToday = true;
+    } else if (tier === 'today') {
+        newUrgency = 'soon';
+        newDoToday = false;
+    } else if (tier === 'tomorrow') {
+        newUrgency = 'week';
+        newDoToday = false;
+    }
+
     // Use spread operator to preserve existing properties
     tasks[taskId] = {
         ...task,
         triageTier: tier,
-        triageOrder: getTasksByTier(tier).length + 1
+        triageOrder: getTasksByTier(tier).length + 1,
+        urgency: newUrgency,
+        doToday: newDoToday
     };
 
     // Remove from crash out if moving to different tier
@@ -528,6 +546,7 @@ function triageQuickAddTask() {
         category: 'health',
         completed: false,
         doToday: true,
+        urgency: 'eod',
         triageTier: 'today',
         triageOrder: getTasksByTier('today').length + 1,
         createdAt: new Date().toISOString(),
@@ -541,6 +560,19 @@ function triageQuickAddTask() {
     renderTasks();
     saveData();
     showToast('Task added to TODAY', 'ok');
+}
+
+function editTriageTaskText(taskId) {
+    const task = tasks[taskId];
+    if (!task) return;
+
+    const newText = prompt('Edit task:', task.text);
+    if (newText && newText.trim() && newText.trim() !== task.text) {
+        tasks[taskId] = { ...task, text: newText.trim() };
+        renderFocusMode();
+        renderTasks();
+        saveData();
+    }
 }
 
 // Triage Drag & Drop

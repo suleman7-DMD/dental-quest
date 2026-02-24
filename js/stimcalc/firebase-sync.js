@@ -62,6 +62,38 @@ function updateSyncStatus(status, text) {
             textEl.style.color = '#2C2825';
         }
     }
+    // Also update sidebar + top bar sync indicators
+    scUpdateSidebarSync(status, text);
+}
+
+// Update sidebar and top bar sync status indicators (Synchro layout)
+function scUpdateSidebarSync(status, text) {
+    var dot = document.getElementById('scSidebarSyncDot');
+    var textEl = document.getElementById('scSidebarSyncText');
+    var topDot = document.getElementById('scTopBarSyncDot');
+    var topText = document.getElementById('scTopBarSyncText');
+
+    [dot, topDot].forEach(function(d) {
+        if (!d) return;
+        d.classList.remove('syncing', 'offline', 'error');
+        if (status === 'syncing') d.classList.add('syncing');
+        else if (status === 'offline') d.classList.add('offline');
+        else if (status === 'error') d.classList.add('error');
+        // 'connected' = no extra class = default green
+    });
+
+    if (textEl) {
+        textEl.textContent = text || (status === 'connected' ? 'Connected' :
+            status === 'syncing' ? 'Syncing...' :
+            status === 'offline' ? 'Offline' :
+            status === 'error' ? 'Error' : '');
+    }
+    if (topText) {
+        topText.textContent = text || (status === 'connected' ? 'Synced' :
+            status === 'syncing' ? 'Syncing...' :
+            status === 'offline' ? 'Offline' :
+            status === 'error' ? 'Error' : '');
+    }
 }
 
 // ============================================

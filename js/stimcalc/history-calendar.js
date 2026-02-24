@@ -1940,6 +1940,20 @@ function suggestCalibration() {
 // ============================================
 
 function switchSITab(tab) {
+    // Bridge to sidebar page navigation when new layout is active
+    if (document.body.classList.contains('has-sc-sidebar') && typeof scNavigate === 'function') {
+        var pageMap = {
+            'insights': 'insights',
+            'accuracy': 'accuracy',
+            'calendar': 'calendar',
+            'overview': 'calendar'  // overview content lives in calendar page
+        };
+        if (pageMap[tab]) {
+            scNavigate(pageMap[tab]);
+            return;  // Let scNavigate handle the rest
+        }
+    }
+
     currentSITab = tab;
     var tabs = document.querySelectorAll('#siTabs .si-tab');
     for (var i = 0; i < tabs.length; i++) {

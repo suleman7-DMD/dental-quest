@@ -4,10 +4,12 @@
 
 function drawGraph() {
     const canvas = document.getElementById('graphCanvas');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size
+    // Set canvas size — bail if container not visible (e.g. display:none page)
     const rect = canvas.parentElement.getBoundingClientRect();
+    if (rect.width < 10) return;
     canvas.width = rect.width - 40;
     canvas.height = rect.height - 40;
 
@@ -48,11 +50,11 @@ function drawGraph() {
         const fzStartX = padding.left + ((fzStart - startTime) / timeRange) * graphWidth;
         const fzEndX = padding.left + ((Math.min(fzEnd, endTime) - startTime) / timeRange) * graphWidth;
 
-        ctx.fillStyle = 'rgba(199, 107, 107, 0.08)';
+        ctx.fillStyle = 'rgba(184, 92, 92, 0.08)';
         ctx.fillRect(fzStartX, padding.top, fzEndX - fzStartX, graphHeight);
 
         // Label
-        ctx.fillStyle = 'rgba(199, 107, 107, 0.5)';
+        ctx.fillStyle = 'rgba(184, 92, 92, 0.5)';
         ctx.font = 'bold 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
@@ -69,11 +71,11 @@ function drawGraph() {
         const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
         const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
 
-        ctx.fillStyle = 'rgba(94, 170, 141, 0.08)';
+        ctx.fillStyle = 'rgba(94, 138, 94, 0.08)';
         ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
 
         // Label
-        ctx.fillStyle = 'rgba(94, 170, 141, 0.5)';
+        ctx.fillStyle = 'rgba(94, 138, 94, 0.5)';
         ctx.font = 'bold 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
@@ -94,7 +96,7 @@ function drawGraph() {
 
         // Y-axis labels
         const value = Math.round(maxY * (1 - i / 5));
-        ctx.fillStyle = '#5C6370';
+        ctx.fillStyle = '#9C948B';
         ctx.font = '11px SF Mono, Consolas, monospace';
         ctx.textAlign = 'right';
         ctx.fillText(value + 'mg', padding.left - 8, y + 4);
@@ -113,14 +115,14 @@ function drawGraph() {
         ctx.lineTo(x, height - padding.bottom);
         ctx.stroke();
 
-        ctx.fillStyle = '#5C6370';
+        ctx.fillStyle = '#9C948B';
         ctx.font = '11px SF Mono, Consolas, monospace';
         ctx.textAlign = 'center';
         ctx.fillText(timeLabels[i], x, height - 8);
     });
 
     // Draw threshold line (using effective threshold)
-    ctx.strokeStyle = '#C76B6B';
+    ctx.strokeStyle = '#B85C5C';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     const thresholdY = padding.top + graphHeight * (1 - effectiveThreshold / maxY);
@@ -130,7 +132,7 @@ function drawGraph() {
     ctx.stroke();
 
     // Label threshold
-    ctx.fillStyle = '#C76B6B';
+    ctx.fillStyle = '#B85C5C';
     ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`${effectiveThreshold.toFixed(0)}mg threshold`, padding.left + 5, thresholdY - 5);
@@ -139,7 +141,7 @@ function drawGraph() {
 
     // Draw "Stimulant Blockade" shading (area between amp curve and threshold)
     // This visually shows when drugs are blocking sleep
-    ctx.fillStyle = 'rgba(91, 155, 213, 0.12)';
+    ctx.fillStyle = 'rgba(74, 124, 155, 0.12)';
     ctx.beginPath();
     ctx.moveTo(padding.left, thresholdY);
 
@@ -174,7 +176,7 @@ function drawGraph() {
             const labelX = padding.left + ((peakTime - startTime) / timeRange) * graphWidth;
             const labelY = padding.top + graphHeight * (1 - (effectiveThreshold + (peakLoad - effectiveThreshold) / 2) / maxY);
 
-            ctx.fillStyle = 'rgba(91, 155, 213, 0.6)';
+            ctx.fillStyle = 'rgba(74, 124, 155, 0.6)';
             ctx.font = 'bold 9px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('STIMULANT', labelX, labelY - 5);
@@ -183,7 +185,7 @@ function drawGraph() {
     }
 
     // Draw amphetamine curve
-    ctx.strokeStyle = '#5B9BD5';
+    ctx.strokeStyle = '#4A7C9B';
     ctx.lineWidth = 3;
     ctx.beginPath();
     let firstPoint = true;
@@ -203,7 +205,7 @@ function drawGraph() {
     ctx.stroke();
 
     // Draw caffeine curve
-    ctx.strokeStyle = '#D4A05A';
+    ctx.strokeStyle = '#C4923A';
     ctx.lineWidth = 3;
     ctx.beginPath();
     firstPoint = true;
@@ -226,7 +228,7 @@ function drawGraph() {
     const now = getCurrentMinutes();
     if (now >= startTime && now <= endTime) {
         const nowX = padding.left + ((now - startTime) / timeRange) * graphWidth;
-        ctx.strokeStyle = '#5EAA8D';
+        ctx.strokeStyle = '#5E8A5E';
         ctx.lineWidth = 2;
         ctx.setLineDash([3, 3]);
         ctx.beginPath();
@@ -235,7 +237,7 @@ function drawGraph() {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = '#5EAA8D';
+        ctx.fillStyle = '#5E8A5E';
         ctx.font = 'bold 10px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('NOW', nowX, padding.top - 5);
@@ -255,7 +257,7 @@ function drawGraph() {
         const sleepX = padding.left + ((graphSleepTime - startTime) / timeRange) * graphWidth;
 
         // Draw sleep time line
-        ctx.strokeStyle = '#5EAA8D';
+        ctx.strokeStyle = '#5E8A5E';
         ctx.lineWidth = 3;
         ctx.setLineDash([]);
         ctx.beginPath();
@@ -264,7 +266,7 @@ function drawGraph() {
         ctx.stroke();
 
         // Sleep time arrow at bottom
-        ctx.fillStyle = '#5EAA8D';
+        ctx.fillStyle = '#5E8A5E';
         ctx.beginPath();
         ctx.moveTo(sleepX, height - padding.bottom + 5);
         ctx.lineTo(sleepX - 6, height - padding.bottom + 12);
@@ -332,9 +334,9 @@ function setupGraphTooltip() {
 
         let zoneText = '';
         if (inForbidden) {
-            zoneText = '<div style="color: #C76B6B; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Warning: Forbidden Zone</div>';
+            zoneText = '<div style="color: #B85C5C; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Warning: Forbidden Zone</div>';
         } else if (inSleepGate) {
-            zoneText = '<div style="color: #5EAA8D; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Sleep Gate</div>';
+            zoneText = '<div style="color: #5E8A5E; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Sleep Gate</div>';
         }
 
         // Status indicators
@@ -353,7 +355,7 @@ function setupGraphTooltip() {
             </div>
             <div class="tooltip-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-default);">
                 <span class="tooltip-label">Threshold:</span>
-                <span class="tooltip-value" style="color: #C76B6B;">${effectiveThreshold.toFixed(1)}mg</span>
+                <span class="tooltip-value" style="color: #B85C5C;">${effectiveThreshold.toFixed(1)}mg</span>
             </div>
             ${zoneText}
         `;
@@ -488,19 +490,19 @@ function setupSleepGraphTooltip(data, avg) {
             let statusText, statusColor;
             if (closestPoint.hoursSlept >= 8) {
                 statusText = 'Excellent recovery';
-                statusColor = '#5EAA8D';
+                statusColor = '#5E8A5E';
             } else if (closestPoint.hoursSlept >= 7) {
                 statusText = 'Good night';
-                statusColor = '#5EAA8D';
+                statusColor = '#5E8A5E';
             } else if (closestPoint.hoursSlept >= 5.5) {
                 statusText = 'Functional';
-                statusColor = '#8B92A0';
+                statusColor = '#9C948B';
             } else if (closestPoint.hoursSlept >= 4.5) {
                 statusText = 'Sleep deprived';
-                statusColor = '#D4A05A';
+                statusColor = '#C4923A';
             } else {
                 statusText = 'Severe deficit';
-                statusColor = '#C76B6B';
+                statusColor = '#B85C5C';
             }
 
             const vsAvg = closestPoint.hoursSlept - avg;
@@ -524,6 +526,10 @@ function setupSleepGraphTooltip(data, avg) {
 function drawSleepPerformanceGraph(data) {
     const canvas = document.getElementById('sleepPerformanceGraph');
     if (!canvas) return;
+
+    // Bail if container not visible (e.g. display:none page)
+    const parentRect = canvas.parentElement ? canvas.parentElement.getBoundingClientRect() : canvas.getBoundingClientRect();
+    if (parentRect.width < 10) return;
 
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
@@ -568,7 +574,7 @@ function drawSleepPerformanceGraph(data) {
 
     // Y-axis labels (minimal)
     ctx.font = '10px SF Mono, Consolas, monospace';
-    ctx.fillStyle = '#5C6370';
+    ctx.fillStyle = '#9C948B';
     ctx.textAlign = 'right';
     [4, 8, 12].forEach(hours => {
         const y = padding.top + graphHeight - (hours / 12) * graphHeight;
@@ -580,10 +586,10 @@ function drawSleepPerformanceGraph(data) {
 
         // Draw gradient fill under the curve
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
-        gradient.addColorStop(0, 'rgba(91, 155, 213, 0.25)');    // Medical blue at top
-        gradient.addColorStop(0.3, 'rgba(94, 170, 141, 0.15)'); // Success green
-        gradient.addColorStop(0.6, 'rgba(91, 155, 213, 0.08)'); // Medical blue
-        gradient.addColorStop(1, 'rgba(91, 155, 213, 0.05)');   // Fade to near-transparent
+        gradient.addColorStop(0, 'rgba(74, 124, 155, 0.25)');    // Medical blue at top
+        gradient.addColorStop(0.3, 'rgba(94, 138, 94, 0.15)'); // Success green
+        gradient.addColorStop(0.6, 'rgba(74, 124, 155, 0.08)'); // Medical blue
+        gradient.addColorStop(1, 'rgba(74, 124, 155, 0.05)');   // Fade to near-transparent
 
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, padding.top + graphHeight);
@@ -600,7 +606,7 @@ function drawSleepPerformanceGraph(data) {
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
         smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.strokeStyle = '#5EAA8D';
+        ctx.strokeStyle = '#5E8A5E';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -610,13 +616,13 @@ function drawSleepPerformanceGraph(data) {
         validPoints.forEach((p, idx) => {
             let pointColor;
             if (p.hours >= 7) {
-                pointColor = '#5EAA8D';
+                pointColor = '#5E8A5E';
             } else if (p.hours >= 5.5) {
-                pointColor = '#8B92A0';
+                pointColor = '#9C948B';
             } else if (p.hours >= 4.5) {
-                pointColor = '#D4A05A';
+                pointColor = '#C4923A';
             } else {
-                pointColor = '#C76B6B';
+                pointColor = '#B85C5C';
             }
 
             const radius = p.isToday ? 5 : 3.5;
@@ -652,7 +658,7 @@ function drawSleepPerformanceGraph(data) {
     ctx.beginPath();
     ctx.moveTo(padding.left, optimalY);
     ctx.lineTo(width - padding.right, optimalY);
-    ctx.strokeStyle = 'rgba(94, 170, 141, 0.25)';
+    ctx.strokeStyle = 'rgba(94, 138, 94, 0.25)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -660,7 +666,7 @@ function drawSleepPerformanceGraph(data) {
     ctx.beginPath();
     ctx.moveTo(padding.left, dangerY);
     ctx.lineTo(width - padding.right, dangerY);
-    ctx.strokeStyle = 'rgba(199, 107, 107, 0.2)';
+    ctx.strokeStyle = 'rgba(184, 92, 92, 0.2)';
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -673,7 +679,7 @@ function drawSleepPerformanceGraph(data) {
 
         // Show label every 7 days or if today
         if (i === 0 || i === 7 || i === 14 || i === 21 || i === 29 || d.isToday) {
-            ctx.fillStyle = d.isToday ? '#5EAA8D' : '#8B92A0';
+            ctx.fillStyle = d.isToday ? '#5E8A5E' : '#9C948B';
             ctx.font = d.isToday ? 'bold 10px Inter, sans-serif' : '9px SF Mono, Consolas, monospace';
             ctx.fillText(d.isToday ? 'Today' : d.dayLabel, x, height - 10);
 
@@ -698,6 +704,10 @@ function drawAccuracyTimeline() {
     var canvas = document.getElementById('accuracyTimelineGraph');
     if (!canvas) return;
 
+    // Bail if container not visible (e.g. display:none page)
+    var parentRect = canvas.parentElement ? canvas.parentElement.getBoundingClientRect() : canvas.getBoundingClientRect();
+    if (parentRect.width < 10) return;
+
     var entries = getValues(state.history).filter(function(e) {
         return e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
                e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep);
@@ -721,7 +731,7 @@ function drawAccuracyTimeline() {
     ctx.clearRect(0, 0, width, height);
 
     if (entries.length < 2) {
-        ctx.fillStyle = '#8B92A0';
+        ctx.fillStyle = '#9C948B';
         ctx.font = '13px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Need 2+ entries with feedback to show timeline', width / 2, height / 2);
@@ -744,12 +754,12 @@ function drawAccuracyTimeline() {
     }
 
     // Red zone (>60 or <-60)
-    ctx.fillStyle = 'rgba(199, 107, 107, 0.06)';
+    ctx.fillStyle = 'rgba(184, 92, 92, 0.06)';
     ctx.fillRect(padding.left, valToY(maxDelta), gw, valToY(60) - valToY(maxDelta));
     ctx.fillRect(padding.left, valToY(-60), gw, valToY(-maxDelta) - valToY(-60));
 
     // Yellow zone (30-60 and -60 to -30)
-    ctx.fillStyle = 'rgba(212, 160, 90, 0.06)';
+    ctx.fillStyle = 'rgba(196, 146, 58, 0.06)';
     ctx.fillRect(padding.left, valToY(60), gw, valToY(30) - valToY(60));
     ctx.fillRect(padding.left, valToY(-30), gw, valToY(-60) - valToY(-30));
 
@@ -805,7 +815,7 @@ function drawAccuracyTimeline() {
     // Data points with color
     points.forEach(function(p) {
         var absDelta = Math.abs(p.delta);
-        var color = absDelta <= 30 ? '#5EAA8D' : absDelta <= 60 ? '#D4A05A' : '#C76B6B';
+        var color = absDelta <= 30 ? '#5E8A5E' : absDelta <= 60 ? '#C4923A' : '#B85C5C';
         ctx.beginPath();
         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -816,7 +826,7 @@ function drawAccuracyTimeline() {
     });
 
     // X-axis date labels (sparse)
-    ctx.fillStyle = '#5C6370';
+    ctx.fillStyle = '#9C948B';
     ctx.font = '9px Inter, system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
     var labelInterval = Math.max(1, Math.floor(entries.length / 5));
@@ -827,3 +837,26 @@ function drawAccuracyTimeline() {
         }
     });
 }
+
+// ============================================
+// RESIZE HANDLER — Redraw visible graphs
+// ============================================
+
+var _graphResizeTimer = null;
+window.addEventListener('resize', function() {
+    clearTimeout(_graphResizeTimer);
+    _graphResizeTimer = setTimeout(function() {
+        // drawGraph() — visibility guard is inside the function
+        drawGraph();
+        // drawSleepPerformanceGraph() — only redraw if canvas parent is visible
+        // Needs data param so trigger via calendar re-render if available
+        var sp = document.getElementById('sleepPerformanceGraph');
+        if (sp && sp.parentElement && sp.parentElement.getBoundingClientRect().width > 10) {
+            if (typeof renderCalendarTab === 'function') {
+                try { renderCalendarTab(); } catch(e) {}
+            }
+        }
+        // drawAccuracyTimeline() — visibility guard is inside the function
+        drawAccuracyTimeline();
+    }, 200);
+});
