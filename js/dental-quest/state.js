@@ -100,7 +100,7 @@ function markInitialLoadComplete() {
 // APP VARIABLES
 // ============================================
 
-var currentCategory = 'dotoday';
+var currentCategory = 'all';
 var tasks = {}; // Object with ID keys for Firebase safety
 var timerInterval = null;
 var currentSeconds = 25 * 60;

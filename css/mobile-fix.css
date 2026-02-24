@@ -1,0 +1,45 @@
+/* ============================================
+   MOBILE RESPONSIVE FIX (Feb 2026)
+   Fixes: text truncation, metrics bar, pills,
+   view controls, FAB spacing
+   ============================================ */
+
+/* --- Metrics bar: horizontal scroll, single line --- */
+@media (max-width: 768px) {
+    .metrics-row {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin-bottom: 10px;
+    }
+    .metrics-row::-webkit-scrollbar { display: none; }
+    .metric-card { flex: 0 0 auto; min-width: 70px; }
+
+    /* Category filter pills: horizontal scroll */
+    .category-filter-pills {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+    .category-filter-pills::-webkit-scrollbar { display: none; }
+    .cfp { flex-shrink: 0; white-space: nowrap; }
+
+    /* View controls: compact */
+    .view-controls { gap: 8px; flex-wrap: nowrap; }
+    .vtp { font-size: 12px; padding: 6px 12px; }
+
+    /* Content area: tighter padding */
+    .content-area { padding: 12px 8px !important; }
+    .top-bar { padding: 10px 12px !important; }
+}
+
+@media (max-width: 480px) {
+    .metric-card { padding: 4px 6px !important; min-width: 60px; }
+    .metric-value { font-size: 13px !important; }
+    .metric-label { font-size: 8px !important; }
+    .content-area { padding: 8px 4px !important; }
+    .cfp { font-size: 11px; padding: 5px 11px; }
+}
