@@ -458,7 +458,6 @@
         /* Content Area */
         .sc-content-area {
             padding: 20px 28px;
-            max-width: 1200px;
             width: 100%;
             flex: 1;
         }
@@ -3789,7 +3788,7 @@
                 <!-- ==================== DASHBOARD PAGE ==================== -->
                 <div class="sc-page active" id="scPageDashboard">
                     <div class="sc-dashboard-grid">
-                        <!-- Row 1: Hero + Sleep Intelligence side by side -->
+                        <!-- Row 1: Hero + Today's Inputs side by side -->
                         <div class="sc-card" id="scHeroCard" style="border-left: 4px solid var(--accent);">
                             <div class="unified-hero">
                                 <div class="hero-label">Projected Sleep Window</div>
@@ -3803,25 +3802,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="sc-card">
-                            <div class="sc-card-title">Sleep Intelligence</div>
-                            <div id="circadianPhaseDisplay" style="margin-bottom:8px;"></div>
-                            <div id="sleepCalendar"></div>
-                            <div style="display:flex; gap:8px; justify-content:center; margin-top:6px; font-size:0.68em; color:var(--fg-tertiary);">
-                                <span style="color:var(--success);">&#9679; >6.5h</span>
-                                <span style="color:var(--warning);">&#9679; 4.5-6.5h</span>
-                                <span style="color:var(--destructive);">&#9679; <4.5h</span>
-                            </div>
-                            <div id="sleepExplainer" class="si-explainer">
-                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                                    <span id="explainerIcon" style="font-size:1.2em;"></span>
-                                    <span id="explainerTitle" style="font-weight:600; font-size:0.9em; color:var(--fg-primary);"></span>
-                                </div>
-                                <div id="explainerDesc" style="font-size:0.82em; color:var(--fg-secondary); line-height:1.4;"></div>
-                                <div id="explainerAction" style="font-size:0.78em; color:var(--accent); margin-top:4px;"></div>
-                            </div>
-                        </div>
-                        <!-- Row 2: Today's Inputs + Medications side by side -->
                         <div class="sc-card" id="scQuickInputsCard">
                             <div class="sc-card-title">Today's Inputs</div>
                             <div class="sc-quick-inputs">
@@ -3839,6 +3819,7 @@
                                 <div id="recentNightsContainer" class="recent-nights" style="margin-top:6px;"></div>
                             </div>
                         </div>
+                        <!-- Row 2: Medications + Caffeine side by side -->
                         <div class="sc-card" id="scMedsCard">
                             <div class="sc-card-title">Medications</div>
                             <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
@@ -3854,7 +3835,6 @@
                             <button class="add-btn" onclick="addMedEntry()">+ Add Medication Dose</button>
                             <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
                         </div>
-                        <!-- Row 3: Caffeine + Modifiers side by side -->
                         <div class="sc-card" id="scCaffeineCard">
                             <div class="sc-card-title">Caffeine</div>
                             <div class="quick-actions">
@@ -3867,6 +3847,25 @@
                             <button class="quick-btn" onclick="addCustomCaffeine()" style="width:100%; margin-top:8px; margin-bottom:8px;">+ Custom Amount</button>
                             <div id="caffeineEntries"></div>
                             <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                        </div>
+                        <!-- Row 3: Sleep Intelligence + Modifiers side by side -->
+                        <div class="sc-card">
+                            <div class="sc-card-title">Sleep Intelligence</div>
+                            <div id="circadianPhaseDisplay" style="margin-bottom:8px;"></div>
+                            <div id="sleepCalendar"></div>
+                            <div style="display:flex; gap:8px; justify-content:center; margin-top:6px; font-size:0.68em; color:var(--fg-tertiary);">
+                                <span style="color:var(--success);">&#9679; >6.5h</span>
+                                <span style="color:var(--warning);">&#9679; 4.5-6.5h</span>
+                                <span style="color:var(--destructive);">&#9679; <4.5h</span>
+                            </div>
+                            <div id="sleepExplainer" class="si-explainer">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <span id="explainerIcon" style="font-size:1.2em;"></span>
+                                    <span id="explainerTitle" style="font-weight:600; font-size:0.9em; color:var(--fg-primary);"></span>
+                                </div>
+                                <div id="explainerDesc" style="font-size:0.82em; color:var(--fg-secondary); line-height:1.4;"></div>
+                                <div id="explainerAction" style="font-size:0.78em; color:var(--accent); margin-top:4px;"></div>
+                            </div>
                         </div>
                         <div class="sc-card" id="scModifiersCard">
                             <div class="sc-card-title">Modifiers</div>
