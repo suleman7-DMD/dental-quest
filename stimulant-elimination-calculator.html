@@ -9,8 +9,103 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
+
+    <!-- Google Fonts: Inter (body) + Source Serif 4 (headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
+        /* ============================================
+           DESIGN TOKENS — Warm Clinical Theme
+           Synchro-inspired, matching Dental Quest
+           ============================================ */
+        :root {
+            /* Canvas & Surfaces */
+            --canvas: #FAF8F5;
+            --canvas-subtle: #F5F2ED;
+            --canvas-inset: #EFECE6;
+            --surface-primary: #FFFFFF;
+            --surface-elevated: #FFFFFF;
+
+            /* Text Hierarchy */
+            --fg-primary: #2C2825;
+            --fg-secondary: #6B635B;
+            --fg-tertiary: #9C948B;
+            --fg-muted: #C4BCB3;
+
+            /* Accent (Clinical Sage/Olive) */
+            --accent: #6B7C5E;
+            --accent-hover: #5A6A4F;
+            --accent-light: #E8EDE4;
+            --accent-lighter: #F2F5F0;
+            --accent-fg: #FFFFFF;
+
+            /* Borders */
+            --border-default: rgba(0, 0, 0, 0.08);
+            --border-subtle: rgba(0, 0, 0, 0.05);
+            --border-strong: rgba(0, 0, 0, 0.12);
+            --border-focus: #8A9A7B;
+
+            /* Semantic */
+            --destructive: #B85C5C;
+            --destructive-light: #F5E6E6;
+            --warning: #C4923A;
+            --warning-light: #FBF3E4;
+            --success: #5E8A5E;
+            --success-light: #E4EDE4;
+            --info: #5E7A8A;
+            --info-light: #E4EDF0;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-overlay: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+            /* Controls */
+            --control-bg: #FFFFFF;
+            --control-bg-hover: #F5F2ED;
+            --control-border: rgba(0, 0, 0, 0.12);
+            --control-border-focus: #8A9A7B;
+            --control-ring: rgba(107, 124, 94, 0.25);
+
+            /* Status Colors (stim-calc semantic) */
+            --status-safe: #5E8A5E;
+            --status-safe-light: #E4EDE4;
+            --status-caution: #C4923A;
+            --status-caution-light: #FBF3E4;
+            --status-danger: #B85C5C;
+            --status-danger-light: #F5E6E6;
+            --status-blocking: #994444;
+            --status-blocking-light: #F0DADA;
+            --status-info: #5E7A8A;
+            --status-info-light: #E4EDF0;
+
+            /* Graph Colors (Scientific — intentionally vivid for medical clarity) */
+            --graph-amp: #4A7C9B;
+            --graph-amp-fill: rgba(74, 124, 155, 0.15);
+            --graph-caff: #C4923A;
+            --graph-threshold: #B85C5C;
+            --graph-forbidden: rgba(184, 92, 92, 0.10);
+            --graph-forbidden-text: rgba(184, 92, 92, 0.6);
+            --graph-sleepgate: rgba(94, 138, 94, 0.10);
+            --graph-sleepgate-text: rgba(94, 138, 94, 0.6);
+            --graph-grid: rgba(0, 0, 0, 0.06);
+            --graph-label: #9C948B;
+
+            /* Typography */
+            --font-heading: 'Source Serif 4', 'Georgia', serif;
+            --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+            --font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
+
+            /* Spacing */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+        }
+
         * {
             margin: 0;
             padding: 0;
