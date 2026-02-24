@@ -430,9 +430,9 @@ function getCardinalSplinePoints(points, tension) {
     return result;
 }
 
-function setupSleepGraphTooltip(data, avg) {
-    const canvas = document.getElementById('sleepPerformanceGraph');
-    const tooltip = document.getElementById('sleepGraphTooltip');
+function _setupSleepTooltipForCanvas(canvasId, tooltipId, dateId, hoursId, statusId, vsAvgId, data, avg) {
+    const canvas = document.getElementById(canvasId);
+    const tooltip = document.getElementById(tooltipId);
     if (!canvas || !tooltip) return;
 
     const rect = canvas.getBoundingClientRect();
@@ -508,10 +508,14 @@ function setupSleepGraphTooltip(data, avg) {
             const vsAvg = closestPoint.hoursSlept - avg;
             const vsAvgText = vsAvg >= 0 ? `+${vsAvg.toFixed(1)}h vs avg` : `${vsAvg.toFixed(1)}h vs avg`;
 
-            document.getElementById('tooltipDate').textContent = fullDate;
-            document.getElementById('tooltipHours').innerHTML = `<span style="color: ${statusColor}">${closestPoint.hoursSlept.toFixed(1)}h</span>`;
-            document.getElementById('tooltipStatus').innerHTML = `<span style="color: ${statusColor}">${statusText}</span>`;
-            document.getElementById('tooltipVsAvg').textContent = vsAvgText;
+            const dateEl = document.getElementById(dateId);
+            const hoursEl = document.getElementById(hoursId);
+            const statusEl = document.getElementById(statusId);
+            const vsAvgEl = document.getElementById(vsAvgId);
+            if (dateEl) dateEl.textContent = fullDate;
+            if (hoursEl) hoursEl.innerHTML = `<span style="color: ${statusColor}">${closestPoint.hoursSlept.toFixed(1)}h</span>`;
+            if (statusEl) statusEl.innerHTML = `<span style="color: ${statusColor}">${statusText}</span>`;
+            if (vsAvgEl) vsAvgEl.textContent = vsAvgText;
 
         } else {
             tooltip.style.display = 'none';
@@ -523,8 +527,15 @@ function setupSleepGraphTooltip(data, avg) {
     };
 }
 
-function drawSleepPerformanceGraph(data) {
-    const canvas = document.getElementById('sleepPerformanceGraph');
+function setupSleepGraphTooltip(data, avg) {
+    // Calendar page tooltip
+    _setupSleepTooltipForCanvas('sleepPerformanceGraph', 'sleepGraphTooltip', 'tooltipDate', 'tooltipHours', 'tooltipStatus', 'tooltipVsAvg', data, avg);
+    // Dashboard page tooltip
+    _setupSleepTooltipForCanvas('sleepHistoryGraphDash', 'sleepHistoryTooltipDash', 'tooltipDateDash', 'tooltipHoursDash', 'tooltipStatusDash', 'tooltipVsAvgDash', data, avg);
+}
+
+function _drawSleepGraphToCanvas(canvasId, data) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
     // Bail if container not visible (e.g. display:none page)
@@ -696,6 +707,13 @@ function drawSleepPerformanceGraph(data) {
     });
 }
 
+function drawSleepPerformanceGraph(data) {
+    // Draw to Calendar page canvas
+    _drawSleepGraphToCanvas('sleepPerformanceGraph', data);
+    // Draw to Dashboard page canvas
+    _drawSleepGraphToCanvas('sleepHistoryGraphDash', data);
+}
+
 // ============================================
 // ACCURACY TIMELINE GRAPH (Phase 5)
 // ============================================
@@ -854,6 +872,13 @@ window.addEventListener('resize', function() {
         if (sp && sp.parentElement && sp.parentElement.getBoundingClientRect().width > 10) {
             if (typeof renderCalendarTab === 'function') {
                 try { renderCalendarTab(); } catch(e) {}
+            }
+        }
+        // Also redraw dashboard sleep history graph on resize
+        var spDash = document.getElementById('sleepHistoryGraphDash');
+        if (spDash && spDash.parentElement && spDash.parentElement.getBoundingClientRect().width > 10) {
+            if (typeof renderSleepPerformance === 'function') {
+                try { renderSleepPerformance(); } catch(e) {}
             }
         }
         // drawAccuracyTimeline() — visibility guard is inside the function

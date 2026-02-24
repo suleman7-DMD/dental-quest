@@ -1141,8 +1141,13 @@ function toggleSettings() {
 
 // BUG FIX 4: Skip when accordion is closed
 function updateScenarios() {
-    const section = document.querySelector('.accordion-section[data-section="whatif"]');
-    if (section && !section.classList.contains('open')) return;
+    // In sidebar layout, check if modifiers page is active
+    if (typeof currentPage !== 'undefined' && document.body.classList.contains('has-sc-sidebar')) {
+        if (currentPage !== 'modifiers') return;
+    } else {
+        const section = document.querySelector('.accordion-section[data-section="whatif"]');
+        if (section && !section.classList.contains('open')) return;
+    }
 
     const now = getCurrentMinutes();
     const { sleepTime: baseSleepTime } = calculateSleepTime();

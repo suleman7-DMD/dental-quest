@@ -429,65 +429,41 @@ function renderSleepCalendar() {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = getLocalDateString(date);
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        const dayNum = date.getDate();
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'narrow' });
         const isToday = i === 0;
 
-        days.push({ dateStr, dayName, dayNum, isToday });
+        days.push({ dateStr, dayName, isToday });
     }
 
     container.innerHTML = days.map(day => {
         const sleepData = getSleepForDate(day.dateStr);
         const hoursSlept = sleepData ? sleepData.hoursSlept : undefined;
-        const wakeTime = sleepData ? sleepData.wakeTime : undefined;
         const hasData = hoursSlept !== undefined && hoursSlept !== null;
 
-        let bgColor, borderColor, textColor, statusText, wakeTimeDisplay;
+        let cellClass = '';
+        let textClass = 'swc-nodata-text';
+        let statusText = '\u2014';
 
-        if (!hasData) {
-            bgColor = '#EFECE6';
-            borderColor = 'rgba(0,0,0,0.08)';
-            textColor = '#9C948B';
-            statusText = '—';
-            wakeTimeDisplay = '';
-        } else if (hoursSlept > 6.5) {
-            bgColor = 'rgba(94, 138, 94, 0.15)';
-            borderColor = '#5E8A5E';
-            textColor = '#5E8A5E';
-            statusText = `${hoursSlept.toFixed(1)}h`;
-            wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
-        } else if (hoursSlept >= 4.5) {
-            bgColor = 'rgba(196, 146, 58, 0.15)';
-            borderColor = '#C4923A';
-            textColor = '#C4923A';
-            statusText = `${hoursSlept.toFixed(1)}h`;
-            wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
-        } else {
-            bgColor = 'rgba(184, 92, 92, 0.15)';
-            borderColor = '#B85C5C';
-            textColor = '#B85C5C';
-            statusText = `${hoursSlept.toFixed(1)}h ⚠️`;
-            wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
+        if (hasData) {
+            if (hoursSlept > 6.5) {
+                cellClass = 'swc-great';
+                textClass = 'swc-great-text';
+            } else if (hoursSlept >= 4.5) {
+                cellClass = 'swc-ok';
+                textClass = 'swc-ok-text';
+            } else {
+                cellClass = 'swc-poor';
+                textClass = 'swc-poor-text';
+            }
+            statusText = hoursSlept.toFixed(1) + 'h';
         }
+        if (day.isToday) cellClass += ' swc-today';
 
-        return `
-            <div onclick="openSleepEditModal('${day.dateStr}')" style="
-                background: ${bgColor};
-                border: 2px solid ${borderColor};
-                border-radius: 8px;
-                padding: 10px 6px;
-                text-align: center;
-                cursor: pointer;
-                transition: transform 0.2s;
-                ${day.isToday ? 'box-shadow: 0 0 0 2px #6B7C5E;' : ''}
-            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                <div style="font-size: 0.75em; color: #9C948B; margin-bottom: 4px;">${day.dayName}</div>
-                <div style="font-size: 1.1em; font-weight: 600; color: #2C2825; margin-bottom: 2px;">${day.dayNum}</div>
-                <div style="font-size: 0.85em; font-weight: 600; color: ${textColor};">${statusText}</div>
-                ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #9C948B; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
-                ${day.isToday ? '<div style="font-size: 0.65em; color: #6B7C5E; margin-top: 2px;">TODAY</div>' : ''}
-            </div>
-        `;
+        return '<div class="sleep-week-cell ' + cellClass + '" onclick="openSleepEditModal(\'' + day.dateStr + '\')">'
+            + '<div class="swc-day">' + day.dayName + '</div>'
+            + '<div class="swc-hours ' + textClass + '">' + statusText + '</div>'
+            + (day.isToday ? '<div class="swc-today-dot">TODAY</div>' : '')
+            + '</div>';
     }).join('');
 
     // Update circadian phase display

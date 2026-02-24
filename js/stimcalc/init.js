@@ -1132,7 +1132,7 @@ function scNavigate(page) {
             calendar: 'Calendar',
             insights: 'Insights',
             accuracy: 'Accuracy',
-            settings: 'Settings'
+            settings: 'Tools'
         };
         bc.textContent = '\u203A ' + (labels[page] || page);
     }
@@ -1158,6 +1158,8 @@ function scNavigate(page) {
     } else if (page === 'dashboard') {
         recalculate();
         if (typeof drawGraph === 'function') drawGraph();
+        if (typeof renderSleepPerformance === 'function') renderSleepPerformance();
+        if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
     }
 
     // Auto-close mobile sidebar
@@ -1176,6 +1178,7 @@ function scToggleSidebar() {
     var isOpen = sidebar.classList.contains('open');
     sidebar.classList.toggle('open', !isOpen);
     if (backdrop) backdrop.classList.toggle('open', !isOpen);
+    document.body.classList.toggle('sc-sidebar-open', !isOpen);
 }
 
 // ============================================
