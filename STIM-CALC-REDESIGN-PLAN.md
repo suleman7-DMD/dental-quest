@@ -6,6 +6,52 @@
 
 ---
 
+## PROGRESS STATUS (Updated Feb 23, 2026)
+
+| Phase | Status | Commit |
+|-------|--------|--------|
+| Phase 0: Token Foundation | DONE | `2ad7cd8` |
+| Phase 1: Body, Canvas, Typography | DONE | `60c57d8` |
+| Phase 2: Cards, Containers, Surfaces | DONE | `60c57d8` |
+| Phase 3: Cross-App Nav | DONE | `60c57d8` |
+| Phase 4: Hero Section & Status Pills | **NOT DONE** | — |
+| Phase 5: Accordion Sections | **NOT DONE** | — |
+| Phase 6: Input Controls & Forms | DONE | `ad1e1b6` (CSS lines 393-700) |
+| Phase 7: Graph & Canvas | DONE | `ad1e1b6` (graph.js canvas colors) |
+| Phase 8: Sleep Intelligence Dashboard | DONE | `ad1e1b6` (CSS lines 950-1200) |
+| Phase 9: Modals & Overlays | **NOT DONE** | — |
+| Phase 10: JS Inline Colors (40+ touchpoints) | PARTIAL | `ad1e1b6` (graph.js + med-caffeine.js done, 5 more JS files remaining) |
+| Phase 11: Recommendations & Forecast | **NOT DONE** | — |
+| Phase 12: Polish & Mobile | **NOT DONE** | — |
+
+### What's Done
+- 70+ CSS design tokens in `:root` (warm clinical palette)
+- Google Fonts loaded (Inter + Source Serif 4)
+- `icon()` SVG helper with 45+ icons in `state.js`
+- Body, nav, header, cards, countdown, status sections all warm-themed
+- Input controls, med entries, buttons, modifiers, caffeine presets (CSS lines 393-700)
+- Graph container, tooltips, recommendations, settings (CSS lines 700-950)
+- Sleep Intelligence tabs, calendar grid, insights, accuracy (CSS lines 950-1200)
+- Canvas graph colors (forbidden zone, sleep gate, grid, threshold, amp/caff curves) in `graph.js`
+- Inline styles in `med-caffeine.js` (date pickers, stacking warnings, sip badges, caffeine entries)
+
+### What's Remaining
+1. **CSS Phase D** (lines 1200-2400): Unified view hero, accordion headers, status pills, modals, toast, what-if, forecast sections
+2. **JS Phase**: 5 more JS files need inline color updates:
+   - `firebase-sync.js` — `updateSyncStatus()` colors
+   - `ui-sections.js` — nicotine button gradients, modifier colors, workout planner
+   - `history-calendar.js` — calendar day status colors, insight section colors, accuracy tab colors
+   - `init.js` — hero display colors, sleep quality indicators, accordion summaries
+   - `state.js` — `showCustomAlert/Confirm` modal colors
+3. **Phase 12**: Polish pass — mobile validation, remaining neon color grep, visual QA
+
+### How to Resume
+1. Start with CSS Phase D (lines 1200-2400 in `stimulant-elimination-calculator.html`)
+2. Then sweep each JS file for hardcoded colors (grep for `#ef4444`, `#10b981`, `#58a6ff`, `#f59e0b`, `#8b949e`, `#161b22`, `#30363d`, `rgba(255,255,255`, `rgba(0,0,0,0.3`)
+3. Finally polish pass + mobile testing
+
+---
+
 ## Architecture Summary
 
 ### Files to Modify
