@@ -3820,7 +3820,20 @@
                                 <div id="recentNightsContainer" class="recent-nights" style="margin-top:6px;"></div>
                             </div>
                         </div>
-                        <!-- Row 2: Medications + Caffeine side by side -->
+                        <!-- Sleep History fills under Hero -->
+                        <div class="sc-card" id="scSleepHistoryCard">
+                            <div class="sc-card-title">Sleep History</div>
+                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
+                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
+                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
+                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
+                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
+                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
+                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Medications + Caffeine -->
                         <div class="sc-card" id="scMedsCard">
                             <div class="sc-card-title">Medications</div>
                             <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
@@ -3897,18 +3910,6 @@
                             <div class="unified-graph-wrap" id="graphContainer" style="min-height:200px;">
                                 <canvas id="graphCanvas"></canvas>
                                 <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
-                            </div>
-                        </div>
-                        <div class="sc-card" id="scSleepHistoryCard">
-                            <div class="sc-card-title">Sleep History</div>
-                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
-                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
-                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
-                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
-                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
-                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
-                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
-                                </div>
                             </div>
                         </div>
                         <!-- Blocking Factors (hidden) -->
