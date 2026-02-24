@@ -22,6 +22,18 @@ var lastAutoSavePredictionMinutes = null;
 var calendarViewDate = new Date();
 
 // ============================================
+// MEDICATION INVENTORY GLOBALS (cross-app shared data)
+// ============================================
+var scInvMedications = {
+    '30mg': { pills: 0, refillDate: null, lastAutoReduceDate: null, dosesLogged: {}, lastManualChange: null, lastManualChangeType: null },
+    '20mg': { pills: 0, refillDate: null, lastAutoReduceDate: null, dosesLogged: {}, lastManualChange: null, lastManualChangeType: null }
+};
+var scInvPillAssignments = { '30mg': {}, '20mg': {} };
+var scInvCalendarNotes = {};
+var scInvCurrentMedModal = null;
+var scInvCurrentNoteDate = null;
+
+// ============================================
 // DEFAULT STATE FACTORY (for restore/reset operations)
 // ============================================
 function getDefaultState() {

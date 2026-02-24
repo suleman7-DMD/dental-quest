@@ -460,6 +460,9 @@ function loadFromFirebase() {
 
             // NOW we can allow saves
             isInitialLoad = false;
+
+            // Load medication inventory from cross-app shared path
+            if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
         })
         .catch(error => {
             console.error('\u274C Firebase load error:', error);
@@ -1104,6 +1107,7 @@ function renderAll() {
     updateAllNighterUI();
     renderGhostLoad();
     recalculate();
+    if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
 
     if (focusMode) {
         renderFocusMode();

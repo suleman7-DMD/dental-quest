@@ -187,6 +187,12 @@ function runCalculations() {
  * Takes the viewModel from runCalculations() — no recalculation here.
  */
 function updateUI(vm) {
+    // Always update metrics row regardless of active page
+    if (typeof updateMetricsRow === 'function') updateMetricsRow(vm);
+
+    // Skip heavy dashboard DOM updates when not on dashboard
+    if (typeof currentPage !== 'undefined' && currentPage !== 'dashboard') return;
+
     // --- Sleep Debt Display ---
     var sleepDebtDisplay = document.getElementById('sleepDebtDisplay');
     if (sleepDebtDisplay && vm.isHyperarousal) {
@@ -361,7 +367,6 @@ function updateUI(vm) {
     updateStatusPillColors();
     updateVitCBadge();
     updateForecastLogic();
-    updateMetricsRow(vm);
 }
 
 /**
@@ -1115,6 +1120,13 @@ function initUnifiedView() {
 // SIDEBAR NAVIGATION
 // ============================================
 
+function scToggleCalibration() {
+    var body = document.getElementById('scCalibrationBody');
+    if (body) {
+        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
 function scNavigate(page) {
     currentPage = page;
 
@@ -1132,7 +1144,8 @@ function scNavigate(page) {
             calendar: 'Calendar',
             insights: 'Insights',
             accuracy: 'Accuracy',
-            settings: 'Tools'
+            settings: 'Tools',
+            inventory: 'Medication Inventory'
         };
         bc.textContent = '\u203A ' + (labels[page] || page);
     }
@@ -1160,6 +1173,8 @@ function scNavigate(page) {
         if (typeof drawGraph === 'function') drawGraph();
         if (typeof renderSleepPerformance === 'function') renderSleepPerformance();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
+    } else if (page === 'inventory') {
+        if (typeof scInvRender === 'function') scInvRender();
     }
 
     // Auto-close mobile sidebar

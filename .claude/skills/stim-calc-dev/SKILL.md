@@ -12,10 +12,11 @@ globs:
 metadata:
   author: Sully
   version: 3.1.0
-  file: stimulant-elimination-calculator.html + js/stimcalc/*.js (10 modules)
-  lines: ~13,025 total (2,903 HTML + 10,122 JS)
+  file: stimulant-elimination-calculator.html + js/stimcalc/*.js (11 modules)
+  lines: ~14,600 total (4,270 HTML/CSS + 10,955 JS)
   last-verified: 2026-02-24
   theme: warm-clinical (cream/olive, CSS vars, zero neon colors)
+  layout: sidebar-nav + page-based (Synchro-style, 7 pages including Inventory)
 ---
 
 # Stimulant Elimination Calculator Development Patterns
@@ -55,20 +56,21 @@ Read the APP OVERVIEW and KEY CONCEPTS below. Determine which subsystem is relev
 - UI rendering? -> See function map for render functions
 
 ### Step 2: Find the right module file
-The app is split into 10 JS modules. Use the MODULE MAP below to identify which file to edit:
+The app is split into 11 JS modules. Use the MODULE MAP below to identify which file to edit:
 | What to change | File |
 |---------------|------|
-| State defaults, utilities, time helpers | `js/stimcalc/state.js` (463 lines) |
+| State defaults, utilities, time helpers | `js/stimcalc/state.js` (~475 lines) |
 | Circadian zones, forbidden zone, sleep gate | `js/stimcalc/circadian.js` (229 lines) |
 | Drug decay, threshold, VitC, clearance search | `js/stimcalc/pharma-engine.js` (657 lines) |
 | Sleep prediction algorithm (7 phases) | `js/stimcalc/sleep-prediction.js` (284 lines) |
-| Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (1,404 lines) |
+| Firebase, save guards, sync, checkpoints | `js/stimcalc/firebase-sync.js` (~1,408 lines) |
 | Add/remove medications or caffeine | `js/stimcalc/med-caffeine.js` (295 lines) |
 | Nicotine, modifiers, workout, what-if, forecast | `js/stimcalc/ui-sections.js` (1,911 lines) |
 | History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,888 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
-| recalculate(), init, accordion, hero UI | `js/stimcalc/init.js` (1,090 lines) |
-| CSS or HTML markup | `stimulant-elimination-calculator.html` (2,903 lines, zero JS) |
+| Medication inventory (cross-app shared pills/calendar/notes) | `js/stimcalc/med-inventory.js` (~755 lines) |
+| recalculate(), init, accordion, hero UI, sidebar nav | `js/stimcalc/init.js` (~1,109 lines) |
+| CSS or HTML markup | `stimulant-elimination-calculator.html` (~4,270 lines, zero JS) |
 
 ### Step 3: Read the code before changing it
 Each module is 200-1,900 lines. Read the target function and surrounding context before editing. Never write blind.
@@ -217,9 +219,11 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Predict when a user can fall asleep based on stimulant and caffeine intake, using real pharmacokinetic models.
 
-**Files:** `stimulant-elimination-calculator.html` (2,903 lines CSS+HTML) + `js/stimcalc/*.js` (10 modules, ~10,122 lines total)
-**Split Feb 2026**: Was 11,526-line monolith → now 10 separate JS modules loaded via `<script src>` tags. Zero inline JS.
+**Files:** `stimulant-elimination-calculator.html` (~3,500 lines CSS+HTML) + `js/stimcalc/*.js` (11 modules, ~11,000 lines total)
+**Split Feb 2026**: Was 11,526-line monolith → now 11 separate JS modules loaded via `<script src>` tags. Zero inline JS.
 **Theme (Feb 2026)**: Warm clinical — cream canvas (#FAF8F5), olive accent (#6B7C5E), 70+ CSS vars in `:root`. All JS-rendered colors use warm hex values (no neon). Graph uses clean 2px lines (no glow effects). Status colors: success=#5E8A5E, warning=#C4923A, destructive=#B85C5C, info=#5E7A8A.
+**Layout (Feb 24, 2026)**: Synchro-style sidebar + page navigation. 7 pages: Dashboard, Modifiers, Calendar, Insights, Accuracy, Tools, Inventory. Sidebar: 240px desktop, 56px tablet rail, mobile off-canvas drawer. `body.has-sc-sidebar` master class. `scNavigate(page)` handles page switching. `currentPage` global tracks active page. Sticky metrics row (5-stat bar) at top of content area. Hidden compatibility layer preserves all accordion `data-section` elements in `display:none` div so existing JS won't throw. All `sc-` prefixed CSS classes (`sc-inv-` for inventory module) to avoid conflicts.
+**Inventory (Feb 24, 2026)**: Cross-app medication pill tracker. Reads/writes to `users/user_[pin]/appData/medications` (shared with index.html). 23 `scInv`-prefixed functions in `med-inventory.js`. DOM IDs use `sc-inv-` prefix. Loads via `scInvLoadFromFirebase()` after main state loads.
 
 **Core Algorithm:**
 ```
@@ -330,10 +334,13 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 **Legacy wrappers:** `renderPredictionInsights()` → `renderInsightsTab()`, `renderAccuracyDashboard()` → `renderAccuracyTab()`, `renderCalibrationContexts()` (no-op)
 
 ### graph.js — Canvas Rendering
-`drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`
+`drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`, `_drawSleepGraphToCanvas(canvasId, data)` (shared renderer for calendar + dashboard), `_setupSleepTooltipForCanvas(...)` (shared tooltip for both canvases)
 
-### init.js — App Bootstrap & Heartbeat
-`syncStateFromDOM()`, `runCalculations()`, `updateUI()`, `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`
+### med-inventory.js — Medication Inventory (Cross-App Shared)
+`scInvLoadFromFirebase()` (reads appData/medications + pillAssignments + calendarNotes), `scInvSaveMedInventory()` (writes to shared appData path), `scInvRender()`, `scInvUpdateMedCard(medType)`, `scInvTakeMed(medType)`, `scInvTakeBothMeds()`, `scInvAdjustMed(medType, amount)`, `scInvCheckAndApplyDailyPillReduce()`, `scInvOpenMedSettings(medType)`, `scInvCloseMedModal()`, `scInvSaveMedSettings()`, `scInvGenerateCalendar(...)`, `scInvToggleCalendar(medType)`, `scInvHandleCalendarDayClick(...)`, `scInvAssignPillToNearestAvailableDay(...)`, `scInvRemovePillFromNearestAssignedDay(...)`, `scInvResetPillAssignments(medType)`, `scInvOpenNoteModal(dateStr, displayDate)`, `scInvCloseNoteModal()`, `scInvSaveNote()`, `scInvDeleteNote()`, `scInvGetTimeAgo(date)`, `scInvCountWeekdays(start, end)`
+
+### init.js — App Bootstrap, Heartbeat & Sidebar Navigation
+`syncStateFromDOM()`, `runCalculations()`, `updateUI()` (guarded: skips DOM when not on dashboard), `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`, `scNavigate(page)` (7 pages: dashboard/modifiers/calendar/insights/accuracy/settings/inventory), `scToggleSidebar()` (mobile drawer), `scToggleCalibration()` (dashboard calibration card), `updateMetricsRow(vm)` (5-stat bar, always runs regardless of page), `updateSidebarBadges()` (med/caff/modifier counts)
 
 ---
 

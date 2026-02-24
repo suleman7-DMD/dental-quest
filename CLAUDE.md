@@ -33,13 +33,13 @@ const date = new Date(year, month - 1, day);
 | `js/dental-quest/*.js` (12 modules) | ~10,762 | Main app JS: state, firebase-sync, medications, financials, calendar, daily-planner, notebook, tasks, triage, crash-out, focus-pomodoro, init |
 | `d3-roadmap.html` | ~8,394 | Academic tracker: CSS + HTML only (zero inline JS) |
 | `js/d3-roadmap/*.js` (10 modules) | ~9,135 | D3 roadmap JS: state, firebase-sync, deadlines, grades, exam-content, clinical, import-system, daily-planner, monthly-planner, init |
-| `stimulant-elimination-calculator.html` | ~2,833 | Sleep prediction app — CSS + HTML only (zero inline JS) |
-| `js/stimcalc/*.js` (10 modules) | ~10,122 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, init |
+| `stimulant-elimination-calculator.html` | ~3,500 | Sleep prediction app — CSS + HTML only (zero inline JS) |
+| `js/stimcalc/*.js` (11 modules) | ~10,877 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, med-inventory, init |
 | `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
-- **Pattern**: Multi-file JS modules (index.html: 12, d3-roadmap: 10, stim calc: 10) + single-file (body-comp, lecture-prompt). No build system. Push to `main` → live in ~30s.
+- **Pattern**: Multi-file JS modules (index.html: 12, d3-roadmap: 10, stim calc: 11) + single-file (body-comp, lecture-prompt). No build system. Push to `main` → live in ~30s.
 
 ---
 
@@ -450,26 +450,27 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 
 ---
 
-## STIMULANT CALCULATOR (10 JS Modules — Split Feb 2026, Warm Clinical Theme Feb 2026)
+## STIMULANT CALCULATOR (11 JS Modules — Split Feb 2026, Warm Clinical Theme Feb 2026)
 
 ### Architecture: Multi-File (Split from 11,526-line monolith)
 ```
-stimulant-elimination-calculator.html  (2,903 lines — CSS + HTML only, ZERO inline JS)
+stimulant-elimination-calculator.html  (~3,500 lines — CSS + HTML only, ZERO inline JS)
 js/stimcalc/
-├── state.js              (463 lines)  - Globals, defaults, utilities, time helpers
+├── state.js              (475 lines)  - Globals, defaults, utilities, time helpers
 ├── circadian.js          (229 lines)  - Circadian analysis, forbidden zone, sleep gate
 ├── pharma-engine.js      (657 lines)  - Drug decay, VitC model, threshold, clearance
 ├── sleep-prediction.js   (284 lines)  - 7-phase sleep prediction algorithm
-├── firebase-sync.js    (1,404 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
+├── firebase-sync.js    (1,408 lines)  - Auth, save/load, sync, checkpoints, mergeRemoteState
 ├── med-caffeine.js       (295 lines)  - Medication + caffeine CRUD
 ├── ui-sections.js      (1,911 lines)  - Nicotine, modifiers, workout, what-if, forecast
 ├── history-calendar.js (2,888 lines)  - History, calibration, calendar, analytics, accuracy
 ├── graph.js              (733 lines)  - Canvas graphs, tooltips, spline interpolation
-└── init.js             (1,089 lines)  - recalculate() (3 phases + try/catch), init, accordion
+├── med-inventory.js      (755 lines)  - Cross-app medication pill tracker (shared with index.html)
+└── init.js             (1,108 lines)  - recalculate() (3 phases + try/catch), init, sidebar nav
 ```
 
 ### Script Loading Order (ORDER MATTERS — dependencies flow downward)
-state → circadian → pharma-engine → sleep-prediction → firebase-sync → med-caffeine → ui-sections → history-calendar → graph → init
+state → circadian → pharma-engine → sleep-prediction → firebase-sync → med-caffeine → ui-sections → history-calendar → graph → med-inventory → init
 
 ### Key Module Map
 | What to change | File to edit |
@@ -483,7 +484,8 @@ state → circadian → pharma-engine → sleep-prediction → firebase-sync →
 | Nicotine, modifiers, workout, what-if, forecast | `ui-sections.js` |
 | History, calibration, calendar, analytics dashboard, accuracy transparency | `history-calendar.js` |
 | Canvas graphs, tooltips | `graph.js` |
-| recalculate(), init, accordion, hero UI | `init.js` |
+| Medication inventory, pill tracking, refill calendar | `med-inventory.js` |
+| recalculate(), init, accordion, hero UI, sidebar nav | `init.js` |
 
 ### Theme: Warm Clinical (Feb 2026)
 - 70+ CSS vars in `:root` matching index.html design system. Canvas=#FAF8F5, accent=#6B7C5E (olive), fg=#2C2825.
