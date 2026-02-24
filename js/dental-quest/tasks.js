@@ -135,47 +135,19 @@ function renderTasks() {
         return;
     }
 
-    // Group by urgency
-    var urgencyOrder = ['eod', 'soon', 'week', 'month', 'inbox'];
-    var urgencyNames = { eod: 'Must Today', soon: 'Up Next', week: 'This Week', month: 'This Month', inbox: 'Someday' };
-    var urgencyColors = { eod: 'var(--destructive)', soon: 'var(--warning)', week: 'var(--accent)', month: 'var(--info)', inbox: 'var(--fg-tertiary)' };
-
-    var groups = {};
-    urgencyOrder.forEach(function(u) { groups[u] = []; });
-
-    filteredTasks.forEach(function(t) {
-        var urg = getTaskUrgency(t);
-        if (!groups[urg]) groups[urg] = [];
-        groups[urg].push(t);
+    // Sort by urgency priority then by order within each group
+    var urgencyWeight = { eod: 0, soon: 1, week: 2, month: 3, inbox: 4 };
+    filteredTasks.sort(function(a, b) {
+        var wa = urgencyWeight[getTaskUrgency(a)] ?? 4;
+        var wb = urgencyWeight[getTaskUrgency(b)] ?? 4;
+        if (wa !== wb) return wa - wb;
+        return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0);
     });
 
-    // Sort within groups
-    var sortFn = function(a, b) { return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0); };
-    urgencyOrder.forEach(function(u) { groups[u].sort(sortFn); });
-
-    // Render urgency sections — all user text escaped via escapeHtml() in renderSynchroCard
+    // Render flat list — user text escaped via escapeHtml() in renderSynchroCard
     var html = '';
-    urgencyOrder.forEach(function(urg) {
-        var taskArr = groups[urg];
-        if (taskArr.length === 0) return;
-
-        var mins = getColumnMinutes(taskArr);
-        var timeStr = mins > 0 ? formatMinutes(mins) : '';
-
-        html += '<div class="urgency-section" data-urgency="' + urg + '">';
-        html += '<div class="urgency-section-header" onclick="toggleUrgencySection(this)">';
-        html += '<span class="urgency-section-dot" style="background:' + urgencyColors[urg] + '"></span>';
-        html += '<span class="urgency-section-title">' + urgencyNames[urg] + '</span>';
-        html += '<span class="urgency-section-count">' + taskArr.length + ' tasks</span>';
-        if (timeStr) html += '<span class="urgency-section-time">' + timeStr + '</span>';
-        html += '<span class="urgency-section-chevron">' + icon('chevron-down', 14) + '</span>';
-        html += '</div>';
-        html += '<div class="urgency-section-body">';
-        taskArr.forEach(function(t) { html += renderSynchroCard(t); });
-        html += '</div></div>';
-    });
-
-    taskList.innerHTML = html;
+    filteredTasks.forEach(function(t) { html += renderSynchroCard(t); });
+    taskList.innerHTML = html; // Safe: all user input escaped via escapeHtml()
 }
 
 function toggleUrgencySection(headerEl) {

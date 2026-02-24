@@ -227,6 +227,9 @@ function loadData() {
         try {
             updateStats();
             renderTasks();
+            if (typeof renderKanbanBoard === 'function' && typeof currentViewMode !== 'undefined' && currentViewMode === 'kanban') {
+                renderKanbanBoard();
+            }
             updateMedicationDisplay();
             // Check and apply daily pill auto-reduce
             checkAndApplyDailyPillReduce();
@@ -1374,6 +1377,9 @@ function loadDataFromFirebase() {
                     checkCriticalEODReset();
                     updateStats();
                     renderTasks();
+                    if (typeof renderKanbanBoard === 'function' && typeof currentViewMode !== 'undefined' && currentViewMode === 'kanban') {
+                        renderKanbanBoard();
+                    }
                     updateMedicationDisplay();
                     checkAndApplyDailyPillReduce();
                     initFocusMode();
@@ -1685,6 +1691,9 @@ function applyRemoteData(data) {
     // Re-render ALL UI
     updateStats();
     renderTasks();
+    if (typeof renderKanbanBoard === 'function' && typeof currentViewMode !== 'undefined' && currentViewMode === 'kanban') {
+        renderKanbanBoard();
+    }
     updateMedicationDisplay();
 
     // Check for daily pill auto-reduce (sync/pull path)

@@ -10862,19 +10862,33 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         gap: 6px;
     }
     .synchro-card {
-        padding: 12px 14px;
+        padding: 14px 16px;
     }
     .synchro-card-title {
         font-size: 14px;
+        line-height: 1.5;
         word-break: break-word;
         overflow-wrap: break-word;
+        white-space: normal;
+    }
+    .synchro-card-meta {
+        flex-wrap: wrap;
+        gap: 4px 8px;
     }
     .synchro-card-actions {
         opacity: 1; /* Always visible on mobile — no hover */
+        position: static;
+        margin-top: 8px;
+        justify-content: flex-end;
     }
     .synchro-card-action {
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+    }
+    .synchro-card-badges {
+        flex-wrap: wrap;
+        gap: 4px;
     }
 }
 
@@ -11930,15 +11944,21 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     }
     .kanban-column:last-child { margin-right: 0; }
 
-    /* Mobile card: always show actions */
-    .synchro-card-actions { opacity: 1; }
-
-    /* Mobile card: full width, larger touch targets */
+    /* Mobile card: always show actions, proper touch targets */
+    .synchro-card-actions {
+        opacity: 1;
+        position: static;
+        margin-top: 8px;
+        justify-content: flex-end;
+    }
     .synchro-card { padding: 14px 16px; }
-    .synchro-card-action { width: 32px; height: 32px; }
-
-    /* Urgency sections: collapse lower priority by default on mobile */
-    .urgency-section .synchro-card { padding: 12px 14px; }
+    .synchro-card-action { width: 44px; height: 44px; }
+    .synchro-card-title {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.5;
+    }
 
     .metrics-row { flex-wrap: wrap; }
     .metric-card { padding: 6px 10px; }
@@ -11952,7 +11972,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
 @media (max-width: 480px) {
     .kanban-column { min-width: 90vw; }
-    .synchro-card-title { font-size: 13px; }
+    .synchro-card { padding: 12px 14px; }
+    .synchro-card-title { font-size: 13px; line-height: 1.5; }
+    .synchro-card-meta { font-size: 11px; }
+    .synchro-card-action { width: 40px; height: 40px; }
     .metrics-row { gap: 0; border-radius: var(--radius-md); }
     .metric-card { padding: 8px 6px 6px; }
     .metric-value { font-size: 16px; }

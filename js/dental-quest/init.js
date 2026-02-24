@@ -228,6 +228,9 @@ function initApp() {
                     try {
                         updateStats();
                         renderTasks();
+                        if (typeof renderKanbanBoard === 'function' && currentViewMode === 'kanban') {
+                            renderKanbanBoard();
+                        }
                     } catch (e) {
                         console.error('Failsafe render error:', e);
                     }
