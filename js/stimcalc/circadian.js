@@ -85,7 +85,7 @@ function analyzeCircadianPhase() {
     if (avgWakeMinutes >= 300 && avgWakeMinutes <= 480) {
         phase = 'normal';
         label = 'Normal Phase';
-        color = '#10b981';
+        color = '#5E8A5E';
         icon = '✅';
         recommendation = 'Your circadian rhythm is well-aligned. Maintain consistent wake times to preserve this.';
     } else if (avgWakeMinutes < 300) {
@@ -94,13 +94,13 @@ function analyzeCircadianPhase() {
             // Extreme early (before 3am)
             phase = 'extreme-early';
             label = 'Extreme Early Bird';
-            color = '#f59e0b';
+            color = '#C4923A';
             icon = '🌅';
             recommendation = 'Waking before 3am consistently may indicate Advanced Sleep Phase Disorder. Consider light therapy in evening and avoiding morning light to shift later.';
         } else {
             phase = 'early';
             label = 'Early Bird';
-            color = '#06b6d4';
+            color = '#5E7A8A';
             icon = '🐦';
             recommendation = 'Early wake pattern. This is generally healthy if intentional. Ensure you\'re getting enough total sleep hours.';
         }
@@ -108,21 +108,21 @@ function analyzeCircadianPhase() {
         // Extreme night owl (after noon) - DANGER ZONE
         phase = 'danger-delayed';
         label = 'SEVERELY DELAYED';
-        color = '#ef4444';
+        color = '#B85C5C';
         icon = '🚨';
         recommendation = 'DANGER: Waking after noon indicates severely delayed circadian phase. This pattern correlates with depression, metabolic dysfunction, and cognitive impairment. You need aggressive light therapy (10,000 lux) immediately upon waking and strict light avoidance after 8pm.';
     } else if (avgWakeMinutes > 600) {
         // Night owl (after 10am)
         phase = 'delayed';
         label = 'Delayed Phase';
-        color = '#f59e0b';
+        color = '#C4923A';
         icon = '🦉';
         recommendation = 'Your circadian rhythm is delayed. To shift earlier: get bright light immediately upon waking, avoid screens after 8pm, and gradually wake 15-30 min earlier every few days.';
     } else {
         // Slightly late (8am-10am)
         phase = 'slightly-late';
         label = 'Slightly Late';
-        color = '#eab308';
+        color = '#C4923A';
         icon = '⏰';
         recommendation = 'Wake time is slightly later than ideal. Consider morning light exposure to anchor your rhythm earlier.';
     }

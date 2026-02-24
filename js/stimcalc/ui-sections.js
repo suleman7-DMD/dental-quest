@@ -118,7 +118,7 @@ function updateNicotineDisplay() {
 
         // Show impact level instead of exact clear time
         if (clearDisplayEl) {
-            const levelColors = { 'HIGH': '#f87171', 'MODERATE': '#f59e0b', 'LOW': '#10b981', 'MINIMAL': '#10b981' };
+            const levelColors = { 'HIGH': '#B85C5C', 'MODERATE': '#C4923A', 'LOW': '#5E8A5E', 'MINIMAL': '#5E8A5E' };
             clearDisplayEl.style.color = levelColors[impactLevel];
 
             if (impactLevel === 'MINIMAL') {
@@ -132,11 +132,11 @@ function updateNicotineDisplay() {
         // Update button styles
         if (vapeBtn && pouchBtn) {
             if (state.nicotine.type === 'vape') {
-                vapeBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-                pouchBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+                vapeBtn.style.background = '#B85C5C';
+                pouchBtn.style.background = '#F5F2ED';
             } else {
-                vapeBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
-                pouchBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                vapeBtn.style.background = '#F5F2ED';
+                pouchBtn.style.background = '#5E8A5E';
             }
         }
 
@@ -148,8 +148,8 @@ function updateNicotineDisplay() {
         if (recommendEl) recommendEl.style.display = 'none';
 
         // Reset buttons
-        if (vapeBtn) vapeBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
-        if (pouchBtn) pouchBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+        if (vapeBtn) vapeBtn.style.background = '#F5F2ED';
+        if (pouchBtn) pouchBtn.style.background = '#F5F2ED';
     }
 
     checkRLSRisk();
@@ -192,58 +192,58 @@ function updateNicotineWarnings() {
 
     // Build visual bar
     const bars = {
-        'HIGH': '<span style="color: #f87171;">████████</span><span style="color: #3f3f46;">░░</span>',
-        'MODERATE': '<span style="color: #f59e0b;">█████</span><span style="color: #3f3f46;">░░░░░</span>',
-        'LOW': '<span style="color: #10b981;">██</span><span style="color: #3f3f46;">░░░░░░░░</span>',
-        'MINIMAL': '<span style="color: #3f3f46;">░░░░░░░░░░</span>'
+        'HIGH': '<span style="color: #B85C5C;">████████</span><span style="color: #C4BCB3;">░░</span>',
+        'MODERATE': '<span style="color: #C4923A;">█████</span><span style="color: #C4BCB3;">░░░░░</span>',
+        'LOW': '<span style="color: #5E8A5E;">██</span><span style="color: #C4BCB3;">░░░░░░░░</span>',
+        'MINIMAL': '<span style="color: #C4BCB3;">░░░░░░░░░░</span>'
     };
 
     warningEl.style.display = 'block';
 
     if (impactLevel === 'MINIMAL') {
-        warningEl.style.background = 'rgba(16, 185, 129, 0.15)';
-        warningEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+        warningEl.style.background = 'rgba(94, 138, 94, 0.12)';
+        warningEl.style.border = '1px solid rgba(94, 138, 94, 0.3)';
         warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 8px;">
                 ✅ Nicotine Impact: Minimal
             </div>
             <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
                 ${bars[impactLevel]}
             </div>
-            <div style="color: #a1a1aa; font-size: 0.85em;">
+            <div style="color: #9C948B; font-size: 0.85em;">
                 2+ hours since last hit. Effects largely cleared.
             </div>
         `;
         if (recommendEl) recommendEl.style.display = 'none';
     } else if (impactLevel === 'LOW') {
-        warningEl.style.background = 'rgba(16, 185, 129, 0.1)';
-        warningEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        warningEl.style.background = 'rgba(94, 138, 94, 0.1)';
+        warningEl.style.border = '1px solid rgba(94, 138, 94, 0.3)';
         warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 8px;">
                 🚬 Nicotine Impact: Low
             </div>
             <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
                 ${bars[impactLevel]}
             </div>
-            <div style="color: #e6edf3; font-size: 0.9em;">
+            <div style="color: #2C2825; font-size: 0.9em;">
                 ~${Math.round(timeUntilNext)} min until minimal. Sleep usually possible, quality may be slightly reduced.
             </div>
         `;
         if (recommendEl) recommendEl.style.display = 'none';
     } else if (impactLevel === 'MODERATE') {
-        warningEl.style.background = 'rgba(245, 158, 11, 0.15)';
-        warningEl.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+        warningEl.style.background = 'rgba(196, 146, 58, 0.12)';
+        warningEl.style.border = '1px solid rgba(196, 146, 58, 0.4)';
         warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #C4923A; margin-bottom: 8px;">
                 🚬 Nicotine Impact: Moderate
             </div>
             <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
                 ${bars[impactLevel]}
             </div>
-            <div style="color: #e6edf3; font-size: 0.9em; margin-bottom: 6px;">
+            <div style="color: #2C2825; font-size: 0.9em; margin-bottom: 6px;">
                 ~${Math.round(timeUntilNext)} min until low impact. Arousal may delay sleep 15-45 min.
             </div>
-            <div style="color: #a1a1aa; font-size: 0.85em;">
+            <div style="color: #9C948B; font-size: 0.85em;">
                 Chronic users often sleep fine but may notice lighter sleep.
             </div>
         `;
@@ -255,19 +255,19 @@ function updateNicotineWarnings() {
         }
     } else {
         // HIGH impact
-        warningEl.style.background = 'rgba(239, 68, 68, 0.15)';
-        warningEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        warningEl.style.background = 'rgba(184, 92, 92, 0.12)';
+        warningEl.style.border = '1px solid rgba(184, 92, 92, 0.4)';
         warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #f87171; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #C97070; margin-bottom: 8px;">
                 🚬 Nicotine Impact: High
             </div>
             <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
                 ${bars[impactLevel]}
             </div>
-            <div style="color: #e6edf3; font-size: 0.9em; margin-bottom: 6px;">
+            <div style="color: #2C2825; font-size: 0.9em; margin-bottom: 6px;">
                 ~${Math.round(timeUntilNext)} min until moderate. Peak alertness window - sleep onset difficult.
             </div>
-            <div style="color: #a1a1aa; font-size: 0.85em;">
+            <div style="color: #9C948B; font-size: 0.85em;">
                 ${state.nicotine.type === 'vape' ? 'Vaping hits fast, clears fast.' : 'Pouches have a flatter, longer curve.'}
             </div>
         `;
@@ -277,10 +277,10 @@ function updateNicotineWarnings() {
         } else if (recommendEl && hour >= 18 && state.nicotine.type === 'vape') {
             recommendEl.style.display = 'block';
             recommendEl.innerHTML = `
-                <div style="font-weight: 600; color: #10b981; margin-bottom: 6px;">
+                <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 6px;">
                     💡 EVENING STRATEGY
                 </div>
-                <div style="color: #e6edf3; font-size: 0.9em;">
+                <div style="color: #2C2825; font-size: 0.9em;">
                     Consider <strong>Zyn/pouches</strong> for evening. Slower onset, flatter curve, easier to "land the plane" for sleep.
                 </div>
             `;
@@ -293,16 +293,16 @@ function updateNicotineWarnings() {
 // Relaxation protocol for late-night nicotine use
 function getRelaxationProtocol() {
     return `
-        <div style="font-weight: 600; color: #8b5cf6; margin-bottom: 10px;">
+        <div style="font-weight: 600; color: #6B7C5E; margin-bottom: 10px;">
             😴 Wind-Down Protocol
         </div>
-        <div style="color: #e6edf3; font-size: 0.9em; line-height: 1.6;">
+        <div style="color: #2C2825; font-size: 0.9em; line-height: 1.6;">
             <div style="margin-bottom: 8px;">
                 <strong>1. Dim lights</strong>, put phone away (or night mode)
             </div>
             <div style="margin-bottom: 8px;">
                 <strong>2. Physiologic sigh</strong> (5x):<br>
-                <span style="color: #a1a1aa; font-size: 0.85em; margin-left: 12px; display: block;">
+                <span style="color: #9C948B; font-size: 0.85em; margin-left: 12px; display: block;">
                     Inhale nose → small top-up inhale → long slow exhale
                 </span>
             </div>
@@ -310,7 +310,7 @@ function getRelaxationProtocol() {
                 <strong>3. If not sleepy in 20 min:</strong> get up, do something boring in dim light, return when drowsy
             </div>
         </div>
-        <div style="color: #f87171; font-size: 0.85em; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div style="color: #C97070; font-size: 0.85em; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);">
             ❌ Avoid: Clock-watching, calculating when you'll sleep — this itself triggers arousal
         </div>
     `;
@@ -443,16 +443,16 @@ function updateVitCBadge() {
     badge.style.display = 'inline-block';
     if (status === 'effective') {
         badge.textContent = 'ACTIVE';
-        badge.style.background = 'rgba(16,185,129,0.2)';
-        badge.style.color = '#10b981';
+        badge.style.background = 'rgba(94,138,94,0.2)';
+        badge.style.color = '#5E8A5E';
     } else if (status === 'expired') {
         badge.textContent = 'EXPIRED';
-        badge.style.background = 'rgba(239,68,68,0.2)';
-        badge.style.color = '#ef4444';
+        badge.style.background = 'rgba(184,92,92,0.2)';
+        badge.style.color = '#B85C5C';
     } else if (status === 'future') {
         badge.textContent = 'SCHEDULED';
-        badge.style.background = 'rgba(59,130,246,0.2)';
-        badge.style.color = '#60a5fa';
+        badge.style.background = 'rgba(94,122,138,0.2)';
+        badge.style.color = '#5E7A8A';
     }
 }
 
@@ -527,12 +527,12 @@ function updateAllNighterUI() {
     const hint = document.getElementById('allNighterHint');
 
     if (state.allNighterMode) {
-        if (btn) { btn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)'; btn.style.borderColor = '#a78bfa'; }
+        if (btn) { btn.style.background = '#6B7C5E'; btn.style.borderColor = '#6B7C5E'; }
         if (icon) icon.textContent = '🔥';
         if (text) text.textContent = 'All-Nighter Mode: ON';
         if (hint) hint.style.display = 'block';
     } else {
-        if (btn) { btn.style.background = 'linear-gradient(135deg, #1e3a5f, #2d1b4e)'; btn.style.borderColor = '#6366f1'; }
+        if (btn) { btn.style.background = '#F5F2ED'; btn.style.borderColor = 'rgba(0,0,0,0.12)'; }
         if (icon) icon.textContent = '🌙';
         if (text) text.textContent = 'All-Nighter Mode: OFF';
         if (hint) hint.style.display = 'none';
@@ -557,7 +557,7 @@ function renderGhostLoad() {
 
     if (yesterdayMeds.length === 0 && yesterdayCaff.length === 0) {
         section.style.display = 'block';
-        medEntriesEl.innerHTML = '<div style="color: #b0b8c4; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
+        medEntriesEl.innerHTML = '<div style="color: #6B635B; font-style: italic;">No data from yesterday found. Doses need a date stamp to carry over.</div>';
         totalEl.innerHTML = '';
         return;
     }
@@ -568,17 +568,17 @@ function renderGhostLoad() {
 
     // Medications from yesterday — use engine total for accuracy
     if (yesterdayMeds.length > 0) {
-        medsHtml += '<div style="margin-bottom: 10px;"><strong style="color: #a78bfa;">💊 Amphetamine:</strong></div>';
+        medsHtml += '<div style="margin-bottom: 10px;"><strong style="color: #6B7C5E;">💊 Amphetamine:</strong></div>';
 
         yesterdayMeds.forEach(med => {
             const doseTime = timeToMinutes(med.time);
             const remaining = calculateYesterdayDoseRemaining(med.dose, doseTime, state.settings.ampHalfLife);
             totalAmpRemaining += remaining;
             medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
-                ${med.dose}mg XR @ ${formatTime12(med.time)} → <span style="color: #10b981;">~${remaining.toFixed(1)}mg remaining</span>
+                ${med.dose}mg XR @ ${formatTime12(med.time)} → <span style="color: #5E8A5E;">~${remaining.toFixed(1)}mg remaining</span>
             </div>`;
         });
-        medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+        medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #C4923A;">
             Total Ghost Amp: ${totalAmpRemaining.toFixed(1)}mg
         </div>`;
     }
@@ -600,7 +600,7 @@ function renderGhostLoad() {
             }
         });
 
-        medsHtml += '<div style="margin-top: 12px; margin-bottom: 10px;"><strong style="color: #f59e0b;">☕ Caffeine:</strong></div>';
+        medsHtml += '<div style="margin-top: 12px; margin-bottom: 10px;"><strong style="color: #C4923A;">☕ Caffeine:</strong></div>';
 
         // Regular caffeine entries
         regularCaff.forEach(caff => {
@@ -608,7 +608,7 @@ function renderGhostLoad() {
             const remaining = calculateYesterdayDoseRemaining(caff.amount, doseTime, state.settings.caffHalfLife);
             totalCaffRemaining += remaining;
             medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
-                ${caff.name} (${caff.amount}mg) @ ${formatTime12(caff.time)} → <span style="color: #10b981;">${remaining.toFixed(1)}mg remaining</span>
+                ${caff.name} (${caff.amount}mg) @ ${formatTime12(caff.time)} → <span style="color: #5E8A5E;">${remaining.toFixed(1)}mg remaining</span>
             </div>`;
         });
 
@@ -628,11 +628,11 @@ function renderGhostLoad() {
             const timeRange = sipMeta ? `${sipMeta.startTime} - ${sipMeta.endTime}` : formatTime12(firstEntry.time);
 
             medsHtml += `<div style="margin-left: 15px; margin-bottom: 4px; opacity: 0.8;">
-                ⏱️ ${displayName} (${totalMg.toFixed(0)}mg sipped ${timeRange}) → <span style="color: #10b981;">${groupRemaining.toFixed(1)}mg remaining</span>
+                ⏱️ ${displayName} (${totalMg.toFixed(0)}mg sipped ${timeRange}) → <span style="color: #5E8A5E;">${groupRemaining.toFixed(1)}mg remaining</span>
             </div>`;
         });
 
-        medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #f59e0b;">
+        medsHtml += `<div style="margin-left: 15px; margin-top: 6px; font-weight: 600; color: #C4923A;">
             Total Ghost Caff: ${totalCaffRemaining.toFixed(1)}mg
         </div>`;
     }
@@ -689,10 +689,10 @@ function updateWorkoutTimeline() {
     const timelineBar = document.getElementById('workoutTimelineBar');
     if (timelineBar) {
         timelineBar.style.background = `linear-gradient(90deg,
-            #10b981 0%, #10b981 ${goldenPercent}%,
-            #f59e0b ${goldenPercent}%, #f59e0b ${forbiddenPercent}%,
-            #ef4444 ${forbiddenPercent}%, #ef4444 ${sleepGatePercent}%,
-            #6b7280 ${sleepGatePercent}%)`;
+            #5E8A5E 0%, #5E8A5E ${goldenPercent}%,
+            #C4923A ${goldenPercent}%, #C4923A ${forbiddenPercent}%,
+            #B85C5C ${forbiddenPercent}%, #B85C5C ${sleepGatePercent}%,
+            #C4BCB3 ${sleepGatePercent}%)`;
 
         // Add current time marker
         const now = getCurrentMinutes();
@@ -909,12 +909,12 @@ function updateWorkoutPlan() {
 
     // Update styling based on status
     resultDiv.className = `workout-result-${impact.status}`;
-    resultDiv.style.borderLeftColor = impact.status === 'optimal' ? '#10b981' : impact.status === 'caution' ? '#f59e0b' : '#ef4444';
-    resultDiv.style.background = impact.status === 'optimal' ? 'rgba(16, 185, 129, 0.1)' : impact.status === 'caution' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+    resultDiv.style.borderLeftColor = impact.status === 'optimal' ? '#5E8A5E' : impact.status === 'caution' ? '#C4923A' : '#B85C5C';
+    resultDiv.style.background = impact.status === 'optimal' ? 'rgba(94, 138, 94, 0.1)' : impact.status === 'caution' ? 'rgba(196, 146, 58, 0.1)' : 'rgba(184, 92, 92, 0.1)';
 
     // Update header
     const statusIcons = { optimal: '✅ GOLDEN SLOT', caution: '⚠️ PROCEED WITH CAUTION', danger: '🚫 NOT RECOMMENDED' };
-    const statusColors = { optimal: '#10b981', caution: '#f59e0b', danger: '#ef4444' };
+    const statusColors = { optimal: '#5E8A5E', caution: '#C4923A', danger: '#B85C5C' };
     headerDiv.textContent = statusIcons[impact.status];
     headerDiv.style.color = statusColors[impact.status];
 
@@ -924,9 +924,9 @@ function updateWorkoutPlan() {
     // Add warnings
     if (impact.warnings.length > 0) {
         impact.warnings.forEach(w => {
-            const wColor = w.type === 'danger' ? '#ef4444' : w.type === 'warning' ? '#f59e0b' : '#10b981';
+            const wColor = w.type === 'danger' ? '#B85C5C' : w.type === 'warning' ? '#C4923A' : '#5E8A5E';
             textContent += `
-                <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 3px solid ${wColor};">
+                <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 3px solid ${wColor};">
                     <div style="font-weight: 600; color: ${wColor};">${w.icon} ${w.title}</div>
                     <div style="font-size: 0.9em; margin-top: 4px;">${w.text}</div>
                 </div>
@@ -978,7 +978,7 @@ function updateWorkoutPlan() {
     }
 
     detailsContent += `
-        <div class="workout-impact-item" style="font-weight: 600; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="workout-impact-item" style="font-weight: 600; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);">
             <span>Predicted Sleep After Workout</span>
             <span style="color: ${statusColors[impact.status]};">${sleepTimeFormatted}</span>
         </div>
@@ -1042,7 +1042,7 @@ function applyWorkoutPlan() {
     // Update button to show it's applied
     const btn = document.getElementById('applyWorkoutBtn');
     btn.textContent = '✓ Workout Applied';
-    btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+    btn.style.background = '#5E8A5E';
 
     // Show reset button
     const resetBtn = document.getElementById('resetWorkoutBtn');
@@ -1075,7 +1075,7 @@ function resetWorkoutPlan() {
     const applyBtn = document.getElementById('applyWorkoutBtn');
     if (applyBtn) {
         applyBtn.textContent = '✓ Apply This Workout to Calculation';
-        applyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        applyBtn.style.background = '#5E8A5E';
     }
 
     const resetBtn = document.getElementById('resetWorkoutBtn');
@@ -1116,7 +1116,7 @@ function restoreWorkoutPlanUI() {
     const btn = document.getElementById('applyWorkoutBtn');
     if (btn) {
         btn.textContent = '✓ Workout Applied';
-        btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+        btn.style.background = '#5E8A5E';
         btn.style.display = 'block';
     }
 
@@ -1293,14 +1293,14 @@ function updateScenarioDisplay(scenario, newSleepTime, baseSleepTime) {
 
     if (delta === 0) {
         deltaEl.textContent = 'No change';
-        deltaEl.style.color = '#8b949e';
+        deltaEl.style.color = '#9C948B';
     } else {
         let deltaStr = '';
         if (deltaHours > 0) deltaStr += `${deltaHours}h `;
         deltaStr += `${deltaMins}m`;
 
         deltaEl.textContent = sign + deltaStr;
-        deltaEl.style.color = delta > 0 ? '#ef4444' : '#10b981';
+        deltaEl.style.color = delta > 0 ? '#B85C5C' : '#5E8A5E';
     }
 }
 
@@ -1384,7 +1384,7 @@ function clearToday() {
         const applyBtn = document.getElementById('applyWorkoutBtn');
         if (applyBtn) {
             applyBtn.textContent = '✓ Apply This Workout to Calculation';
-            applyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            applyBtn.style.background = '#5E8A5E';
             applyBtn.style.display = 'none';
         }
 

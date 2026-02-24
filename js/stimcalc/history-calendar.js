@@ -189,7 +189,7 @@ function renderHistory() {
     const historyValues = getValues(state.history).sort((a, b) => b.date.localeCompare(a.date));
 
     if (historyValues.length === 0) {
-        container.innerHTML = '<p style="color: #b0b8c4; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
+        container.innerHTML = '<p style="color: #6B635B; text-align: center; padding: 20px;">No history yet. Save today\'s data to start tracking accuracy.</p>';
         return;
     }
 
@@ -211,7 +211,7 @@ function renderHistory() {
             const diff = Math.abs(computeSleepDelta(entry.predictedSleep, entry.actualSleep));
             const diffMins = Math.round(diff);
             accuracyText = diffMins <= 30 ? '✓ Accurate' : `${diffMins} min off`;
-            accuracyClass = diffMins <= 30 ? 'style="color: #10b981;"' : diffMins <= 60 ? 'style="color: #f59e0b;"' : 'style="color: #ef4444;"';
+            accuracyClass = diffMins <= 30 ? 'style="color: #5E8A5E;"' : diffMins <= 60 ? 'style="color: #C4923A;"' : 'style="color: #B85C5C;"';
         }
 
         // Format predicted sleep time safely
@@ -262,7 +262,7 @@ function renderHistory() {
 
     // Add count indicator if there are more entries
     if (historyValues.length > displayCount) {
-        html += `<p style="color: #b0b8c4; text-align: center; padding: 10px; font-size: 0.85em;">
+        html += `<p style="color: #6B635B; text-align: center; padding: 10px; font-size: 0.85em;">
             Showing ${displayCount} of ${historyValues.length} entries
         </p>`;
     }
@@ -277,7 +277,7 @@ function renderHistory() {
             const recent = withFeedback.slice(0, 10);
             const avgError = recent.reduce((sum, h) => sum + Math.abs(computeSleepDelta(h.predictedSleep, h.actualSleep)), 0) / recent.length;
             const errMins = Math.round(avgError);
-            const color = errMins <= 30 ? '#10b981' : errMins <= 60 ? '#f59e0b' : '#ef4444';
+            const color = errMins <= 30 ? '#5E8A5E' : errMins <= 60 ? '#C4923A' : '#B85C5C';
             summaryEl.innerHTML = `Avg prediction error: <span style="color:${color}; font-weight: 600;">&plusmn;${errMins} min</span> (${withFeedback.length} predictions)`;
         } else if (withFeedback.length > 0) {
             summaryEl.textContent = `${withFeedback.length} prediction(s) tracked — need 3+ for accuracy score`;
@@ -445,27 +445,27 @@ function renderSleepCalendar() {
         let bgColor, borderColor, textColor, statusText, wakeTimeDisplay;
 
         if (!hasData) {
-            bgColor = 'rgba(0,0,0,0.2)';
-            borderColor = 'rgba(255,255,255,0.1)';
-            textColor = '#6e7681';
+            bgColor = '#EFECE6';
+            borderColor = 'rgba(0,0,0,0.08)';
+            textColor = '#9C948B';
             statusText = '—';
             wakeTimeDisplay = '';
         } else if (hoursSlept > 6.5) {
-            bgColor = 'rgba(16, 185, 129, 0.2)';
-            borderColor = '#10b981';
-            textColor = '#10b981';
+            bgColor = 'rgba(94, 138, 94, 0.15)';
+            borderColor = '#5E8A5E';
+            textColor = '#5E8A5E';
             statusText = `${hoursSlept.toFixed(1)}h`;
             wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
         } else if (hoursSlept >= 4.5) {
-            bgColor = 'rgba(245, 158, 11, 0.2)';
-            borderColor = '#f59e0b';
-            textColor = '#f59e0b';
+            bgColor = 'rgba(196, 146, 58, 0.15)';
+            borderColor = '#C4923A';
+            textColor = '#C4923A';
             statusText = `${hoursSlept.toFixed(1)}h`;
             wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
         } else {
-            bgColor = 'rgba(239, 68, 68, 0.2)';
-            borderColor = '#ef4444';
-            textColor = '#ef4444';
+            bgColor = 'rgba(184, 92, 92, 0.15)';
+            borderColor = '#B85C5C';
+            textColor = '#B85C5C';
             statusText = `${hoursSlept.toFixed(1)}h ⚠️`;
             wakeTimeDisplay = wakeTime ? formatTime12(wakeTime) : '';
         }
@@ -479,13 +479,13 @@ function renderSleepCalendar() {
                 text-align: center;
                 cursor: pointer;
                 transition: transform 0.2s;
-                ${day.isToday ? 'box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);' : ''}
+                ${day.isToday ? 'box-shadow: 0 0 0 2px #6B7C5E;' : ''}
             " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                <div style="font-size: 0.75em; color: #b0b8c4; margin-bottom: 4px;">${day.dayName}</div>
-                <div style="font-size: 1.1em; font-weight: 600; color: #e6edf3; margin-bottom: 2px;">${day.dayNum}</div>
+                <div style="font-size: 0.75em; color: #9C948B; margin-bottom: 4px;">${day.dayName}</div>
+                <div style="font-size: 1.1em; font-weight: 600; color: #2C2825; margin-bottom: 2px;">${day.dayNum}</div>
                 <div style="font-size: 0.85em; font-weight: 600; color: ${textColor};">${statusText}</div>
-                ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #b0b8c4; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
-                ${day.isToday ? '<div style="font-size: 0.65em; color: #58a6ff; margin-top: 2px;">TODAY</div>' : ''}
+                ${wakeTimeDisplay ? `<div style="font-size: 0.65em; color: #9C948B; margin-top: 2px;">⏰ ${wakeTimeDisplay}</div>` : ''}
+                ${day.isToday ? '<div style="font-size: 0.65em; color: #6B7C5E; margin-top: 2px;">TODAY</div>' : ''}
             </div>
         `;
     }).join('');
@@ -506,23 +506,23 @@ function renderCircadianPhase() {
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                     <span style="font-size: 1.8em;">${analysis.icon}</span>
                     <div>
-                        <div style="font-size: 0.75em; color: #b0b8c4; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
+                        <div style="font-size: 0.75em; color: #6B635B; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
                         <div style="font-size: 1.2em; font-weight: 700; color: ${analysis.color};">${analysis.label}</div>
                     </div>
                 </div>
                 ${analysis.avgWakeTime ? `
-                    <div style="display: flex; gap: 20px; font-size: 0.85em; color: #b0b8c4;">
+                    <div style="display: flex; gap: 20px; font-size: 0.85em; color: #6B635B;">
                         <div>
-                            <span style="color: #e6edf3; font-weight: 600;">${minutesToTime(analysis.avgWakeTime)}</span> avg wake
+                            <span style="color: #2C2825; font-weight: 600;">${minutesToTime(analysis.avgWakeTime)}</span> avg wake
                         </div>
                         ${analysis.avgSleep ? `
                             <div>
-                                <span style="color: #e6edf3; font-weight: 600;">${analysis.avgSleep.toFixed(1)}h</span> avg sleep
+                                <span style="color: #2C2825; font-weight: 600;">${analysis.avgSleep.toFixed(1)}h</span> avg sleep
                             </div>
                         ` : ''}
                         ${analysis.dataPoints ? `
                             <div>
-                                <span style="color: #e6edf3; font-weight: 600;">${analysis.dataPoints}</span> days logged
+                                <span style="color: #2C2825; font-weight: 600;">${analysis.dataPoints}</span> days logged
                             </div>
                         ` : ''}
                     </div>
@@ -530,14 +530,14 @@ function renderCircadianPhase() {
             </div>
             ${analysis.consistency !== undefined && analysis.dataPoints >= 3 ? `
                 <div style="text-align: right;">
-                    <div style="font-size: 0.75em; color: #b0b8c4;">Consistency</div>
-                    <div style="font-size: 1.4em; font-weight: 700; color: ${analysis.consistency > 70 ? '#10b981' : analysis.consistency > 40 ? '#f59e0b' : '#ef4444'};">${Math.round(analysis.consistency)}%</div>
-                    ${analysis.stdDev ? `<div style="font-size: 0.7em; color: #6e7681;">±${Math.round(analysis.stdDev)}min variation</div>` : ''}
+                    <div style="font-size: 0.75em; color: #6B635B;">Consistency</div>
+                    <div style="font-size: 1.4em; font-weight: 700; color: ${analysis.consistency > 70 ? '#5E8A5E' : analysis.consistency > 40 ? '#C4923A' : '#B85C5C'};">${Math.round(analysis.consistency)}%</div>
+                    ${analysis.stdDev ? `<div style="font-size: 0.7em; color: #9C948B;">±${Math.round(analysis.stdDev)}min variation</div>` : ''}
                 </div>
             ` : ''}
         </div>
-        <div style="margin-top: 12px; padding: 12px; background: rgba(${analysis.color === '#ef4444' ? '239, 68, 68' : analysis.color === '#f59e0b' ? '245, 158, 11' : analysis.color === '#10b981' ? '16, 185, 129' : '88, 166, 255'}, 0.1); border-radius: 8px; border-left: 3px solid ${analysis.color};">
-            <div style="font-size: 0.85em; color: #c9d1d9; line-height: 1.5; white-space: pre-wrap;">${analysis.recommendation}</div>
+        <div style="margin-top: 12px; padding: 12px; background: rgba(${analysis.color === '#B85C5C' ? '184, 92, 92' : analysis.color === '#C4923A' ? '196, 146, 58' : analysis.color === '#5E8A5E' ? '94, 138, 94' : '94, 122, 138'}, 0.1); border-radius: 8px; border-left: 3px solid ${analysis.color};">
+            <div style="font-size: 0.85em; color: #2C2825; line-height: 1.5; white-space: pre-wrap;">${analysis.recommendation}</div>
         </div>
     `;
 }
@@ -1020,8 +1020,8 @@ function renderAccOverallGrade(stats, stats30) {
     if (!el) return;
     var hasEnough = stats.entriesWithFeedback >= 3;
     var avgErr = stats.avgAbsError ?? 0;
-    var gradeColor = avgErr <= 30 ? '#10b981' : avgErr <= 60 ? '#f59e0b' : '#ef4444';
-    var gradeBg = avgErr <= 30 ? 'rgba(16,185,129,0.1)' : avgErr <= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
+    var gradeColor = avgErr <= 30 ? '#5E8A5E' : avgErr <= 60 ? '#C4923A' : '#B85C5C';
+    var gradeBg = avgErr <= 30 ? 'rgba(94,138,94,0.1)' : avgErr <= 60 ? 'rgba(196,146,58,0.1)' : 'rgba(184,92,92,0.1)';
 
     var html = '<div class="acc-hero" style="background:' + gradeBg + ';">';
     html += '<div class="acc-hero__value" style="color:' + gradeColor + ';">' + (hasEnough ? '\u00b1' + avgErr + ' min' : '--') + '</div>';
@@ -1029,12 +1029,12 @@ function renderAccOverallGrade(stats, stats30) {
     html += '<div class="acc-hero__sub">Based on ' + stats.entriesWithFeedback + ' predictions with feedback out of ' + stats.totalEntries + ' total days</div>';
     if (hasEnough) {
         html += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.82em;">';
-        html += '<span>Within 30min: <strong style="color:' + (stats.within30min >= 50 ? '#10b981' : '#f59e0b') + ';">' + stats.within30min + '%</strong></span>';
-        html += '<span>Within 60min: <strong style="color:' + (stats.within60min >= 70 ? '#10b981' : '#f59e0b') + ';">' + stats.within60min + '%</strong></span>';
+        html += '<span>Within 30min: <strong style="color:' + (stats.within30min >= 50 ? '#5E8A5E' : '#C4923A') + ';">' + stats.within30min + '%</strong></span>';
+        html += '<span>Within 60min: <strong style="color:' + (stats.within60min >= 70 ? '#5E8A5E' : '#C4923A') + ';">' + stats.within60min + '%</strong></span>';
         html += '</div>';
         if (stats.trend) {
             var trendLabel = stats.trend === 'improving' ? 'Improving &#8593;' : stats.trend === 'worsening' ? 'Worsening &#8595;' : 'Stable &#8596;';
-            var trendColor = stats.trend === 'improving' ? '#10b981' : stats.trend === 'worsening' ? '#ef4444' : '#6e7681';
+            var trendColor = stats.trend === 'improving' ? '#5E8A5E' : stats.trend === 'worsening' ? '#B85C5C' : '#9C948B';
             html += '<div style="margin-top:6px;font-size:0.78em;color:' + trendColor + ';">Trend: ' + trendLabel + '</div>';
         }
     }
@@ -1056,7 +1056,7 @@ function renderAccMethodology(stats) {
         ['Within 30 min = <code>' + (stats.within30min ?? '--') + '%</code>, Within 60 min = <code>' + (stats.within60min ?? '--') + '%</code>', 'Percentage of predictions within those windows']
     ];
     steps.forEach(function(step, i) {
-        body += '<div class="ins-method-step"><div class="ins-method-num">' + (i + 1) + '</div><div class="ins-method-text"><strong>' + step[0] + '</strong><br><span style="color:#6e7681;">' + step[1] + '</span></div></div>';
+        body += '<div class="ins-method-step"><div class="ins-method-num">' + (i + 1) + '</div><div class="ins-method-text"><strong>' + step[0] + '</strong><br><span style="color:#9C948B;">' + step[1] + '</span></div></div>';
     });
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accMethodology\')">' +
         '<span class="ins-section-title">&#128270; How It\'s Calculated</span>' +
@@ -1089,7 +1089,7 @@ function renderAccErrorDistribution(stats) {
     });
     var maxCount = Math.max.apply(null, buckets.map(function(b) { return b.count; }));
     var body = '';
-    var colors = ['#10b981', '#10b981', '#f59e0b', '#ef4444', '#ef4444'];
+    var colors = ['#5E8A5E', '#5E8A5E', '#C4923A', '#B85C5C', '#B85C5C'];
     buckets.forEach(function(b, i) {
         var pct = maxCount > 0 ? Math.round(b.count / maxCount * 100) : 0;
         var pctTotal = entries.length > 0 ? Math.round(b.count / entries.length * 100) : 0;
@@ -1110,7 +1110,7 @@ function renderAccDirectionalBias(stats) {
 
     var avgError = stats.avgError; // signed
     var biasDir = avgError > 15 ? 'late (predicts too early)' : avgError < -15 ? 'early (predicts too late)' : 'neutral';
-    var biasColor = Math.abs(avgError) <= 15 ? '#10b981' : Math.abs(avgError) <= 30 ? '#f59e0b' : '#ef4444';
+    var biasColor = Math.abs(avgError) <= 15 ? '#5E8A5E' : Math.abs(avgError) <= 30 ? '#C4923A' : '#B85C5C';
 
     var body = '<div class="ins-metric-row"><span class="ins-metric-label">Overall Bias</span><span class="ins-metric-value" style="color:' + biasColor + ';">' + (avgError > 0 ? '+' : '') + avgError + 'min (' + biasDir + ')</span></div>';
 
@@ -1132,7 +1132,7 @@ function renderAccDirectionalBias(stats) {
     // Recommendation
     if (Math.abs(avgError) > 15) {
         var rec = avgError > 0 ? 'Consider lowering your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg' : 'Consider raising your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg';
-        body += '<div style="font-size:0.78em;color:#a78bfa;margin-top:8px;padding:8px;background:rgba(139,92,246,0.1);border-radius:6px;">' + rec + '</div>';
+        body += '<div style="font-size:0.78em;color:#6B7C5E;margin-top:8px;padding:8px;background:rgba(107,124,94,0.08);border-radius:6px;">' + rec + '</div>';
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accDirectionalBias\')">' +
         '<span class="ins-section-title">&#128269; Directional Bias</span>' +
@@ -1165,10 +1165,10 @@ function renderAccContextBreakdowns() {
         var deltas = matched.map(function(e) { return computeSleepDelta(e.predictedSleep, e.actualSleep); });
         var avgDelta = Math.round(deltas.reduce(function(s, d) { return s + d; }, 0) / deltas.length);
         var avgAbs = Math.round(deltas.map(function(d) { return Math.abs(d); }).reduce(function(s, d) { return s + d; }, 0) / deltas.length);
-        var biasColor = Math.abs(avgDelta) <= 15 ? '#10b981' : Math.abs(avgDelta) <= 30 ? '#f59e0b' : '#ef4444';
+        var biasColor = Math.abs(avgDelta) <= 15 ? '#5E8A5E' : Math.abs(avgDelta) <= 30 ? '#C4923A' : '#B85C5C';
         body += '<div class="ins-metric-row"><span class="ins-metric-label">' + ctx.icon + ' ' + ctx.label + ' (' + matched.length + ')</span><span class="ins-metric-value">\u00b1' + avgAbs + 'min <span style="color:' + biasColor + ';font-size:0.85em;">bias ' + (avgDelta > 0 ? '+' : '') + avgDelta + '</span></span></div>';
     });
-    if (!body) body = '<div style="text-align:center;color:#8b949e;padding:12px;">Not enough context data yet.</div>';
+    if (!body) body = '<div style="text-align:center;color:#9C948B;padding:12px;">Not enough context data yet.</div>';
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accContextBreakdowns\')">' +
         '<span class="ins-section-title">&#128203; Context Breakdowns</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
@@ -1187,7 +1187,7 @@ function renderAccDataInventory() {
     var rows = withBoth.slice(0, 50).map(function(d) {
         var delta = computeSleepDelta(d.predictedSleep, d.actualSleep);
         var absDelta = Math.abs(delta);
-        var deltaColor = absDelta <= 30 ? '#10b981' : absDelta <= 60 ? '#f59e0b' : '#ef4444';
+        var deltaColor = absDelta <= 30 ? '#5E8A5E' : absDelta <= 60 ? '#C4923A' : '#B85C5C';
         var dir = delta > 0 ? 'Late' : delta < 0 ? 'Early' : 'Exact';
         var dateObj = parseLocalDate(d.date);
         var dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1196,7 +1196,7 @@ function renderAccDataInventory() {
 
     var body = '<div class="ins-table-wrap"><table class="ins-table"><thead><tr><th>Date</th><th>Predicted</th><th>Actual</th><th>Error</th><th>Dir</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     if (withBoth.length > 50) {
-        body += '<div style="text-align:center;font-size:0.72em;color:#6e7681;margin-top:6px;">Showing latest 50 of ' + withBoth.length + ' entries</div>';
+        body += '<div style="text-align:center;font-size:0.72em;color:#9C948B;margin-top:6px;">Showing latest 50 of ' + withBoth.length + ' entries</div>';
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accDataInventory\')">' +
         '<span class="ins-section-title">&#128196; Data Inventory</span>' +
@@ -1238,7 +1238,7 @@ function renderAccInputVerification() {
         ['Caffeine Today', caff.length > 0 ? caff.map(function(c) { return c.amount + 'mg @ ' + c.time; }).join(', ') : 'None'],
         ['Active Modifiers', modifiers.length > 0 ? modifiers.join(', ') : 'None']
     ];
-    var body = '<div style="font-size:0.72em;color:#6e7681;margin-bottom:8px;">This is exactly what the prediction algorithm sees right now.</div>';
+    var body = '<div style="font-size:0.72em;color:#9C948B;margin-bottom:8px;">This is exactly what the prediction algorithm sees right now.</div>';
     body += rows.map(function(r) {
         return '<div class="ins-metric-row"><span class="ins-metric-label">' + r[0] + '</span><span class="ins-metric-value">' + r[1] + '</span></div>';
     }).join('');
@@ -1258,7 +1258,7 @@ function renderAccuracyHeroHint(stats) {
     if (!el) return;
     if (!stats || stats.entriesWithFeedback < 3) { el.style.display = 'none'; return; }
     var avgErr = stats.avgAbsError;
-    var color = avgErr <= 30 ? '#10b981' : avgErr <= 60 ? '#f59e0b' : '#ef4444';
+    var color = avgErr <= 30 ? '#5E8A5E' : avgErr <= 60 ? '#C4923A' : '#B85C5C';
     el.textContent = '';
     var span = document.createElement('span');
     span.style.color = color;
@@ -1310,18 +1310,18 @@ function calculateSleepStats(data) {
     var prev7 = data.slice(-14, -7).filter(function(d) { return d.hoursSlept !== null; });
 
     var trend = '\u2014';
-    var trendColor = '#8b949e';
+    var trendColor = '#9C948B';
     if (last7.length >= 3 && prev7.length >= 3) {
         var recentAvg = last7.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / last7.length;
         var olderAvg = prev7.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / prev7.length;
         var diff = recentAvg - olderAvg;
-        if (diff > 0.3) { trend = '\u2191+' + diff.toFixed(1) + 'h'; trendColor = '#10b981'; }
-        else if (diff < -0.3) { trend = '\u2193' + diff.toFixed(1) + 'h'; trendColor = '#ef4444'; }
-        else { trend = '\u2192 Stable'; trendColor = '#60a5fa'; }
+        if (diff > 0.3) { trend = '\u2191+' + diff.toFixed(1) + 'h'; trendColor = '#5E8A5E'; }
+        else if (diff < -0.3) { trend = '\u2193' + diff.toFixed(1) + 'h'; trendColor = '#B85C5C'; }
+        else { trend = '\u2192 Stable'; trendColor = '#5E7A8A'; }
     } else if (last7.length >= 2) {
         var recentAvg2 = last7.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / last7.length;
         trend = recentAvg2.toFixed(1) + 'h avg';
-        trendColor = recentAvg2 >= 7 ? '#10b981' : recentAvg2 >= 5.5 ? '#60a5fa' : '#f59e0b';
+        trendColor = recentAvg2 >= 7 ? '#5E8A5E' : recentAvg2 >= 5.5 ? '#5E7A8A' : '#C4923A';
     }
 
     var currentStreak = 0, longestStreak = 0, tempStreak = 0;
@@ -1371,14 +1371,14 @@ function renderSIStatsGrid(stats) {
     if (!grid) return;
 
     var cards = [
-        { key: 'avg', label: '30-Day Avg', value: stats.daysLogged > 0 ? stats.avg.toFixed(1) + 'h' : '--', color: stats.avg >= 7 ? '#10b981' : stats.avg >= 5.5 ? '#60a5fa' : '#f59e0b' },
-        { key: 'best', label: 'Best Night', value: stats.daysLogged > 0 ? stats.best.toFixed(1) + 'h' : '--', color: '#8b5cf6' },
-        { key: 'worst', label: 'Worst Night', value: stats.daysLogged > 0 ? stats.worst.toFixed(1) + 'h' : '--', color: stats.worst >= 6 ? '#60a5fa' : stats.worst >= 4 ? '#f59e0b' : '#ef4444' },
+        { key: 'avg', label: '30-Day Avg', value: stats.daysLogged > 0 ? stats.avg.toFixed(1) + 'h' : '--', color: stats.avg >= 7 ? '#5E8A5E' : stats.avg >= 5.5 ? '#5E7A8A' : '#C4923A' },
+        { key: 'best', label: 'Best Night', value: stats.daysLogged > 0 ? stats.best.toFixed(1) + 'h' : '--', color: '#6B7C5E' },
+        { key: 'worst', label: 'Worst Night', value: stats.daysLogged > 0 ? stats.worst.toFixed(1) + 'h' : '--', color: stats.worst >= 6 ? '#5E7A8A' : stats.worst >= 4 ? '#C4923A' : '#B85C5C' },
         { key: 'trend', label: '7-Day Trend', value: stats.trend, color: stats.trendColor },
-        { key: 'streak', label: 'Streak', value: stats.currentStreak > 0 ? stats.currentStreak + '\ud83d\udd25' : '0', color: stats.currentStreak >= 7 ? '#10b981' : stats.currentStreak > 0 ? '#fbbf24' : '#6b7280' },
-        { key: 'debt', label: 'Sleep Debt', value: stats.sleepDebt > 0 ? stats.sleepDebt.toFixed(1) + 'h' : '0h \u2713', color: stats.sleepDebt > 10 ? '#ef4444' : stats.sleepDebt > 5 ? '#f59e0b' : stats.sleepDebt > 0 ? '#f472b6' : '#10b981' },
-        { key: 'score', label: 'Week Score', value: stats.weekScore > 0 ? stats.weekScore : '--', color: stats.weekScore >= 80 ? '#10b981' : stats.weekScore >= 60 ? '#22d3ee' : stats.weekScore >= 40 ? '#f59e0b' : '#ef4444' },
-        { key: 'recovery', label: 'Recovery', value: stats.sleepDebt > 0 ? stats.daysToRecover + ' days' : '\u2713 Clear', color: stats.daysToRecover > 7 ? '#ef4444' : stats.daysToRecover > 3 ? '#f59e0b' : stats.sleepDebt > 0 ? '#a8a29e' : '#10b981' }
+        { key: 'streak', label: 'Streak', value: stats.currentStreak > 0 ? stats.currentStreak + '\ud83d\udd25' : '0', color: stats.currentStreak >= 7 ? '#5E8A5E' : stats.currentStreak > 0 ? '#C4923A' : '#C4BCB3' },
+        { key: 'debt', label: 'Sleep Debt', value: stats.sleepDebt > 0 ? stats.sleepDebt.toFixed(1) + 'h' : '0h \u2713', color: stats.sleepDebt > 10 ? '#B85C5C' : stats.sleepDebt > 5 ? '#C4923A' : stats.sleepDebt > 0 ? '#B85C5C' : '#5E8A5E' },
+        { key: 'score', label: 'Week Score', value: stats.weekScore > 0 ? stats.weekScore : '--', color: stats.weekScore >= 80 ? '#5E8A5E' : stats.weekScore >= 60 ? '#5E7A8A' : stats.weekScore >= 40 ? '#C4923A' : '#B85C5C' },
+        { key: 'recovery', label: 'Recovery', value: stats.sleepDebt > 0 ? stats.daysToRecover + ' days' : '\u2713 Clear', color: stats.daysToRecover > 7 ? '#B85C5C' : stats.daysToRecover > 3 ? '#C4923A' : stats.sleepDebt > 0 ? '#9C948B' : '#5E8A5E' }
     ];
 
     grid.innerHTML = cards.map(function(c) {
@@ -1473,24 +1473,24 @@ function renderSleepAchievements(data, validData, currentStreak, longestStreak, 
     const best = validData.length > 0 ? Math.max(...validData.map(d => d.hoursSlept)) : 0;
 
     const achievements = [
-        { id: 'first_log', icon: '📝', name: 'First Log', unlocked: validData.length >= 1, color: '#60a5fa' },
-        { id: 'week_warrior', icon: '📅', name: 'Week Warrior', unlocked: validData.length >= 7, color: '#8b5cf6' },
-        { id: 'month_master', icon: '🗓️', name: 'Month Master', unlocked: validData.length >= 30, color: '#f59e0b' },
-        { id: 'streak_3', icon: '🔥', name: '3-Day Streak', unlocked: longestStreak >= 3, color: '#ef4444' },
-        { id: 'streak_7', icon: '⚡', name: 'Week Streak', unlocked: longestStreak >= 7, color: '#fbbf24' },
-        { id: 'debt_free', icon: '💎', name: 'Debt Free', unlocked: sleepDebt === 0 && validData.length >= 7, color: '#22d3ee' },
-        { id: 'perfect_night', icon: '🌟', name: 'Perfect Night', unlocked: best >= 8, color: '#10b981' },
-        { id: 'recovery_king', icon: '👑', name: 'Recovery King', unlocked: best >= 10, color: '#f472b6' },
-        { id: 'score_80', icon: '🏆', name: 'A+ Student', unlocked: weekScore >= 80, color: '#10b981' },
-        { id: 'consistent', icon: '🎯', name: 'Consistent', unlocked: avg >= 7 && validData.length >= 7, color: '#6366f1' }
+        { id: 'first_log', icon: '📝', name: 'First Log', unlocked: validData.length >= 1, color: '#5E7A8A' },
+        { id: 'week_warrior', icon: '📅', name: 'Week Warrior', unlocked: validData.length >= 7, color: '#6B7C5E' },
+        { id: 'month_master', icon: '🗓️', name: 'Month Master', unlocked: validData.length >= 30, color: '#C4923A' },
+        { id: 'streak_3', icon: '🔥', name: '3-Day Streak', unlocked: longestStreak >= 3, color: '#B85C5C' },
+        { id: 'streak_7', icon: '⚡', name: 'Week Streak', unlocked: longestStreak >= 7, color: '#C4923A' },
+        { id: 'debt_free', icon: '💎', name: 'Debt Free', unlocked: sleepDebt === 0 && validData.length >= 7, color: '#5E7A8A' },
+        { id: 'perfect_night', icon: '🌟', name: 'Perfect Night', unlocked: best >= 8, color: '#5E8A5E' },
+        { id: 'recovery_king', icon: '👑', name: 'Recovery King', unlocked: best >= 10, color: '#B85C5C' },
+        { id: 'score_80', icon: '🏆', name: 'A+ Student', unlocked: weekScore >= 80, color: '#5E8A5E' },
+        { id: 'consistent', icon: '🎯', name: 'Consistent', unlocked: avg >= 7 && validData.length >= 7, color: '#6B7C5E' }
     ];
 
     container.innerHTML = achievements.map(function(a) {
         return '<div class="si-badge' + (a.unlocked ? '' : ' si-badge--locked') + '" onclick="toggleExplainer(\'' + a.id + '\')" style="' +
-            'background:' + (a.unlocked ? 'rgba(' + hexToRgb(a.color) + ', 0.15)' : 'rgba(0,0,0,0.2)') + ';' +
-            'border-color:' + (a.unlocked ? a.color : 'rgba(255,255,255,0.1)') + ';">' +
+            'background:' + (a.unlocked ? 'rgba(' + hexToRgb(a.color) + ', 0.15)' : '#EFECE6') + ';' +
+            'border-color:' + (a.unlocked ? a.color : 'rgba(0,0,0,0.08)') + ';">' +
             '<div class="si-badge__icon"' + (a.unlocked ? '' : ' style="filter:grayscale(100%);"') + '>' + a.icon + '</div>' +
-            '<div class="si-badge__name" style="color:' + (a.unlocked ? a.color : '#6b7280') + ';">' + a.name + '</div>' +
+            '<div class="si-badge__name" style="color:' + (a.unlocked ? a.color : '#C4BCB3') + ';">' + a.name + '</div>' +
         '</div>';
     }).join('');
 }
@@ -1505,18 +1505,18 @@ function renderSleepHistoryList(data) {
     container.innerHTML = reversed.map(function(d) {
         var hasData = d.hoursSlept !== null;
         var statusClass = !hasData ? '' : d.hoursSlept >= 7 ? 'green' : d.hoursSlept >= 5.5 ? 'blue' : d.hoursSlept >= 4.5 ? 'yellow' : 'red';
-        var textColor = !hasData ? '#6e7681' : d.hoursSlept >= 7 ? '#10b981' : d.hoursSlept >= 5.5 ? '#60a5fa' : d.hoursSlept >= 4.5 ? '#f59e0b' : '#ef4444';
+        var textColor = !hasData ? '#9C948B' : d.hoursSlept >= 7 ? '#5E8A5E' : d.hoursSlept >= 5.5 ? '#5E7A8A' : d.hoursSlept >= 4.5 ? '#C4923A' : '#B85C5C';
         var statusIcon = !hasData ? '\u2014' : d.hoursSlept >= 7 ? '\u2713' : d.hoursSlept >= 5.5 ? '\u25cb' : d.hoursSlept >= 4.5 ? '\u26a0\ufe0f' : '\ud83d\udea8';
 
         return '<div class="si-history-row' + (statusClass ? ' si-history-row--' + statusClass : '') + (d.isToday ? ' si-history-row--today' : '') + '" onclick="openSleepEditModal(\'' + d.dateStr + '\')">' +
             '<div style="display:flex;align-items:center;gap:12px;">' +
                 '<div style="font-size:1.2em;">' + statusIcon + '</div>' +
                 '<div>' +
-                    '<div style="font-weight:600;color:#e6edf3;font-size:0.9em;">' + d.dayName + ', ' + d.dayLabel +
-                        (d.isToday ? ' <span style="color:#58a6ff;font-size:0.75em;margin-left:8px;">TODAY</span>' : '') +
+                    '<div style="font-weight:600;color:#2C2825;font-size:0.9em;">' + d.dayName + ', ' + d.dayLabel +
+                        (d.isToday ? ' <span style="color:#6B7C5E;font-size:0.75em;margin-left:8px;">TODAY</span>' : '') +
                     '</div>' +
-                    (hasData ? '<div style="font-size:0.8em;color:#b0b8c4;">' + d.hoursSlept.toFixed(1) + ' hours of sleep</div>' :
-                               '<div style="font-size:0.8em;color:#6e7681;">No data logged</div>') +
+                    (hasData ? '<div style="font-size:0.8em;color:#6B635B;">' + d.hoursSlept.toFixed(1) + ' hours of sleep</div>' :
+                               '<div style="font-size:0.8em;color:#9C948B;">No data logged</div>') +
                 '</div>' +
             '</div>' +
             '<div style="font-size:1.3em;font-weight:700;color:' + textColor + ';">' + (hasData ? d.hoursSlept.toFixed(1) + 'h' : '\u2014') + '</div>' +
@@ -1562,7 +1562,7 @@ function renderSleepCalendarMonth() {
         var isFuture = dateStr > todayStr;
 
         if (isFuture) {
-            html += '<div class="sleep-cal-day empty"><span class="cal-day-num" style="color:#3b4048;">' + d + '</span></div>';
+            html += '<div class="sleep-cal-day empty"><span class="cal-day-num" style="color:#C4BCB3;">' + d + '</span></div>';
         } else {
             html += '<div class="sleep-cal-day ' + status + (isToday ? ' today' : '') + '" onclick="showSleepDayDetails(\'' + dateStr + '\')">' +
                 '<span class="cal-day-num">' + d + '</span>' +
@@ -1617,19 +1617,19 @@ function renderCalendarMonthStats(year, month, daysInMonth, todayStr) {
     }
 
     if (daysWithData === 0) {
-        el.innerHTML = '<div style="text-align:center;color:#6e7681;font-size:0.85em;padding:8px;">No sleep data for this month.</div>';
+        el.innerHTML = '<div style="text-align:center;color:#9C948B;font-size:0.85em;padding:8px;">No sleep data for this month.</div>';
         return;
     }
 
     var avg = totalHours / daysWithData;
-    var avgColor = avg >= 7 ? '#10b981' : avg >= 5.5 ? '#f59e0b' : '#ef4444';
+    var avgColor = avg >= 7 ? '#5E8A5E' : avg >= 5.5 ? '#C4923A' : '#B85C5C';
 
-    el.innerHTML = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.82em;color:#b0b8c4;padding:8px 0;">' +
+    el.innerHTML = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.82em;color:#6B635B;padding:8px 0;">' +
         '<span>Avg: <strong style="color:' + avgColor + ';">' + avg.toFixed(1) + 'h</strong></span>' +
-        '<span>Days tracked: <strong style="color:#e6edf3;">' + daysWithData + '</strong></span>' +
-        (statusCounts.great > 0 ? '<span style="color:#10b981;">' + statusCounts.great + ' great</span>' : '') +
-        (statusCounts.good > 0 ? '<span style="color:#60a5fa;">' + statusCounts.good + ' good</span>' : '') +
-        ((statusCounts.poor + statusCounts.critical + statusCounts.allnighter) > 0 ? '<span style="color:#ef4444;">' + (statusCounts.poor + statusCounts.critical + statusCounts.allnighter) + ' poor</span>' : '') +
+        '<span>Days tracked: <strong style="color:#2C2825;">' + daysWithData + '</strong></span>' +
+        (statusCounts.great > 0 ? '<span style="color:#5E8A5E;">' + statusCounts.great + ' great</span>' : '') +
+        (statusCounts.good > 0 ? '<span style="color:#5E7A8A;">' + statusCounts.good + ' good</span>' : '') +
+        ((statusCounts.poor + statusCounts.critical + statusCounts.allnighter) > 0 ? '<span style="color:#B85C5C;">' + (statusCounts.poor + statusCounts.critical + statusCounts.allnighter) + ' poor</span>' : '') +
         '</div>';
 }
 
@@ -1658,14 +1658,14 @@ function showSleepDayDetails(dateStr) {
 
     var status = computeSleepStatus(hoursSlept);
     var statusColors = {
-        great: '#10b981', good: '#60a5fa', ok: '#f59e0b', poor: '#ef4444',
-        critical: '#ef4444', allnighter: '#7f1d1d', no_data: '#6b7280'
+        great: '#5E8A5E', good: '#5E7A8A', ok: '#C4923A', poor: '#B85C5C',
+        critical: '#994444', allnighter: '#7A3B3B', no_data: '#9C948B'
     };
     var statusLabels = {
         great: '8h+ Great', good: '7-8h Good', ok: '5.5-7h OK', poor: '4-5.5h Poor',
         critical: '<4h Critical', allnighter: 'All-Nighter', no_data: 'No Data'
     };
-    var statusColor = statusColors[status] || '#6b7280';
+    var statusColor = statusColors[status] || '#9C948B';
 
     var html = '';
 
@@ -1673,7 +1673,7 @@ function showSleepDayDetails(dateStr) {
     html += '<div style="text-align:center;padding:12px;margin-bottom:12px;border-radius:10px;background:rgba(' + hexToRgb(statusColor) + ',0.15);border:1px solid ' + statusColor + ';">';
     html += '<div style="font-size:2em;font-weight:700;color:' + statusColor + ';">' + (hoursSlept !== null ? hoursSlept.toFixed(1) + 'h' : '--') + '</div>';
     html += '<div style="font-size:0.85em;color:' + statusColor + ';">' + statusLabels[status] + '</div>';
-    if (wakeTime) html += '<div style="font-size:0.8em;color:#b0b8c4;margin-top:4px;">Wake: ' + formatTime12(wakeTime) + '</div>';
+    if (wakeTime) html += '<div style="font-size:0.8em;color:#6B635B;margin-top:4px;">Wake: ' + formatTime12(wakeTime) + '</div>';
     html += '</div>';
 
     // Prediction accuracy
@@ -1681,21 +1681,21 @@ function showSleepDayDetails(dateStr) {
         var predDisplay = predictionEntry.predictedSleep !== null && predictionEntry.predictedSleep !== undefined
             ? formatTime12(minutesToTime(predictionEntry.predictedSleep > 24*60 ? predictionEntry.predictedSleep - 24*60 : predictionEntry.predictedSleep))
             : '--';
-        html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">';
-        html += '<div style="font-size:0.78em;color:#c084fc;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Prediction</div>';
+        html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(107,124,94,0.08);border:1px solid rgba(107,124,94,0.15);">';
+        html += '<div style="font-size:0.78em;color:#6B7C5E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Prediction</div>';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-        html += '<span style="color:#e6edf3;">Predicted: <strong>' + predDisplay + '</strong></span>';
+        html += '<span style="color:#2C2825;">Predicted: <strong>' + predDisplay + '</strong></span>';
         if (predictionEntry.actualSleep !== null && predictionEntry.actualSleep !== undefined && !isNaN(predictionEntry.actualSleep)) {
             var actualDisplay = formatTime12(minutesToTime(predictionEntry.actualSleep > 1440 ? predictionEntry.actualSleep - 1440 : predictionEntry.actualSleep));
             var delta = computeSleepDelta(predictionEntry.predictedSleep, predictionEntry.actualSleep);
             var absDelta = Math.abs(Math.round(delta));
-            var deltaColor = absDelta <= 30 ? '#10b981' : absDelta <= 60 ? '#f59e0b' : '#ef4444';
+            var deltaColor = absDelta <= 30 ? '#5E8A5E' : absDelta <= 60 ? '#C4923A' : '#B85C5C';
             var deltaDir = delta > 0 ? 'late' : 'early';
             html += '<span style="color:' + deltaColor + ';font-weight:600;">' + absDelta + 'min ' + deltaDir + '</span>';
             html += '</div>';
-            html += '<div style="font-size:0.85em;color:#b0b8c4;margin-top:4px;">Actual sleep onset: ' + actualDisplay + '</div>';
+            html += '<div style="font-size:0.85em;color:#6B635B;margin-top:4px;">Actual sleep onset: ' + actualDisplay + '</div>';
         } else {
-            html += '<span style="color:#8b949e;font-size:0.85em;">Awaiting feedback</span>';
+            html += '<span style="color:#9C948B;font-size:0.85em;">Awaiting feedback</span>';
             html += '</div>';
         }
         html += '</div>';
@@ -1704,21 +1704,21 @@ function showSleepDayDetails(dateStr) {
     // Medications and Caffeine (from daily log)
     if (dailyLog) {
         if (dailyLog.medications && dailyLog.medications.length > 0) {
-            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
-            html += '<div style="font-size:0.78em;color:#c084fc;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Medications</div>';
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:#EFECE6;">';
+            html += '<div style="font-size:0.78em;color:#6B7C5E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Medications</div>';
             dailyLog.medications.forEach(function(m) {
-                html += '<div style="font-size:0.85em;color:#e6edf3;margin-bottom:2px;">' + escapeHtml(m.dose + 'mg at ' + (m.time || '--')) + '</div>';
+                html += '<div style="font-size:0.85em;color:#2C2825;margin-bottom:2px;">' + escapeHtml(m.dose + 'mg at ' + (m.time || '--')) + '</div>';
             });
-            if (dailyLog.totalAmpDose) html += '<div style="font-size:0.8em;color:#8b9cb6;margin-top:4px;">Total: ' + dailyLog.totalAmpDose + 'mg</div>';
+            if (dailyLog.totalAmpDose) html += '<div style="font-size:0.8em;color:#9C948B;margin-top:4px;">Total: ' + dailyLog.totalAmpDose + 'mg</div>';
             html += '</div>';
         }
         if (dailyLog.caffeine && dailyLog.caffeine.length > 0) {
-            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
-            html += '<div style="font-size:0.78em;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Caffeine</div>';
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:#EFECE6;">';
+            html += '<div style="font-size:0.78em;color:#C4923A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Caffeine</div>';
             dailyLog.caffeine.forEach(function(c) {
-                html += '<div style="font-size:0.85em;color:#e6edf3;margin-bottom:2px;">' + escapeHtml((c.amount || 0) + 'mg ' + (c.name || '') + ' at ' + (c.time || '--')) + '</div>';
+                html += '<div style="font-size:0.85em;color:#2C2825;margin-bottom:2px;">' + escapeHtml((c.amount || 0) + 'mg ' + (c.name || '') + ' at ' + (c.time || '--')) + '</div>';
             });
-            if (dailyLog.totalCaffDose) html += '<div style="font-size:0.8em;color:#8b9cb6;margin-top:4px;">Total: ' + dailyLog.totalCaffDose + 'mg</div>';
+            if (dailyLog.totalCaffDose) html += '<div style="font-size:0.8em;color:#9C948B;margin-top:4px;">Total: ' + dailyLog.totalCaffDose + 'mg</div>';
             html += '</div>';
         }
 
@@ -1729,36 +1729,36 @@ function showSleepDayDetails(dateStr) {
         if (dailyLog.hadSauna) mods.push('Sauna');
         if (dailyLog.allNighterMode) mods.push('All-Nighter');
         if (mods.length > 0) {
-            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
-            html += '<div style="font-size:0.78em;color:#10b981;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Modifiers</div>';
-            html += '<div style="font-size:0.85em;color:#e6edf3;">' + mods.join(' &middot; ') + '</div>';
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:#EFECE6;">';
+            html += '<div style="font-size:0.78em;color:#5E8A5E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Modifiers</div>';
+            html += '<div style="font-size:0.85em;color:#2C2825;">' + mods.join(' &middot; ') + '</div>';
             html += '</div>';
         }
 
         // Parameters
         if (dailyLog.effectiveThreshold || dailyLog.sleepDebtBonus || dailyLog.ampHalfLife) {
-            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
-            html += '<div style="font-size:0.78em;color:#60a5fa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Parameters</div>';
-            if (dailyLog.effectiveThreshold) html += '<div style="font-size:0.82em;color:#b0b8c4;">Threshold: ' + dailyLog.effectiveThreshold + 'mg</div>';
-            if (dailyLog.sleepDebtBonus) html += '<div style="font-size:0.82em;color:#b0b8c4;">Sleep debt bonus: +' + dailyLog.sleepDebtBonus + 'mg</div>';
-            if (dailyLog.ampHalfLife) html += '<div style="font-size:0.82em;color:#b0b8c4;">Amp half-life: ' + dailyLog.ampHalfLife + 'h</div>';
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:#EFECE6;">';
+            html += '<div style="font-size:0.78em;color:#5E7A8A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Parameters</div>';
+            if (dailyLog.effectiveThreshold) html += '<div style="font-size:0.82em;color:#6B635B;">Threshold: ' + dailyLog.effectiveThreshold + 'mg</div>';
+            if (dailyLog.sleepDebtBonus) html += '<div style="font-size:0.82em;color:#6B635B;">Sleep debt bonus: +' + dailyLog.sleepDebtBonus + 'mg</div>';
+            if (dailyLog.ampHalfLife) html += '<div style="font-size:0.82em;color:#6B635B;">Amp half-life: ' + dailyLog.ampHalfLife + 'h</div>';
             html += '</div>';
         }
 
         // Logic log (collapsible)
         if (dailyLog.logicLog) {
-            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:rgba(0,0,0,0.2);">';
-            html += '<div style="font-size:0.78em;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">Forecast Logic (tap to toggle)</div>';
-            html += '<pre style="display:none;font-size:0.72em;color:#b0b8c4;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;margin:0;">' + escapeHtml(dailyLog.logicLog) + '</pre>';
+            html += '<div style="padding:10px;margin-bottom:10px;border-radius:8px;background:#EFECE6;">';
+            html += '<div style="font-size:0.78em;color:#6B7C5E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">Forecast Logic (tap to toggle)</div>';
+            html += '<pre style="display:none;font-size:0.72em;color:#6B635B;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;margin:0;">' + escapeHtml(dailyLog.logicLog) + '</pre>';
             html += '</div>';
         }
     } else if (hoursSlept === null) {
-        html += '<div style="text-align:center;padding:16px;color:#6e7681;font-size:0.9em;">No data logged for this day.</div>';
+        html += '<div style="text-align:center;padding:16px;color:#9C948B;font-size:0.9em;">No data logged for this day.</div>';
     }
 
     // Edit button
     html += '<div style="text-align:center;margin-top:12px;">';
-    html += '<button onclick="closeSleepDayDetailModal(); openSleepEditModal(\'' + dateStr + '\')" style="padding:10px 24px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:8px;color:#c084fc;font-weight:600;cursor:pointer;">Edit Sleep Data</button>';
+    html += '<button onclick="closeSleepDayDetailModal(); openSleepEditModal(\'' + dateStr + '\')" style="padding:10px 24px;background:rgba(107,124,94,0.15);border:1px solid rgba(107,124,94,0.25);border-radius:8px;color:#6B7C5E;font-weight:600;cursor:pointer;">Edit Sleep Data</button>';
     html += '</div>';
 
     bodyEl.innerHTML = html;
@@ -2194,7 +2194,7 @@ function renderInsightsTab() {
         if (km) {
             km.style.display = 'block';
             km.className = 'ins-section ins-section--open';
-            km.innerHTML = '<div class="ins-section-body" style="display:block;text-align:center;color:#8b949e;padding:24px 0;">Save predictions and log actual sleep to see analytics.</div>';
+            km.innerHTML = '<div class="ins-section-body" style="display:block;text-align:center;color:#9C948B;padding:24px 0;">Save predictions and log actual sleep to see analytics.</div>';
         }
         return;
     }
@@ -2299,7 +2299,7 @@ function renderInsDoseResponse(days) {
         var pct = Math.round(b.days.length / maxCount * 100);
         body += '<div class="ins-bucket">' +
             '<span class="ins-bucket__label">' + b.label + '</span>' +
-            '<div class="ins-bucket__bar-wrap"><div class="ins-bucket__bar" style="width:' + pct + '%;background:#8b5cf6;"></div></div>' +
+            '<div class="ins-bucket__bar-wrap"><div class="ins-bucket__bar" style="width:' + pct + '%;background:#6B7C5E;"></div></div>' +
             '<span class="ins-bucket__value">' + _fmtOnset(Math.round(avgOnset)) + ' / ' + avgSleepH + ' (' + b.days.length + ')</span>' +
         '</div>';
     });
@@ -2323,11 +2323,11 @@ function renderInsCaffeineImpact(days) {
     var grid = '<div class="ins-compare-grid">';
     if (noCaff.length > 0) {
         var ncOnset = Math.round(noCaff.reduce(function(s, d) { return s + d.actualSleep; }, 0) / noCaff.length);
-        grid += '<div class="ins-compare-card" style="background:rgba(16,185,129,0.1);"><div class="ins-compare-card__label">No Caffeine</div><div class="ins-compare-card__value" style="color:#10b981;">' + _fmtOnset(ncOnset) + '</div><div class="ins-compare-card__sub">' + noCaff.length + ' days</div></div>';
+        grid += '<div class="ins-compare-card" style="background:rgba(94,138,94,0.1);"><div class="ins-compare-card__label">No Caffeine</div><div class="ins-compare-card__value" style="color:#5E8A5E;">' + _fmtOnset(ncOnset) + '</div><div class="ins-compare-card__sub">' + noCaff.length + ' days</div></div>';
     }
     if (yesCaff.length > 0) {
         var ycOnset = Math.round(yesCaff.reduce(function(s, d) { return s + d.actualSleep; }, 0) / yesCaff.length);
-        grid += '<div class="ins-compare-card" style="background:rgba(245,158,11,0.1);"><div class="ins-compare-card__label">With Caffeine</div><div class="ins-compare-card__value" style="color:#f59e0b;">' + _fmtOnset(ycOnset) + '</div><div class="ins-compare-card__sub">' + yesCaff.length + ' days</div></div>';
+        grid += '<div class="ins-compare-card" style="background:rgba(196,146,58,0.1);"><div class="ins-compare-card__label">With Caffeine</div><div class="ins-compare-card__value" style="color:#C4923A;">' + _fmtOnset(ycOnset) + '</div><div class="ins-compare-card__sub">' + yesCaff.length + ' days</div></div>';
     }
     grid += '</div>';
 
@@ -2371,11 +2371,11 @@ function renderInsSleepPatterns(days) {
     var body = '<div class="ins-compare-grid">';
     if (weekday.length > 0) {
         var wdOnset = Math.round(weekday.reduce(function(s, d) { return s + d.actualSleep; }, 0) / weekday.length);
-        body += '<div class="ins-compare-card" style="background:rgba(96,165,250,0.1);"><div class="ins-compare-card__label">Weekday (Mon-Thu)</div><div class="ins-compare-card__value" style="color:#60a5fa;">' + _fmtOnset(wdOnset) + '</div><div class="ins-compare-card__sub">' + weekday.length + ' nights</div></div>';
+        body += '<div class="ins-compare-card" style="background:rgba(94,122,138,0.1);"><div class="ins-compare-card__label">Weekday (Mon-Thu)</div><div class="ins-compare-card__value" style="color:#5E7A8A;">' + _fmtOnset(wdOnset) + '</div><div class="ins-compare-card__sub">' + weekday.length + ' nights</div></div>';
     }
     if (weekend.length > 0) {
         var weOnset = Math.round(weekend.reduce(function(s, d) { return s + d.actualSleep; }, 0) / weekend.length);
-        body += '<div class="ins-compare-card" style="background:rgba(168,85,247,0.1);"><div class="ins-compare-card__label">Weekend (Fri-Sun)</div><div class="ins-compare-card__value" style="color:#a855f7;">' + _fmtOnset(weOnset) + '</div><div class="ins-compare-card__sub">' + weekend.length + ' nights</div></div>';
+        body += '<div class="ins-compare-card" style="background:rgba(107,124,94,0.08);"><div class="ins-compare-card__label">Weekend (Fri-Sun)</div><div class="ins-compare-card__value" style="color:#6B7C5E;">' + _fmtOnset(weOnset) + '</div><div class="ins-compare-card__sub">' + weekend.length + ' nights</div></div>';
     }
     body += '</div>';
 
@@ -2394,16 +2394,16 @@ function renderInsSleepPatterns(days) {
         if (avg > worstAvg) { worstAvg = avg; worstDow = dow; }
     });
     if (bestDow !== null) {
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">Earliest Sleep Day</span><span class="ins-metric-value" style="color:#10b981;">' + _DOW_NAMES[bestDow] + ' (' + _fmtOnset(Math.round(bestAvg)) + ')</span></div>';
+        body += '<div class="ins-metric-row"><span class="ins-metric-label">Earliest Sleep Day</span><span class="ins-metric-value" style="color:#5E8A5E;">' + _DOW_NAMES[bestDow] + ' (' + _fmtOnset(Math.round(bestAvg)) + ')</span></div>';
     }
     if (worstDow !== null) {
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">Latest Sleep Day</span><span class="ins-metric-value" style="color:#ef4444;">' + _DOW_NAMES[worstDow] + ' (' + _fmtOnset(Math.round(worstAvg)) + ')</span></div>';
+        body += '<div class="ins-metric-row"><span class="ins-metric-label">Latest Sleep Day</span><span class="ins-metric-value" style="color:#B85C5C;">' + _DOW_NAMES[worstDow] + ' (' + _fmtOnset(Math.round(worstAvg)) + ')</span></div>';
     }
 
     // Consistency score (std dev of onset times)
     var onsets = withOnset.map(function(d) { return d.actualSleep; });
     var consistency = Math.round(_stdDev(onsets));
-    var consColor = consistency <= 60 ? '#10b981' : consistency <= 120 ? '#f59e0b' : '#ef4444';
+    var consColor = consistency <= 60 ? '#5E8A5E' : consistency <= 120 ? '#C4923A' : '#B85C5C';
     body += '<div class="ins-metric-row"><span class="ins-metric-label">Consistency (std dev)</span><span class="ins-metric-value" style="color:' + consColor + ';">&plusmn;' + consistency + 'min</span></div>';
 
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insSleepPatterns\')">' +
@@ -2434,14 +2434,14 @@ function renderInsModifierImpact(days) {
         var avgWithout = Math.round(withoutMod.reduce(function(s, d) { return s + d.actualSleep; }, 0) / withoutMod.length);
         var delta = avgWith - avgWithout;
         var deltaStr = (delta > 0 ? '+' : '') + delta + 'min';
-        var deltaColor = delta < 0 ? '#10b981' : delta > 30 ? '#ef4444' : '#f59e0b';
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + mod.icon + ' ' + mod.label + '</span><span class="ins-metric-value"><span style="color:' + deltaColor + ';">' + deltaStr + '</span> <span style="color:#6e7681;font-size:0.8em;">(' + withMod.length + ' vs ' + withoutMod.length + ')</span></span></div>';
+        var deltaColor = delta < 0 ? '#5E8A5E' : delta > 30 ? '#B85C5C' : '#C4923A';
+        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + mod.icon + ' ' + mod.label + '</span><span class="ins-metric-value"><span style="color:' + deltaColor + ';">' + deltaStr + '</span> <span style="color:#9C948B;font-size:0.8em;">(' + withMod.length + ' vs ' + withoutMod.length + ')</span></span></div>';
     });
     if (!body) { el.style.display = 'none'; return; }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insModifierImpact\')">' +
         '<span class="ins-section-title">&#9881; Modifier Impact</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '<div style="font-size:0.72em;color:#6e7681;margin-top:6px;">Negative = earlier sleep. Based on actual sleep onset.</div></div>';
+        '<div class="ins-section-body">' + body + '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Negative = earlier sleep. Based on actual sleep onset.</div></div>';
 }
 
 // Section 6: Dosing Windows
@@ -2471,7 +2471,7 @@ function renderInsDosingWindows(days) {
     ['0-2h', '2-4h', '4-6h', '6h+'].forEach(function(b) {
         if (!buckets[b] || buckets[b].length === 0) return;
         var avg = Math.round(buckets[b].reduce(function(s, v) { return s + v; }, 0) / buckets[b].length);
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">Last dose ' + b + ' after wake</span><span class="ins-metric-value">' + _fmtOnset(avg) + ' <span style="color:#6e7681;font-size:0.8em;">(' + buckets[b].length + ')</span></span></div>';
+        body += '<div class="ins-metric-row"><span class="ins-metric-label">Last dose ' + b + ' after wake</span><span class="ins-metric-value">' + _fmtOnset(avg) + ' <span style="color:#9C948B;font-size:0.8em;">(' + buckets[b].length + ')</span></span></div>';
     });
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insDosingWindows\')">' +
         '<span class="ins-section-title">&#9200; Dosing Windows</span>' +
@@ -2504,7 +2504,7 @@ function renderInsCaffeineTiming(days) {
     var avgGapH = (avgGap / 60).toFixed(1);
 
     var body = '<div class="ins-metric-row"><span class="ins-metric-label">Avg gap: last caffeine to sleep</span><span class="ins-metric-value">' + avgGapH + 'h (' + avgGap + 'min)</span></div>';
-    var cutoffColor = avgGap < 360 ? '#ef4444' : avgGap < 480 ? '#f59e0b' : '#10b981';
+    var cutoffColor = avgGap < 360 ? '#B85C5C' : avgGap < 480 ? '#C4923A' : '#5E8A5E';
     var cutoffNote = avgGap < 360 ? 'Research suggests 6h+ gap (Drake 2013)' : avgGap < 480 ? 'Good — close to 8h ideal' : 'Excellent caffeine timing';
     body += '<div style="font-size:0.78em;color:' + cutoffColor + ';margin-top:6px;">' + cutoffNote + '</div>';
 
@@ -2525,7 +2525,7 @@ function renderInsSleepEfficiency(days) {
     var target = state.settings.sleepTarget ?? 8;
     var avgHrs = withSleep.reduce(function(s, d) { return s + d.hoursSlept; }, 0) / withSleep.length;
     var efficiency = Math.round(avgHrs / target * 100);
-    var effColor = efficiency >= 90 ? '#10b981' : efficiency >= 75 ? '#f59e0b' : '#ef4444';
+    var effColor = efficiency >= 90 ? '#5E8A5E' : efficiency >= 75 ? '#C4923A' : '#B85C5C';
 
     // Weekly deficit
     var now = new Date();
@@ -2536,7 +2536,7 @@ function renderInsSleepEfficiency(days) {
 
     var body = '<div class="ins-metric-row"><span class="ins-metric-label">Sleep Efficiency</span><span class="ins-metric-value" style="color:' + effColor + ';">' + efficiency + '% of ' + target + 'h target</span></div>';
     body += '<div class="ins-metric-row"><span class="ins-metric-label">Avg Hours Slept</span><span class="ins-metric-value">' + avgHrs.toFixed(1) + 'h</span></div>';
-    body += '<div class="ins-metric-row"><span class="ins-metric-label">This Week Deficit</span><span class="ins-metric-value" style="color:' + (weekDeficit > 5 ? '#ef4444' : weekDeficit > 2 ? '#f59e0b' : '#10b981') + ';">' + weekDeficit.toFixed(1) + 'h</span></div>';
+    body += '<div class="ins-metric-row"><span class="ins-metric-label">This Week Deficit</span><span class="ins-metric-value" style="color:' + (weekDeficit > 5 ? '#B85C5C' : weekDeficit > 2 ? '#C4923A' : '#5E8A5E') + ';">' + weekDeficit.toFixed(1) + 'h</span></div>';
     body += '<div class="ins-metric-row"><span class="ins-metric-label">Days Below Target</span><span class="ins-metric-value">' + withSleep.filter(function(d) { return d.hoursSlept < target; }).length + '/' + withSleep.length + '</span></div>';
 
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insSleepEfficiency\')">' +
@@ -2574,11 +2574,11 @@ function renderInsPredictionReliability(days) {
     });
     results.sort(function(a, b) { return a.avgErr - b.avgErr; });
     results.forEach(function(r) {
-        var color = r.avgErr <= 30 ? '#10b981' : r.avgErr <= 60 ? '#f59e0b' : '#ef4444';
+        var color = r.avgErr <= 30 ? '#5E8A5E' : r.avgErr <= 60 ? '#C4923A' : '#B85C5C';
         body += '<div class="ins-metric-row"><span class="ins-metric-label">' + r.label + ' (' + r.count + ')</span><span class="ins-metric-value" style="color:' + color + ';">&plusmn;' + r.avgErr + 'min</span></div>';
     });
     if (results.length > 0) {
-        body += '<div style="font-size:0.72em;color:#6e7681;margin-top:6px;">Sorted by accuracy (best first)</div>';
+        body += '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Sorted by accuracy (best first)</div>';
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insPredictionReliability\')">' +
         '<span class="ins-section-title">&#127919; Prediction Reliability</span>' +
@@ -2596,24 +2596,24 @@ function renderInsCircadianConsistency(days) {
 
     var wakeMins = withWake.map(function(d) { return typeof d.wakeTime === 'string' ? timeToMinutes(d.wakeTime) : d.wakeTime; });
     var wakeStd = Math.round(_stdDev(wakeMins));
-    var wakeColor = wakeStd <= 30 ? '#10b981' : wakeStd <= 60 ? '#f59e0b' : '#ef4444';
+    var wakeColor = wakeStd <= 30 ? '#5E8A5E' : wakeStd <= 60 ? '#C4923A' : '#B85C5C';
 
     // Social jet lag (weekday vs weekend wake difference)
     var weekdayWake = withWake.filter(function(d) { return !_isWeekend(d.date); }).map(function(d) { return typeof d.wakeTime === 'string' ? timeToMinutes(d.wakeTime) : d.wakeTime; });
     var weekendWake = withWake.filter(function(d) { return _isWeekend(d.date); }).map(function(d) { return typeof d.wakeTime === 'string' ? timeToMinutes(d.wakeTime) : d.wakeTime; });
     var sjl = '--';
-    var sjlColor = '#6e7681';
+    var sjlColor = '#9C948B';
     if (weekdayWake.length > 0 && weekendWake.length > 0) {
         var wdAvg = weekdayWake.reduce(function(s, v) { return s + v; }, 0) / weekdayWake.length;
         var weAvg = weekendWake.reduce(function(s, v) { return s + v; }, 0) / weekendWake.length;
         var sjlMin = Math.round(Math.abs(weAvg - wdAvg));
         sjl = sjlMin + 'min';
-        sjlColor = sjlMin <= 30 ? '#10b981' : sjlMin <= 60 ? '#f59e0b' : '#ef4444';
+        sjlColor = sjlMin <= 30 ? '#5E8A5E' : sjlMin <= 60 ? '#C4923A' : '#B85C5C';
     }
 
     var body = '<div class="ins-metric-row"><span class="ins-metric-label">Wake Time Variability</span><span class="ins-metric-value" style="color:' + wakeColor + ';">&plusmn;' + wakeStd + 'min</span></div>';
     body += '<div class="ins-metric-row"><span class="ins-metric-label">Social Jet Lag</span><span class="ins-metric-value" style="color:' + sjlColor + ';">' + sjl + '</span></div>';
-    body += '<div style="font-size:0.72em;color:#6e7681;margin-top:6px;">Target: &lt;60min variability, &lt;30min jet lag (Wittmann 2006)</div>';
+    body += '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Target: &lt;60min variability, &lt;30min jet lag (Wittmann 2006)</div>';
 
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insCircadianConsistency\')">' +
         '<span class="ins-section-title">&#128336; Circadian Consistency</span>' +
@@ -2645,7 +2645,7 @@ function renderInsStimulantTrends(days) {
     weeks.forEach(function(wk) {
         if (wk.total === 0) return;
         var pct = maxDose > 0 ? Math.round(wk.avgDose / maxDose * 100) : 0;
-        body += '<div class="ins-bucket"><span class="ins-bucket__label">' + wk.label + '</span><div class="ins-bucket__bar-wrap"><div class="ins-bucket__bar" style="width:' + pct + '%;background:#a78bfa;"></div></div><span class="ins-bucket__value">' + wk.avgDose + 'mg/day (' + wk.stimDays + '/' + wk.total + ')</span></div>';
+        body += '<div class="ins-bucket"><span class="ins-bucket__label">' + wk.label + '</span><div class="ins-bucket__bar-wrap"><div class="ins-bucket__bar" style="width:' + pct + '%;background:#6B7C5E;"></div></div><span class="ins-bucket__value">' + wk.avgDose + 'mg/day (' + wk.stimDays + '/' + wk.total + ')</span></div>';
     });
 
     // Tolerance indicator
@@ -2659,7 +2659,7 @@ function renderInsStimulantTrends(days) {
             var shift = Math.round(rAvg - oAvg);
             if (Math.abs(shift) > 15) {
                 var toleranceNote = shift > 0 ? 'Sleep onset shifting ' + shift + 'min later at similar doses (possible tolerance)' : 'Sleep onset shifting ' + Math.abs(shift) + 'min earlier at similar doses';
-                body += '<div style="font-size:0.78em;color:#f59e0b;margin-top:8px;padding:8px;background:rgba(245,158,11,0.1);border-radius:6px;">' + toleranceNote + '</div>';
+                body += '<div style="font-size:0.78em;color:#C4923A;margin-top:8px;padding:8px;background:rgba(196,146,58,0.1);border-radius:6px;">' + toleranceNote + '</div>';
             }
         }
     }
@@ -2685,7 +2685,7 @@ function renderInsRiskIndicators(days) {
         else { highDoseStreak = 0; }
     });
     if (maxStreak >= 3) {
-        risks.push({ icon: '&#128293;', label: 'High Dose Streak', detail: maxStreak + ' consecutive days at 40mg+', bg: 'rgba(239,68,68,0.1)' });
+        risks.push({ icon: '&#128293;', label: 'High Dose Streak', detail: maxStreak + ' consecutive days at 40mg+', bg: 'rgba(184,92,92,0.1)' });
     }
 
     // Days since stim-free
@@ -2696,7 +2696,7 @@ function renderInsRiskIndicators(days) {
         daysSinceStimFree++;
     }
     if (daysSinceStimFree >= 7) {
-        risks.push({ icon: '&#9888;', label: 'No Stimulant-Free Days', detail: daysSinceStimFree + ' consecutive days with stimulants', bg: 'rgba(245,158,11,0.1)' });
+        risks.push({ icon: '&#9888;', label: 'No Stimulant-Free Days', detail: daysSinceStimFree + ' consecutive days with stimulants', bg: 'rgba(196,146,58,0.1)' });
     }
 
     // <5h sleep frequency (last 30 days)
@@ -2706,7 +2706,7 @@ function renderInsRiskIndicators(days) {
     });
     var under5 = last30.filter(function(d) { return d.hoursSlept != null && d.hoursSlept < 5; });
     if (under5.length >= 3) {
-        risks.push({ icon: '&#128564;', label: 'Frequent Sleep Deprivation', detail: under5.length + '/' + last30.length + ' days with <5h sleep (last 30d)', bg: 'rgba(239,68,68,0.1)' });
+        risks.push({ icon: '&#128564;', label: 'Frequent Sleep Deprivation', detail: under5.length + '/' + last30.length + ' days with <5h sleep (last 30d)', bg: 'rgba(184,92,92,0.1)' });
     }
 
     // Sleep debt danger zone
@@ -2715,13 +2715,13 @@ function renderInsRiskIndicators(days) {
         var target = state.settings.sleepTarget ?? 8;
         var weekDebt = recentSleep.reduce(function(s, d) { return s + Math.max(0, target - d.hoursSlept); }, 0);
         if (weekDebt > 10) {
-            risks.push({ icon: '&#9762;', label: 'Sleep Debt Danger Zone', detail: weekDebt.toFixed(1) + 'h deficit in last ' + recentSleep.length + ' days', bg: 'rgba(239,68,68,0.15)' });
+            risks.push({ icon: '&#9762;', label: 'Sleep Debt Danger Zone', detail: weekDebt.toFixed(1) + 'h deficit in last ' + recentSleep.length + ' days', bg: 'rgba(184,92,92,0.15)' });
         }
     }
 
     var body = '';
     if (risks.length === 0) {
-        body = '<div style="text-align:center;color:#10b981;padding:12px;">No risk indicators detected</div>';
+        body = '<div style="text-align:center;color:#5E8A5E;padding:12px;">No risk indicators detected</div>';
     } else {
         risks.forEach(function(r) {
             body += '<div class="ins-risk-card" style="background:' + r.bg + ';"><span class="ins-risk-card__icon">' + r.icon + '</span><div class="ins-risk-card__text"><div class="ins-risk-card__label">' + r.label + '</div><div class="ins-risk-card__detail">' + r.detail + '</div></div></div>';
@@ -2800,18 +2800,18 @@ function renderInsResearchBenchmarks(days) {
     var body = '';
     // Sleep duration benchmark
     var durationPct = Math.min(100, Math.round(avgHrs / 9 * 100));
-    var durationColor = avgHrs >= 7 ? '#10b981' : avgHrs >= 6 ? '#f59e0b' : '#ef4444';
+    var durationColor = avgHrs >= 7 ? '#5E8A5E' : avgHrs >= 6 ? '#C4923A' : '#B85C5C';
     body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Duration vs Recommended 7-9h (Hirshkowitz 2015)</div>';
-    body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(7/9*100) + '%;background:rgba(16,185,129,0.2);"></div>';
+    body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(7/9*100) + '%;background:rgba(94,138,94,0.15);"></div>';
     body += '<div class="ins-benchmark__marker" style="left:' + durationPct + '%;background:' + durationColor + ';"></div></div>';
     body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + durationColor + ';">You: ' + avgHrs.toFixed(1) + 'h</span><span>9h</span></div></div>';
 
     // Variability benchmark
     if (onsetStd !== null) {
         var varPct = Math.min(100, Math.round(onsetStd / 180 * 100));
-        var varColor = onsetStd <= 60 ? '#10b981' : onsetStd <= 120 ? '#f59e0b' : '#ef4444';
+        var varColor = onsetStd <= 60 ? '#5E8A5E' : onsetStd <= 120 ? '#C4923A' : '#B85C5C';
         body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Time Variability vs &lt;60min target (Wittmann 2006)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(60/180*100) + '%;background:rgba(16,185,129,0.2);"></div>';
+        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(60/180*100) + '%;background:rgba(94,138,94,0.15);"></div>';
         body += '<div class="ins-benchmark__marker" style="left:' + varPct + '%;background:' + varColor + ';"></div></div>';
         body += '<div class="ins-benchmark__range"><span>0min</span><span style="color:' + varColor + ';">You: &plusmn;' + onsetStd + 'min</span><span>180min</span></div></div>';
     }
@@ -2832,15 +2832,15 @@ function renderInsResearchBenchmarks(days) {
         });
         var avgGapMins = Math.round(totalGap / withCaffData.length);
         var gapPct = Math.min(100, Math.round(avgGapMins / 600 * 100));
-        var gapColor = avgGapMins >= 360 ? '#10b981' : avgGapMins >= 240 ? '#f59e0b' : '#ef4444';
+        var gapColor = avgGapMins >= 360 ? '#5E8A5E' : avgGapMins >= 240 ? '#C4923A' : '#B85C5C';
         body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Caffeine-to-Sleep Gap vs 6h minimum (Drake 2013)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(360/600*100) + '%;background:rgba(16,185,129,0.2);"></div>';
+        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(360/600*100) + '%;background:rgba(94,138,94,0.15);"></div>';
         body += '<div class="ins-benchmark__marker" style="left:' + gapPct + '%;background:' + gapColor + ';"></div></div>';
         body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + gapColor + ';">You: ' + (avgGapMins/60).toFixed(1) + 'h</span><span>10h</span></div></div>';
     }
 
     // Adderall XR context
-    body += '<div style="font-size:0.72em;color:#6e7681;margin-top:10px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;">';
+    body += '<div style="font-size:0.72em;color:#9C948B;margin-top:10px;padding:8px;background:rgba(0,0,0,0.03);border-radius:6px;">';
     body += '<strong>Adderall XR Pharmacokinetics:</strong> Terminal half-life ~11h (FDA label). 50% IR at T+0, 50% DR at T+4h. Full clearance varies by dose and individual metabolism.';
     body += '</div>';
 

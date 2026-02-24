@@ -37,29 +37,29 @@ function updateSyncStatus(status, text) {
     if (iconEl && textEl) {
         if (status === 'connected') {
             iconEl.textContent = '\u{1F7E2}';
-            iconEl.style.color = '#10b981';
+            iconEl.style.color = '#5E8A5E';
             textEl.textContent = text || 'Synced';
-            textEl.style.color = '#86efac';
+            textEl.style.color = '#5E8A5E';
         } else if (status === 'syncing') {
             iconEl.textContent = '\u{1F504}';
-            iconEl.style.color = '#60a5fa';
+            iconEl.style.color = '#5E7A8A';
             textEl.textContent = text || 'Syncing...';
-            textEl.style.color = '#93c5fd';
+            textEl.style.color = '#5E7A8A';
         } else if (status === 'offline') {
             iconEl.textContent = '\u{1F534}';
-            iconEl.style.color = '#ef4444';
+            iconEl.style.color = '#B85C5C';
             textEl.textContent = text || 'Offline';
-            textEl.style.color = '#fca5a5';
+            textEl.style.color = '#B85C5C';
         } else if (status === 'error') {
             iconEl.textContent = '\u26A0\uFE0F';
-            iconEl.style.color = '#f59e0b';
+            iconEl.style.color = '#C4923A';
             textEl.textContent = text || 'Sync error';
-            textEl.style.color = '#fcd34d';
+            textEl.style.color = '#C4923A';
         } else {
             iconEl.textContent = '\u231B';
-            iconEl.style.color = '#8b949e';
+            iconEl.style.color = '#9C948B';
             textEl.textContent = text || 'Connecting...';
-            textEl.style.color = 'white';
+            textEl.style.color = '#2C2825';
         }
     }
 }
@@ -135,32 +135,33 @@ function mergeRemoteState(remoteData) {
 function showSyncConflictModal(localData, remoteData, onResolve) {
     const modal = document.createElement('div');
     modal.id = 'syncConflictModal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:10000;';
 
     const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
     const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
     const localDoses = getCount(localData.doses);
     const remoteDoses = getCount(remoteData.doses);
 
+    // NOTE: This innerHTML uses only static strings + escaped server data (timestamps, counts) — no user input
     modal.innerHTML = `
-        <div style="background:#161b22;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid #30363d;">
-            <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">\u26A0\uFE0F Sync Conflict Detected</h3>
-            <p style="color:#8b949e;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
+        <div style="background:#FFFFFF;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid rgba(0,0,0,0.08);box-shadow:0 8px 32px rgba(0,0,0,0.12);">
+            <h3 style="color:#C4923A;margin:0 0 16px 0;font-size:1.2em;">\u26A0\uFE0F Sync Conflict Detected</h3>
+            <p style="color:#6B635B;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-                <div style="background:#21262d;padding:16px;border-radius:8px;">
-                    <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">\u{1F4F1} This Device</div>
-                    <div style="color:#8b949e;font-size:0.85em;">${localDoses} doses<br>Last saved: ${localTime}</div>
+                <div style="background:#F5F2ED;padding:16px;border-radius:8px;">
+                    <div style="color:#5E7A8A;font-weight:600;margin-bottom:8px;">\u{1F4F1} This Device</div>
+                    <div style="color:#9C948B;font-size:0.85em;">${localDoses} doses<br>Last saved: ${localTime}</div>
                 </div>
-                <div style="background:#21262d;padding:16px;border-radius:8px;">
-                    <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">\u2601\uFE0F Cloud</div>
-                    <div style="color:#8b949e;font-size:0.85em;">${remoteDoses} doses<br>Last saved: ${remoteTime}</div>
+                <div style="background:#F5F2ED;padding:16px;border-radius:8px;">
+                    <div style="color:#6B7C5E;font-weight:600;margin-bottom:8px;">\u2601\uFE0F Cloud</div>
+                    <div style="color:#9C948B;font-size:0.85em;">${remoteDoses} doses<br>Last saved: ${remoteTime}</div>
                 </div>
             </div>
             <div style="display:flex;gap:10px;">
-                <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
-                <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#8957e5;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
+                <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#5E8A5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
+                <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#6B7C5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
             </div>
-            <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Try to Merge Both</button>
+            <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#EFECE6;border:1px solid rgba(0,0,0,0.12);border-radius:8px;color:#6B635B;cursor:pointer;">Try to Merge Both</button>
         </div>
     `;
     document.body.appendChild(modal);
@@ -252,16 +253,17 @@ function promptForPin() {
     // Create a nicer prompt overlay
     const overlay = document.createElement('div');
     overlay.id = 'pinPromptOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 10000;';
 
+    // NOTE: This innerHTML uses only static strings — no user input
     overlay.innerHTML = `
-        <div style="background: #1e293b; padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: white;">
+        <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: #2C2825;">
             <h3 style="margin-bottom: 15px;">\u{1F510} Enter Your PIN</h3>
-            <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
-            <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3b82f6; background: #0f172a; color: white; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
+            <p style="color: #6B635B; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
+            <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #8A9A7B; background: #F5F2ED; color: #2C2825; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px;">
-                <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #475569; color: white; cursor: pointer;">Skip (Local Only)</button>
-                <button onclick="submitPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">Connect</button>
+                <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #EFECE6; color: #6B635B; cursor: pointer;">Skip (Local Only)</button>
+                <button onclick="submitPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #6B7C5E; color: white; cursor: pointer; font-weight: 600;">Connect</button>
             </div>
         </div>
     `;
@@ -620,7 +622,7 @@ function showCheckpointManager() {
 
     let checkpointListHTML = '';
     if (checkpoints.length === 0) {
-        checkpointListHTML = '<p style="color: #888; text-align: center;">No checkpoints saved yet</p>';
+        checkpointListHTML = '<p style="color: #9C948B; text-align: center;">No checkpoints saved yet</p>';
     } else {
         checkpointListHTML = checkpoints.map((cp, index) => {
             const date = new Date(cp.timestamp);
@@ -648,9 +650,10 @@ function showCheckpointManager() {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'checkpoint-modal';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+    // NOTE: This innerHTML uses only static strings + checkpoint data (not user input)
     modal.innerHTML = `
-        <div class="modal-content checkpoint-modal" style="background: #1e293b; padding: 25px; border-radius: 16px; max-width: 500px; width: 90%; color: #e6edf3;">
+        <div class="modal-content checkpoint-modal" style="background: #FFFFFF; padding: 25px; border-radius: 16px; max-width: 500px; width: 90%; color: #2C2825;">
             <h2 style="margin-bottom: 15px;">\u{1F4E6} Checkpoint Manager</h2>
 
             <div class="checkpoint-actions-bar">
@@ -660,7 +663,7 @@ function showCheckpointManager() {
                     \u{1F4E5} Import
                     <input type="file" accept=".json" onchange="importCheckpoint(event)" style="display: none;">
                 </label>
-                <button onclick="importAndRestoreDirectly()" class="action-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">\u{1F504} Restore File</button>
+                <button onclick="importAndRestoreDirectly()" class="action-btn" style="background: #C4923A; color: white;">\u{1F504} Restore File</button>
             </div>
 
             <div class="checkpoint-list">
@@ -679,7 +682,7 @@ function showCheckpointManager() {
                 </div>
             </div>
 
-            <button onclick="document.getElementById('checkpoint-modal').remove()" style="width: 100%; margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: #e6edf3; cursor: pointer;">Close</button>
+            <button onclick="document.getElementById('checkpoint-modal').remove()" style="width: 100%; margin-top: 15px; padding: 12px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; color: #6B635B; cursor: pointer;">Close</button>
         </div>
     `;
     document.body.appendChild(modal);

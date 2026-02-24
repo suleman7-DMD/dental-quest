@@ -185,26 +185,26 @@ function updateUI(vm) {
     // --- Sleep Debt Display ---
     var sleepDebtDisplay = document.getElementById('sleepDebtDisplay');
     if (sleepDebtDisplay && vm.isHyperarousal) {
-        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #ef4444; font-weight: 700;">\ud83d\udea8 ACUTE DEPRIVATION DETECTED</span>\n                        <span style="color: #ef4444; font-weight: 600;">HIGH ADRENALINE RISK</span>\n                    </div>\n                    <div style="font-size: 0.85em; color: #fca5a5; margin-top: 8px; line-height: 1.5;">\n                        <strong>WARNING:</strong> You slept less than 4 hours. Your body is in survival mode.\n                        <br><br>\n                        <strong>The Paradox:</strong> Sleep pressure is high, but your HPA axis is flooding your system with cortisol and adrenaline. You will feel "tired but wired."\n                        <br><br>\n                        <strong>Action Required:</strong>\n                        <br>\u2022 Avoid ALL screens after 8 PM (blue light extends wakefulness 90-120 min)\n                        <br>\u2022 No caffeine after noon\n                        <br>\u2022 Hot shower or sauna to trigger parasympathetic response\n                        <br>\u2022 The sleep debt bonus is NEGATED - you need drugs to clear fully\n                    </div>\n                    <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; font-size: 0.85em;">\n                        Threshold: ' + vm.effectiveThreshold.toFixed(1) + 'mg (no bonus applied - adrenaline counteracts adenosine)\n                    </div>\n                ';
-        sleepDebtDisplay.style.borderLeft = '4px solid #ef4444';
-        sleepDebtDisplay.style.background = 'rgba(239, 68, 68, 0.1)';
+        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #B85C5C; font-weight: 700;">\ud83d\udea8 ACUTE DEPRIVATION DETECTED</span>\n                        <span style="color: #B85C5C; font-weight: 600;">HIGH ADRENALINE RISK</span>\n                    </div>\n                    <div style="font-size: 0.85em; color: #C97070; margin-top: 8px; line-height: 1.5;">\n                        <strong>WARNING:</strong> You slept less than 4 hours. Your body is in survival mode.\n                        <br><br>\n                        <strong>The Paradox:</strong> Sleep pressure is high, but your HPA axis is flooding your system with cortisol and adrenaline. You will feel "tired but wired."\n                        <br><br>\n                        <strong>Action Required:</strong>\n                        <br>\u2022 Avoid ALL screens after 8 PM (blue light extends wakefulness 90-120 min)\n                        <br>\u2022 No caffeine after noon\n                        <br>\u2022 Hot shower or sauna to trigger parasympathetic response\n                        <br>\u2022 The sleep debt bonus is NEGATED - you need drugs to clear fully\n                    </div>\n                    <div style="margin-top: 10px; padding: 8px; background: rgba(184, 92, 92, 0.15); border-radius: 6px; font-size: 0.85em;">\n                        Threshold: ' + vm.effectiveThreshold.toFixed(1) + 'mg (no bonus applied - adrenaline counteracts adenosine)\n                    </div>\n                ';
+        sleepDebtDisplay.style.borderLeft = '4px solid #B85C5C';
+        sleepDebtDisplay.style.background = 'rgba(184, 92, 92, 0.08)';
     } else if (sleepDebtDisplay && vm.sleepDebtBonus > 0) {
         var breakdown = vm.sleepDebtBreakdown;
         var breakdownHtml = breakdown.map(function(d) {
             if (!d.hasData && d.label !== 'Today') {
-                return '<span style="color: #6e7681;">' + d.label + ': no data</span>';
+                return '<span style="color: #9C948B;">' + d.label + ': no data</span>';
             }
-            var deficitColor = d.deficit > 0 ? '#f59e0b' : '#10b981';
+            var deficitColor = d.deficit > 0 ? '#C4923A' : '#5E8A5E';
             return '<span style="color: ' + deficitColor + ';">' + d.label + ': ' + d.hours + 'h' + (d.deficit > 0 ? ' (-' + d.deficit + 'h \u00d7 ' + d.weight + ')' : '') + '</span>';
         }).join(' \u00b7 ');
 
-        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #f59e0b;">\ud83d\ude34 Sleep Debt Detected (3-Day Rolling)</span>\n                        <span style="color: #f59e0b; font-weight: 600;">+' + vm.sleepDebtBonus.toFixed(1) + 'mg to threshold</span>\n                    </div>\n                    <div style="font-size: 0.8em; color: #b0b8c4; margin-top: 6px;">\n                        ' + breakdownHtml + '\n                    </div>\n                    <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 4px;">\n                        Base threshold: ' + state.settings.sleepThreshold + 'mg \u2192 Effective: <strong style="color: #10b981;">' + vm.effectiveThreshold.toFixed(1) + 'mg</strong>\n                    </div>\n                ';
-        sleepDebtDisplay.style.borderLeft = '3px solid #f59e0b';
-        sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
+        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #C4923A;">\ud83d\ude34 Sleep Debt Detected (3-Day Rolling)</span>\n                        <span style="color: #C4923A; font-weight: 600;">+' + vm.sleepDebtBonus.toFixed(1) + 'mg to threshold</span>\n                    </div>\n                    <div style="font-size: 0.8em; color: #6B635B; margin-top: 6px;">\n                        ' + breakdownHtml + '\n                    </div>\n                    <div style="font-size: 0.85em; color: #6B635B; margin-top: 4px;">\n                        Base threshold: ' + state.settings.sleepThreshold + 'mg \u2192 Effective: <strong style="color: #5E8A5E;">' + vm.effectiveThreshold.toFixed(1) + 'mg</strong>\n                    </div>\n                ';
+        sleepDebtDisplay.style.borderLeft = '3px solid #C4923A';
+        sleepDebtDisplay.style.background = '#F5F2ED';
     } else if (sleepDebtDisplay) {
-        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #10b981;">\u2713 Well Rested</span>\n                        <span style="color: #b0b8c4;">Threshold: ' + vm.effectiveThreshold.toFixed(1) + 'mg</span>\n                    </div>\n                    <div style="font-size: 0.85em; color: #b0b8c4; margin-top: 6px;">\n                        No sleep debt modifier applied.\n                    </div>\n                ';
-        sleepDebtDisplay.style.borderLeft = '3px solid #10b981';
-        sleepDebtDisplay.style.background = 'rgba(0,0,0,0.2)';
+        sleepDebtDisplay.innerHTML = '\n                    <div style="display: flex; justify-content: space-between; align-items: center;">\n                        <span style="color: #5E8A5E;">\u2713 Well Rested</span>\n                        <span style="color: #6B635B;">Threshold: ' + vm.effectiveThreshold.toFixed(1) + 'mg</span>\n                    </div>\n                    <div style="font-size: 0.85em; color: #6B635B; margin-top: 6px;">\n                        No sleep debt modifier applied.\n                    </div>\n                ';
+        sleepDebtDisplay.style.borderLeft = '3px solid #5E8A5E';
+        sleepDebtDisplay.style.background = '#F5F2ED';
     }
 
     // --- Circadian Timeline Display ---
@@ -228,12 +228,12 @@ function updateUI(vm) {
             circadianStatusEl.textContent = 'CRITICAL DEBT';
             circadianIndicatorEl.textContent = '\ud83d\udea8';
             circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#ef4444';
+            circadianItem.style.borderLeftColor = '#B85C5C';
         } else if (vm.dataPoints >= 2 && vm.avgSleep < 6) {
             circadianStatusEl.textContent = 'Sleep Debt';
             circadianIndicatorEl.textContent = '\u26a0\ufe0f';
             circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#f59e0b';
+            circadianItem.style.borderLeftColor = '#C4923A';
         } else if (vm.circadianAnalysis.phase === 'danger-delayed' || vm.circadianAnalysis.phase === 'delayed') {
             circadianStatusEl.textContent = vm.circadianAnalysis.label;
             circadianIndicatorEl.textContent = vm.circadianAnalysis.icon;
@@ -243,27 +243,27 @@ function updateUI(vm) {
             circadianStatusEl.textContent = 'Irregular';
             circadianIndicatorEl.textContent = '\ud83d\udd00';
             circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#f59e0b';
+            circadianItem.style.borderLeftColor = '#C4923A';
         } else if (vm.inForbiddenZone) {
             circadianStatusEl.textContent = 'Forbidden Zone';
             circadianIndicatorEl.textContent = '\u26a0\ufe0f';
             circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#ef4444';
+            circadianItem.style.borderLeftColor = '#B85C5C';
         } else if (vm.inSleepGate) {
             circadianStatusEl.textContent = 'Sleep Gate Open';
             circadianIndicatorEl.textContent = '\ud83c\udf19';
             circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = '#10b981';
+            circadianItem.style.borderLeftColor = '#5E8A5E';
         } else if (vm.circadianAnalysis.phase === 'normal' && vm.avgSleep >= 6.5) {
             circadianStatusEl.textContent = 'Healthy';
             circadianIndicatorEl.textContent = '\u2713';
             circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = '#10b981';
+            circadianItem.style.borderLeftColor = '#5E8A5E';
         } else {
             circadianStatusEl.textContent = vm.circadianAnalysis.label || 'Monitoring';
             circadianIndicatorEl.textContent = vm.circadianAnalysis.icon || '\ud83d\udcca';
             circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = vm.circadianAnalysis.color || '#8b949e';
+            circadianItem.style.borderLeftColor = vm.circadianAnalysis.color || '#9C948B';
         }
     }
 
@@ -304,6 +304,8 @@ function updateUI(vm) {
         }
     }
     if (sleepTimeDisplay) sleepTimeDisplay.className = 'hero-time ' + vm.colorClass;
+    var heroCard = document.querySelector('.unified-hero');
+    if (heroCard) { heroCard.classList.remove('state-green', 'state-yellow', 'state-red'); heroCard.classList.add('state-' + vm.colorClass); }
     if (sleepQualityEl) {
         sleepQualityEl.className = 'hero-quality ' + vm.colorClass;
         sleepQualityEl.textContent = vm.qualityText;
@@ -321,12 +323,12 @@ function updateUI(vm) {
             blockingContainer.style.display = 'block';
 
             var html = realBlockers.map(function(f) {
-                return '\n                    <div class="blocking-factor">\n                        <span>' + f.name + (f.note ? ' <span style="font-size: 0.8em; color: #b0b8c4;">(' + f.note + ')</span>' : '') + '</span>\n                        <span class="clears-at">Clears at ' + minutesToTimeWithDay(f.clearsAt) + '</span>\n                    </div>\n                    ';
+                return '\n                    <div class="blocking-factor">\n                        <span>' + f.name + (f.note ? ' <span style="font-size: 0.8em; color: #6B635B;">(' + f.note + ')</span>' : '') + '</span>\n                        <span class="clears-at">Clears at ' + minutesToTimeWithDay(f.clearsAt) + '</span>\n                    </div>\n                    ';
             }).join('');
 
             if (advisoryItems.length > 0) {
                 html += advisoryItems.map(function(f) {
-                    return '\n                        <div class="blocking-factor" style="border-left-color: #f59e0b; opacity: 0.85;">\n                            <span>' + f.name + ' <span style="font-size: 0.8em; color: #f59e0b;">(' + f.note + ')</span></span>\n                            <span class="clears-at" style="color: #f59e0b;">' + (f.type === 'nicotine-advisory' ? 'Quality modifier' : 'Advisory') + '</span>\n                        </div>\n                        ';
+                    return '\n                        <div class="blocking-factor" style="border-left-color: #C4923A; opacity: 0.85;">\n                            <span>' + f.name + ' <span style="font-size: 0.8em; color: #C4923A;">(' + f.note + ')</span></span>\n                            <span class="clears-at" style="color: #C4923A;">' + (f.type === 'nicotine-advisory' ? 'Quality modifier' : 'Advisory') + '</span>\n                        </div>\n                        ';
                 }).join('');
             }
 
@@ -334,7 +336,7 @@ function updateUI(vm) {
         } else if (advisoryItems.length > 0) {
             blockingContainer.style.display = 'block';
             blockingList.innerHTML = advisoryItems.map(function(f) {
-                return '\n                    <div class="blocking-factor" style="border-left-color: #f59e0b; opacity: 0.85;">\n                        <span>' + f.name + ' <span style="font-size: 0.8em; color: #f59e0b;">(' + f.note + ')</span></span>\n                        <span class="clears-at" style="color: #f59e0b;">May affect sleep quality</span>\n                    </div>\n                    ';
+                return '\n                    <div class="blocking-factor" style="border-left-color: #C4923A; opacity: 0.85;">\n                        <span>' + f.name + ' <span style="font-size: 0.8em; color: #C4923A;">(' + f.note + ')</span></span>\n                        <span class="clears-at" style="color: #C4923A;">May affect sleep quality</span>\n                    </div>\n                    ';
             }).join('');
         } else {
             blockingContainer.style.display = 'none';
@@ -418,22 +420,22 @@ function updateWorkoutStatus() {
             workoutStatusEl.textContent = '+' + thresholdBonus.toFixed(1) + 'mg threshold';
             workoutIndicatorEl.textContent = '\u2713';
             workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#10b981';
+            workoutItem.style.borderLeftColor = '#5E8A5E';
         } else if (thresholdBonus > 0 && timeDelay > 0) {
             workoutStatusEl.textContent = '+' + thresholdBonus.toFixed(1) + 'mg, +' + timeDelay + 'min delay';
             workoutIndicatorEl.textContent = '\u23f3';
             workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#f59e0b';
+            workoutItem.style.borderLeftColor = '#C4923A';
         } else if (timeDelay > 0) {
             workoutStatusEl.textContent = '+' + timeDelay + ' min delay';
             workoutIndicatorEl.textContent = '\u26a0\ufe0f';
             workoutItem.className = 'status-item blocking';
-            workoutItem.style.borderLeftColor = '#f59e0b';
+            workoutItem.style.borderLeftColor = '#C4923A';
         } else {
             workoutStatusEl.textContent = 'Neutral';
             workoutIndicatorEl.textContent = '\u2713';
             workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#10b981';
+            workoutItem.style.borderLeftColor = '#5E8A5E';
         }
     } else {
         workoutItem.style.display = 'none';
@@ -644,7 +646,7 @@ function updateFeelingsTimeline() {
     var totalAmpDose = medsArray.reduce(function(sum, m) { return sum + m.dose; }, 0);
 
     if (totalAmpDose === 0) {
-        container.innerHTML = '<div style="color: #b0b8c4; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
+        container.innerHTML = '<div style="color: #6B635B; font-style: italic; padding: 8px;">Log medications to see your expected feelings timeline.</div>';
         return;
     }
 
@@ -659,7 +661,7 @@ function updateFeelingsTimeline() {
                 emoji: '\u26a1',
                 label: 'Peak Focus',
                 detail: 'Maximum drug effect - best for demanding tasks',
-                color: '#3b82f6'
+                color: '#5E7A8A'
             });
         }
 
@@ -671,7 +673,7 @@ function updateFeelingsTimeline() {
                 emoji: '\ud83d\udd04',
                 label: 'Second Release',
                 detail: 'XR second layer kicks in',
-                color: '#8b5cf6'
+                color: '#6B7C5E'
             });
         }
     }
@@ -708,7 +710,7 @@ function updateFeelingsTimeline() {
                 emoji: '\ud83d\udcc9',
                 label: 'Crash Begins',
                 detail: 'Amphetamine dropping fast - fatigue onset',
-                color: '#f59e0b'
+                color: '#C4923A'
             });
         }
     }
@@ -724,7 +726,7 @@ function updateFeelingsTimeline() {
             emoji: '\u26a0\ufe0f',
             label: 'Second Wind',
             detail: 'Circadian alerting signal - will feel awake despite exhaustion',
-            color: '#ef4444'
+            color: '#B85C5C'
         });
     }
 
@@ -736,7 +738,7 @@ function updateFeelingsTimeline() {
             emoji: '\ud83c\udf19',
             label: 'Sleep Gate Opens',
             detail: 'Melatonin rising - body ready for sleep',
-            color: '#10b981'
+            color: '#5E8A5E'
         });
     }
 
@@ -750,7 +752,7 @@ function updateFeelingsTimeline() {
             emoji: '\ud83d\ude34',
             label: 'Sleep Onset',
             detail: 'Projected time you\'ll fall asleep',
-            color: '#06b6d4'
+            color: '#5E7A8A'
         });
     }
 
@@ -765,12 +767,12 @@ function updateFeelingsTimeline() {
 
     // Render
     if (feelings.length === 0) {
-        container.innerHTML = '<div style="color: #b0b8c4; font-style: italic; padding: 8px;">All events have passed or no data available.</div>';
+        container.innerHTML = '<div style="color: #6B635B; font-style: italic; padding: 8px;">All events have passed or no data available.</div>';
         return;
     }
 
     container.innerHTML = feelings.map(function(f) {
-        return '\n                <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; border-left: 3px solid ' + f.color + ';">\n                    <div style="font-size: 1.4em;">' + f.emoji + '</div>\n                    <div style="flex: 1;">\n                        <div style="display: flex; justify-content: space-between; align-items: center;">\n                            <span style="font-weight: 600; color: ' + f.color + ';">' + f.label + '</span>\n                            <span style="font-size: 0.9em; color: #e6edf3; font-variant-numeric: tabular-nums;">' + minutesToTime(f.time) + '</span>\n                        </div>\n                        <div style="font-size: 0.8em; color: #b0b8c4; margin-top: 2px;">' + f.detail + '</div>\n                    </div>\n                </div>\n            ';
+        return '\n                <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 3px solid ' + f.color + ';">\n                    <div style="font-size: 1.4em;">' + f.emoji + '</div>\n                    <div style="flex: 1;">\n                        <div style="display: flex; justify-content: space-between; align-items: center;">\n                            <span style="font-weight: 600; color: ' + f.color + ';">' + f.label + '</span>\n                            <span style="font-size: 0.9em; color: #2C2825; font-variant-numeric: tabular-nums;">' + minutesToTime(f.time) + '</span>\n                        </div>\n                        <div style="font-size: 0.8em; color: #6B635B; margin-top: 2px;">' + f.detail + '</div>\n                    </div>\n                </div>\n            ';
     }).join('');
 }
 
@@ -929,11 +931,11 @@ function updateAccordionSummaries() {
         var medCount = getCount(state.medications);
         if (medCount === 0) {
             medsSummary.textContent = 'No meds logged';
-            medsSummary.style.color = '#7d8590';
+            medsSummary.style.color = '#9C948B';
         } else {
             var totalDose = getValues(state.medications).reduce(function(sum, m) { return sum + m.dose; }, 0);
             medsSummary.textContent = medCount + (medCount === 1 ? ' dose' : ' doses') + ' \u2022 ' + totalDose + 'mg';
-            medsSummary.style.color = '#c084fc';
+            medsSummary.style.color = '#6B7C5E';
         }
     }
 
@@ -943,11 +945,11 @@ function updateAccordionSummaries() {
         var caffCount = getCount(state.caffeine);
         if (caffCount === 0) {
             caffSummary.textContent = 'No caffeine';
-            caffSummary.style.color = '#7d8590';
+            caffSummary.style.color = '#9C948B';
         } else {
             var totalCaff = getValues(state.caffeine).reduce(function(sum, c) { return sum + c.amount; }, 0);
             caffSummary.textContent = totalCaff + 'mg' + (caffCount > 1 ? ' \u2022 ' + caffCount + ' drinks' : '');
-            caffSummary.style.color = '#f59e0b';
+            caffSummary.style.color = '#C4923A';
         }
     }
 
@@ -960,7 +962,7 @@ function updateAccordionSummaries() {
         if (state.modifiers.sauna && state.modifiers.sauna.active) active.push('Sauna');
         if (state.allNighterMode) active.push('All-Nighter');
         modSummary.textContent = active.length > 0 ? active.join(', ') : 'None active';
-        modSummary.style.color = active.length > 0 ? '#10b981' : '#7d8590';
+        modSummary.style.color = active.length > 0 ? '#5E8A5E' : '#9C948B';
     }
 
     // Nicotine summary
@@ -968,10 +970,10 @@ function updateAccordionSummaries() {
     if (nicSummary) {
         if (state.nicotine && state.nicotine.active) {
             nicSummary.textContent = state.nicotine.type === 'vape' ? 'Vape hit logged' : 'Pouch logged';
-            nicSummary.style.color = '#f87171';
+            nicSummary.style.color = '#C97070';
         } else {
             nicSummary.textContent = 'Not tracked';
-            nicSummary.style.color = '#7d8590';
+            nicSummary.style.color = '#9C948B';
         }
     }
 
@@ -980,10 +982,10 @@ function updateAccordionSummaries() {
     if (workoutSummary) {
         if (state.workoutPlan && state.workoutPlan.applied) {
             workoutSummary.textContent = 'Applied (' + (state.workoutPlan.type || 'workout') + ')';
-            workoutSummary.style.color = '#10b981';
+            workoutSummary.style.color = '#5E8A5E';
         } else {
             workoutSummary.textContent = 'Not planned';
-            workoutSummary.style.color = '#7d8590';
+            workoutSummary.style.color = '#9C948B';
         }
     }
 
@@ -993,13 +995,13 @@ function updateAccordionSummaries() {
         var now = getCurrentMinutes();
         if (isInForbiddenZone(now)) {
             circSummary.textContent = 'Forbidden Zone';
-            circSummary.style.color = '#ef4444';
+            circSummary.style.color = '#B85C5C';
         } else if (isInSleepGate(now)) {
             circSummary.textContent = 'Sleep Gate Open';
-            circSummary.style.color = '#10b981';
+            circSummary.style.color = '#5E8A5E';
         } else {
             circSummary.textContent = 'Normal';
-            circSummary.style.color = '#7d8590';
+            circSummary.style.color = '#9C948B';
         }
     }
 
@@ -1056,10 +1058,12 @@ function updateStatusPillColors() {
     var ampPill = document.getElementById('ampStatusPill');
     var caffPill = document.getElementById('caffStatusPill');
     if (ampPill) {
-        ampPill.style.borderColor = ampLoad < threshold ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
+        ampPill.classList.toggle('pill-safe', ampLoad < threshold);
+        ampPill.classList.toggle('pill-danger', ampLoad >= threshold);
     }
     if (caffPill) {
-        caffPill.style.borderColor = caffLoad < caffThreshold ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
+        caffPill.classList.toggle('pill-safe', caffLoad < caffThreshold);
+        caffPill.classList.toggle('pill-danger', caffLoad >= caffThreshold);
     }
 }
 
@@ -1079,12 +1083,12 @@ function renderRecentNights() {
             hours = typeof entry === 'number' ? entry : (entry.hoursSlept || null);
         }
         var dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        var color = hours === null ? 'rgba(255,255,255,0.05)' :
-            hours >= 6.5 ? 'rgba(16,185,129,0.15)' :
-            hours >= 4.5 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)';
-        var borderColor = hours === null ? 'rgba(255,255,255,0.1)' :
-            hours >= 6.5 ? 'rgba(16,185,129,0.3)' :
-            hours >= 4.5 ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)';
+        var color = hours === null ? 'rgba(0,0,0,0.03)' :
+            hours >= 6.5 ? 'rgba(94,138,94,0.15)' :
+            hours >= 4.5 ? 'rgba(196,146,58,0.15)' : 'rgba(184,92,92,0.15)';
+        var borderColor = hours === null ? 'rgba(0,0,0,0.08)' :
+            hours >= 6.5 ? 'rgba(94,138,94,0.3)' :
+            hours >= 4.5 ? 'rgba(196,146,58,0.3)' : 'rgba(184,92,92,0.3)';
         html += '<div class="recent-night-pill" onclick="openSleepEditModal(\'' + dateStr + '\')" style="background:' + color + '; border-color:' + borderColor + ';">' +
             dayName + (hours !== null ? ' ' + hours + 'h' : ' --') + '</div>';
     }

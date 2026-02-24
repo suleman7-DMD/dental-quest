@@ -96,7 +96,7 @@ function renderMedEntries() {
         const isToday = medDate === today;
         // Use string ID with quotes in onclick handlers
         const dateSelector = `
-            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; color: ${isToday ? '#5E8A5E' : '#C4923A'}; width: 110px;">
+            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #1A1D25; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: ${isToday ? '#5EAA8D' : '#D4A05A'}; width: 110px;">
         `;
 
         return `
@@ -145,17 +145,17 @@ function updateStackingWarning() {
 
     if (numDoses > 1) {
         let riskLevel = 'moderate';
-        let riskColor = '#C4923A';
+        let riskColor = '#D4A05A';
 
         // High risk if: stacking + no sleep debt (fighting drug "naked")
         if (sleepDebt < 2 && totalDose >= 60) {
             riskLevel = 'high';
-            riskColor = '#B85C5C';
+            riskColor = '#C76B6B';
         }
 
         warningEl.style.display = 'block';
-        warningEl.style.borderColor = `rgba(${riskLevel === 'high' ? '184, 92, 92' : '196, 146, 58'}, 0.4)`;
-        warningEl.style.background = `rgba(${riskLevel === 'high' ? '184, 92, 92' : '196, 146, 58'}, 0.15)`;
+        warningEl.style.borderColor = `rgba(${riskLevel === 'high' ? '199, 107, 107' : '212, 160, 90'}, 0.4)`;
+        warningEl.style.background = `rgba(${riskLevel === 'high' ? '199, 107, 107' : '212, 160, 90'}, 0.15)`;
 
         warningEl.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -166,7 +166,7 @@ function updateStackingWarning() {
                     Total: ${totalDose}mg
                 </div>
             </div>
-            <div style="color: #6B635B; line-height: 1.5;">
+            <div style="color: #8B92A0; line-height: 1.5;">
                 <strong>The Math:</strong> Adding a second dose doesn't just raise the peak – it <em>widens the base</em> of the elimination curve.
                 That ${meds[1]?.dose || 20}mg "booster" often adds <strong>4-6+ hours</strong> of wakefulness, not just more focus.
             </div>
@@ -175,7 +175,7 @@ function updateStackingWarning() {
                     <strong>🚨 HIGH RISK:</strong> You're well-rested (${sleepDebt.toFixed(1)}hr debt). Your brain has NO adenosine pressure to fight this extra drug. You're fighting it "naked."
                 </div>
             ` : ''}
-            <div style="margin-top: 10px; font-size: 0.85em; color: #6B635B;">
+            <div style="margin-top: 10px; font-size: 0.85em; color: #8B92A0;">
                 <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
             </div>
         `;
@@ -189,7 +189,7 @@ function updateStackingWarning() {
             <div style="color: #C4923A; font-weight: 600; margin-bottom: 6px;">
                 💊 High Dose Warning: ${totalDose}mg
             </div>
-            <div style="color: #6B635B; font-size: 0.9em;">
+            <div style="color: #8B92A0; font-size: 0.9em;">
                 Doses above 50mg extend clearance time disproportionately. Consider if you really need this much today.
             </div>
         `;

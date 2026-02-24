@@ -48,11 +48,11 @@ function drawGraph() {
         const fzStartX = padding.left + ((fzStart - startTime) / timeRange) * graphWidth;
         const fzEndX = padding.left + ((Math.min(fzEnd, endTime) - startTime) / timeRange) * graphWidth;
 
-        ctx.fillStyle = 'rgba(184, 92, 92, 0.08)';
+        ctx.fillStyle = 'rgba(199, 107, 107, 0.08)';
         ctx.fillRect(fzStartX, padding.top, fzEndX - fzStartX, graphHeight);
 
         // Label
-        ctx.fillStyle = 'rgba(184, 92, 92, 0.5)';
+        ctx.fillStyle = 'rgba(199, 107, 107, 0.5)';
         ctx.font = 'bold 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
@@ -69,11 +69,11 @@ function drawGraph() {
         const sgStartX = padding.left + ((sgStart - startTime) / timeRange) * graphWidth;
         const sgEndX = padding.left + ((Math.min(sgEnd, endTime) - startTime) / timeRange) * graphWidth;
 
-        ctx.fillStyle = 'rgba(94, 138, 94, 0.08)';
+        ctx.fillStyle = 'rgba(94, 170, 141, 0.08)';
         ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
 
         // Label
-        ctx.fillStyle = 'rgba(94, 138, 94, 0.5)';
+        ctx.fillStyle = 'rgba(94, 170, 141, 0.5)';
         ctx.font = 'bold 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
@@ -94,8 +94,8 @@ function drawGraph() {
 
         // Y-axis labels
         const value = Math.round(maxY * (1 - i / 5));
-        ctx.fillStyle = '#9C948B';
-        ctx.font = '11px Inter, sans-serif';
+        ctx.fillStyle = '#5C6370';
+        ctx.font = '11px SF Mono, Consolas, monospace';
         ctx.textAlign = 'right';
         ctx.fillText(value + 'mg', padding.left - 8, y + 4);
     }
@@ -108,19 +108,19 @@ function drawGraph() {
         const x = padding.left + ((hour * 60 - startTime) / timeRange) * graphWidth;
 
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
         ctx.moveTo(x, padding.top);
         ctx.lineTo(x, height - padding.bottom);
         ctx.stroke();
 
-        ctx.fillStyle = '#9C948B';
-        ctx.font = '11px Inter, sans-serif';
+        ctx.fillStyle = '#5C6370';
+        ctx.font = '11px SF Mono, Consolas, monospace';
         ctx.textAlign = 'center';
         ctx.fillText(timeLabels[i], x, height - 8);
     });
 
     // Draw threshold line (using effective threshold)
-    ctx.strokeStyle = '#B85C5C';
+    ctx.strokeStyle = '#C76B6B';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     const thresholdY = padding.top + graphHeight * (1 - effectiveThreshold / maxY);
@@ -130,7 +130,7 @@ function drawGraph() {
     ctx.stroke();
 
     // Label threshold
-    ctx.fillStyle = '#B85C5C';
+    ctx.fillStyle = '#C76B6B';
     ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`${effectiveThreshold.toFixed(0)}mg threshold`, padding.left + 5, thresholdY - 5);
@@ -139,7 +139,7 @@ function drawGraph() {
 
     // Draw "Stimulant Blockade" shading (area between amp curve and threshold)
     // This visually shows when drugs are blocking sleep
-    ctx.fillStyle = 'rgba(74, 124, 155, 0.12)';
+    ctx.fillStyle = 'rgba(91, 155, 213, 0.12)';
     ctx.beginPath();
     ctx.moveTo(padding.left, thresholdY);
 
@@ -174,7 +174,7 @@ function drawGraph() {
             const labelX = padding.left + ((peakTime - startTime) / timeRange) * graphWidth;
             const labelY = padding.top + graphHeight * (1 - (effectiveThreshold + (peakLoad - effectiveThreshold) / 2) / maxY);
 
-            ctx.fillStyle = 'rgba(74, 124, 155, 0.6)';
+            ctx.fillStyle = 'rgba(91, 155, 213, 0.6)';
             ctx.font = 'bold 9px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('STIMULANT', labelX, labelY - 5);
@@ -183,7 +183,7 @@ function drawGraph() {
     }
 
     // Draw amphetamine curve
-    ctx.strokeStyle = '#4A7C9B';
+    ctx.strokeStyle = '#5B9BD5';
     ctx.lineWidth = 3;
     ctx.beginPath();
     let firstPoint = true;
@@ -203,7 +203,7 @@ function drawGraph() {
     ctx.stroke();
 
     // Draw caffeine curve
-    ctx.strokeStyle = '#C4923A';
+    ctx.strokeStyle = '#D4A05A';
     ctx.lineWidth = 3;
     ctx.beginPath();
     firstPoint = true;
@@ -226,7 +226,7 @@ function drawGraph() {
     const now = getCurrentMinutes();
     if (now >= startTime && now <= endTime) {
         const nowX = padding.left + ((now - startTime) / timeRange) * graphWidth;
-        ctx.strokeStyle = '#5E8A5E';
+        ctx.strokeStyle = '#5EAA8D';
         ctx.lineWidth = 2;
         ctx.setLineDash([3, 3]);
         ctx.beginPath();
@@ -235,7 +235,7 @@ function drawGraph() {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = '#5E8A5E';
+        ctx.fillStyle = '#5EAA8D';
         ctx.font = 'bold 10px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('NOW', nowX, padding.top - 5);
@@ -255,7 +255,7 @@ function drawGraph() {
         const sleepX = padding.left + ((graphSleepTime - startTime) / timeRange) * graphWidth;
 
         // Draw sleep time line
-        ctx.strokeStyle = '#6B7C5E';
+        ctx.strokeStyle = '#5EAA8D';
         ctx.lineWidth = 3;
         ctx.setLineDash([]);
         ctx.beginPath();
@@ -264,7 +264,7 @@ function drawGraph() {
         ctx.stroke();
 
         // Sleep time arrow at bottom
-        ctx.fillStyle = '#6B7C5E';
+        ctx.fillStyle = '#5EAA8D';
         ctx.beginPath();
         ctx.moveTo(sleepX, height - padding.bottom + 5);
         ctx.lineTo(sleepX - 6, height - padding.bottom + 12);
@@ -332,9 +332,9 @@ function setupGraphTooltip() {
 
         let zoneText = '';
         if (inForbidden) {
-            zoneText = '<div style="color: #B85C5C; font-size: 0.85em; margin-top: 6px;">Warning: Forbidden Zone</div>';
+            zoneText = '<div style="color: #C76B6B; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Warning: Forbidden Zone</div>';
         } else if (inSleepGate) {
-            zoneText = '<div style="color: #5E8A5E; font-size: 0.85em; margin-top: 6px;">Sleep Gate</div>';
+            zoneText = '<div style="color: #5EAA8D; font-size: 0.85em; margin-top: 6px; font-family: Inter, sans-serif;">Sleep Gate</div>';
         }
 
         // Status indicators
@@ -353,7 +353,7 @@ function setupGraphTooltip() {
             </div>
             <div class="tooltip-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-default);">
                 <span class="tooltip-label">Threshold:</span>
-                <span class="tooltip-value" style="color: #B85C5C;">${effectiveThreshold.toFixed(1)}mg</span>
+                <span class="tooltip-value" style="color: #C76B6B;">${effectiveThreshold.toFixed(1)}mg</span>
             </div>
             ${zoneText}
         `;
@@ -488,19 +488,19 @@ function setupSleepGraphTooltip(data, avg) {
             let statusText, statusColor;
             if (closestPoint.hoursSlept >= 8) {
                 statusText = 'Excellent recovery';
-                statusColor = '#5E8A5E';
+                statusColor = '#5EAA8D';
             } else if (closestPoint.hoursSlept >= 7) {
                 statusText = 'Good night';
-                statusColor = '#5E8A5E';
+                statusColor = '#5EAA8D';
             } else if (closestPoint.hoursSlept >= 5.5) {
                 statusText = 'Functional';
-                statusColor = '#5E7A8A';
+                statusColor = '#8B92A0';
             } else if (closestPoint.hoursSlept >= 4.5) {
                 statusText = 'Sleep deprived';
-                statusColor = '#C4923A';
+                statusColor = '#D4A05A';
             } else {
                 statusText = 'Severe deficit';
-                statusColor = '#B85C5C';
+                statusColor = '#C76B6B';
             }
 
             const vsAvg = closestPoint.hoursSlept - avg;
@@ -556,7 +556,7 @@ function drawSleepPerformanceGraph(data) {
     });
 
     // Draw subtle horizontal reference lines
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.04)';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
     ctx.lineWidth = 1;
     [4, 6, 8, 10].forEach(hours => {
         const y = padding.top + graphHeight - (hours / 12) * graphHeight;
@@ -567,8 +567,8 @@ function drawSleepPerformanceGraph(data) {
     });
 
     // Y-axis labels (minimal)
-    ctx.font = '10px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#9C948B';
+    ctx.font = '10px SF Mono, Consolas, monospace';
+    ctx.fillStyle = '#5C6370';
     ctx.textAlign = 'right';
     [4, 8, 12].forEach(hours => {
         const y = padding.top + graphHeight - (hours / 12) * graphHeight;
@@ -580,10 +580,10 @@ function drawSleepPerformanceGraph(data) {
 
         // Draw gradient fill under the curve
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
-        gradient.addColorStop(0, 'rgba(74, 124, 155, 0.3)');   // Teal-blue at top
-        gradient.addColorStop(0.3, 'rgba(94, 138, 94, 0.2)');   // Sage green
-        gradient.addColorStop(0.6, 'rgba(74, 124, 155, 0.10)'); // Teal-blue
-        gradient.addColorStop(1, 'rgba(74, 124, 155, 0.02)');   // Fade to transparent
+        gradient.addColorStop(0, 'rgba(91, 155, 213, 0.25)');    // Medical blue at top
+        gradient.addColorStop(0.3, 'rgba(94, 170, 141, 0.15)'); // Success green
+        gradient.addColorStop(0.6, 'rgba(91, 155, 213, 0.08)'); // Medical blue
+        gradient.addColorStop(1, 'rgba(91, 155, 213, 0.05)');   // Fade to near-transparent
 
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, padding.top + graphHeight);
@@ -596,71 +596,30 @@ function drawSleepPerformanceGraph(data) {
         ctx.fillStyle = gradient;
         ctx.fill();
 
-        // Draw the main line with glow effect
-        // Outer glow
+        // Draw the main line — clean, no glow
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
         smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.strokeStyle = 'rgba(107, 124, 94, 0.3)';
-        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#5EAA8D';
+        ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // Inner glow
-        ctx.beginPath();
-        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.strokeStyle = 'rgba(107, 124, 94, 0.5)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Main line
-        ctx.beginPath();
-        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
-
-        // Gradient stroke
-        const lineGradient = ctx.createLinearGradient(padding.left, 0, width - padding.right, 0);
-        lineGradient.addColorStop(0, '#4A7C9B');    // Teal-blue
-        lineGradient.addColorStop(0.5, '#6B7C5E');  // Olive
-        lineGradient.addColorStop(1, '#5E8A5E');    // Sage green
-
-        ctx.strokeStyle = lineGradient;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        // Draw data points with glow
+        // Draw data points — crisp dots, no glow layers
         validPoints.forEach((p, idx) => {
-            // Determine color based on hours
-            let pointColor, glowColor;
+            let pointColor;
             if (p.hours >= 7) {
-                pointColor = '#5E8A5E';
-                glowColor = 'rgba(94, 138, 94, 0.6)';
+                pointColor = '#5EAA8D';
             } else if (p.hours >= 5.5) {
-                pointColor = '#5E7A8A';
-                glowColor = 'rgba(94, 122, 138, 0.6)';
+                pointColor = '#8B92A0';
             } else if (p.hours >= 4.5) {
-                pointColor = '#C4923A';
-                glowColor = 'rgba(196, 146, 58, 0.6)';
+                pointColor = '#D4A05A';
             } else {
-                pointColor = '#B85C5C';
-                glowColor = 'rgba(184, 92, 92, 0.6)';
+                pointColor = '#C76B6B';
             }
 
-            const radius = p.isToday ? 7 : 5;
-
-            // Outer glow
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, radius + 4, 0, Math.PI * 2);
-            ctx.fillStyle = glowColor.replace('0.6', '0.2');
-            ctx.fill();
-
-            // Inner glow
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, radius + 2, 0, Math.PI * 2);
-            ctx.fillStyle = glowColor.replace('0.6', '0.4');
-            ctx.fill();
+            const radius = p.isToday ? 5 : 3.5;
 
             // Main point
             ctx.beginPath();
@@ -668,18 +627,17 @@ function drawSleepPerformanceGraph(data) {
             ctx.fillStyle = pointColor;
             ctx.fill();
 
-            // White center dot
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, radius * 0.4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            ctx.fill();
+            // Subtle border
+            ctx.strokeStyle = '#FAF8F5';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
             // Today indicator ring
             if (p.isToday) {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, radius + 6, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(107, 124, 94, 0.6)';
-                ctx.lineWidth = 2;
+                ctx.arc(p.x, p.y, radius + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(94, 138, 94, 0.4)';
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
         });
@@ -694,7 +652,7 @@ function drawSleepPerformanceGraph(data) {
     ctx.beginPath();
     ctx.moveTo(padding.left, optimalY);
     ctx.lineTo(width - padding.right, optimalY);
-    ctx.strokeStyle = 'rgba(94, 138, 94, 0.25)';
+    ctx.strokeStyle = 'rgba(94, 170, 141, 0.25)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -702,12 +660,12 @@ function drawSleepPerformanceGraph(data) {
     ctx.beginPath();
     ctx.moveTo(padding.left, dangerY);
     ctx.lineTo(width - padding.right, dangerY);
-    ctx.strokeStyle = 'rgba(184, 92, 92, 0.2)';
+    ctx.strokeStyle = 'rgba(199, 107, 107, 0.2)';
     ctx.stroke();
     ctx.setLineDash([]);
 
     // X-axis labels (minimal - only every 7 days + today)
-    ctx.font = '9px system-ui, -apple-system, sans-serif';
+    ctx.font = '9px SF Mono, Consolas, monospace';
     ctx.textAlign = 'center';
 
     data.forEach((d, i) => {
@@ -715,8 +673,8 @@ function drawSleepPerformanceGraph(data) {
 
         // Show label every 7 days or if today
         if (i === 0 || i === 7 || i === 14 || i === 21 || i === 29 || d.isToday) {
-            ctx.fillStyle = d.isToday ? '#6B7C5E' : '#C4BCB3';
-            ctx.font = d.isToday ? 'bold 10px system-ui' : '9px system-ui';
+            ctx.fillStyle = d.isToday ? '#5EAA8D' : '#8B92A0';
+            ctx.font = d.isToday ? 'bold 10px Inter, sans-serif' : '9px SF Mono, Consolas, monospace';
             ctx.fillText(d.isToday ? 'Today' : d.dayLabel, x, height - 10);
 
             // Tick mark
@@ -763,8 +721,8 @@ function drawAccuracyTimeline() {
     ctx.clearRect(0, 0, width, height);
 
     if (entries.length < 2) {
-        ctx.fillStyle = '#9C948B';
-        ctx.font = '13px Inter, system-ui, -apple-system, sans-serif';
+        ctx.fillStyle = '#8B92A0';
+        ctx.font = '13px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Need 2+ entries with feedback to show timeline', width / 2, height / 2);
         return;
@@ -786,12 +744,12 @@ function drawAccuracyTimeline() {
     }
 
     // Red zone (>60 or <-60)
-    ctx.fillStyle = 'rgba(184, 92, 92, 0.06)';
+    ctx.fillStyle = 'rgba(199, 107, 107, 0.06)';
     ctx.fillRect(padding.left, valToY(maxDelta), gw, valToY(60) - valToY(maxDelta));
     ctx.fillRect(padding.left, valToY(-60), gw, valToY(-maxDelta) - valToY(-60));
 
     // Yellow zone (30-60 and -60 to -30)
-    ctx.fillStyle = 'rgba(196, 146, 58, 0.06)';
+    ctx.fillStyle = 'rgba(212, 160, 90, 0.06)';
     ctx.fillRect(padding.left, valToY(60), gw, valToY(30) - valToY(60));
     ctx.fillRect(padding.left, valToY(-30), gw, valToY(-60) - valToY(-30));
 
@@ -847,7 +805,7 @@ function drawAccuracyTimeline() {
     // Data points with color
     points.forEach(function(p) {
         var absDelta = Math.abs(p.delta);
-        var color = absDelta <= 30 ? '#5E8A5E' : absDelta <= 60 ? '#C4923A' : '#B85C5C';
+        var color = absDelta <= 30 ? '#5EAA8D' : absDelta <= 60 ? '#D4A05A' : '#C76B6B';
         ctx.beginPath();
         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -858,7 +816,7 @@ function drawAccuracyTimeline() {
     });
 
     // X-axis date labels (sparse)
-    ctx.fillStyle = '#C4BCB3';
+    ctx.fillStyle = '#5C6370';
     ctx.font = '9px Inter, system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
     var labelInterval = Math.max(1, Math.floor(entries.length / 5));

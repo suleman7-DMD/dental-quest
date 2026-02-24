@@ -10,10 +10,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- Google Fonts: Inter (body) + Source Serif 4 (headings) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         /* ============================================
@@ -1092,13 +1092,13 @@
         .sleep-cal-day.today { box-shadow: 0 0 0 2px var(--accent); }
         .sleep-cal-day.empty { background: transparent; cursor: default; }
         .sleep-cal-day.empty:hover { transform: none; }
-        .sleep-cal-day.great { background: rgba(94,138,94,0.35); }
-        .sleep-cal-day.good { background: rgba(94,122,138,0.35); }
-        .sleep-cal-day.ok { background: rgba(196,146,58,0.3); }
-        .sleep-cal-day.poor { background: rgba(184,92,92,0.3); }
-        .sleep-cal-day.critical { background: rgba(153,68,68,0.45); }
-        .sleep-cal-day.allnighter { background: rgba(122,59,59,0.5); }
-        .sleep-cal-day.no_data { background: rgba(196,188,179,0.2); }
+        .sleep-cal-day.great { background: var(--success-light); }
+        .sleep-cal-day.good { background: var(--info-light); }
+        .sleep-cal-day.ok { background: var(--warning-light); }
+        .sleep-cal-day.poor { background: var(--destructive-light); }
+        .sleep-cal-day.critical { background: var(--status-blocking-light); }
+        .sleep-cal-day.allnighter { background: var(--status-blocking-light); }
+        .sleep-cal-day.no_data { background: var(--canvas-inset); }
         .sleep-cal-day .cal-day-num { font-weight: 600; color: var(--fg-primary); font-size: 0.95em; }
         .sleep-cal-day .cal-day-hours { font-size: 0.7em; color: var(--fg-secondary); margin-top: 1px; }
 
@@ -1235,31 +1235,33 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
+            background: var(--accent);
+            color: var(--accent-fg);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 5px 20px rgba(107, 124, 94, 0.3);
+            background: var(--accent-hover);
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: #e6edf3;
+            background: var(--surface-primary);
+            border: 1px solid var(--border-default);
+            color: var(--fg-secondary);
         }
 
         .btn-secondary:hover {
-            background: rgba(255,255,255,0.15);
+            background: var(--canvas-subtle);
         }
 
         .btn-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
+            background: var(--destructive-light);
+            color: var(--destructive);
         }
 
         .btn-danger:hover {
-            background: #ef4444;
+            background: var(--destructive);
             color: white;
         }
 
@@ -1436,6 +1438,7 @@
             transition: transform 0.3s ease;
             z-index: 1000;
             border: 1px solid var(--border-default);
+            border-left: 3px solid var(--accent);
         }
 
         .toast.show {
@@ -1703,11 +1706,11 @@
         .dose-bar-fill {
             height: 8px;
             border-radius: 4px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            background: var(--accent);
         }
 
         .dose-bar-time {
-            color: #e6edf3;
+            color: var(--fg-primary);
             font-weight: 600;
             font-size: 10px;
         }
@@ -1717,8 +1720,8 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
+            background: var(--warning-light);
+            color: var(--warning);
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 10px;
@@ -1746,10 +1749,10 @@
         /* ============================================ */
 
         .unified-container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             padding: 12px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font-body);
         }
 
         .unified-header {
@@ -1757,7 +1760,9 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 12px;
-            background: rgba(0,0,0,0.3);
+            background: var(--surface-primary);
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-sm);
             border-radius: 12px;
             margin-bottom: 12px;
             flex-wrap: wrap;
@@ -1774,34 +1779,37 @@
             padding: 4px 8px;
             font-size: 0.75em;
             border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: #b0b8c4;
+            border: 1px solid var(--border-default);
+            background: var(--canvas-subtle);
+            color: var(--fg-secondary);
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .unified-header .checkpoint-controls button:hover {
-            background: rgba(255,255,255,0.1);
+            background: var(--canvas-inset);
         }
 
         .unified-hero {
             text-align: center;
             padding: 24px 16px 20px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(16, 185, 129, 0.12));
-            border-radius: 16px;
-            border: 1px solid rgba(139, 92, 246, 0.2);
+            background: var(--surface-primary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-default);
+            border-left: 4px solid var(--accent);
+            box-shadow: var(--shadow-md);
             margin-bottom: 12px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            transition: border-left-color 0.4s ease;
         }
 
         .unified-hero .hero-label {
             font-size: 0.8em;
-            color: #9ca3af;
+            color: var(--fg-tertiary);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 4px;
+            font-family: var(--font-body);
+            font-weight: 600;
         }
 
         .unified-hero .hero-time {
@@ -1810,24 +1818,32 @@
             letter-spacing: -1px;
             margin: 4px 0;
             transition: color 0.3s;
+            font-family: var(--font-heading);
         }
-        .hero-time.green { color: #10b981; }
-        .hero-time.yellow { color: #f59e0b; }
-        .hero-time.red { color: #ef4444; }
+        .hero-time.green { color: var(--status-safe); }
+        .hero-time.yellow { color: var(--status-caution); }
+        .hero-time.red { color: var(--status-danger); }
 
-        .hero-quality.green { background: rgba(16,185,129,0.15) !important; color: #10b981 !important; }
-        .hero-quality.yellow { background: rgba(245,158,11,0.15) !important; color: #f59e0b !important; }
-        .hero-quality.red { background: rgba(239,68,68,0.15) !important; color: #ef4444 !important; }
+        .hero-quality.green { background: var(--status-safe-light) !important; color: var(--status-safe) !important; }
+        .hero-quality.yellow { background: var(--status-caution-light) !important; color: var(--status-caution) !important; }
+        .hero-quality.red { background: var(--status-danger-light) !important; color: var(--status-danger) !important; }
+
+        .unified-hero.state-green { border-left-color: var(--status-safe); }
+        .unified-hero.state-yellow { border-left-color: var(--status-caution); }
+        .unified-hero.state-red { border-left-color: var(--status-danger); }
+        .status-pill.pill-safe { background: var(--status-safe-light); border-color: var(--status-safe); color: var(--status-safe); }
+        .status-pill.pill-danger { background: var(--status-danger-light); border-color: var(--status-danger); color: var(--status-danger); }
+        #bottleneckIndicator { display: inline-block; font-size: 0.75em; font-weight: 500; color: var(--status-caution); background: var(--status-caution-light); border-radius: var(--radius-full); padding: 3px 10px; margin-top: 6px; }
 
         .unified-hero .hero-countdown {
             font-size: 1.1em;
             font-weight: 600;
-            color: #10b981;
+            color: var(--fg-secondary);
             margin-bottom: 8px;
         }
         .unified-hero .hero-countdown.urgent {
-            animation: heroPulse 2s ease-in-out infinite;
-            color: #ef4444;
+            color: var(--status-danger);
+            font-weight: 700;
         }
         @keyframes heroPulse {
             0%, 100% { opacity: 1; }
@@ -1844,7 +1860,7 @@
 
         .hero-progress-bar {
             height: 4px;
-            background: rgba(255,255,255,0.08);
+            background: var(--canvas-inset);
             border-radius: 2px;
             overflow: hidden;
             margin-top: 8px;
@@ -1852,7 +1868,7 @@
 
         .hero-progress-bar .hero-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #8b5cf6, #10b981);
+            background: var(--accent);
             border-radius: 2px;
             transition: width 1s linear;
         }
@@ -1872,27 +1888,27 @@
 
         .status-pill {
             padding: 6px 14px;
-            background: rgba(0,0,0,0.3);
+            background: var(--surface-primary);
             border-radius: 20px;
             font-size: 0.8em;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #c9d1d9;
+            border: 1.5px solid var(--border-default);
+            color: var(--fg-secondary);
             transition: border-color 0.3s;
             white-space: nowrap;
             flex-shrink: 0;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            box-shadow: var(--shadow-sm);
+            font-family: var(--font-body);
+            font-weight: 500;
         }
 
         .unified-graph-wrap {
-            background: rgba(0,0,0,0.25);
+            background: var(--surface-primary);
             border-radius: 12px;
             padding: 10px;
             margin-bottom: 12px;
             position: relative;
-            border: 1px solid rgba(255,255,255,0.06);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-sm);
         }
 
         .unified-graph-wrap canvas {
@@ -1905,25 +1921,23 @@
         .accordion-section {
             margin-bottom: 6px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid var(--border-default);
             overflow: hidden;
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--surface-primary);
+            box-shadow: var(--shadow-sm);
             transition: border-color 0.2s, background 0.2s;
         }
 
         .accordion-section:hover {
-            border-color: rgba(255,255,255,0.12);
+            border-color: var(--border-strong);
         }
 
         .accordion-section.open {
-            border-color: rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
+            border-color: var(--accent-light);
         }
 
         .accordion-section.has-content {
-            border-left: 3px solid rgba(139, 92, 246, 0.4);
+            border-left: 3px solid var(--accent);
         }
 
         .accordion-header {
@@ -1935,18 +1949,19 @@
             gap: 10px;
             font-weight: 600;
             font-size: 0.92em;
-            color: #e6edf3;
+            color: var(--fg-primary);
+            font-family: var(--font-heading);
             transition: background 0.2s;
         }
 
         .accordion-header:hover {
-            background: rgba(255,255,255,0.04);
+            background: var(--canvas-subtle);
         }
 
         .accordion-summary {
             margin-left: auto;
             font-size: 0.8em;
-            color: #9ca3af;
+            color: var(--fg-tertiary);
             font-weight: 400;
             white-space: nowrap;
         }
@@ -1954,12 +1969,12 @@
         .accordion-arrow {
             font-size: 0.65em;
             transition: transform 0.25s ease;
-            color: #6e7681;
+            color: var(--fg-muted);
         }
 
         .accordion-section.open .accordion-arrow {
             transform: rotate(180deg);
-            color: #8b949e;
+            color: var(--accent);
         }
 
         .accordion-body {
@@ -1987,7 +2002,7 @@
         .accordion-body .input-group label {
             display: block;
             font-size: 0.78em;
-            color: #9ca3af;
+            color: var(--fg-secondary);
             margin-bottom: 3px;
         }
 
@@ -1996,9 +2011,9 @@
             width: 100%;
             padding: 8px 10px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            color: #e6edf3;
+            border: 1px solid var(--control-border);
+            background: var(--control-bg);
+            color: var(--fg-primary);
             font-size: 0.9em;
             box-sizing: border-box;
         }
@@ -2006,7 +2021,8 @@
         .accordion-body .input-group input:focus,
         .accordion-body .input-group select:focus {
             outline: none;
-            border-color: rgba(139, 92, 246, 0.5);
+            border-color: var(--control-border-focus);
+            box-shadow: 0 0 0 3px var(--control-ring);
         }
 
         .accordion-body .quick-actions {
@@ -2019,17 +2035,17 @@
         .accordion-body .quick-btn {
             padding: 6px 12px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: #c9d1d9;
+            border: 1px solid var(--border-default);
+            background: var(--canvas-subtle);
+            color: var(--fg-secondary);
             cursor: pointer;
             font-size: 0.82em;
             transition: all 0.15s;
         }
 
         .accordion-body .quick-btn:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.2);
+            background: var(--canvas-inset);
+            border-color: var(--border-strong);
         }
 
         .accordion-body .quick-btn:active {
@@ -2040,9 +2056,9 @@
             width: 100%;
             padding: 8px;
             border-radius: 8px;
-            border: 1px dashed rgba(255,255,255,0.15);
+            border: 1px dashed var(--border-strong);
             background: transparent;
-            color: #9ca3af;
+            color: var(--fg-tertiary);
             cursor: pointer;
             font-size: 0.85em;
             margin-top: 8px;
@@ -2050,9 +2066,9 @@
         }
 
         .accordion-body .add-btn:hover {
-            background: rgba(139, 92, 246, 0.1);
-            border-color: rgba(139, 92, 246, 0.3);
-            color: #c9d1d9;
+            background: var(--accent-lighter);
+            border-color: var(--accent-light);
+            color: var(--accent);
         }
 
         /* Unified med/caff entry styling */
@@ -2061,7 +2077,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 10px;
-            background: rgba(0,0,0,0.2);
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             margin-bottom: 6px;
             font-size: 0.88em;
@@ -2070,16 +2087,16 @@
         .unified-entry input, .unified-entry select {
             padding: 6px 8px;
             border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            color: #e6edf3;
+            border: 1px solid var(--control-border);
+            background: var(--control-bg);
+            color: var(--fg-primary);
             font-size: 0.9em;
         }
 
         .unified-entry .entry-delete {
             background: none;
             border: none;
-            color: #f87171;
+            color: var(--destructive);
             cursor: pointer;
             font-size: 1.1em;
             padding: 2px 6px;
@@ -2098,7 +2115,7 @@
             align-items: center;
             gap: 10px;
             padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         .modifier-toggle:last-child {
@@ -2111,7 +2128,7 @@
             gap: 8px;
             cursor: pointer;
             font-size: 0.9em;
-            color: #c9d1d9;
+            color: var(--fg-primary);
             flex: 1;
         }
 
@@ -2124,9 +2141,9 @@
         .modifier-toggle .modifier-time input {
             padding: 5px 8px;
             border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            color: #e6edf3;
+            border: 1px solid var(--control-border);
+            background: var(--control-bg);
+            color: var(--fg-primary);
             font-size: 0.85em;
             width: 100px;
         }
@@ -2142,7 +2159,7 @@
         /* Compact What-If Scenarios */
         .scenario-label {
             font-size: 0.82em;
-            color: #7d8590;
+            color: var(--fg-tertiary);
             margin-bottom: 8px;
             padding: 0 4px;
         }
@@ -2164,8 +2181,8 @@
         }
 
         .scenario-compact:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .scenario-compact:active {
@@ -2184,13 +2201,14 @@
 
         .scenario-compact .scenario-delta {
             font-size: 0.75em;
-            color: #7d8590;
+            color: var(--fg-tertiary);
         }
 
         /* Blocking factors */
         .unified-blocking {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: var(--status-blocking-light);
+            border: 1px solid var(--status-blocking);
+            border-left: 4px solid var(--status-blocking);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 12px;
@@ -2199,7 +2217,7 @@
         .unified-blocking h4 {
             margin: 0 0 8px;
             font-size: 0.85em;
-            color: #f87171;
+            color: var(--status-blocking);
         }
 
         .unified-blocking .blocking-item {
@@ -2207,7 +2225,7 @@
             justify-content: space-between;
             padding: 4px 0;
             font-size: 0.85em;
-            color: #c9d1d9;
+            color: var(--fg-primary);
         }
 
         /* (unified-perf-section removed — replaced by si-* classes) */
@@ -2239,35 +2257,36 @@
         }
 
         .action-btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            color: white;
-            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+            background: var(--accent);
+            color: var(--accent-fg);
+            box-shadow: 0 2px 12px rgba(107, 124, 94, 0.3);
         }
         .action-btn-primary:hover {
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.45);
+            box-shadow: 0 4px 20px rgba(107, 124, 94, 0.45);
+            background: var(--accent-hover);
         }
 
         .action-btn-secondary {
-            background: rgba(255,255,255,0.06);
-            color: #9ca3af;
-            border: 1px solid rgba(255,255,255,0.12) !important;
+            background: var(--surface-primary);
+            color: var(--fg-secondary);
+            border: 1px solid var(--border-default) !important;
         }
 
         .action-btn-small {
             padding: 6px 12px !important;
             font-size: 0.8em !important;
-            background: rgba(255,255,255,0.04);
-            color: #8b949e;
-            border: 1px solid rgba(255,255,255,0.08) !important;
+            background: var(--canvas-subtle);
+            color: var(--fg-tertiary);
+            border: 1px solid var(--border-subtle) !important;
         }
 
         /* All-nighter badge */
         .all-nighter-btn {
             padding: 8px 14px;
             border-radius: 8px;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            background: rgba(245, 158, 11, 0.08);
-            color: #f59e0b;
+            border: 1px solid var(--warning);
+            background: var(--warning-light);
+            color: var(--warning);
             cursor: pointer;
             font-size: 0.85em;
             font-weight: 600;
@@ -2277,8 +2296,8 @@
         }
 
         .all-nighter-btn.active {
-            background: rgba(245, 158, 11, 0.2);
-            border-color: rgba(245, 158, 11, 0.5);
+            background: var(--warning);
+            color: white;
         }
 
         /* Recent nights pills */
@@ -2294,33 +2313,35 @@
             border-radius: 6px;
             font-size: 0.78em;
             cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-default);
+            background: var(--surface-primary);
             transition: all 0.15s;
         }
 
         .recent-night-pill:hover {
-            border-color: rgba(255,255,255,0.25);
+            border-color: var(--border-strong);
         }
 
         /* Sleep debt display */
         .sleep-debt-display {
             margin-top: 8px;
             padding: 8px 12px;
-            background: rgba(0,0,0,0.2);
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             font-size: 0.85em;
-            color: #9ca3af;
+            color: var(--fg-tertiary);
         }
 
         /* Stacking warning */
         .stacking-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: var(--warning-light);
+            border: 1px solid var(--warning);
             border-radius: 8px;
             padding: 8px 12px;
             margin-top: 8px;
             font-size: 0.82em;
-            color: #f59e0b;
+            color: var(--warning);
         }
 
         /* Workout result in accordion */
@@ -2343,16 +2364,16 @@
             flex: 1;
             padding: 10px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: #c9d1d9;
+            border: 1px solid var(--border-default);
+            background: var(--canvas-subtle);
+            color: var(--fg-secondary);
             cursor: pointer;
             font-size: 0.88em;
             transition: all 0.15s;
         }
 
         .nic-quick-btns button:hover {
-            background: rgba(255,255,255,0.1);
+            background: var(--canvas-inset);
         }
 
         /* Circadian timeline compact */
@@ -2371,15 +2392,15 @@
         }
 
         .circadian-box.forbidden {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #f87171;
+            background: var(--destructive-light);
+            border: 1px solid var(--destructive);
+            color: var(--destructive);
         }
 
         .circadian-box.gate {
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #34d399;
+            background: var(--success-light);
+            border: 1px solid var(--success);
+            color: var(--success);
         }
 
         /* Mobile optimizations for unified view */
@@ -2426,7 +2447,7 @@
     <div class="modal-overlay" id="feedbackModal">
         <div class="modal-content">
             <h3>🌙 How did you sleep?</h3>
-            <p style="color: #b0b8c4; margin-bottom: 20px;">Yesterday's prediction was <strong id="feedbackPredicted">10:30 PM</strong>. When did you actually fall asleep?</p>
+            <p style="color: var(--fg-secondary); margin-bottom: 20px;">Yesterday's prediction was <strong id="feedbackPredicted">10:30 PM</strong>. When did you actually fall asleep?</p>
             <div class="input-group">
                 <label>Actual sleep time:</label>
                 <input type="time" id="actualSleepTime" style="width: 100%;">
@@ -2454,10 +2475,10 @@
 
         <!-- Header Bar: Sync + Checkpoints -->
         <div class="unified-header">
-            <div id="syncStatus" style="font-size: 0.8em; color: #b0b8c4; display: flex; align-items: center; gap: 6px;">
+            <div id="syncStatus" style="font-size: 0.8em; color: var(--fg-tertiary); display: flex; align-items: center; gap: 6px;">
                 <span id="syncIcon">⏳</span>
                 <span id="syncText">Connecting...</span>
-                <button onclick="forceCloudSync()" style="padding: 2px 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #e6edf3; font-size: 0.85em; cursor: pointer;" title="Sync">🔄</button>
+                <button onclick="forceCloudSync()" style="padding: 2px 8px; background: var(--canvas-subtle); border: 1px solid var(--border-default); border-radius: 8px; color: var(--fg-secondary); font-size: 0.85em; cursor: pointer;" title="Sync">🔄</button>
             </div>
             <div class="checkpoint-controls">
                 <button onclick="createCheckpoint()" title="Save checkpoint" aria-label="Save checkpoint">💾</button>
@@ -2472,8 +2493,8 @@
             <div class="hero-label">Projected Sleep Window</div>
             <div class="hero-time green" id="sleepTime">--:-- PM</div>
             <div class="hero-countdown" id="timeRemaining">Calculating...</div>
-            <div class="hero-quality" id="sleepQuality" style="background: rgba(16,185,129,0.15); color: #10b981;"></div>
-            <div id="bottleneckIndicator" style="display:none; font-size:0.78em; color:#f59e0b; margin-top:4px;"></div>
+            <div class="hero-quality green" id="sleepQuality" style=""></div>
+            <div id="bottleneckIndicator" style="display:none; margin-top:4px;"></div>
             <div id="accuracyHeroHint" class="accuracy-hero-hint" style="display:none;"></div>
             <div class="hero-progress-bar">
                 <div class="hero-progress-fill" id="heroProgressFill" style="width: 0%;"></div>
@@ -2483,13 +2504,13 @@
         <!-- Drug Concentration Graph -->
         <div class="unified-graph-wrap" id="graphContainer">
             <canvas id="graphCanvas"></canvas>
-            <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:rgba(0,0,0,0.9); color:#e6edf3; padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10;"></div>
+            <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
         </div>
 
         <!-- Status Pills -->
         <div class="status-pills">
-            <div class="status-pill" id="ampStatusPill" style="border-color: rgba(16,185,129,0.3);">💊 <span id="currentAmpLoad">0.0 mg</span></div>
-            <div class="status-pill" id="caffStatusPill" style="border-color: rgba(16,185,129,0.3);">☕ <span id="currentCaffLoad">0.0 mg</span></div>
+            <div class="status-pill" id="ampStatusPill" style="border-color: var(--status-safe);">💊 <span id="currentAmpLoad">0.0 mg</span></div>
+            <div class="status-pill" id="caffStatusPill" style="border-color: var(--status-safe);">☕ <span id="currentCaffLoad">0.0 mg</span></div>
             <div class="status-pill" id="circadianPill">🌙 <span id="circadianStatus">Normal</span></div>
         </div>
         <!-- Hidden status elements for JS compatibility -->
@@ -2542,11 +2563,11 @@
                 <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
                     <span id="allNighterIcon">🌙</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
                 </button>
-                <div id="allNighterHint" style="display:none; font-size:0.78em; color:#f59e0b; margin-bottom:10px;">Extended tracking active — includes yesterday's residual load</div>
-                <div id="ghostLoadSection" style="display:none; margin-bottom:10px; padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:8px;">
-                    <div style="font-size:0.82em; color:#f59e0b; font-weight:600; margin-bottom:6px;">👻 Ghost Load (Yesterday)</div>
+                <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:10px;">Extended tracking active — includes yesterday's residual load</div>
+                <div id="ghostLoadSection" style="display:none; margin-bottom:10px; padding:10px; background:var(--warning-light); border:1px solid var(--warning); border-radius:8px;">
+                    <div style="font-size:0.82em; color:var(--warning); font-weight:600; margin-bottom:6px;">👻 Ghost Load (Yesterday)</div>
                     <div id="ghostMedEntries"></div>
-                    <div id="ghostLoadTotal" style="font-size:0.82em; color:#b0b8c4; margin-top:4px;"></div>
+                    <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
                 </div>
                 <div id="medEntries">
                     <!-- Populated by renderMedEntries() -->
@@ -2575,7 +2596,7 @@
                 <div id="caffeineEntries">
                     <!-- Populated by renderCaffeineEntries() -->
                 </div>
-                <div id="coffeeStatus" style="font-size:0.82em; color:#9ca3af; margin-top:6px;"></div>
+                <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:6px;"></div>
             </div>
         </div>
 
@@ -2595,7 +2616,7 @@
                     <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
                     <div class="modifier-time" id="vitCTimeRow" style="display:none;">
                         <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
-                        <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); color:#e6edf3; font-size:0.85em;">
+                        <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;">
                             <option value="today">Today</option>
                             <option value="tomorrow">Tomorrow</option>
                         </select>
@@ -2631,15 +2652,15 @@
                     <button id="logVapeBtn" onclick="logNicotine('vape')">💨 Log Vape Hit</button>
                     <button id="logPouchBtn" onclick="logNicotine('pouch')">🫧 Log Zyn/Pouch</button>
                 </div>
-                <div id="nicotineStatus" style="display:none; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; margin-bottom:8px;">
+                <div id="nicotineStatus" style="display:none; padding:10px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; margin-bottom:8px;">
                     <div style="display:flex; justify-content:space-between; font-size:0.85em;">
-                        <span id="lastNicotineDisplay" style="color:#b0b8c4;"></span>
+                        <span id="lastNicotineDisplay" style="color:var(--fg-secondary);"></span>
                         <span id="nicotineTypeDisplay" style="font-weight:600;"></span>
                     </div>
-                    <div id="nicotineClearDisplay" style="font-size:0.8em; color:#9ca3af; margin-top:4px;"></div>
+                    <div id="nicotineClearDisplay" style="font-size:0.8em; color:var(--fg-tertiary); margin-top:4px;"></div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <input type="time" id="nicotineTimeInput" style="flex:1; padding:5px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); color:#e6edf3; font-size:0.85em;" onchange="state.nicotine.active = true; state.nicotine.lastHitTime = this.value; updateNicotineDisplay(); recalculate(); saveState();">
-                        <button onclick="clearNicotine()" style="padding:5px 10px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:#f87171; cursor:pointer; font-size:0.82em;">Clear</button>
+                        <input type="time" id="nicotineTimeInput" style="flex:1; padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;" onchange="state.nicotine.active = true; state.nicotine.lastHitTime = this.value; updateNicotineDisplay(); recalculate(); saveState();">
+                        <button onclick="clearNicotine()" style="padding:5px 10px; background:var(--destructive-light); border:1px solid var(--destructive); border-radius:6px; color:var(--destructive); cursor:pointer; font-size:0.82em;">Clear</button>
                     </div>
                 </div>
                 <div id="nicotineWarning" style="display:none;"></div>
@@ -2692,7 +2713,7 @@
                         </select>
                     </div>
                 </div>
-                <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:#c9d1d9; margin:6px 0 10px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary); margin:6px 0 10px;">
                     <input type="checkbox" id="workoutFasted" onchange="updateWorkoutPlan()"> 🍽️ Fasted Training
                 </label>
                 <div id="workoutResult" style="display:none;"></div>
@@ -2700,13 +2721,13 @@
                 <div id="workoutResultText" style="display:none;"></div>
                 <div id="workoutResultDetails" style="display:none;"></div>
                 <div id="coldShowerOption" style="display:none; margin-top:8px;">
-                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:#c9d1d9;">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary);">
                         <input type="checkbox" id="coldShowerToggle" onchange="updateWorkoutPlan()"> 🧊 Cold Shower After (cuts cooldown to 45min)
                     </label>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:10px;" id="workoutButtons" style="display:none;">
-                    <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="display:none; flex:1; padding:8px; border-radius:8px; border:1px solid rgba(16,185,129,0.3); background:rgba(16,185,129,0.1); color:#10b981; cursor:pointer; font-size:0.85em; font-weight:600;">✅ Apply to Prediction</button>
-                    <button id="resetWorkoutBtn" onclick="resetWorkoutPlan()" style="display:none; padding:8px 14px; border-radius:8px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.1); color:#f87171; cursor:pointer; font-size:0.85em;">Reset</button>
+                    <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="display:none; flex:1; padding:8px; border-radius:8px; border:1px solid var(--success); background:var(--success-light); color:var(--success); cursor:pointer; font-size:0.85em; font-weight:600;">✅ Apply to Prediction</button>
+                    <button id="resetWorkoutBtn" onclick="resetWorkoutPlan()" style="display:none; padding:8px 14px; border-radius:8px; border:1px solid var(--destructive); background:var(--destructive-light); color:var(--destructive); cursor:pointer; font-size:0.85em;">Reset</button>
                 </div>
             </div>
         </div>
@@ -2715,32 +2736,32 @@
         <div style="margin: 12px 0;">
             <div class="scenario-label">🔮 What-If Scenarios</div>
             <div class="scenario-compact-grid">
-                <div class="scenario-compact" onclick="simulateScenario('coffee')" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('coffee')" style="background: var(--warning-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">☕</div>
                     <div class="scenario-time" id="scenarioCoffeeSleep">--</div>
                     <div class="scenario-delta" id="scenarioCoffeeDelta">Coffee</div>
                 </div>
-                <div class="scenario-compact" onclick="simulateScenario('espresso')" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('espresso')" style="background: var(--destructive-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">🔥</div>
                     <div class="scenario-time" id="scenarioEspressoSleep">--</div>
                     <div class="scenario-delta" id="scenarioEspressoDelta">Espresso</div>
                 </div>
-                <div class="scenario-compact" onclick="simulateScenario('vitc')" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('vitc')" style="background: var(--success-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">🍊</div>
                     <div class="scenario-time" id="scenarioVitCSleep">--</div>
                     <div class="scenario-delta" id="scenarioVitCDelta">Vitamin C</div>
                 </div>
-                <div class="scenario-compact" onclick="simulateScenario('sauna')" style="background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('sauna')" style="background: var(--info-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">🧖</div>
                     <div class="scenario-time" id="scenarioSaunaSleep">--</div>
                     <div class="scenario-delta" id="scenarioSaunaDelta">Sauna</div>
                 </div>
-                <div class="scenario-compact" onclick="simulateScenario('vape')" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('vape')" style="background: var(--destructive-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">💨</div>
                     <div class="scenario-time" id="scenarioVapeSleep">--</div>
                     <div class="scenario-delta" id="scenarioVapeDelta">Vape</div>
                 </div>
-                <div class="scenario-compact" onclick="simulateScenario('zyn')" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15);">
+                <div class="scenario-compact" onclick="simulateScenario('zyn')" style="background: var(--success-light); border: 1px solid var(--border-default);">
                     <div class="scenario-icon">🫧</div>
                     <div class="scenario-time" id="scenarioZynSleep">--</div>
                     <div class="scenario-delta" id="scenarioZynDelta">Zyn</div>
@@ -2766,7 +2787,7 @@
                         <div id="sleepGateTime" style="font-size:0.95em;">--</div>
                     </div>
                 </div>
-                <div style="font-size:0.82em; color:#7d8590; margin-bottom:10px;">Wake: <span id="wakeTimeDisplay">--</span></div>
+                <div style="font-size:0.82em; color:var(--fg-tertiary); margin-bottom:10px;">Wake: <span id="wakeTimeDisplay">--</span></div>
                 <div id="feelingsList" style="font-size:0.88em;"></div>
             </div>
         </div>
@@ -2791,7 +2812,7 @@
                 <div id="siTabOverview" class="si-tab-content">
                     <div id="circadianPhaseDisplay" style="margin-bottom:10px;"></div>
                     <div id="sleepCalendar" style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;"></div>
-                    <div style="display:flex; gap:12px; justify-content:center; margin-top:8px; font-size:0.75em; color:#6e7681;">
+                    <div style="display:flex; gap:12px; justify-content:center; margin-top:8px; font-size:0.75em; color:var(--fg-tertiary);">
                         <span>🟢 >6.5h</span>
                         <span>🟡 4.5-6.5h</span>
                         <span>🔴 <4.5h</span>
@@ -2801,23 +2822,23 @@
                     <div id="sleepExplainer" class="si-explainer">
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                             <span id="explainerIcon" style="font-size:1.4em;"></span>
-                            <span id="explainerTitle" style="font-weight:600; color:#e6edf3;"></span>
+                            <span id="explainerTitle" style="font-weight:600; color:var(--fg-primary);"></span>
                         </div>
-                        <div id="explainerDesc" style="font-size:0.85em; color:#b0b8c4; line-height:1.5;"></div>
-                        <div id="explainerAction" style="font-size:0.8em; color:#8b5cf6; margin-top:6px;"></div>
+                        <div id="explainerDesc" style="font-size:0.85em; color:var(--fg-secondary); line-height:1.5;"></div>
+                        <div id="explainerAction" style="font-size:0.8em; color:var(--accent); margin-top:6px;"></div>
                     </div>
 
                     <!-- Stats Grid (dynamically rendered) -->
                     <div id="siStatsGrid" class="si-stats-grid"></div>
 
                     <!-- Sleep Performance Graph -->
-                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:8px; margin-bottom:12px; position:relative;">
+                    <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; margin-bottom:12px; position:relative;">
                         <canvas id="sleepPerformanceGraph" style="width:100%; height:220px;"></canvas>
-                        <div id="sleepGraphTooltip" style="display:none; position:absolute; background:rgba(0,0,0,0.95); color:#e6edf3; padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid rgba(255,255,255,0.1); min-width:140px;">
+                        <div id="sleepGraphTooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
                             <div id="tooltipDate" style="font-weight:600; margin-bottom:4px;"></div>
                             <div id="tooltipHours" style="font-size:1.2em; margin-bottom:2px;"></div>
                             <div id="tooltipStatus" style="font-size:0.9em; margin-bottom:2px;"></div>
-                            <div id="tooltipVsAvg" style="font-size:0.85em; color:#9ca3af;"></div>
+                            <div id="tooltipVsAvg" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
                         </div>
                     </div>
 
@@ -2862,20 +2883,20 @@
                 <div id="siTabCalendar" class="si-tab-content" style="display:none">
                     <div id="sleepCalendarMonth">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                            <button onclick="navigateCalendar(-1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#e6edf3;padding:8px 14px;cursor:pointer;font-size:1em;">&#8249;</button>
-                            <span id="sleepCalendarMonthLabel" style="font-weight:700;font-size:1.1em;color:#e6edf3;"></span>
-                            <button onclick="navigateCalendar(1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#e6edf3;padding:8px 14px;cursor:pointer;font-size:1em;">&#8250;</button>
+                            <button onclick="navigateCalendar(-1)" style="background:var(--canvas-subtle);border:1px solid var(--border-default);border-radius:8px;color:var(--fg-primary);padding:8px 14px;cursor:pointer;font-size:1em;">&#8249;</button>
+                            <span id="sleepCalendarMonthLabel" style="font-weight:700;font-size:1.1em;color:var(--fg-primary);"></span>
+                            <button onclick="navigateCalendar(1)" style="background:var(--canvas-subtle);border:1px solid var(--border-default);border-radius:8px;color:var(--fg-primary);padding:8px 14px;cursor:pointer;font-size:1em;">&#8250;</button>
                         </div>
                         <div class="sleep-cal-header">
                             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                         </div>
                         <div id="sleepCalendarDays" class="sleep-cal-grid"></div>
                     </div>
-                    <div id="sleepCalendarLegend" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:0.72em;color:#9ca3af;"></div>
+                    <div id="sleepCalendarLegend" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:0.72em;color:var(--fg-tertiary);"></div>
                     <div id="sleepCalendarStats" style="margin-top:12px;"></div>
                     <div style="margin-top:16px;">
-                        <h4 style="color:#c9d1d9; margin-bottom:8px; font-size:0.9em;">Prediction Log</h4>
-                        <span id="historyAccuracySummary" style="font-size:0.75em; color:#9ca3af;"></span>
+                        <h4 style="color:var(--fg-primary); margin-bottom:8px; font-size:0.9em;">Prediction Log</h4>
+                        <span id="historyAccuracySummary" style="font-size:0.75em; color:var(--fg-tertiary);"></span>
                         <div id="historyList" style="margin-top:8px;"></div>
                     </div>
                 </div>
@@ -2883,9 +2904,9 @@
                 <!-- Day Detail Modal -->
                 <div id="sleepDayDetailModal" class="modal-overlay">
                     <div class="modal" style="max-width:440px;max-height:90vh;display:flex;flex-direction:column;">
-                        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <span id="dayDetailTitle" style="font-weight:700;font-size:1.1em;color:#e6edf3;"></span>
-                            <button onclick="closeSleepDayDetailModal()" style="background:none;border:none;color:#8b949e;font-size:1.4em;cursor:pointer;padding:4px;">&times;</button>
+                        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-default);">
+                            <span id="dayDetailTitle" style="font-weight:700;font-size:1.1em;color:var(--fg-primary);"></span>
+                            <button onclick="closeSleepDayDetailModal()" style="background:none;border:none;color:var(--fg-muted);font-size:1.4em;cursor:pointer;padding:4px;">&times;</button>
                         </div>
                         <div id="dayDetailBody" style="overflow-y:auto;flex:1;padding:16px 20px;"></div>
                     </div>
@@ -2911,8 +2932,8 @@
                 <span class="accordion-arrow">▼</span>
             </div>
             <div class="accordion-body">
-                <pre id="forecastLogicText" style="font-size:0.78em; color:#b0b8c4; white-space:pre-wrap; word-wrap:break-word; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; max-height:400px; overflow-y:auto;"></pre>
-                <button onclick="copyForecastLogic()" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#b0b8c4; cursor:pointer; font-size:0.82em;">📋 Copy to Clipboard</button>
+                <pre id="forecastLogicText" style="font-size:0.78em; color:var(--fg-secondary); white-space:pre-wrap; word-wrap:break-word; background:var(--canvas-subtle); border:1px solid var(--border-subtle); padding:10px; border-radius:8px; max-height:400px; overflow-y:auto;"></pre>
+                <button onclick="copyForecastLogic()" style="margin-top:8px; padding:6px 14px; background:var(--canvas-subtle); border:1px solid var(--border-default); border-radius:6px; color:var(--fg-secondary); cursor:pointer; font-size:0.82em;">📋 Copy to Clipboard</button>
             </div>
         </div>
 
@@ -2972,7 +2993,7 @@
     <div class="modal-overlay" id="sleepEditModal">
         <div class="modal-content" style="max-width: 350px;">
             <h3 id="sleepEditTitle">📅 Edit Sleep Data</h3>
-            <p style="color: #b0b8c4; margin-bottom: 15px; font-size: 0.9em;">Enter the sleep you got <strong>before waking up</strong> on this day.</p>
+            <p style="color: var(--fg-secondary); margin-bottom: 15px; font-size: 0.9em;">Enter the sleep you got <strong>before waking up</strong> on this day.</p>
             <div class="input-group" style="margin-bottom: 15px;">
                 <label>Hours Slept</label>
                 <input type="number" id="sleepEditHours" value="7" min="0" max="14" step="0.5" style="width: 100%;">
@@ -2982,14 +3003,14 @@
                 <input type="time" id="sleepEditWakeTime" value="07:00" style="width: 100%;">
             </div>
             <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                <button onclick="setAllNighter()" style="flex:1; padding:10px; background:linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1)); border:1px solid rgba(239,68,68,0.4); border-radius:8px; color:#ef4444; font-size:0.85em; font-weight:600; cursor:pointer;">
+                <button onclick="setAllNighter()" style="flex:1; padding:10px; background:var(--destructive-light); border:1px solid var(--destructive); border-radius:8px; color:var(--destructive); font-size:0.85em; font-weight:600; cursor:pointer;">
                     🚫 All-Nighter<br><span style="font-size:0.8em; opacity:0.8;">0 hours</span>
                 </button>
-                <button onclick="clearSleepEntry()" style="flex:1; padding:10px; background:linear-gradient(135deg, rgba(107,114,128,0.2), rgba(107,114,128,0.1)); border:1px solid rgba(107,114,128,0.4); border-radius:8px; color:#9ca3af; font-size:0.85em; font-weight:600; cursor:pointer;">
+                <button onclick="clearSleepEntry()" style="flex:1; padding:10px; background:var(--canvas-subtle); border:1px solid var(--border-default); border-radius:8px; color:var(--fg-tertiary); font-size:0.85em; font-weight:600; cursor:pointer;">
                     🗑️ Clear Entry<br><span style="font-size:0.8em; opacity:0.8;">Remove data</span>
                 </button>
             </div>
-            <div style="font-size:0.75em; color:#6b7280; margin-bottom:15px; padding:8px; background:rgba(0,0,0,0.2); border-radius:6px;">
+            <div style="font-size:0.75em; color:var(--fg-tertiary); margin-bottom:15px; padding:8px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:6px;">
                 💡 <strong>All-Nighter</strong> = 0 sleep (counts in stats)<br>
                 💡 <strong>Clear Entry</strong> = No data for this day (ignored)
             </div>

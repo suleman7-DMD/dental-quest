@@ -494,35 +494,56 @@ function icon(name, size) {
 function showCustomAlert(message, title = 'Notice', callback = null) {
     const modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-    modal.innerHTML = `
-        <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
-            <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-            <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
-            <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
-                style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
-        </div>
-    `;
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:10001;';
+    const alertContainer = document.createElement('div');
+    alertContainer.style.cssText = 'background:#FFFFFF;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid rgba(0,0,0,0.08);box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;';
+    const alertH3 = document.createElement('h3');
+    alertH3.style.cssText = 'color:#5E7A8A;margin:0 0 16px 0;font-size:1.2em;';
+    alertH3.textContent = title;
+    const alertP = document.createElement('p');
+    alertP.style.cssText = 'color:#2C2825;margin-bottom:20px;white-space:pre-wrap;';
+    alertP.textContent = message;
+    const alertBtn = document.createElement('button');
+    alertBtn.style.cssText = 'padding:12px 32px;background:#6B7C5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;';
+    alertBtn.textContent = 'OK';
+    alertBtn.onclick = function() { modal.remove(); if (callback) callback(); };
+    alertContainer.appendChild(alertH3);
+    alertContainer.appendChild(alertP);
+    alertContainer.appendChild(alertBtn);
+    modal.appendChild(alertContainer);
     document.body.appendChild(modal);
-    window._customAlertCallback = callback;
-    modal.querySelector('button').focus();
+    alertBtn.focus();
 }
 
 // Custom Confirm Modal (replaces blocking confirm())
 function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
     const modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-    modal.innerHTML = `
-        <div style="background:#1a1a2e;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #30363d;text-align:center;">
-            <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-            <p style="color:#e6edf3;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
-            <div style="display:flex;gap:12px;justify-content:center;">
-                <button id="confirmBtn" style="flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
-                <button id="cancelBtn" style="flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
-            </div>
-        </div>
-    `;
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:10001;';
+    const confirmContainer = document.createElement('div');
+    confirmContainer.style.cssText = 'background:#FFFFFF;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid rgba(0,0,0,0.08);box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;';
+    const confirmH3 = document.createElement('h3');
+    confirmH3.style.cssText = 'color:#C4923A;margin:0 0 16px 0;font-size:1.2em;';
+    confirmH3.textContent = title;
+    const confirmP = document.createElement('p');
+    confirmP.style.cssText = 'color:#2C2825;margin-bottom:20px;white-space:pre-wrap;';
+    confirmP.textContent = message;
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;';
+    const yesBtn = document.createElement('button');
+    yesBtn.id = 'confirmBtn';
+    yesBtn.style.cssText = 'flex:1;padding:12px;background:#6B7C5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    yesBtn.textContent = 'Yes';
+    const noBtn = document.createElement('button');
+    noBtn.id = 'cancelBtn';
+    noBtn.style.cssText = 'flex:1;padding:12px;background:#EFECE6;border:1px solid rgba(0,0,0,0.08);border-radius:8px;color:#6B635B;font-weight:600;cursor:pointer;';
+    noBtn.textContent = 'No';
+    btnRow.appendChild(yesBtn);
+    btnRow.appendChild(noBtn);
+    confirmContainer.appendChild(confirmH3);
+    confirmContainer.appendChild(confirmP);
+    confirmContainer.appendChild(btnRow);
+    modal.appendChild(confirmContainer);
     document.body.appendChild(modal);
     modal.querySelector('#confirmBtn').onclick = () => { modal.remove(); if (onConfirm) onConfirm(); };
     modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
