@@ -36,6 +36,8 @@ function addTask() {
     if (currentCategory === 'dotoday') {
         taskCategory = 'health'; // Default category
         markDoToday = true;
+    } else if (currentCategory === 'all') {
+        taskCategory = 'health'; // Default category for all-tasks view
     }
 
     const id = generateId('task');
@@ -96,7 +98,9 @@ function renderTasks() {
     const allTasks = getValues(tasks); // Cache once per render
     let filteredTasks;
 
-    if (currentCategory === 'dotoday') {
+    if (currentCategory === 'all') {
+        filteredTasks = allTasks.filter(t => !t.completed);
+    } else if (currentCategory === 'dotoday') {
         filteredTasks = allTasks.filter(t => t.doToday && !t.completed);
     } else {
         filteredTasks = allTasks.filter(t => t.category === currentCategory && !t.completed);
@@ -143,46 +147,45 @@ function renderTasks() {
     }
 
     taskList.innerHTML = filteredTasks.map((task, index) => {
-        const isDoTodayView = currentCategory === 'dotoday';
+        const isDoTodayView = currentCategory === 'dotoday' || currentCategory === 'all';
         const categoryNames = {
-            financial: 'FIN', clinic: 'CLI', health: 'HTH',
-            school: 'SCH', academic: 'ACA', future: 'FUT', life: 'LIF'
+            financial: 'Financial', clinic: 'Clinic', health: 'Health',
+            school: 'School', academic: 'Academic', future: 'Future', life: 'Life'
         };
 
         const sizeLabel = task.size === 'big' ? 'L' : task.size === 'small' ? 'S' : 'M';
+        const sizeTitle = task.size === 'big' ? 'Large' : task.size === 'small' ? 'Small' : 'Medium';
+        const completedClass = task.completed ? ' completed' : '';
 
-        return `
-            <div class="task-item ${isDoTodayView ? 'dotoday' : task.category}"
-                 draggable="true"
-                 data-task-id="${task.id}"
-                 data-index="${index}"
-                 ondragstart="handleDragStart(event, '${task.id}')"
-                 ondragover="handleDragOver(event)"
-                 ondragleave="handleDragLeave(event)"
-                 ondrop="handleDrop(event, '${task.id}')"
-                 ondragend="handleDragEnd(event)">
-                <div class="task-row-top">
-                    <input type="checkbox"
-                           class="task-checkbox"
-                           ${task.completed ? 'checked' : ''}
-                           onchange="toggleTask('${task.id}')">
-                    <div class="task-text ${task.completed ? 'completed' : ''}">${escapeHtml(task.text)}</div>
-                    ${task.highLeverage ? '<span class="task-meta-tag leverage" title="High leverage">' + icon('zap') + '</span>' : ''}
-                    <span class="task-meta-tag size" title="${task.size || 'medium'}">${sizeLabel}</span>
-                    ${isDoTodayView ? '<span class="task-meta-tag cat">' + (categoryNames[task.category] || '') + '</span>' : ''}
-                    ${task.doToday && !isDoTodayView ? '<span class="task-meta-tag today">TODAY</span>' : ''}
-                </div>
-                ${!task.completed && !isDoTodayView ? `
-                    <button class="do-today-btn ${task.doToday ? 'active' : ''}" onclick="toggleDoToday('${task.id}')" title="${task.doToday ? 'Remove from today' : 'Do today'}">
-                        ${task.doToday ? icon('check') : icon('sun')}
-                    </button>
-                ` : ''}
-                <div class="task-actions">
-                    ${!task.completed ? `<button class="task-timer-btn" onclick="openTaskEditModal('${task.id}')" title="Edit">${icon('edit')}</button>` : ''}
-                    <button class="task-delete-btn" onclick="deleteTask('${task.id}')" title="Delete">${icon('trash-2')}</button>
-                </div>
-            </div>
-        `;
+        return '<div class="task-item' + completedClass + ' ' + (currentCategory === 'dotoday' ? 'dotoday' : (task.category || 'health')) + '"'
+            + ' draggable="true"'
+            + ' data-task-id="' + task.id + '"'
+            + ' data-index="' + index + '"'
+            + ' ondragstart="handleDragStart(event, \'' + task.id + '\')"'
+            + ' ondragover="handleDragOver(event)"'
+            + ' ondragleave="handleDragLeave(event)"'
+            + ' ondrop="handleDrop(event, \'' + task.id + '\')"'
+            + ' ondragend="handleDragEnd(event)">'
+            + '<input type="checkbox" class="task-checkbox"'
+            + (task.completed ? ' checked' : '')
+            + ' onchange="toggleTask(\'' + task.id + '\')">'
+            + '<div class="task-content">'
+            + '<span class="task-text' + completedClass + '">' + escapeHtml(task.text) + '</span>'
+            + '<div class="task-meta">'
+            + (isDoTodayView ? '<span class="task-meta-tag cat">' + (categoryNames[task.category] || '') + '</span>' : '')
+            + '<span class="task-meta-tag size" title="' + sizeTitle + '">' + sizeLabel + '</span>'
+            + (task.highLeverage ? '<span class="task-meta-tag leverage" title="High leverage">' + icon('zap', 12) + ' Leverage</span>' : '')
+            + (task.doToday && !isDoTodayView ? '<span class="task-meta-tag today">' + icon('sun', 10) + ' Today</span>' : '')
+            + '</div>'
+            + '</div>'
+            + '<div class="task-actions-row">'
+            + (!task.completed && !isDoTodayView ? '<button class="do-today-btn ' + (task.doToday ? 'active' : '') + '" onclick="toggleDoToday(\'' + task.id + '\')" title="' + (task.doToday ? 'Remove from today' : 'Do today') + '">' + (task.doToday ? icon('check', 14) : icon('sun', 14)) + '</button>' : '')
+            + '<div class="task-actions">'
+            + (!task.completed ? '<button class="task-action-btn task-edit-btn" onclick="openTaskEditModal(\'' + task.id + '\')" title="Edit">' + icon('edit', 14) + '</button>' : '')
+            + '<button class="task-action-btn task-delete-btn" onclick="deleteTask(\'' + task.id + '\')" title="Delete">' + icon('trash-2', 14) + '</button>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
     }).join('');
 }
 
@@ -586,7 +589,7 @@ function updateDashboardExpansion(type) {
             <div class="expansion-task">
                 <input type="checkbox"
                        class="expansion-task-check"
-                       onchange="toggleTaskFromDashboard(${task.id}, '${type}')"
+                       onchange="toggleTaskFromDashboard('${task.id}', '${type}')"
                        ${task.completed ? 'checked' : ''}>
                 <span class="expansion-task-text">
                     ${escapeHtml(task.text)}
@@ -845,11 +848,7 @@ function filterCategory(cat) {
         p.classList.toggle('active', p.getAttribute('data-category') === cat);
     });
 
-    if (cat === 'all') {
-        currentCategory = 'dotoday'; // default view
-    } else {
-        currentCategory = cat;
-    }
+    currentCategory = cat;
 
     // Update the old category tabs too (for list view)
     document.querySelectorAll('.category-tab').forEach(function(t) {
@@ -868,55 +867,58 @@ function filterCategory(cat) {
 
 function renderKanbanBoard() {
     var allTasks = getValues(tasks);
-    var lockedIn = [];
-    var today = [];
-    var tomorrow = [];
-    var completed = [];
+
+    // Apply category filter (same as list view)
+    if (currentCategory && currentCategory !== 'all') {
+        if (currentCategory === 'dotoday') {
+            allTasks = allTasks.filter(function(t) { return t.doToday && !t.completed; });
+        } else {
+            allTasks = allTasks.filter(function(t) { return t.category === currentCategory; });
+        }
+    }
+
+    // 3-column model: To Do / In Progress / Done
+    var todo = [];
+    var inprogress = [];
+    var done = [];
 
     for (var i = 0; i < allTasks.length; i++) {
         var t = allTasks[i];
         if (t.completed) {
-            completed.push(t);
-        } else if (t.triageTier === 'lockedIn') {
-            lockedIn.push(t);
-        } else if (t.triageTier === 'tomorrow') {
-            tomorrow.push(t);
-        } else if (t.doToday || t.triageTier === 'today') {
-            today.push(t);
+            done.push(t);
+        } else if (t.triageTier === 'lockedIn' || t.doToday || t.triageTier === 'today') {
+            inprogress.push(t);
         } else {
-            today.push(t); // Default: unassigned goes to today
+            todo.push(t);
         }
     }
 
-    // Sort by triageOrder or sortOrder
+    // Sort active tasks by triageOrder/sortOrder, completed by most recent first
     var sortFn = function(a, b) { return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0); };
-    lockedIn.sort(sortFn);
-    today.sort(sortFn);
-    tomorrow.sort(sortFn);
-    completed.sort(function(a, b) {
+    todo.sort(sortFn);
+    inprogress.sort(sortFn);
+    done.sort(function(a, b) {
         var bTime = b.completedAt || b.createdAt || 0;
         var aTime = a.completedAt || a.createdAt || 0;
-        // Handle both string ISO dates and numeric timestamps
-        if (typeof bTime === 'string' && typeof aTime === 'string') return bTime.localeCompare(aTime);
-        return (typeof bTime === 'number' ? bTime : new Date(bTime).getTime()) - (typeof aTime === 'number' ? aTime : new Date(aTime).getTime());
+        // Most recent completed first (descending)
+        var bMs = typeof bTime === 'number' ? bTime : new Date(bTime).getTime();
+        var aMs = typeof aTime === 'number' ? aTime : new Date(aTime).getTime();
+        return bMs - aMs;
     });
 
-    // Render columns — uses escapeHtml() for all user content (XSS-safe)
-    renderKanbanColumn('kanbanLockedIn', lockedIn);
-    renderKanbanColumn('kanbanToday', today);
-    renderKanbanColumn('kanbanTomorrow', tomorrow);
-    renderKanbanColumn('kanbanCompleted', completed.slice(0, 10)); // Show last 10
+    // Render 3 columns
+    renderKanbanColumn('kanbanTodo', todo);
+    renderKanbanColumn('kanbanInProgress', inprogress);
+    renderKanbanColumn('kanbanDone', done.slice(0, 15));
 
     // Update counts
     var el;
-    el = document.getElementById('kanbanLockedInCount');
-    if (el) el.textContent = lockedIn.length;
-    el = document.getElementById('kanbanTodayCount');
-    if (el) el.textContent = today.length;
-    el = document.getElementById('kanbanTomorrowCount');
-    if (el) el.textContent = tomorrow.length;
-    el = document.getElementById('kanbanCompletedCount');
-    if (el) el.textContent = completed.length;
+    el = document.getElementById('kanbanTodoCount');
+    if (el) el.textContent = todo.length;
+    el = document.getElementById('kanbanInProgressCount');
+    if (el) el.textContent = inprogress.length;
+    el = document.getElementById('kanbanDoneCount');
+    if (el) el.textContent = done.length;
 
     // Init Lucide icons in new cards
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
@@ -930,11 +932,10 @@ function renderKanbanColumn(containerId, taskList) {
     if (!container) return;
 
     if (taskList.length === 0) {
-        container.innerHTML = '<div class="kanban-empty">No tasks</div>';
+        container.innerHTML = '<div class="kanban-empty">No tasks yet</div>';
         return;
     }
 
-    // Build HTML using escapeHtml for all user-provided text
     var html = '';
     for (var i = 0; i < taskList.length; i++) {
         html += renderKanbanCard(taskList[i]);
@@ -943,28 +944,23 @@ function renderKanbanColumn(containerId, taskList) {
 }
 
 function renderKanbanCard(task) {
-    // All user content sanitized via escapeHtml() — same pattern as existing triage card rendering
-    var catColor = getCategoryColor(task.category);
-    var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '2-15m' : '15-45m';
+    var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '5m' : '30m';
     var completedClass = task.completed ? ' completed' : '';
-    var leverageHtml = task.highLeverage ?
-        '<span class="kanban-card-leverage" title="High leverage"><i data-lucide="zap"></i></span>' : '';
+    var checkedClass = task.completed ? ' checked' : '';
+    var leverageBadge = task.highLeverage ? '<span class="kanban-badge kanban-badge-leverage">High leverage</span>' : '';
 
     return '<div class="kanban-card' + completedClass + '" data-task-id="' + escapeHtml(task.id) + '" draggable="true">' +
-        '<div class="kanban-card-category">' +
-            '<span class="kanban-cat-dot" style="background:' + catColor + '"></span>' +
-            escapeHtml(task.category) +
+        '<div class="kanban-card-actions">' +
+            '<button class="kca" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit"><i data-lucide="pencil"></i></button>' +
         '</div>' +
-        '<div class="kanban-card-title">' + escapeHtml(task.text) + '</div>' +
-        '<div class="kanban-card-meta">' +
-            '<span class="kanban-card-size"><i data-lucide="clock"></i> ' + sizeLabel + '</span>' +
-            leverageHtml +
+        '<div class="kanban-card-top">' +
+            '<button class="kanban-card-check' + checkedClass + '" onclick="toggleTaskComplete(\'' + escapeHtml(task.id) + '\')" title="' + (task.completed ? 'Undo' : 'Complete') + '"></button>' +
+            '<span class="kanban-card-title">' + escapeHtml(task.text) + '</span>' +
         '</div>' +
-        '<div class="kanban-card-footer">' +
-            '<div class="kanban-card-actions">' +
-                '<button class="kca" onclick="toggleTaskComplete(\'' + escapeHtml(task.id) + '\')" title="' + (task.completed ? 'Undo' : 'Complete') + '"><i data-lucide="' + (task.completed ? 'rotate-ccw' : 'check') + '"></i></button>' +
-                '<button class="kca" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit"><i data-lucide="edit"></i></button>' +
-            '</div>' +
+        '<div class="kanban-card-badges">' +
+            '<span class="kanban-badge kanban-badge-cat">' + escapeHtml(task.category) + '</span>' +
+            '<span class="kanban-badge kanban-badge-size">' + sizeLabel + '</span>' +
+            leverageBadge +
         '</div>' +
     '</div>';
 }
@@ -992,7 +988,7 @@ function toggleTaskComplete(taskId) {
         stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
     } else {
         task.completed = true;
-        task.completedAt = new Date().toISOString();
+        task.completedAt = Date.now();
         stats.totalTasks = (stats.totalTasks || 0) + 1;
     }
     saveData();
@@ -1002,21 +998,23 @@ function toggleTaskComplete(taskId) {
     if (currentView === 'focus') renderFocusMode();
 }
 
-function quickAddToColumn(tier) {
+function quickAddToColumn(status) {
     var text = prompt('New task:');
     if (!text || !text.trim()) return;
     var id = generateId('task');
+    // Map kanban status to task fields
+    var isInProgress = (status === 'inprogress');
     var task = {
         id: id,
         text: text.trim(),
         category: 'health',
         completed: false,
-        doToday: true,
+        doToday: isInProgress,
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,
         sortOrder: getCount(tasks),
-        triageTier: tier,
+        triageTier: isInProgress ? 'today' : 'tomorrow',
         triageOrder: 0,
         triageDate: getLocalDateString(new Date())
     };
@@ -1066,10 +1064,10 @@ function kanbanDropTask(taskId, targetStatus) {
     var task = tasks[taskId];
     if (!task) return;
 
-    if (targetStatus === 'completed') {
+    if (targetStatus === 'done') {
         if (!task.completed) {
             task.completed = true;
-            task.completedAt = new Date().toISOString();
+            task.completedAt = Date.now();
             stats.totalTasks = (stats.totalTasks || 0) + 1;
         }
     } else {
@@ -1078,8 +1076,14 @@ function kanbanDropTask(taskId, targetStatus) {
             task.completedAt = null;
             stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
         }
-        task.triageTier = targetStatus;
-        task.doToday = (targetStatus === 'lockedIn' || targetStatus === 'today');
+        if (targetStatus === 'inprogress') {
+            task.triageTier = 'today';
+            task.doToday = true;
+        } else {
+            // 'todo'
+            task.triageTier = 'tomorrow';
+            task.doToday = false;
+        }
         task.triageDate = getLocalDateString(new Date());
     }
 

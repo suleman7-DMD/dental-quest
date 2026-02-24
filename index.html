@@ -62,11 +62,11 @@
             --info: #5E7A8A;
             --info-light: #E4EDF0;
 
-            /* Shadows */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-            --shadow-overlay: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+            /* Shadows (warm-tinted, not cold gray) */
+            --shadow-sm: 0 1px 2px rgba(44, 40, 37, 0.05);
+            --shadow-md: 0 2px 8px rgba(44, 40, 37, 0.07), 0 1px 2px rgba(44, 40, 37, 0.04);
+            --shadow-lg: 0 4px 16px rgba(44, 40, 37, 0.09), 0 2px 4px rgba(44, 40, 37, 0.05);
+            --shadow-overlay: 0 8px 32px rgba(44, 40, 37, 0.14), 0 2px 8px rgba(44, 40, 37, 0.07);
 
             /* Control-specific */
             --control-bg: #FFFFFF;
@@ -737,47 +737,86 @@
         .task-list {
             display: flex;
             flex-direction: column;
-            gap: 0;
+            gap: 2px;
         }
 
         .task-item {
             background: var(--surface-primary);
-            border-radius: 0;
-            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
             display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.15s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid var(--border-subtle);
+            align-items: flex-start;
+            gap: 10px;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            position: relative;
         }
 
         .task-item:hover {
             background: var(--canvas-subtle);
+            border-color: var(--border-default);
         }
 
-        .task-item.financial { border-left-color: var(--cat-financial); }
-        .task-item.clinic { border-left-color: var(--cat-clinic); }
-        .task-item.health { border-left-color: var(--cat-health); }
-        .task-item.school { border-left-color: var(--cat-school); }
-        .task-item.academic { border-left-color: var(--cat-academic); }
-        .task-item.future { border-left-color: var(--cat-future); }
-        .task-item.life { border-left-color: var(--cat-life); }
-        .task-item.dotoday { border-left-color: var(--cat-dotoday); }
+        /* Category accent — inset left bar */
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 0 2px 2px 0;
+            background: transparent;
+        }
+        .task-item.financial::before { background: var(--cat-financial); }
+        .task-item.clinic::before { background: var(--cat-clinic); }
+        .task-item.health::before { background: var(--cat-health); }
+        .task-item.school::before { background: var(--cat-school); }
+        .task-item.academic::before { background: var(--cat-academic); }
+        .task-item.future::before { background: var(--cat-future); }
+        .task-item.life::before { background: var(--cat-life); }
+        .task-item.dotoday::before { background: var(--cat-dotoday); }
 
-        /* Desktop: task-row-top and task-actions display inline with task-item flex */
-        .task-item .task-row-top {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        /* Completed task row */
+        .task-item.completed { opacity: 0.55; }
+        .task-item.completed:hover { opacity: 0.7; }
+
+        /* Drag states */
+        .task-item.dragging { opacity: 0.4; transform: scale(0.98); }
+        .task-item.drag-over { border-top: 2px solid var(--accent); }
+
+        /* Content column: text + meta */
+        .task-content {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding-top: 1px;
         }
-        .task-item .task-actions {
+
+        /* Meta tags row */
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* Actions row: do-today + edit/delete */
+        .task-actions-row {
             display: flex;
             align-items: center;
             gap: 4px;
             flex-shrink: 0;
+            margin-left: auto;
+            padding-top: 1px;
+        }
+
+        .task-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
             opacity: 0;
             transition: opacity 0.15s ease;
         }
@@ -1300,20 +1339,20 @@
 
         /* Task Card */
         .task-card {
-            background: var(--canvas-subtle);
-            border: 1px solid var(--border-default);
-            border-radius: 6px;
-            padding: 6px 10px;
+            background: var(--surface-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 8px 10px;
             margin-bottom: 4px;
             cursor: grab;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .task-card:hover {
-            background: var(--canvas-inset);
-            border-color: var(--border-strong);
-            transform: none;
-            box-shadow: none;
+            background: var(--surface-primary);
+            border-color: var(--border-default);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
         .task-card-main {
@@ -2052,26 +2091,31 @@
         .task-meta-tag {
             display: inline-flex;
             align-items: center;
-            padding: 1px 5px;
-            border-radius: 3px;
+            gap: 3px;
+            padding: 1px 6px;
+            border-radius: var(--radius-full);
             font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            color: var(--fg-muted);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            color: var(--fg-tertiary);
             background: var(--canvas-inset);
             flex-shrink: 0;
-            line-height: 1.4;
+            line-height: 1.5;
         }
         .task-meta-tag.today {
             background: var(--destructive-light);
             color: var(--destructive);
         }
+        .task-meta-tag.today svg { flex-shrink: 0; }
         .task-meta-tag.leverage {
             color: var(--warning);
-            background: transparent;
-            padding: 0;
+            background: var(--warning-light);
         }
-        .task-meta-tag.leverage svg { width: 13px; height: 13px; }
+        .task-meta-tag.leverage svg { width: 12px; height: 12px; flex-shrink: 0; }
+        .task-meta-tag.cat {
+            background: var(--accent-lighter);
+            color: var(--accent);
+        }
 
         .today-badge {
             display: none;
@@ -2087,52 +2131,56 @@
         }
 
         .do-today-btn {
-            padding: 4px 8px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: transparent;
             color: var(--fg-muted);
-            border: 1px solid var(--border-subtle);
+            border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
         }
 
         .do-today-btn:hover {
-            background: var(--destructive-light);
-            color: var(--destructive);
-            border-color: var(--destructive);
+            background: var(--warning-light);
+            color: var(--warning);
         }
 
         .do-today-btn.active {
-            background: var(--success-light, rgba(107,124,94,0.1));
-            color: var(--success);
-            border-color: var(--success);
+            color: var(--warning);
+            background: var(--warning-light);
         }
 
         .do-today-btn.active:hover {
-            background: var(--accent-hover);
-            color: white;
+            background: var(--destructive-light);
+            color: var(--destructive);
         }
 
         .task-checkbox {
-            width: 16px;
-            height: 16px;
-            min-width: 16px;
-            min-height: 16px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            min-height: 18px;
             cursor: pointer;
             -webkit-appearance: none;
             appearance: none;
-            border: 2px solid var(--border-default);
+            border: 1.5px solid var(--fg-muted);
             border-radius: 50%;
             background: transparent;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
             position: relative;
             flex-shrink: 0;
+            margin-top: 1px;
         }
 
         .task-checkbox:hover {
             border-color: var(--accent);
+            background: var(--accent-lighter);
         }
 
         .task-checkbox:checked {
@@ -2145,59 +2193,47 @@
             position: absolute;
             top: 2px;
             left: 5px;
-            width: 4px;
-            height: 8px;
+            width: 5px;
+            height: 9px;
             border: solid white;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
 
         .task-text {
-            flex: 1;
-            font-size: 13px;
+            font-size: var(--text-base);
             color: var(--fg-primary);
-            line-height: 1.4;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .task-text.completed {
             text-decoration: line-through;
-            opacity: 0.5;
             color: var(--fg-tertiary);
         }
 
-        .task-timer-btn {
-            padding: 4px 6px;
+        .task-action-btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: transparent;
             color: var(--fg-muted);
             border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 13px;
-            transition: all 0.15s ease;
-            line-height: 1;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .task-timer-btn:hover {
+        .task-action-btn.task-edit-btn:hover {
             background: var(--canvas-inset);
             color: var(--accent);
         }
 
-        .task-delete-btn {
-            padding: 4px 6px;
-            background: transparent;
-            color: var(--fg-muted);
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.15s ease;
-            line-height: 1;
-        }
-
-        .task-delete-btn:hover {
+        .task-action-btn.task-delete-btn:hover {
             background: var(--destructive-light);
             color: var(--destructive);
         }
@@ -10150,7 +10186,7 @@
 .header-compact {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 50;
     background: var(--surface-primary);
     border-bottom: 1px solid var(--border-default);
     box-shadow: var(--shadow-sm);
@@ -10556,7 +10592,7 @@
 /* Touch-action for faster taps */
 button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .view-toggle-btn, .task-checkbox, input[type="checkbox"],
-.do-today-btn, .task-timer-btn, .task-delete-btn {
+.do-today-btn, .task-action-btn, .task-delete-btn {
     touch-action: manipulation;
 }
 
@@ -10692,64 +10728,57 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
     /* Task list */
     #fullViewContainer .task-list {
-        gap: 0;
+        gap: 2px;
+        padding-bottom: 80px; /* Space for FAB so last task isn't hidden */
     }
 
-    /* TASK ITEMS: clean minimal rows */
+    /* TASK ITEMS: mobile card layout */
     #fullViewContainer .task-item {
-        padding: 8px 10px;
-        gap: 6px;
-        align-items: center;
-        border-radius: 0 !important;
-        overflow: visible;
+        padding: 10px 12px;
+        gap: 8px;
+        border-radius: var(--radius-md) !important;
         background: var(--surface-primary) !important;
-        border: none !important;
-        border-bottom: 1px solid var(--border-subtle) !important;
-        border-left: 3px solid transparent !important;
+        border: 1px solid transparent !important;
         box-shadow: none;
         -webkit-user-drag: none;
     }
 
-    /* Category color tints on task items */
-    #fullViewContainer .task-item.financial { border-left-color: var(--cat-financial) !important; }
-    #fullViewContainer .task-item.clinic { border-left-color: var(--cat-clinic) !important; }
-    #fullViewContainer .task-item.health { border-left-color: var(--cat-health) !important; }
-    #fullViewContainer .task-item.school { border-left-color: var(--cat-school) !important; }
-    #fullViewContainer .task-item.academic { border-left-color: var(--cat-academic) !important; }
-    #fullViewContainer .task-item.future { border-left-color: var(--cat-future) !important; }
-    #fullViewContainer .task-item.life { border-left-color: var(--cat-life) !important; }
-    #fullViewContainer .task-item.dotoday { border-left-color: var(--cat-dotoday) !important; }
-
     #fullViewContainer .task-item:active {
         background: var(--canvas-subtle) !important;
+        border-color: var(--border-default) !important;
     }
 
-    /* Row 1: single-line horizontal strip */
-    #fullViewContainer .task-item .task-row-top {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-    }
-
-    /* Task text: fills remaining space */
+    /* Task text: wraps naturally — NO truncation */
     #fullViewContainer .task-item .task-text {
-        flex: 1 1 auto;
-        min-width: 0;
-        font-size: 13px;
-        line-height: 1.4;
+        font-size: 13.5px;
+        line-height: 1.45;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        white-space: normal;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
         color: var(--fg-primary);
+    }
+
+    /* Meta tags: compact on mobile */
+    #fullViewContainer .task-item .task-meta-tag {
+        font-size: 9px;
+        padding: 1px 5px;
     }
 
     /* Mobile: always show actions (no hover) */
     #fullViewContainer .task-item .task-actions {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-        opacity: 1;
+        opacity: 1 !important;
+    }
+
+    /* Compact action buttons on mobile */
+    #fullViewContainer .task-item .task-action-btn {
+        width: 26px;
+        height: 26px;
+    }
+    #fullViewContainer .task-item .do-today-btn {
+        width: 26px;
+        height: 26px;
     }
 
     /* Timer section: hide on mobile */
@@ -10757,7 +10786,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         display: none;
     }
 
-    /* Completed tasks: muted appearance */
+    /* Completed tasks: muted */
     #fullViewContainer .task-item.completed {
         opacity: 0.5;
     }
@@ -10778,8 +10807,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         min-height: 36px;
     }
     #fullViewContainer .task-item {
-        padding: 8px 8px 6px;
-        gap: 5px;
+        padding: 8px 10px;
     }
     #fullViewContainer .task-item .task-checkbox {
         width: 16px !important;
@@ -10788,18 +10816,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         min-height: 16px !important;
     }
     #fullViewContainer .task-item .task-text {
-        font-size: 0.84em;
-    }
-    #fullViewContainer .task-item .task-actions {
-        padding-left: 28px;
-        gap: 5px;
-    }
-    #fullViewContainer .task-item .task-actions .do-today-btn,
-    #fullViewContainer .task-item .task-actions .task-timer-btn,
-    #fullViewContainer .task-item .task-actions .task-delete-btn {
-        padding: 3px 7px;
-        font-size: 0.68em;
-        min-height: 26px;
+        font-size: 12.5px;
     }
 }
 
@@ -10953,7 +10970,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
 /* --- Sidebar --- */
 .sidebar {
-    background: var(--surface-primary);
+    background: var(--canvas-subtle);
     border-right: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
@@ -10995,12 +11012,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     margin-bottom: 8px;
 }
 .sidebar-section-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
     color: var(--fg-muted);
-    padding: 12px 20px 6px;
+    padding: 14px 20px 6px;
 }
 .sidebar-item {
     display: flex;
@@ -11014,14 +11031,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     text-align: left;
     cursor: pointer;
     border-radius: 0;
-    transition: all 0.15s ease;
-    font-size: 14px;
+    transition: all 0.2s ease;
+    font-size: 13.5px;
     font-family: var(--font-body);
     text-decoration: none;
     position: relative;
 }
 .sidebar-item:hover {
-    background: var(--canvas-subtle);
+    background: var(--canvas-inset);
     color: var(--fg-primary);
 }
 .sidebar-item.active {
@@ -11109,25 +11126,27 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .sidebar-data-controls {
     display: flex;
     gap: 4px;
-    padding: 8px 0;
+    padding: 10px 0 6px;
 }
 .sidebar-data-controls button {
     flex: 1;
-    padding: 6px;
-    background: none;
+    padding: 7px;
+    background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     color: var(--fg-tertiary);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: var(--shadow-sm);
 }
 .sidebar-data-controls button:hover {
-    background: var(--canvas-subtle);
-    color: var(--fg-primary);
-    border-color: var(--border-default);
+    background: var(--surface-primary);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
 }
 .sidebar-data-controls button i {
     width: 14px;
@@ -11177,9 +11196,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 32px;
+    padding: 14px 32px;
     border-bottom: 1px solid var(--border-subtle);
-    background: var(--surface-primary);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 50;
@@ -11187,17 +11208,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .top-bar-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 .top-bar-title {
     font-family: var(--font-heading);
     font-weight: 700;
-    font-size: var(--text-md);
+    font-size: var(--text-lg);
     color: var(--fg-primary);
+    letter-spacing: -0.01em;
 }
 .top-bar-breadcrumb {
     font-size: var(--text-sm);
     color: var(--fg-muted);
+    font-weight: 400;
 }
 .top-bar-right {
     display: flex;
@@ -11208,15 +11231,18 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--fg-muted);
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 .sync-dot-mini {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--success);
     flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(94, 138, 94, 0.15);
 }
 .sync-dot-mini.syncing { background: var(--warning); }
 .sync-dot-mini.offline { background: var(--fg-muted); }
@@ -11233,25 +11259,29 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 /* --- Metrics Bar (compact inline) --- */
 .metrics-row {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 0;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 0;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 .metric-card {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
+    justify-content: center;
+    gap: 2px;
+    padding: 12px 14px 10px;
     cursor: default;
-    transition: background 0.15s ease;
+    transition: background 0.2s ease;
     border-right: 1px solid var(--border-subtle);
     flex: 1;
     min-width: 0;
+    position: relative;
 }
 .metric-card:last-child { border-right: none; }
 .metric-card:hover {
@@ -11261,27 +11291,35 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     cursor: pointer;
 }
 .metric-card.clickable:hover {
-    background: var(--canvas-inset);
+    background: var(--accent-lighter);
+}
+.metric-card.clickable:active {
+    background: var(--accent-light);
 }
 .metric-label {
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     color: var(--fg-muted);
     white-space: nowrap;
+    order: 1;
 }
 .metric-value {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     color: var(--fg-primary);
     line-height: 1;
+    order: 0;
 }
 .metric-sub {
     font-size: 10px;
     color: var(--fg-tertiary);
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    order: 2;
 }
 .metric-card.streak .metric-value {
     color: var(--warning);
@@ -11302,12 +11340,13 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     border-radius: var(--radius-md);
     padding: 3px;
     gap: 2px;
+    border: 1px solid var(--border-subtle);
 }
 .vtp {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 16px;
+    padding: 7px 18px;
     border: none;
     background: transparent;
     color: var(--fg-tertiary);
@@ -11315,18 +11354,18 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     font-weight: 500;
     cursor: pointer;
     border-radius: 6px;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: var(--font-body);
 }
 .vtp:hover {
     color: var(--fg-secondary);
-    background: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.6);
 }
 .vtp.active {
     background: var(--surface-primary);
     color: var(--fg-primary);
     font-weight: 600;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
 }
 .vtp i {
     width: 14px;
@@ -11338,6 +11377,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
 }
 .cfp {
     padding: 5px 14px;
@@ -11348,72 +11388,84 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     font-weight: 500;
     border-radius: var(--radius-full);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: var(--font-body);
+    white-space: nowrap;
+    line-height: 1.4;
 }
 .cfp:hover {
-    border-color: var(--border-default);
+    border-color: var(--border-strong);
     color: var(--fg-secondary);
+    background: var(--canvas-subtle);
+}
+.cfp:active {
+    transform: scale(0.97);
 }
 .cfp.active {
-    background: var(--accent-light);
+    background: var(--accent);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-fg);
     font-weight: 600;
+    box-shadow: 0 1px 3px rgba(107, 124, 94, 0.25);
+}
+.cfp.active:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
 }
 
-/* --- Kanban Board --- */
+/* --- Kanban Board (3-column: To Do / In Progress / Done) --- */
 .kanban-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     align-items: start;
 }
 .kanban-column {
     background: var(--canvas-subtle);
     border-radius: var(--radius-lg);
-    padding: 12px;
-    min-height: 200px;
+    padding: 0;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
 }
 .kanban-column-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 4px;
-    margin-bottom: 8px;
+    padding: 12px 14px 10px;
     font-weight: 600;
-    font-size: 13px;
-    color: var(--fg-secondary);
-}
-.kanban-col-icon {
-    display: flex;
-    align-items: center;
-}
-.kanban-col-icon i {
-    width: 14px;
-    height: 14px;
-    display: inline-block;
-}
-.kanban-col-title {
-    flex: 1;
+    font-size: 11px;
+    color: var(--fg-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-subtle);
 }
+.kanban-col-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kanban-column[data-status="todo"] .kanban-col-indicator { background: var(--info); }
+.kanban-column[data-status="inprogress"] .kanban-col-indicator { background: var(--accent); }
+.kanban-column[data-status="done"] .kanban-col-indicator { background: var(--success); }
+.kanban-col-title { flex: 1; }
 .kanban-col-count {
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--surface-primary);
     border-radius: var(--radius-full);
-    font-size: 11px;
+    font-size: 10px;
+    font-weight: 600;
     color: var(--fg-tertiary);
 }
 .kanban-col-add {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -11422,10 +11474,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     border-radius: var(--radius-sm);
     color: var(--fg-muted);
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
     transition: all 0.15s ease;
+    opacity: 0;
 }
+.kanban-column-header:hover .kanban-col-add { opacity: 1; }
 .kanban-col-add:hover {
     border-color: var(--accent);
     color: var(--accent);
@@ -11434,14 +11488,14 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .kanban-column-body {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    padding: 8px;
     min-height: 60px;
+    flex: 1;
 }
 .kanban-column-body.drag-over {
     background: var(--accent-lighter);
-    border-radius: var(--radius-md);
-    outline: 2px dashed var(--accent);
-    outline-offset: -2px;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 /* --- Kanban Cards --- */
@@ -11449,101 +11503,119 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    padding: 12px;
+    padding: 10px 12px;
     cursor: grab;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    position: relative;
 }
 .kanban-card:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    border-color: var(--border-default);
 }
 .kanban-card.dragging {
-    opacity: 0.5;
-    transform: rotate(2deg);
+    opacity: 0.4;
+    box-shadow: var(--shadow-lg);
 }
-.kanban-card.completed {
-    opacity: 0.55;
-}
+.kanban-card.completed { opacity: 0.5; }
 .kanban-card.completed .kanban-card-title {
     text-decoration: line-through;
     color: var(--fg-tertiary);
 }
-.kanban-card-category {
+.kanban-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.kanban-card-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s ease;
+    padding: 0;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--fg-tertiary);
-    margin-bottom: 6px;
-    text-transform: capitalize;
+    justify-content: center;
 }
-.kanban-cat-dot {
-    width: 8px;
-    height: 8px;
+.kanban-card-check:hover {
+    border-color: var(--success);
+    background: var(--success-light);
+}
+.kanban-card-check.checked {
+    border-color: var(--success);
+    background: var(--success);
+}
+.kanban-card-check.checked::after {
+    content: '';
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    flex-shrink: 0;
+    background: white;
 }
 .kanban-card-title {
     font-size: 13px;
     font-weight: 500;
     color: var(--fg-primary);
     line-height: 1.4;
-    margin-bottom: 8px;
     word-break: break-word;
+    flex: 1;
 }
-.kanban-card-meta {
+.kanban-card-badges {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 5px;
+    margin-top: 8px;
+    padding-left: 24px;
+    flex-wrap: wrap;
 }
-.kanban-card-size {
-    display: flex;
+.kanban-badge {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    line-height: 1.2;
+}
+.kanban-badge-cat {
+    color: var(--fg-tertiary);
+    background: var(--canvas-inset);
+    text-transform: capitalize;
+}
+.kanban-badge-size {
     color: var(--fg-muted);
+    background: var(--canvas-inset);
 }
-.kanban-card-size i {
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-}
-.kanban-card-leverage {
+.kanban-badge-leverage {
     color: var(--warning);
-    display: flex;
-    align-items: center;
-}
-.kanban-card-leverage i {
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-}
-.kanban-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    padding-top: 6px;
-    border-top: 1px solid var(--border-subtle);
+    background: var(--warning-light);
 }
 .kanban-card-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
     display: flex;
-    gap: 4px;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
 }
+.kanban-card:hover .kanban-card-actions { opacity: 1; }
 .kca {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none;
+    background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     color: var(--fg-muted);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.12s ease;
 }
 .kca:hover {
     background: var(--canvas-subtle);
@@ -11551,23 +11623,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     border-color: var(--border-default);
 }
 .kca i {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     display: inline-block;
 }
 .kanban-empty {
-    text-align: center;
-    padding: 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 12px;
     font-size: 12px;
     color: var(--fg-muted);
-    font-style: italic;
+    min-height: 60px;
 }
-
-/* Column-specific kanban header colors */
-.kanban-column[data-status="lockedIn"] .kanban-col-icon { color: var(--destructive); }
-.kanban-column[data-status="today"] .kanban-col-icon { color: var(--accent); }
-.kanban-column[data-status="tomorrow"] .kanban-col-icon { color: var(--info); }
-.kanban-column[data-status="completed"] .kanban-col-icon { color: var(--success); }
 
 /* ============================================
    PHASE 2: RESPONSIVE — Tablet Rail
@@ -11614,7 +11682,6 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         left: 0;
         box-shadow: var(--shadow-overlay);
     }
-    .sidebar.open ~ .sidebar-backdrop { display: block; }
     /* Show labels again in mobile drawer */
     .sidebar-label, .sidebar-section-label, .sidebar-logo-text { display: unset; }
     .sidebar-stats > .sidebar-stat > span:not(.sidebar-xp-badge):not(i) { display: unset; }
@@ -11635,16 +11702,19 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     .metric-label { font-size: 9px; }
     .metric-sub { display: none; }
     .content-area { padding: 16px 12px; }
-    .top-bar { padding: 10px 16px; }
+    .top-bar { display: none !important; }
     .view-controls { gap: 10px; }
 }
 
 @media (max-width: 480px) {
     .kanban-board { grid-template-columns: 1fr; }
-    .metrics-row { gap: 0; }
-    .metric-card { padding: 5px 8px; }
+    .metrics-row { gap: 0; border-radius: var(--radius-md); }
+    .metric-card { padding: 8px 6px 6px; }
+    .metric-value { font-size: 16px; }
+    .metric-label { font-size: 9px; letter-spacing: 0.3px; }
     /* Show actions always on mobile (no hover) */
     .task-item .task-actions { opacity: 1; }
+    .kanban-card .kanban-card-actions { opacity: 1; }
 }
 
 /* Hide old elements when sidebar layout is active */
@@ -11661,6 +11731,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 @media (max-width: 768px) {
     .has-sidebar .header-compact {
         display: flex !important;
+        /* Break out of content-area padding so header spans full width */
+        margin-left: -12px;
+        margin-right: -12px;
+        width: calc(100% + 24px);
     }
 }
 
@@ -11678,11 +11752,70 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .has-sidebar #fullViewContainer .timer-section { display: none !important; }
 .has-sidebar #fullViewContainer .main-content { grid-template-columns: 1fr !important; }
 .has-sidebar #fullViewContainer .tasks-section { border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; }
-.has-sidebar #fullViewContainer .task-list { gap: 0 !important; }
+.has-sidebar #fullViewContainer .task-list { gap: 2px !important; }
 .has-sidebar #fullViewContainer .medication-tracker { display: none !important; }
-.has-sidebar #fullViewContainer .task-item .task-text { white-space: nowrap !important; }
+.has-sidebar #fullViewContainer .task-item .task-text { white-space: normal !important; overflow: visible !important; text-overflow: unset !important; }
+
+/* ============================================
+   DESIGN POLISH — Premium Refinements
+   ============================================ */
+
+/* Tabular numbers for all numeric displays */
+.metric-value, .sidebar-badge, .sidebar-xp-badge, .kanban-col-count,
+[id*="metric"], [id*="Streak"], [id*="XP"], [id*="Count"] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Smooth transitions on all interactive elements */
+button, a, .sidebar-item, .kanban-card, .task-item, .cfp, .vtp, .vtc-btn, .kca {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Subtle active press effect on all clickable elements */
+.sidebar-item:active, .cfp:active, .vtp:active, .vtc-btn:active, .kca:active,
+.kanban-col-add:active, .sidebar-data-controls button:active {
+    transform: scale(0.97);
+}
+
+/* Task item hover */
+.task-item {
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+.has-sidebar #fullViewContainer .task-item:hover {
+    background: var(--canvas-subtle) !important;
+}
+
+/* Empty state for task list */
+.task-list:empty::after {
+    content: 'No tasks yet';
+    display: block;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--fg-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Kanban column header — tighter uppercase */
+.kanban-col-title {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+/* Sidebar logo icon — subtle shadow */
+.sidebar-logo-icon {
+    box-shadow: var(--shadow-sm);
+}
+
+/* Focus ring for keyboard navigation */
+.sidebar-item:focus-visible, .cfp:focus-visible, .vtp:focus-visible,
+.vtc-btn:focus-visible, .kca:focus-visible, .kanban-col-add:focus-visible {
+    outline: 2px solid var(--control-ring);
+    outline-offset: 1px;
+}
 
     </style>
+<link rel="stylesheet" href="css/mobile-fix.css">
 </head>
 <body class="has-sidebar">
     <!-- Loading overlay - shown until Firebase data loads -->
@@ -11854,42 +11987,33 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
                 </div>
             </div>
 
-            <!-- Kanban Board Container (hidden by default) -->
+            <!-- Kanban Board Container (3-column: To Do / In Progress / Done) -->
             <div id="kanbanBoard" class="kanban-board" style="display: none;">
-                <div class="kanban-column" data-status="lockedIn">
+                <div class="kanban-column" data-status="todo">
                     <div class="kanban-column-header">
-                        <span class="kanban-col-icon"><i data-lucide="flame"></i></span>
-                        <span class="kanban-col-title">Locked In</span>
-                        <span class="kanban-col-count" id="kanbanLockedInCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('lockedIn')" title="Add task">+</button>
+                        <span class="kanban-col-indicator"></span>
+                        <span class="kanban-col-title">To Do</span>
+                        <span class="kanban-col-count" id="kanbanTodoCount">0</span>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('todo')" title="Add task">+</button>
                     </div>
-                    <div class="kanban-column-body" id="kanbanLockedIn"></div>
+                    <div class="kanban-column-body" id="kanbanTodo"></div>
                 </div>
-                <div class="kanban-column" data-status="today">
+                <div class="kanban-column" data-status="inprogress">
                     <div class="kanban-column-header">
-                        <span class="kanban-col-icon"><i data-lucide="sun"></i></span>
-                        <span class="kanban-col-title">Today</span>
-                        <span class="kanban-col-count" id="kanbanTodayCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('today')" title="Add task">+</button>
+                        <span class="kanban-col-indicator"></span>
+                        <span class="kanban-col-title">In Progress</span>
+                        <span class="kanban-col-count" id="kanbanInProgressCount">0</span>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('inprogress')" title="Add task">+</button>
                     </div>
-                    <div class="kanban-column-body" id="kanbanToday"></div>
+                    <div class="kanban-column-body" id="kanbanInProgress"></div>
                 </div>
-                <div class="kanban-column" data-status="tomorrow">
+                <div class="kanban-column" data-status="done">
                     <div class="kanban-column-header">
-                        <span class="kanban-col-icon"><i data-lucide="calendar"></i></span>
-                        <span class="kanban-col-title">Tomorrow</span>
-                        <span class="kanban-col-count" id="kanbanTomorrowCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('tomorrow')" title="Add task">+</button>
-                    </div>
-                    <div class="kanban-column-body" id="kanbanTomorrow"></div>
-                </div>
-                <div class="kanban-column" data-status="completed">
-                    <div class="kanban-column-header">
-                        <span class="kanban-col-icon"><i data-lucide="check-circle"></i></span>
+                        <span class="kanban-col-indicator"></span>
                         <span class="kanban-col-title">Done</span>
-                        <span class="kanban-col-count" id="kanbanCompletedCount">0</span>
+                        <span class="kanban-col-count" id="kanbanDoneCount">0</span>
                     </div>
-                    <div class="kanban-column-body" id="kanbanCompleted"></div>
+                    <div class="kanban-column-body" id="kanbanDone"></div>
                 </div>
             </div>
 
