@@ -737,53 +737,47 @@
         .task-list {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 0;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-primary);
         }
 
         .task-item {
             background: var(--surface-primary);
-            border-radius: var(--radius-md);
-            padding: 10px 14px;
+            padding: 12px 16px 12px 14px;
             display: flex;
             align-items: flex-start;
-            gap: 10px;
-            transition: all 0.15s ease;
-            border: 1px solid transparent;
+            gap: 12px;
+            transition: background 0.15s ease;
+            border-bottom: 1px solid var(--border-subtle);
             position: relative;
+            border-left: 3px solid transparent;
         }
+        .task-item:last-child { border-bottom: none; }
 
         .task-item:hover {
             background: var(--canvas-subtle);
-            border-color: var(--border-default);
         }
 
-        /* Category accent — inset left bar */
-        .task-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 8px;
-            bottom: 8px;
-            width: 3px;
-            border-radius: 0 2px 2px 0;
-            background: transparent;
-        }
-        .task-item.financial::before { background: var(--cat-financial); }
-        .task-item.clinic::before { background: var(--cat-clinic); }
-        .task-item.health::before { background: var(--cat-health); }
-        .task-item.school::before { background: var(--cat-school); }
-        .task-item.academic::before { background: var(--cat-academic); }
-        .task-item.future::before { background: var(--cat-future); }
-        .task-item.life::before { background: var(--cat-life); }
-        .task-item.dotoday::before { background: var(--cat-dotoday); }
+        /* Category accent — left border stripe */
+        .task-item.financial { border-left-color: var(--cat-financial); }
+        .task-item.clinic { border-left-color: var(--cat-clinic); }
+        .task-item.health { border-left-color: var(--cat-health); }
+        .task-item.school { border-left-color: var(--cat-school); }
+        .task-item.academic { border-left-color: var(--cat-academic); }
+        .task-item.future { border-left-color: var(--cat-future); }
+        .task-item.life { border-left-color: var(--cat-life); }
+        .task-item.dotoday { border-left-color: var(--cat-dotoday); }
 
         /* Completed task row */
-        .task-item.completed { opacity: 0.55; }
-        .task-item.completed:hover { opacity: 0.7; }
+        .task-item.completed { opacity: 0.5; }
+        .task-item.completed:hover { opacity: 0.65; }
 
         /* Drag states */
         .task-item.dragging { opacity: 0.4; transform: scale(0.98); }
-        .task-item.drag-over { border-top: 2px solid var(--accent); }
+        .task-item.drag-over { box-shadow: inset 0 2px 0 var(--accent); }
 
         /* Content column: text + meta */
         .task-content {
@@ -791,7 +785,7 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 4px;
             padding-top: 1px;
         }
 
@@ -807,10 +801,10 @@
         .task-actions-row {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             flex-shrink: 0;
             margin-left: auto;
-            padding-top: 1px;
+            padding-top: 2px;
         }
 
         .task-actions {
