@@ -457,7 +457,7 @@
 
         /* Content Area */
         .sc-content-area {
-            padding: 28px 36px;
+            padding: 20px 28px;
             max-width: 1200px;
             width: 100%;
             flex: 1;
@@ -482,7 +482,7 @@
         .sc-dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 22px;
+            gap: 16px;
         }
 
         .sc-card {
@@ -490,7 +490,7 @@
             border: 1px solid var(--border-default);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
-            padding: 20px 24px;
+            padding: 16px 18px;
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
@@ -500,12 +500,12 @@
         }
 
         .sc-card-title {
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.6px;
             color: var(--fg-tertiary);
-            margin-bottom: 16px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -582,14 +582,14 @@
             margin-bottom: 0;
             border: none;
             box-shadow: none;
-            padding: 20px 12px 16px;
+            padding: 10px 8px 8px;
         }
 
         .sc-card .unified-graph-wrap {
             margin-bottom: 0;
             border: none;
             box-shadow: none;
-            padding: 8px 0;
+            padding: 4px 0;
         }
 
         .sc-card .unified-blocking {
@@ -1021,11 +1021,16 @@
             }
 
             .sc-content-area {
-                padding: 24px;
+                padding: 18px 20px;
             }
 
             .sc-top-bar {
                 padding: 10px 20px;
+            }
+
+            /* Tablet: keep 2 columns but tighter */
+            .sc-dashboard-grid {
+                gap: 14px;
             }
         }
 
@@ -1097,12 +1102,12 @@
             }
 
             .sc-content-area {
-                padding: 18px 14px;
+                padding: 14px 10px;
             }
 
             .sc-dashboard-grid {
                 grid-template-columns: 1fr;
-                gap: 16px;
+                gap: 12px;
             }
 
             .sc-metrics-row {
@@ -1136,16 +1141,16 @@
 
             /* Mobile cards tighter */
             .sc-card {
-                padding: 14px 12px;
+                padding: 12px 10px;
             }
 
             .sc-card-title {
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             /* Mobile hero compact */
             .sc-card .unified-hero {
-                padding: 16px 8px 12px;
+                padding: 8px 6px 6px;
             }
 
             .hero-time {
@@ -1237,11 +1242,11 @@
 
             /* Even tighter on small screens */
             .sc-content-area {
-                padding: 12px 8px;
+                padding: 10px 6px;
             }
 
             .sc-dashboard-grid {
-                gap: 14px;
+                gap: 10px;
             }
 
             .hero-time {
@@ -3784,13 +3789,13 @@
                 <!-- ==================== DASHBOARD PAGE ==================== -->
                 <div class="sc-page active" id="scPageDashboard">
                     <div class="sc-dashboard-grid">
-                        <!-- Hero Card -->
-                        <div class="sc-card full-width" id="scHeroCard" style="border-left: 4px solid var(--accent);">
+                        <!-- Row 1: Hero + Sleep Intelligence side by side -->
+                        <div class="sc-card" id="scHeroCard" style="border-left: 4px solid var(--accent);">
                             <div class="unified-hero">
                                 <div class="hero-label">Projected Sleep Window</div>
                                 <div class="hero-time green" id="sleepTime">--:-- PM</div>
                                 <div class="hero-countdown" id="timeRemaining">Calculating...</div>
-                                <div class="hero-quality green" id="sleepQuality" style=""></div>
+                                <div class="hero-quality green" id="sleepQuality"></div>
                                 <div id="bottleneckIndicator" style="display:none; margin-top:4px;"></div>
                                 <div id="accuracyHeroHint" class="accuracy-hero-hint" style="display:none;"></div>
                                 <div class="hero-progress-bar">
@@ -3798,8 +3803,128 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Calibration Card (collapsed by default) -->
-                        <div class="sc-card" id="scCalibrationCard" style="grid-column: 1 / -1;">
+                        <div class="sc-card">
+                            <div class="sc-card-title">Sleep Intelligence</div>
+                            <div id="circadianPhaseDisplay" style="margin-bottom:8px;"></div>
+                            <div id="sleepCalendar"></div>
+                            <div style="display:flex; gap:8px; justify-content:center; margin-top:6px; font-size:0.68em; color:var(--fg-tertiary);">
+                                <span style="color:var(--success);">&#9679; >6.5h</span>
+                                <span style="color:var(--warning);">&#9679; 4.5-6.5h</span>
+                                <span style="color:var(--destructive);">&#9679; <4.5h</span>
+                            </div>
+                            <div id="sleepExplainer" class="si-explainer">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <span id="explainerIcon" style="font-size:1.2em;"></span>
+                                    <span id="explainerTitle" style="font-weight:600; font-size:0.9em; color:var(--fg-primary);"></span>
+                                </div>
+                                <div id="explainerDesc" style="font-size:0.82em; color:var(--fg-secondary); line-height:1.4;"></div>
+                                <div id="explainerAction" style="font-size:0.78em; color:var(--accent); margin-top:4px;"></div>
+                            </div>
+                        </div>
+                        <!-- Row 2: Today's Inputs + Medications side by side -->
+                        <div class="sc-card" id="scQuickInputsCard">
+                            <div class="sc-card-title">Today's Inputs</div>
+                            <div class="sc-quick-inputs">
+                                <div class="sc-input-row">
+                                    <div class="input-group" style="flex:1;">
+                                        <label>Wake Time</label>
+                                        <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime();">
+                                    </div>
+                                    <div class="input-group" style="flex:1;">
+                                        <label>Hours Slept</label>
+                                        <input type="number" id="hoursSlept" value="8" min="0" max="14" step="0.5" onchange="recalculate(); updateTodaySleepHistory();">
+                                    </div>
+                                </div>
+                                <div id="sleepDebtDisplay" class="sleep-debt-display"></div>
+                                <div id="recentNightsContainer" class="recent-nights" style="margin-top:6px;"></div>
+                            </div>
+                        </div>
+                        <div class="sc-card" id="scMedsCard">
+                            <div class="sc-card-title">Medications</div>
+                            <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
+                                <span id="allNighterIcon">~</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
+                            </button>
+                            <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:8px;">Extended tracking active -- includes yesterday's residual load</div>
+                            <div id="ghostLoadSection" style="display:none; margin-bottom:8px; padding:8px; background:var(--warning-light); border:1px solid var(--warning); border-radius:8px;">
+                                <div style="font-size:0.82em; color:var(--warning); font-weight:600; margin-bottom:4px;">Ghost Load (Yesterday)</div>
+                                <div id="ghostMedEntries"></div>
+                                <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                            </div>
+                            <div id="medEntries"></div>
+                            <button class="add-btn" onclick="addMedEntry()">+ Add Medication Dose</button>
+                            <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
+                        </div>
+                        <!-- Row 3: Caffeine + Modifiers side by side -->
+                        <div class="sc-card" id="scCaffeineCard">
+                            <div class="sc-card-title">Caffeine</div>
+                            <div class="quick-actions">
+                                <button class="quick-btn" onclick="addCaffeine(100, 'Coffee')">Coffee 100mg</button>
+                                <button class="quick-btn" onclick="addCaffeine(160, 'Celsius')">Celsius 160mg</button>
+                                <button class="quick-btn" onclick="addCaffeine(225, 'Starbucks')">Starbucks 225mg</button>
+                                <button class="quick-btn" onclick="addCaffeine(63, 'Espresso')">Espresso 63mg</button>
+                                <button class="quick-btn" onclick="addCaffeine(47, 'Tea')">Tea 47mg</button>
+                            </div>
+                            <button class="quick-btn" onclick="addCustomCaffeine()" style="width:100%; margin-top:8px; margin-bottom:8px;">+ Custom Amount</button>
+                            <div id="caffeineEntries"></div>
+                            <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                        </div>
+                        <div class="sc-card" id="scModifiersCard">
+                            <div class="sc-card-title">Modifiers</div>
+                            <div class="modifier-toggle">
+                                <label><input type="checkbox" id="vitCToggle" onchange="toggleModifier(this, 'vitaminC'); recalculate();"> Vitamin C (1000mg)</label>
+                                <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
+                                <div class="modifier-time" id="vitCTimeRow" style="display:none;">
+                                    <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
+                                    <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;">
+                                        <option value="today">Today</option>
+                                        <option value="tomorrow">Tomorrow</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modifier-toggle">
+                                <label><input type="checkbox" id="liftToggle" onchange="toggleModifier(this, 'heavyLift'); recalculate();"> Heavy Lifting</label>
+                            </div>
+                            <div class="modifier-toggle">
+                                <label><input type="checkbox" id="saunaToggle" onchange="toggleModifier(this, 'sauna'); recalculate();"> Sauna Session</label>
+                                <div class="modifier-time" id="saunaTimeRow" style="display:none;">
+                                    <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Row 4: Graphs side by side -->
+                        <div class="sc-card" id="scGraphCard">
+                            <div class="sc-card-title">Drug Concentration</div>
+                            <div class="unified-graph-wrap" id="graphContainer" style="min-height:200px;">
+                                <canvas id="graphCanvas"></canvas>
+                                <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
+                            </div>
+                        </div>
+                        <div class="sc-card" id="scSleepHistoryCard">
+                            <div class="sc-card-title">Sleep History</div>
+                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
+                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
+                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
+                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
+                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
+                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
+                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Blocking Factors (hidden) -->
+                        <div class="sc-card full-width" id="scBlockingCard" style="display:none">
+                            <div class="unified-blocking" id="blockingFactors" style="display: none;">
+                                <h4>What's Keeping You Awake</h4>
+                                <div id="blockingList"></div>
+                            </div>
+                        </div>
+                        <!-- Recommendations -->
+                        <div class="sc-card full-width">
+                            <div class="sc-card-title">Recommendations</div>
+                            <div id="recommendations"></div>
+                        </div>
+                        <!-- Calibration (collapsed, bottom) -->
+                        <div class="sc-card full-width" id="scCalibrationCard">
                             <div class="sc-calibration-header" onclick="scToggleCalibration()" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
                                 <div class="sc-card-title" style="margin-bottom:0;">Calibration</div>
                                 <span style="font-size:0.75em; color:var(--fg-tertiary);">Tap to adjust</span>
@@ -3818,121 +3943,6 @@
                                     <div class="input-group"><label>Sleep Target (hrs)</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Quick Inputs Card -->
-                        <div class="sc-card" id="scQuickInputsCard">
-                            <div class="sc-card-title">Today's Inputs</div>
-                            <div class="sc-quick-inputs">
-                                <div class="sc-input-row">
-                                    <div class="input-group" style="flex:1;">
-                                        <label>Wake Time</label>
-                                        <input type="time" id="wakeTime" value="06:45" onchange="recalculate(); updateTodayWakeTime();">
-                                    </div>
-                                    <div class="input-group" style="flex:1;">
-                                        <label>Hours Slept</label>
-                                        <input type="number" id="hoursSlept" value="8" min="0" max="14" step="0.5" onchange="recalculate(); updateTodaySleepHistory();">
-                                    </div>
-                                </div>
-                                <div id="sleepDebtDisplay" class="sleep-debt-display"></div>
-                                <div id="recentNightsContainer" class="recent-nights" style="margin-top: 8px;"></div>
-                                <div class="sc-input-divider">Medications</div>
-                                <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
-                                    <span id="allNighterIcon">~</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
-                                </button>
-                                <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:10px;">Extended tracking active -- includes yesterday's residual load</div>
-                                <div id="ghostLoadSection" style="display:none; margin-bottom:10px; padding:10px; background:var(--warning-light); border:1px solid var(--warning); border-radius:8px;">
-                                    <div style="font-size:0.82em; color:var(--warning); font-weight:600; margin-bottom:6px;">Ghost Load (Yesterday)</div>
-                                    <div id="ghostMedEntries"></div>
-                                    <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
-                                </div>
-                                <div id="medEntries"></div>
-                                <button class="add-btn" onclick="addMedEntry()">+ Add Medication Dose</button>
-                                <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
-                                <div class="sc-input-divider">Caffeine</div>
-                                <div class="quick-actions">
-                                    <button class="quick-btn" onclick="addCaffeine(100, 'Coffee')">Coffee 100mg</button>
-                                    <button class="quick-btn" onclick="addCaffeine(160, 'Celsius')">Celsius 160mg</button>
-                                    <button class="quick-btn" onclick="addCaffeine(225, 'Starbucks')">Starbucks 225mg</button>
-                                    <button class="quick-btn" onclick="addCaffeine(63, 'Espresso')">Espresso 63mg</button>
-                                    <button class="quick-btn" onclick="addCaffeine(47, 'Tea')">Tea 47mg</button>
-                                </div>
-                                <button class="quick-btn" onclick="addCustomCaffeine()" style="width:100%; margin-bottom:10px;">+ Custom Amount</button>
-                                <div id="caffeineEntries"></div>
-                                <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:6px;"></div>
-                                <div class="sc-input-divider">Modifiers</div>
-                                <div class="modifier-toggle">
-                                    <label><input type="checkbox" id="vitCToggle" onchange="toggleModifier(this, 'vitaminC'); recalculate();"> Vitamin C (1000mg)</label>
-                                    <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
-                                    <div class="modifier-time" id="vitCTimeRow" style="display:none;">
-                                        <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
-                                        <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;">
-                                            <option value="today">Today</option>
-                                            <option value="tomorrow">Tomorrow</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modifier-toggle">
-                                    <label><input type="checkbox" id="liftToggle" onchange="toggleModifier(this, 'heavyLift'); recalculate();"> Heavy Lifting</label>
-                                </div>
-                                <div class="modifier-toggle">
-                                    <label><input type="checkbox" id="saunaToggle" onchange="toggleModifier(this, 'sauna'); recalculate();"> Sauna Session</label>
-                                    <div class="modifier-time" id="saunaTimeRow" style="display:none;">
-                                        <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Sleep History Card (full width) -->
-                        <div class="sc-card full-width" id="scSleepHistoryCard">
-                            <div class="sc-card-title">Sleep History</div>
-                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:240px;">
-                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:240px;"></canvas>
-                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
-                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
-                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
-                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
-                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Drug Concentration Graph Card (full width) -->
-                        <div class="sc-card full-width" id="scGraphCard">
-                            <div class="sc-card-title">Drug Concentration</div>
-                            <div class="unified-graph-wrap" id="graphContainer" style="min-height:240px;">
-                                <canvas id="graphCanvas"></canvas>
-                                <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
-                            </div>
-                        </div>
-                        <!-- Blocking Factors Card -->
-                        <div class="sc-card full-width" id="scBlockingCard" style="display:none">
-                            <div class="unified-blocking" id="blockingFactors" style="display: none;">
-                                <h4>What's Keeping You Awake</h4>
-                                <div id="blockingList"></div>
-                            </div>
-                        </div>
-                        <!-- Intelligence Summary Card -->
-                        <div class="sc-card">
-                            <div class="sc-card-title">Sleep Intelligence</div>
-                            <div id="circadianPhaseDisplay" style="margin-bottom:10px;"></div>
-                            <div id="sleepCalendar"></div>
-                            <div style="display:flex; gap:8px; justify-content:center; margin-top:6px; font-size:0.68em; color:var(--fg-tertiary);">
-                                <span style="color:var(--success);">&#9679; >6.5h</span>
-                                <span style="color:var(--warning);">&#9679; 4.5-6.5h</span>
-                                <span style="color:var(--destructive);">&#9679; <4.5h</span>
-                            </div>
-                            <div id="sleepExplainer" class="si-explainer">
-                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                                    <span id="explainerIcon" style="font-size:1.4em;"></span>
-                                    <span id="explainerTitle" style="font-weight:600; color:var(--fg-primary);"></span>
-                                </div>
-                                <div id="explainerDesc" style="font-size:0.85em; color:var(--fg-secondary); line-height:1.5;"></div>
-                                <div id="explainerAction" style="font-size:0.8em; color:var(--accent); margin-top:6px;"></div>
-                            </div>
-                        </div>
-                        <!-- Recommendations Card -->
-                        <div class="sc-card full-width">
-                            <div class="sc-card-title">Recommendations</div>
-                            <div id="recommendations"></div>
                         </div>
                     </div>
                 </div>
