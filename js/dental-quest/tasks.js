@@ -792,7 +792,7 @@ function renderFocusMode() {
 
 // ==================== SIDEBAR NAVIGATION ====================
 
-var currentViewMode = 'list'; // 'list' or 'kanban'
+var currentViewMode = 'kanban'; // 'list' or 'kanban'
 
 function sidebarNavigate(view) {
     // Update sidebar active state

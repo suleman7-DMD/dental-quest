@@ -12212,10 +12212,10 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
             <!-- View Toggle + Category Filters (shown in full view) -->
             <div class="view-controls" id="viewControls" style="display: none;">
                 <div class="view-toggle-pills">
-                    <button class="vtp active" id="listViewBtn" onclick="switchViewMode('list')">
+                    <button class="vtp" id="listViewBtn" onclick="switchViewMode('list')">
                         <i data-lucide="list"></i> List
                     </button>
-                    <button class="vtp" id="kanbanViewBtn" onclick="switchViewMode('kanban')">
+                    <button class="vtp active" id="kanbanViewBtn" onclick="switchViewMode('kanban')">
                         <i data-lucide="columns-3"></i> Board
                     </button>
                 </div>
@@ -12233,7 +12233,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
             </div>
 
             <!-- Kanban Board Container (5-column urgency: Must Today / Up Next / This Week / This Month / Someday) -->
-            <div id="kanbanBoard" class="kanban-board" style="display: none;">
+            <div id="kanbanBoard" class="kanban-board" style="display: grid;">
                 <div class="kanban-column" data-urgency="eod">
                     <div class="kanban-column-header">
                         <span class="kanban-col-indicator"></span>
