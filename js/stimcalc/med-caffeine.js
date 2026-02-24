@@ -96,7 +96,7 @@ function renderMedEntries() {
         const isToday = medDate === today;
         // Use string ID with quotes in onclick handlers
         const dateSelector = `
-            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 110px;">
+            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; color: ${isToday ? '#5E8A5E' : '#C4923A'}; width: 110px;">
         `;
 
         return `
@@ -145,17 +145,17 @@ function updateStackingWarning() {
 
     if (numDoses > 1) {
         let riskLevel = 'moderate';
-        let riskColor = '#f59e0b';
+        let riskColor = '#C4923A';
 
         // High risk if: stacking + no sleep debt (fighting drug "naked")
         if (sleepDebt < 2 && totalDose >= 60) {
             riskLevel = 'high';
-            riskColor = '#ef4444';
+            riskColor = '#B85C5C';
         }
 
         warningEl.style.display = 'block';
-        warningEl.style.borderColor = `rgba(${riskLevel === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.4)`;
-        warningEl.style.background = `rgba(${riskLevel === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.15)`;
+        warningEl.style.borderColor = `rgba(${riskLevel === 'high' ? '184, 92, 92' : '196, 146, 58'}, 0.4)`;
+        warningEl.style.background = `rgba(${riskLevel === 'high' ? '184, 92, 92' : '196, 146, 58'}, 0.15)`;
 
         warningEl.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -166,30 +166,30 @@ function updateStackingWarning() {
                     Total: ${totalDose}mg
                 </div>
             </div>
-            <div style="color: #c9d1d9; line-height: 1.5;">
+            <div style="color: #6B635B; line-height: 1.5;">
                 <strong>The Math:</strong> Adding a second dose doesn't just raise the peak – it <em>widens the base</em> of the elimination curve.
                 That ${meds[1]?.dose || 20}mg "booster" often adds <strong>4-6+ hours</strong> of wakefulness, not just more focus.
             </div>
             ${sleepDebt < 2 ? `
-                <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; color: #fca5a5;">
+                <div style="margin-top: 10px; padding: 8px; background: rgba(184, 92, 92, 0.15); border-radius: 6px; color: #B85C5C;">
                     <strong>🚨 HIGH RISK:</strong> You're well-rested (${sleepDebt.toFixed(1)}hr debt). Your brain has NO adenosine pressure to fight this extra drug. You're fighting it "naked."
                 </div>
             ` : ''}
-            <div style="margin-top: 10px; font-size: 0.85em; color: #b0b8c4;">
+            <div style="margin-top: 10px; font-size: 0.85em; color: #6B635B;">
                 <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
             </div>
         `;
     } else if (totalDose >= 60) {
         // Single high dose warning
         warningEl.style.display = 'block';
-        warningEl.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-        warningEl.style.background = 'rgba(245, 158, 11, 0.1)';
+        warningEl.style.borderColor = 'rgba(196, 146, 58, 0.3)';
+        warningEl.style.background = 'rgba(196, 146, 58, 0.1)';
 
         warningEl.innerHTML = `
-            <div style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
+            <div style="color: #C4923A; font-weight: 600; margin-bottom: 6px;">
                 💊 High Dose Warning: ${totalDose}mg
             </div>
-            <div style="color: #b0b8c4; font-size: 0.9em;">
+            <div style="color: #6B635B; font-size: 0.9em;">
                 Doses above 50mg extend clearance time disproportionately. Consider if you really need this much today.
             </div>
         `;
@@ -245,22 +245,22 @@ function renderCaffeineEntries() {
     const caffArray = getValues(state.caffeine);
     container.innerHTML = caffArray.map((caff, index) => {
         const isSipPart = caff.sipGroup !== undefined;
-        const sipBadge = isSipPart ? `<span style="font-size: 0.7em; color: #a78bfa; margin-left: 6px;">(sip ${caff.sipPart}/${caff.sipTotal})</span>` : '';
+        const sipBadge = isSipPart ? `<span style="font-size: 0.7em; color: #6B7C5E; margin-left: 6px;">(sip ${caff.sipPart}/${caff.sipTotal})</span>` : '';
 
         // Always show date picker for max precision
         const caffDate = caff.date || today;
         const isToday = caffDate === today;
         // Use string ID in onclick handlers
         const dateSelector = `
-            <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate('${caff.id}', this.value)" style="font-size: 0.7em; padding: 3px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: ${isToday ? '#10b981' : '#f59e0b'}; width: 100px;">
+            <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate('${caff.id}', this.value)" style="font-size: 0.7em; padding: 3px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; color: ${isToday ? '#5E8A5E' : '#C4923A'}; width: 100px;">
         `;
 
         return `
-        <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);"' : ''}>
+        <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(107, 124, 94, 0.08); border-color: rgba(107, 124, 94, 0.15);"' : ''}>
             ${dateSelector}
             <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
             <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
-                   style="padding: 4px 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 0.85em; width: 100px;">
+                   style="padding: 4px 8px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 6px; color: #2C2825; font-size: 0.85em; width: 100px;">
             <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
         </div>
     `}).join('');
