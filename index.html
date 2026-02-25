@@ -118,6 +118,18 @@
             --cat-life-light: #E8EDE4;
             --cat-dotoday: #B85C5C;
             --cat-dotoday-light: #F5E6E6;
+
+            /* Z-index scale */
+            --z-base: 1;
+            --z-sidebar: 50;
+            --z-sidebar-backdrop: 49;
+            --z-sticky: 100;
+            --z-header: 1000;
+            --z-fab: 2000;
+            --z-overlay: 9999;
+            --z-modal: 10000;
+            --z-toast: 10100;
+            --z-loading: 99999;
         }
 
         * {
@@ -1925,40 +1937,6 @@
             background: var(--destructive-light);
         }
 
-        /* Perfect Day Badge */
-        .perfect-day-badge {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: var(--warning);
-            border-radius: 50%;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.8);
-            animation: perfectDayPop 2s ease forwards;
-        }
-        @keyframes perfectDayPop {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            30% { transform: translate(-50%, -50%) scale(1.2); }
-            50% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-        }
-        .perfect-day-badge .trophy {
-            font-size: 4em;
-        }
-        .perfect-day-badge .text {
-            font-weight: 800;
-            font-size: 1em;
-            color: #92400e;
-            margin-top: 10px;
-        }
-
         /* Time Prompt Modal */
         .time-prompt-modal {
             position: fixed;
@@ -2173,6 +2151,17 @@
             position: relative;
             flex-shrink: 0;
             margin-top: 1px;
+        }
+
+        /* 44px iOS tap target: transparent ::before covers 44x44 area around 18px checkbox */
+        .task-checkbox::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44px;
+            height: 44px;
+            transform: translate(-50%, -50%);
         }
 
         .task-checkbox:hover {
@@ -6145,28 +6134,6 @@
             0% { transform: translateY(100%); opacity: 0; }
             100% { transform: translateY(0); opacity: 1; }
         }
-        @keyframes perfectDayFlash {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-        @keyframes badgePopEnhanced {
-            0% { transform: translate(-50%, -50%) scale(0) rotate(-5deg); opacity: 0; }
-            60% { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-        }
-        @keyframes trophyBounce {
-            0% { transform: scale(0); }
-            40% { transform: scale(1.3); }
-            60% { transform: scale(0.9); }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes glowPulse {
-            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
-            50% { transform: translateX(-50%) scale(1.3); opacity: 1; }
-        }
         @keyframes taskCardFlash {
             0% { background: inherit; }
             30% { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); }
@@ -8703,59 +8670,6 @@
             height: 10px;
         }
 
-        /* Perfect day celebration */
-        .perfect-day-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15), transparent 70%);
-            z-index: 9999;
-            pointer-events: none;
-            animation: perfectDayFlash 3s ease-out forwards;
-        }
-        .perfect-day-badge {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.15));
-            border: 2px solid rgba(251, 191, 36, 0.4);
-            backdrop-filter: blur(20px);
-            padding: 40px 60px;
-            border-radius: 24px;
-            text-align: center;
-            z-index: 10000;
-            animation: badgePopEnhanced 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
-        }
-        .perfect-day-badge .trophy {
-            font-size: 64px;
-            margin-bottom: 10px;
-            animation: trophyBounce 0.8s ease-in-out;
-            display: inline-block;
-        }
-        .perfect-day-badge .text {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--warning), var(--warning));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .perfect-day-badge .perfect-day-stats {
-            margin-top: 12px;
-            font-size: 0.85em;
-            color: rgba(251, 191, 36, 0.8);
-        }
-        .perfect-day-badge .trophy-glow {
-            position: absolute;
-            top: 20%; left: 50%;
-            transform: translateX(-50%);
-            width: 100px; height: 100px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
-            animation: glowPulse 1.5s ease-in-out infinite;
-        }
-
         /* === DRAG AND DROP === */
         .task-card.dragging {
             opacity: 0.3 !important;
@@ -9916,68 +9830,6 @@
     animation: screenPulse 0.4s ease-out;
 }
 
-.perfect-day-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15), transparent 70%);
-    z-index: 9999;
-    pointer-events: none;
-    animation: perfectDayFlash 3s ease-out forwards;
-}
-
-.perfect-day-badge {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.15));
-    border: 2px solid rgba(251, 191, 36, 0.4);
-    backdrop-filter: blur(20px);
-    padding: 40px 60px;
-    border-radius: 24px;
-    text-align: center;
-    z-index: 10000;
-    animation: badgePopEnhanced 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
-}
-
-.perfect-day-badge .trophy {
-    font-size: 64px;
-    margin-bottom: 10px;
-    animation: trophyBounce 0.8s ease-in-out;
-    display: inline-block;
-}
-
-.perfect-day-badge .text {
-    font-size: 28px;
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--warning), var(--warning));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.perfect-day-badge .perfect-day-stats {
-    margin-top: 12px;
-    font-size: 0.85em;
-    color: rgba(251, 191, 36, 0.8);
-}
-
-.perfect-day-badge .trophy-glow {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
-    animation: glowPulse 1.5s ease-in-out infinite;
-}
-
 .time-prompt-modal-enhanced {
     position: fixed;
     top: 0;
@@ -10481,8 +10333,10 @@
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     max-height: 85vh;
+    max-height: 85dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     box-shadow: var(--shadow-overlay);
 }
 #quickAddPanel.open { transform: translateY(0); }
@@ -11043,10 +10897,82 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 /* 11C: Firebase saving toast — JS-generated inline dark styles */
 #savingIndicator { background: var(--accent) !important; color: var(--accent-fg) !important; box-shadow: var(--shadow-md) !important; }
 
-/* 11C: Custom alert/confirm modals — JS-generated in state.js */
-.custom-modal-overlay h3[style*="color:#58a6ff"] { color: var(--accent) !important; }
-.custom-modal-overlay h3[style*="color:#f0883e"] { color: var(--warning) !important; }
-.custom-modal-overlay button[style*="background:#238636"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
+/* Custom modal system (alert, confirm, prompt) — JS-generated in state.js */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    padding: 20px;
+}
+.custom-modal-card {
+    background: var(--surface-overlay);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid var(--border-default);
+    text-align: center;
+    box-shadow: var(--shadow-overlay);
+}
+.custom-modal-title {
+    margin: 0 0 16px 0;
+    font-size: 1.2em;
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+.custom-modal-message {
+    color: var(--fg-primary);
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+.custom-modal-input {
+    width: 100%;
+    padding: 12px;
+    background: var(--canvas-inset);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    color: var(--fg-primary);
+    font-size: 1em;
+    margin-bottom: 16px;
+    font-family: var(--font-body);
+}
+.custom-modal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+}
+.custom-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.custom-modal-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: var(--font-body);
+    transition: opacity 0.15s ease;
+}
+.custom-modal-btn:hover { opacity: 0.85; }
+.custom-modal-btn-primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+}
+.custom-modal-btn-secondary {
+    background: var(--canvas-inset);
+    color: var(--fg-secondary);
+}
 
 /* 11C: Sync conflict modal — JS-generated */
 #syncConflictModal button[onclick*="resolveSyncConflict('local')"] { background: var(--accent) !important; color: var(--accent-fg) !important; }
@@ -11074,7 +11000,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     position: sticky;
     top: 0;
     height: 100vh;
+    height: 100dvh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 16px 0;
     z-index: 100;
 }
@@ -11443,7 +11371,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 18px;
+    padding: 8px 18px;
+    min-height: 36px;
     border: none;
     background: transparent;
     color: var(--fg-tertiary);
@@ -11477,7 +11406,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     align-items: center;
 }
 .cfp {
-    padding: 5px 14px;
+    padding: 8px 14px;
+    min-height: 36px;
     border: 1px solid var(--border-subtle);
     background: transparent;
     color: var(--fg-tertiary);
@@ -11568,8 +11498,11 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     margin-left: auto;
 }
 .kanban-col-add {
-    width: 22px;
-    height: 22px;
+    width: 32px;
+    height: 32px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -11582,6 +11515,9 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     line-height: 1;
     transition: all 0.15s ease;
     opacity: 0;
+}
+@media (hover: none) {
+    .kanban-col-add { opacity: 0.6; }
 }
 .kanban-column-header:hover .kanban-col-add { opacity: 1; }
 .kanban-col-add:hover {
@@ -11681,6 +11617,20 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     color: var(--fg-tertiary);
     margin-left: auto;
 }
+.synchro-card-urgency-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.synchro-card-urgency-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--fg-tertiary);
+    margin-right: 6px;
+}
 
 /* Card: Size/progress bar */
 .synchro-card-progress {
@@ -11770,6 +11720,66 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     height: 13px;
 }
 
+/* Card: Row layout (checkbox + body + actions) */
+.synchro-card-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.synchro-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Card: Completion checkbox */
+.synchro-card-check {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 11px;
+    margin: -11px;
+    margin-right: 1px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+}
+.synchro-card-check:hover .synchro-check-ring {
+    border-color: var(--accent);
+    background: rgba(107, 124, 94, 0.08);
+}
+.synchro-card-check.checked {
+    color: var(--success);
+}
+.synchro-card-check.checked svg {
+    width: 18px;
+    height: 18px;
+}
+.synchro-check-ring {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-default);
+    border-radius: 50%;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    background: transparent;
+}
+
+/* Card: With row layout, reposition actions */
+.synchro-card-row .synchro-card-actions {
+    position: static;
+    opacity: 0;
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 2px;
+}
+.synchro-card:hover .synchro-card-row .synchro-card-actions {
+    opacity: 1;
+}
+
 /* Card: Overdue pulse animation */
 .synchro-card.overdue {
     border-left: 3px solid var(--destructive);
@@ -11834,10 +11844,23 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+.urgency-section-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--fg-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
 .urgency-section-count {
     font-size: var(--text-xs);
     color: var(--fg-tertiary);
     font-weight: 500;
+}
+.urgency-section-cap {
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    margin-left: auto;
 }
 .urgency-section-time {
     font-size: var(--text-xs);
@@ -11845,6 +11868,12 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     font-family: var(--font-mono);
     margin-left: auto;
 }
+/* Urgency dot colors */
+.urgency-dot-eod { background: var(--destructive); }
+.urgency-dot-soon { background: var(--warning); }
+.urgency-dot-week { background: var(--accent); }
+.urgency-dot-month { background: var(--info, #5E7A8A); }
+.urgency-dot-inbox { background: var(--fg-muted); }
 .urgency-section-chevron {
     color: var(--fg-muted);
     transition: transform 0.2s ease;
@@ -11859,6 +11888,25 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+/* Empty state call-to-action button */
+.empty-state-cta {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md, 8px);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.empty-state-cta:hover {
+    background: var(--accent-hover, var(--accent));
+    opacity: 0.9;
 }
 
 /* List view cards reuse .synchro-card */
@@ -11910,7 +11958,10 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         transition: left 0.25s ease;
         box-shadow: none;
         height: 100vh;
+        height: 100dvh;
         top: 0;
+        padding-top: env(safe-area-inset-top, 0);
+        padding-bottom: env(safe-area-inset-bottom, 0);
     }
     .sidebar.open {
         left: 0;
@@ -12020,7 +12071,8 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     color: var(--fg-tertiary);
     font-size: 10px;
     font-weight: 500;
-    padding: 4px 8px;
+    padding: 8px 12px;
+    min-height: 44px;
     border-radius: var(--radius-sm);
     transition: color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
@@ -12147,7 +12199,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
             100% { transform: translateX(100%); }
         }
     </style>
-    <div class="toast-notification" id="toast">
+    <div class="toast-notification" id="toast" role="status" aria-live="polite" aria-atomic="true">
         <span class="toast-icon" id="toastIcon"><i data-lucide="check-circle" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i></span>
         <span class="toast-message" id="toastMessage">Success!</span>
     </div>
@@ -12159,7 +12211,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     <div class="app-layout" id="appLayout">
 
     <!-- ==================== SIDEBAR ==================== -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-logo">
             <span class="sidebar-logo-icon">DQ</span>
             <span class="sidebar-logo-text">Dental Quest</span>
@@ -12218,10 +12270,10 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 </div>
             </div>
             <div class="sidebar-data-controls">
-                <button onclick="forceCloudSync()" title="Sync"><i data-lucide="refresh-cw"></i></button>
-                <button onclick="createCheckpoint()" title="Save"><i data-lucide="save"></i></button>
-                <button onclick="showCheckpointManager()" title="Restore"><i data-lucide="folder-open"></i></button>
-                <button onclick="showHelp()" title="Help"><i data-lucide="help-circle"></i></button>
+                <button onclick="forceCloudSync()" title="Sync" aria-label="Sync with cloud"><i data-lucide="refresh-cw"></i></button>
+                <button onclick="createCheckpoint()" title="Save" aria-label="Save checkpoint"><i data-lucide="save"></i></button>
+                <button onclick="showCheckpointManager()" title="Restore" aria-label="Restore checkpoint"><i data-lucide="folder-open"></i></button>
+                <button onclick="showHelp()" title="Help" aria-label="Show help"><i data-lucide="help-circle"></i></button>
             </div>
             <div class="sidebar-sync-status" id="sidebarSyncStatus">
                 <span class="sync-dot-sidebar" id="sidebarSyncDot"></span>
@@ -12231,7 +12283,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     </aside>
 
     <!-- ==================== MAIN PANEL ==================== -->
-    <main class="main-panel" id="mainPanel">
+    <main class="main-panel" id="mainPanel" role="main">
         <header class="top-bar" id="topBar">
             <div class="top-bar-left">
                 <button class="menu-btn" id="sidebarMenuBtn" onclick="toggleSidebar()" aria-label="Menu" style="display:none; background:none; border:none; cursor:pointer; color:var(--fg-secondary); padding:4px;">
@@ -12309,7 +12361,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <span class="kanban-col-title">Must Today</span>
                         <span class="kanban-col-count" id="kanbanEodCount">0</span>
                         <span class="kanban-col-meta" id="kanbanEodTime"></span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('eod')" title="Add task">+</button>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('eod')" title="Add task" aria-label="Add task to column">+</button>
                     </div>
                     <div class="kanban-capacity-bar"><div class="kanban-capacity-fill" id="kanbanEodCapacity"></div></div>
                     <div class="kanban-column-body" id="kanbanEod"></div>
@@ -12320,7 +12372,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <span class="kanban-col-title">Up Next</span>
                         <span class="kanban-col-count" id="kanbanSoonCount">0</span>
                         <span class="kanban-col-meta" id="kanbanSoonTime"></span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('soon')" title="Add task">+</button>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('soon')" title="Add task" aria-label="Add task to column">+</button>
                     </div>
                     <div class="kanban-capacity-bar"><div class="kanban-capacity-fill" id="kanbanSoonCapacity"></div></div>
                     <div class="kanban-column-body" id="kanbanSoon"></div>
@@ -12330,7 +12382,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <span class="kanban-col-indicator"></span>
                         <span class="kanban-col-title">This Week</span>
                         <span class="kanban-col-count" id="kanbanWeekCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('week')" title="Add task">+</button>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('week')" title="Add task" aria-label="Add task to column">+</button>
                     </div>
                     <div class="kanban-column-body" id="kanbanWeek"></div>
                 </div>
@@ -12339,7 +12391,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <span class="kanban-col-indicator"></span>
                         <span class="kanban-col-title">This Month</span>
                         <span class="kanban-col-count" id="kanbanMonthCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('month')" title="Add task">+</button>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('month')" title="Add task" aria-label="Add task to column">+</button>
                     </div>
                     <div class="kanban-column-body" id="kanbanMonth"></div>
                 </div>
@@ -12348,7 +12400,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <span class="kanban-col-indicator"></span>
                         <span class="kanban-col-title">Someday</span>
                         <span class="kanban-col-count" id="kanbanInboxCount">0</span>
-                        <button class="kanban-col-add" onclick="quickAddToColumn('inbox')" title="Add task">+</button>
+                        <button class="kanban-col-add" onclick="quickAddToColumn('inbox')" title="Add task" aria-label="Add task to column">+</button>
                     </div>
                     <div class="kanban-column-body" id="kanbanInbox"></div>
                 </div>
@@ -12531,7 +12583,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         <div class="dashboard-expansion" id="expansionDoToday">
             <div class="expansion-header">
                 <span>Do Today Tasks</span>
-                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+                <button class="expansion-close" onclick="closeAllExpansions()" aria-label="Close panel">✕</button>
             </div>
             <div class="expansion-content" id="contentDoToday"></div>
         </div>
@@ -12539,7 +12591,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         <div class="dashboard-expansion" id="expansionRemaining">
             <div class="expansion-header">
                 <span>Remaining Tasks</span>
-                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+                <button class="expansion-close" onclick="closeAllExpansions()" aria-label="Close panel">✕</button>
             </div>
             <div class="expansion-content" id="contentRemaining"></div>
         </div>
@@ -12547,7 +12599,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         <div class="dashboard-expansion" id="expansionCompleted">
             <div class="expansion-header">
                 <span>Completed Tasks</span>
-                <button class="expansion-close" onclick="closeAllExpansions()">✕</button>
+                <button class="expansion-close" onclick="closeAllExpansions()" aria-label="Close panel">✕</button>
             </div>
             <div class="expansion-content" id="contentCompleted"></div>
         </div>
@@ -13200,7 +13252,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     <!-- ==================== MODALS (outside containers for visibility) ==================== -->
                 <div class="modal-overlay" id="medModal" onclick="safeModalClose(closeMedModal, event)">
                     <div class="modal-content" onclick="event.stopPropagation()">
-                        <button class="modal-close-x" onclick="closeMedModal()" title="Close">×</button>
+                        <button class="modal-close-x" onclick="closeMedModal()" title="Close" aria-label="Close medication settings">×</button>
                         <h3 id="modalTitle">Medication Settings</h3>
                         <div class="modal-body">
                             <div class="form-group">
@@ -13220,7 +13272,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 </div>
                 <div class="modal-overlay" id="noteModal" onclick="safeModalClose(closeNoteModal, event)">
                     <div class="modal-content" onclick="event.stopPropagation()">
-                        <button class="modal-close-x" onclick="closeNoteModal()" title="Close">×</button>
+                        <button class="modal-close-x" onclick="closeNoteModal()" title="Close" aria-label="Close note modal">×</button>
                         <h3 id="noteModalTitle">Add Note</h3>
                         <div class="modal-body">
                             <div class="form-group">
@@ -13240,7 +13292,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 </div>
                 <div class="modal-overlay" id="addCountdownModal" onclick="safeModalClose(closeAddCountdown, event)">
                     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
-                        <button class="modal-close-x" onclick="closeAddCountdown()" title="Close">×</button>
+                        <button class="modal-close-x" onclick="closeAddCountdown()" title="Close" aria-label="Close add countdown modal">×</button>
                         <h2 style="color: var(--accent); margin-bottom: 20px; font-family: var(--font-heading);">+ Add New Countdown</h2>
                         
                         <div style="margin-bottom: 20px;">
@@ -13295,7 +13347,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 </div>
                 <div class="modal-overlay" id="helpModal" onclick="safeModalClose(closeHelp, event)">
                     <div class="modal-content help-modal" onclick="event.stopPropagation()">
-                        <button class="modal-close-x" onclick="closeHelp()" title="Close">×</button>
+                        <button class="modal-close-x" onclick="closeHelp()" title="Close" aria-label="Close help guide">×</button>
                         <h3>Quick Reference Guide</h3>
                         <div class="modal-body">
                             <div class="help-section">
@@ -13660,7 +13712,31 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                     <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Task</label>
                     <input type="text" id="editTaskText" style="width: 100%; background: var(--canvas-inset); border: 1px solid var(--border-default); border-radius: 8px; padding: 12px; color: var(--fg-primary); font-size: 1em;">
                 </div>
-                
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Category</label>
+                    <div id="editCategoryPills" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <button class="edit-cat-pill" data-cat="financial" onclick="selectEditCategory('financial')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Financial</button>
+                        <button class="edit-cat-pill" data-cat="clinic" onclick="selectEditCategory('clinic')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Clinic</button>
+                        <button class="edit-cat-pill" data-cat="health" onclick="selectEditCategory('health')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Health</button>
+                        <button class="edit-cat-pill" data-cat="school" onclick="selectEditCategory('school')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">School</button>
+                        <button class="edit-cat-pill" data-cat="academic" onclick="selectEditCategory('academic')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Academic</button>
+                        <button class="edit-cat-pill" data-cat="future" onclick="selectEditCategory('future')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Future</button>
+                        <button class="edit-cat-pill" data-cat="life" onclick="selectEditCategory('life')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Life</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Urgency</label>
+                    <div id="editUrgencyPills" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <button class="edit-urg-pill" data-urgency="eod" onclick="selectEditUrgency('eod')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Must Today</button>
+                        <button class="edit-urg-pill" data-urgency="soon" onclick="selectEditUrgency('soon')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Up Next</button>
+                        <button class="edit-urg-pill" data-urgency="week" onclick="selectEditUrgency('week')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">This Week</button>
+                        <button class="edit-urg-pill" data-urgency="month" onclick="selectEditUrgency('month')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">This Month</button>
+                        <button class="edit-urg-pill" data-urgency="inbox" onclick="selectEditUrgency('inbox')" style="padding: 6px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-full); background: var(--canvas-subtle); color: var(--fg-secondary); font-size: 12px; font-weight: 500; cursor: pointer;">Someday</button>
+                    </div>
+                </div>
+
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; color: var(--fg-secondary); margin-bottom: 8px; font-weight: 600;">Size (How long will this take?)</label>
                     <div style="display: flex; gap: 10px;">

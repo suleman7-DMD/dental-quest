@@ -261,7 +261,7 @@ function showFocusCompleteModal() {
         var confettiWrap = document.getElementById('focusConfettiContainer');
         if (confettiWrap) {
             confettiWrap.innerHTML = '';
-            var colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
+            var colors = ['#6B7C5E', '#8A9A7B', '#C4923A', '#B85C5C', '#5E7A8A', '#9C948B'];
             var shapes = ['', 'circle', 'rect', 'diamond'];
             for (var i = 0; i < 40; i++) {
                 var p = document.createElement('div');
@@ -502,7 +502,7 @@ function showCelebration(size) {
     container.className = 'confetti-container';
     document.body.appendChild(container);
 
-    var colors = ['#ff6b35', '#f7931e', '#ffd700', '#6B7C5E', '#10b981', '#ec4899'];
+    var colors = ['#6B7C5E', '#8A9A7B', '#C4923A', '#B85C5C', '#5E7A8A', '#9C948B'];
     var count = size === 'big' ? 100 : size === 'medium' ? 50 : 20;
 
     for (var i = 0; i < count; i++) {

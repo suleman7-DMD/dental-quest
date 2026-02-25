@@ -75,22 +75,20 @@ function deletePage(pageId) {
         return;
     }
 
-    if (!confirm('Delete this page? This cannot be undone.')) {
-        return;
-    }
+    showCustomConfirm('Delete this page? This cannot be undone.', function() {
+        delete notebook.pages[pageId];
 
-    delete notebook.pages[pageId];
+        // Switch to first page if we deleted current page
+        if (notebook.currentPageId === pageId) {
+            var pageIds = Object.keys(notebook.pages);
+            notebook.currentPageId = pageIds.length > 0 ? pageIds[0] : null;
+        }
 
-    // Switch to first page if we deleted current page
-    if (notebook.currentPageId === pageId) {
-        const pageIds = Object.keys(notebook.pages);
-        notebook.currentPageId = pageIds.length > 0 ? pageIds[0] : null;
-    }
-
-    renderNotebookTabs();
-    renderNotebookContent();
-    saveNotebook();
-    showToast('Page deleted', '\u{1F5D1}\uFE0F');
+        renderNotebookTabs();
+        renderNotebookContent();
+        saveNotebook();
+        showToast('Page deleted', 'ok');
+    }, null, 'Delete Page');
 }
 
 function switchPage(pageId) {
@@ -192,7 +190,7 @@ function updateCharCount() {
     const count = text.length;
 
     charCountDisplay.textContent = `${count} / 10,000 characters`;
-    charCountDisplay.style.color = count > 10000 ? '#ff4757' : '#999';
+    charCountDisplay.style.color = count > 10000 ? 'var(--destructive)' : 'var(--fg-tertiary)';
 
     // Prevent typing if over limit
     if (count > 10000) {
@@ -239,12 +237,13 @@ function renamePage(pageId) {
     const page = notebook.pages[pageId];
     if (!page) return;
 
-    const newTitle = prompt('Enter new page name:', page.title);
-    if (newTitle && newTitle.trim()) {
-        page.title = newTitle.trim();
-        renderNotebookTabs();
-        saveNotebook();
-    }
+    showCustomPrompt('Enter new page name:', page.title, function(newTitle) {
+        if (newTitle && newTitle.trim()) {
+            page.title = newTitle.trim();
+            renderNotebookTabs();
+            saveNotebook();
+        }
+    }, 'Rename Page');
 }
 
 function saveNotebook() {

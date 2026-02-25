@@ -31,11 +31,11 @@ function openFinancials() {
         const dashboard = document.getElementById('financialDashboard');
         if (dashboard) {
             dashboard.innerHTML = `
-                <div style="padding: 40px; text-align: center; color: #f87171;">
+                <div style="padding: 40px; text-align: center; color: var(--destructive);">
                     <h2>Error Loading Financial Dashboard</h2>
                     <p style="margin: 20px 0; color: var(--fg-secondary);">${error.message}</p>
                     <p style="color: var(--fg-secondary);">Check the console for details.</p>
-                    <button onclick="closeFinancials()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                    <button onclick="closeFinancials()" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
                         Close
                     </button>
                 </div>
@@ -101,9 +101,9 @@ function calculateFinancialStatus() {
     var daysRemaining = Math.ceil((semesterEnd - today) / (1000 * 60 * 60 * 24));
     var projectedBalance = availableCash - totalUnpaidMonthly;
 
-    var healthStatus = 'good', healthColor = '#4ade80', healthMessage = 'ON TRACK';
-    if (projectedBalance < 0) { healthStatus = 'critical'; healthColor = '#dc2626'; healthMessage = 'DEFICIT PROJECTED'; }
-    else if (projectedBalance < financials.masterLiquidity.targetCushion) { healthStatus = 'warning'; healthColor = '#f59e0b'; healthMessage = 'BELOW TARGET'; }
+    var healthStatus = 'good', healthColor = 'var(--success)', healthMessage = 'ON TRACK';
+    if (projectedBalance < 0) { healthStatus = 'critical'; healthColor = 'var(--destructive)'; healthMessage = 'DEFICIT PROJECTED'; }
+    else if (projectedBalance < financials.masterLiquidity.targetCushion) { healthStatus = 'warning'; healthColor = 'var(--warning)'; healthMessage = 'BELOW TARGET'; }
 
     return {
         currentLiquid: liquid, oneTimeExpenses: oneTimeExpenses, oneTimeIncome: oneTimeIncome,
@@ -148,7 +148,7 @@ function renderFinancialCockpit() {
             renderCreditCards();
     } catch (error) {
         console.error('Error in renderFinancialCockpit:', error);
-        dashboard.innerHTML = '<div style="padding: 40px; color: #f87171; background: var(--surface-primary); border-radius: 12px; margin: 20px;"><h3>Rendering Error</h3><p style="margin-top: 15px; color: var(--fg-secondary);">' + escapeHtml(error.message) + '</p></div>';
+        dashboard.innerHTML = '<div style="padding: 40px; color: var(--destructive); background: var(--surface-primary); border-radius: 12px; margin: 20px;"><h3>Rendering Error</h3><p style="margin-top: 15px; color: var(--fg-secondary);">' + escapeHtml(error.message) + '</p></div>';
     }
 }
 
@@ -158,7 +158,7 @@ function renderMasterCockpit() {
         ? new Date(financials.masterLiquidity.lastUpdated).toLocaleString()
         : 'Never';
 
-    return '<div class="fin-section fin-master-cockpit" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none;">' +
+    return '<div class="fin-section fin-master-cockpit" style="background: linear-gradient(135deg, var(--surface-primary) 0%, var(--accent) 100%); border: none;">' +
         '<div class="fin-master-header">' +
             '<h3 class="fin-master-title">MASTER LIQUIDITY</h3>' +
             '<button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp(\'masterLiquidity\')" style="border-color: white; color: white;">? Help</button>' +
@@ -178,10 +178,10 @@ function renderMasterCockpit() {
             '</div>' +
         '</div>' +
         '<div class="fin-quick-stats">' +
-            '<div class="fin-quick-stat"><div class="fin-quick-label">One-Time Bills</div><div class="fin-quick-value" style="color: #fca5a5;">-$' + status.oneTimeExpenses.toLocaleString() + '</div></div>' +
-            '<div class="fin-quick-stat"><div class="fin-quick-label">Expected Income</div><div class="fin-quick-value" style="color: #86efac;">+$' + status.oneTimeIncome.toLocaleString() + '</div></div>' +
+            '<div class="fin-quick-stat"><div class="fin-quick-label">One-Time Bills</div><div class="fin-quick-value" style="color: var(--destructive-light);">-$' + status.oneTimeExpenses.toLocaleString() + '</div></div>' +
+            '<div class="fin-quick-stat"><div class="fin-quick-label">Expected Income</div><div class="fin-quick-value" style="color: var(--success-light);">+$' + status.oneTimeIncome.toLocaleString() + '</div></div>' +
             '<div class="fin-quick-stat"><div class="fin-quick-label">After One-Time</div><div class="fin-quick-value" style="color: white;">$' + status.availableCash.toLocaleString() + '</div></div>' +
-            '<div class="fin-quick-stat"><div class="fin-quick-label">Unpaid Monthly</div><div class="fin-quick-value" style="color: #fbbf24;">-$' + status.totalUnpaidMonthly.toLocaleString() + '</div></div>' +
+            '<div class="fin-quick-stat"><div class="fin-quick-label">Unpaid Monthly</div><div class="fin-quick-value" style="color: var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + '</div></div>' +
         '</div>' +
     '</div>';
 }
@@ -206,7 +206,7 @@ function updateMasterLiquidity() {
                        inputmode="decimal" style="font-size: 1.5em; text-align: center; font-weight: 700;">
             </div>
 
-            <div style="margin: 15px 0; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 0.9em; color: #93c5fd;">
+            <div style="margin: 15px 0; padding: 12px; background: var(--accent-light); border-radius: 8px; font-size: 0.9em; color: var(--accent);">
                 Enter your actual bank balance to get accurate projections.
             </div>
 
@@ -266,13 +266,13 @@ function renderOneTimeBills() {
             '</div>' +
             '<div style="text-align: right;">' +
                 '<div style="font-size: 0.85em; color: var(--fg-secondary);">Unpaid</div>' +
-                '<div style="font-size: 1.3em; font-weight: 700; color: #f87171;">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
-                (totalUnpaidIncome > 0 ? '<div style="font-size: 1em; color: #4ade80;">+$' + totalUnpaidIncome.toLocaleString() + '</div>' : '') +
+                '<div style="font-size: 1.3em; font-weight: 700; color: var(--destructive);">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
+                (totalUnpaidIncome > 0 ? '<div style="font-size: 1em; color: var(--success);">+$' + totalUnpaidIncome.toLocaleString() + '</div>' : '') +
             '</div>' +
         '</div>';
 
     if (unpaid.length === 0 && paid.length === 0) {
-        html += '<p style="text-align: center; padding: 30px; color: #4ade80; font-size: 1.1em;">No one-time bills</p>';
+        html += '<p style="text-align: center; padding: 30px; color: var(--success); font-size: 1.1em;">No one-time bills</p>';
     }
 
     var allBillsList = unpaid.concat(paid);
@@ -296,8 +296,8 @@ function renderOneTimeBills() {
                 (bill.notes ? '<div class="action-notes">' + escapeHtml(bill.notes) + '</div>' : '') + '</div>' +
                 '<div style="text-align: right;">' +
                     '<div class="cash-amount ' + (bill.type === 'income' ? 'positive' : 'negative') + '" style="font-size: 1.3em;">' + (bill.type === 'income' ? '+' : '-') + '$' + bill.amount.toLocaleString() + '</div>' +
-                    (!bill.paid ? '<button onclick="event.stopPropagation(); editOneTimeBill(\'' + bill.id + '\')" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px;">Edit</button>' +
-                    '<button onclick="event.stopPropagation(); deleteOneTimeBill(\'' + bill.id + '\')" style="background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px; margin-left: 4px;">x</button>' : '') +
+                    (!bill.paid ? '<button onclick="event.stopPropagation(); editOneTimeBill(\'' + bill.id + '\')" style="background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px;">Edit</button>' +
+                    '<button onclick="event.stopPropagation(); deleteOneTimeBill(\'' + bill.id + '\')" style="background: var(--destructive); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px; margin-left: 4px;">x</button>' : '') +
                 '</div></div></div></div>';
     }
 
@@ -375,10 +375,11 @@ function saveOneTimeBillEdit(billId) {
 function deleteOneTimeBill(billId) {
     var bill = (financials.oneTimeBills || {})[billId];
     if (!bill) return;
-    if (!confirm('Delete "' + bill.description + '"?')) return;
-    delete financials.oneTimeBills[billId];
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    showToast('Deleted: ' + bill.description, 'x');
+    showCustomConfirm('Delete "' + bill.description + '"?', function() {
+        delete financials.oneTimeBills[billId];
+        saveData(); renderFinancialCockpit(); updateCockpitStats();
+        showToast('Deleted: ' + bill.description, 'x');
+    }, null, 'Delete Bill');
 }
 
 // ==================== MONTHLY EXPENSES (per-month) ====================
@@ -396,9 +397,9 @@ function renderMonthlyExpenses() {
             '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0;">Monthly Expenses</h3></div>' +
             '<div style="text-align: right;">' +
                 '<div style="font-size: 0.85em; color: var(--fg-secondary);">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
-                '<div style="font-size: 1.3em; font-weight: 700; color: #fbbf24;">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
+                '<div style="font-size: 1.3em; font-weight: 700; color: var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
             '</div></div>' +
-        '<div style="margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 0.9em; color: #93c5fd;">Tap a month header to expand/collapse. Check individual expenses or use "Pay All" for the entire month.</div>';
+        '<div style="margin-bottom: 15px; padding: 12px; background: var(--accent-light); border-left: 4px solid var(--accent); border-radius: 6px; font-size: 0.9em; color: var(--accent);">Tap a month header to expand/collapse. Check individual expenses or use "Pay All" for the entire month.</div>';
 
     var now = new Date();
     var currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -416,29 +417,29 @@ function renderMonthlyExpenses() {
         var shouldExpand = monthKey === currentMonthKey || collapsedMonths[monthKey] === false;
         var collapsed = !shouldExpand && collapsedMonths[monthKey] !== false;
 
-        html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? '#16a34a' : 'var(--border-default)') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
-            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'rgba(22, 163, 74, 0.15)' : 'var(--canvas-subtle)') + '; cursor: pointer; user-select: none;">' +
+        html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? 'var(--success)' : 'var(--border-default)') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
+            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'var(--success-light)' : 'var(--canvas-subtle)') + '; cursor: pointer; user-select: none;">' +
                 '<div style="display: flex; align-items: center; gap: 12px;">' +
                     '<span id="arrow_' + monthKey + '" style="color: var(--fg-secondary); font-size: 0.9em; font-family: monospace; min-width: 14px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
-                    '<div><div style="font-weight: 700; color: ' + (allPaid ? '#4ade80' : 'var(--fg-primary)') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
+                    '<div><div style="font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
                     '<div style="font-size: 0.8em; color: var(--fg-tertiary);">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
                 '<div style="display: flex; align-items: center; gap: 12px;">' +
-                    '<div style="text-align: right;"><div style="font-size: 1.1em; font-weight: 700; color: ' + (allPaid ? '#4ade80' : '#f87171') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
+                    '<div style="text-align: right;"><div style="font-size: 1.1em; font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--destructive)') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
                     (!allPaid ? '<div style="font-size: 0.75em; color: var(--fg-tertiary);">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
-                    (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
+                    (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: var(--success); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
                 '</div></div>';
 
         html += '<div id="monthBody_' + monthKey + '" style="display: ' + (collapsed ? 'none' : 'block') + '; padding: 8px;">';
         for (var ei = 0; ei < expEntries.length; ei++) {
             var expKey = expEntries[ei][0], exp = expEntries[ei][1];
-            html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; background: ' + (exp.paid ? 'rgba(22, 163, 74, 0.1)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
+            html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; background: ' + (exp.paid ? 'var(--success-light)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
                 '<div style="display: flex; align-items: center; gap: 10px;">' +
                     '<div class="action-checkbox ' + (exp.paid ? 'checked' : '') + '" style="width: 22px; height: 22px; min-width: 22px;" onclick="event.stopPropagation(); toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')"></div>' +
-                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? '#4ade80' : 'var(--fg-primary)') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
+                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
                     '<div style="font-size: 0.75em; color: var(--fg-tertiary);">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
                 '<div style="display: flex; align-items: center; gap: 8px;">' +
-                    '<div style="font-weight: 700; color: ' + (exp.paid ? '#4ade80' : '#f87171') + '; font-size: 1em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
-                    (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button>' : '') +
+                    '<div style="font-weight: 700; color: ' + (exp.paid ? 'var(--success)' : 'var(--destructive)') + '; font-size: 1em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
+                    (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: var(--accent); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button>' : '') +
                 '</div></div>';
         }
         html += '<div style="padding: 8px 12px; margin-top: 4px;"><button onclick="addExpenseToMonth(\'' + monthKey + '\')" class="fin-add-btn" style="width: 100%; padding: 10px;">+ Add Expense to ' + escapeHtml(monthData.label) + '</button></div>';
@@ -499,7 +500,7 @@ function editMonthExpense(monthKey, expenseKey) {
             '<option value="other"' + (exp.category === 'other' ? ' selected' : '') + '>Other</option></select></div>' +
         '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="edit_mexp_notes" value="' + escapeHtml(exp.notes || '') + '"></div>' +
         '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveMonthExpenseEdit(\'' + monthKey + '\', \'' + expenseKey + '\')">Save</button></div>' +
-        '<div style="margin-top: 15px; text-align: center;"><button onclick="deleteMonthExpense(\'' + monthKey + '\', \'' + expenseKey + '\')" style="background: transparent; color: #f87171; border: 1px solid #f87171; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">Delete from ' + escapeHtml(month.label) + '</button></div></div>';
+        '<div style="margin-top: 15px; text-align: center;"><button onclick="deleteMonthExpense(\'' + monthKey + '\', \'' + expenseKey + '\')" style="background: transparent; color: var(--destructive); border: 1px solid var(--destructive); padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">Delete from ' + escapeHtml(month.label) + '</button></div></div>';
     document.body.appendChild(overlay);
 }
 
@@ -520,11 +521,12 @@ function deleteMonthExpense(monthKey, expenseKey) {
     var month = (financials.months || {})[monthKey];
     if (!month || !month.expenses || !month.expenses[expenseKey]) return;
     var name = month.expenses[expenseKey].name;
-    if (!confirm('Delete "' + name + '" from ' + month.label + '?')) return;
-    delete month.expenses[expenseKey];
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
-    showToast('Deleted: ' + name, 'x');
+    showCustomConfirm('Delete "' + name + '" from ' + month.label + '?', function() {
+        delete month.expenses[expenseKey];
+        saveData(); renderFinancialCockpit(); updateCockpitStats();
+        var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
+        showToast('Deleted: ' + name, 'x');
+    }, null, 'Delete Expense');
 }
 
 function addExpenseToMonth(monthKey) {
@@ -562,12 +564,12 @@ function renderExpenseTemplate() {
     var template = financials.expenseTemplate || {};
     var total = Object.values(template).reduce(function(sum, exp) { return sum + (exp.amount || 0); }, 0);
 
-    var html = '<div class="fin-section" style="border-color: #6366f1;">' +
+    var html = '<div class="fin-section" style="border-color: var(--info);">' +
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
-            '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0; color: #a78bfa;">Expense Template</h3></div>' +
+            '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0; color: var(--info);">Expense Template</h3></div>' +
             '<div style="text-align: right;"><div style="font-size: 0.85em; color: var(--fg-secondary);">Template Total</div>' +
-            '<div style="font-size: 1.2em; font-weight: 700; color: #a78bfa;">$' + total.toLocaleString() + '/mo</div></div></div>' +
-        '<div style="margin-bottom: 12px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 6px; font-size: 0.85em; color: #a5b4fc;">Edit this template to change what gets created for future months. Existing months are NOT affected.</div>' +
+            '<div style="font-size: 1.2em; font-weight: 700; color: var(--info);">$' + total.toLocaleString() + '/mo</div></div></div>' +
+        '<div style="margin-bottom: 12px; padding: 10px; background: var(--info-light); border-left: 4px solid var(--info); border-radius: 6px; font-size: 0.85em; color: var(--info);">Edit this template to change what gets created for future months. Existing months are NOT affected.</div>' +
         '<div class="fin-expense-list">';
 
     Object.entries(template).forEach(function(entry) {
@@ -618,10 +620,11 @@ function saveTemplateExpenseEdit(expKey) {
 function deleteTemplateExpense(expKey) {
     var exp = (financials.expenseTemplate || {})[expKey];
     if (!exp) return;
-    if (!confirm('Delete "' + (exp.name || expKey) + '" from template?')) return;
-    delete financials.expenseTemplate[expKey];
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    showToast('Removed from template', 'x');
+    showCustomConfirm('Delete "' + (exp.name || expKey) + '" from template?', function() {
+        delete financials.expenseTemplate[expKey];
+        saveData(); renderFinancialCockpit(); updateCockpitStats();
+        showToast('Removed from template', 'x');
+    }, null, 'Delete Template Expense');
 }
 
 function addTemplateExpense() {
@@ -784,13 +787,13 @@ function renderCreditCards() {
             <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <h3 style="margin: 0;">Credit Cards (7 Cards)</h3>
-                    <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('negotiation')" style="background: rgba(34, 197, 94, 0.2); border-color: #22c55e; color: #4ade80;">
+                    <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('negotiation')" style="background: var(--success-light); border-color: var(--success); color: var(--success);">
                         How To Negotiate
                     </button>
                 </div>
                 <div style="text-align: right;">
                     <div style="font-size: 0.9em; color: var(--fg-secondary);">Total Balance</div>
-                    <div style="font-size: 1.4em; font-weight: 700; color: #f87171;">$${totalBalance.toLocaleString()}</div>
+                    <div style="font-size: 1.4em; font-weight: 700; color: var(--destructive);">$${totalBalance.toLocaleString()}</div>
                     <div style="font-size: 0.85em; color: var(--fg-secondary); margin-top: 4px;">Target minimums: $${totalMinimums}/mo</div>
                 </div>
             </div>
@@ -825,7 +828,7 @@ function renderCreditCards() {
                     </div>
 
                     ${card.negotiationNotes ? `
-                        <div style="margin-top: 12px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 0.9em; color: var(--fg-secondary);">
+                        <div style="margin-top: 12px; padding: 10px; background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 0.9em; color: var(--fg-secondary);">
                             ${card.negotiationNotes}
                         </div>
                     ` : ''}
@@ -1088,17 +1091,17 @@ function showFinancialHelp(topic) {
 
             <h3>What The Colors Mean:</h3>
             <div class="help-section">
-                <p><strong style="color: #4ade80;">GREEN - "ON TRACK":</strong></p>
+                <p><strong style="color: var(--success);">GREEN - "ON TRACK":</strong></p>
                 <p>You'll have MORE than your $2,285 target cushion. Great shape!</p>
             </div>
 
             <div class="help-section">
-                <p><strong style="color: #fbbf24;">YELLOW - "BELOW TARGET":</strong></p>
+                <p><strong style="color: var(--warning);">YELLOW - "BELOW TARGET":</strong></p>
                 <p>You'll have SOME cushion but less than $2,285. Tight but okay.</p>
             </div>
 
             <div class="help-section">
-                <p><strong style="color: #f87171;">RED - "DEFICIT PROJECTED":</strong></p>
+                <p><strong style="color: var(--destructive);">RED - "DEFICIT PROJECTED":</strong></p>
                 <p>You're projected to RUN OUT before May 14. Adjust spending!</p>
             </div>
 

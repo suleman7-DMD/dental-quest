@@ -66,18 +66,18 @@ function submitQuickAdd() {
         text: text,
         category: qaSelectedCategory,
         completed: false,
-        doToday: qaDoToday || (quickAddUrgency === 'eod'),
+        doToday: qaDoToday || quickAddUrgency === 'eod' || quickAddUrgency === 'soon',
         createdAt: new Date().toISOString(),
         size: qaSelectedSize,
         highLeverage: qaHighLeverage,
         sortOrder: getCount(tasks),
         urgency: quickAddUrgency || 'inbox',
-        triageTier: quickAddUrgency === 'eod' ? 'lockedIn' : (quickAddUrgency === 'soon' ? 'today' : 'tomorrow')
+        triageTier: quickAddUrgency === 'eod' ? 'lockedIn' : quickAddUrgency === 'soon' ? 'today' : quickAddUrgency === 'week' ? 'tomorrow' : null
     };
 
     tasks[id] = task;
     input.value = '';
-    renderTasks();
+    rerenderCurrentView();
     if (typeof renderFocusMode === 'function' && currentView === 'focus') renderFocusMode();
     updateStats();
     saveData();
@@ -120,6 +120,8 @@ function toggleSidebar() {
     var isOpen = sidebar.classList.contains('open');
     sidebar.classList.toggle('open', !isOpen);
     if (backdrop) backdrop.classList.toggle('open', !isOpen);
+    // Lock body scroll when sidebar is open on mobile
+    document.body.style.overflow = !isOpen ? 'hidden' : '';
 }
 
 function updateSidebarSyncStatus(status, text) {
@@ -242,20 +244,47 @@ function initApp() {
         // Create backup every 5 minutes
         setInterval(function() { BackupManager.createBackup(); }, 5 * 60 * 1000);
 
-        // Global escape key handler to close any open modal
+        // Global escape key handler to close any open modal (priority-ordered)
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeAllExpansions();
-                var modals = document.querySelectorAll('.modal-overlay.show, .help-modal-overlay.show');
-                modals.forEach(function(modal) { modal.classList.remove('show'); });
+                // 1. Custom alert/confirm/prompt (highest priority — topmost layer)
+                var customModal = document.querySelector('.custom-modal-overlay');
+                if (customModal) { customModal.remove(); return; }
+
+                // 2. Checkpoint manager
+                var checkpoint = document.querySelector('.checkpoint-modal-overlay');
+                if (checkpoint) { checkpoint.remove(); return; }
+
+                // 3. Task details modal
+                var taskDetails = document.getElementById('taskDetailsModal');
+                if (taskDetails) { taskDetails.remove(); return; }
+
+                // 4. Task edit modal
                 var taskEditModal = document.getElementById('taskEditModal');
+                if (taskEditModal && taskEditModal.style.display !== 'none') { closeTaskEditModal(); return; }
+
+                // 5. Planning modal
                 var planningModal = document.getElementById('planningModal');
-                if (taskEditModal && taskEditModal.style.display !== 'none') {
-                    closeTaskEditModal();
-                }
-                if (planningModal && planningModal.style.display !== 'none') {
-                    closePlanningModal();
-                }
+                if (planningModal && planningModal.style.display !== 'none') { closePlanningModal(); return; }
+
+                // 6. Time prompt
+                var timePrompt = document.getElementById('timePromptModal');
+                if (timePrompt) { if (typeof dismissTimePrompt === 'function') dismissTimePrompt(); else timePrompt.remove(); return; }
+
+                // 7. Duration modal
+                var durationModal = document.querySelector('.duration-modal');
+                if (durationModal) { if (typeof closeDurationModal === 'function') closeDurationModal(); else durationModal.remove(); return; }
+
+                // 8. Focus timer complete
+                var focusComplete = document.getElementById('focusTimerCompleteModal');
+                if (focusComplete && focusComplete.style.display !== 'none') { if (typeof hideFocusCompleteModal === 'function') hideFocusCompleteModal(); return; }
+
+                // 9. Static modals (.modal-overlay.show)
+                var modals = document.querySelectorAll('.modal-overlay.show, .help-modal-overlay.show');
+                if (modals.length > 0) { modals.forEach(function(m) { m.classList.remove('show'); }); return; }
+
+                // 10. Dashboard expansions (lowest priority)
+                closeAllExpansions();
             }
         });
 
@@ -276,6 +305,19 @@ function initApp() {
             taskInputElement.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') addTask();
             });
+        }
+
+        // Restore persisted view state (category filter pills, view mode buttons)
+        if (currentCategory && currentCategory !== 'all') {
+            document.querySelectorAll('#categoryFilters .cfp').forEach(function(p) {
+                p.classList.toggle('active', p.getAttribute('data-category') === currentCategory);
+            });
+        }
+        if (currentViewMode) {
+            var listBtn = document.getElementById('listViewBtn');
+            var kanbanBtn = document.getElementById('kanbanViewBtn');
+            if (listBtn) listBtn.classList.toggle('active', currentViewMode === 'list');
+            if (kanbanBtn) kanbanBtn.classList.toggle('active', currentViewMode === 'kanban');
         }
 
         // Focus mode init

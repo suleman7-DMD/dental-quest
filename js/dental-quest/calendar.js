@@ -133,23 +133,23 @@ function renderCalendarGrid() {
         let borderColor = 'var(--border-default)';
 
         if (isToday) {
-            borderColor = '#3b82f6';
-            dayBg = 'rgba(59, 130, 246, 0.1)';
+            borderColor = 'var(--accent)';
+            dayBg = 'var(--accent-light)';
         }
 
         html += `
             <div style="background: ${dayBg}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 8px; height: 120px; max-height: 120px; overflow: hidden; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;"
-                 onmouseover="this.style.background='rgba(59, 130, 246, 0.15)'"
+                 onmouseover="this.style.background='var(--accent-light)'"
                  onmouseout="this.style.background='${dayBg}'">
 
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px; flex-shrink: 0;">
-                    <div style="font-size: 1.1em; font-weight: 700; color: ${isToday ? '#58a6ff' : 'var(--fg-primary)'};">
+                    <div style="font-size: 1.1em; font-weight: 700; color: ${isToday ? 'var(--accent)' : 'var(--fg-primary)'};">
                         ${day}
                     </div>
                     ${(needs30mg || needs20mg) ? `
                         <div style="display: flex; gap: 3px;">
-                            ${needs30mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has30mgPill ? '#10b981' : '#dc2626'}; flex-shrink: 0;"></div>` : ''}
-                            ${needs20mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has20mgPill ? '#10b981' : '#dc2626'}; flex-shrink: 0;"></div>` : ''}
+                            ${needs30mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has30mgPill ? 'var(--success)' : 'var(--destructive)'}; flex-shrink: 0;"></div>` : ''}
+                            ${needs20mg ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${has20mgPill ? 'var(--success)' : 'var(--destructive)'}; flex-shrink: 0;"></div>` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -158,7 +158,7 @@ function renderCalendarGrid() {
                     ${is30mgRefill || is20mgRefill ? `
                         <div style="flex-shrink: 0;">
                             ${is30mgRefill ? `
-                                <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <div style="background: var(--success-light); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--success); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     \u{1F389} 30mg Refill
                                 </div>
                                 <div style="font-size: 0.6em; color: var(--fg-secondary); margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -166,7 +166,7 @@ function renderCalendarGrid() {
                                 </div>
                             ` : ''}
                             ${is20mgRefill ? `
-                                <div style="background: rgba(16, 185, 129, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: #10b981; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <div style="background: var(--success-light); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--success); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     \u{1F389} 20mg Refill
                                 </div>
                                 <div style="font-size: 0.6em; color: var(--fg-secondary); margin-left: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -179,7 +179,7 @@ function renderCalendarGrid() {
                     ${dayEvents.length > 0 ? `
                         <div style="flex: 1; overflow: hidden;">
                             ${dayEvents.slice(0, 2).map(event => `
-                                <div style="background: rgba(59, 130, 246, 0.2); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
+                                <div style="background: var(--accent-light); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
                                     ${categoryIcons[event.category]} ${event.description}
                                 </div>
                             `).join('')}
@@ -288,17 +288,17 @@ function renderCountdowns() {
         const diffTime = eventDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        let urgencyColor = '#10b981'; // Green (>14 days)
+        let urgencyColor = 'var(--success)'; // Green (>14 days)
         let urgencyIcon = '';
 
         if (diffDays < 0) {
             // Past event - should have been filtered out
             return '';
         } else if (diffDays <= 7) {
-            urgencyColor = '#dc2626'; // Red (<7 days)
+            urgencyColor = 'var(--destructive)'; // Red (<7 days)
             urgencyIcon = '\u26A0\uFE0F';
         } else if (diffDays <= 14) {
-            urgencyColor = '#f59e0b'; // Yellow (7-14 days)
+            urgencyColor = 'var(--warning)'; // Yellow (7-14 days)
             urgencyIcon = '\u26A1';
         }
 
@@ -374,7 +374,7 @@ function saveCountdown() {
     const notes = document.getElementById('countdownNotes').value.trim();
 
     if (!description || !date) {
-        alert('Please enter a description and date!');
+        showToast('Please enter a description and date!', '!');
         return;
     }
 
@@ -387,7 +387,7 @@ function saveCountdown() {
     today.setHours(0, 0, 0, 0);
 
     if (eventDate < today) {
-        alert('Cannot create countdown for past dates!');
+        showToast('Cannot create countdown for past dates!', '!');
         return;
     }
 
@@ -423,24 +423,27 @@ function editCountdown(eventId) {
     const event = calendarEvents[eventId];
     if (!event) return;
 
-    const action = confirm(`Edit or Delete "${event.description}"?\n\nOK = Edit\nCancel = Go back\n\nTo delete, click Edit then use the Delete button.`);
-
-    if (action) {
-        // Edit
-        editingCountdownId = eventId;
-        document.getElementById('countdownDescription').value = event.description;
-        document.getElementById('countdownCategory').value = event.category;
-        document.getElementById('countdownDate').value = event.dateStr;
-        document.getElementById('countdownTime').value = event.time || '';
-        document.getElementById('countdownNotes').value = event.notes || '';
-        document.getElementById('countdownDeleteBtn').style.display = 'block';
-        document.getElementById('saveCountdownBtn').textContent = '\u2713 Save Changes';
-        document.getElementById('addCountdownModal').classList.add('show');
-    }
+    showCustomConfirm(
+        `Edit "${escapeHtml(event.description)}"?\n\nTo delete, click Edit then use the Delete button.`,
+        function() {
+            // Edit
+            editingCountdownId = eventId;
+            document.getElementById('countdownDescription').value = event.description;
+            document.getElementById('countdownCategory').value = event.category;
+            document.getElementById('countdownDate').value = event.dateStr;
+            document.getElementById('countdownTime').value = event.time || '';
+            document.getElementById('countdownNotes').value = event.notes || '';
+            document.getElementById('countdownDeleteBtn').style.display = 'block';
+            document.getElementById('saveCountdownBtn').textContent = '\u2713 Save Changes';
+            document.getElementById('addCountdownModal').classList.add('show');
+        },
+        null,
+        'Edit Countdown'
+    );
 }
 
 function deleteCountdown(eventId) {
-    if (confirm('Delete this countdown?')) {
+    showCustomConfirm('Delete this countdown?', function() {
         if (calendarEvents[eventId]) {
             delete calendarEvents[eventId];
         }
@@ -448,7 +451,7 @@ function deleteCountdown(eventId) {
         renderMasterCalendar();
         closeAddCountdown();
         showToast('Countdown deleted', '\u{1F5D1}\uFE0F');
-    }
+    }, null, 'Delete Countdown');
 }
 
 // ============================================
@@ -530,16 +533,14 @@ function removePillFromNearestAssignedDay(medType, targetDate, totalPills) {
 }
 
 function resetPillAssignments(medType) {
-    if (!confirm('Reset pill assignments to default (first available days)?')) {
-        return;
-    }
+    showCustomConfirm('Reset pill assignments to default (first available days)?', function() {
+        // Clear all assignments for this med type
+        pillAssignments[medType] = {};
 
-    // Clear all assignments for this med type
-    pillAssignments[medType] = {};
-
-    saveData();
-    updateMedicationDisplay();
-    showToast('Pill assignments reset', '\u{1F504}');
+        saveData();
+        updateMedicationDisplay();
+        showToast('Pill assignments reset', '\u{1F504}');
+    }, null, 'Reset Assignments');
 }
 
 // ============================================
@@ -598,13 +599,13 @@ function saveNote() {
 function deleteNote() {
     if (!currentNoteDate) return;
 
-    if (confirm('Delete this note?')) {
+    showCustomConfirm('Delete this note?', function() {
         delete calendarNotes[currentNoteDate];
         saveData();
         updateMedicationDisplay();
         closeNoteModal();
         showToast('Note deleted', '\u{1F5D1}\uFE0F');
-    }
+    }, null, 'Delete Note');
 }
 
 // Toggle calendar breakdown

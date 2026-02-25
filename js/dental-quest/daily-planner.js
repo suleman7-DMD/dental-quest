@@ -629,12 +629,12 @@ function updatePlannerFooterStats() {
 }
 
 function clearDailyPlanner() {
-    if (confirm('Clear all tasks for today?')) {
+    showCustomConfirm('Clear all tasks for today?', function() {
         dailyPlanner.blocks = {};
         saveDailyPlanner();
         renderPlannerTimeline();
         showToast('Planner cleared', '\u{1F5D1}\uFE0F');
-    }
+    }, null, 'Clear Planner');
 }
 
 // Legacy function stubs for compatibility

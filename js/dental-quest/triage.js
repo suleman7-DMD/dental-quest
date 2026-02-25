@@ -13,14 +13,8 @@ function renderTriageMode() {
 }
 
 function updateTriageGreeting() {
-    const hour = new Date().getHours();
-    let greeting = 'Good morning';
-    if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
-    if (hour >= 17 && hour < 21) greeting = 'Good evening';
-    if (hour >= 21 || hour < 5) greeting = 'Good night';
-
     const greetingEl = document.getElementById('triageGreeting');
-    if (greetingEl) greetingEl.textContent = `${greeting}, Sully`;
+    if (greetingEl) greetingEl.textContent = `${getGreetingString()}, Sully`;
 
     const dateEl = document.getElementById('triageDate');
     if (dateEl) {
@@ -138,9 +132,9 @@ function renderRolledOverSection() {
 
     if (container) {
         container.innerHTML = rolledOverTasks.map(task => `
-            <div class="task-card" data-task-id="${task.id}" style="border-left: 3px solid #f59e0b;">
+            <div class="task-card" data-task-id="${task.id}" style="border-left: 3px solid var(--warning);">
                 <div class="task-card-main">
-                    <span style="color: #f59e0b; font-size: 12px;">${icon('alert-triangle')}</span>
+                    <span style="color: var(--warning); font-size: 12px;">${icon('alert-triangle')}</span>
                     <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete('${task.id}')">
                     <span class="task-text">${escapeHtml(task.text)}</span>
                     <span style="font-size: 11px; color: var(--fg-tertiary);">from ${task.rolledOver.fromDate}</span>
@@ -243,7 +237,7 @@ function toggleTaskComplete(taskId) {
 
     updateStats();
     renderFocusMode();
-    renderTasks();
+    rerenderCurrentView();
     saveData();
 }
 
@@ -354,7 +348,7 @@ function completeTriageTask(taskId) {
 
     updateStats();
     renderFocusMode();
-    renderTasks(); // Also update Full View
+    rerenderCurrentView(); // Also update Full View (list or kanban)
     saveData();
 }
 
@@ -523,13 +517,14 @@ function editTriageTaskText(taskId) {
     const task = tasks[taskId];
     if (!task) return;
 
-    const newText = prompt('Edit task:', task.text);
-    if (newText && newText.trim() && newText.trim() !== task.text) {
-        tasks[taskId] = { ...task, text: newText.trim() };
-        renderFocusMode();
-        renderTasks();
-        saveData();
-    }
+    showCustomPrompt('Edit task:', task.text, function(newText) {
+        if (newText && newText.trim() && newText.trim() !== task.text) {
+            tasks[taskId] = { ...task, text: newText.trim() };
+            renderFocusMode();
+            rerenderCurrentView();
+            saveData();
+        }
+    }, 'Edit Task');
 }
 
 function triageQuickAddTask() {
@@ -543,12 +538,12 @@ function triageQuickAddTask() {
     tasks[id] = {
         id: id,
         text: input.value.trim(),
-        category: 'health',
+        category: localStorage.getItem('lastTaskCategory') || 'health',
         completed: false,
         doToday: true,
         urgency: 'eod',
-        triageTier: 'today',
-        triageOrder: getTasksByTier('today').length + 1,
+        triageTier: 'lockedIn',
+        triageOrder: getTasksByTier('lockedIn').length + 1,
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,
@@ -557,22 +552,9 @@ function triageQuickAddTask() {
 
     input.value = '';
     renderFocusMode();
-    renderTasks();
+    rerenderCurrentView();
     saveData();
-    showToast('Task added to TODAY', 'ok');
-}
-
-function editTriageTaskText(taskId) {
-    const task = tasks[taskId];
-    if (!task) return;
-
-    const newText = prompt('Edit task:', task.text);
-    if (newText && newText.trim() && newText.trim() !== task.text) {
-        tasks[taskId] = { ...task, text: newText.trim() };
-        renderFocusMode();
-        renderTasks();
-        saveData();
-    }
+    showToast('Task added to LOCKED IN', 'ok');
 }
 
 // Triage Drag & Drop
@@ -796,7 +778,7 @@ function unflagFromToday(taskId) {
     delete tasks[taskId].crashOutDuration;
 
     renderFocusMode();
-    renderTasks();
+    rerenderCurrentView();
     saveData();
     showToast('Removed from today', 'ok');
 }

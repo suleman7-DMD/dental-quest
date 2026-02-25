@@ -100,7 +100,7 @@ function markInitialLoadComplete() {
 // APP VARIABLES
 // ============================================
 
-var currentCategory = 'all';
+var currentCategory = localStorage.getItem('dq_currentCategory') || 'all';
 var tasks = {}; // Object with ID keys for Firebase safety
 var timerInterval = null;
 var currentSeconds = 25 * 60;
@@ -110,7 +110,7 @@ var breakMinutes = 5;
 var currentTask = null;
 
 // Focus Mode variables
-var currentView = 'focus'; // 'focus' or 'full'
+var currentView = localStorage.getItem('dq_currentView') || 'focus'; // 'focus' or 'full'
 var focusModeData = {
     oneThingId: null,
     microSteps: {},  // Object for Firebase safety
@@ -555,7 +555,7 @@ var realtimeSyncListener = null; // Store the listener reference for cleanup
 var _renderFrame = 0;
 
 // Command Center mode
-var commandCenterMode = 'triage';
+var commandCenterMode = localStorage.getItem('dq_commandCenterMode') || 'triage';
 
 // Focus timer state (ephemeral - not persisted to Firebase)
 var focusTimerInterval = null;
@@ -979,12 +979,12 @@ var BackupManager = {
     restoreBackup: function(timestamp) {
         var backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
         var backup = backups.find(function(b) { return b.timestamp === timestamp; });
-        if (backup && confirm('Restore backup from ' + new Date(timestamp).toLocaleString() + '?')) {
-            safeLocalStorageSet('dentalStudentQuestData', backup.data);
-            location.reload();
-            return true;
+        if (backup) {
+            showCustomConfirm('Restore backup from ' + new Date(timestamp).toLocaleString() + '?', function() {
+                safeLocalStorageSet('dentalStudentQuestData', backup.data);
+                location.reload();
+            }, null, 'Restore Backup');
         }
-        return false;
     }
 };
 
@@ -1014,22 +1014,32 @@ function showToast(message, icon) {
 }
 
 // Custom Alert Modal (replaces blocking alert())
+// All title/message args are escaped via escapeHtml() before insertion
 function showCustomAlert(message, title, callback) {
     if (title === undefined) title = 'Notice';
     if (callback === undefined) callback = null;
     var modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-    modal.innerHTML =
-        '<div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid var(--border-default);text-align:center;">' +
-            '<h3 style="color:#58a6ff;margin:0 0 16px 0;font-size:1.2em;">' + title + '</h3>' +
-            '<p style="color:var(--fg-primary);margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
-            '<button onclick="this.closest(\'.custom-modal-overlay\').remove(); window._customAlertCallback && window._customAlertCallback();"' +
-                ' style="padding:12px 32px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>' +
-        '</div>';
+    modal.onclick = function(e) { if (e.target === modal) { modal.remove(); if (callback) callback(); } };
+    var card = document.createElement('div');
+    card.className = 'custom-modal-card';
+    var h3 = document.createElement('h3');
+    h3.className = 'custom-modal-title';
+    h3.style.color = 'var(--info, #5E7A8A)';
+    h3.textContent = title;
+    var p = document.createElement('p');
+    p.className = 'custom-modal-message';
+    p.textContent = message;
+    var btn = document.createElement('button');
+    btn.className = 'custom-modal-btn custom-modal-btn-primary';
+    btn.textContent = 'OK';
+    btn.onclick = function() { modal.remove(); if (callback) callback(); };
+    card.appendChild(h3);
+    card.appendChild(p);
+    card.appendChild(btn);
+    modal.appendChild(card);
     document.body.appendChild(modal);
-    window._customAlertCallback = callback;
-    modal.querySelector('button').focus();
+    btn.focus();
 }
 
 // Custom Confirm Modal (replaces blocking confirm())
@@ -1038,20 +1048,86 @@ function showCustomConfirm(message, onConfirm, onCancel, title) {
     if (title === undefined) title = 'Confirm';
     var modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
-    modal.innerHTML =
-        '<div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid var(--border-default);text-align:center;">' +
-            '<h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">' + title + '</h3>' +
-            '<p style="color:var(--fg-primary);margin-bottom:20px;white-space:pre-wrap;">' + message + '</p>' +
-            '<div style="display:flex;gap:12px;justify-content:center;">' +
-                '<button id="confirmBtn" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>' +
-                '<button id="cancelBtn" style="flex:1;padding:12px;background:var(--fg-muted);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>' +
-            '</div>' +
-        '</div>';
+    modal.onclick = function(e) { if (e.target === modal) { modal.remove(); if (onCancel) onCancel(); } };
+    var card = document.createElement('div');
+    card.className = 'custom-modal-card';
+    var h3 = document.createElement('h3');
+    h3.className = 'custom-modal-title';
+    h3.style.color = 'var(--warning)';
+    h3.textContent = title;
+    var p = document.createElement('p');
+    p.className = 'custom-modal-message';
+    p.textContent = message;
+    var actions = document.createElement('div');
+    actions.className = 'custom-modal-actions';
+    var yesBtn = document.createElement('button');
+    yesBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+    yesBtn.textContent = 'Yes';
+    yesBtn.onclick = function() { modal.remove(); if (onConfirm) onConfirm(); };
+    var noBtn = document.createElement('button');
+    noBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+    noBtn.textContent = 'No';
+    noBtn.onclick = function() { modal.remove(); if (onCancel) onCancel(); };
+    actions.appendChild(yesBtn);
+    actions.appendChild(noBtn);
+    card.appendChild(h3);
+    card.appendChild(p);
+    card.appendChild(actions);
+    modal.appendChild(card);
     document.body.appendChild(modal);
-    modal.querySelector('#confirmBtn').onclick = function() { modal.remove(); if (onConfirm) onConfirm(); };
-    modal.querySelector('#cancelBtn').onclick = function() { modal.remove(); if (onCancel) onCancel(); };
-    modal.querySelector('#confirmBtn').focus();
+    yesBtn.focus();
+}
+
+// Custom Prompt Modal (replaces blocking prompt())
+function showCustomPrompt(message, defaultValue, onSubmit, title) {
+    if (defaultValue === undefined) defaultValue = '';
+    if (title === undefined) title = 'Input';
+    var modal = document.createElement('div');
+    modal.className = 'custom-modal-overlay';
+    var cancelFn = function() { modal.remove(); if (onSubmit) onSubmit(null); };
+    modal.onclick = function(e) { if (e.target === modal) { cancelFn(); } };
+    var card = document.createElement('div');
+    card.className = 'custom-modal-card';
+    var h3 = document.createElement('h3');
+    h3.className = 'custom-modal-title';
+    h3.style.color = 'var(--accent)';
+    h3.textContent = title;
+    var p = document.createElement('p');
+    p.className = 'custom-modal-message';
+    p.textContent = message;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'custom-modal-input';
+    input.value = defaultValue;
+    var actions = document.createElement('div');
+    actions.className = 'custom-modal-actions';
+    var okBtn = document.createElement('button');
+    okBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+    okBtn.textContent = 'OK';
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    var submitFn = function() {
+        var val = input.value;
+        modal.remove();
+        if (onSubmit) onSubmit(val);
+    };
+    okBtn.onclick = submitFn;
+    cancelBtn.onclick = cancelFn;
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') submitFn();
+        if (e.key === 'Escape') cancelFn();
+    });
+    actions.appendChild(okBtn);
+    actions.appendChild(cancelBtn);
+    card.appendChild(h3);
+    card.appendChild(p);
+    card.appendChild(input);
+    card.appendChild(actions);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+    input.focus();
+    input.select();
 }
 
 // VERSION COMPATIBILITY SYSTEM
@@ -1089,6 +1165,18 @@ function safeModalClose(closeFn, event) {
     if (event && event.target !== event.currentTarget) return;
     if (Date.now() - _modalOpenTime < 400) return;
     closeFn();
+}
+
+// ============================================
+// GREETING HELPER
+// ============================================
+
+function getGreetingString() {
+    var hour = new Date().getHours();
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 21) return 'Good evening';
+    if (hour >= 21 || hour < 5) return 'Good night';
+    return 'Good morning';
 }
 
 // ============================================

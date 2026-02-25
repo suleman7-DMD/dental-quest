@@ -342,13 +342,13 @@ function saveData() {
             // Show saving indicator
             const savingToast = document.createElement('div');
             savingToast.id = 'savingIndicator';
-            savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+            savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
             savingToast.textContent = '\u2601\ufe0f Syncing...';
             document.body.appendChild(savingToast);
 
             database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
                 .then(() => {
-                    savingToast.style.background = '#10b981';
+                    savingToast.style.background = 'var(--success)';
                     savingToast.textContent = '\u2713 Synced';
                     updateSyncStatus('connected', `Saved (${new Date().toLocaleTimeString()})`);
                     setTimeout(() => {
@@ -359,7 +359,7 @@ function saveData() {
                 })
                 .catch((error) => {
                     console.error('Firebase save error:', error);
-                    savingToast.style.background = '#dc2626';
+                    savingToast.style.background = 'var(--destructive)';
                     savingToast.textContent = '\u2717 Sync failed - Retrying...';
                     updateSyncStatus('error', 'Save failed - retrying...');
 
@@ -367,7 +367,7 @@ function saveData() {
                     setTimeout(() => {
                         database.ref('users/' + currentUser.uid + '/appData').set(dataToSave)
                             .then(() => {
-                                savingToast.style.background = '#10b981';
+                                savingToast.style.background = 'var(--success)';
                                 savingToast.textContent = '\u2713 Synced (retry)';
                                 updateSyncStatus('connected', 'Saved (retry)');
                                 offlineSyncPending = false;
@@ -465,18 +465,18 @@ function saveDataImmediate() {
     if (firebaseInitialized && currentUser && database) {
         const savingToast = document.createElement('div');
         savingToast.id = 'savingIndicator';
-        savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        savingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; z-index: 10050; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
         savingToast.textContent = '\u2601\ufe0f Saving...';
         document.body.appendChild(savingToast);
 
         database.ref('users/' + currentUser.uid + '/appData').set(data)
             .then(() => {
-                savingToast.style.background = '#10b981';
+                savingToast.style.background = 'var(--success)';
                 savingToast.textContent = '\u2713 Saved!';
                 setTimeout(() => savingToast.remove(), 2000);
             })
             .catch(err => {
-                savingToast.style.background = '#dc2626';
+                savingToast.style.background = 'var(--destructive)';
                 savingToast.textContent = '\u2717 Save failed';
                 setTimeout(() => savingToast.remove(), 3000);
             });
@@ -540,11 +540,12 @@ function getDataCountForCheckpoint() {
 
 // Create Checkpoint (saves to localStorage AND Firebase)
 function createCheckpoint() {
-    const name = prompt('Checkpoint name (optional):') || `Checkpoint ${new Date().toLocaleString()}`;
-    if (name === null) return; // User cancelled
+    showCustomPrompt('Checkpoint name (optional):', '', function(rawName) {
+        if (rawName === null) return; // User cancelled
+        const name = rawName || `Checkpoint ${new Date().toLocaleString()}`;
 
-    const timestamp = Date.now();
-    const checkpoint = {
+        const timestamp = Date.now();
+        const checkpoint = {
         id: `checkpoint_${timestamp}_${Math.random().toString(36).substr(2, 6)}`,
         name: name,
         timestamp: timestamp,
@@ -599,6 +600,7 @@ function createCheckpoint() {
     } else {
         showToast(`Checkpoint saved locally: ${name}`, '\ud83d\udcbe');
     }
+    }, 'Create Checkpoint'); // end showCustomPrompt callback
 }
 
 // Show Checkpoint Manager modal with local + cloud checkpoints
@@ -646,39 +648,39 @@ async function showCheckpointManager() {
 
     const modal = document.createElement('div');
     modal.className = 'checkpoint-modal-overlay';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(44,40,37,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;';
 
     modal.innerHTML = `
-        <div style="background:#1a1a2e;border-radius:16px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.1);">
-            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
-                <h2 style="margin:0;color:white;">\u2601\ufe0f Checkpoint Manager</h2>
-                <button onclick="this.closest('.checkpoint-modal-overlay').remove()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">\u00d7</button>
+        <div style="background:var(--surface-elevated);border-radius:16px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--border-default);">
+            <div style="padding:20px;border-bottom:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;">
+                <h2 style="margin:0;color:var(--fg-primary);">\u2601\ufe0f Checkpoint Manager</h2>
+                <button onclick="this.closest('.checkpoint-modal-overlay').remove()" style="background:none;border:none;color:var(--fg-primary);font-size:24px;cursor:pointer;">\u00d7</button>
             </div>
             <div style="padding:20px;overflow-y:auto;flex:1;">
                 ${checkpoints.length === 0 ?
-                    '<p style="color:#888;text-align:center;padding:40px;">No checkpoints yet. Create one first!</p>' :
-                    `<p style="color:#888;margin-bottom:16px;">${checkpoints.length} checkpoint(s) saved</p>
+                    '<p style="color:var(--fg-muted);text-align:center;padding:40px;">No checkpoints yet. Create one first!</p>' :
+                    `<p style="color:var(--fg-muted);margin-bottom:16px;">${checkpoints.length} checkpoint(s) saved</p>
                     <div style="display:flex;flex-direction:column;gap:12px;">
                         ${checkpoints.map((cp, i) => `
-                            <div style="background:rgba(0,0,0,0.03);padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <div style="background:var(--canvas-subtle);padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                                 <div style="flex:1;min-width:200px;">
-                                    <strong style="color:white;">${escapeHtmlLocal(cp.name)}</strong>
-                                    <div style="color:#888;font-size:0.85em;margin-top:4px;">${new Date(cp.date || cp.timestamp).toLocaleString()}</div>
-                                    <div style="color:#666;font-size:0.8em;">${cp.dataCount || ''}</div>
+                                    <strong style="color:var(--fg-primary);">${escapeHtmlLocal(cp.name)}</strong>
+                                    <div style="color:var(--fg-muted);font-size:0.85em;margin-top:4px;">${new Date(cp.date || cp.timestamp).toLocaleString()}</div>
+                                    <div style="color:var(--fg-tertiary);font-size:0.8em;">${cp.dataCount || ''}</div>
                                 </div>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                    <button onclick="restoreCheckpointByIndex(${i})" style="padding:8px 16px;background:#4CAF50;border:none;border-radius:8px;color:white;cursor:pointer;">Restore</button>
-                                    <button onclick="exportCheckpointByIndex(${i})" style="padding:8px 16px;background:#2196F3;border:none;border-radius:8px;color:white;cursor:pointer;">Export</button>
-                                    <button onclick="deleteCheckpointByIndex(${i})" style="padding:8px 12px;background:#f44336;border:none;border-radius:8px;color:white;cursor:pointer;">\ud83d\uddd1\ufe0f</button>
+                                    <button onclick="restoreCheckpointByIndex(${i})" style="padding:8px 16px;background:var(--success);border:none;border-radius:8px;color:white;cursor:pointer;">Restore</button>
+                                    <button onclick="exportCheckpointByIndex(${i})" style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;">Export</button>
+                                    <button onclick="deleteCheckpointByIndex(${i})" style="padding:8px 12px;background:var(--destructive);border:none;border-radius:8px;color:white;cursor:pointer;">\ud83d\uddd1\ufe0f</button>
                                 </div>
                             </div>
                         `).join('')}
                     </div>`
                 }
             </div>
-            <div style="padding:20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                <button onclick="createCheckpoint(); document.querySelector('.checkpoint-modal-overlay')?.remove();" style="padding:12px 24px;background:rgba(74,222,128,0.2);border:1px solid rgba(74,222,128,0.4);border-radius:12px;color:#4ade80;cursor:pointer;">+ Create New</button>
-                <button onclick="document.getElementById('checkpointFileImport').click()" style="padding:12px 24px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:white;cursor:pointer;">\ud83d\udcc2 Import File</button>
+            <div style="padding:20px;border-top:1px solid var(--border-default);display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <button onclick="createCheckpoint(); document.querySelector('.checkpoint-modal-overlay')?.remove();" style="padding:12px 24px;background:var(--success-light);border:1px solid var(--success);border-radius:12px;color:var(--success);cursor:pointer;">+ Create New</button>
+                <button onclick="document.getElementById('checkpointFileImport').click()" style="padding:12px 24px;background:var(--canvas-subtle);border:1px solid var(--border-default);border-radius:12px;color:var(--fg-primary);cursor:pointer;">\ud83d\udcc2 Import File</button>
             </div>
         </div>
         <input type="file" id="checkpointFileImport" accept=".dent,.json" style="display:none;" onchange="importCheckpointFile(event)">
@@ -707,34 +709,32 @@ function restoreCheckpointByIndex(index) {
         return;
     }
 
-    if (!confirm(`Restore checkpoint "${checkpoint.name}"?\n\nThis will replace your current data.`)) {
-        return;
-    }
+    showCustomConfirm(`Restore checkpoint "${checkpoint.name}"?\n\nThis will replace your current data.`, function() {
+        // Restore all data
+        const data = checkpoint.data;
 
-    // Restore all data
-    const data = checkpoint.data;
+        if (data.tasks) { tasks = migrateArrayToObject(data.tasks, 'task'); migrateTaskUrgency(); }
+        if (data.stats) stats = { ...stats, ...data.stats };
+        if (data.medications) medications = { ...medications, ...data.medications };
+        if (data.calendarNotes) calendarNotes = data.calendarNotes;
+        if (data.notebook) notebook = data.notebook;
+        if (data.financials) financials = migrateFinancials(data.financials);
+        if (data.pillAssignments) pillAssignments = data.pillAssignments;
+        if (data.calendarEvents) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
+        if (data.dailyPlanner) dailyPlanner = { ...dailyPlanner, ...data.dailyPlanner };
+        if (data.focusModeData) focusModeData = { ...focusModeData, ...data.focusModeData };
+        if (data.commandCenterData) commandCenterData = { ...commandCenterData, ...data.commandCenterData };
 
-    if (data.tasks) { tasks = migrateArrayToObject(data.tasks, 'task'); migrateTaskUrgency(); }
-    if (data.stats) stats = { ...stats, ...data.stats };
-    if (data.medications) medications = { ...medications, ...data.medications };
-    if (data.calendarNotes) calendarNotes = data.calendarNotes;
-    if (data.notebook) notebook = data.notebook;
-    if (data.financials) financials = migrateFinancials(data.financials);
-    if (data.pillAssignments) pillAssignments = data.pillAssignments;
-    if (data.calendarEvents) calendarEvents = migrateArrayToObject(data.calendarEvents, 'event');
-    if (data.dailyPlanner) dailyPlanner = { ...dailyPlanner, ...data.dailyPlanner };
-    if (data.focusModeData) focusModeData = { ...focusModeData, ...data.focusModeData };
-    if (data.commandCenterData) commandCenterData = { ...commandCenterData, ...data.commandCenterData };
+        // Re-render and save
+        updateStats();
+        renderTasks();
+        updateMedicationDisplay();
+        renderFocusMode();
+        saveData();
 
-    // Re-render and save
-    updateStats();
-    renderTasks();
-    updateMedicationDisplay();
-    renderFocusMode();
-    saveData();
-
-    document.querySelector('.checkpoint-modal-overlay')?.remove();
-    showToast(`Restored: ${checkpoint.name}`, '\u2705');
+        document.querySelector('.checkpoint-modal-overlay')?.remove();
+        showToast(`Restored: ${checkpoint.name}`, '\u2705');
+    }, null, 'Restore Checkpoint');
 }
 
 function exportCheckpointByIndex(index) {
@@ -778,27 +778,25 @@ async function deleteCheckpointByIndex(index) {
 
     if (!checkpoint) return;
 
-    if (!confirm(`Delete checkpoint "${checkpoint.name}"?`)) {
-        return;
-    }
+    showCustomConfirm(`Delete checkpoint "${checkpoint.name}"?`, async function() {
+        // Remove from array
+        checkpoints.splice(index, 1);
+        safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
-    // Remove from array
-    checkpoints.splice(index, 1);
-    safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
-
-    // Also delete from Firebase
-    if (firebaseInitialized && currentUser && database && checkpoint.id) {
-        try {
-            await database.ref('users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id).remove();
-        } catch (err) {
-            console.error('Failed to delete checkpoint from cloud:', err);
+        // Also delete from Firebase
+        if (firebaseInitialized && currentUser && database && checkpoint.id) {
+            try {
+                await database.ref('users/' + currentUser.uid + '/appData/checkpoints/' + checkpoint.id).remove();
+            } catch (err) {
+                console.error('Failed to delete checkpoint from cloud:', err);
+            }
         }
-    }
 
-    showToast('Checkpoint deleted', '\ud83d\uddd1\ufe0f');
+        showToast('Checkpoint deleted', '\ud83d\uddd1\ufe0f');
 
-    // Refresh the modal
-    showCheckpointManager();
+        // Refresh the modal
+        showCheckpointManager();
+    }, null, 'Delete Checkpoint');
 }
 
 function importCheckpointFile(event) {
@@ -927,123 +925,128 @@ function restoreCheckpoint(event) {
 
             confirmMessage += `\nThis will replace your current data. Continue?`;
 
-            if (!confirm(confirmMessage)) return;
+            showCustomConfirm(confirmMessage, function() {
+                try {
+                // Restore tasks
+                tasks = migrateArrayToObject(checkpoint.tasks, 'task');
 
-            // Restore tasks
-            tasks = migrateArrayToObject(checkpoint.tasks, 'task');
+                // Restore stats with migration
+                if (checkpoint.stats) {
+                    stats = {
+                        totalXPGained: checkpoint.stats.totalXPGained || 0,
+                        totalTasks: checkpoint.stats.totalTasks || 0,
+                        categoryXPGained: {
+                            financial: 0,
+                            clinic: 0,
+                            health: 0,
+                            school: 0,
+                            academic: 0,
+                            future: 0,
+                            life: 0,
+                            ...(checkpoint.stats.categoryXPGained || checkpoint.stats.categoryXP || {})
+                        }
+                    };
+                }
 
-            // Restore stats with migration
-            if (checkpoint.stats) {
-                stats = {
-                    totalXPGained: checkpoint.stats.totalXPGained || 0,
-                    totalTasks: checkpoint.stats.totalTasks || 0,
-                    categoryXPGained: {
-                        financial: 0,
-                        clinic: 0,
-                        health: 0,
-                        school: 0,
-                        academic: 0,
-                        future: 0,
-                        life: 0,
-                        ...(checkpoint.stats.categoryXPGained || checkpoint.stats.categoryXP || {})
-                    }
-                };
-            }
+                // Restore medications with migration
+                if (checkpoint.medications) {
+                    medications = {
+                        '30mg': {
+                            pills: 30,
+                            refillDate: null,
+                            dosesLogged: {},
+                            ...(checkpoint.medications['30mg'] || {})
+                        },
+                        '20mg': {
+                            pills: 30,
+                            refillDate: null,
+                            dosesLogged: {},
+                            ...(checkpoint.medications['20mg'] || {})
+                        }
+                    };
+                }
 
-            // Restore medications with migration
-            if (checkpoint.medications) {
-                medications = {
-                    '30mg': {
-                        pills: 30,
-                        refillDate: null,
-                        dosesLogged: {},
-                        ...(checkpoint.medications['30mg'] || {})
-                    },
-                    '20mg': {
-                        pills: 30,
-                        refillDate: null,
-                        dosesLogged: {},
-                        ...(checkpoint.medications['20mg'] || {})
-                    }
-                };
-            }
+                // Restore calendar notes
+                if (checkpoint.calendarNotes) {
+                    calendarNotes = checkpoint.calendarNotes;
+                } else {
+                    calendarNotes = {};
+                }
 
-            // Restore calendar notes
-            if (checkpoint.calendarNotes) {
-                calendarNotes = checkpoint.calendarNotes;
-            } else {
-                calendarNotes = {};
-            }
+                // Restore notebook with object migration
+                if (checkpoint.notebook) {
+                    const migratedPages = migrateArrayToObject(checkpoint.notebook.pages, 'page');
+                    const pageIds = Object.keys(migratedPages);
+                    notebook = {
+                        pages: migratedPages,
+                        currentPageId: checkpoint.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
+                    };
+                } else {
+                    notebook = { pages: {}, currentPageId: null };
+                }
 
-            // Restore notebook with object migration
-            if (checkpoint.notebook) {
-                const migratedPages = migrateArrayToObject(checkpoint.notebook.pages, 'page');
-                const pageIds = Object.keys(migratedPages);
-                notebook = {
-                    pages: migratedPages,
-                    currentPageId: checkpoint.notebook.currentPageId || (pageIds.length > 0 ? pageIds[0] : null)
-                };
-            } else {
-                notebook = { pages: {}, currentPageId: null };
-            }
+                // Restore financials (if available - backward compatible)
+                if (checkpoint.financials) {
+                    financials = migrateFinancials(checkpoint.financials);
+                }
 
-            // Restore financials (if available - backward compatible)
-            if (checkpoint.financials) {
-                financials = migrateFinancials(checkpoint.financials);
-            }
+                // Restore pill assignments (if available - backward compatible)
+                if (checkpoint.pillAssignments) {
+                    pillAssignments = {
+                        '30mg': checkpoint.pillAssignments['30mg'] || {},
+                        '20mg': checkpoint.pillAssignments['20mg'] || {}
+                    };
+                } else {
+                    pillAssignments = { '30mg': {}, '20mg': {} };
+                }
 
-            // Restore pill assignments (if available - backward compatible)
-            if (checkpoint.pillAssignments) {
-                pillAssignments = {
-                    '30mg': checkpoint.pillAssignments['30mg'] || {},
-                    '20mg': checkpoint.pillAssignments['20mg'] || {}
-                };
-            } else {
-                pillAssignments = { '30mg': {}, '20mg': {} };
-            }
+                // Restore calendar events (if available - backward compatible)
+                if (checkpoint.calendarEvents) {
+                    calendarEvents = migrateArrayToObject(checkpoint.calendarEvents, 'event');
+                    // Remove past events using local timezone
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    Object.keys(calendarEvents).forEach(id => {
+                        const event = calendarEvents[id];
+                        if (!event || !event.dateStr || typeof event.dateStr !== 'string') {
+                            delete calendarEvents[id];
+                            return;
+                        }
+                        const [year, month, day] = event.dateStr.split('-').map(Number);
+                        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                            delete calendarEvents[id];
+                            return;
+                        }
+                        const eventDate = new Date(year, month - 1, day);
+                        eventDate.setHours(0, 0, 0, 0);
+                        if (eventDate < today) {
+                            delete calendarEvents[id];
+                        }
+                    });
+                } else {
+                    calendarEvents = {};
+                }
+                // If no financials/pillAssignments/calendarEvents in checkpoint, keep default values (backward compatible)
 
-            // Restore calendar events (if available - backward compatible)
-            if (checkpoint.calendarEvents) {
-                calendarEvents = migrateArrayToObject(checkpoint.calendarEvents, 'event');
-                // Remove past events using local timezone
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                Object.keys(calendarEvents).forEach(id => {
-                    const event = calendarEvents[id];
-                    if (!event || !event.dateStr || typeof event.dateStr !== 'string') {
-                        delete calendarEvents[id];
-                        return;
-                    }
-                    const [year, month, day] = event.dateStr.split('-').map(Number);
-                    if (isNaN(year) || isNaN(month) || isNaN(day)) {
-                        delete calendarEvents[id];
-                        return;
-                    }
-                    const eventDate = new Date(year, month - 1, day);
-                    eventDate.setHours(0, 0, 0, 0);
-                    if (eventDate < today) {
-                        delete calendarEvents[id];
-                    }
-                });
-            } else {
-                calendarEvents = {};
-            }
-            // If no financials/pillAssignments/calendarEvents in checkpoint, keep default values (backward compatible)
+                // Save and refresh
+                saveData();
+                updateStats();
+                renderTasks();
+                updateMedicationDisplay();
 
-            // Save and refresh
-            saveData();
-            updateStats();
-            renderTasks();
-            updateMedicationDisplay();
+                showToast('Checkpoint restored successfully!', '\u2705');
 
-            showToast('Checkpoint restored successfully!', '\u2705');
-
-            // Show version info if different
-            if (checkpointVersion !== APP_VERSION) {
-                setTimeout(() => {
-                    showToast(`Updated from v${checkpointVersion} to v${APP_VERSION}`, '\u2139\ufe0f');
-                }, 3500);
-            }
+                // Show version info if different
+                if (checkpointVersion !== APP_VERSION) {
+                    setTimeout(() => {
+                        showToast(`Updated from v${checkpointVersion} to v${APP_VERSION}`, '\u2139\ufe0f');
+                    }, 3500);
+                }
+                } catch (restoreErr) {
+                    showToast('Error restoring checkpoint', '\u274c');
+                    console.error('Restore error:', restoreErr);
+                }
+            }, null, 'Restore Checkpoint');
         } catch (error) {
             showToast('Error reading checkpoint file', '\u274c');
             console.error('Restore error:', error);
@@ -1059,66 +1062,65 @@ function restoreCheckpoint(event) {
 // ============================================
 
 function clearAllData() {
-    const confirmClear = confirm(
-        '\u26a0\ufe0f WARNING: This will permanently delete ALL your data!\n\n' +
+    showCustomConfirm(
+        'WARNING: This will permanently delete ALL your data!\n\n' +
         'This includes:\n' +
         '- All tasks\n' +
         '- All progress\n' +
         '- All XP\n' +
         '- All statistics\n\n' +
         'This action CANNOT be undone!\n\n' +
-        'Are you absolutely sure?'
-    );
+        'Are you absolutely sure?',
+        function() {
+            // Double confirmation
+            showCustomConfirm(
+                'You are about to delete everything. This cannot be undone.\n\n' +
+                'Click Yes to DELETE ALL DATA or No to keep your data.',
+                function() {
+                    // Clear everything
+                    tasks = {};
+                    stats = {
+                        totalXPGained: 0,
+                        totalTasks: 0,
+                        categoryXPGained: {
+                            financial: 0,
+                            clinic: 0,
+                            health: 0,
+                            school: 0,
+                            academic: 0,
+                            future: 0,
+                            life: 0
+                        }
+                    };
 
-    if (!confirmClear) return;
+                    medications = {
+                        '30mg': {
+                            pills: 30,
+                            refillDate: null,
+                            dosesLogged: {}
+                        },
+                        '20mg': {
+                            pills: 30,
+                            refillDate: null,
+                            dosesLogged: {}
+                        }
+                    };
 
-    // Double confirmation
-    const doubleConfirm = confirm(
-        'FINAL CONFIRMATION\n\n' +
-        'You are about to delete everything. This cannot be undone.\n\n' +
-        'Click OK to DELETE ALL DATA or Cancel to keep your data.'
-    );
+                    localStorage.removeItem('dentalStudentQuestData');
+                    localStorage.removeItem('lastReset');
 
-    if (!doubleConfirm) return;
+                    saveData();
+                    updateStats();
+                    renderTasks();
+                    updateMedicationDisplay();
 
-    // Clear everything
-    tasks = {};
-    stats = {
-        totalXPGained: 0,
-        totalTasks: 0,
-        categoryXPGained: {
-            financial: 0,
-            clinic: 0,
-            health: 0,
-            school: 0,
-            academic: 0,
-            future: 0,
-            life: 0
-        }
-    };
-
-    medications = {
-        '30mg': {
-            pills: 30,
-            refillDate: null,
-            dosesLogged: {}
+                    showToast('All data cleared', '!');
+                },
+                null, 'FINAL CONFIRMATION'
+            );
         },
-        '20mg': {
-            pills: 30,
-            refillDate: null,
-            dosesLogged: {}
-        }
-    };
-
-    localStorage.removeItem('dentalStudentQuestData');
-    localStorage.removeItem('lastReset');
-
-    saveData();
-    updateStats();
-    renderTasks();
-    updateMedicationDisplay();
-
-    showToast('All data cleared', '\ud83d\uddd1\ufe0f');
+        null, 'Delete All Data'
+    );
 }
 
 // ============================================
@@ -1158,35 +1160,47 @@ function initializeFirebase() {
             }
         }
 
-        if (!userPin) {
-            // First time - ask for PIN
-            userPin = prompt('Create a 4-digit PIN to sync across devices:\n\n(Use the same PIN on all your devices - main app, D3 Roadmap, Sleep Tracker!)');
+        // Helper: finish Firebase setup with a validated PIN
+        function finishFirebaseSetup(pin) {
+            // Create a consistent user ID from the PIN
+            const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
 
-            if (!userPin || userPin.length < 4) {
-                alert('PIN must be at least 4 characters. Using localStorage only.');
-                loadData();
-                markInitialLoadComplete();
-                updateCategoryDisplay();
-                return;
-            }
+            // Create a fake user object
+            currentUser = {
+                uid: hashedPin
+            };
+            firebaseInitialized = true;
+            pinValidated = true;  // CRITICAL: Mark PIN as validated before any saves
 
-            // Save to BOTH keys for full compatibility
-            safeLocalStorageSet('dentalQuestPin', userPin);
-            safeLocalStorageSet('dentalAppPin', userPin);
+            // Load data from Firebase
+            loadDataFromFirebase();
         }
 
-        // Create a consistent user ID from the PIN
-        const hashedPin = 'user_' + btoa(userPin).replace(/[^a-zA-Z0-9]/g, '');
+        if (!userPin) {
+            // First time - ask for PIN
+            showCustomPrompt(
+                'Create a 4-digit PIN to sync across devices:\n\n(Use the same PIN on all your devices - main app, D3 Roadmap, Sleep Tracker!)',
+                '',
+                function(enteredPin) {
+                    if (!enteredPin || enteredPin.length < 4) {
+                        showToast('PIN must be at least 4 characters. Using localStorage only.', '!');
+                        loadData();
+                        markInitialLoadComplete();
+                        updateCategoryDisplay();
+                        return;
+                    }
 
-        // Create a fake user object
-        currentUser = {
-            uid: hashedPin
-        };
-        firebaseInitialized = true;
-        pinValidated = true;  // CRITICAL: Mark PIN as validated before any saves
+                    // Save to BOTH keys for full compatibility
+                    safeLocalStorageSet('dentalQuestPin', enteredPin);
+                    safeLocalStorageSet('dentalAppPin', enteredPin);
+                    finishFirebaseSetup(enteredPin);
+                },
+                'Sync PIN'
+            );
+            return; // Wait for prompt callback
+        }
 
-        // Load data from Firebase
-        loadDataFromFirebase();
+        finishFirebaseSetup(userPin);
 
     } catch (error) {
         console.error('Firebase init error:', error);
@@ -1432,7 +1446,7 @@ function loadDataFromFirebase() {
 function showSyncConflictModal(localData, remoteData, onResolve) {
     const modal = document.createElement('div');
     modal.id = 'syncConflictModal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(44,40,37,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;';
 
     const localTasks = getValues(localData.tasks).filter(t => !t.completed).length;
     const remoteTasks = getValues(remoteData.tasks).filter(t => !t.completed).length;
@@ -1441,19 +1455,19 @@ function showSyncConflictModal(localData, remoteData, onResolve) {
 
     modal.innerHTML = `
         <div style="background:var(--surface-overlay);border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid var(--border-default);">
-            <h3 style="color:#f0883e;margin:0 0 16px 0;font-size:1.2em;">\u26a0\ufe0f Sync Conflict Detected</h3>
+            <h3 style="color:var(--warning);margin:0 0 16px 0;font-size:1.2em;">\u26a0\ufe0f Sync Conflict Detected</h3>
             <p style="color:var(--fg-tertiary);margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepLocal">
-                    <div style="color:#58a6ff;font-weight:600;margin-bottom:8px;">\ud83d\udcf1 This Device</div>
+                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='var(--success)'" id="keepLocal">
+                    <div style="color:var(--info);font-weight:600;margin-bottom:8px;">\ud83d\udcf1 This Device</div>
                     <div style="color:var(--fg-tertiary);font-size:0.85em;">
                         ${localTasks} active tasks<br>
                         Last saved: ${localTime}
                     </div>
                 </div>
-                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='#238636'" id="keepRemote">
-                    <div style="color:#a371f7;font-weight:600;margin-bottom:8px;">\u2601\ufe0f Cloud</div>
+                <div style="background:var(--canvas-subtle);padding:16px;border-radius:8px;border:2px solid transparent;cursor:pointer;" onclick="this.style.borderColor='var(--success)'" id="keepRemote">
+                    <div style="color:var(--info);font-weight:600;margin-bottom:8px;">\u2601\ufe0f Cloud</div>
                     <div style="color:var(--fg-tertiary);font-size:0.85em;">
                         ${remoteTasks} active tasks<br>
                         Last saved: ${remoteTime}
@@ -1462,7 +1476,7 @@ function showSyncConflictModal(localData, remoteData, onResolve) {
             </div>
 
             <div style="display:flex;gap:10px;">
-                <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
+                <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:var(--success);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
                 <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
             </div>
             <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:var(--canvas-subtle);border:1px solid var(--border-strong);border-radius:8px;color:var(--fg-tertiary);cursor:pointer;">Try to Merge Both</button>
@@ -1491,22 +1505,22 @@ function updateSyncStatus(status, message) {
         case 'connected':
             icon.textContent = '\ud83d\udfe2';
             text.textContent = message || 'Connected to cloud';
-            text.style.color = '#86efac';
+            text.style.color = 'var(--success-light)';
             break;
         case 'syncing':
             icon.textContent = '\ud83d\udd04';
             text.textContent = message || 'Syncing...';
-            text.style.color = '#93c5fd';
+            text.style.color = 'var(--accent-light)';
             break;
         case 'offline':
             icon.textContent = '\ud83d\udd34';
             text.textContent = message || 'Offline (local only)';
-            text.style.color = '#fca5a5';
+            text.style.color = 'var(--destructive-light)';
             break;
         case 'error':
             icon.textContent = '\u26a0\ufe0f';
             text.textContent = message || 'Sync error';
-            text.style.color = '#fcd34d';
+            text.style.color = 'var(--warning-light)';
             break;
         default:
             icon.textContent = '\u23f3';
@@ -1714,28 +1728,26 @@ function forceUploadToCloud() {
         return;
     }
 
-    if (!confirm('\u26a0\ufe0f Force Upload\n\nThis will OVERWRITE all cloud data with your local data.\n\nAre you sure?')) {
-        return;
-    }
+    showCustomConfirm('Force Upload\n\nThis will OVERWRITE all cloud data with your local data.\n\nAre you sure?', function() {
+        updateSyncStatus('syncing', 'Uploading...');
 
-    updateSyncStatus('syncing', 'Uploading...');
+        const saveTimestamp = Date.now();
+        lastKnownSaveTime = saveTimestamp;
 
-    const saveTimestamp = Date.now();
-    lastKnownSaveTime = saveTimestamp;
+        const data = buildSaveData(saveTimestamp);
 
-    const data = buildSaveData(saveTimestamp);
-
-    database.ref('users/' + currentUser.uid + '/appData').set(data)
-        .then(() => {
-            safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
-            updateSyncStatus('connected', 'Force uploaded \u2713');
-            showToast('\u2b06\ufe0f Force uploaded to cloud', '\u2601\ufe0f');
-        })
-        .catch(err => {
-            console.error('Force upload failed:', err);
-            updateSyncStatus('error', 'Upload failed');
-            showToast('\u274c Upload failed: ' + err.message, '\u26a0\ufe0f');
-        });
+        database.ref('users/' + currentUser.uid + '/appData').set(data)
+            .then(() => {
+                safeLocalStorageSet('dentalStudentQuestData', JSON.stringify(data));
+                updateSyncStatus('connected', 'Force uploaded \u2713');
+                showToast('Force uploaded to cloud', '!');
+            })
+            .catch(err => {
+                console.error('Force upload failed:', err);
+                updateSyncStatus('error', 'Upload failed');
+                showToast('Upload failed: ' + err.message, '!');
+            });
+    }, null, 'Force Upload');
 }
 
 function forcePullFromCloud() {
@@ -1744,33 +1756,31 @@ function forcePullFromCloud() {
         return;
     }
 
-    if (!confirm('\u26a0\ufe0f Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?')) {
-        return;
-    }
+    showCustomConfirm('Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?', function() {
+        updateSyncStatus('syncing', 'Pulling...');
 
-    updateSyncStatus('syncing', 'Pulling...');
+        database.ref('users/' + currentUser.uid + '/appData').once('value')
+            .then(snapshot => {
+                const data = snapshot.val();
 
-    database.ref('users/' + currentUser.uid + '/appData').once('value')
-        .then(snapshot => {
-            const data = snapshot.val();
+                if (!data) {
+                    showToast('No cloud data found', '!');
+                    updateSyncStatus('connected', 'No cloud data');
+                    return;
+                }
 
-            if (!data) {
-                showToast('\u26a0\ufe0f No cloud data found', '\u2601\ufe0f');
-                updateSyncStatus('connected', 'No cloud data');
-                return;
-            }
+                // Full overwrite - apply all remote data
+                applyRemoteData(data);
 
-            // Full overwrite - apply all remote data
-            applyRemoteData(data);
-
-            updateSyncStatus('connected', 'Force pulled \u2713');
-            showToast('\u2b07\ufe0f Pulled from cloud', '\u2601\ufe0f');
-        })
-        .catch(err => {
-            console.error('Force pull failed:', err);
-            updateSyncStatus('error', 'Pull failed');
-            showToast('\u274c Pull failed: ' + err.message, '\u26a0\ufe0f');
-        });
+                updateSyncStatus('connected', 'Force pulled \u2713');
+                showToast('Pulled from cloud', '!');
+            })
+            .catch(err => {
+                console.error('Force pull failed:', err);
+                updateSyncStatus('error', 'Pull failed');
+                showToast('Pull failed: ' + err.message, '!');
+            });
+    }, null, 'Force Pull');
 }
 
 // ============================================
@@ -1799,16 +1809,22 @@ window.debugSyncStatus = function() {
 window.resetSyncPin = function() {
     const currentPin = localStorage.getItem('dentalQuestPin') || localStorage.getItem('dentalAppPin');
 
-    const newPin = prompt('Enter your sync PIN:\n\n\u26a0\ufe0f Use the SAME PIN on ALL devices!\n\nCurrent PIN ends with: ' + (currentPin ? currentPin.slice(-2) : 'N/A'));
-
-    if (newPin && newPin.length >= 4) {
-        safeLocalStorageSet('dentalQuestPin', newPin);
-        safeLocalStorageSet('dentalAppPin', newPin);
-        alert('PIN updated! The page will now reload to connect with your new PIN.');
-        window.location.reload();
-    } else {
-        alert('PIN must be at least 4 characters. No changes made.');
-    }
+    showCustomPrompt(
+        'Enter your sync PIN:\n\nUse the SAME PIN on ALL devices!\n\nCurrent PIN ends with: ' + (currentPin ? currentPin.slice(-2) : 'N/A'),
+        '',
+        function(newPin) {
+            if (newPin && newPin.length >= 4) {
+                safeLocalStorageSet('dentalQuestPin', newPin);
+                safeLocalStorageSet('dentalAppPin', newPin);
+                showCustomAlert('PIN updated! The page will now reload to connect with your new PIN.', 'PIN Updated', function() {
+                    window.location.reload();
+                });
+            } else {
+                showToast('PIN must be at least 4 characters. No changes made.', '!');
+            }
+        },
+        'Change Sync PIN'
+    );
 };
 
 // ============================================

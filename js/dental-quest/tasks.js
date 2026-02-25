@@ -34,10 +34,10 @@ function addTask() {
     let markDoToday = false;
 
     if (currentCategory === 'dotoday') {
-        taskCategory = 'health'; // Default category
+        taskCategory = localStorage.getItem('lastTaskCategory') || 'health';
         markDoToday = true;
     } else if (currentCategory === 'all') {
-        taskCategory = 'health'; // Default category for all-tasks view
+        taskCategory = localStorage.getItem('lastTaskCategory') || 'health';
     }
 
     const id = generateId('task');
@@ -56,7 +56,8 @@ function addTask() {
 
     tasks[id] = task;
     input.value = '';
-    renderTasks();
+    safeLocalStorageSet('lastTaskCategory', taskCategory);
+    rerenderCurrentView();
     if (currentView === 'focus') renderFocusMode();
     saveData();
 }
@@ -90,6 +91,13 @@ function updateCategoryXPDisplay() {
     if (labelElement) labelElement.textContent = categoryNames[currentCategory];
     if (textElement) textElement.textContent = `${earnedXP} / ${totalXP} XP`;
     if (progressElement) progressElement.style.width = percentage + '%';
+}
+
+// ==================== VIEW RE-RENDER HELPER ====================
+
+function rerenderCurrentView() {
+    if (currentViewMode === 'kanban') renderKanbanBoard();
+    else renderTasks();
 }
 
 // ==================== RENDER TASKS ====================
@@ -135,19 +143,48 @@ function renderTasks() {
         return;
     }
 
-    // Sort by urgency priority then by order within each group
+    // Group by urgency bucket
     var urgencyWeight = { eod: 0, soon: 1, week: 2, month: 3, inbox: 4 };
-    filteredTasks.sort(function(a, b) {
-        var wa = urgencyWeight[getTaskUrgency(a)] ?? 4;
-        var wb = urgencyWeight[getTaskUrgency(b)] ?? 4;
-        if (wa !== wb) return wa - wb;
-        return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0);
+    var urgencyBuckets = { eod: [], soon: [], week: [], month: [], inbox: [] };
+    var urgencyLabels = {
+        eod: 'Must Today', soon: 'Up Next', week: 'This Week',
+        month: 'This Month', inbox: 'Someday'
+    };
+    var urgencyCapacity = { eod: '4h', soon: '8h' };
+
+    filteredTasks.forEach(function(t) {
+        var urg = getTaskUrgency(t);
+        if (!urgencyBuckets[urg]) urgencyBuckets[urg] = [];
+        urgencyBuckets[urg].push(t);
     });
 
-    // Render flat list — user text escaped via escapeHtml() in renderSynchroCard
+    // Sort within each bucket
+    ['eod', 'soon', 'week', 'month', 'inbox'].forEach(function(urg) {
+        urgencyBuckets[urg].sort(function(a, b) {
+            return (a.triageOrder ?? a.sortOrder ?? 0) - (b.triageOrder ?? b.sortOrder ?? 0);
+        });
+    });
+
+    // Render urgency sections — all user text escaped via escapeHtml() in renderSynchroCard
+    // Section labels and icons are hardcoded strings, not user input
     var html = '';
-    filteredTasks.forEach(function(t) { html += renderSynchroCard(t); });
-    taskList.innerHTML = html; // Safe: all user input escaped via escapeHtml()
+    ['eod', 'soon', 'week', 'month', 'inbox'].forEach(function(urg) {
+        var bucket = urgencyBuckets[urg];
+        if (bucket.length === 0) return;
+        var cap = urgencyCapacity[urg] ? '<span class="urgency-section-cap">' + urgencyCapacity[urg] + '</span>' : '';
+        html += '<div class="urgency-section" data-urgency="' + urg + '">' +
+            '<div class="urgency-section-header" onclick="toggleUrgencySection(this)">' +
+                '<span class="urgency-section-dot urgency-dot-' + urg + '"></span>' +
+                '<span class="urgency-section-label">' + urgencyLabels[urg] + '</span>' +
+                '<span class="urgency-section-count">' + bucket.length + '</span>' +
+                cap +
+                '<span class="urgency-section-chevron">' + icon('chevron-down', 14) + '</span>' +
+            '</div>' +
+            '<div class="urgency-section-body">';
+        bucket.forEach(function(t) { html += renderSynchroCard(t); });
+        html += '</div></div>';
+    });
+    taskList.innerHTML = html;
 }
 
 function toggleUrgencySection(headerEl) {
@@ -168,14 +205,14 @@ function handleDragStart(event, taskId) {
 function handleDragOver(event) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    const taskItem = event.target.closest('.task-item');
+    const taskItem = event.target.closest('.synchro-card');
     if (taskItem && !taskItem.classList.contains('dragging')) {
         taskItem.classList.add('drag-over');
     }
 }
 
 function handleDragLeave(event) {
-    const taskItem = event.target.closest('.task-item');
+    const taskItem = event.target.closest('.synchro-card');
     if (taskItem) {
         taskItem.classList.remove('drag-over');
     }
@@ -183,7 +220,7 @@ function handleDragLeave(event) {
 
 function handleDrop(event, targetTaskId) {
     event.preventDefault();
-    const taskItem = event.target.closest('.task-item');
+    const taskItem = event.target.closest('.synchro-card');
     if (taskItem) {
         taskItem.classList.remove('drag-over');
     }
@@ -277,7 +314,7 @@ function toggleTask(id) {
         updateStats();
     }
 
-    renderTasks();
+    rerenderCurrentView();
     saveData();
 
     // Refresh any open dashboard expansions
@@ -305,7 +342,8 @@ function toggleDoToday(id) {
         }
     }
 
-    renderTasks();
+    invalidateTriageCache();
+    rerenderCurrentView();
     updateStats();
     saveData();
 
@@ -331,7 +369,7 @@ function deleteTask(id) {
         }
     });
 
-    renderTasks();
+    rerenderCurrentView();
     if (currentView === 'focus') renderFocusMode();
     saveData();
 }
@@ -428,7 +466,7 @@ function completeSession() {
         document.getElementById('timerMode').textContent = 'Break Time!';
         updateTimerDisplay();
 
-        alert('Great work! Time for a break!');
+        showToast('Great work! Time for a break!', 'ok');
     } else {
         // Break completed
         isWorkSession = true;
@@ -436,7 +474,7 @@ function completeSession() {
         document.getElementById('timerMode').textContent = 'Work Session';
         updateTimerDisplay();
 
-        alert('Break over! Ready for another session?');
+        showToast('Break over! Ready for another session?', '!');
     }
 
     document.getElementById('startBtn').style.display = 'inline-block';
@@ -549,7 +587,7 @@ function updateDashboardExpansion(type) {
     if (type === 'completed') {
         // Completed tasks - show with uncomplete option
         content.innerHTML = tasksToShow.map(task => `
-            <div class="expansion-task" style="border-left-color: #10b981;">
+            <div class="expansion-task" style="border-left-color: var(--success);">
                 <input type="checkbox"
                        class="expansion-task-check"
                        checked
@@ -593,7 +631,7 @@ function uncompleteTaskFromDashboard(taskId) {
         stats.totalTasks--;
         saveData();
         updateStats();
-        renderTasks();
+        rerenderCurrentView();
         updateDashboardExpansion('completed');
         showToast('Task marked as incomplete', 'ok');
     }
@@ -665,6 +703,7 @@ function updateStats() {
 
 function switchToFocusMode() {
     currentView = 'focus';
+    safeLocalStorageSet('dq_currentView', 'focus');
     document.body.classList.add('focus-active');
     document.getElementById('focusModeContainer').style.display = 'block';
     document.getElementById('fullViewContainer').style.display = 'none';
@@ -702,6 +741,7 @@ function switchToFocusMode() {
 
 function switchToFullView() {
     currentView = 'full';
+    safeLocalStorageSet('dq_currentView', 'full');
     document.body.classList.remove('focus-active');
     document.getElementById('focusModeContainer').style.display = 'none';
 
@@ -764,7 +804,7 @@ function renderFocusMode() {
 
 // ==================== SIDEBAR NAVIGATION ====================
 
-var currentViewMode = 'kanban'; // 'list' or 'kanban'
+var currentViewMode = localStorage.getItem('dq_viewMode') || 'kanban'; // 'list' or 'kanban'
 
 function sidebarNavigate(view) {
     // Update sidebar active state
@@ -801,6 +841,7 @@ function sidebarNavigate(view) {
 
 function switchViewMode(mode) {
     currentViewMode = mode;
+    safeLocalStorageSet('dq_viewMode', mode);
     var listBtn = document.getElementById('listViewBtn');
     var kanbanBtn = document.getElementById('kanbanViewBtn');
     if (listBtn) listBtn.classList.toggle('active', mode === 'list');
@@ -827,6 +868,11 @@ function filterCategory(cat) {
     });
 
     currentCategory = cat;
+    safeLocalStorageSet('dq_currentCategory', cat);
+    // Also set lastTaskCategory when filtering to a real category
+    if (cat !== 'all' && cat !== 'dotoday') {
+        safeLocalStorageSet('lastTaskCategory', cat);
+    }
 
     // Update the old category tabs too (for list view)
     document.querySelectorAll('.category-tab').forEach(function(t) {
@@ -895,20 +941,30 @@ function renderSynchroCard(task) {
         badges += '<span class="synchro-card-stale-badge">' + staleDays + 'd</span>';
     }
 
+    var checkIcon = task.completed ? icon('check-circle', 18) : '';
+    var checkClass = task.completed ? ' checked' : '';
+
     return '<div class="synchro-card' + completedClass + overdueClass + staleClass + '" data-task-id="' + escapeHtml(task.id) + '" draggable="true">' +
-        '<div class="synchro-card-actions">' +
-            '<button class="synchro-card-action" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit">' + icon('edit', 13) + '</button>' +
-            '<button class="synchro-card-action" onclick="deleteTask(\'' + escapeHtml(task.id) + '\')" title="Delete">' + icon('trash-2', 13) + '</button>' +
+        '<div class="synchro-card-row">' +
+            '<div class="synchro-card-check' + checkClass + '" onclick="event.stopPropagation(); toggleTask(\'' + escapeHtml(task.id) + '\')" title="' + (task.completed ? 'Mark incomplete' : 'Complete task') + '">' +
+                (task.completed ? checkIcon : '<div class="synchro-check-ring"></div>') +
+            '</div>' +
+            '<div class="synchro-card-body">' +
+                '<div class="synchro-card-title">' + escapeHtml(task.text) + '</div>' +
+                '<div class="synchro-card-meta">' +
+                    '<span class="synchro-card-cat-dot" style="background:' + catColor + '"></span>' +
+                    '<span class="synchro-card-cat-label">' + catName + '</span>' +
+                    (dateStr ? '<span class="synchro-card-date">' + dateStr + '</span>' : '') +
+                '</div>' +
+                '<div class="synchro-card-progress"><div class="synchro-card-progress-fill" style="width:' + sizePercent + '%;background:' + catColor + '"></div></div>' +
+                '<span class="synchro-card-progress-label">' + sizeLabel + '</span>' +
+                (badges ? '<div class="synchro-card-badges">' + badges + '</div>' : '') +
+            '</div>' +
+            '<div class="synchro-card-actions">' +
+                '<button class="synchro-card-action" onclick="openTaskEditModal(\'' + escapeHtml(task.id) + '\')" title="Edit">' + icon('edit', 13) + '</button>' +
+                '<button class="synchro-card-action" onclick="deleteTask(\'' + escapeHtml(task.id) + '\')" title="Delete">' + icon('trash-2', 13) + '</button>' +
+            '</div>' +
         '</div>' +
-        '<div class="synchro-card-title">' + escapeHtml(task.text) + '</div>' +
-        '<div class="synchro-card-meta">' +
-            '<span class="synchro-card-cat-dot" style="background:' + catColor + '"></span>' +
-            '<span class="synchro-card-cat-label">' + catName + '</span>' +
-            (dateStr ? '<span class="synchro-card-date">' + dateStr + '</span>' : '') +
-        '</div>' +
-        '<div class="synchro-card-progress"><div class="synchro-card-progress-fill" style="width:' + sizePercent + '%;background:' + catColor + '"></div></div>' +
-        '<span class="synchro-card-progress-label">' + sizeLabel + '</span>' +
-        (badges ? '<div class="synchro-card-badges">' + badges + '</div>' : '') +
     '</div>';
 }
 
@@ -1042,51 +1098,34 @@ function getCategoryColor(cat) {
     return colors[cat] || 'var(--fg-muted)';
 }
 
-function toggleTaskComplete(taskId) {
-    var task = tasks[taskId];
-    if (!task) return;
-    if (task.completed) {
-        task.completed = false;
-        task.completedAt = null;
-        stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
-    } else {
-        task.completed = true;
-        task.completedAt = Date.now();
-        stats.totalTasks = (stats.totalTasks || 0) + 1;
-    }
-    saveData();
-    updateStats();
-    if (currentViewMode === 'kanban') renderKanbanBoard();
-    else renderTasks();
-    if (currentView === 'focus') renderFocusMode();
-}
+// toggleTaskComplete is defined in triage.js (canonical version)
 
 function quickAddToColumn(urgency) {
-    var text = prompt('New task:');
-    if (!text || !text.trim()) return;
-    var id = generateId('task');
-    var isEod = (urgency === 'eod');
-    var task = {
-        id: id,
-        text: text.trim(),
-        category: 'health',
-        completed: false,
-        doToday: isEod,
-        urgency: urgency,
-        createdAt: new Date().toISOString(),
-        size: 'medium',
-        highLeverage: false,
-        sortOrder: getCount(tasks),
-        triageTier: isEod ? 'lockedIn' : (urgency === 'soon' ? 'today' : 'tomorrow'),
-        triageOrder: 0,
-        triageDate: getLocalDateString(new Date())
-    };
-    tasks[id] = task;
-    saveData();
-    updateStats();
-    if (currentViewMode === 'kanban') renderKanbanBoard();
-    else renderTasks();
-    if (currentView === 'focus') renderFocusMode();
+    showCustomPrompt('New task:', '', function(text) {
+        if (!text || !text.trim()) return;
+        var id = generateId('task');
+        var isEod = (urgency === 'eod');
+        var task = {
+            id: id,
+            text: text.trim(),
+            category: localStorage.getItem('lastTaskCategory') || 'health',
+            completed: false,
+            doToday: isEod || urgency === 'soon',
+            urgency: urgency,
+            createdAt: new Date().toISOString(),
+            size: 'medium',
+            highLeverage: false,
+            sortOrder: getCount(tasks),
+            triageTier: isEod ? 'lockedIn' : urgency === 'soon' ? 'today' : urgency === 'week' ? 'tomorrow' : null,
+            triageOrder: 0,
+            triageDate: getLocalDateString(new Date())
+        };
+        tasks[id] = task;
+        saveData();
+        updateStats();
+        rerenderCurrentView();
+        if (currentView === 'focus') renderFocusMode();
+    }, 'Add Task');
 }
 
 function setupKanbanDragDrop() {
@@ -1273,11 +1312,11 @@ function renderOneThingCard() {
     container.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
             <div style="font-size: 2em;">${icon('flame', 24)}</div>
-            <div style="color: #fbbf24; font-size: 1.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">THE ONE THING</div>
-            ${oneThingTask.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">' + icon('activity') + ' HIGH LEVERAGE</div>' : ''}
+            <div style="color: var(--warning); font-size: 1.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">THE ONE THING</div>
+            ${oneThingTask.highLeverage ? '<div style="background: rgba(196, 146, 58, 0.2); color: var(--warning); padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">' + icon('activity') + ' HIGH LEVERAGE</div>' : ''}
             <div style="margin-left: auto; display: flex; gap: 8px;">
-                <button onclick="openOneThingPicker()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Change to different task">${icon('refresh-cw')} Change</button>
-                <button onclick="clearOneThing()" style="background: rgba(255,255,255,0.1); border: 1px solid #6b7280; border-radius: 8px; padding: 6px 12px; color: #c9d1d9; font-size: 0.85em; cursor: pointer;" title="Clear and pick later">${icon('x')}</button>
+                <button onclick="openOneThingPicker()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-default); border-radius: 8px; padding: 6px 12px; color: var(--fg-primary); font-size: 0.85em; cursor: pointer;" title="Change to different task">${icon('refresh-cw')} Change</button>
+                <button onclick="clearOneThing()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-default); border-radius: 8px; padding: 6px 12px; color: var(--fg-primary); font-size: 0.85em; cursor: pointer;" title="Clear and pick later">${icon('x')}</button>
             </div>
         </div>
 
@@ -1306,7 +1345,7 @@ function renderOneThingCard() {
             <div id="oneThingTimerDisplay" style="font-family: Monaco, monospace; font-size: 2.2em; font-weight: 700; color: var(--fg-primary);">
                 ${formatFocusTimer(focusModeData.focusTimerSeconds)}
             </div>
-            <button id="oneThingTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+            <button id="oneThingTimerBtn" onclick="toggleFocusTimer()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: var(--accent); color: var(--accent-fg);">
                 ${focusModeData.focusTimerRunning ? icon('pause') + ' Pause' : icon('play') + ' Start Focus'}
             </button>
             <button onclick="completeOneThing()" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95em; cursor: pointer; background: var(--accent); color: white;">
@@ -1319,16 +1358,16 @@ function renderOneThingCard() {
 function renderMicroSteps() {
     const steps = getValues(focusModeData.microSteps);
     if (steps.length === 0) {
-        return '<div style="color: #6b7280; font-size: 0.9em; padding: 10px;">No micro-steps yet. Break your task into tiny pieces!</div>';
+        return '<div style="color: var(--fg-muted); font-size: 0.9em; padding: 10px;">No micro-steps yet. Break your task into tiny pieces!</div>';
     }
 
     return steps.map(step => `
         <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; ${step.completed ? 'opacity: 0.6;' : ''}">
-            <div onclick="toggleMicroStep('${step.id}')" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? '#10b981' : 'var(--accent)'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? '#10b981' : 'transparent'}; color: white; flex-shrink: 0;">
+            <div onclick="toggleMicroStep('${step.id}')" style="width: 22px; height: 22px; border: 2px solid ${step.completed ? 'var(--success)' : 'var(--accent)'}; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: ${step.completed ? 'var(--success)' : 'transparent'}; color: white; flex-shrink: 0;">
                 ${step.completed ? icon('check') : ''}
             </div>
-            <div style="flex: 1; color: #c9d1d9; ${step.completed ? 'text-decoration: line-through; color: #6b7280;' : ''}">${escapeHtml(step.text)}</div>
-            <button onclick="removeMicroStep('${step.id}')" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 5px;">${icon('x')}</button>
+            <div style="flex: 1; color: var(--fg-primary); ${step.completed ? 'text-decoration: line-through; color: var(--fg-muted);' : ''}">${escapeHtml(step.text)}</div>
+            <button onclick="removeMicroStep('${step.id}')" style="background: none; border: none; color: var(--fg-muted); cursor: pointer; padding: 5px;">${icon('x')}</button>
         </div>
     `).join('');
 }
@@ -1425,7 +1464,7 @@ function openOneThingPicker() {
     if (body) {
         body.innerHTML = `
             <div style="margin-bottom: 30px;">
-                <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: #c9d1d9;">
+                <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: var(--fg-primary);">
                     Choose the task that would make today a success if completed:
                 </div>
                 ${sortedTasks.length === 0 ?
@@ -1457,7 +1496,7 @@ function openAddTasksModal(size) {
     if (body) {
         body.innerHTML = `
             <div style="margin-bottom: 30px;">
-                <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: #c9d1d9;">
+                <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 15px; color: var(--fg-primary);">
                     Select tasks to add to today's ${size} tasks:
                 </div>
                 ${sizeTasks.length === 0 ?
@@ -1485,7 +1524,7 @@ function renderPlanningTaskOption(task) {
                 <div style="font-size: 0.85em; color: var(--fg-secondary); display: flex; gap: 12px;">
                     <span>${catInfo.emoji} ${catInfo.name}</span>
                     <span>${sizeLabel}</span>
-                    ${task.highLeverage ? '<span style="color: #fbbf24;">' + icon('activity') + ' High Leverage</span>' : ''}
+                    ${task.highLeverage ? '<span style="color: var(--warning);">' + icon('activity') + ' High Leverage</span>' : ''}
                 </div>
             </div>
         </div>
@@ -1566,9 +1605,9 @@ function renderTaskBudget() {
         }
     }
 
-    renderBudgetBar('budgetBarBig', counts.big, 1, '#dc2626');
-    renderBudgetBar('budgetBarMedium', counts.medium, 3, '#f59e0b');
-    renderBudgetBar('budgetBarSmall', counts.small, 5, '#10b981');
+    renderBudgetBar('budgetBarBig', counts.big, 1, 'var(--destructive)');
+    renderBudgetBar('budgetBarMedium', counts.medium, 3, 'var(--warning)');
+    renderBudgetBar('budgetBarSmall', counts.small, 5, 'var(--success)');
 
     const bigEl = document.getElementById('budgetCountBig');
     const medEl = document.getElementById('budgetCountMedium');
@@ -1614,51 +1653,13 @@ function updateTimeEstimate(counts) {
     }
 }
 
-function quickAddFromFocus() {
-    const input = document.getElementById('focusQuickAdd');
-    const sizeSelect = document.getElementById('focusQuickAddSize');
-    const categorySelect = document.getElementById('focusQuickAddCategory');
-
-    if (!input || !input.value.trim()) {
-        showToast('Please enter a task', '!');
-        return;
-    }
-
-    const id = generateId('task');
-    const task = {
-        id: id,
-        text: input.value.trim(),
-        category: categorySelect.value,
-        completed: false,
-        doToday: true, // Auto-mark as do today
-        urgency: 'eod',
-        createdAt: new Date().toISOString(),
-        size: sizeSelect.value,
-        highLeverage: false,
-        sortOrder: getCount(tasks)
-    };
-
-    tasks[id] = task;
-
-    // Add to today's focus tasks
-    if (!hasTaskId(focusModeData.todaysTasks[task.size], task.id)) {
-        if (!focusModeData.todaysTasks[task.size]) focusModeData.todaysTasks[task.size] = {};
-        focusModeData.todaysTasks[task.size][task.id] = true;
-    }
-
-    input.value = '';
-    renderFocusMode();
-    saveData();
-    showToast(`Added to ${task.size} tasks!`, 'ok');
-}
-
 function renderBudgetBar(containerId, filled, total, color) {
     const container = document.getElementById(containerId);
     if (!container) return;
     let html = '';
     for (let i = 0; i < total; i++) {
         const isFilled = i < filled;
-        html += `<div style="flex: 1; height: 100%; background: ${isFilled ? color : '#d1d5db'}; border-radius: 8px;"></div>`;
+        html += `<div style="flex: 1; height: 100%; background: ${isFilled ? color : 'var(--border-default)'}; border-radius: 8px;"></div>`;
     }
     container.innerHTML = html;
 }
@@ -1679,7 +1680,7 @@ function renderTaskSizeSection(size, containerId) {
 
     if (todaysTasks.length === 0) {
         container.innerHTML = `
-            <div style="color: #9ca3af; font-size: 0.9em; padding: 15px; text-align: center; background: #f9fafb; border-radius: 8px;">
+            <div style="color: var(--fg-tertiary); font-size: 0.9em; padding: 15px; text-align: center; background: var(--canvas-subtle); border-radius: 8px;">
                 No ${size} tasks for today.
                 <button onclick="openAddTasksModal('${size}')" style="background: none; border: none; color: var(--accent); cursor: pointer; text-decoration: underline;">Add some →</button>
             </div>
@@ -1688,16 +1689,16 @@ function renderTaskSizeSection(size, containerId) {
     }
 
     container.innerHTML = todaysTasks.map(task => {
-        const borderColor = size === 'small' ? '#10b981' : '#f59e0b';
+        const borderColor = size === 'small' ? 'var(--success)' : 'var(--warning)';
         return `
-            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
-                <div onclick="toggleFocusTask('${task.id}')" style="width: 24px; height: 24px; border: 2px solid #10b981; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
-                    <span style="color: #10b981; font-size: 14px;">${icon('check')}</span>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--canvas-subtle); border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
+                <div onclick="toggleFocusTask('${task.id}')" style="width: 24px; height: 24px; border: 2px solid var(--success); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white;" title="Complete task">
+                    <span style="color: var(--success); font-size: 14px;">${icon('check')}</span>
                 </div>
-                <div style="flex: 1; color: #374151; font-size: 0.95em;">${escapeHtml(task.text)}</div>
-                ${task.highLeverage ? '<div style="background: rgba(251, 191, 36, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">' + icon('activity') + '</div>' : ''}
-                <div style="color: #9ca3af; font-size: 0.85em; white-space: nowrap;">${size === 'small' ? '~5 min' : '~20 min'}</div>
-                <button onclick="removeFromToday('${task.id}', '${size}')" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">${icon('x')}</button>
+                <div style="flex: 1; color: var(--fg-primary); font-size: 0.95em;">${escapeHtml(task.text)}</div>
+                ${task.highLeverage ? '<div style="background: rgba(196, 146, 58, 0.15); color: var(--warning); padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600;">' + icon('activity') + '</div>' : ''}
+                <div style="color: var(--fg-tertiary); font-size: 0.85em; white-space: nowrap;">${size === 'small' ? '~5 min' : '~20 min'}</div>
+                <button onclick="removeFromToday('${task.id}', '${size}')" style="background: none; border: none; color: var(--fg-tertiary); cursor: pointer; padding: 5px; font-size: 1.1em;" title="Remove from today">${icon('x')}</button>
             </div>
         `;
     }).join('');
@@ -1753,15 +1754,15 @@ function updateBacklogCount() {
 
 function getCategoryInfo(category) {
     const cats = {
-        financial: { name: 'Financial', emoji: icon('wallet'), color: '#22c55e' },
-        clinic: { name: 'Clinic', emoji: icon('heart'), color: '#ef4444' },
-        health: { name: 'Health', emoji: icon('heart'), color: '#ec4899' },
-        school: { name: 'School', emoji: icon('clipboard-list'), color: '#6b7280' },
-        academic: { name: 'Academic', emoji: icon('graduation-cap'), color: '#f59e0b' },
-        future: { name: 'Future', emoji: icon('rocket'), color: '#3b82f6' },
-        life: { name: 'Life', emoji: icon('home'), color: '#8b5cf6' }
+        financial: { name: 'Financial', emoji: icon('wallet'), color: 'var(--cat-financial)' },
+        clinic: { name: 'Clinic', emoji: icon('heart'), color: 'var(--cat-clinic)' },
+        health: { name: 'Health', emoji: icon('heart'), color: 'var(--cat-health)' },
+        school: { name: 'School', emoji: icon('clipboard-list'), color: 'var(--cat-school)' },
+        academic: { name: 'Academic', emoji: icon('graduation-cap'), color: 'var(--cat-academic)' },
+        future: { name: 'Future', emoji: icon('rocket'), color: 'var(--cat-future)' },
+        life: { name: 'Life', emoji: icon('home'), color: 'var(--cat-life)' }
     };
-    return cats[category] || { name: 'Task', emoji: icon('clipboard-list'), color: '#6b7280' };
+    return cats[category] || { name: 'Task', emoji: icon('clipboard-list'), color: 'var(--fg-muted)' };
 }
 
 // escapeHtml extracted to state.js
@@ -1819,22 +1820,17 @@ function getCurrentCommandCenterMode() {
 
 function switchCommandCenterMode(mode) {
     commandCenterMode = mode;
+    safeLocalStorageSet('dq_commandCenterMode', mode);
 
-    // Update tab styling - dark theme
+    // Update tab styling via CSS classes (no hardcoded colors)
     document.querySelectorAll('.cc-mode-tab').forEach(tab => {
         tab.classList.remove('active');
-        tab.style.background = 'transparent';
-        tab.style.borderColor = '#334155';
-        tab.style.color = '#94a3b8';
     });
 
     const activeTab = document.getElementById(mode === 'triage' ? 'triageModeTab' :
         mode === 'crashout' ? 'crashOutModeTab' : 'focusPomodoroTab');
     if (activeTab) {
         activeTab.classList.add('active');
-        activeTab.style.background = '#1e293b';
-        activeTab.style.borderColor = '#475569';
-        activeTab.style.color = '#f1f5f9';
     }
 
     // Show/hide content
@@ -1847,14 +1843,8 @@ function switchCommandCenterMode(mode) {
 }
 
 function updateCommandCenterGreeting() {
-    const hour = new Date().getHours();
-    let greeting = 'Good morning';
-    if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
-    if (hour >= 17 && hour < 21) greeting = 'Good evening';
-    if (hour >= 21 || hour < 5) greeting = 'Good night';
-
     const greetingEl = document.querySelector('.cc-greeting > div:first-child');
-    if (greetingEl) greetingEl.textContent = `${greeting}, Sully`;
+    if (greetingEl) greetingEl.textContent = `${getGreetingString()}, Sully`;
 
     const dateEl = document.getElementById('ccDateDisplay');
     if (dateEl) {
@@ -1975,8 +1965,12 @@ function openTaskEditModal(taskId) {
 
     editingTaskSize = task.size || 'medium';
     editingTaskLeverage = task.highLeverage || false;
+    editingTaskCategory = task.category || 'health';
+    editingTaskUrgency = task.urgency || 'inbox';
 
     document.getElementById('editTaskText').value = task.text;
+    selectEditCategory(editingTaskCategory);
+    selectEditUrgency(editingTaskUrgency);
     updateSizeSelection();
     updateLeverageToggle();
     document.getElementById('taskEditModal').style.display = 'flex';
@@ -2000,6 +1994,30 @@ function updateSizeSelection() {
     });
 }
 
+// Edit modal: Category + Urgency pickers
+var editingTaskCategory = 'health';
+var editingTaskUrgency = 'inbox';
+
+function selectEditCategory(cat) {
+    editingTaskCategory = cat;
+    document.querySelectorAll('#editCategoryPills .edit-cat-pill').forEach(function(p) {
+        var isActive = p.getAttribute('data-cat') === cat;
+        p.style.background = isActive ? 'var(--accent)' : 'var(--canvas-subtle)';
+        p.style.color = isActive ? 'white' : 'var(--fg-secondary)';
+        p.style.borderColor = isActive ? 'var(--accent)' : 'var(--border-default)';
+    });
+}
+
+function selectEditUrgency(urg) {
+    editingTaskUrgency = urg;
+    document.querySelectorAll('#editUrgencyPills .edit-urg-pill').forEach(function(p) {
+        var isActive = p.getAttribute('data-urgency') === urg;
+        p.style.background = isActive ? 'var(--accent)' : 'var(--canvas-subtle)';
+        p.style.color = isActive ? 'white' : 'var(--fg-secondary)';
+        p.style.borderColor = isActive ? 'var(--accent)' : 'var(--border-default)';
+    });
+}
+
 function toggleLeverage() {
     editingTaskLeverage = !editingTaskLeverage;
     updateLeverageToggle();
@@ -2008,7 +2026,7 @@ function toggleLeverage() {
 function updateLeverageToggle() {
     const toggle = document.getElementById('leverageSwitch');
     if (toggle) {
-        toggle.style.background = editingTaskLeverage ? '#fbbf24' : 'var(--border-default)';
+        toggle.style.background = editingTaskLeverage ? 'var(--warning)' : 'var(--border-default)';
         toggle.querySelector('div').style.left = editingTaskLeverage ? '23px' : '3px';
     }
 }
@@ -2027,9 +2045,31 @@ function saveTaskEdit() {
     task.text = document.getElementById('editTaskText').value.trim();
     task.size = editingTaskSize;
     task.highLeverage = editingTaskLeverage;
+    task.category = editingTaskCategory;
 
+    // Urgency change with propagation to doToday + triageTier
+    var oldUrgency = task.urgency || 'inbox';
+    task.urgency = editingTaskUrgency;
+    if (editingTaskUrgency !== oldUrgency) {
+        if (editingTaskUrgency === 'eod') {
+            task.doToday = true;
+            task.triageTier = 'lockedIn';
+        } else if (editingTaskUrgency === 'soon') {
+            task.doToday = false;
+            task.triageTier = 'today';
+        } else if (editingTaskUrgency === 'week') {
+            task.doToday = false;
+            task.triageTier = 'tomorrow';
+        } else {
+            task.doToday = false;
+            task.triageTier = null;
+        }
+        invalidateTriageCache();
+    }
+
+    safeLocalStorageSet('lastTaskCategory', editingTaskCategory);
     closeTaskEditModal();
-    renderTasks();
+    rerenderCurrentView();
     if (currentView === 'focus') renderFocusMode();
     saveData();
     showToast('Task updated!', 'ok');
@@ -2076,7 +2116,9 @@ function initFocusMode() {
         if (sf) sf.classList.add('active');
         if (su) su.classList.remove('active');
 
-        renderFocusMode();
+        // Apply the persisted command center mode (triage/crashout/focus)
+        // switchCommandCenterMode handles tab styling, content visibility, and renderFocusMode()
+        switchCommandCenterMode(commandCenterMode || 'triage');
     } else {
         if (focusContainer) focusContainer.style.display = 'none';
         if (fullContainer) fullContainer.style.display = 'block';

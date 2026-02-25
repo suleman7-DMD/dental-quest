@@ -81,11 +81,11 @@ function showTimePrompt(task) {
     modal.innerHTML = `
         <div class="time-prompt-content-enhanced">
             <div class="nudge-progress">${completed}/${total} done today &middot; ${pct}%</div>
-            <div style="color: var(--text-muted, #64748b); font-size: 0.9em;">It's ${task.crashOutTime}</div>
-            <div style="color: var(--text-secondary, #94a3b8); margin-bottom: 4px;">Time to start:</div>
+            <div style="color: var(--fg-muted); font-size: 0.9em;">It's ${task.crashOutTime}</div>
+            <div style="color: var(--fg-tertiary); margin-bottom: 4px;">Time to start:</div>
             <div class="nudge-task-name">${task.triageTier === 'lockedIn' ? '&#x1F525;' : '&#x1F4CB;'} ${typeof escapeHtml === 'function' ? escapeHtml(task.text) : task.text}</div>
             <button class="nudge-start-btn" onclick="startTaskFromPrompt('${task.id}')">&#x25B6; START NOW</button>
-            <div style="color: var(--text-muted, #64748b); font-size: 0.85em; margin-top: 8px;">Not ready? Push all tasks:</div>
+            <div style="color: var(--fg-muted); font-size: 0.85em; margin-top: 8px;">Not ready? Push all tasks:</div>
             <div class="nudge-push-grid">
                 <button class="nudge-push-btn" onclick="pushAllTasks(5)">+5m</button>
                 <button class="nudge-push-btn" onclick="pushAllTasks(10)">+10m</button>
@@ -976,16 +976,20 @@ function promptTaskPosition(taskId) {
     var currentIndex = scheduledTasks.findIndex(t => String(t.id) === String(taskId));
     var totalTasks = scheduledTasks.length;
 
-    var input = prompt(`Move task to position (1-${totalTasks}):`, currentIndex + 1);
-    if (input === null) return; // Cancelled
-
-    var newPosition = parseInt(input, 10);
-    if (isNaN(newPosition)) {
-        showToast('Please enter a valid number', '!');
-        return;
-    }
-
-    setTaskPosition(taskId, newPosition);
+    showCustomPrompt(
+        `Move task to position (1-${totalTasks}):`,
+        String(currentIndex + 1),
+        function(input) {
+            if (input === null) return; // Cancelled
+            var newPosition = parseInt(input, 10);
+            if (isNaN(newPosition)) {
+                showToast('Please enter a valid number', '!');
+                return;
+            }
+            setTaskPosition(taskId, newPosition);
+        },
+        'Move Task'
+    );
 }
 
 // Helper to parse crash out time string back to Date
@@ -1042,7 +1046,7 @@ function renderUnscheduledPool() {
     if (countEl) countEl.textContent = `${unscheduledTasks.length} task${unscheduledTasks.length !== 1 ? 's' : ''}`;
 
     if (unscheduledTasks.length === 0) {
-        container.innerHTML = `<div style="color: #64748b; padding: 20px; text-align: center; width: 100%;">All tasks scheduled or completed!</div>`;
+        container.innerHTML = `<div style="color: var(--fg-muted); padding: 20px; text-align: center; width: 100%;">All tasks scheduled or completed!</div>`;
         return;
     }
 
@@ -1086,7 +1090,7 @@ function openDurationModal(taskId) {
                 <button onclick="adjustDuration(${taskId}, 15)">+15m</button>
                 <button onclick="adjustDuration(${taskId}, 30)">+30m</button>
             </div>
-            <div style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 12px;">Quick set:</div>
+            <div style="font-size: 13px; color: var(--fg-muted); text-align: center; margin-bottom: 12px;">Quick set:</div>
             <div class="duration-quick-row">
                 <button onclick="setDuration(${taskId}, 15)">15m</button>
                 <button onclick="setDuration(${taskId}, 30)">30m</button>
@@ -1160,29 +1164,34 @@ function dismissOverscheduledWarning() {
 }
 
 function resetCrashOutDay() {
-    if (!confirm('Reset Crash Out? This will clear all scheduled times but keep your tasks.')) return;
+    showCustomConfirm(
+        'Reset Crash Out? This will clear all scheduled times but keep your tasks.',
+        function() {
+            // Clear crash out data from all tasks
+            getValues(tasks).forEach(task => {
+                if (task.crashOutScheduled) {
+                    tasks[task.id] = {
+                        ...task,
+                        crashOutScheduled: false
+                    };
+                    delete tasks[task.id].crashOutTime;
+                    delete tasks[task.id].crashOutDuration;
+                }
+            });
 
-    // Clear crash out data from all tasks
-    getValues(tasks).forEach(task => {
-        if (task.crashOutScheduled) {
-            tasks[task.id] = {
-                ...task,
-                crashOutScheduled: false
-            };
-            delete tasks[task.id].crashOutTime;
-            delete tasks[task.id].crashOutDuration;
-        }
-    });
+            // Reset sleep time to prompt for new one
+            if (commandCenterData.crashOut) {
+                commandCenterData.crashOut.sleepTime = null;
+                commandCenterData.crashOut.lastReset = new Date().toISOString();
+            }
 
-    // Reset sleep time to prompt for new one
-    if (commandCenterData.crashOut) {
-        commandCenterData.crashOut.sleepTime = null;
-        commandCenterData.crashOut.lastReset = new Date().toISOString();
-    }
-
-    renderCrashOutMode();
-    saveData();
-    showToast('Crash Out reset', 'ok');
+            renderCrashOutMode();
+            saveData();
+            showToast('Crash Out reset', 'ok');
+        },
+        null,
+        'Reset Crash Out'
+    );
 }
 
 // ==================== WINDOW BINDINGS ====================
