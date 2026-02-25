@@ -10429,7 +10429,8 @@
 #quickAddFAB {
     position: fixed;
     bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-    right: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -10448,11 +10449,11 @@
 #quickAddFAB:hover {
     background: var(--accent-hover);
     box-shadow: var(--shadow-overlay);
-    transform: translateY(-2px);
+    transform: translateX(-50%) translateY(-2px);
 }
-#quickAddFAB:active { transform: scale(0.92); }
+#quickAddFAB:active { transform: translateX(-50%) scale(0.92); }
 #quickAddFAB.panel-open {
-    transform: rotate(45deg);
+    transform: translateX(-50%) rotate(45deg);
     background: var(--fg-secondary);
     box-shadow: var(--shadow-md);
 }
@@ -10579,7 +10580,7 @@
         transform: translateY(calc(50% + 100vh));
     }
     #quickAddPanel.open { transform: translateY(50%); }
-    #quickAddFAB { bottom: 32px; right: 32px; }
+    #quickAddFAB { bottom: 32px; left: 50%; }
 }
 @media (max-width: 380px) {
     .qa-pill { padding: 8px 10px; font-size: 0.8em; }
@@ -11994,6 +11995,51 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .has-sidebar .header-compact { display: none !important; }
 .has-sidebar .header-menu-backdrop { display: none !important; }
 .has-sidebar .header-menu-panel { display: none !important; }
+
+/* ==================== MOBILE BOTTOM NAV ==================== */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    background: var(--surface-primary);
+    border-top: 1px solid var(--border-subtle);
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+}
+.mobile-bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-decoration: none;
+    color: var(--fg-tertiary);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.mobile-bottom-nav a.active {
+    color: var(--accent);
+    font-weight: 600;
+}
+.mobile-bottom-nav a svg {
+    width: 20px;
+    height: 20px;
+}
+@media (max-width: 768px) {
+    .mobile-bottom-nav { display: flex; }
+    /* Raise the FAB above bottom nav */
+    #quickAddFAB { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+    /* Add bottom padding to content so it doesn't hide behind nav */
+    .content-area { padding-bottom: 80px !important; }
+}
 
 /* Show compact header only on mobile when sidebar is not open */
 @media (max-width: 768px) {
@@ -13734,6 +13780,26 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         </div>
         <button class="qa-submit-btn" onclick="submitQuickAdd()">Add Task</button>
     </div>
+
+    <!-- Mobile Bottom Nav (cross-app navigation) -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <a href="index.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>Quest</span>
+        </a>
+        <a href="d3-roadmap.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Roadmap</span>
+        </a>
+        <a href="stimulant-elimination-calculator.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Sleep</span>
+        </a>
+        <a href="body-comp-tracker.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Body</span>
+        </a>
+    </nav>
 
 </body>
 </html>

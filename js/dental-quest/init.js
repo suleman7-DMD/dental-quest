@@ -231,6 +231,7 @@ function initApp() {
                         if (typeof renderKanbanBoard === 'function' && currentViewMode === 'kanban') {
                             renderKanbanBoard();
                         }
+                        if (typeof initFocusMode === 'function') initFocusMode();
                     } catch (e) {
                         console.error('Failsafe render error:', e);
                     }

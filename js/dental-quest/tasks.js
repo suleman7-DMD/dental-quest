@@ -1100,20 +1100,33 @@ function setupKanbanDragDrop() {
         });
         card.addEventListener('dragend', function() {
             card.classList.remove('dragging');
-            columns.forEach(function(col) { col.classList.remove('drag-over'); });
+            columns.forEach(function(col) {
+                col.classList.remove('drag-over');
+                col._dragCounter = 0;
+            });
         });
     });
 
     columns.forEach(function(col) {
-        col.addEventListener('dragover', function(e) {
+        col._dragCounter = 0;
+        col.addEventListener('dragenter', function(e) {
             e.preventDefault();
+            col._dragCounter++;
             col.classList.add('drag-over');
         });
+        col.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
         col.addEventListener('dragleave', function() {
-            col.classList.remove('drag-over');
+            col._dragCounter--;
+            if (col._dragCounter <= 0) {
+                col._dragCounter = 0;
+                col.classList.remove('drag-over');
+            }
         });
         col.addEventListener('drop', function(e) {
             e.preventDefault();
+            col._dragCounter = 0;
             col.classList.remove('drag-over');
             var taskId = e.dataTransfer.getData('text/plain');
             var targetUrgency = col.parentElement.getAttribute('data-urgency');
@@ -1127,23 +1140,32 @@ function kanbanDropTask(taskId, targetUrgency) {
     var task = tasks[taskId];
     if (!task) return;
 
+    var oldUrgency = task.urgency;
+    if (oldUrgency === targetUrgency) return; // No-op if same column
+
     // Set urgency
     task.urgency = targetUrgency;
 
-    // Propagation: Must Today = doToday + lockedIn
+    // Propagation: urgency → doToday + triageTier
     if (targetUrgency === 'eod') {
         task.doToday = true;
         task.triageTier = 'lockedIn';
         task.triageDate = getLocalDateString(new Date());
-    } else {
-        // Clear doToday when moved out of Must Today
+        task.triageOrder = task.triageOrder ?? 0;
+    } else if (targetUrgency === 'soon') {
         task.doToday = false;
-        if (targetUrgency === 'soon') {
-            task.triageTier = 'today';
-        } else {
-            task.triageTier = 'tomorrow';
-        }
+        task.triageTier = 'today';
         task.triageDate = getLocalDateString(new Date());
+        task.triageOrder = task.triageOrder ?? 0;
+    } else if (targetUrgency === 'week') {
+        task.doToday = false;
+        task.triageTier = 'tomorrow';
+        task.triageDate = getLocalDateString(new Date());
+    } else {
+        // month and inbox: no triage mapping
+        task.doToday = false;
+        task.triageTier = null;
+        task.triageDate = null;
     }
 
     saveData();
@@ -2020,10 +2042,16 @@ function initFocusMode() {
     // Make sure containers exist and are properly set
     const focusContainer = document.getElementById('focusModeContainer');
     const fullContainer = document.getElementById('fullViewContainer');
+    const kanbanBoard = document.getElementById('kanbanBoard');
+    const viewControls = document.getElementById('viewControls');
 
     if (currentView === 'focus') {
         if (focusContainer) focusContainer.style.display = 'block';
         if (fullContainer) fullContainer.style.display = 'none';
+        // CRITICAL: Also hide kanban board and view controls (Bug fix: these stayed visible on init)
+        if (kanbanBoard) kanbanBoard.style.display = 'none';
+        if (viewControls) viewControls.style.display = 'none';
+        document.body.classList.add('focus-active');
 
         // Ensure focusModeData is properly initialized
         if (!focusModeData.todaysTasks) {
@@ -2041,6 +2069,12 @@ function initFocusMode() {
 
         // Show welcome overlay for first-time users
         checkFocusViewWelcome();
+
+        // Update sidebar active state to match focus view
+        var sf = document.getElementById('sidebarFocusBtn');
+        var su = document.getElementById('sidebarFullBtn');
+        if (sf) sf.classList.add('active');
+        if (su) su.classList.remove('active');
 
         renderFocusMode();
     } else {
