@@ -165,20 +165,20 @@ Import accepts 6 flexible formats (full backup, single checkpoint, raw data, nes
 
 ### Architecture: Multi-File (Split from 22,900-line monolith)
 ```
-index.html                              (~13,716 lines — CSS + HTML only, ZERO inline JS)
+index.html                              (~13,881 lines — CSS + HTML only, ZERO inline JS)
 js/dental-quest/
-├── state.js              (1,076 lines) - Globals, defaults, utilities, time helpers, Firebase config
-├── firebase-sync.js      (1,968 lines) - Auth, save/load, sync, checkpoints, buildSaveData, migrateTaskUrgency
+├── state.js              (1,250 lines) - Globals, defaults, utilities, time helpers, Firebase config, getGreetingString
+├── firebase-sync.js      (1,993 lines) - Auth, save/load, sync, checkpoints, buildSaveData, migrateTaskUrgency
 ├── medications.js          (337 lines) - Pill tracking, med settings, daily auto-reduce
-├── financials.js         (1,180 lines) - Financial Cockpit (7 render functions), credit cards
-├── calendar.js             (768 lines) - Master calendar, countdowns, calendar events
+├── financials.js         (1,183 lines) - Financial Cockpit (7 render functions), credit cards
+├── calendar.js             (769 lines) - Master calendar, countdowns, calendar events
 ├── daily-planner.js        (674 lines) - Daily planner, Critical EOD Reset
-├── notebook.js             (252 lines) - Multi-page notebook CRUD
-├── tasks.js              (2,088 lines) - Task CRUD, Synchro cards, urgency board, Command Center core
-├── triage.js               (802 lines) - Triage mode (tiers, columns, drag-drop, urgency propagation)
-├── crash-out.js          (1,224 lines) - Crash Out timeline, scheduling, reordering
+├── notebook.js             (251 lines) - Multi-page notebook CRUD
+├── tasks.js              (2,136 lines) - Task CRUD, Synchro cards, urgency board, Command Center core
+├── triage.js               (784 lines) - Triage mode (tiers, columns, drag-drop, urgency propagation)
+├── crash-out.js          (1,233 lines) - Crash Out timeline, scheduling, reordering
 ├── focus-pomodoro.js       (720 lines) - Pomodoro timer, gamification, streaks, rollovers
-└── init.js                 (332 lines) - DOMContentLoaded bootstrap, Quick Add FAB, urgency picker
+└── init.js                 (378 lines) - DOMContentLoaded bootstrap, Quick Add FAB, escape handler, urgency picker
 ```
 
 ### Script Loading Order (ORDER MATTERS — dependencies flow downward)
@@ -187,18 +187,18 @@ state → firebase-sync → medications → financials → calendar → daily-pl
 ### Key Module Map
 | What to change | File to edit |
 |---------------|-------------|
-| State defaults, globals, utilities, Firebase config | `state.js` |
+| State defaults, globals, utilities, Firebase config, `getGreetingString()`, custom dialogs | `state.js` |
 | Save guards, Firebase load/sync, checkpoints, PIN auth | `firebase-sync.js` |
 | Pill tracking, med settings, auto-reduce | `medications.js` |
 | Financial Cockpit, bills, projections, credit cards | `financials.js` |
 | Master calendar, countdowns, events | `calendar.js` |
 | Daily planner, Critical EOD Reset | `daily-planner.js` |
 | Notebook pages CRUD | `notebook.js` |
-| Task CRUD, rendering, Command Center core, focus planning | `tasks.js` |
-| Triage mode (tiers, columns, drag-drop) | `triage.js` |
+| Task CRUD, rendering, `rerenderCurrentView()`, Command Center core, focus planning | `tasks.js` |
+| Triage mode (tiers, columns, drag-drop), `toggleTaskComplete()` | `triage.js` |
 | Crash Out timeline, scheduling, reordering | `crash-out.js` |
 | Pomodoro timer, gamification, XP, streaks, rollovers | `focus-pomodoro.js` |
-| App bootstrap, Quick Add FAB, compact header | `init.js` |
+| App bootstrap, Quick Add FAB, escape handler, compact header | `init.js` |
 
 ### Bootstrap Sequence (init.js)
 ```
@@ -214,13 +214,13 @@ All cross-module function calls are safe because init.js loads LAST after all mo
 **CRITICAL**: `buildSaveData()` must use `?? null`/`?? false` for ALL `currentSession` fields. Firebase `.set()` rejects `undefined` values — any missing field crashes ALL saves (bug fixed Feb 2026, commit `280b3f6`).
 **CRITICAL**: The 10-second failsafe MUST set `hasLoadedFromCloud = true` and call `markInitialLoadComplete()`. Without this, saves are permanently blocked when Firebase connection times out (bug fixed Feb 2026, commit `280b3f6`).
 
-### index.html File Layout (~13,716 lines — CSS + HTML only)
+### index.html File Layout (~13,881 lines — CSS + HTML only)
 | Range | Content |
 |-------|---------|
-| 1-~12,200 | **CSS** (includes Synchro card, urgency board, capacity bars, mobile responsive) |
-| ~12,200-13,600 | **HTML body** (structure, modals, tabs, 5-column urgency board) |
-| ~13,600-13,616 | **Script tags** (12 module `<script src>` tags) |
-| ~13,616-13,716 | **Quick Add FAB HTML** (with urgency picker pills) + closing tags |
+| 1-~12,200 | **CSS** (includes Synchro card, urgency board, capacity bars, z-index tokens, a11y classes, mobile responsive) |
+| ~12,200-13,750 | **HTML body** (structure, modals, tabs, 5-column urgency board, ARIA landmarks) |
+| ~13,750-13,770 | **Script tags** (12 module `<script src>` tags) |
+| ~13,770-13,881 | **Quick Add FAB HTML** (with urgency picker pills) + closing tags |
 
 ### Two Views + View Modes
 - **Full View** (`currentView = 'full'`): Category tabs + task list/board. Toggle between list and board via `currentViewMode`.
@@ -251,8 +251,23 @@ Triage: `triageTier` (lockedIn/today/tomorrow), `triageOrder`, `triageDate`
 Crash Out: `crashOutScheduled`, `crashOutTime`, `crashOutDuration`, `crashOutOrder`
 Other: `rolledOver` ({ fromDate, wasTier }), `xp`, `completedAt`
 
-### 4 Task Creation Sites (MUST update all when adding fields)
-1. `addTask()` in tasks.js | 2. `triageQuickAddTask()` in triage.js | 3. `quickAddFromFocus()` in tasks.js | 4. `submitQuickAdd()` in init.js
+### Task Creation Sites (MUST update all when adding fields)
+1. `addTask()` in tasks.js | 2. `triageQuickAddTask()` in triage.js | 3. `quickAddToColumn(urgency)` in tasks.js | 4. `submitQuickAdd()` in init.js
+
+### Custom Dialog System (replaces native alert/confirm/prompt)
+All native `alert()`, `confirm()`, `prompt()` calls replaced with DOM-based modals in state.js:
+- `showCustomAlert(title, message)` — informational, single OK button
+- `showCustomConfirm(title, message, callback)` — yes/no with callback
+- `showCustomPrompt(title, message, defaultVal, callback)` — text input with callback
+CSS: `.custom-modal-overlay`, `.custom-modal-card`, `.custom-modal-btn-*`
+
+### Escape Key Handler (init.js)
+10-layer priority-ordered handler: custom modal → checkpoint → task details → task edit → planning → time prompt → duration → focus complete → static modals → dashboard expansions
+
+### Color System
+All JS-rendered colors use CSS variables — zero hardcoded neon hex values remain.
+Category colors use `var(--cat-financial)`, `var(--cat-clinic)`, etc.
+Z-index scale: 10 `--z-*` tokens in `:root` (base, sidebar, sticky, header, fab, overlay, modal, toast, loading).
 
 ### XP & Gamification
 Levels = 500 XP each. Awards: lockedIn=50, crashOut=75, rolledOver=40, default=25. Perfect Day=200 bonus.
