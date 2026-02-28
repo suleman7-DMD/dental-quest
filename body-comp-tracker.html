@@ -7416,6 +7416,9 @@
 
                 <div class="divider">OR</div>
 
+                <!-- Import from Claude -->
+                <button type="button" onclick="importFromClaudeViaMealModal()" style="width: 100%; padding: 10px; margin-bottom: 15px; background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; color: var(--accent-blue); cursor: pointer; font-size: 0.85em; font-weight: 500;">📋 Import from Claude Log</button>
+
                 <!-- Custom Entry -->
                 <div class="form-group">
                     <label class="form-label">Food name</label>
@@ -11151,6 +11154,15 @@
             editingMealId = null;
         }
 
+        function importFromClaudeViaMealModal() {
+            // Read date from the Add Meal modal's date picker
+            const dateInput = document.getElementById('mealDateInput');
+            if (dateInput) dateInput.blur(); // Force iOS to commit value
+            const targetDate = dateInput?.value || getLocalDateString();
+            closeAddMealModal();
+            openImportMealModal(targetDate);
+        }
+
         function editMeal(mealId) {
             const meal = state.today.meals[mealId];
             if (!meal) return;
@@ -11191,7 +11203,10 @@
             const saveToFrequent = document.getElementById('saveToFrequent').checked;
 
             // Get date and time from new pickers (Phase 2A)
-            const mealDate = document.getElementById('mealDateInput')?.value || getLocalDateString();
+            // Force-blur date input to ensure iOS Safari commits the picker value
+            const mealDateEl = document.getElementById('mealDateInput');
+            if (mealDateEl) mealDateEl.blur();
+            const mealDate = mealDateEl?.value || getLocalDateString();
             const mealTime = document.getElementById('mealTimeInput')?.value || getCurrentTimeET();
             const today = getLocalDateString();
 
@@ -11273,17 +11288,20 @@
                 showToast(`✓ Also saved to frequent foods`);
             }
 
-            saveState();
-            saveDayLog();  // Update dailyLogs for calendar
+            // Save: use immediate save for historical to bypass Firebase debounce
+            if (isForToday) {
+                saveState();
+                saveDayLog();
+            } else {
+                // Historical: recalculateDayLog already ran, just persist immediately
+                saveStateImmediate();
+            }
             renderMealsList();
             renderDashboard();
-            renderSimpleView();  // FIXED: Also update simple view when meal added
+            renderSimpleView();
             closeAddMealModal();
 
-            // Check if targets are hit (only for today's meals)
             if (isForToday) {
-                // FIX: Update streak when meal is logged for today
-                // This ensures streak is tracked even without workout
                 updateStreak();
                 setTimeout(() => checkDayCompletion(), 500);
             } else {
@@ -12086,19 +12104,20 @@ MEAL|Protein Shake|160|30|5|2"></textarea>
                 saveDayLog();
                 renderMealsList();
                 renderDashboard();
-                renderSimpleView();  // FIXED: Also update simple view
+                renderSimpleView();
+                saveState();
             } else {
                 recalculateDayLog(importTargetDate);
+                saveStateImmediate(); // Bypass debounce for historical
+                renderCalendarHeatmap();
             }
 
-            saveState();
+            const savedDate = importTargetDate;
             closeImportMealModal();
             showToast(`Imported ${imported} meal${imported > 1 ? 's' : ''}`);
 
             // Refresh day detail modal
-            if (document.getElementById('dayDetailModal')) {
-                showDayDetails(importTargetDate);
-            }
+            setTimeout(() => showDayDetails(savedDate), 300);
         }
 
         /**
@@ -12236,20 +12255,21 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 renderWorkoutsList();
                 renderWorkoutHistoryManager();
                 renderDashboard();
-                renderSimpleView();  // FIXED: Also update simple view
+                renderSimpleView();
+                saveState();
             } else {
                 recalculateDayLog(importTargetDate);
+                saveStateImmediate(); // Bypass debounce for historical
                 renderWorkoutHistoryManager();
+                renderCalendarHeatmap();
             }
 
-            saveState();
+            const savedDate = importTargetDate;
             closeImportWorkoutModal();
             showToast(`Imported ${imported} workout${imported > 1 ? 's' : ''}`);
 
             // Refresh day detail modal
-            if (document.getElementById('dayDetailModal')) {
-                showDayDetails(importTargetDate);
-            }
+            setTimeout(() => showDayDetails(savedDate), 300);
         }
 
         // ============================================
@@ -12625,8 +12645,13 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             food.uses = (food.uses || 0) + 1;
 
             pendingMealDate = null;  // Reset pending date
-            saveState();
-            saveDayLog();
+            // Save: use immediate save for historical to bypass Firebase debounce
+            if (isForToday) {
+                saveState();
+                saveDayLog();
+            } else {
+                saveStateImmediate();
+            }
             closeQtySelector();
             closeQuickMealModal();
             renderSimpleView();
