@@ -4173,6 +4173,21 @@
         .calendar-day.deficit-gym { background: rgba(6, 182, 212, 0.4); }
         .calendar-day.gym-only { background: rgba(139, 92, 246, 0.35); }
 
+        .calendar-day.past-empty {
+            border: 1.5px dashed var(--border-color);
+            opacity: 0.7;
+            color: var(--text-muted);
+        }
+        .calendar-day.past-empty:hover {
+            opacity: 1;
+            border-color: var(--accent-blue);
+        }
+
+        .calendar-day.future {
+            opacity: 0.3;
+            cursor: default;
+        }
+
         .calendar-legend {
             display: flex;
             justify-content: center;
@@ -11079,6 +11094,21 @@
             if (dateInput) {
                 dateInput.value = today;
                 dateInput.max = today;
+                // Sync quick date buttons when user changes date picker manually
+                dateInput.onchange = function() {
+                    const quickBtns = document.querySelectorAll('.date-quick-btn');
+                    const selectedDate = dateInput.value;
+                    const todayDate = getLocalDateString();
+                    const yesterdayDate = getLocalDateString(new Date(new Date().getTime() - 86400000));
+                    quickBtns.forEach(btn => btn.classList.remove('active'));
+                    if (selectedDate === todayDate) {
+                        quickBtns[0]?.classList.add('active');
+                    } else if (selectedDate === yesterdayDate) {
+                        quickBtns[1]?.classList.add('active');
+                    } else {
+                        quickBtns[2]?.classList.add('active'); // "Other"
+                    }
+                };
             }
             if (timeInput) {
                 timeInput.value = getCurrentTimeET();
@@ -11256,6 +11286,10 @@
                 // This ensures streak is tracked even without workout
                 updateStreak();
                 setTimeout(() => checkDayCompletion(), 500);
+            } else {
+                // Historical meal: re-render calendar and show the day details
+                renderCalendarHeatmap();
+                setTimeout(() => showDayDetails(mealDate), 300);
             }
         }
 
@@ -12601,6 +12635,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
             if (isForToday) {
                 setTimeout(() => checkDayCompletion(), 500);
+            } else {
+                // Historical meal: re-render calendar and show the day details
+                renderCalendarHeatmap();
+                setTimeout(() => showDayDetails(targetDate), 300);
             }
         }
 
@@ -20910,6 +20948,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const log = state.dailyLogs[dateStr];
                 const isToday = dateStr === todayStr;
+                const isFuture = dateStr > todayStr;
+                const isPastNoData = !log && !isToday && !isFuture;
 
                 let statusClass = '';
                 let displayCalories = 0;
@@ -20967,9 +21007,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     }
                 }
 
-                html += `<div class="calendar-day ${statusClass} ${isToday ? 'today' : ''} ${log ? 'logged' : ''}"
-                              onclick="showDayDetails('${dateStr}')"
-                              title="${log ? displayCalories + ' cal, ' + displayProtein + 'g P' : 'No data'}">${day}</div>`;
+                html += `<div class="calendar-day ${statusClass} ${isToday ? 'today' : ''} ${log ? 'logged' : ''} ${isPastNoData ? 'past-empty' : ''} ${isFuture ? 'future' : ''}"
+                              ${isFuture ? '' : `onclick="showDayDetails('${dateStr}')"`}
+                              title="${log ? displayCalories + ' cal, ' + displayProtein + 'g P' : (isPastNoData ? 'Tap to add data' : 'No data')}">${day}</div>`;
             }
 
             daysContainer.innerHTML = html;
