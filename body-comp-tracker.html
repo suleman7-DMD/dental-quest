@@ -21107,7 +21107,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Create modal to show full day details
             const date = new Date(dateStr + 'T12:00:00');
             const dateDisplay = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-            const todayStr = getLocalDateString();
             const isToday = dateStr === todayStr;
 
             const statusColors = {
