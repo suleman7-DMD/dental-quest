@@ -11,8 +11,8 @@ metadata:
   author: Sully
   version: 3.0.0
   file: body-comp-tracker.html
-  lines: ~21854
-  last-verified: 2026-02-15
+  lines: ~22444
+  last-verified: 2026-03-03
 ---
 
 # Body Comp Tracker Development Patterns
@@ -228,29 +228,29 @@ This app uses the same Firebase patterns as all Sully apps.
 
 **Purpose:** Track calories, protein, workouts, weight, and body composition for a dental student's cut to 170 lbs by June 2026. Integrates with 3 other apps via Firebase for stimulant-aware eating guidance.
 
-**File:** `body-comp-tracker.html` (~21,854 lines, single file, no build system)
+**File:** `body-comp-tracker.html` (~22,444 lines, single file, no build system)
 
-**File Layout:**
+**File Layout (approximate — shifted by +590 lines from Mar 2026 overhaul):**
 | Range | Content |
 |-------|---------|
-| 1-6509 | CSS styles (dark theme, responsive, glass-morphism, collapsible modules) |
-| 6510-7900 | HTML structure, modals (~16 modals), progress tab containers |
-| 7900-8250 | State management (getDefaultState, isEmptyState), data integrity |
-| 8250-8700 | Core algorithms (TDEE, mode, targets), V2 shared infrastructure |
-| 8700-9400 | Simple View rendering, schedule/exam cards |
-| 9400-10200 | Stimulant modeling, nudges, status |
-| 10200-12000 | Meal/workout rendering, import, quick meal, workout modal |
-| 12000-13700 | Weigh-in, export, weekly export, logic log (9 sections) |
-| 13700-15100 | Body comp modal, UI/UX functions, settings |
-| 15100-15900 | **saveState()** (5 guards), saveStateImmediate() (5 guards), load/sync |
-| 15900-16600 | Checkpoint system, Firebase init, PIN auth |
-| 16600-17300 | Ecosystem integration, gamification (XP, levels, streaks, achievements) |
-| 17300-18600 | **V3 progress tab**: 6 new analytics (RoWL, metabolic adaptation, protein efficiency, recomp trajectory, deficit adherence, training volume) |
-| 18600-18700 | Collapsible module system (wrapProgressModules, toggle, localStorage persist) |
-| 18700-19500 | V2 analytics (daily snapshot, workout stats, macro timing, deficit sustainability, recomp predictor) |
-| 19500-20300 | Progress tab dispatcher (23+ sub-renderers), aggregation, weekly score |
-| 20300-20800 | Calendar heatmap (8 statuses), day details modal |
-| 20800-21854 | Initialization, day management, data integrity, DOMContentLoaded |
+| 1-6548 | CSS styles (responsive, collapsible modules, 375px iPhone SE breakpoint) |
+| 6549-7900 | HTML structure (reordered home: actions above collapsible context), modals, progress tab |
+| 7900-8300 | State management (getDefaultState, isEmptyState), data integrity |
+| 8300-8900 | Core algorithms (TDEE, mode, targets, **refreshTodayTargets**), V2 shared infrastructure |
+| 8700-8730 | **Toast queue system** (showToast, processToastQueue) |
+| 8900-9600 | Simple View rendering (remaining context on progress bars), schedule/exam cards |
+| 9600-10400 | Stimulant modeling, nudges, status |
+| 10400-12200 | Meal/workout CRUD (**"Add Another" on meal save**), import, quick meal (**date picker**) |
+| 12200-13900 | Weigh-in, export, weekly export, logic log |
+| 13900-15300 | Body comp modal, UI/UX functions, settings |
+| 15300-16100 | Context details toggle, collapsible wrapper functions |
+| 16097-16200 | **saveState()** (5 guards), saveStateImmediate() (5 guards), load/sync |
+| 16200-16800 | Checkpoint system, Firebase init, PIN auth |
+| 16800-17500 | Ecosystem integration, gamification (XP, levels, streaks, achievements) |
+| 17500-18400 | Progress tab: **renderProgressSummary** (3 cards), **addProgressGroupHeaders** (6 groups) |
+| 18400-19700 | V3+V2 analytics, collapsible modules, aggregation, weekly score |
+| 19700-21400 | Calendar heatmap, day details (**weigh-in section**, **empty day CTAs**) |
+| 21400-22444 | Initialization, day management, data integrity, DOMContentLoaded |
 
 ---
 
@@ -285,7 +285,7 @@ Firebase silently corrupts arrays. Always use `migrateArrayToObject()` when load
 ## THE 5 FIREBASE GUARDS
 
 ```javascript
-// In saveState() at line 14942:
+// In saveState() at line ~16097:
 if (!pinValidated) return false;        // Guard 0: PIN not validated
 if (isInitialLoad) return false;        // Guard A: Still loading
 if (!hasLoadedFromCloud) return false;  // Guard B: Haven't loaded yet
@@ -300,7 +300,7 @@ let hasLoadedFromCloud = false;  // line 7633
 let pinValidated = false;        // line 7634
 ```
 
-**saveStateImmediate() (line 14996) has only 4 guards — missing Guard 0 (PIN check). Known bug.**
+**saveStateImmediate() (line ~16161) now has all 5 guards (PIN bug fixed Feb 2026).**
 
 ---
 
@@ -322,8 +322,10 @@ let pinValidated = false;        // line 7634
 | `get7DayAvgActiveCalories()` | 8177 | Workout-only average from dailyLogs (no activeCalories fallback) |
 | `calculateMode(sleep, brain)` | 8209 | Determines GREEN/YELLOW/ORANGE from sleep |
 | `calculateTargets(mode, tdee, weight, brain)` | 8222 | Calorie/protein/carb targets for mode |
+| `refreshTodayTargets()` | ~8875 | **NEW Mar 2026** — Recalculates TDEE+targets after historical data changes (14 call sites) |
 | `getTodayTotals()` | 8269 | Sum calories/protein/carbs from today's meals |
-| `renderSimpleView()` | 8704 | Main dashboard renderer (auto-corrects stale targets) |
+| `showToast(msg, type)` | ~8713 | **UPDATED** — Queued toast system (success/warning), sequential display |
+| `renderSimpleView()` | ~8900 | Main dashboard renderer (auto-corrects stale targets, shows remaining context) |
 | `getSimpleStatus()` | 9791 | Dashboard status icon/label/color |
 | `getEatingNudge()` | 9845 | Context-aware stimulant eating nudge |
 | `getWorkoutRecommendation()` | 9980 | Sleep-based workout advice + gym streak |
@@ -364,8 +366,12 @@ let pinValidated = false;        // line 7634
 | `renderRecompTrajectory()` | ~18181 | **V3** Barakat et al. 2020, fat vs lean mass trend visualization |
 | `renderDeficitAdherence()` | ~18295 | **V3** Day-of-week heatmap, danger zones, refeed suggestions |
 | `renderTrainingVolume()` | ~18419 | **V3** Schoenfeld et al. 2017, volume trends + deload recs |
-| `renderCalendarHeatmap()` | ~20300 | Calendar (determineDayStatus fallback, 8 statuses) |
-| `awardXP(amount, reason)` | 16753 | XP award with level-up check |
+| `renderProgressSummary()` | ~18844 | **NEW Mar 2026** — 3 summary cards (Weekly Weight, Avg Deficit, Protein Compliance) |
+| `addProgressGroupHeaders()` | ~18912 | **NEW Mar 2026** — 6 section dividers in progress tab |
+| `renderCalendarHeatmap()` | ~20500 | Calendar (determineDayStatus fallback, 8 statuses) |
+| `openWeighInForDate(dateStr)` | ~21366 | **NEW Mar 2026** — Open weigh-in pre-set to date, auto-return to day details |
+| `toggleContextDetails()` | ~15796 | **NEW Mar 2026** — Toggle collapsible context section on home screen |
+| `awardXP(amount, reason)` | ~16753 | XP award with level-up check |
 | `updateStreak()` | 16772 | Daily completion streak |
 | `checkDayCompletion()` | 16808 | Check calorie/protein targets, award XP |
 

@@ -35,7 +35,7 @@ const date = new Date(year, month - 1, day);
 | `js/d3-roadmap/*.js` (10 modules) | ~9,135 | D3 roadmap JS: state, firebase-sync, deadlines, grades, exam-content, clinical, import-system, daily-planner, monthly-planner, init |
 | `stimulant-elimination-calculator.html` | ~3,500 | Sleep prediction app — CSS + HTML only (zero inline JS) |
 | `js/stimcalc/*.js` (11 modules) | ~10,877 | Stim calc JS: state, circadian, pharma-engine, sleep-prediction, firebase-sync, med-caffeine, ui-sections, history-calendar, graph, med-inventory, init |
-| `body-comp-tracker.html` | ~21,854 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
+| `body-comp-tracker.html` | ~22,444 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
@@ -384,36 +384,37 @@ avgNeeded = ((targetGrade - earnedPoints) / remainingWeight) * 100;
 
 ## BODY COMP TRACKER (body-comp-tracker.html)
 
-### File Layout (~21,854 lines)
+### File Layout (~22,444 lines)
 | Range | Content |
 |-------|---------|
-| 1-5,962 | **CSS** |
-| 5,963-7,343 | **HTML** — header, simple view, setup, ~16 modals |
-| 7,344-20,158 | **JavaScript** |
+| 1-6,548 | **CSS** (includes 375px iPhone SE breakpoint) |
+| 6,549-7,400 | **HTML** — header (with settings gear), simple view (reordered: hero → progress → burn → chips → **actions** → collapsible context → meals), setup, ~16 modals |
+| 7,400-22,444 | **JavaScript** |
 
-### Key JS Locations
+### Key JS Locations (approximate — shifted by +590 lines from Mar 2026 overhaul)
 | Range | Content |
 |-------|---------|
-| 7,344-7,460 | `getDefaultState()` factory |
-| 7,662-7,688 | Sync flags, `isEmptyState()`, `hasRealData()` |
-| 7,689-7,875 | Data integrity (`generateId`, `getValues`, `getCount`) |
-| 8,080-8,260 | Core: `calculateTDEE`, `calculateMode`, `calculateTargets`, `getTodayTotals` |
-| 8,260-8,560 | V2: `determineDayStatus`, score calculators, `recalculateAllDayLogs` |
-| 8,560-9,010 | `renderSimpleView` (auto-corrects stale targets if TDEE >100 cal off) |
-| 9,933-10,120 | Status engine (`getSimpleStatus`) + 11-priority nudge (`getEatingNudge`) |
-| 10,260-11,320 | Meal/workout CRUD, historical editing, TDEE recalculation |
-| 11,320-11,610 | Import from Claude (MEAL\|/WORKOUT\| pipe format) |
-| 12,228 | `saveDayLog()` — snapshot today → dailyLogs[date] |
-| 14,942-15,135 | **CRITICAL**: `saveState()` (5 guards) + `saveStateImmediate()` (5 guards) |
-| 15,135-15,560 | `saveToFirebase()` (strips ecosystemContext), `loadFromFirebase()`, realtime sync |
-| 16,110-16,340 | Firebase init, PIN auth |
-| 16,340-16,810 | `loadEcosystemData()` (reads 4 Firebase paths), ecosystem refresh (60s polling) |
-| 16,810-16,975 | Gamification (10 levels, XP, streaks, achievements) |
-| 16,976-17,300 | Progress tab dispatcher (23+ sub-renderers, collapsible accordion) |
-| 17,300-18,600 | **V3 analytics**: 6 new research-backed modules (RoWL, metabolic adaptation, protein efficiency, recomp trajectory, deficit adherence, training volume) |
-| 18,600-19,500 | V2 analytics + aggregation + weekly score |
-| 19,500-20,300 | Calendar heatmap (8 statuses), day details modal |
-| 20,300-21,854 | Initialization, day management, data integrity, DOMContentLoaded |
+| ~7,400-7,520 | `getDefaultState()` factory |
+| ~7,720-7,750 | Sync flags, `isEmptyState()`, `hasRealData()` |
+| ~7,750-7,940 | Data integrity (`generateId`, `getValues`, `getCount`) |
+| ~8,140-8,330 | Core: `calculateTDEE`, `calculateMode`, `calculateTargets`, `refreshTodayTargets` |
+| ~8,330-8,620 | V2: `determineDayStatus`, score calculators, `recalculateAllDayLogs` |
+| ~8,620-9,100 | `renderSimpleView` (auto-corrects stale targets, shows remaining context on progress bars) |
+| ~8,700-8,720 | Toast queue system (`showToast`, `processToastQueue`, `toastQueue[]`) |
+| ~10,000-10,180 | Status engine (`getSimpleStatus`) + 11-priority nudge (`getEatingNudge`) |
+| ~10,320-11,400 | Meal/workout CRUD, historical editing, "Add Another" on meal modal |
+| ~11,400-11,680 | Import from Claude (MEAL\|/WORKOUT\| pipe format) |
+| ~12,300 | `saveDayLog()` — snapshot today → dailyLogs[date] |
+| ~12,400-12,700 | Quick Meal modal (date picker for historical routing) |
+| ~16,097-16,200 | **CRITICAL**: `saveState()` (5 guards) + `saveStateImmediate()` (5 guards) |
+| ~16,200-16,620 | `saveToFirebase()` (strips ecosystemContext), `loadFromFirebase()`, realtime sync |
+| ~17,170-17,400 | Firebase init, PIN auth |
+| ~17,400-17,870 | `loadEcosystemData()` (reads 4 Firebase paths), ecosystem refresh (60s polling) |
+| ~17,870-18,040 | Gamification (10 levels, XP, streaks, achievements) |
+| ~18,040-18,400 | Progress tab: `renderProgressSummary()` (3 cards), `addProgressGroupHeaders()` (6 groups) |
+| ~18,400-19,700 | **V3 analytics**: 6 research-backed modules + V2 analytics + aggregation |
+| ~20,500-21,400 | Calendar heatmap (8 statuses), day details modal (with weigh-in section + empty day CTAs) |
+| ~21,400-22,444 | Initialization, day management, data integrity, DOMContentLoaded |
 
 ### Save Chain
 ```
@@ -457,6 +458,15 @@ Visibility → checkAndResetDayIfNeeded() | Every 5 min → saveDayLog()
 ### Gamification
 10 levels (0-5500 XP). XP: logMeal=10, hitCalorie/Protein=30, perfectDay=50, weeklyWeighIn=25, streakBonus=5/day.
 12 achievements. Daily completion streak (not gym streak). `updateStreak()` after meals + setup.
+
+### Key Features (Mar 2026 Overhaul)
+- **Retroactive data input**: All date max constraints removed. Quick Meal modal has date picker. Calendar day details has weigh-in section + empty day CTAs.
+- **`refreshTodayTargets()`**: Auto-recalculates TDEE/targets after any historical data change (14 call sites). Fixes stale targets after past-date workout/meal/weigh-in edits.
+- **Home screen reorder**: Action buttons immediately after progress bars. Context cards in collapsible section (collapsed by default, persisted).
+- **Progress tab**: 3 summary cards (Weekly Weight, Avg Deficit, Protein Compliance) + 6 group headers + improved empty states.
+- **Data propagation fixes**: 6 bugs fixed — missing `renderCalendarHeatmap()` after meal edits, missing `saveDayLog()` after weigh-in/body comp, `deleteWeighIn()` reverts profile weight, TDEE recalc after weigh-in changes.
+- **Modal UX**: "Add Another" button on meal save, toast queue system, direct qty input, morning boot toast, settings gear icon.
+- **375px breakpoint**: iPhone SE support (2x2 chips, 44px touch targets, ellipsis overflow).
 
 ### Key Historical Fixes
 - **TDEE circular inflation** (Feb 2026): `get7DayAvgActiveCalories()` and `calculateTDEE()` only use workout object data, no `activeCalories` fallback. `renderSimpleView` auto-corrects stale targets.
