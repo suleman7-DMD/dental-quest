@@ -1063,7 +1063,7 @@
         }
 
         .status-icon {
-            font-size: 4em;
+            font-size: 2.5em;
             margin-bottom: 10px;
             display: block;
         }
@@ -1619,7 +1619,7 @@
         /* Action Buttons */
         .simple-actions {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 12px;
             margin-bottom: 15px;
         }
@@ -6521,6 +6521,36 @@
                 padding: 5px 10px;
             }
         }
+
+        /* 375px breakpoint for small phones */
+        @media (max-width: 375px) {
+            .quick-stats-strip {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important;
+            }
+            .simple-actions {
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 6px !important;
+            }
+            .simple-actions .action-btn {
+                min-height: 44px !important;
+                font-size: 0.85em !important;
+                padding: 8px 4px !important;
+            }
+            .simple-meal-items .meal-item-name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 180px;
+            }
+            .status-hero .status-icon {
+                font-size: 2em !important;
+            }
+            .progress-values {
+                font-size: 0.85em !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -6543,6 +6573,7 @@
                     <span id="syncText">Connecting...</span>
                 </div>
                 <button class="header-btn" onclick="forceCloudSync()" title="Sync">🔄</button>
+                <button class="header-btn" onclick="openSettingsModal()" title="Settings" style="font-size: 1.2em;">⚙️</button>
                 <!-- Consolidated Menu Button -->
                 <div class="header-menu-container">
                     <button class="header-menu-btn" onclick="toggleHeaderMenu()" title="Menu">
@@ -6599,7 +6630,7 @@
                 <div class="progress-row">
                     <div class="progress-label-row">
                         <span class="progress-name">Calories</span>
-                        <span class="progress-values"><strong id="calCurrent">0</strong> / <span id="calTarget">1900</span></span>
+                        <span class="progress-values"><strong id="calCurrent">0</strong> / <span id="calTarget">1900</span> <span id="calRemaining" style="font-size: 0.85em; color: var(--text-muted);"></span></span>
                     </div>
                     <div class="simple-progress-bar">
                         <div class="simple-progress-fill calories" id="calProgressFill" style="width: 0%;"></div>
@@ -6608,7 +6639,7 @@
                 <div class="progress-row">
                     <div class="progress-label-row">
                         <span class="progress-name">Protein</span>
-                        <span class="progress-values"><strong id="proCurrent">0</strong>g / <span id="proTarget">172</span>g</span>
+                        <span class="progress-values"><strong id="proCurrent">0</strong>g / <span id="proTarget">172</span>g <span id="proRemaining" style="font-size: 0.85em; color: var(--text-muted);"></span></span>
                     </div>
                     <div class="simple-progress-bar">
                         <div class="simple-progress-fill protein" id="proProgressFill" style="width: 0%;"></div>
@@ -6652,16 +6683,37 @@
                 </div>
             </div>
 
-            <!-- Schedule Card (God Mode 8A.1) -->
-            <div class="context-card schedule-card" id="scheduleCard" style="display: none;">
-                <div class="card-header">
-                    <span>📅 Today's Schedule</span>
-                    <span class="intensity-badge" id="scheduleIntensity">EASY</span>
-                </div>
-                <div class="schedule-summary" id="scheduleSummary">Loading schedule...</div>
-                <div class="blocked-list" id="blockedList"></div>
-                <div class="front-load-warning" id="frontLoadWarning" style="display: none;"></div>
+            <!-- Action Buttons (moved up for quick access) -->
+            <div class="simple-actions">
+                <button class="action-btn primary" onclick="openQuickMealModal()">
+                    <span>+</span> Meal
+                </button>
+                <button class="action-btn secondary" onclick="openWorkoutModal()">
+                    <span>💪</span> Workout
+                </button>
+                <button class="action-btn" onclick="openWeighInModal()" style="background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: white;">
+                    <span>⚖️</span> Weigh In
+                </button>
             </div>
+
+            <!-- Context & Details (Collapsible) -->
+            <div class="context-details-wrapper" id="contextDetailsWrapper">
+                <div class="context-details-toggle" onclick="toggleContextDetails()" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--text-muted); font-size: 0.85em; border-bottom: 1px solid var(--bg-tertiary);">
+                    <span id="contextToggleText">Show Context &amp; Details</span>
+                    <span id="contextToggleArrow">&#9660;</span>
+                </div>
+                <div class="context-details-content" id="contextDetailsContent" style="display: none;">
+
+                    <!-- Schedule Card (God Mode 8A.1) -->
+                    <div class="context-card schedule-card" id="scheduleCard" style="display: none;">
+                        <div class="card-header">
+                            <span>📅 Today's Schedule</span>
+                            <span class="intensity-badge" id="scheduleIntensity">EASY</span>
+                        </div>
+                        <div class="schedule-summary" id="scheduleSummary">Loading schedule...</div>
+                        <div class="blocked-list" id="blockedList"></div>
+                        <div class="front-load-warning" id="frontLoadWarning" style="display: none;"></div>
+                    </div>
 
             <!-- Exam Day Card (God Mode 8A.3) -->
             <div class="context-card exam-day-card" id="examDayCard" style="display: none;">
@@ -6744,17 +6796,7 @@
                 </div>
             </div>
 
-            <!-- Action Buttons (2e: added Weigh In) -->
-            <div class="simple-actions" style="grid-template-columns: 1fr 1fr 1fr;">
-                <button class="action-btn primary" onclick="openQuickMealModal()">
-                    <span>+</span> Meal
-                </button>
-                <button class="action-btn secondary" onclick="openWorkoutModal()">
-                    <span>💪</span> Workout
-                </button>
-                <button class="action-btn" onclick="openWeighInModal()" style="background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: white;">
-                    <span>⚖️</span> Weigh In
-                </button>
+                </div>
             </div>
 
             <!-- Today's Meals Inline (Task 2a) -->
@@ -7070,6 +7112,9 @@
 
             <!-- PROGRESS TAB -->
             <div id="progressTab" class="tab-content">
+                <!-- Progress Summary Cards -->
+                <div id="progressSummary"></div>
+
                 <!-- Body Composition Trend -->
                 <div id="bodyCompTrend"></div>
 
@@ -8696,11 +8741,30 @@
             return blockedWindows.find(b => (b.endMinutes - b.startMinutes) >= 120);
         }
 
-        function showToast(message) {
+        let toastQueue = [];
+        let toastShowing = false;
+
+        function showToast(message, type = 'success') {
+            toastQueue.push({ message, type });
+            if (!toastShowing) processToastQueue();
+        }
+
+        function processToastQueue() {
+            if (toastQueue.length === 0) {
+                toastShowing = false;
+                return;
+            }
+            toastShowing = true;
+            const { message, type } = toastQueue.shift();
             const toast = document.getElementById('toast');
+            if (!toast) { toastShowing = false; return; }
             toast.textContent = message;
+            toast.style.borderLeft = type === 'warning' ? '3px solid var(--accent-yellow)' : '3px solid var(--accent-green)';
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => processToastQueue(), 400);
+            }, 3500);
         }
 
         function updateSyncStatus(status, text) {
@@ -8870,6 +8934,21 @@
                 floor: m.floor,
                 deficit: m.deficit
             };
+        }
+
+        function refreshTodayTargets() {
+            const todayWorkoutCals = getValues(state.today?.workouts || {}).reduce(
+                (sum, w) => sum + (w.calories || 0), 0);
+            state.today.activeCalories = todayWorkoutCals;
+            const tdee = calculateTDEE(
+                state.profile.currentWeight_lbs,
+                state.profile.height_cm,
+                state.profile.age,
+                state.today.activeCalories);
+            state.today.targets = calculateTargets(
+                state.today.mode, tdee,
+                state.profile.currentWeight_lbs,
+                state.today.isBrainDay);
         }
 
         function getModeDisplay(mode) {
@@ -9352,6 +9431,20 @@
             document.getElementById('proTarget').textContent = targets.protein;
             document.getElementById('proProgressFill').style.width = `${proPercent}%`;
 
+            // Update remaining context
+            const calRemainingEl = document.getElementById('calRemaining');
+            const proRemainingEl = document.getElementById('proRemaining');
+            if (calRemainingEl) {
+                const calLeft = targets.calories - totals.calories;
+                calRemainingEl.textContent = calLeft > 0 ? `(${calLeft} left)` : '(over)';
+                calRemainingEl.style.color = calLeft > 0 ? 'var(--text-muted)' : 'var(--accent-red)';
+            }
+            if (proRemainingEl) {
+                const proLeft = targets.protein - totals.protein;
+                proRemainingEl.textContent = proLeft > 0 ? `(${proLeft}g left)` : '(hit!)';
+                proRemainingEl.style.color = proLeft > 0 ? 'var(--text-muted)' : 'var(--accent-green)';
+            }
+
             // Update carbs progress (always show now)
             const carbTarget = targets.carbs || 150;
             const carbPercent = Math.min((totals.carbs / carbTarget) * 100, 100);
@@ -9527,6 +9620,9 @@
             renderSimpleMealList();
             renderQuickStats();
             renderSimpleWorkoutSummary();
+
+            // Restore context details collapsed/expanded state
+            restoreContextDetailsState();
         }
 
         // ============================================
@@ -9541,7 +9637,8 @@
             const itemsEl = document.getElementById('simpleMealItems');
 
             if (countEl) {
-                countEl.textContent = `${mealsArr.length} meal${mealsArr.length !== 1 ? 's' : ''} logged`;
+                const totalCal = mealsArr.reduce((sum, [, m]) => sum + (m.calories || 0), 0);
+                countEl.textContent = `${mealsArr.length} meal${mealsArr.length !== 1 ? 's' : ''} (${formatNumber(totalCal)} cal)`;
             }
 
             if (!itemsEl) return;
@@ -9575,7 +9672,11 @@
 
         function toggleSimpleMealList() {
             const list = document.getElementById('simpleMealList');
-            if (list) list.classList.toggle('collapsed');
+            if (list) {
+                list.classList.toggle('collapsed');
+                const toggle = list.querySelector('.simple-meal-toggle');
+                if (toggle) toggle.textContent = list.classList.contains('collapsed') ? '▼' : '▲';
+            }
         }
 
         // 2b. Render quick stats strip
@@ -11096,7 +11197,6 @@
             const timeInput = document.getElementById('mealTimeInput');
             if (dateInput) {
                 dateInput.value = today;
-                dateInput.max = today;
                 // Sync quick date buttons when user changes date picker manually
                 dateInput.onchange = function() {
                     const quickBtns = document.querySelectorAll('.date-quick-btn');
@@ -11201,6 +11301,7 @@
             const carbs = parseInt(document.getElementById('mealCarbsInput').value) || 0;
             const fat = parseInt(document.getElementById('mealFatInput')?.value) || 0;
             const saveToFrequent = document.getElementById('saveToFrequent').checked;
+            const wasEditing = !!editingMealId;
 
             // Get date and time from new pickers (Phase 2A)
             // Force-blur date input to ensure iOS Safari commits the picker value
@@ -11265,6 +11366,7 @@
                 }
                 state.dailyLogs[mealDate].meals[mealId] = meal;
                 recalculateDayLog(mealDate);
+                refreshTodayTargets();
                 const dateDisplay = new Date(mealDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 showToast(`✓ Added ${name} to ${dateDisplay}`);
             }
@@ -11299,7 +11401,59 @@
             renderMealsList();
             renderDashboard();
             renderSimpleView();
-            closeAddMealModal();
+
+            if (wasEditing) {
+                // Editing: just close the modal
+                closeAddMealModal();
+            } else {
+                // New meal: show "Add Another" option instead of auto-closing
+                const modalBody = document.querySelector('#addMealModal .modal-body');
+                if (modalBody) {
+                    let banner = document.getElementById('mealAddedBanner');
+                    if (!banner) {
+                        banner = document.createElement('div');
+                        banner.id = 'mealAddedBanner';
+                        modalBody.insertBefore(banner, modalBody.firstChild);
+                    }
+                    banner.style.cssText = 'padding: 10px 12px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;';
+                    const escapedName = escapeHtml(name);
+                    banner.textContent = '';
+                    const msgSpan = document.createElement('span');
+                    msgSpan.style.cssText = 'color: var(--accent-green); font-size: 0.9em;';
+                    msgSpan.textContent = escapedName + ' added!';
+                    const btnDiv = document.createElement('div');
+                    btnDiv.style.cssText = 'display: flex; gap: 6px;';
+                    const anotherBtn = document.createElement('button');
+                    anotherBtn.className = 'action-btn secondary';
+                    anotherBtn.style.cssText = 'padding: 4px 10px; font-size: 0.8em;';
+                    anotherBtn.textContent = '+ Another';
+                    anotherBtn.onclick = function() {
+                        document.getElementById('mealAddedBanner').remove();
+                        document.getElementById('mealNameInput').value = '';
+                        document.getElementById('mealCalInput').value = '';
+                        document.getElementById('mealProteinInput').value = '';
+                        document.getElementById('mealCarbsInput').value = '';
+                        document.getElementById('mealNameInput').focus();
+                    };
+                    const doneBtn = document.createElement('button');
+                    doneBtn.className = 'action-btn';
+                    doneBtn.style.cssText = 'padding: 4px 10px; font-size: 0.8em; background: var(--bg-tertiary);';
+                    doneBtn.textContent = 'Done';
+                    doneBtn.onclick = function() { closeAddMealModal(); };
+                    btnDiv.appendChild(anotherBtn);
+                    btnDiv.appendChild(doneBtn);
+                    banner.appendChild(msgSpan);
+                    banner.appendChild(btnDiv);
+                    // Clear form fields for next entry
+                    document.getElementById('mealNameInput').value = '';
+                    document.getElementById('mealCalInput').value = '';
+                    document.getElementById('mealProteinInput').value = '';
+                    document.getElementById('mealCarbsInput').value = '';
+                    const fatInput = document.getElementById('mealFatInput');
+                    if (fatInput) fatInput.value = '';
+                    document.getElementById('saveToFrequent').checked = false;
+                }
+            }
 
             if (isForToday) {
                 updateStreak();
@@ -11420,7 +11574,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
                             <div class="form-group">
                                 <label class="form-label">Date</label>
-                                <input type="date" id="editMealDate" class="form-input" value="${dateStr}" max="${todayStr}">
+                                <input type="date" id="editMealDate" class="form-input" value="${dateStr}">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Time (ET)</label>
@@ -11538,6 +11692,7 @@
                     ensureMealsObject(newDate);
                     state.dailyLogs[newDate].meals[mealId] = updatedMeal;
                     recalculateDayLog(newDate);
+                    refreshTodayTargets();
                 }
 
                 showToast(`Meal moved to ${newDate}`);
@@ -11545,6 +11700,7 @@
                 // Same date - just update in place
                 if (originalDateStr === todayStr) {
                     state.today.meals[mealId] = updatedMeal;
+                    refreshTodayTargets();
                     saveDayLog();
                     renderMealsList();
                     renderDashboard();
@@ -11553,11 +11709,13 @@
                     ensureMealsObject(originalDateStr);
                     state.dailyLogs[originalDateStr].meals[mealId] = updatedMeal;
                     recalculateDayLog(originalDateStr);
+                    refreshTodayTargets();
                 }
                 showToast('Meal updated');
             }
 
             saveState();
+            renderCalendarHeatmap();
             closeEditMealModal();
 
             // Refresh any open day detail modal
@@ -11613,6 +11771,7 @@
                 if (state.today.meals?.[mealId]) {
                     delete state.today.meals[mealId];
                 }
+                refreshTodayTargets();
                 saveDayLog();
                 renderMealsList();
                 renderDashboard();
@@ -11634,9 +11793,11 @@
                     delete state.dailyLogs[dateStr].meals[mealId];
                 }
                 recalculateDayLog(dateStr);
+                refreshTodayTargets();
             }
 
             saveState();
+            renderCalendarHeatmap();
             showToast('Meal deleted');
 
             // Refresh any open day detail modal
@@ -11743,7 +11904,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
                             <div class="form-group">
                                 <label class="form-label">Date</label>
-                                <input type="date" id="editWorkoutDate" class="form-input" value="${dateStr}" max="${todayStr}">
+                                <input type="date" id="editWorkoutDate" class="form-input" value="${dateStr}">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Time (ET)</label>
@@ -11881,6 +12042,7 @@
                     state.dailyLogs[newDate].workouts[workoutId] = updatedWorkout;
                     state.dailyLogs[newDate].workedOut = true;
                     recalculateDayLog(newDate);
+                    refreshTodayTargets();
                 }
 
                 showToast(`Workout moved to ${newDate}`);
@@ -11906,6 +12068,7 @@
                     ensureWorkoutsObject(originalDateStr);
                     state.dailyLogs[originalDateStr].workouts[workoutId] = updatedWorkout;
                     recalculateDayLog(originalDateStr);
+                    refreshTodayTargets();
                 }
                 showToast('Workout updated');
             }
@@ -11969,10 +12132,12 @@
                     delete state.dailyLogs[dateStr].workouts[workoutId];
                 }
                 recalculateDayLog(dateStr);
+                refreshTodayTargets();
                 renderWorkoutHistoryManager();
             }
 
             saveState();
+            renderCalendarHeatmap();
             showToast('Workout deleted');
 
             if (document.getElementById('dayDetailModal')?.classList.contains('active')) {
@@ -12101,6 +12266,7 @@ MEAL|Protein Shake|160|30|5|2"></textarea>
 
             // Recalculate and save
             if (importTargetDate === todayStr) {
+                refreshTodayTargets();
                 saveDayLog();
                 renderMealsList();
                 renderDashboard();
@@ -12108,6 +12274,7 @@ MEAL|Protein Shake|160|30|5|2"></textarea>
                 saveState();
             } else {
                 recalculateDayLog(importTargetDate);
+                refreshTodayTargets();
                 saveStateImmediate(); // Bypass debounce for historical
                 renderCalendarHeatmap();
             }
@@ -12259,6 +12426,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 saveState();
             } else {
                 recalculateDayLog(importTargetDate);
+                refreshTodayTargets();
                 saveStateImmediate(); // Bypass debounce for historical
                 renderWorkoutHistoryManager();
                 renderCalendarHeatmap();
@@ -12336,6 +12504,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         // ============================================
 
         function openQuickMealModal() {
+            pendingMealDate = null;  // Reset date selection on open
             // Create quick meal modal if it doesn't exist
             let modal = document.getElementById('quickMealModal');
             if (!modal) {
@@ -12361,6 +12530,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                         <button class="modal-close" onclick="closeQuickMealModal()">×</button>
                     </div>
                     <div class="modal-body" style="overflow-y: auto; flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                            <label style="font-size: 0.85em; color: var(--text-secondary); white-space: nowrap;">Date:</label>
+                            <input type="date" id="quickMealDateInput" class="form-input" value="${getLocalDateString()}" max="${getLocalDateString()}" style="flex: 1; padding: 6px 8px; font-size: 0.85em;" onchange="pendingMealDate = (this.value === getLocalDateString()) ? null : this.value;">
+                        </div>
                         <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9em;">Tap to select serving size:</p>
 
                         <div class="quick-meal-grid" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
@@ -12425,7 +12598,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             const originalMeal = state.today.meals[mealId];
             if (!originalMeal) return;
 
-            // Create copy with new ID and time
+            const today = getLocalDateString();
+            const targetDate = pendingMealDate || today;
+            const isForToday = targetDate === today;
+
             const newMealId = generateId('meal');
             const meal = {
                 id: newMealId,
@@ -12434,25 +12610,37 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 protein: originalMeal.protein,
                 carbs: originalMeal.carbs || 0,
                 fat: originalMeal.fat || 0,
-                time: formatTimeET(new Date())
+                time: formatTimeET(new Date()),
+                date: targetDate
             };
 
-            if (!state.today.meals || Array.isArray(state.today.meals)) {
-                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+            if (isForToday) {
+                if (!state.today.meals || Array.isArray(state.today.meals)) {
+                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                }
+                state.today.meals[newMealId] = meal;
+                saveState();
+                saveDayLog();
+                showToast(`✓ ${meal.name} repeated`);
+                awardXP(10, 'Logged meal');
+            } else {
+                if (!state.dailyLogs[targetDate]) {
+                    state.dailyLogs[targetDate] = { date: targetDate, meals: {}, workouts: {} };
+                }
+                if (!state.dailyLogs[targetDate].meals || Array.isArray(state.dailyLogs[targetDate].meals)) {
+                    state.dailyLogs[targetDate].meals = migrateArrayToObject(state.dailyLogs[targetDate].meals, 'meal');
+                }
+                state.dailyLogs[targetDate].meals[newMealId] = meal;
+                recalculateDayLog(targetDate);
+                saveStateImmediate();
+                const dateDisplay = new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                showToast(`✓ ${meal.name} added to ${dateDisplay}`);
             }
-            state.today.meals[newMealId] = meal;
 
-            // Note: totals are calculated via getTodayTotals() from meals array
-            // No need to track separate totalCalories/totalProtein fields
-
-            saveState();
-            saveDayLog();  // Update dailyLogs for calendar
+            pendingMealDate = null;
             closeQuickMealModal();
             renderSimpleView();
-            showToast(`✓ ${meal.name} repeated`);
-
-            // Award XP
-            awardXP(10, 'Logged meal');
+            if (!isForToday) renderCalendarHeatmap();
         }
 
         function parseQuickMealPaste() {
@@ -12464,6 +12652,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                 showToast('Paste meal data first', '⚠️');
                 return;
             }
+
+            const today = getLocalDateString();
+            const targetDate = pendingMealDate || today;
+            const isForToday = targetDate === today;
 
             const lines = text.split('\n').filter(line => line.trim());
             let addedCount = 0;
@@ -12481,16 +12673,24 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                             protein: parseInt(parts[3]) || 0,
                             carbs: parseInt(parts[4]) || 0,
                             fat: parseInt(parts[5]) || 0,
-                            time: formatTimeET(new Date())
+                            time: formatTimeET(new Date()),
+                            date: targetDate
                         };
 
-                        if (!state.today.meals || Array.isArray(state.today.meals)) {
-                            state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                        if (isForToday) {
+                            if (!state.today.meals || Array.isArray(state.today.meals)) {
+                                state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                            }
+                            state.today.meals[mealId] = meal;
+                        } else {
+                            if (!state.dailyLogs[targetDate]) {
+                                state.dailyLogs[targetDate] = { date: targetDate, meals: {}, workouts: {} };
+                            }
+                            if (!state.dailyLogs[targetDate].meals || Array.isArray(state.dailyLogs[targetDate].meals)) {
+                                state.dailyLogs[targetDate].meals = migrateArrayToObject(state.dailyLogs[targetDate].meals, 'meal');
+                            }
+                            state.dailyLogs[targetDate].meals[mealId] = meal;
                         }
-                        state.today.meals[mealId] = meal;
-
-                        // Note: totals are calculated via getTodayTotals() from meals array
-                        // No need to track separate totalCalories/totalProtein fields
 
                         addedCount++;
                     }
@@ -12498,12 +12698,24 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             }
 
             if (addedCount > 0) {
-                saveState();
-                saveDayLog();  // Update dailyLogs for calendar
+                if (isForToday) {
+                    saveState();
+                    saveDayLog();
+                } else {
+                    recalculateDayLog(targetDate);
+                    saveStateImmediate();
+                }
+                pendingMealDate = null;
                 closeQuickMealModal();
                 renderSimpleView();
-                showToast(`✓ Added ${addedCount} meal${addedCount > 1 ? 's' : ''}`);
-                awardXP(10 * addedCount, 'Logged meals');
+                if (isForToday) {
+                    showToast(`✓ Added ${addedCount} meal${addedCount > 1 ? 's' : ''}`);
+                    awardXP(10 * addedCount, 'Logged meals');
+                } else {
+                    const dateDisplay = new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    showToast(`✓ Added ${addedCount} meal${addedCount > 1 ? 's' : ''} to ${dateDisplay}`);
+                    renderCalendarHeatmap();
+                }
             } else {
                 showToast('No valid MEAL| lines found', '⚠️');
             }
@@ -12562,10 +12774,11 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                             <div class="qty-controls">
                                 <button class="qty-btn" onclick="adjustQty(-0.5)" ${currentQty <= 0.5 ? 'disabled style="opacity: 0.4;"' : ''}>−</button>
                                 <div>
-                                    <div class="qty-display">${currentQty}</div>
+                                    <div class="qty-display" id="qtyDisplay">${currentQty}</div>
                                     <div class="qty-display-label">serving${currentQty !== 1 ? 's' : ''}</div>
                                 </div>
                                 <button class="qty-btn" onclick="adjustQty(0.5)">+</button>
+                                <input type="number" id="qtyDirectInput" min="0.25" step="0.25" value="${currentQty}" style="width: 60px; text-align: center; padding: 6px; border: 1px solid var(--bg-tertiary); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1em; margin-left: 8px;" onchange="updateQtyFromInput(this.value)">
                             </div>
 
                             <div class="qty-preview">
@@ -12595,6 +12808,14 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         function adjustQty(delta) {
             currentQty = Math.max(0.5, currentQty + delta);
             renderQtySelectorContent();
+        }
+
+        function updateQtyFromInput(val) {
+            const num = parseFloat(val);
+            if (!isNaN(num) && num > 0) {
+                currentQty = num;
+                renderQtySelectorContent();
+            }
         }
 
         function confirmQtyAdd() {
@@ -12861,7 +13082,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                     <div class="modal-body">
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label class="form-label">Date</label>
-                            <input type="date" id="workoutDateInput" class="form-input" value="${today}" max="${today}">
+                            <input type="date" id="workoutDateInput" class="form-input" value="${today}">
                         </div>
 
                         <p style="margin-bottom: 15px; color: var(--text-secondary);">Quick add:</p>
@@ -12995,6 +13216,8 @@ WORKOUT|Walk|20|80|07:00"></textarea>
                     state.dailyLogs[workoutDate].activeCalories = (state.dailyLogs[workoutDate].activeCalories || 0) + workout.calories;
                 }
                 recalculateDayLog(workoutDate);
+                refreshTodayTargets();
+                renderCalendarHeatmap();
                 const dateDisplay = new Date(workoutDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 showToast(`${type} added to ${dateDisplay}! +${workout.calories} cal`);
             }
@@ -13573,7 +13796,9 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             // Check weight loss achievements
             checkAchievements();
 
+            refreshTodayTargets();
             saveState();
+            saveDayLog();
             closeWeighInModal();
             renderDashboard();
             renderSimpleView();  // FIXED: Also update simple view (weight affects TDEE)
@@ -13582,6 +13807,14 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             const dateDisplay = weighInDate === getLocalDateString() ? '' :
                 ` on ${new Date(weighInDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
             showToast(`✓ Weight logged: ${weight} lbs${dateDisplay}` + (bodyFat ? ` @ ${bodyFat}% BF` : ''));
+
+            // Auto-return to day details if opened from calendar
+            if (weighInReturnDate) {
+                const returnDate = weighInReturnDate;
+                weighInReturnDate = null;
+                renderCalendarHeatmap();
+                setTimeout(() => showDayDetails(returnDate), 300);
+            }
         }
 
         // ============================================
@@ -14813,9 +15046,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state.profile.currentWeight_lbs = weight;
             state.profile.currentBodyFat = bodyFat;
 
+            refreshTodayTargets();
             saveState();
+            saveDayLog();
             closeBodyCompModal();
             renderSimpleView();
+            renderCalendarHeatmap();
             showToast(`✓ Body comp logged: ${bodyFat}% BF`);
             awardXP(50, 'Monthly body comp check-in');
         }
@@ -14870,9 +15106,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             state.profile.currentWeight_lbs = weight;
             state.profile.currentBodyFat = bodyFat;
 
+            refreshTodayTargets();
             saveState();
+            saveDayLog();
             closeBodyCompModal();
             renderSimpleView();
+            renderCalendarHeatmap();
             showToast(`✓ Body comp logged: ${bodyFat}% BF`);
             awardXP(50, 'Monthly body comp check-in');
         }
@@ -15209,7 +15448,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         function openWeighInModal() {
             const today = getLocalDateString();
             document.getElementById('weighInDateInput').value = today;
-            document.getElementById('weighInDateInput').max = today;
             document.getElementById('weightInput').value = '';
             document.getElementById('bodyFatInput').value = '';
             renderWeightTrend();
@@ -15258,7 +15496,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             editingWeighInId = id;
             document.getElementById('editWeighInDate').value = wi.date;
-            document.getElementById('editWeighInDate').max = getLocalDateString();
             document.getElementById('editWeighInWeight').value = wi.weight;
             document.getElementById('editWeighInBf').value = wi.bodyFat || '';
 
@@ -15305,6 +15542,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             }
 
             saveState();
+
+            // Recalculate targets since weight changed
+            if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
+
             closeEditWeighInModal();
             renderWeighInHistory();
             renderWeightTrend();
@@ -15316,7 +15557,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (!confirm('Delete this weigh-in?')) return;
 
             delete state.weighIns[id];
+
+            // Revert profile weight to most recent remaining weigh-in
+            const remaining = getValues(state.weighIns);
+            if (remaining.length > 0) {
+                const mostRecent = remaining.sort((a, b) => b.date.localeCompare(a.date))[0];
+                state.profile.currentWeight_lbs = mostRecent.weight;
+            }
+
             saveState();
+
+            // Recalculate targets since weight changed
+            if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
+
             renderWeighInHistory();
             renderWeightTrend();
             renderProgressTab();
@@ -15328,7 +15581,19 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (!confirm('Delete this weigh-in?')) return;
 
             delete state.weighIns[editingWeighInId];
+
+            // Revert profile weight to most recent remaining weigh-in
+            const remaining = getValues(state.weighIns);
+            if (remaining.length > 0) {
+                const mostRecent = remaining.sort((a, b) => b.date.localeCompare(a.date))[0];
+                state.profile.currentWeight_lbs = mostRecent.weight;
+            }
+
             saveState();
+
+            // Recalculate targets since weight changed
+            if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
+
             closeEditWeighInModal();
             renderWeighInHistory();
             renderWeightTrend();
@@ -15407,7 +15672,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             editingBodyCompId = id;
             document.getElementById('editBcDate').value = bc.date;
-            document.getElementById('editBcDate').max = getLocalDateString();
             document.getElementById('editBcWeight').value = bc.weight;
             document.getElementById('editBcBodyFat').value = bc.bodyFat;
 
@@ -15663,6 +15927,31 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     if (card) card.classList.add('collapsed');
                 }
             });
+        }
+
+        // --- Context Details Section Toggle ---
+        function toggleContextDetails() {
+            const content = document.getElementById('contextDetailsContent');
+            const text = document.getElementById('contextToggleText');
+            const arrow = document.getElementById('contextToggleArrow');
+            if (!content) return;
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            if (text) text.textContent = isHidden ? 'Hide Context & Details' : 'Show Context & Details';
+            if (arrow) arrow.textContent = isHidden ? '\u25B2' : '\u25BC';
+            try { safeLocalStorageSet('bodyCompContextExpanded', isHidden ? 'true' : 'false'); } catch(e) {}
+        }
+
+        function restoreContextDetailsState() {
+            const contextExpanded = localStorage.getItem('bodyCompContextExpanded');
+            const contextContent = document.getElementById('contextDetailsContent');
+            const contextText = document.getElementById('contextToggleText');
+            const contextArrow = document.getElementById('contextToggleArrow');
+            if (contextContent) {
+                contextContent.style.display = contextExpanded === 'true' ? 'block' : 'none';
+                if (contextText) contextText.textContent = contextExpanded === 'true' ? 'Hide Context & Details' : 'Show Context & Details';
+                if (contextArrow) contextArrow.textContent = contextExpanded === 'true' ? '\u25B2' : '\u25BC';
+            }
         }
 
         // ============================================
@@ -17888,8 +18177,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
             if (weighIns.length < 3) {
+                const needed = 3 - weighIns.length;
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 3+ weigh-ins to analyze weight loss rate. Keep weighing in weekly.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">${needed} more weigh-in${needed === 1 ? '' : 's'} needed to unlock weight loss rate analysis. Weigh in weekly for best results.</div>
                 </div>`;
                 return;
             }
@@ -18030,7 +18320,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             if (weighIns.length < 3 || allLogs.length < 14) {
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 3+ weigh-ins and 14+ days of tracking to detect metabolic adaptation.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">Log more data to unlock metabolic adaptation tracking. Requires 3+ weigh-ins and 14+ days of food logging.</div>
                 </div>`;
                 return;
             }
@@ -18160,7 +18450,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             if (agg.daysWithData < 5) {
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 5+ days of tracking for protein efficiency analysis.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">Keep logging meals to unlock protein efficiency analysis. Needs 5+ days of tracking data.</div>
                 </div>`;
                 return;
             }
@@ -18309,7 +18599,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 container.innerHTML = `
                     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
                         <div style="font-size:0.82em;color:var(--text-muted);margin-bottom:8px;">
-                            Need 2+ weigh-ins with body fat measurements to track recomposition trajectory.
+                            Add body fat % to your weigh-ins to unlock recomposition tracking. Needs 2+ weigh-ins with body fat data.
                         </div>
                         <div style="font-size:0.78em;color:var(--text-secondary);">
                             Use the body comp modal (Navy method or scale) to log body fat alongside your weight.
@@ -18418,7 +18708,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
             if (allLogs.length < 7) {
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 7+ days of tracking to identify adherence patterns.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">Keep logging daily to unlock adherence pattern analysis. Needs 7+ days of tracking data.</div>
                 </div>`;
                 return;
             }
@@ -18542,7 +18832,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
             if (allLogs.length < 14) {
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 14+ days of tracking to analyze training volume trends.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">Keep logging workouts to unlock volume trend analysis. Needs 14+ days of tracking data.</div>
                 </div>`;
                 return;
             }
@@ -18581,7 +18871,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             if (weeklyVolume.length < 2) {
                 container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Need 2+ weeks of workout data to show volume trends.</div>
+                    <div style="font-size:0.82em;color:var(--text-muted);">Log workouts for 2+ weeks to see volume trend charts.</div>
                 </div>`;
                 return;
             }
@@ -18679,10 +18969,112 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         }
 
         // ============================================
+        // PROGRESS SUMMARY CARDS
+        // ============================================
+
+        function renderProgressSummary() {
+            const container = document.getElementById('progressSummary');
+            if (!container) return;
+
+            // Get last 7 days of data
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 86400000);
+            const weekAgoStr = getLocalDateString(weekAgo);
+            const nowStr = getLocalDateString(now);
+            const agg = aggregateDailyLogs(weekAgoStr, nowStr);
+
+            // Calculate weekly weight change
+            const weighIns = getValues(state.weighIns || {}).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            let weeklyWeightChange = '--';
+            let weightColor = 'var(--text-primary)';
+            if (weighIns.length >= 2) {
+                const recent = weighIns[weighIns.length - 1];
+                let prevWeighIn = weighIns[0];
+                for (const wi of weighIns) {
+                    if (wi.date <= weekAgoStr) prevWeighIn = wi;
+                }
+                if (prevWeighIn !== recent) {
+                    const change = recent.weight - prevWeighIn.weight;
+                    weeklyWeightChange = (change > 0 ? '+' : '') + change.toFixed(1) + ' lbs';
+                    weightColor = change <= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                }
+            }
+
+            // Average daily deficit from aggregated data
+            let avgDeficit = '--';
+            let deficitColor = 'var(--text-primary)';
+            if (agg.daysWithData > 0) {
+                const avg = agg.avgDeficit;
+                avgDeficit = (avg > 0 ? '+' : '') + avg + ' cal';
+                deficitColor = avg > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
+
+            // Protein compliance from aggregated data
+            let proteinCompliance = '--';
+            let proteinColor = 'var(--text-primary)';
+            if (agg.daysWithData > 0) {
+                const pct = Math.round((agg.proteinHitDays / agg.daysWithData) * 100);
+                proteinCompliance = pct + '%';
+                proteinColor = pct >= 70 ? 'var(--accent-green)' : pct >= 40 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+            }
+
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                        <div style="font-size: 1.2em; font-weight: 700; color: ${weightColor};">${weeklyWeightChange}</div>
+                        <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Weekly Weight</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                        <div style="font-size: 1.2em; font-weight: 700; color: ${deficitColor};">${avgDeficit}</div>
+                        <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Avg Daily Deficit</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                        <div style="font-size: 1.2em; font-weight: 700; color: ${proteinColor};">${proteinCompliance}</div>
+                        <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Protein Compliance</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // PROGRESS GROUP HEADERS
+        // ============================================
+
+        function addProgressGroupHeaders() {
+            const tab = document.getElementById('progressTab');
+            if (!tab) return;
+
+            const groups = [
+                { before: 'pm_dailySnapshot', label: 'Today & This Week' },
+                { before: 'pm_bodyCompTrend', label: 'Body Composition' },
+                { before: 'pm_deficitSustainability', label: 'Deficit & Nutrition' },
+                { before: 'pm_trainingVolume', label: 'Training' },
+                { before: 'pm_sleepPerformanceInsight', label: 'Recovery & Lifestyle' },
+                { before: 'pm_lifetimeStats', label: 'Lifetime' }
+            ];
+
+            // Remove existing group headers
+            tab.querySelectorAll('.progress-group-header').forEach(el => el.remove());
+
+            groups.forEach(g => {
+                const target = document.getElementById(g.before);
+                if (target) {
+                    const header = document.createElement('div');
+                    header.className = 'progress-group-header';
+                    header.style.cssText = 'font-size: 0.8em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 12px 0 4px 0; border-top: 1px solid var(--bg-tertiary); margin-top: 8px;';
+                    header.textContent = g.label;
+                    target.parentNode.insertBefore(header, target);
+                }
+            });
+        }
+
+        // ============================================
         // PROGRESS TAB RENDERING
         // ============================================
 
         function renderProgressTab() {
+            // Summary cards at the top
+            renderProgressSummary();
             // Render all sub-modules
             renderDailySnapshot();
             renderWeeklyReportCard();
@@ -18711,6 +19103,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             renderAchievementProgress();
             // Wrap all modules in collapsible containers
             wrapProgressModules();
+            // Add group headers after wrapping
+            addProgressGroupHeaders();
         }
 
         // ============================================
@@ -20243,7 +20637,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 if (daysAnalyzed > 0) {
                     container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;">
                         <div style="font-size:1em;font-weight:600;margin-bottom:6px;">\u{1F551} Macro Timing Analysis</div>
-                        <div style="font-size:0.82em;color:var(--text-muted);">Need 10+ meals with timestamps for timing analysis. ${totalMealsWithTime > 0 ? totalMealsWithTime + ' timed meals so far.' : 'Meal times are recorded automatically when you log.'}</div>
+                        <div style="font-size:0.82em;color:var(--text-muted);">${10 - totalMealsWithTime} more timed meal${10 - totalMealsWithTime === 1 ? '' : 's'} needed to unlock timing analysis. ${totalMealsWithTime > 0 ? totalMealsWithTime + '/10 so far.' : 'Meal times are recorded automatically when you log.'}</div>
                     </div>`;
                 } else {
                     container.innerHTML = '';
@@ -21241,6 +21635,45 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 </div>
             `;
 
+            // Build weigh-in section
+            const weighInsForDate = getValues(state.weighIns).filter(wi => wi.date === dateStr);
+            let weighInHtml = `
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong>⚖️ Weigh-In</strong>
+                        <button onclick="openWeighInForDate('${dateStr}')" style="padding: 4px 10px; border: none; background: var(--accent-blue); color: white; border-radius: 6px; cursor: pointer; font-size: 0.75em;">+ Add Weigh-In</button>
+                    </div>
+                    ${weighInsForDate.length > 0 ? `
+                        <div style="font-size: 0.85em;">
+                            ${weighInsForDate.map(wi => `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <div>
+                                    <div style="font-weight: 500;">${wi.weight} lbs</div>
+                                    ${wi.bodyFat ? `<div style="font-size: 0.85em; color: var(--text-muted);">${wi.bodyFat}% body fat</div>` : ''}
+                                </div>
+                            </div>`).join('')}
+                        </div>
+                    ` : '<div style="text-align: center; color: var(--text-muted); font-size: 0.85em; padding: 10px;">No weigh-in recorded</div>'}
+                </div>
+            `;
+
+            // Build empty-day CTAs for no_data days
+            const isEmptyDay = mealsArr.length === 0 && workoutsArr.length === 0 && weighInsForDate.length === 0;
+            let emptyDayCtaHtml = '';
+            if (isEmptyDay) {
+                emptyDayCtaHtml = `
+                    <div style="text-align: center; padding: 20px 15px; margin-top: 15px; background: var(--bg-tertiary); border-radius: 12px; border: 1px dashed var(--border-default, rgba(0,0,0,0.1));">
+                        <div style="font-size: 1.1em; font-weight: 600; margin-bottom: 4px;">No data for this day</div>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 12px;">Add meals, workouts, or weigh-ins to fill in this day</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+                            <button onclick="openAddMealForDate('${dateStr}')" style="padding: 8px 14px; border: none; background: var(--accent-green); color: white; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 500;">+ Add Meal</button>
+                            <button onclick="openImportMealModal('${dateStr}')" style="padding: 8px 14px; border: none; background: var(--accent-blue); color: white; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 500;">Import from Claude</button>
+                            <button onclick="openWorkoutForDate('${dateStr}')" style="padding: 8px 14px; border: none; background: var(--accent-green); color: white; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 500;">+ Add Workout</button>
+                            <button onclick="openWeighInForDate('${dateStr}')" style="padding: 8px 14px; border: none; background: var(--accent-blue); color: white; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 500;">+ Weigh-In</button>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Show TDEE info
             const displayTdee = tdee || log.tdee || getTDEEForDate(dateStr);
 
@@ -21301,7 +21734,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                         ${mealsHtml}
                         ${workoutsHtml}
-
+                        ${weighInHtml}
+                        ${emptyDayCtaHtml}
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button onclick="recalculateDayLog('${dateStr}'); showDayDetails('${dateStr}');" class="submit-btn" style="flex: 1; background: var(--accent-blue); color: white; font-size: 0.85em;">
                                 🔄 Recalculate
@@ -21343,6 +21777,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Override the date picker to the historical date
             const dateInput = document.getElementById('workoutDateInput');
             if (dateInput) dateInput.value = dateStr;
+        }
+
+        let weighInReturnDate = null;
+
+        function openWeighInForDate(dateStr) {
+            weighInReturnDate = dateStr;
+            closeDayDetailModal();
+            openWeighInModal();
+            setTimeout(() => {
+                const dateInput = document.getElementById('weighInDateInput');
+                if (dateInput) dateInput.value = dateStr;
+            }, 100);
         }
 
         function copyDayLog(dateStr) {
@@ -21589,6 +22035,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Save state
             saveState();
 
+            // Show morning greeting toast
+            const modeDisplay = getModeDisplay(state.today.mode);
+            showToast(`Good morning! ${modeDisplay.emoji} ${state.today.mode} mode — ${state.today.targets?.calories ?? 1900} cal target`);
         }
 
         // Show manual setup screen (optional override)
