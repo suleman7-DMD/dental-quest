@@ -14,6 +14,11 @@ function openQuickAddPanel() {
     document.getElementById('quickAddBackdrop').classList.add('visible');
     document.getElementById('quickAddPanel').classList.add('open');
     document.getElementById('quickAddFAB').classList.add('panel-open');
+    // Pre-select category from current tab (if viewing a specific category)
+    var realCategories = ['financial', 'clinic', 'health', 'school', 'academic', 'future', 'life'];
+    if (currentCategory && realCategories.indexOf(currentCategory) !== -1) {
+        selectQACategory(currentCategory);
+    }
     // Reset urgency picker to inbox on open
     quickAddUrgency = 'inbox';
     var urgPills = document.querySelectorAll('.qa-urgency-pill');
