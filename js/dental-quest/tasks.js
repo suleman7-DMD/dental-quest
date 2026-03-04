@@ -278,22 +278,25 @@ function toggleTask(id) {
     task.completed = !task.completed;
 
     if (task.completed) {
-        // Task completed: add XP, set timestamp, remove from "Do Today" if marked
-        const xpValue = task.xp || 20;
+        // Task completed: award tier-based XP, set timestamp
+        const xpValue = task.triageTier === 'lockedIn' ? 50 :
+                        task.crashOutScheduled ? 75 :
+                        task.rolledOver ? 40 : 25;
 
-        // Store XP value on task if not already set
-        if (!task.xp) {
-            task.xp = xpValue;
-        }
-
-        stats.totalXPGained += xpValue;
-        stats.categoryXPGained[task.category] = (stats.categoryXPGained[task.category] || 0) + xpValue;
+        if (!task.xp) task.xp = xpValue;
         stats.totalTasks++;
-
-        // Set completion timestamp
         task.completedAt = Date.now();
 
-        // When completed, preserve doToday so completed tasks stay in triage progress count
+        // Update both XP counters to keep them in sync
+        if (typeof awardCommandCenterXP === 'function') {
+            awardCommandCenterXP(xpValue, 'task');
+        } else {
+            stats.totalXPGained += xpValue;
+        }
+        stats.categoryXPGained[task.category] = (stats.categoryXPGained[task.category] || 0) + xpValue;
+
+        // Update streak from any view
+        if (typeof updateStreaks === 'function') updateStreaks();
 
         updateStats();
 
@@ -304,12 +307,15 @@ function toggleTask(id) {
         }
     } else {
         // Task uncompleted: remove XP and timestamp
-        const xpValue = task.xp || 20;
+        const xpValue = task.xp || 25;
         stats.totalXPGained = Math.max(0, stats.totalXPGained - xpValue);
         stats.categoryXPGained[task.category] = Math.max(0, (stats.categoryXPGained[task.category] || 0) - xpValue);
         stats.totalTasks = Math.max(0, stats.totalTasks - 1);
+        // Also subtract from command center XP
+        if (commandCenterData?.focusStats) {
+            commandCenterData.focusStats.totalXP = Math.max(0, (commandCenterData.focusStats.totalXP || 0) - xpValue);
+        }
 
-        // Clear completion timestamp but KEEP task.xp
         task.completedAt = null;
         updateStats();
     }
@@ -1234,9 +1240,11 @@ function updateSidebarStats() {
                 doTodayCount++;
                 if (t.triageTier === 'lockedIn') lockedInCount++;
             }
-        } else if (t.completedAt) {
-            var catStr = typeof t.completedAt === 'string' ? t.completedAt : new Date(t.completedAt).toISOString();
-            if (catStr.slice(0, 10) === todayStr) completedToday++;
+        } else {
+            if (t.completedAt) {
+                var completedDate = typeof t.completedAt === 'number' ? new Date(t.completedAt) : new Date(t.completedAt);
+                if (getLocalDateString(completedDate) === todayStr) completedToday++;
+            }
         }
     }
 
@@ -1250,7 +1258,7 @@ function updateSidebarStats() {
     // Sidebar footer stats
     var totalXP = commandCenterData?.focusStats?.totalXP || stats.totalXPGained || 0;
     var currentLevel = Math.floor(totalXP / 500) + 1;
-    var streak = commandCenterData?.focusStats?.streak || 0;
+    var streak = commandCenterData?.focusStats?.dailyStreak || 0;
 
     el = document.getElementById('sidebarStreak');
     if (el) el.textContent = streak;
@@ -1267,7 +1275,7 @@ function updateSidebarStats() {
     el = document.getElementById('metricCompleted');
     if (el) el.textContent = completedToday;
     el = document.getElementById('metricXPToday');
-    if (el) el.textContent = '+' + (completedToday * 20);
+    if (el) el.textContent = '+' + totalXP;
     el = document.getElementById('metricLevel');
     if (el) el.textContent = currentLevel;
     el = document.getElementById('metricStreak');
@@ -2125,6 +2133,25 @@ function initFocusMode() {
     } else {
         if (focusContainer) focusContainer.style.display = 'none';
         if (fullContainer) fullContainer.style.display = 'block';
+
+        // Update breadcrumb to match All Tasks view
+        var bc = document.getElementById('topBarBreadcrumb');
+        if (bc) bc.textContent = '\u203A All Tasks';
+
+        // Show view controls for full view
+        if (viewControls) viewControls.style.display = 'flex';
+
+        // Show kanban if that's the persisted view mode
+        if (kanbanBoard && currentViewMode === 'kanban') {
+            kanbanBoard.style.display = 'grid';
+            if (fullContainer) fullContainer.style.display = 'none';
+        }
+
+        // Update sidebar active state
+        var sf = document.getElementById('sidebarFocusBtn');
+        var su = document.getElementById('sidebarFullBtn');
+        if (sf) sf.classList.remove('active');
+        if (su) su.classList.add('active');
     }
 }
 
