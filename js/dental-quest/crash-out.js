@@ -1083,21 +1083,21 @@ function openDurationModal(taskId) {
                 Current: <strong id="currentDuration">${task.crashOutDuration || 30}m</strong>
             </div>
             <div class="duration-adjust-row">
-                <button onclick="adjustDuration(${taskId}, -30)">-30m</button>
-                <button onclick="adjustDuration(${taskId}, -15)">-15m</button>
-                <button onclick="adjustDuration(${taskId}, -5)">-5m</button>
-                <button onclick="adjustDuration(${taskId}, 5)">+5m</button>
-                <button onclick="adjustDuration(${taskId}, 15)">+15m</button>
-                <button onclick="adjustDuration(${taskId}, 30)">+30m</button>
+                <button onclick="adjustDuration('${taskId}', -30)">-30m</button>
+                <button onclick="adjustDuration('${taskId}', -15)">-15m</button>
+                <button onclick="adjustDuration('${taskId}', -5)">-5m</button>
+                <button onclick="adjustDuration('${taskId}', 5)">+5m</button>
+                <button onclick="adjustDuration('${taskId}', 15)">+15m</button>
+                <button onclick="adjustDuration('${taskId}', 30)">+30m</button>
             </div>
             <div style="font-size: 13px; color: var(--fg-muted); text-align: center; margin-bottom: 12px;">Quick set:</div>
             <div class="duration-quick-row">
-                <button onclick="setDuration(${taskId}, 15)">15m</button>
-                <button onclick="setDuration(${taskId}, 30)">30m</button>
-                <button onclick="setDuration(${taskId}, 45)">45m</button>
-                <button onclick="setDuration(${taskId}, 60)">60m</button>
-                <button onclick="setDuration(${taskId}, 90)">90m</button>
-                <button onclick="setDuration(${taskId}, 120)">2h</button>
+                <button onclick="setDuration('${taskId}', 15)">15m</button>
+                <button onclick="setDuration('${taskId}', 30)">30m</button>
+                <button onclick="setDuration('${taskId}', 45)">45m</button>
+                <button onclick="setDuration('${taskId}', 60)">60m</button>
+                <button onclick="setDuration('${taskId}', 90)">90m</button>
+                <button onclick="setDuration('${taskId}', 120)">2h</button>
             </div>
             <div class="duration-modal-actions">
                 <button class="btn-cancel" onclick="closeDurationModal()">Cancel</button>
@@ -1118,7 +1118,7 @@ function adjustDuration(taskId, delta) {
     var el = document.getElementById('currentDuration');
     if (el) el.textContent = `${newDuration}m`;
 
-    recalculateCrashOutTimes();
+    recalculateScheduledTimes();
     saveData();
 }
 
@@ -1131,7 +1131,7 @@ function setDuration(taskId, duration) {
     var el = document.getElementById('currentDuration');
     if (el) el.textContent = `${duration}m`;
 
-    recalculateCrashOutTimes();
+    recalculateScheduledTimes();
     saveData();
 }
 
@@ -1139,17 +1139,6 @@ function closeDurationModal() {
     var modal = document.getElementById('durationModal');
     if (modal) modal.remove();
     renderCrashOutMode();
-}
-
-function recalculateCrashOutTimes() {
-    var scheduledTasks = getTasksByTier('scheduled').filter(t => !t.completed);
-    var currentTime = new Date();
-
-    scheduledTasks.forEach(task => {
-        var timeStr = currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-        tasks[task.id] = { ...tasks[task.id], crashOutTime: timeStr };
-        currentTime = new Date(currentTime.getTime() + (task.crashOutDuration || 30) * 60 * 1000);
-    });
 }
 
 function dismissOverscheduledWarning() {
@@ -1176,6 +1165,7 @@ function resetCrashOutDay() {
                     };
                     delete tasks[task.id].crashOutTime;
                     delete tasks[task.id].crashOutDuration;
+                    delete tasks[task.id].crashOutOrder;
                 }
             });
 

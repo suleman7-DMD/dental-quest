@@ -346,7 +346,7 @@ function selectTaskFromDropdown() {
 
     if (!dropdown || !taskInput) return;
 
-    const taskId = parseInt(dropdown.value);
+    const taskId = dropdown.value;
     if (!taskId) return;
 
     const task = tasks[taskId];

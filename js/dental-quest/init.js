@@ -66,6 +66,7 @@ function submitQuickAdd() {
     if (!text) return;
 
     var id = generateId('task');
+    var isTriaged = (quickAddUrgency === 'eod' || quickAddUrgency === 'soon' || quickAddUrgency === 'week');
     var task = {
         id: id,
         text: text,
@@ -77,7 +78,9 @@ function submitQuickAdd() {
         highLeverage: qaHighLeverage,
         sortOrder: getCount(tasks),
         urgency: quickAddUrgency || 'inbox',
-        triageTier: quickAddUrgency === 'eod' ? 'lockedIn' : quickAddUrgency === 'soon' ? 'today' : quickAddUrgency === 'week' ? 'tomorrow' : null
+        triageTier: quickAddUrgency === 'eod' ? 'lockedIn' : quickAddUrgency === 'soon' ? 'today' : quickAddUrgency === 'week' ? 'tomorrow' : null,
+        triageOrder: isTriaged ? 0 : null,
+        triageDate: isTriaged ? getLocalDateString(new Date()) : null
     };
 
     tasks[id] = task;

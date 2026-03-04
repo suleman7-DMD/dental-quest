@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dental Student Quest</title>
+    <title>SULEMAN SHAIKH, DMD</title>
 
     <!-- Google Fonts: Inter (body) + Source Serif 4 (headings) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2364,7 +2364,7 @@
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--fg-tertiary);
         }
 
         .empty-state svg {
@@ -2866,6 +2866,7 @@
             z-index: 10002;
             align-items: center;
             justify-content: center;
+            overscroll-behavior: contain;
         }
 
         .modal-overlay.show {
@@ -4637,6 +4638,7 @@
             align-items: center;
             justify-content: center;
             z-index: 20000;
+            overscroll-behavior: contain;
         }
 
         .help-modal-content {
@@ -5701,7 +5703,7 @@
         .notebook-empty {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: var(--fg-tertiary);
         }
 
         .notebook-empty h3 {
@@ -10910,6 +10912,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     justify-content: center;
     z-index: 10001;
     padding: 20px;
+    overscroll-behavior: contain;
 }
 .custom-modal-card {
     background: var(--surface-overlay);
@@ -11730,7 +11733,7 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 .synchro-card-row {
     display: flex;
     align-items: flex-start;
-    gap: 5px;
+    gap: 8px;
 }
 .synchro-card-body {
     flex: 1;
@@ -11739,37 +11742,43 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 
 /* Card: Completion checkbox */
 .synchro-card-check {
-    width: 14px;
-    height: 14px;
-    min-width: 14px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    padding: 6px;
-    margin: -6px;
-    margin-right: 0;
+    padding: 8px;
+    margin: -4px;
+    margin-right: 2px;
     flex-shrink: 0;
     border-radius: 50%;
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s ease;
 }
 .synchro-card-check:hover .synchro-check-ring {
     border-color: var(--accent);
-    background: rgba(107, 124, 94, 0.08);
+    background: rgba(107, 124, 94, 0.12);
+    transform: scale(1.1);
+}
+.synchro-card-check:active .synchro-check-ring {
+    transform: scale(0.92);
+    background: rgba(107, 124, 94, 0.2);
 }
 .synchro-card-check.checked {
     color: var(--success);
 }
 .synchro-card-check.checked svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
 }
 .synchro-check-ring {
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid var(--border-default);
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-strong, var(--border-default));
     border-radius: 50%;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
     background: transparent;
 }
 
@@ -12198,8 +12207,8 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
 <body class="has-sidebar">
     <!-- Loading overlay - shown until Firebase data loads -->
     <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #FAF8F5; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
-        <div style="font-size: 1.8em; margin-bottom: 20px; font-family: 'Source Serif 4', Georgia, serif; color: #2C2825; font-weight: 700;">DQ</div>
-        <div style="color: #2C2825; font-size: 1.5em; font-weight: 600; font-family: 'Source Serif 4', Georgia, serif;">Dental Student Quest</div>
+        <div style="font-size: 1.8em; margin-bottom: 20px; font-family: 'Source Serif 4', Georgia, serif; color: #2C2825; font-weight: 700;">SS</div>
+        <div style="color: #2C2825; font-size: 1.5em; font-weight: 600; font-family: 'Source Serif 4', Georgia, serif;">Suleman Shaikh, DMD</div>
         <div style="color: #9C948B; font-size: 1em; margin-top: 10px;">Loading your data...</div>
         <div style="margin-top: 20px; width: 200px; height: 4px; background: #EFECE6; border-radius: 2px; overflow: hidden;">
             <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #6B7C5E, #8A9A7B, #6B7C5E); animation: loading 1.5s infinite;"></div>
@@ -12217,7 +12226,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     </div>
 
     <!-- Sidebar Backdrop (mobile drawer) -->
-    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()" role="button" aria-label="Close sidebar"></div>
 
     <!-- ==================== APP LAYOUT GRID ==================== -->
     <div class="app-layout" id="appLayout">
@@ -12225,8 +12234,8 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-logo">
-            <span class="sidebar-logo-icon">DQ</span>
-            <span class="sidebar-logo-text">Dental Quest</span>
+            <span class="sidebar-logo-icon">SS</span>
+            <span class="sidebar-logo-text">Sully Suite</span>
         </div>
 
         <div class="sidebar-section">
@@ -12305,7 +12314,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <rect y="15" width="20" height="2" rx="1"/>
                     </svg>
                 </button>
-                <span class="top-bar-title">Dental Quest</span>
+                <span class="top-bar-title">Sully Suite</span>
                 <span class="top-bar-breadcrumb" id="topBarBreadcrumb">&rsaquo; Focus</span>
             </div>
             <div class="top-bar-right">
@@ -12449,7 +12458,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     </div>
 
     <!-- Hamburger Menu Panel -->
-    <div class="header-menu-backdrop" id="headerMenuBackdrop" onclick="toggleHeaderMenu()"></div>
+    <div class="header-menu-backdrop" id="headerMenuBackdrop" onclick="toggleHeaderMenu()" role="button" aria-label="Close menu"></div>
     <div class="header-menu-panel" id="headerMenuPanel">
         <div class="menu-section">
             <div class="menu-section-title">Stats</div>
@@ -12504,7 +12513,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         <div class="header" style="padding: 12px 0;">
             <!-- Compact Header Row -->
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap;">
-                <h1 style="margin: 0; font-size: 1.4em;">Dental Student Quest</h1>
+                <h1 style="margin: 0; font-size: 1.4em;">SULEMAN SHAIKH, DMD</h1>
 
                 <!-- Compact Sync Status -->
                 <div id="syncStatusBar" style="display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: rgba(0,0,0,0.3); border-radius: 20px; font-size: 0.8em;">
@@ -12638,14 +12647,14 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
                             <span style="font-size: 1.5em;"><i data-lucide="flame" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
-                                <div style="color: #ff6b35; font-weight: 700; font-size: 1em;">CRASH OUT</div>
+                                <div style="color: var(--warning); font-weight: 700; font-size: 1em;">CRASH OUT</div>
                                 <div style="color: var(--fg-muted); font-size: 0.9em;">Time-block your tasks on an hourly timeline until sleep</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: flex-start; gap: 12px;">
                             <span style="font-size: 1.5em;"><i data-lucide="target" style="width:24px;height:24px;display:inline-block"></i></span>
                             <div>
-                                <div style="color: #10b981; font-weight: 700; font-size: 1em;">FOCUS</div>
+                                <div style="color: var(--accent); font-weight: 700; font-size: 1em;">FOCUS</div>
                                 <div style="color: var(--fg-muted); font-size: 0.9em;">Pomodoro timer with session checklists for deep work</div>
                             </div>
                         </div>
@@ -12841,7 +12850,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                             <div style="display: inline-flex; align-items: center; gap: 12px; background: #1e293b; padding: 16px 24px; border-radius: 12px; border: 1px solid #334155;">
                                 <label style="color: #94a3b8; font-size: 14px;">Sleep at:</label>
                                 <input type="time" id="customSleepTime" value="06:30" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #f1f5f9; font-size: 16px; font-family: 'SF Mono', Monaco, monospace;">
-                                <button onclick="setCustomSleepTime()" style="padding: 10px 20px; border: none; border-radius: 8px; background: #22c55e; color: white; font-weight: 600; cursor: pointer; font-size: 14px;">✓ Set</button>
+                                <button onclick="setCustomSleepTime()" style="padding: 10px 20px; border: none; border-radius: 8px; background: var(--success); color: white; font-weight: 600; cursor: pointer; font-size: 14px;">✓ Set</button>
                                 <button onclick="hideCustomSleepPicker()" style="padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; font-size: 14px;">Cancel</button>
                             </div>
                         </div>
@@ -12951,16 +12960,16 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                                 <svg class="focus-timer-svg" viewBox="0 0 320 320">
                                     <defs>
                                         <linearGradient id="timerGradientGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#22c55e"/>
-                                            <stop offset="100%" stop-color="#3b82f6"/>
+                                            <stop offset="0%" stop-color="#5E8A5E"/>
+                                            <stop offset="100%" stop-color="#5E7A8A"/>
                                         </linearGradient>
                                         <linearGradient id="timerGradientYellow" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#f59e0b"/>
-                                            <stop offset="100%" stop-color="#ef4444"/>
+                                            <stop offset="0%" stop-color="#C4923A"/>
+                                            <stop offset="100%" stop-color="#B85C5C"/>
                                         </linearGradient>
                                         <linearGradient id="timerGradientRed" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#ef4444"/>
-                                            <stop offset="100%" stop-color="#dc2626"/>
+                                            <stop offset="0%" stop-color="#B85C5C"/>
+                                            <stop offset="100%" stop-color="#9A4444"/>
                                         </linearGradient>
                                         <filter id="timerGlow">
                                             <feGaussianBlur stdDeviation="4" result="blur"/>
@@ -13290,7 +13299,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                             <div class="form-group">
                                 <label>Note for this day (max 100 characters):</label>
                                 <textarea id="noteInput" class="modal-input" maxlength="100" rows="3" placeholder="e.g., Exam day, Traveling, Doctor appointment..."></textarea>
-                                <div style="text-align: right; font-size: 0.85em; color: #999; margin-top: 5px;">
+                                <div style="text-align: right; font-size: 0.85em; color: var(--fg-muted); margin-top: 5px;">
                                     <span id="noteCharCount">0</span>/100
                                 </div>
                             </div>
@@ -13348,7 +13357,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         </div>
                         
                         <div style="display: flex; gap: 15px;">
-                            <button onclick="saveCountdown()" id="saveCountdownBtn" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
+                            <button onclick="saveCountdown()" id="saveCountdownBtn" style="flex: 1; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
                                 ✓ Create Countdown
                             </button>
                             <button onclick="closeAddCountdown()" style="flex: 1; background: var(--fg-tertiary); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 700;">
@@ -13482,11 +13491,11 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <div style="padding: 30px;">
                             <!-- Month Navigation -->
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                                <button onclick="changeMonth(-1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Previous month">
+                                <button onclick="changeMonth(-1)" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Previous month">
                                     ← Previous
                                 </button>
-                                <h3 style="color: #e6edf3; font-size: 2em; margin: 0;" id="currentMonthDisplay">Loading...</h3>
-                                <button onclick="changeMonth(1)" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Next month">
+                                <h3 style="color: var(--fg-primary); font-size: 2em; margin: 0;" id="currentMonthDisplay">Loading...</h3>
+                                <button onclick="changeMonth(1)" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;" aria-label="Next month">
                                     Next →
                                 </button>
                             </div>
@@ -13548,7 +13557,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 <div class="help-modal-overlay" id="financialHelpModal" onclick="closeFinancialHelp()">
                     <div class="help-modal-content" onclick="event.stopPropagation()">
                         <div id="helpContent"></div>
-                        <button onclick="closeFinancialHelp()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 20px; width: 100%;">
+                        <button onclick="closeFinancialHelp()" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 20px; width: 100%;">
                             Close
                         </button>
                     </div>

@@ -170,7 +170,11 @@ function handleDateChange(inputEl) {
         return;
     }
 
-    const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    let index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    // Fallback: search by _originalStableId (handles post-edit IDs)
+    if (index === -1) {
+        index = deadlines.findIndex(d => d._originalStableId === deadlineId);
+    }
     if (index === -1) {
         console.error('Deadline not found for ID:', deadlineId);
         return;
@@ -187,6 +191,10 @@ function handleDateChange(inputEl) {
         return;
     }
 
+    // Use _originalStableId (set at initUI time) for persistence key
+    const originalStableId = deadline._originalStableId || getDeadlineId(deadline);
+    console.log('[D3-EDIT] Date changed:', originalStableId, oldDate, '->', newDate);
+
     // Parse the new date
     const dateObj = new Date(newDate + 'T12:00:00'); // Add time to avoid timezone issues
 
@@ -198,8 +206,7 @@ function handleDateChange(inputEl) {
 
     // Store the edit using STABLE ID (not array index!)
     if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-    const stableId = getDeadlineId(deadline);
-    roadmapData.editedDeadlines[stableId] = {
+    roadmapData.editedDeadlines[originalStableId] = {
         date: deadline.date,
         day: deadline.day,
         month: deadline.month,
@@ -214,7 +221,11 @@ function handleDateChange(inputEl) {
 
     // Save immediately
     safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+        return;
+    }
 
     // Re-render
     renderDeadlines();
@@ -239,7 +250,11 @@ function handleTextEdit(inputEl) {
         return;
     }
 
-    const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    let index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    // Fallback: search by _originalStableId (handles post-edit IDs)
+    if (index === -1) {
+        index = deadlines.findIndex(d => d._originalStableId === deadlineId);
+    }
     if (index === -1) {
         console.error('Deadline not found for ID:', deadlineId);
         return;
@@ -247,13 +262,16 @@ function handleTextEdit(inputEl) {
 
     const deadline = deadlines[index];
 
+    // Use _originalStableId (set at initUI time) for persistence key
+    const originalStableId = deadline._originalStableId || getDeadlineId(deadline);
+    console.log('[D3-EDIT] Text changed:', originalStableId, field, ':', original, '->', value);
+
     // Update the field
     deadline[field] = value;
 
     // Store the edit using STABLE ID (not array index!)
     if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
-    const stableId = getDeadlineId(deadline);
-    roadmapData.editedDeadlines[stableId] = {
+    roadmapData.editedDeadlines[originalStableId] = {
         date: deadline.date,
         day: deadline.day,
         month: deadline.month,
@@ -268,7 +286,11 @@ function handleTextEdit(inputEl) {
 
     // Save immediately
     safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+        return;
+    }
 
     // Re-render
     renderDeadlines();
@@ -389,11 +411,11 @@ function submitNewDeadline() {
     const type = document.getElementById('newDeadlineType').value;
 
     if (!what) {
-        alert('Please enter what the deadline is for');
+        showToast('Please enter what the deadline is for', 'warning');
         return;
     }
     if (!date) {
-        alert('Please select a date');
+        showToast('Please select a date', 'warning');
         return;
     }
 
@@ -404,7 +426,7 @@ function submitNewDeadline() {
         d.course === course
     );
     if (isDuplicate) {
-        alert('A deadline with the same date, description, and course already exists.');
+        showToast('A deadline with the same date, description, and course already exists.', 'warning');
         return;
     }
 
@@ -432,9 +454,14 @@ function submitNewDeadline() {
     }
     const deadlineId = generateId('deadline');
     newDeadline.id = deadlineId;
+    console.log('[D3-ADD] Custom deadline added:', deadlineId, what);
     roadmapData.customDeadlines[deadlineId] = newDeadline;
 
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+        return;
+    }
     renderDeadlines();
     renderDashboard();
 
@@ -452,14 +479,14 @@ function toggleDeadlineDone(index) {
     }
 
     const deadline = deadlines[index];
-    const deadlineId = getDeadlineId(deadline);
+    const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
 
     if (deadline.done) {
         // Unchecking - mark as incomplete
         deadline.done = false;
         deadline.grade = null;
 
-        // Remove from completedDeadlines using stable ID
+        // Remove from completedDeadlines using original stable ID
         if (roadmapData.completedDeadlines) {
             delete roadmapData.completedDeadlines[deadlineId];
             // Also try to clean up any old index-based entries
@@ -472,10 +499,29 @@ function toggleDeadlineDone(index) {
             roadmapData.customDeadlines[deadline.id].grade = null;
         }
 
+        // Store explicit "not done" override so static done:true doesn't win on reload
+        if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+        roadmapData.editedDeadlines[deadlineId] = {
+            ...roadmapData.editedDeadlines[deadlineId],
+            date: deadline.date,
+            day: deadline.day,
+            month: deadline.month,
+            what: deadline.what,
+            course: deadline.course,
+            weight: deadline.weight,
+            type: deadline.type,
+            done: false,
+            grade: null
+        };
+
         // Update grades if this was synced
         syncDeadlineToGrades(deadline, false);
 
-        saveData();
+        const saved = saveData();
+        if (!saved) {
+            showToast('Save blocked — try refreshing', 'error');
+            return;
+        }
         renderDeadlines();
         renderDashboard();
         loadCourseGrades();
@@ -489,7 +535,11 @@ function toggleDeadlineDone(index) {
 
 // ID-based wrapper for toggleDeadlineDone (prevents index race conditions)
 function toggleDeadlineDoneById(deadlineId) {
-    const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    let index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    // Fallback: search by _originalStableId (handles post-edit IDs)
+    if (index === -1) {
+        index = deadlines.findIndex(d => d._originalStableId === deadlineId);
+    }
     if (index === -1) {
         showToast('Deadline not found', 'error');
         console.error('toggleDeadlineDoneById: Deadline not found for ID:', deadlineId);
@@ -500,7 +550,11 @@ function toggleDeadlineDoneById(deadlineId) {
 
 // ID-based wrapper for deleteDeadline (prevents index race conditions)
 function deleteDeadlineById(deadlineId) {
-    const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    let index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    // Fallback: search by _originalStableId (handles post-edit IDs)
+    if (index === -1) {
+        index = deadlines.findIndex(d => d._originalStableId === deadlineId);
+    }
     if (index === -1) {
         showToast('Deadline not found', 'error');
         console.error('deleteDeadlineById: Deadline not found for ID:', deadlineId);
@@ -510,7 +564,7 @@ function deleteDeadlineById(deadlineId) {
 }
 
 function showGradeInputModal(index, deadline) {
-    const deadlineId = getDeadlineId(deadline);
+    const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
     const modal = document.createElement('div');
     modal.id = 'gradeInputModal';
     modal.dataset.deadlineId = deadlineId;
@@ -553,7 +607,11 @@ function submitDeadlineGradeById() {
     const modal = document.getElementById('gradeInputModal');
     if (!modal) return;
     const deadlineId = modal.dataset.deadlineId;
-    const index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    let index = deadlines.findIndex(d => getDeadlineId(d) === deadlineId);
+    // Fallback: search by _originalStableId (handles post-edit IDs)
+    if (index === -1) {
+        index = deadlines.findIndex(d => d._originalStableId === deadlineId);
+    }
     if (index === -1) {
         showToast('Error: Deadline not found', 'error');
         console.error('submitDeadlineGradeById: Deadline not found for ID:', deadlineId);
@@ -568,7 +626,7 @@ function submitDeadlineGrade(index) {
     const grade = gradeInput ? parseFloat(gradeInput) : null;
 
     if (grade !== null && (grade < 0 || grade > 100)) {
-        alert('Grade must be between 0 and 100');
+        showToast('Grade must be between 0 and 100', 'warning');
         return;
     }
 
@@ -576,10 +634,11 @@ function submitDeadlineGrade(index) {
     deadline.done = true;
     deadline.grade = grade;
 
-    // Get stable ID for this deadline (survives reloads and reordering)
-    const deadlineId = getDeadlineId(deadline);
+    // Use _originalStableId for persistence key (survives edits, reloads, reordering)
+    const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
+    console.log('[D3-DONE] Deadline completed:', deadlineId, 'grade:', grade);
 
-    // Store in completedDeadlines using stable ID (not array index!)
+    // Store in completedDeadlines using original stable ID (not array index!)
     if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
     roadmapData.completedDeadlines[deadlineId] = {
         id: deadlineId,
@@ -603,7 +662,11 @@ function submitDeadlineGrade(index) {
     // Close modal
     document.getElementById('gradeInputModal').remove();
 
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+        return;
+    }
     renderDeadlines();
     renderDashboard();
     loadCourseGrades();
@@ -737,6 +800,8 @@ function deleteDeadline(index) {
     }
 
     const deadline = deadlines[index];
+    const _logDeadlineId = getDeadlineId(deadline);
+    console.log('[D3-DELETE] Deadline delete requested:', _logDeadlineId, deadline.what);
 
     // Confirm deletion
     if (!confirm(`Delete this deadline?\n\n"${deadline.what}"\n${deadline.date} - ${deadline.course}`)) {
@@ -776,10 +841,10 @@ function deleteDeadline(index) {
         deletedAt: new Date().toISOString()
     };
 
-    // Remove from editedDeadlines using STABLE ID
-    const deadlineId = getDeadlineId(deadline);
+    // Remove from editedDeadlines using original stable ID
+    const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
     if (roadmapData.editedDeadlines) {
-        // Delete by stable ID
+        // Delete by original stable ID
         if (roadmapData.editedDeadlines[deadlineId]) {
             delete roadmapData.editedDeadlines[deadlineId];
         }
@@ -796,7 +861,11 @@ function deleteDeadline(index) {
         }
     }
 
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+        return;
+    }
     renderDeadlines();
     renderDashboard();
 

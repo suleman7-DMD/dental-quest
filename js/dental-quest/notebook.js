@@ -213,12 +213,14 @@ function scheduleNotebookSave() {
     notebookSaveTimeout = setTimeout(() => {
         saveCurrentPageContent();
         saveNotebook();
-        indicator.textContent = 'Saved \u2713';
-        indicator.classList.remove('saving');
+        if (indicator) {
+            indicator.textContent = 'Saved \u2713';
+            indicator.classList.remove('saving');
 
-        setTimeout(() => {
-            indicator.textContent = '';
-        }, 2000);
+            setTimeout(() => {
+                if (indicator) indicator.textContent = '';
+            }, 2000);
+        }
     }, 2000); // Auto-save after 2 seconds of no typing
 }
 

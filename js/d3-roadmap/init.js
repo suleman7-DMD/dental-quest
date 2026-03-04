@@ -289,6 +289,10 @@ function initUI() {
     deadlines.length = 0; // Clear the working array
     STATIC_DEADLINES.forEach(d => deadlines.push({...d})); // Deep copy static deadlines
 
+    // Tag each static deadline with its original stableId BEFORE any edits are applied
+    // This allows CRUD operations to always use the correct persistence key
+    deadlines.forEach(d => { d._originalStableId = getDeadlineId(d); });
+
     // CRITICAL FIX: Filter out deleted static deadlines
     // Without this, deleted static deadlines reappear every time initUI() runs
     // because they get re-added from STATIC_DEADLINES above
@@ -402,7 +406,8 @@ function initUI() {
                     custom: true,
                     id: d.id,  // CRITICAL: Preserve the custom deadline ID!
                     done: d.done || false,
-                    grade: d.grade || null
+                    grade: d.grade || null,
+                    _originalStableId: d.id ? sanitizeFirebaseKey(d.id) : getDeadlineId({date: d.date, course: d.course || 'Other', what: d.what})
                 });
             });
         }
@@ -439,6 +444,14 @@ function initUI() {
             });
         }
     } catch(e) { console.error('Error restoring completed deadlines:', e); }
+
+    console.log('[D3-INIT] Deadline restore complete:',
+        'total deadlines:', deadlines.length,
+        'editedDeadlines keys:', getCount(roadmapData.editedDeadlines),
+        'customDeadlines:', getCount(roadmapData.customDeadlines),
+        'completedDeadlines:', getCount(roadmapData.completedDeadlines),
+        'deletedDeadlines:', getCount(roadmapData.deletedDeadlines),
+        'done count:', deadlines.filter(d => d.done).length);
 
     // Also restore completion status from grades data (bidirectional sync)
     try {

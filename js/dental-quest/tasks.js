@@ -51,7 +51,10 @@ function addTask() {
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,
-        sortOrder: getCount(tasks)
+        sortOrder: getCount(tasks),
+        triageTier: markDoToday ? 'lockedIn' : null,
+        triageOrder: 0,
+        triageDate: markDoToday ? getLocalDateString(new Date()) : null
     };
 
     tasks[id] = task;
@@ -631,10 +634,19 @@ function toggleTaskFromDashboard(taskId, expansionType) {
 function uncompleteTaskFromDashboard(taskId) {
     const task = tasks[taskId];
     if (task && task.completed) {
+        // Calculate the tier-based XP that was awarded (mirror toggleTask uncomplete logic)
+        const xpValue = task.xp || (task.triageTier === 'lockedIn' ? 50 :
+                        task.crashOutScheduled ? 75 :
+                        task.rolledOver ? 40 : 25);
         task.completed = false;
-        delete task.completedAt;
-        stats.totalXPGained -= 20;
-        stats.totalTasks--;
+        task.completedAt = null;
+        stats.totalXPGained = Math.max(0, stats.totalXPGained - xpValue);
+        stats.categoryXPGained[task.category] = Math.max(0, (stats.categoryXPGained[task.category] || 0) - xpValue);
+        stats.totalTasks = Math.max(0, stats.totalTasks - 1);
+        // Also subtract from command center XP
+        if (commandCenterData?.focusStats) {
+            commandCenterData.focusStats.totalXP = Math.max(0, (commandCenterData.focusStats.totalXP || 0) - xpValue);
+        }
         saveData();
         updateStats();
         rerenderCurrentView();
@@ -1228,9 +1240,8 @@ function updateSidebarStats() {
     var allTasksArr = getValues(tasks);
     var doTodayCount = 0;
     var remaining = 0;
-    var completedToday = 0;
+    var completedTotal = 0;
     var lockedInCount = 0;
-    var todayStr = getLocalDateString(new Date());
 
     for (var i = 0; i < allTasksArr.length; i++) {
         var t = allTasksArr[i];
@@ -1241,10 +1252,7 @@ function updateSidebarStats() {
                 if (t.triageTier === 'lockedIn') lockedInCount++;
             }
         } else {
-            if (t.completedAt) {
-                var completedDate = typeof t.completedAt === 'number' ? new Date(t.completedAt) : new Date(t.completedAt);
-                if (getLocalDateString(completedDate) === todayStr) completedToday++;
-            }
+            completedTotal++;
         }
     }
 
@@ -1273,7 +1281,7 @@ function updateSidebarStats() {
     el = document.getElementById('metricRemaining');
     if (el) el.textContent = remaining;
     el = document.getElementById('metricCompleted');
-    if (el) el.textContent = completedToday;
+    if (el) el.textContent = completedTotal;
     el = document.getElementById('metricXPToday');
     if (el) el.textContent = '+' + totalXP;
     el = document.getElementById('metricLevel');

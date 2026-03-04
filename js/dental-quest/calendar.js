@@ -179,8 +179,8 @@ function renderCalendarGrid() {
                     ${dayEvents.length > 0 ? `
                         <div style="flex: 1; overflow: hidden;">
                             ${dayEvents.slice(0, 2).map(event => `
-                                <div style="background: var(--accent-light); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.description}">
-                                    ${categoryIcons[event.category]} ${event.description}
+                                <div style="background: var(--accent-light); padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65em; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(event.description)}">
+                                    ${categoryIcons[event.category]} ${escapeHtml(event.description)}
                                 </div>
                             `).join('')}
                             ${dayEvents.length > 2 ? `

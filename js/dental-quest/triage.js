@@ -228,9 +228,14 @@ function toggleTaskComplete(taskId) {
                    task.crashOutScheduled ? 75 :
                    task.rolledOver ? 40 : 25;
         stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+        stats.totalXPGained = Math.max(0, (stats.totalXPGained || 0) - xp);
         const category = task.category || 'life';
         if (stats.categoryXPGained && category) {
             stats.categoryXPGained[category] = Math.max(0, (stats.categoryXPGained[category] || 0) - xp);
+        }
+        // Also subtract from command center XP
+        if (commandCenterData?.focusStats) {
+            commandCenterData.focusStats.totalXP = Math.max(0, (commandCenterData.focusStats.totalXP || 0) - xp);
         }
         task.completedAt = null;
     }
@@ -340,9 +345,14 @@ function completeTriageTask(taskId) {
                    task.crashOutScheduled ? 75 :
                    task.rolledOver ? 40 : 25;
         stats.totalTasks = Math.max(0, (stats.totalTasks || 0) - 1);
+        stats.totalXPGained = Math.max(0, (stats.totalXPGained || 0) - xp);
         const category = task.category || 'life';
         if (stats.categoryXPGained && category) {
             stats.categoryXPGained[category] = Math.max(0, (stats.categoryXPGained[category] || 0) - xp);
+        }
+        // Also subtract from command center XP
+        if (commandCenterData?.focusStats) {
+            commandCenterData.focusStats.totalXP = Math.max(0, (commandCenterData.focusStats.totalXP || 0) - xp);
         }
     }
 
@@ -544,6 +554,7 @@ function triageQuickAddTask() {
         urgency: 'eod',
         triageTier: 'lockedIn',
         triageOrder: getTasksByTier('lockedIn').length + 1,
+        triageDate: getLocalDateString(new Date()),
         createdAt: new Date().toISOString(),
         size: 'medium',
         highLeverage: false,

@@ -291,7 +291,7 @@ function promptForPin() {
     overlay.innerHTML = `
         <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; max-width: 400px; text-align: center; color: #2C2825;">
             <h3 style="margin-bottom: 15px;">\u{1F510} Enter Your PIN</h3>
-            <p style="color: #6B635B; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your Dental Quest app to sync across devices.</p>
+            <p style="color: #6B635B; margin-bottom: 20px; font-size: 0.9em;">Use the same PIN as your main app to sync across devices.</p>
             <input type="text" id="pinInput" placeholder="Enter PIN" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #8A9A7B; background: #F5F2ED; color: #2C2825; font-size: 1.1em; text-align: center; margin-bottom: 15px;">
             <div style="display: flex; gap: 10px;">
                 <button onclick="skipPin()" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #EFECE6; color: #6B635B; cursor: pointer;">Skip (Local Only)</button>

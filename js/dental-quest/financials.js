@@ -338,7 +338,7 @@ function saveNewOneTimeBill() {
     if (amount <= 0) { showToast('Please enter a valid amount', '!'); return; }
     var id = generateId('bill');
     if (!financials.oneTimeBills) financials.oneTimeBills = {};
-    financials.oneTimeBills[id] = { id: id, description: desc, amount: amount, type: type, dueDate: dueDate || new Date().toISOString().split('T')[0], paid: false, category: 'other', notes: notes || undefined };
+    financials.oneTimeBills[id] = { id: id, description: desc, amount: amount, type: type, dueDate: dueDate || new Date().toISOString().split('T')[0], paid: false, category: 'other', notes: notes || null };
     saveData(); renderFinancialCockpit(); updateCockpitStats();
     var el = document.getElementById('oneTimeBillOverlay'); if (el) el.remove();
     showToast('Added: ' + desc, '+');
@@ -850,7 +850,7 @@ function editCreditCard(cardId) {
 
     overlay.innerHTML = `
         <div class="edit-panel" onclick="event.stopPropagation()">
-            <h3>Edit ${card.name}</h3>
+            <h3>Edit ${escapeHtml(card.name)}</h3>
 
             <div class="edit-field">
                 <label>Current Balance ($)</label>
@@ -874,7 +874,7 @@ function editCreditCard(cardId) {
 
             <div class="edit-field">
                 <label>Notes</label>
-                <textarea id="edit_cardNotes" rows="3">${card.negotiationNotes || ''}</textarea>
+                <textarea id="edit_cardNotes" rows="3">${escapeHtml(card.negotiationNotes || '')}</textarea>
             </div>
 
             <div class="edit-actions">

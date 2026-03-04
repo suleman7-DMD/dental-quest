@@ -302,11 +302,11 @@ function markLocalChange() {
 
 function setLocalUpdateFlag() {
     isLocalUpdate = true;
-    // Clear flag after 2 seconds (longer than debounce + network latency)
+    // Clear flag after 5 seconds (longer than debounce + slow network latency)
     if (localUpdateTimer) clearTimeout(localUpdateTimer);
     localUpdateTimer = setTimeout(() => {
         isLocalUpdate = false;
-    }, 2000);
+    }, 5000);
 }
 
 // Show conflict resolution modal
@@ -412,16 +412,68 @@ function setupUserAuth(pin) {
 }
 
 function promptForPin() {
-    const pin = prompt('Enter your Dental Quest PIN to sync data across devices:\n\n(Use the same PIN as your main Dental Quest app)');
+    const modal = document.createElement('div');
+    modal.className = 'custom-modal-overlay';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
 
-    if (pin && pin.length >= 4) {
-        safeLocalStorageSet('dentalQuestPin', pin);
-        setupUserAuth(pin);
-    } else {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;';
+
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'color:#60a5fa;margin:0 0 16px 0;';
+    heading.textContent = 'Enter PIN';
+
+    const desc = document.createElement('p');
+    desc.style.cssText = 'color:#e2e8f0;margin-bottom:16px;';
+    desc.textContent = 'Enter your Dental Quest PIN to sync across devices';
+
+    const pinInputEl = document.createElement('input');
+    pinInputEl.type = 'password';
+    pinInputEl.id = 'pinInput';
+    pinInputEl.placeholder = 'Enter PIN (4+ characters)';
+    pinInputEl.style.cssText = 'width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:1.1em;text-align:center;box-sizing:border-box;margin-bottom:16px;';
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;';
+
+    const submitBtn = document.createElement('button');
+    submitBtn.style.cssText = 'flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    submitBtn.textContent = 'Connect';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.style.cssText = 'flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    skipBtn.textContent = 'Skip (Local Only)';
+
+    btnRow.appendChild(submitBtn);
+    btnRow.appendChild(skipBtn);
+    card.appendChild(heading);
+    card.appendChild(desc);
+    card.appendChild(pinInputEl);
+    card.appendChild(btnRow);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    pinInputEl.focus();
+    pinInputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitBtn.click();
+    });
+    submitBtn.onclick = () => {
+        const pin = pinInputEl.value;
+        modal.remove();
+        if (pin && pin.length >= 4) {
+            safeLocalStorageSet('dentalQuestPin', pin);
+            setupUserAuth(pin);
+        } else {
+            showToast('PIN must be at least 4 characters', 'warning');
+            promptForPin();
+        }
+    };
+    skipBtn.onclick = () => {
+        modal.remove();
         firebaseSyncEnabled = false;
         updateSyncStatus('offline', 'Local only');
         loadFromLocalStorage();
-    }
+    };
 }
 
 // ==================== CONSOLIDATED MERGE ====================
@@ -435,7 +487,20 @@ function mergeRemoteState(data) {
         ...roadmapData,
         pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
         mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
-        grades: { ...roadmapData.grades, ...(data.grades || {}) },
+        grades: (() => {
+            const merged = {};
+            const allCourses = new Set([
+                ...Object.keys(roadmapData.grades || {}),
+                ...Object.keys(data.grades || {})
+            ]);
+            allCourses.forEach(courseId => {
+                merged[courseId] = {
+                    ...(roadmapData.grades?.[courseId] || {}),
+                    ...(data.grades?.[courseId] || {})
+                };
+            });
+            return merged;
+        })(),
         editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
         completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
         customDeadlines: {
@@ -511,7 +576,20 @@ function loadFromLocalStorage(finalize = true) {
                 // Explicit field merges for safety (not raw ...data spread)
                 pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
                 mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
-                grades: { ...roadmapData.grades, ...(data.grades || {}) },
+                grades: (() => {
+                    const merged = {};
+                    const allCourses = new Set([
+                        ...Object.keys(roadmapData.grades || {}),
+                        ...Object.keys(data.grades || {})
+                    ]);
+                    allCourses.forEach(courseId => {
+                        merged[courseId] = {
+                            ...(roadmapData.grades?.[courseId] || {}),
+                            ...(data.grades?.[courseId] || {})
+                        };
+                    });
+                    return merged;
+                })(),
                 editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
                 completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
                 customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
@@ -569,7 +647,9 @@ function loadFromFirebase() {
         .then(snapshot => {
             const data = snapshot.val();
             if (data) {
-                // Merge Firebase data with defaults - preserving local data where applicable
+                // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
+                // Then merge Firebase data on top (Firebase wins for fields it has)
+                loadFromLocalStorage(false);
                 mergeRemoteState(data);
 
                 // Also save to localStorage as backup
@@ -891,6 +971,8 @@ function forceCloudSync() {
                         const merged = deepMerge(remoteData, roadmapData);
                         merged.lastSaved = Date.now();
                         lastKeepLocalTime = Date.now();
+                        // Sanitize merged data
+                        migrateInvalidFirebaseKeys(merged);
                         applyRemoteData(merged);
                         saveData();
                         showToast('✅ Merged data from both devices');
@@ -947,9 +1029,7 @@ function createCheckpoint(customName = null) {
 
     const timestamp = Date.now();
     const date = new Date().toISOString();
-    const name = customName || prompt('Checkpoint name (optional):') || `Checkpoint ${new Date().toLocaleString()}`;
-
-    if (name === null) return null; // User cancelled
+    const name = customName || `Checkpoint ${new Date().toLocaleString()}`;
 
     const checkpoint = {
         id: `checkpoint_${timestamp}_${Math.random().toString(36).substr(2, 6)}`,
@@ -1072,7 +1152,7 @@ function escapeHtmlForCheckpoint(text) {
     return div.innerHTML;
 }
 
-async function restoreCheckpoint(index) {
+function restoreCheckpoint(index) {
     const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
     const checkpoint = checkpoints[index];
 
@@ -1081,93 +1161,80 @@ async function restoreCheckpoint(index) {
         return;
     }
 
-    const confirmed = confirm(
-        `⚠️ RESTORE CHECKPOINT?\n\n` +
-        `Name: ${checkpoint.name}\n` +
-        `Date: ${new Date(checkpoint.date).toLocaleString()}\n` +
-        `Data: ${checkpoint.dataCount}\n\n` +
-        `This will OVERWRITE your current data.\n` +
-        `A backup of current data will be created first.\n\n` +
-        `Continue?`
+    showCustomConfirm(
+        `Restore checkpoint?\n\nName: ${escapeHtml(checkpoint.name)}\nDate: ${new Date(checkpoint.date).toLocaleString()}\nData: ${checkpoint.dataCount}\n\nThis will OVERWRITE your current data.\nA backup of current data will be created first.`,
+        function() {
+            // Backup current state first
+            createCheckpoint(`Pre-restore backup (${new Date().toLocaleString()})`);
+
+            // Restore checkpoint - explicitly restore each field (no raw spread)
+            const cpData = checkpoint.data;
+            roadmapData = {
+                pedsLockedIn: cpData.pedsLockedIn !== undefined ? cpData.pedsLockedIn : roadmapData.pedsLockedIn,
+                mandatoryItems: cpData.mandatoryItems || roadmapData.mandatoryItems || {},
+                grades: cpData.grades || roadmapData.grades || {},
+                editedDeadlines: cpData.editedDeadlines || {},
+                completedDeadlines: cpData.completedDeadlines || {},
+                customDeadlines: migrateArrayToObject(cpData.customDeadlines, 'deadline'),
+                deletedDeadlines: migrateArrayToObject(cpData.deletedDeadlines, 'deleted'),
+                examStudyProgress: cpData.examStudyProgress || {},
+                monthlyPlanner: {
+                    notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
+                    customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
+                    overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
+                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed')
+                },
+                clinicalData: {
+                    patients: cpData.clinicalData?.patients || {},
+                    appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
+                    completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
+                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies)
+                },
+                dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
+                exams: migrateArrayToObject(cpData.exams, 'exam'),
+                lastSaved: cpData.lastSaved || Date.now(),
+                _version: Date.now(),
+                _lastModified: new Date().toISOString(),
+                _dataLoaded: true
+            };
+
+            migrateInvalidFirebaseKeys(roadmapData);
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            setLocalUpdateFlag();
+            saveData();
+            initUI();
+            document.querySelector('.checkpoint-modal-overlay')?.remove();
+            showToast('Restored: ' + checkpoint.name);
+        },
+        null,
+        'Restore Checkpoint'
     );
-
-    if (!confirmed) return;
-
-    // Backup current state first
-    createCheckpoint(`Pre-restore backup (${new Date().toLocaleString()})`);
-
-    // Restore checkpoint - explicitly restore each field (no raw spread)
-    const cpData = checkpoint.data;
-    roadmapData = {
-        pedsLockedIn: cpData.pedsLockedIn !== undefined ? cpData.pedsLockedIn : roadmapData.pedsLockedIn,
-        mandatoryItems: cpData.mandatoryItems || roadmapData.mandatoryItems || {},
-        grades: cpData.grades || roadmapData.grades || {},
-        editedDeadlines: cpData.editedDeadlines || {},
-        completedDeadlines: cpData.completedDeadlines || {},
-        customDeadlines: migrateArrayToObject(cpData.customDeadlines, 'deadline'),
-        deletedDeadlines: migrateArrayToObject(cpData.deletedDeadlines, 'deleted'),
-        examStudyProgress: cpData.examStudyProgress || {},
-        monthlyPlanner: {
-            notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
-            customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
-            overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
-            completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed')
-        },
-        clinicalData: {
-            patients: cpData.clinicalData?.patients || {},
-            appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
-            completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
-            // FIX: Preserve existing competencies if checkpoint doesn't have them
-            competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies)
-        },
-        dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
-        exams: migrateArrayToObject(cpData.exams, 'exam'),
-        lastSaved: cpData.lastSaved || Date.now(),
-        // FIX: Use high _version so restored data wins over stale cloud data
-        // _version: 0 was WRONG here — it let old cloud data overwrite the restore on next sync
-        _version: Date.now(),
-        _lastModified: new Date().toISOString(),
-        _dataLoaded: true
-    };
-
-    // Migrate any invalid Firebase keys from checkpoint data
-    migrateInvalidFirebaseKeys(roadmapData);
-
-    // Save everywhere
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-
-    // Set local update flag to prevent realtime listener from processing our own write
-    setLocalUpdateFlag();
-    saveData();
-
-    // Refresh UI
-    initUI();
-
-    // Close modal
-    document.querySelector('.checkpoint-modal-overlay')?.remove();
-
-    showToast(`✅ Restored: ${checkpoint.name}`);
 }
 
 function deleteCheckpoint(index) {
-    if (!confirm('Delete this checkpoint?')) return;
+    showCustomConfirm(
+        'Delete this checkpoint?',
+        function() {
+            const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+            const checkpoint = checkpoints[index];
+            checkpoints.splice(index, 1);
+            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
 
-    const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-    const checkpoint = checkpoints[index];
-    checkpoints.splice(index, 1);
-    safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
+            // Also delete from Firebase
+            if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
+                database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
+                    .catch(err => console.error('Failed to delete cloud checkpoint:', err));
+            }
 
-    // FIXED: Also delete from Firebase
-    if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
-        database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
-            .catch(err => console.error('Failed to delete cloud checkpoint:', err));
-    }
+            // Refresh modal
+            document.querySelector('.checkpoint-modal-overlay')?.remove();
+            showCheckpointManager();
 
-    // Refresh modal
-    document.querySelector('.checkpoint-modal-overlay')?.remove();
-    showCheckpointManager();
-
-    showToast('Checkpoint deleted');
+            showToast('Checkpoint deleted');
+        },
+        null,
+        'Delete Checkpoint'
+    );
 }
 
 function exportCheckpoint(index) {
@@ -1371,67 +1438,53 @@ function importAndRestoreDirectly() {
             }
 
             const dataCount = getDataCountForCheckpoint(data);
-            const confirmMsg = `Restore data from "${file.name}"?\n\n` +
-                `Data found: ${dataCount}\n\n` +
-                `This will OVERWRITE your current data.\n` +
-                `A backup will be created first.`;
 
-            if (!confirm(confirmMsg)) return;
+            showCustomConfirm(
+                `Restore data from "${escapeHtml(file.name)}"?\n\nData found: ${dataCount}\n\nThis will OVERWRITE your current data.\nA backup will be created first.`,
+                function() {
+                    createCheckpoint('Auto-backup before direct restore');
 
-            // Create backup first
-            createCheckpoint('Auto-backup before direct restore');
+                    roadmapData = {
+                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : 33.3,
+                        mandatoryItems: data.mandatoryItems || getDefaultRoadmapData().mandatoryItems,
+                        grades: data.grades || getDefaultRoadmapData().grades,
+                        editedDeadlines: data.editedDeadlines || {},
+                        completedDeadlines: data.completedDeadlines || {},
+                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
+                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
+                        examStudyProgress: data.examStudyProgress || {},
+                        monthlyPlanner: {
+                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
+                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
+                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                        },
+                        clinicalData: {
+                            patients: data.clinicalData?.patients || {},
+                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
+                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
+                            competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies)
+                        },
+                        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
+                        exams: migrateArrayToObject(data.exams, 'exam'),
+                        lastSaved: data.lastSaved || Date.now(),
+                        _version: Date.now(),
+                        _lastModified: new Date().toISOString(),
+                        _dataLoaded: true
+                    };
 
-            // Restore - use explicit fields instead of raw spread
-            roadmapData = {
-                pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : 33.3,
-                mandatoryItems: data.mandatoryItems || getDefaultRoadmapData().mandatoryItems,
-                grades: data.grades || getDefaultRoadmapData().grades,
-                editedDeadlines: data.editedDeadlines || {},
-                completedDeadlines: data.completedDeadlines || {},
-                customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
-                examStudyProgress: data.examStudyProgress || {},
-                monthlyPlanner: {
-                    notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                    migrateInvalidFirebaseKeys(roadmapData);
+                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+                    setLocalUpdateFlag();
+                    saveData();
+
+                    showToast('Data restored from file');
+                    document.querySelector('.checkpoint-modal-overlay')?.remove();
+                    initUI();
                 },
-                clinicalData: {
-                    patients: data.clinicalData?.patients || {},
-                    appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                    // FIX: Preserve existing competencies if import doesn't have them
-                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies)
-                },
-                dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
-                exams: migrateArrayToObject(data.exams, 'exam'),
-                lastSaved: data.lastSaved || Date.now(),
-                // FIX: Use high _version so imported data wins over stale cloud data
-                // _version: 0 was WRONG here — it let old cloud data overwrite the import on next sync
-                _version: Date.now(),
-                _lastModified: new Date().toISOString(),
-                _dataLoaded: true
-            };
-
-            // Migrate any invalid Firebase keys from imported data
-            migrateInvalidFirebaseKeys(roadmapData);
-
-            // FIX: Save to localStorage BEFORE saveData() so data persists even if guards block
-            // This matches restoreCheckpoint() pattern (line 10421)
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-
-            // Set local update flag to prevent realtime listener from processing our own write
-            setLocalUpdateFlag();
-
-            // Save to Firebase
-            saveData();
-
-            showToast('✅ Data restored from file');
-
-            // Close modal and refresh UI
-            document.querySelector('.checkpoint-modal-overlay')?.remove();
-            initUI();  // FIXED: was initializeUI() which doesn't exist
+                null,
+                'Restore from File'
+            );
 
         } catch (err) {
             console.error('Direct restore error:', err);
@@ -1479,8 +1532,6 @@ async function forceUploadToCloud() {
     // Force version to be newest
     roadmapData._version = Date.now();
     roadmapData._lastModified = new Date().toISOString();
-    roadmapData._forceUploaded = true;
-    roadmapData._forceUploadedAt = new Date().toISOString();
     roadmapData.lastSaved = Date.now();
 
     updateSyncStatus('syncing', 'Uploading...');
@@ -1584,35 +1635,40 @@ function saveData() {
 
     // GUARD A: Never save during initial load
     if (isInitialLoad) {
-        console.warn('⚠️ BLOCKED: Save attempted during initial load');
+        console.warn('[D3-SAVE] ⚠️ BLOCKED by Guard A: isInitialLoad =', isInitialLoad);
         return false;
     }
 
     // GUARD B: Never save if we haven't loaded cloud data yet
     if (!hasLoadedFromCloud) {
-        console.warn('⚠️ BLOCKED: Save attempted before cloud load');
+        console.warn('[D3-SAVE] ⚠️ BLOCKED by Guard B: hasLoadedFromCloud =', hasLoadedFromCloud);
         return false;
     }
 
     // GUARD C: Never save empty state
     if (isEmptyState(roadmapData)) {
-        console.warn('⚠️ BLOCKED: Refusing to save empty state');
+        console.warn('[D3-SAVE] ⚠️ BLOCKED by Guard C: isEmptyState =', isEmptyState(roadmapData));
         return false;
     }
 
     // GUARD D: Verify we have real data loaded
     if (!roadmapData._dataLoaded) {
-        console.warn('⚠️ BLOCKED: Data not properly loaded yet');
+        console.warn('[D3-SAVE] ⚠️ BLOCKED by Guard D: _dataLoaded =', roadmapData._dataLoaded);
         return false;
     }
 
     // GUARD E: Never save to Firebase if PIN not validated (race condition prevention)
     if (firebaseSyncEnabled && !pinValidated) {
-        console.warn('⚠️ BLOCKED: Save attempted before PIN validation');
+        console.warn('[D3-SAVE] ⚠️ BLOCKED by Guard E: pinValidated =', pinValidated, 'firebaseSyncEnabled =', firebaseSyncEnabled);
         return false;
     }
 
     // All guards passed — safe to save
+    console.log('[D3-SAVE] ✅ All guards passed. editedDeadlines:', getCount(roadmapData.editedDeadlines),
+        'customDeadlines:', getCount(roadmapData.customDeadlines),
+        'completedDeadlines:', getCount(roadmapData.completedDeadlines),
+        'deletedDeadlines:', getCount(roadmapData.deletedDeadlines));
+
     // Mark that local changes exist (for conflict detection)
     markLocalChange();
 

@@ -51,15 +51,23 @@ function buildSaveData(saveTimestamp) {
         calendarEvents: calendarEvents || {},
         dailyPlanner: dailyPlanner,
         focusModeData: {
-            oneThingId: focusModeData.oneThingId,
-            microSteps: focusModeData.microSteps,
-            todaysTasks: focusModeData.todaysTasks,
-            lastPlanningDate: focusModeData.lastPlanningDate
+            oneThingId: focusModeData.oneThingId ?? null,
+            microSteps: focusModeData.microSteps || {},
+            todaysTasks: focusModeData.todaysTasks || {},
+            lastPlanningDate: focusModeData.lastPlanningDate ?? null
             // Don't save timer state - it's local only
         },
         commandCenterData: {
-            crashOut: commandCenterData.crashOut,
-            focusStats: commandCenterData.focusStats,
+            crashOut: {
+                sleepTime: commandCenterData.crashOut?.sleepTime ?? null,
+                lastReset: commandCenterData.crashOut?.lastReset ?? null
+            },
+            focusStats: {
+                totalXP: commandCenterData.focusStats?.totalXP ?? 0,
+                focusStreak: commandCenterData.focusStats?.focusStreak ?? 0,
+                dailyStreak: commandCenterData.focusStats?.dailyStreak ?? 0,
+                lockedInStreak: commandCenterData.focusStats?.lockedInStreak ?? 0
+            },
             currentSession: {
                 taskId: commandCenterData.currentSession.taskId ?? null,
                 checklist: commandCenterData.currentSession.checklist || {},
@@ -69,7 +77,7 @@ function buildSaveData(saveTimestamp) {
                 startedAt: commandCenterData.currentSession.startedAt ?? null
             }
         },
-        lastCriticalEODReset: lastCriticalEODReset,
+        lastCriticalEODReset: lastCriticalEODReset ?? null,
         _version: _version,
         _dataLoaded: true,
         lastSaved: saveTimestamp
@@ -1947,9 +1955,9 @@ window.addEventListener('online', function() {
     if (localStorage.getItem('dentalQuestOfflineSyncPending') === 'true' || offlineSyncPending) {
         showToast('\ud83d\udce4 Syncing offline changes...', '\ud83d\udd04');
         // Force a fresh save which will push all current data to Firebase
-        if (firebaseInitialized && currentUser && database) {
+        if (firebaseInitialized && currentUser && database && initialLoadComplete) {
             const data = JSON.parse(localStorage.getItem('dentalStudentQuestData') || '{}');
-            if (Object.keys(data).length > 0) {
+            if (Object.keys(data).length > 0 && !isEmptyState(data)) {
                 database.ref('users/' + currentUser.uid + '/appData').set(data)
                     .then(() => {
                         offlineSyncPending = false;
