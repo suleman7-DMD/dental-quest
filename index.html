@@ -11012,30 +11012,41 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 }
 .sidebar-logo {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px 10px;
+    flex-direction: column;
+    padding: 12px 10px 10px;
+    gap: 0;
+}
+.sidebar-logo-name {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--fg-primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1.15;
+}
+.sidebar-logo-rule {
+    width: 24px;
+    height: 1.5px;
+    background: var(--accent);
+    margin: 5px 0 4px;
+    border-radius: 1px;
+}
+.sidebar-logo-credential {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 8px;
+    color: var(--fg-muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 .sidebar-logo-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: var(--accent);
-    color: var(--accent-fg);
-    border-radius: var(--radius-md);
-    font-weight: 700;
-    font-size: 10px;
-    font-family: var(--font-heading);
-    flex-shrink: 0;
+    display: none;
 }
 .sidebar-logo-text {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 11px;
-    color: var(--fg-primary);
-    white-space: nowrap;
+    display: none;
 }
 .sidebar-section {
     margin-bottom: 4px;
@@ -11240,11 +11251,15 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
     gap: 10px;
 }
 .top-bar-title {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: var(--text-lg);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
     color: var(--fg-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.03em;
+}
+.top-bar-credential {
+    font-weight: 400;
+    color: var(--fg-secondary);
 }
 .top-bar-breadcrumb {
     font-size: var(--text-sm);
@@ -11942,14 +11957,30 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
 @media (max-width: 1024px) {
     .app-layout { grid-template-columns: 56px 1fr; }
     .sidebar { padding: 12px 0; }
-    .sidebar-label, .sidebar-section-label, .sidebar-logo-text { display: none; }
+    .sidebar-label, .sidebar-section-label { display: none; }
+    .sidebar-logo-name, .sidebar-logo-credential, .sidebar-logo-rule { display: none; }
+    .sidebar-logo::before {
+        content: 'SS';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        background: var(--fg-primary);
+        color: var(--surface);
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 11px;
+        font-family: var(--font-body);
+        letter-spacing: 0.06em;
+    }
     .sidebar-stats > .sidebar-stat > span:not(.sidebar-xp-badge):not(i),
     .sidebar-sync-status > span:not(.sync-dot-sidebar) { display: none; }
     .sidebar-item { justify-content: center; padding: 10px; gap: 0; }
     .sidebar-item.active::before { display: none; }
     .sidebar-item.active { border-left: 3px solid var(--accent); }
     .sidebar-badge { display: none; }
-    .sidebar-logo { justify-content: center; padding: 8px 0 16px; }
+    .sidebar-logo { justify-content: center; align-items: center; padding: 8px 0 16px; }
     .sidebar-data-controls { flex-wrap: wrap; justify-content: center; padding: 8px 4px; }
     .sidebar-data-controls button { min-width: 32px; }
     .sidebar-footer { padding: 8px 4px; }
@@ -11989,13 +12020,15 @@ button, a, .nav-link, .stat-card.clickable-card, .category-tab,
         box-shadow: var(--shadow-overlay);
     }
     /* Show labels again in mobile drawer */
-    .sidebar-label, .sidebar-section-label, .sidebar-logo-text { display: unset; }
+    .sidebar-label, .sidebar-section-label { display: unset; }
+    .sidebar-logo-name, .sidebar-logo-credential, .sidebar-logo-rule { display: block; }
+    .sidebar-logo::before { display: none; }
     .sidebar-stats > .sidebar-stat > span:not(.sidebar-xp-badge):not(i) { display: unset; }
     .sidebar-sync-status > span:not(.sync-dot-sidebar) { display: unset; }
     .sidebar-item { justify-content: flex-start; padding: 5px 10px; gap: 6px; }
     .sidebar-item.active::before { display: block; }
     .sidebar-badge { display: flex; }
-    .sidebar-logo { justify-content: flex-start; padding: 4px 10px 10px; }
+    .sidebar-logo { justify-content: flex-start; align-items: flex-start; padding: 10px 10px 12px; }
     .sidebar-data-controls { flex-wrap: nowrap; padding: 4px 0; }
     .sidebar-footer { padding: 6px 8px; }
     .sidebar-stats { align-items: flex-start; }
@@ -12189,8 +12222,8 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     letter-spacing: 0.5px;
 }
 
-/* Sidebar logo icon — subtle shadow */
-.sidebar-logo-icon {
+/* Sidebar logo — tablet monogram */
+.sidebar-logo::before {
     box-shadow: var(--shadow-sm);
 }
 
@@ -12234,8 +12267,9 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-logo">
-            <span class="sidebar-logo-icon">SS</span>
-            <span class="sidebar-logo-text">Sully Suite</span>
+            <span class="sidebar-logo-name">Suleman Shaikh</span>
+            <div class="sidebar-logo-rule"></div>
+            <span class="sidebar-logo-credential">DMD</span>
         </div>
 
         <div class="sidebar-section">
@@ -12314,7 +12348,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         <rect y="15" width="20" height="2" rx="1"/>
                     </svg>
                 </button>
-                <span class="top-bar-title">Sully Suite</span>
+                <span class="top-bar-title">Suleman Shaikh<span class="top-bar-credential">, DMD</span></span>
                 <span class="top-bar-breadcrumb" id="topBarBreadcrumb">&rsaquo; Focus</span>
             </div>
             <div class="top-bar-right">

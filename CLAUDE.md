@@ -51,7 +51,7 @@ const date = new Date(year, month - 1, day);
 | `body-comp-tracker.html` | ~22,444 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
-- **Brand**: "SULEMAN SHAIKH, DMD" (page titles) / "Sully Suite" (sidebar/nav). Rebranded from "Dental Quest" Mar 2026.
+- **Brand**: "SULEMAN SHAIKH, DMD" everywhere (page titles, sidebar wordmark, mobile header). Rebranded from "Dental Quest" → "Sully Suite" → "Suleman Shaikh, DMD" (Mar 2026).
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
 - **Pattern**: Multi-file JS modules (index.html: 12, d3-roadmap: 10, stim calc: 11) + single-file (body-comp, lecture-prompt). No build system. Push to `main` → live in ~30s.
 - **localStorage keys**: Still use `dentalQuest*` prefix (NOT changed — would break existing sessions).
