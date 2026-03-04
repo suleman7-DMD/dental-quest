@@ -803,71 +803,68 @@ function deleteDeadline(index) {
     const _logDeadlineId = getDeadlineId(deadline);
     console.log('[D3-DELETE] Deadline delete requested:', _logDeadlineId, deadline.what);
 
-    // Confirm deletion
-    if (!confirm(`Delete this deadline?\n\n"${deadline.what}"\n${deadline.date} - ${deadline.course}`)) {
-        return;
-    }
+    showCustomConfirm(
+        `Delete this deadline?\n\n"${escapeHtml(deadline.what)}"\n${deadline.date} - ${deadline.course}`,
+        function() {
+            // Remove from deadlines array
+            deadlines.splice(index, 1);
 
-    // Remove from deadlines array
-    deadlines.splice(index, 1);
-
-    // Also remove from customDeadlines if it was custom
-    // FIX: Use deadline.id for precise matching instead of property matching
-    // (property matching can delete wrong deadline if two have identical date/what/course)
-    if (roadmapData.customDeadlines && deadline.custom && deadline.id) {
-        if (roadmapData.customDeadlines[deadline.id]) {
-            delete roadmapData.customDeadlines[deadline.id];
-        }
-    } else if (roadmapData.customDeadlines) {
-        // Fallback for legacy deadlines without id field
-        Object.keys(roadmapData.customDeadlines).forEach(id => {
-            const d = roadmapData.customDeadlines[id];
-            if (d && d.date === deadline.date && d.what === deadline.what && d.course === deadline.course) {
-                delete roadmapData.customDeadlines[id];
+            // Also remove from customDeadlines if it was custom
+            if (roadmapData.customDeadlines && deadline.custom && deadline.id) {
+                if (roadmapData.customDeadlines[deadline.id]) {
+                    delete roadmapData.customDeadlines[deadline.id];
+                }
+            } else if (roadmapData.customDeadlines) {
+                Object.keys(roadmapData.customDeadlines).forEach(id => {
+                    const d = roadmapData.customDeadlines[id];
+                    if (d && d.date === deadline.date && d.what === deadline.what && d.course === deadline.course) {
+                        delete roadmapData.customDeadlines[id];
+                    }
+                });
             }
-        });
-    }
 
-    // Store the deletion (for syncing)
-    if (!roadmapData.deletedDeadlines || Array.isArray(roadmapData.deletedDeadlines)) {
-        roadmapData.deletedDeadlines = migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted');
-    }
-    const deletedId = generateId('deleted');
-    roadmapData.deletedDeadlines[deletedId] = {
-        id: deletedId,
-        date: deadline.date,
-        what: deadline.what,
-        course: deadline.course,
-        deletedAt: new Date().toISOString()
-    };
+            // Store the deletion (for syncing)
+            if (!roadmapData.deletedDeadlines || Array.isArray(roadmapData.deletedDeadlines)) {
+                roadmapData.deletedDeadlines = migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted');
+            }
+            const deletedId = generateId('deleted');
+            roadmapData.deletedDeadlines[deletedId] = {
+                id: deletedId,
+                date: deadline.date,
+                what: deadline.what,
+                course: deadline.course,
+                deletedAt: new Date().toISOString()
+            };
 
-    // Remove from editedDeadlines using original stable ID
-    const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
-    if (roadmapData.editedDeadlines) {
-        // Delete by original stable ID
-        if (roadmapData.editedDeadlines[deadlineId]) {
-            delete roadmapData.editedDeadlines[deadlineId];
-        }
-        // Also clean up any legacy index-based entry
-        if (roadmapData.editedDeadlines[index]) {
-            delete roadmapData.editedDeadlines[index];
-        }
-    }
+            // Remove from editedDeadlines using original stable ID
+            const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
+            if (roadmapData.editedDeadlines) {
+                if (roadmapData.editedDeadlines[deadlineId]) {
+                    delete roadmapData.editedDeadlines[deadlineId];
+                }
+                if (roadmapData.editedDeadlines[index]) {
+                    delete roadmapData.editedDeadlines[index];
+                }
+            }
 
-    // Also remove from completedDeadlines
-    if (roadmapData.completedDeadlines) {
-        if (roadmapData.completedDeadlines[deadlineId]) {
-            delete roadmapData.completedDeadlines[deadlineId];
-        }
-    }
+            // Also remove from completedDeadlines
+            if (roadmapData.completedDeadlines) {
+                if (roadmapData.completedDeadlines[deadlineId]) {
+                    delete roadmapData.completedDeadlines[deadlineId];
+                }
+            }
 
-    const saved = saveData();
-    if (!saved) {
-        showToast('Save blocked — try refreshing', 'error');
-        return;
-    }
-    renderDeadlines();
-    renderDashboard();
+            const saved = saveData();
+            if (!saved) {
+                showToast('Save blocked — try refreshing', 'error');
+                return;
+            }
+            renderDeadlines();
+            renderDashboard();
 
-    showToast('🗑️ Deadline deleted');
+            showToast('Deadline deleted');
+        },
+        null,
+        'Delete Deadline'
+    );
 }

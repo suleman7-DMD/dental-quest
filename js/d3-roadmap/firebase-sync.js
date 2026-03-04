@@ -1497,7 +1497,7 @@ function importAndRestoreDirectly() {
 
 // ==================== FORCE UPLOAD / FORCE PULL ====================
 
-async function forceUploadToCloud() {
+function forceUploadToCloud() {
     if (isEmptyState(roadmapData)) {
         showToast('Cannot force upload - no data');
         return;
@@ -1505,124 +1505,156 @@ async function forceUploadToCloud() {
 
     const dataCount = getDataCountForCheckpoint(roadmapData);
 
-    const confirmed = confirm(
-        `☁️⬆️ FORCE UPLOAD TO CLOUD\n\n` +
-        `This will make THIS device's data the master version.\n` +
-        `All other devices will receive this data.\n\n` +
-        `Current data: ${dataCount}\n\n` +
-        `⚠️ This OVERWRITES cloud data.\n\n` +
-        `Continue?`
+    showCustomConfirm(
+        `FORCE UPLOAD TO CLOUD\n\nThis will make THIS device's data the master version.\nAll other devices will receive this data.\n\nCurrent data: ${dataCount}\n\nThis OVERWRITES cloud data.`,
+        function() {
+            showUploadConfirmModal(async function() {
+                createCheckpoint('Pre-force-upload backup');
+
+                roadmapData._version = Date.now();
+                roadmapData._lastModified = new Date().toISOString();
+                roadmapData.lastSaved = Date.now();
+
+                updateSyncStatus('syncing', 'Uploading...');
+
+                try {
+                    if (!firebaseSyncEnabled) {
+                        throw new Error('Firebase sync not enabled. Try refreshing the page.');
+                    }
+                    if (!database) {
+                        throw new Error('Database not initialized. Try refreshing the page.');
+                    }
+                    if (!userPath) {
+                        throw new Error('User path not set. Please enter your PIN again.');
+                    }
+
+                    let cleanData = JSON.parse(JSON.stringify(roadmapData));
+                    delete cleanData._dataLoaded;
+                    cleanData = sanitizeFirebaseData(cleanData);
+
+                    setLocalUpdateFlag();
+
+                    await database.ref(userPath).set(cleanData);
+                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+                    updateSyncStatus('connected', 'Force uploaded');
+                    showToast('Force upload complete!');
+                } catch (err) {
+                    console.error('Force upload failed:', err);
+                    updateSyncStatus('error', 'Upload failed');
+                    const errorMsg = err.message || 'Unknown error';
+                    showCustomAlert('Force upload failed:\n\n' + errorMsg + '\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted', 'Upload Failed');
+                }
+            });
+        },
+        null,
+        'Force Upload'
     );
-
-    if (!confirmed) return;
-
-    const typed = prompt('Type UPLOAD (in capital letters) to confirm:');
-    if (typed === null) {
-        showToast('Cancelled');
-        return;
-    }
-    if (typed !== 'UPLOAD') {
-        showToast('Cancelled - you must type UPLOAD exactly');
-        return;
-    }
-
-    // Create checkpoint first
-    createCheckpoint(`Pre-force-upload backup`);
-
-    // Force version to be newest
-    roadmapData._version = Date.now();
-    roadmapData._lastModified = new Date().toISOString();
-    roadmapData.lastSaved = Date.now();
-
-    updateSyncStatus('syncing', 'Uploading...');
-
-    try {
-        if (!firebaseSyncEnabled) {
-            throw new Error('Firebase sync not enabled. Try refreshing the page.');
-        }
-        if (!database) {
-            throw new Error('Database not initialized. Try refreshing the page.');
-        }
-        if (!userPath) {
-            throw new Error('User path not set. Please enter your PIN again.');
-        }
-
-        // FIXED: Clean data before Firebase write
-        // JSON.parse(JSON.stringify()) strips undefined values that Firebase rejects
-        let cleanData = JSON.parse(JSON.stringify(roadmapData));
-        // Remove internal flags that shouldn't be in Firebase
-        delete cleanData._dataLoaded;
-        // CRITICAL FIX: Sanitize ALL keys to prevent Firebase InvalidKey throws
-        cleanData = sanitizeFirebaseData(cleanData);
-
-        // Set local update flag to prevent realtime listener from processing our own write
-        setLocalUpdateFlag();
-
-        // Attempt the upload
-        await database.ref(userPath).set(cleanData);
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-        updateSyncStatus('connected', 'Force uploaded ✓');
-        showToast('✅ Force upload complete!');
-    } catch (err) {
-        console.error('Force upload failed:', err);
-        updateSyncStatus('error', 'Upload failed');
-        // More specific error message
-        const errorMsg = err.message || 'Unknown error';
-        showToast('Force upload failed: ' + errorMsg);
-        alert(`Force upload failed:\n\n${errorMsg}\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted`);
-    }
 }
 
-async function forcePullFromCloud() {
-    const confirmed = confirm(
-        `☁️⬇️ FORCE PULL FROM CLOUD\n\n` +
-        `This will OVERWRITE this device's data with cloud data.\n` +
-        `A checkpoint will be created first.\n\n` +
-        `Continue?`
-    );
+function showUploadConfirmModal(onConfirm) {
+    const modal = document.createElement('div');
+    modal.className = 'custom-modal-overlay';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10002;';
 
-    if (!confirmed) return;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;';
 
-    // Backup first
-    if (!isEmptyState(roadmapData)) {
-        createCheckpoint(`Pre-force-pull backup`);
-    }
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'color:#f59e0b;margin:0 0 16px 0;';
+    heading.textContent = 'Confirm Upload';
 
-    updateSyncStatus('syncing', 'Pulling...');
+    const desc = document.createElement('p');
+    desc.style.cssText = 'color:#e2e8f0;margin-bottom:16px;';
+    desc.textContent = 'Type UPLOAD (in capital letters) to confirm:';
 
-    try {
-        // Enhanced connection diagnostics
-        if (!firebaseSyncEnabled) {
-            throw new Error('Firebase sync not enabled. Try refreshing the page.');
-        }
-        if (!database) {
-            throw new Error('Database not initialized. Try refreshing the page.');
-        }
-        if (!userPath) {
-            throw new Error('User path not set. Please enter your PIN again.');
-        }
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.placeholder = 'UPLOAD';
+    inputEl.style.cssText = 'width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:1.1em;text-align:center;box-sizing:border-box;margin-bottom:16px;';
 
-        const snapshot = await database.ref(userPath).once('value');
-        const cloudData = snapshot.val();
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;';
 
-        if (!cloudData || isEmptyState(cloudData)) {
-            showToast('⚠️ Cloud has no data');
-            updateSyncStatus('connected', 'Connected');
+    const confirmBtn = document.createElement('button');
+    confirmBtn.style.cssText = 'flex:1;padding:12px;background:#f59e0b;border:none;border-radius:8px;color:#1e293b;font-weight:600;cursor:pointer;';
+    confirmBtn.textContent = 'Upload';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.style.cssText = 'flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    cancelBtn.textContent = 'Cancel';
+
+    btnRow.appendChild(confirmBtn);
+    btnRow.appendChild(cancelBtn);
+    card.appendChild(heading);
+    card.appendChild(desc);
+    card.appendChild(inputEl);
+    card.appendChild(btnRow);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    inputEl.focus();
+    inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmBtn.click();
+    });
+    confirmBtn.onclick = () => {
+        if (inputEl.value !== 'UPLOAD') {
+            showToast('You must type UPLOAD exactly', 'warning');
             return;
         }
+        modal.remove();
+        onConfirm();
+    };
+    cancelBtn.onclick = () => {
+        modal.remove();
+        showToast('Cancelled');
+    };
+}
 
-        applyRemoteData(cloudData);
-        roadmapData._dataLoaded = true;
+function forcePullFromCloud() {
+    showCustomConfirm(
+        'FORCE PULL FROM CLOUD\n\nThis will OVERWRITE this device\'s data with cloud data.\nA checkpoint will be created first.',
+        async function() {
+            if (!isEmptyState(roadmapData)) {
+                createCheckpoint('Pre-force-pull backup');
+            }
 
-        updateSyncStatus('connected', 'Pulled ✓');
-        showToast(`✅ Force pull complete! ${getDataCountForCheckpoint(roadmapData)}`);
-    } catch (err) {
-        console.error('Force pull failed:', err);
-        updateSyncStatus('error', 'Pull failed');
-        const errorMsg = err.message || 'Unknown error';
-        showToast('Force pull failed: ' + errorMsg);
-        alert(`Force pull failed:\n\n${errorMsg}\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted`);
-    }
+            updateSyncStatus('syncing', 'Pulling...');
+
+            try {
+                if (!firebaseSyncEnabled) {
+                    throw new Error('Firebase sync not enabled. Try refreshing the page.');
+                }
+                if (!database) {
+                    throw new Error('Database not initialized. Try refreshing the page.');
+                }
+                if (!userPath) {
+                    throw new Error('User path not set. Please enter your PIN again.');
+                }
+
+                const snapshot = await database.ref(userPath).once('value');
+                const cloudData = snapshot.val();
+
+                if (!cloudData || isEmptyState(cloudData)) {
+                    showToast('Cloud has no data', 'warning');
+                    updateSyncStatus('connected', 'Connected');
+                    return;
+                }
+
+                applyRemoteData(cloudData);
+                roadmapData._dataLoaded = true;
+
+                updateSyncStatus('connected', 'Pulled');
+                showToast('Force pull complete! ' + getDataCountForCheckpoint(roadmapData));
+            } catch (err) {
+                console.error('Force pull failed:', err);
+                updateSyncStatus('error', 'Pull failed');
+                const errorMsg = err.message || 'Unknown error';
+                showCustomAlert('Force pull failed:\n\n' + errorMsg + '\n\nPlease check:\n1. Internet connection\n2. Try refreshing the page\n3. Re-enter your PIN if prompted', 'Pull Failed');
+            }
+        },
+        null,
+        'Force Pull'
+    );
 }
 
 // ==================== SAVE DATA ====================
