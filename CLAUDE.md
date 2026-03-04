@@ -24,6 +24,9 @@ const date = new Date(year, month - 1, day);
 - **`undefined` in Firebase `.set()`**: Firebase rejects `undefined` values — use `?? null` or `?? false` for any field that might not be initialized. Crashes ALL saves silently.
 - **`doToday` only for eod**: Only `urgency === 'eod'` should set `doToday: true`. Never set it for 'soon' — inflates TODAY count (fixed Mar 2026).
 - **Stats cumulative counters**: `stats.totalTasks` drifts over time. Use live count from `getValues(tasks)` instead (fixed Mar 2026 in `updateStats()`).
+- **UTC vs local dates**: Never use `.toISOString().slice(0,10)` for date comparisons — use `getLocalDateString(date)`. UTC can be wrong date in EST (fixed Mar 2026 in `updateSidebarStats()`).
+- **Wrong field names in focusStats**: `dailyStreak` not `streak`. Always verify field names against `getDefaultState()` or `state.js` defaults.
+- **XP dual counters**: `toggleTask()` must use `awardCommandCenterXP()` to update BOTH `stats.totalXPGained` AND `commandCenterData.focusStats.totalXP`. Un-completing must subtract from both.
 
 ---
 
