@@ -27,6 +27,11 @@ const date = new Date(year, month - 1, day);
 - **UTC vs local dates**: Never use `.toISOString().slice(0,10)` for date comparisons — use `getLocalDateString(date)`. UTC can be wrong date in EST (fixed Mar 2026 in `updateSidebarStats()`).
 - **Wrong field names in focusStats**: `dailyStreak` not `streak`. Always verify field names against `getDefaultState()` or `state.js` defaults.
 - **XP dual counters**: `toggleTask()` must use `awardCommandCenterXP()` to update BOTH `stats.totalXPGained` AND `commandCenterData.focusStats.totalXP`. Un-completing must subtract from both.
+- **Task creation field consistency**: ALL 4 creation sites (addTask, triageQuickAddTask, quickAddToColumn, submitQuickAdd) MUST set triageTier, triageOrder, triageDate when urgency is eod/soon/week (fixed Mar 2026).
+- **XP on uncomplete**: ALL uncomplete paths must subtract tier-based XP (50/75/40/25), not flat 20. Must subtract from ALL 3 counters: totalXPGained, focusStats.totalXP, categoryXPGained (fixed Mar 2026).
+- **Crash Out field cleanup**: resetCrashOutDay() must delete ALL 4 fields: crashOutScheduled, crashOutTime, crashOutDuration, crashOutOrder (fixed Mar 2026).
+- **onclick string IDs**: When generating onclick handlers with template literals for task IDs, ALWAYS quote: `onclick="fn('${taskId}')"` not `onclick="fn(${taskId})"` — string IDs cause ReferenceError (fixed Mar 2026).
+- **XSS in innerHTML**: ALL user text (task.text, event.description, card.name, notes) MUST use `escapeHtml()` when rendered in innerHTML. Audit any new innerHTML for unescaped user content.
 
 ---
 
@@ -43,8 +48,10 @@ const date = new Date(year, month - 1, day);
 | `body-comp-tracker.html` | ~22,444 | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` | ~2,800 | Lecture notes prompt builder (standalone) |
 
+- **Brand**: "SULEMAN SHAIKH, DMD" (page titles) / "Sully Suite" (sidebar/nav). Rebranded from "Dental Quest" Mar 2026.
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
 - **Pattern**: Multi-file JS modules (index.html: 12, d3-roadmap: 10, stim calc: 11) + single-file (body-comp, lecture-prompt). No build system. Push to `main` → live in ~30s.
+- **localStorage keys**: Still use `dentalQuest*` prefix (NOT changed — would break existing sessions).
 
 ---
 
@@ -242,9 +249,11 @@ All cross-module function calls are safe because init.js loads LAST after all mo
 - **Someday** (inbox): Default for new tasks. No triage mapping.
 - `migrateTaskUrgency()` in firebase-sync.js infers urgency from existing `doToday`/`triageTier` for backward compat.
 - Unified card component: `renderSynchroCard(task)` used in both list and board views.
-- **Card structure** (Mar 2026): title → meta (dot+category+date) → badges (size badge + today + leverage + stale). Progress bar REMOVED.
+- **Card structure** (Mar 2026): checkbox ring → title → meta (dot+category+date) → badges (size badge + today + leverage + stale). Progress bar REMOVED.
+- **Checkbox ring**: 20px with 2px border, hover scale, active press animation. Calls `toggleTask()` on click.
 - **List view**: urgency-colored left borders (eod=red, soon=amber, week=olive, month=blue, inbox=grey).
 - **Sidebar**: 150px width (compressed from 240px, Mar 2026). Text labels preserved at 11px.
+- **Dashboard DONE metric**: Shows all-time completed count (NOT today-only). Element: `#metricCompleted`.
 
 ### Command Center Modes
 `commandCenterMode`: `'triage'` | `'crashout'` | `'focus'`
