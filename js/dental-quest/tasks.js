@@ -895,7 +895,6 @@ function renderSynchroCard(task) {
         school: 'School', academic: 'Academic', future: 'Future', life: 'Life'
     };
     var sizeLabel = task.size === 'big' ? '1h+' : task.size === 'small' ? '15 min' : '30 min';
-    var sizePercent = task.size === 'big' ? 100 : task.size === 'small' ? 25 : 50;
     var completedClass = task.completed ? ' completed' : '';
     var catColor = getCategoryColor(task.category);
     var catName = catNames[task.category] || 'Health';
@@ -941,6 +940,9 @@ function renderSynchroCard(task) {
         badges += '<span class="synchro-card-stale-badge">' + staleDays + 'd</span>';
     }
 
+    // Size badge (always shown)
+    badges = '<span class="synchro-badge synchro-badge-size">' + sizeLabel + '</span>' + badges;
+
     var checkIcon = task.completed ? icon('check-circle', 18) : '';
     var checkClass = task.completed ? ' checked' : '';
 
@@ -956,8 +958,6 @@ function renderSynchroCard(task) {
                     '<span class="synchro-card-cat-label">' + catName + '</span>' +
                     (dateStr ? '<span class="synchro-card-date">' + dateStr + '</span>' : '') +
                 '</div>' +
-                '<div class="synchro-card-progress"><div class="synchro-card-progress-fill" style="width:' + sizePercent + '%;background:' + catColor + '"></div></div>' +
-                '<span class="synchro-card-progress-label">' + sizeLabel + '</span>' +
                 (badges ? '<div class="synchro-card-badges">' + badges + '</div>' : '') +
             '</div>' +
             '<div class="synchro-card-actions">' +
