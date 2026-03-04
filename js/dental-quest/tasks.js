@@ -660,20 +660,23 @@ function updateStats() {
     const availableElement = document.getElementById('totalXPAvailable');
     const doTodayElement = document.getElementById('tasksToDoToday');
 
-    // Calculate metrics — single pass
+    // Calculate metrics — single pass from actual task data
     const allTasksArr = getValues(tasks);
     let tasksRemaining = 0;
     let doTodayTasks = 0;
+    let completedTasks = 0;
     for (let i = 0; i < allTasksArr.length; i++) {
         if (!allTasksArr[i].completed) {
             tasksRemaining++;
             if (allTasksArr[i].doToday) doTodayTasks++;
+        } else {
+            completedTasks++;
         }
     }
     const totalXPAvailable = tasksRemaining * 20;
 
     if (totalXPElement) totalXPElement.textContent = stats.totalXPGained;
-    if (totalElement) totalElement.textContent = stats.totalTasks;
+    if (totalElement) totalElement.textContent = completedTasks;
     if (remainingElement) remainingElement.textContent = tasksRemaining;
     if (availableElement) availableElement.textContent = totalXPAvailable;
     if (doTodayElement) doTodayElement.textContent = doTodayTasks;
@@ -1110,7 +1113,7 @@ function quickAddToColumn(urgency) {
             text: text.trim(),
             category: localStorage.getItem('lastTaskCategory') || 'health',
             completed: false,
-            doToday: isEod || urgency === 'soon',
+            doToday: isEod,
             urgency: urgency,
             createdAt: new Date().toISOString(),
             size: 'medium',

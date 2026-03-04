@@ -71,7 +71,7 @@ function submitQuickAdd() {
         text: text,
         category: qaSelectedCategory,
         completed: false,
-        doToday: qaDoToday || quickAddUrgency === 'eod' || quickAddUrgency === 'soon',
+        doToday: qaDoToday || quickAddUrgency === 'eod',
         createdAt: new Date().toISOString(),
         size: qaSelectedSize,
         highLeverage: qaHighLeverage,
