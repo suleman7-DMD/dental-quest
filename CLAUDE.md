@@ -22,6 +22,8 @@ const date = new Date(year, month - 1, day);
 - **Double loadData()**: Causes race conditions. **Orphan function calls**: Verify function exists.
 - **`_version: Date.now()`**: Causes data wipe. Must be 0 in defaults.
 - **`undefined` in Firebase `.set()`**: Firebase rejects `undefined` values — use `?? null` or `?? false` for any field that might not be initialized. Crashes ALL saves silently.
+- **`doToday` only for eod**: Only `urgency === 'eod'` should set `doToday: true`. Never set it for 'soon' — inflates TODAY count (fixed Mar 2026).
+- **Stats cumulative counters**: `stats.totalTasks` drifts over time. Use live count from `getValues(tasks)` instead (fixed Mar 2026 in `updateStats()`).
 
 ---
 
@@ -237,6 +239,9 @@ All cross-module function calls are safe because init.js loads LAST after all mo
 - **Someday** (inbox): Default for new tasks. No triage mapping.
 - `migrateTaskUrgency()` in firebase-sync.js infers urgency from existing `doToday`/`triageTier` for backward compat.
 - Unified card component: `renderSynchroCard(task)` used in both list and board views.
+- **Card structure** (Mar 2026): title → meta (dot+category+date) → badges (size badge + today + leverage + stale). Progress bar REMOVED.
+- **List view**: urgency-colored left borders (eod=red, soon=amber, week=olive, month=blue, inbox=grey).
+- **Sidebar**: 150px width (compressed from 240px, Mar 2026). Text labels preserved at 11px.
 
 ### Command Center Modes
 `commandCenterMode`: `'triage'` | `'crashout'` | `'focus'`
