@@ -29,6 +29,9 @@ const date = new Date(year, month - 1, day);
 - **XP dual counters**: `toggleTask()` must use `awardCommandCenterXP()` to update BOTH `stats.totalXPGained` AND `commandCenterData.focusStats.totalXP`. Un-completing must subtract from both.
 - **Task creation field consistency**: ALL 4 creation sites (addTask, triageQuickAddTask, quickAddToColumn, submitQuickAdd) MUST set triageTier, triageOrder, triageDate when urgency is eod/soon/week (fixed Mar 2026).
 - **XP on uncomplete**: ALL uncomplete paths must subtract tier-based XP (50/75/40/25), not flat 20. Must subtract from ALL 3 counters: totalXPGained, focusStats.totalXP, categoryXPGained (fixed Mar 2026).
+- **StableId before mutation**: In deadline edit handlers, compute `getDeadlineId(deadline)` BEFORE modifying fields. After mutation, the computed ID changes and won't match on reload. Use `deadline._originalStableId` (set in `initUI()`) for all persistence keys.
+- **Shallow grades merge**: `{ ...roadmapData.grades, ...(data.grades || {}) }` is WRONG — overwrites individual grades. Use deep per-course IIFE merge (fixed Mar 2026 in d3-roadmap).
+- **localStorage before Firebase**: `loadFromFirebase()` must call `loadFromLocalStorage(false)` BEFORE `mergeRemoteState(data)` so debounced-but-unsynced local changes survive reload.
 - **Crash Out field cleanup**: resetCrashOutDay() must delete ALL 4 fields: crashOutScheduled, crashOutTime, crashOutDuration, crashOutOrder (fixed Mar 2026).
 - **onclick string IDs**: When generating onclick handlers with template literals for task IDs, ALWAYS quote: `onclick="fn('${taskId}')"` not `onclick="fn(${taskId})"` — string IDs cause ReferenceError (fixed Mar 2026).
 - **XSS in innerHTML**: ALL user text (task.text, event.description, card.name, notes) MUST use `escapeHtml()` when rendered in innerHTML. Audit any new innerHTML for unescaped user content.
@@ -379,6 +382,12 @@ Dashboard, Deadlines, Courses, Grades, Exam Content, Classmate Share, Mandatory,
 - **Competencies**: 10 categories in clinical.js, object-based, status toggles, progress rings
 - **Cross-app**: Reads Do Today tasks from index.html via `setupMainAppTasksSync()`. Writes exams for Body Comp.
 - **mergeRemoteState()**: Single consolidated function in firebase-sync.js (replaces 4 duplicated merge blocks)
+- **`_originalStableId`**: Every deadline gets tagged with its original stableId in `initUI()` BEFORE edits are applied. All CRUD operations use `deadline._originalStableId || getDeadlineId(deadline)` for persistence keys.
+- **Save feedback**: All CRUD functions check `saveData()` return value. Shows "Save blocked" error toast if guards reject.
+- **loadFromFirebase**: Calls `loadFromLocalStorage(false)` BEFORE `mergeRemoteState(data)` to preserve debounced local changes.
+- **Grades merge**: Deep per-course IIFE (not shallow spread) in both `mergeRemoteState()` and `loadFromLocalStorage()`.
+- **No native dialogs**: All `alert()`/`confirm()`/`prompt()` replaced with custom DOM modals in deadlines.js and firebase-sync.js. PIN entry uses custom modal. Delete/restore use `showCustomConfirm()` callbacks.
+- **Diagnostic logs**: `[D3-SAVE]` guards, `[D3-EDIT/ADD/DONE/DELETE]` CRUD, `[D3-INIT]` restore counts.
 
 ### Grade Calculator (DON'T CHANGE — in grades.js)
 ```javascript

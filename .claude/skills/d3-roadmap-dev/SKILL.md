@@ -444,3 +444,8 @@ If you see ANY of these in code you're writing:
 - Removing or weakening any of the 5 sync guards
 - Setting `_version: Date.now()` in defaults (must be 0)
 - Using array index as deadline key (use `getDeadlineId()` for stable IDs)
+- Computing `getDeadlineId()` AFTER mutating deadline fields — MUST use `deadline._originalStableId` for persistence keys
+- Not checking `saveData()` return value in CRUD functions — must show error toast if returns false
+- Shallow grades merge: `{ ...roadmapData.grades, ...(data.grades) }` — MUST deep-merge per course
+- Using native `alert()`/`confirm()`/`prompt()` — use `showCustomAlert()`/`showCustomConfirm()`/`showToast()` from state.js
+- Calling `mergeRemoteState(data)` without first loading localStorage in `loadFromFirebase()`
