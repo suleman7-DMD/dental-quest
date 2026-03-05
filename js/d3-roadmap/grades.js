@@ -187,7 +187,10 @@ function updateGrade(courseId, componentId, value) {
     // Sync back to deadlines - find matching deadline and update
     syncGradeToDeadline(courseId, componentId, grade);
 
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+    }
     loadCourseGrades(); // Refresh the display with new running totals
 }
 
@@ -215,11 +218,12 @@ function syncGradeToDeadline(courseId, componentId, grade) {
 
         let isMatch = false;
 
-        // Quiz matching
+        // Quiz matching (use regex to avoid false positives: quiz1 matching quiz10)
         const quizMatch = componentId.match(/quiz(\d+)/);
         if (quizMatch) {
             const quizNum = quizMatch[1];
-            if (what.includes('quiz') && what.includes(quizNum)) {
+            const quizRegex = new RegExp('quiz\\s*' + quizNum + '(?!\\d)', 'i');
+            if (quizRegex.test(d.what)) {
                 isMatch = true;
             }
         }
@@ -236,6 +240,13 @@ function syncGradeToDeadline(courseId, componentId, grade) {
         if (componentId === 'rx2' && (what.includes('rx #2') || what.includes('rx#2'))) isMatch = true;
         if (componentId === 'takehome1' && what.includes('take home') && what.includes('1')) isMatch = true;
         if (componentId === 'takehome2' && what.includes('take home') && what.includes('2')) isMatch = true;
+        if (componentId === 'medConsult' && what.includes('medical consultation')) isMatch = true;
+        if (componentId === 'passionProject' && what.includes('passion project')) isMatch = true;
+
+        // Critical Thinking project matching
+        if (componentId === 'groupPpt' && what.includes('group powerpoint')) isMatch = true;
+        if (componentId === 'groupVideo' && what.includes('group video')) isMatch = true;
+        if (componentId === 'systematicReview' && what.includes('systematic review')) isMatch = true;
 
         if (isMatch) {
             if (grade !== null) {
@@ -269,7 +280,10 @@ function syncGradeToDeadline(courseId, componentId, grade) {
     });
 
     // CRITICAL FIX: Save the updated completion status
-    saveData();
+    const saved = saveData();
+    if (!saved) {
+        showToast('Save blocked — try refreshing', 'error');
+    }
 
     // Re-render deadlines to show updated status
     renderDeadlines();

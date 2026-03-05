@@ -195,7 +195,7 @@ function dpCompleteSession() {
         document.getElementById('dpTimerMode').textContent = 'Break Time! 🎉';
         dpUpdateTimerDisplay();
 
-        alert('Great work! Time for a break! 🎉\n\nPomodoros completed today: ' + roadmapData.dailyPlanner.pomodorosCompleted);
+        showCustomAlert('Great work! Time for a break! 🎉\n\nPomodoros completed today: ' + roadmapData.dailyPlanner.pomodorosCompleted, 'Session Complete');
     } else {
         // Break completed
         dpIsWorkSession = true;
@@ -203,7 +203,7 @@ function dpCompleteSession() {
         document.getElementById('dpTimerMode').textContent = 'Work Session';
         dpUpdateTimerDisplay();
 
-        alert('Break over! Ready for another session? 💪');
+        showCustomAlert('Break over! Ready for another session! 💪', 'Break Over');
     }
 
     document.getElementById('dpStartBtn').style.display = 'inline-block';
@@ -339,12 +339,12 @@ function dpAddEvent() {
 
     if (!task) {
         taskInput?.focus();
-        alert('Please enter a task!');
+        showToast('Please enter a task', 'warning');
         return;
     }
 
     if (!time) {
-        alert('Please select a time!');
+        showToast('Please select a time', 'warning');
         return;
     }
 
@@ -534,30 +534,33 @@ function dpScrollToNow() {
 }
 
 function dpClearDay() {
-    if (!confirm('Are you sure you want to clear all tasks and reset the day?\n\nThis will remove all scheduled tasks, notes, and reset the pomodoro count.')) {
-        return;
-    }
+    showCustomConfirm(
+        'Are you sure you want to clear all tasks and reset the day?\n\nThis will remove all scheduled tasks, notes, and reset the pomodoro count.',
+        function() {
+            roadmapData.dailyPlanner = {
+                date: getLocalDateString(),
+                focus: '',
+                notes: '',
+                blocks: {},  // Object-based storage for Firebase safety
+                pomodorosCompleted: 0,
+                bedtime: '23:00'
+            };
 
-    roadmapData.dailyPlanner = {
-        date: getLocalDateString(),
-        focus: '',
-        notes: '',
-        blocks: {},  // Object-based storage for Firebase safety
-        pomodorosCompleted: 0,
-        bedtime: '23:00'
-    };
+            // Clear UI
+            const focusInput = document.getElementById('dpTodayFocus');
+            const notesInput = document.getElementById('dpDailyNotes');
+            if (focusInput) focusInput.value = '';
+            if (notesInput) notesInput.value = '';
 
-    // Clear UI
-    const focusInput = document.getElementById('dpTodayFocus');
-    const notesInput = document.getElementById('dpDailyNotes');
-    if (focusInput) focusInput.value = '';
-    if (notesInput) notesInput.value = '';
+            saveDailyPlannerData();
+            dpRenderTimeline();
+            dpUpdateStats();
 
-    saveDailyPlannerData();
-    dpRenderTimeline();
-    dpUpdateStats();
-
-    alert('Day cleared! Start fresh. 💪');
+            showToast('Day cleared! Start fresh. 💪');
+        },
+        null,
+        'Clear Day'
+    );
 }
 
 function saveDailyPlannerData() {

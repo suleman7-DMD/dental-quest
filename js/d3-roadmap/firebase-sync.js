@@ -302,11 +302,11 @@ function markLocalChange() {
 
 function setLocalUpdateFlag() {
     isLocalUpdate = true;
-    // Clear flag after 5 seconds (longer than debounce + slow network latency)
+    // Clear flag after 10 seconds (longer than debounce + slow network latency on poor connections)
     if (localUpdateTimer) clearTimeout(localUpdateTimer);
     localUpdateTimer = setTimeout(() => {
         isLocalUpdate = false;
-    }, 5000);
+    }, 10000);
 }
 
 // Show conflict resolution modal
@@ -648,9 +648,21 @@ function loadFromFirebase() {
             const data = snapshot.val();
             if (data) {
                 // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
-                // Then merge Firebase data on top (Firebase wins for fields it has)
                 loadFromLocalStorage(false);
-                mergeRemoteState(data);
+
+                // BUG 2 FIX: Compare timestamps — only merge Firebase if it's same-age or newer
+                const localLastSaved = roadmapData.lastSaved || 0;
+                const remoteLastSaved = data.lastSaved || 0;
+
+                if (localLastSaved > remoteLastSaved) {
+                    // Local is NEWER — keep local data, don't overwrite with stale Firebase
+                    console.log('[D3-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
+                    roadmapData._dataLoaded = true;
+                    migrateInvalidFirebaseKeys(roadmapData);
+                } else {
+                    // Firebase is same or newer — merge normally
+                    mergeRemoteState(data);
+                }
 
                 // Also save to localStorage as backup
                 safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
@@ -662,20 +674,27 @@ function loadFromFirebase() {
                 updateSyncStatus('connected', 'Synced');
             }
 
-            // Mark that we've loaded from cloud (even if empty)
+            // BUG 1 FIX: SET ALL FLAGS FIRST — before any rendering
+            // Any save triggered during initUI() was blocked because isInitialLoad was still true
             hasLoadedFromCloud = true;
-
-            initUI();
-
-            // Set up real-time listener for cross-device sync
-            setupRealtimeSync();
-
-            // Set up cross-app sync for main app "Do Today" tasks
-            setupMainAppTasksSync();
-
-            // NOW we can allow saves
             isInitialLoad = false;
-            lastSyncTimestamp = Date.now(); // FIX: Initialize so conflict detection works on first Sync click
+            roadmapData._dataLoaded = true;
+            lastSyncTimestamp = Date.now();
+
+            // THEN render (in try/catch so flags are ALWAYS set even if rendering crashes)
+            try {
+                initUI();
+            } catch (e) {
+                console.error('[D3-LOAD] initUI error after Firebase load:', e);
+            }
+
+            // Set up sync listeners (in try/catch to not block on errors)
+            try {
+                setupRealtimeSync();
+                setupMainAppTasksSync();
+            } catch (e) {
+                console.error('[D3-LOAD] Sync setup error:', e);
+            }
         })
         .catch(error => {
             console.error('❌ Firebase load error:', error);
@@ -1659,8 +1678,36 @@ function forcePullFromCloud() {
 
 // ==================== SAVE DATA ====================
 
+// Diagnostic: log all guard values for debugging save failures
+function debugSaveState() {
+    const guardValues = {
+        isInitialLoad: isInitialLoad,
+        hasLoadedFromCloud: hasLoadedFromCloud,
+        isEmptyState: isEmptyState(roadmapData),
+        _dataLoaded: roadmapData._dataLoaded,
+        pinValidated: pinValidated,
+        firebaseSyncEnabled: firebaseSyncEnabled,
+        userPath: !!userPath,
+        database: !!database,
+        localChangesSinceLastSync: localChangesSinceLastSync,
+        lastSyncTimestamp: lastSyncTimestamp,
+        lastSaveTime: lastSaveTime,
+        isLocalUpdate: isLocalUpdate,
+        editedDeadlines: getCount(roadmapData.editedDeadlines),
+        customDeadlines: getCount(roadmapData.customDeadlines),
+        completedDeadlines: getCount(roadmapData.completedDeadlines),
+        deletedDeadlines: getCount(roadmapData.deletedDeadlines),
+        lastSaved: roadmapData.lastSaved,
+        _version: roadmapData._version
+    };
+    console.log('[D3-SAVE] 🔍 Debug save state:', guardValues);
+    return guardValues;
+}
+
 // Save data with debounce - BULLETPROOF VERSION
 function saveData() {
+    // Log all guard values for diagnostics
+    debugSaveState();
     // ============================================
     // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
     // ============================================
@@ -1828,9 +1875,12 @@ document.addEventListener('visibilitychange', function() {
                             return;
                         }
 
-                        // Use consolidated merge function
-                        mergeRemoteState(data);
-                        initUI();
+                        // BUG 3 FIX: Only apply Firebase data if it's actually NEWER than local
+                        // Prevents stale cloud data from overwriting recent local changes
+                        if (data.lastSaved && data.lastSaved > (roadmapData.lastSaved || 0) + 1000) {
+                            mergeRemoteState(data);
+                            initUI();
+                        }
                     }
                 })
                 .catch(err => console.error('Refresh on visible failed:', err));

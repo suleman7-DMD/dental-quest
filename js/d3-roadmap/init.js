@@ -11,8 +11,9 @@ function renderDashboard() {
 
     // Stats row - dynamically calculated from deadlines array
     const upcomingExams = exams.filter(e => getCountdown(e.date) >= 0 && getCountdown(e.date) <= 30).length;
-    const urgentDeadlines = deadlines.filter(d => getCountdown(d.date) >= 0 && getCountdown(d.date) <= 7).length;
+    const urgentDeadlines = deadlines.filter(d => !d.done && getCountdown(d.date) >= 0 && getCountdown(d.date) <= 7).length;
     const next14Deadlines = deadlines.filter(d => {
+        if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 7 && days <= 14;
     }).length;
@@ -58,7 +59,9 @@ function renderDashboard() {
     }
 
     // Next 7 days - directly from deadlines array (synced with Deadlines tab)
+    // FIX: Filter out completed deadlines so they don't clutter the dashboard
     const next7 = deadlines.filter(d => {
+        if (d.done) return false;
         const days = getCountdown(d.date);
         return days >= 0 && days <= 7;
     }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
@@ -69,6 +72,7 @@ function renderDashboard() {
 
     // Next 8-14 days
     const next14 = deadlines.filter(d => {
+        if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 7 && days <= 14;
     }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
@@ -79,6 +83,7 @@ function renderDashboard() {
 
     // Next 15-30 days (next month)
     const nextMonth = deadlines.filter(d => {
+        if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 14 && days <= 30;
     }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
@@ -359,6 +364,12 @@ function initUI() {
                 // Try to find deadline by stable ID first
                 let deadlineIdx = deadlines.findIndex(d => getDeadlineId(d) === key);
 
+                // FIX: Also check _originalStableId — if an earlier edit in this loop
+                // already mutated a deadline, getDeadlineId(d) may no longer match
+                if (deadlineIdx === -1) {
+                    deadlineIdx = deadlines.findIndex(d => d._originalStableId === key);
+                }
+
                 // Fallback: Legacy numeric index (for migration from old data)
                 if (deadlineIdx === -1 && /^\d+$/.test(key)) {
                     const idx = parseInt(key, 10);
@@ -405,8 +416,8 @@ function initUI() {
                     month: month,
                     custom: true,
                     id: d.id,  // CRITICAL: Preserve the custom deadline ID!
-                    done: d.done || false,
-                    grade: d.grade || null,
+                    done: d.done ?? false,
+                    grade: d.grade ?? null,
                     _originalStableId: d.id ? sanitizeFirebaseKey(d.id) : getDeadlineId({date: d.date, course: d.course || 'Other', what: d.what})
                 });
             });
@@ -426,6 +437,13 @@ function initUI() {
 
                 // Try to find deadline by stable ID first
                 let deadlineIdx = deadlines.findIndex(d => getDeadlineId(d) === key);
+
+                // FIX: Also check _originalStableId — after edits are applied above,
+                // getDeadlineId(d) uses post-edit properties, but the completedDeadlines
+                // key was stored using the pre-edit _originalStableId
+                if (deadlineIdx === -1) {
+                    deadlineIdx = deadlines.findIndex(d => d._originalStableId === key);
+                }
 
                 // Fallback: If key looks like an old numeric index, try matching by properties
                 if (deadlineIdx === -1 && /^\d+$/.test(key)) {

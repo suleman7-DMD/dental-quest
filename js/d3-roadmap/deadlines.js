@@ -87,8 +87,8 @@ function renderDeadlines() {
             const days = getCountdown(d.date);
             const isPassed = days < 0;
             const deadlineId = getDeadlineId(d);
-            const isCustom = d.custom || false;
-            const isDone = d.done || false;
+            const isCustom = d.custom ?? false;
+            const isDone = d.done ?? false;
             const grade = d.grade !== undefined ? d.grade : null;
 
             // Row styling based on done status
@@ -215,8 +215,8 @@ function handleDateChange(inputEl) {
         weight: deadline.weight,
         type: deadline.type,
         tbd: deadline.tbd,
-        done: deadline.done || false,    // FIXED: Preserve completion status
-        grade: deadline.grade || null     // FIXED: Preserve grade
+        done: deadline.done ?? false,    // FIXED: use ?? not || to preserve grade=0
+        grade: deadline.grade ?? null     // FIXED: use ?? not || to preserve grade=0
     };
 
     // Save immediately
@@ -280,8 +280,8 @@ function handleTextEdit(inputEl) {
         weight: deadline.weight,
         type: deadline.type,
         tbd: deadline.tbd,
-        done: deadline.done || false,    // Preserve completion status
-        grade: deadline.grade || null    // Preserve grade
+        done: deadline.done ?? false,    // Preserve completion status (use ?? not ||)
+        grade: deadline.grade ?? null    // Preserve grade of 0 (use ?? not ||)
     };
 
     // Save immediately
@@ -457,6 +457,8 @@ function submitNewDeadline() {
     console.log('[D3-ADD] Custom deadline added:', deadlineId, what);
     roadmapData.customDeadlines[deadlineId] = newDeadline;
 
+    // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -517,6 +519,8 @@ function toggleDeadlineDone(index) {
         // Update grades if this was synced
         syncDeadlineToGrades(deadline, false);
 
+        // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
+        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
         const saved = saveData();
         if (!saved) {
             showToast('Save blocked — try refreshing', 'error');
@@ -656,12 +660,23 @@ function submitDeadlineGrade(index) {
         roadmapData.customDeadlines[deadline.id].grade = grade;
     }
 
+    // FIX: Also update editedDeadlines so completion persists through initUI restore
+    // Without this, if deadline was previously edited, editedDeadlines has done:false
+    // which overwrites the completion on reload
+    if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+    if (roadmapData.editedDeadlines[deadlineId]) {
+        roadmapData.editedDeadlines[deadlineId].done = true;
+        roadmapData.editedDeadlines[deadlineId].grade = grade;
+    }
+
     // Sync to grades tab
     syncDeadlineToGrades(deadline, true, grade);
 
     // Close modal
     document.getElementById('gradeInputModal').remove();
 
+    // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -800,24 +815,38 @@ function deleteDeadline(index) {
     }
 
     const deadline = deadlines[index];
-    const _logDeadlineId = getDeadlineId(deadline);
-    console.log('[D3-DELETE] Deadline delete requested:', _logDeadlineId, deadline.what);
+    // Capture stable ID NOW before any mutations or confirm delay
+    const stableId = deadline._originalStableId || getDeadlineId(deadline);
+    console.log('[D3-DELETE] Deadline delete requested:', stableId, deadline.what);
 
     showCustomConfirm(
         `Delete this deadline?\n\n"${escapeHtml(deadline.what)}"\n${deadline.date} - ${deadline.course}`,
         function() {
+            // FIX: Re-lookup by stable ID inside callback to prevent stale index
+            let currentIndex = deadlines.findIndex(d => (d._originalStableId || getDeadlineId(d)) === stableId);
+            if (currentIndex === -1) {
+                // Fallback: try original index if it still looks right
+                if (index < deadlines.length && (deadlines[index]._originalStableId || getDeadlineId(deadlines[index])) === stableId) {
+                    currentIndex = index;
+                } else {
+                    showToast('Deadline not found — may have been already deleted', 'error');
+                    return;
+                }
+            }
+            const targetDeadline = deadlines[currentIndex];
+
             // Remove from deadlines array
-            deadlines.splice(index, 1);
+            deadlines.splice(currentIndex, 1);
 
             // Also remove from customDeadlines if it was custom
-            if (roadmapData.customDeadlines && deadline.custom && deadline.id) {
-                if (roadmapData.customDeadlines[deadline.id]) {
-                    delete roadmapData.customDeadlines[deadline.id];
+            if (roadmapData.customDeadlines && targetDeadline.custom && targetDeadline.id) {
+                if (roadmapData.customDeadlines[targetDeadline.id]) {
+                    delete roadmapData.customDeadlines[targetDeadline.id];
                 }
             } else if (roadmapData.customDeadlines) {
                 Object.keys(roadmapData.customDeadlines).forEach(id => {
                     const d = roadmapData.customDeadlines[id];
-                    if (d && d.date === deadline.date && d.what === deadline.what && d.course === deadline.course) {
+                    if (d && d.date === targetDeadline.date && d.what === targetDeadline.what && d.course === targetDeadline.course) {
                         delete roadmapData.customDeadlines[id];
                     }
                 });
@@ -830,30 +859,28 @@ function deleteDeadline(index) {
             const deletedId = generateId('deleted');
             roadmapData.deletedDeadlines[deletedId] = {
                 id: deletedId,
-                date: deadline.date,
-                what: deadline.what,
-                course: deadline.course,
+                date: targetDeadline.date,
+                what: targetDeadline.what,
+                course: targetDeadline.course,
                 deletedAt: new Date().toISOString()
             };
 
             // Remove from editedDeadlines using original stable ID
-            const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
             if (roadmapData.editedDeadlines) {
-                if (roadmapData.editedDeadlines[deadlineId]) {
-                    delete roadmapData.editedDeadlines[deadlineId];
-                }
-                if (roadmapData.editedDeadlines[index]) {
-                    delete roadmapData.editedDeadlines[index];
+                if (roadmapData.editedDeadlines[stableId]) {
+                    delete roadmapData.editedDeadlines[stableId];
                 }
             }
 
             // Also remove from completedDeadlines
             if (roadmapData.completedDeadlines) {
-                if (roadmapData.completedDeadlines[deadlineId]) {
-                    delete roadmapData.completedDeadlines[deadlineId];
+                if (roadmapData.completedDeadlines[stableId]) {
+                    delete roadmapData.completedDeadlines[stableId];
                 }
             }
 
+            // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             const saved = saveData();
             if (!saved) {
                 showToast('Save blocked — try refreshing', 'error');

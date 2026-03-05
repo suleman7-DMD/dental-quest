@@ -776,19 +776,19 @@ function mpSaveTask() {
     const notes = document.getElementById('mpModalNotes').value.trim();
 
     if (!item) {
-        alert('Task name is required');
+        showToast('Task name is required', 'warning');
         document.getElementById('mpModalItem').focus();
         return;
     }
     if (!date) {
-        alert('Date is required');
+        showToast('Date is required', 'warning');
         document.getElementById('mpModalDate').focus();
         return;
     }
 
     // Validate end time is after start time
     if (time && endTime && endTime <= time) {
-        alert('End time must be after start time');
+        showToast('End time must be after start time', 'warning');
         document.getElementById('mpModalEndTime').focus();
         return;
     }
@@ -863,7 +863,11 @@ function mpSaveTask() {
 
 function mpDeleteCurrentTask() {
     if (!mpCurrentTask) return;
-    if (!confirm('Delete this task?')) return;
+    showCustomConfirm('Delete this task?', function() { _mpDeleteCurrentTaskConfirmed(); }, null, 'Delete Task');
+}
+
+function _mpDeleteCurrentTaskConfirmed() {
+    if (!mpCurrentTask) return;
 
     if (mpCurrentTask.isStatic) {
         // Mark static task as deleted/hidden
@@ -1077,14 +1081,14 @@ function mpSaveNoteEdit(noteId) {
 }
 
 function mpDeleteNote(noteId) {
-    if (!confirm('Delete this note?')) return;
+    showCustomConfirm('Delete this note?', function() {
+        if (!roadmapData.monthlyPlanner?.notes?.[noteId]) return;
 
-    if (!roadmapData.monthlyPlanner?.notes?.[noteId]) return;
-
-    delete roadmapData.monthlyPlanner.notes[noteId];
-    saveData();
-    mpRenderNotes();
-    showToast('Note deleted');
+        delete roadmapData.monthlyPlanner.notes[noteId];
+        saveData();
+        mpRenderNotes();
+        showToast('Note deleted');
+    }, null, 'Delete Note');
 }
 
 // Keyboard shortcuts

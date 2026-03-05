@@ -564,6 +564,8 @@
         .table-container {
             overflow-x: auto;
             margin: 15px 0;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
         }
 
         table {
@@ -575,28 +577,44 @@
         th, td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 1px solid #374151;
+            border-bottom: 1px solid rgba(55, 65, 81, 0.6);
         }
 
         th {
             background: #0f172a;
-            color: #b0bcc8;
+            color: #94a3b8;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.8em;
-            letter-spacing: 0.5px;
+            font-size: 0.75em;
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid #334155;
+        }
+
+        /* Alternating row backgrounds */
+        tbody tr:nth-child(even) {
+            background: rgba(255,255,255,0.015);
+        }
+
+        tr {
+            transition: background 0.15s ease;
         }
 
         tr:hover {
-            background: rgba(255,255,255,0.03);
+            background: rgba(96, 165, 250, 0.06);
         }
 
+        /* Passed rows */
         tr.passed {
             opacity: 0.5;
         }
 
         tr.passed td {
             text-decoration: line-through;
+            text-decoration-color: rgba(148, 163, 184, 0.35);
+        }
+
+        tr.passed:hover {
+            opacity: 0.7;
         }
 
         /* Deadline What column - show full text */
@@ -612,54 +630,77 @@
 
         /* Countdown Badges */
         .countdown {
-            display: inline-block;
-            padding: 4px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-weight: 700;
-            font-size: 0.85em;
+            font-size: 0.8em;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .countdown:hover {
+            transform: scale(1.04);
         }
 
         .countdown-critical {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+            animation: urgentPulse 2s ease-in-out infinite;
         }
 
         .countdown-warning {
-            background: #d97706;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
         }
 
         .countdown-normal {
-            background: #059669;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
         }
 
         .countdown-passed {
-            background: #374151;
-            color: #9ca3af;
+            background: rgba(55, 65, 81, 0.6);
+            color: #6b7280;
+            font-weight: 600;
+            text-decoration: line-through;
+            text-decoration-color: rgba(107, 114, 128, 0.5);
+        }
+
+        @keyframes urgentPulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35); }
+            50% { box-shadow: 0 2px 16px rgba(220, 38, 38, 0.55); }
         }
 
         /* Status Badges */
         .status {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 4px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: 600;
             font-size: 0.8em;
+            letter-spacing: 0.3px;
         }
 
         .status-done {
-            background: #059669;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
         }
 
         .status-pending {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
             color: white;
         }
 
         .status-tbd {
-            background: #d97706;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
             color: white;
             animation: pulse 2s infinite;
         }
@@ -902,66 +943,229 @@
         
         /* Deadline Edit Inputs */
         .deadline-edit-input {
-            background: rgba(255,255,255,0.1) !important;
-            border: 1px dashed #4b5563 !important;
-            padding: 4px 8px !important;
-            border-radius: 4px !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            padding: 5px 8px !important;
+            border-radius: 6px !important;
             color: #e2e8f0 !important;
             font-size: 0.9em;
-            transition: all 0.2s;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        
+
         .deadline-edit-input:hover {
-            background: rgba(255,255,255,0.15) !important;
-            border-color: #6b7280 !important;
+            background: rgba(255,255,255,0.06) !important;
+            border-color: rgba(148, 163, 184, 0.3) !important;
         }
-        
+
         .deadline-edit-input:focus {
             outline: none !important;
-            border-color: #3b82f6 !important;
+            border-color: #60a5fa !important;
             border-style: solid !important;
-            background: rgba(59, 130, 246, 0.15) !important;
+            background: rgba(59, 130, 246, 0.08) !important;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
         }
-        
+
         /* Date Picker Styling */
         .deadline-date-picker {
-            background: linear-gradient(135deg, #1e293b 0%, #273449 100%);
-            border: 1px solid #4b5563;
-            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 6px 10px;
             border-radius: 8px;
             color: #f1f5f9;
             cursor: pointer;
-            font-size: 0.95em;
+            font-size: 0.9em;
             font-family: inherit;
             font-weight: 500;
             letter-spacing: 0.3px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             min-width: 130px;
         }
-        
+
         .deadline-date-picker:hover {
-            background: linear-gradient(135deg, #273449 0%, #334155 100%);
-            border-color: #60a5fa;
-            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
+            background: rgba(96, 165, 250, 0.08);
+            border-color: rgba(96, 165, 250, 0.4);
         }
-        
+
         .deadline-date-picker:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+            background: rgba(96, 165, 250, 0.08);
         }
-        
+
         /* Style the calendar icon */
         .deadline-date-picker::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
-            opacity: 0.8;
+            opacity: 0.6;
             padding: 2px;
             transition: opacity 0.2s;
         }
-        
+
         .deadline-date-picker::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
+        }
+
+        /* Deadline Checkbox Button */
+        .deadline-checkbox-btn {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px;
+            min-height: 30px;
+            border-radius: 8px !important;
+            border: 2px solid #4b5563 !important;
+            background: transparent !important;
+            color: #64748b !important;
+            cursor: pointer;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 1em !important;
+            transition: all 0.2s ease !important;
+            padding: 0 !important;
+            flex-shrink: 0;
+        }
+
+        .deadline-checkbox-btn:hover {
+            border-color: #059669 !important;
+            background: rgba(5, 150, 105, 0.1) !important;
+            color: #34d399 !important;
+            transform: scale(1.08);
+        }
+
+        .deadline-checkbox-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Completed checkbox state — overrides inline styles */
+        tr[style*="opacity: 0.6"] .deadline-checkbox-btn {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            border-color: #059669 !important;
+            color: white !important;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+        }
+
+        /* Done row styling — green tint */
+        tr[style*="opacity: 0.6"] {
+            background: rgba(5, 150, 105, 0.04) !important;
+        }
+
+        tr[style*="opacity: 0.6"]:hover {
+            background: rgba(5, 150, 105, 0.08) !important;
+        }
+
+        tr[style*="opacity: 0.6"] td {
+            text-decoration-color: rgba(5, 150, 105, 0.4) !important;
+        }
+
+        /* Grade badge on completed deadlines */
+        tr[style*="opacity: 0.6"] span[style*="background: #059669"] {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            font-size: 0.82em !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+        }
+
+        /* Delete button */
+        .deadline-delete-btn,
+        td > button[onclick*="deleteDeadline"] {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: #64748b !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
+            cursor: pointer;
+            font-size: 0.85em !important;
+            transition: all 0.2s ease !important;
+            opacity: 0.5;
+        }
+
+        .deadline-delete-btn:hover,
+        td > button[onclick*="deleteDeadline"]:hover {
+            background: rgba(220, 38, 38, 0.1) !important;
+            border-color: rgba(220, 38, 38, 0.3) !important;
+            color: #f87171 !important;
+            opacity: 1;
+        }
+
+        .deadline-delete-btn:active,
+        td > button[onclick*="deleteDeadline"]:active {
+            transform: scale(0.92);
+        }
+
+        /* Show delete button on row hover */
+        tr:hover td > button[onclick*="deleteDeadline"] {
+            opacity: 0.8;
+        }
+
+        /* Find Date badge */
+        .find-date {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8em;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        /* Add Deadline Button */
+        .deadline-add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+        }
+
+        .deadline-add-btn:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .deadline-add-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
+        }
+
+        /* Deadline table last row border cleanup */
+        #tab-deadlines tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Deadline table row done+passed interaction */
+        #tab-deadlines tr.passed td {
+            color: #64748b;
+        }
+
+        /* Day column - subtle styling */
+        #tab-deadlines tbody td:nth-child(3) {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+
+        /* Type column - subtle pill */
+        #tab-deadlines tbody td:nth-child(8) {
+            font-size: 0.82em;
+            font-weight: 500;
+            color: #94a3b8;
+            letter-spacing: 0.2px;
         }
 
         /* Priority List */
@@ -1153,15 +1357,36 @@
         /* Month Headers */
         .month-header {
             background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 20px 0 15px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin: 24px 0 12px;
             font-weight: 700;
-            font-size: 1.1em;
+            font-size: 1.05em;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(30, 64, 175, 0.25);
+            border: 1px solid rgba(96, 165, 250, 0.15);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .month-header:first-of-type {
+            margin-top: 0;
+        }
+
+        .month-header:hover {
+            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.35);
         }
 
         .month-header.brutal {
             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            box-shadow: 0 2px 12px rgba(220, 38, 38, 0.3);
+            border-color: rgba(248, 113, 113, 0.2);
+        }
+
+        .month-header.brutal:hover {
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
         }
 
         /* Grid layouts */
@@ -1406,32 +1631,45 @@
                 top: 0;
             }
             
-            /* Deadline edit inputs on mobile */
+            /* Deadline edit inputs on tablet */
             .deadline-edit-input {
-                font-size: 0.8em !important;
-                padding: 4px 6px !important;
+                font-size: 0.85em !important;
+                padding: 5px 6px !important;
                 width: auto !important;
                 min-width: 60px !important;
             }
-            
-            /* What column - allow full text display on mobile */
+
+            /* What column - allow full text display */
             .deadline-what-cell {
                 white-space: normal !important;
                 min-width: 180px !important;
                 max-width: 280px !important;
             }
-            
+
             .deadline-what-cell .deadline-edit-input {
                 min-width: 160px !important;
                 width: 100% !important;
                 white-space: normal !important;
             }
-            
-            /* Date picker on mobile */
+
+            /* Date picker on tablet */
             .deadline-date-picker {
                 font-size: 0.85em !important;
                 padding: 6px 8px !important;
                 min-width: 110px !important;
+            }
+
+            /* Month header on tablet */
+            .month-header {
+                padding: 10px 15px;
+                font-size: 0.95em;
+                margin: 15px 0 10px;
+            }
+
+            /* Add deadline button on tablet */
+            .deadline-add-btn {
+                padding: 7px 14px;
+                font-size: 0.85em;
             }
             
             /* Priority items */
@@ -1494,13 +1732,6 @@
             
             .study-split-item .percent {
                 font-size: 1.3em;
-            }
-            
-            /* Month headers */
-            .month-header {
-                padding: 10px 15px;
-                font-size: 0.95em;
-                margin: 15px 0 10px;
             }
             
             /* Action items */
@@ -1598,17 +1829,6 @@
 
         .toast.toast-warning {
             background: #d97706;
-        }
-
-        /* Find Date Warning */
-        .find-date {
-            background: #dc2626;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-weight: 700;
-            animation: pulse 1.5s infinite;
-            cursor: pointer;
         }
 
         /* Footnotes & Notes */
@@ -5614,11 +5834,12 @@
             /* Deadline checkbox button — 44px touch target */
             .deadline-checkbox-btn,
             button[onclick*="toggleDeadlineDone"] {
-                width: 44px !important;
-                height: 44px !important;
-                min-width: 44px;
-                min-height: 44px;
-                font-size: 1.2em !important;
+                width: 40px !important;
+                height: 40px !important;
+                min-width: 40px;
+                min-height: 40px;
+                font-size: 1.1em !important;
+                border-radius: 8px !important;
             }
 
             /* Deadline what column */
@@ -5630,23 +5851,44 @@
             }
             .deadline-edit-input {
                 font-size: 16px !important;
-                padding: 6px 8px !important;
+                padding: 5px 6px !important;
                 min-width: 80px !important;
             }
             .deadline-date-picker {
                 font-size: 16px !important;
-                padding: 6px !important;
+                padding: 5px !important;
                 min-width: 100px !important;
+            }
+
+            /* Month header on mobile */
+            .month-header {
+                padding: 10px 14px;
+                font-size: 0.88em;
+                margin: 14px 0 8px;
+                border-radius: 8px;
+            }
+
+            /* Add deadline button on mobile */
+            .deadline-add-btn {
+                padding: 7px 12px;
+                font-size: 0.82em;
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Delete button on mobile */
+            td > button[onclick*="deleteDeadline"] {
+                opacity: 0.7 !important;
             }
 
             /* --- Countdown & Status badges --- */
             .countdown {
-                padding: 3px 6px;
-                font-size: 0.7em;
+                padding: 3px 8px;
+                font-size: 0.72em;
             }
             .status {
-                padding: 3px 5px;
-                font-size: 0.65em;
+                padding: 3px 6px;
+                font-size: 0.68em;
             }
             .risk-critical, .risk-high, .risk-medium, .risk-low {
                 padding: 2px 6px;
@@ -6294,7 +6536,9 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">📅 Master Deadline Calendar</span>
-                <button onclick="addNewDeadline()" style="padding: 8px 15px; background: #059669; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">+ Add Deadline</button>
+                <button onclick="addNewDeadline()" class="deadline-add-btn">
+                    <span style="font-size: 1.1em; line-height: 1;">+</span> Add Deadline
+                </button>
             </div>
             <div class="note" style="margin-bottom: 15px;">
                 <strong>💡 Tip:</strong> Click the <span style="color: #60a5fa;">📅 date field</span> to open calendar picker. Edit <span style="color: #60a5fa;">name, course, or weight</span> directly in the text fields. Changes sync to Dashboard automatically.
@@ -6306,7 +6550,7 @@
                 <table id="januaryTable">
                     <thead>
                         <tr>
-                            <th style="width: 45px;">✓</th>
+                            <th style="width: 42px;"></th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -6314,7 +6558,7 @@
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
-                            <th style="width: 60px;">🗑️</th>
+                            <th style="width: 50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="januaryBody">
@@ -6329,7 +6573,7 @@
                 <table id="februaryTable">
                     <thead>
                         <tr>
-                            <th style="width: 45px;">✓</th>
+                            <th style="width: 42px;"></th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -6337,7 +6581,7 @@
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
-                            <th style="width: 60px;">🗑️</th>
+                            <th style="width: 50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="februaryBody">
@@ -6352,7 +6596,7 @@
                 <table id="marchTable">
                     <thead>
                         <tr>
-                            <th style="width: 45px;">✓</th>
+                            <th style="width: 42px;"></th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -6360,7 +6604,7 @@
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
-                            <th style="width: 60px;">🗑️</th>
+                            <th style="width: 50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="marchBody">
@@ -6375,7 +6619,7 @@
                 <table id="aprilTable">
                     <thead>
                         <tr>
-                            <th style="width: 45px;">✓</th>
+                            <th style="width: 42px;"></th>
                             <th>Date</th>
                             <th>Day</th>
                             <th>Countdown</th>
@@ -6383,7 +6627,7 @@
                             <th>Course</th>
                             <th>% of Grade</th>
                             <th>Type</th>
-                            <th style="width: 60px;">🗑️</th>
+                            <th style="width: 50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="aprilBody">

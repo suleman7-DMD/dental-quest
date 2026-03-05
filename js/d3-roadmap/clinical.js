@@ -310,26 +310,26 @@ function deletePatient() {
     const patientId = document.getElementById('patientModalId').value;
     if (!patientId) return;
 
-    if (!confirm('Are you sure you want to delete this patient? This cannot be undone.')) return;
+    showCustomConfirm('Are you sure you want to delete this patient? This cannot be undone.', function() {
+        delete roadmapData.clinicalData.patients[patientId];
 
-    delete roadmapData.clinicalData.patients[patientId];
+        // Also remove any appointments for this patient
+        if (roadmapData.clinicalData.appointments) {
+            Object.keys(roadmapData.clinicalData.appointments).forEach(id => {
+                if (roadmapData.clinicalData.appointments[id]?.patientId === patientId) {
+                    delete roadmapData.clinicalData.appointments[id];
+                }
+            });
+        }
 
-    // Also remove any appointments for this patient
-    if (roadmapData.clinicalData.appointments) {
-        Object.keys(roadmapData.clinicalData.appointments).forEach(id => {
-            if (roadmapData.clinicalData.appointments[id]?.patientId === patientId) {
-                delete roadmapData.clinicalData.appointments[id];
-            }
-        });
-    }
-
-    saveData();
-    closePatientModal();
-    renderPatientsList();
-    renderAppointmentsList();
-    updateClinicalStats();
-    renderDashboard();
-    showToast('Patient deleted');
+        saveData();
+        closePatientModal();
+        renderPatientsList();
+        renderAppointmentsList();
+        updateClinicalStats();
+        renderDashboard();
+        showToast('Patient deleted');
+    }, null, 'Delete Patient');
 }
 
 // ===== APPOINTMENT MANAGEMENT =====
@@ -562,36 +562,36 @@ function deleteAppointment() {
     const aptId = document.getElementById('appointmentModalId').value;
     if (!aptId) return;
 
-    if (!confirm('Delete this appointment?')) return;
+    showCustomConfirm('Delete this appointment?', function() {
+        if (roadmapData.clinicalData.appointments && roadmapData.clinicalData.appointments[aptId]) {
+            delete roadmapData.clinicalData.appointments[aptId];
+        }
 
-    if (roadmapData.clinicalData.appointments && roadmapData.clinicalData.appointments[aptId]) {
-        delete roadmapData.clinicalData.appointments[aptId];
-    }
+        // Also remove linked deadline if exists
+        if (roadmapData.customDeadlines) {
+            Object.keys(roadmapData.customDeadlines).forEach(id => {
+                if (roadmapData.customDeadlines[id]?.clinicalAptId === aptId) {
+                    delete roadmapData.customDeadlines[id];
+                }
+            });
+        }
 
-    // Also remove linked deadline if exists
-    if (roadmapData.customDeadlines) {
-        Object.keys(roadmapData.customDeadlines).forEach(id => {
-            if (roadmapData.customDeadlines[id]?.clinicalAptId === aptId) {
-                delete roadmapData.customDeadlines[id];
-            }
-        });
-    }
+        // CRITICAL: Sync to Monthly Planner
+        syncClinicalToMonthlyPlanner();
 
-    // CRITICAL: Sync to Monthly Planner
-    syncClinicalToMonthlyPlanner();
+        saveData();
+        closeAppointmentModal();
 
-    saveData();
-    closeAppointmentModal();
-
-    // Refresh Monthly Planner if initialized
-    if (typeof mpRenderAllCalendars === 'function') {
-        mpRenderAllCalendars();
-    }
-    renderAppointmentsList();
-    updateClinicalStats();
-    renderDeadlines();
-    renderDashboard();
-    showToast('Appointment deleted');
+        // Refresh Monthly Planner if initialized
+        if (typeof mpRenderAllCalendars === 'function') {
+            mpRenderAllCalendars();
+        }
+        renderAppointmentsList();
+        updateClinicalStats();
+        renderDeadlines();
+        renderDashboard();
+        showToast('Appointment deleted');
+    }, null, 'Delete Appointment');
 }
 
 // ==================== GRADUATION REQUIREMENTS / COMPETENCIES ====================
@@ -1247,15 +1247,16 @@ function showCompMilestone(itemText) {
 }
 
 function resetCompetencies() {
-    if (!confirm('Reset ALL competencies to default values? This cannot be undone.')) return;
-    // Reset and migrate to object-based storage
-    roadmapData.clinicalData.competencies = migrateCompetencies(
-        JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
-    );
-    expandedCompCategories.clear();
-    saveData();
-    renderCompetencies();
-    showToast('Competencies reset to defaults');
+    showCustomConfirm('Reset ALL competencies to default values? This cannot be undone.', function() {
+        // Reset and migrate to object-based storage
+        roadmapData.clinicalData.competencies = migrateCompetencies(
+            JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
+        );
+        expandedCompCategories.clear();
+        saveData();
+        renderCompetencies();
+        showToast('Competencies reset to defaults');
+    }, null, 'Reset Competencies');
 }
 
 // ==================== COMPETENCY ADD/EDIT/DELETE ====================
@@ -1440,12 +1441,15 @@ function deleteCompItem(catKey, itemId) {
         return;
     }
 
-    if (!confirm(`Delete "${itemText}"? This cannot be undone.`)) return;
-
-    // Remove the item using delete operator (object-based storage)
-    delete cat.sections[foundSectionId].items[itemId];
-
-    saveData();
-    renderCompetencies();
-    showToast(`Deleted: ${itemText}`);
+    showCustomConfirm(`Delete "${escapeHtml(itemText)}"? This cannot be undone.`, function() {
+        // Re-lookup to ensure data is still valid after async confirm
+        const comp = getCompetenciesData();
+        const c = comp[catKey];
+        if (c && c.sections[foundSectionId] && c.sections[foundSectionId].items[itemId]) {
+            delete c.sections[foundSectionId].items[itemId];
+            saveData();
+            renderCompetencies();
+            showToast(`Deleted: ${itemText}`);
+        }
+    }, null, 'Delete Item');
 }
