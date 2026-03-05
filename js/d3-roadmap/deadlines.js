@@ -215,9 +215,19 @@ function handleDateChange(inputEl) {
         weight: deadline.weight,
         type: deadline.type,
         tbd: deadline.tbd,
-        done: deadline.done ?? false,    // FIXED: use ?? not || to preserve grade=0
-        grade: deadline.grade ?? null     // FIXED: use ?? not || to preserve grade=0
+        done: deadline.done ?? false,
+        grade: deadline.grade ?? null
     };
+
+    // CRITICAL FIX: Also update customDeadlines if this is a custom deadline
+    // editedDeadlines are only applied to STATIC deadlines in initUI().
+    // Custom deadlines load from customDeadlines — if we don't update it here,
+    // the date change is lost on reload.
+    if (deadline.custom && deadline.id && roadmapData.customDeadlines && roadmapData.customDeadlines[deadline.id]) {
+        roadmapData.customDeadlines[deadline.id].date = deadline.date;
+        roadmapData.customDeadlines[deadline.id].day = deadline.day;
+        roadmapData.customDeadlines[deadline.id].month = deadline.month;
+    }
 
     // Save immediately
     safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
@@ -280,9 +290,17 @@ function handleTextEdit(inputEl) {
         weight: deadline.weight,
         type: deadline.type,
         tbd: deadline.tbd,
-        done: deadline.done ?? false,    // Preserve completion status (use ?? not ||)
-        grade: deadline.grade ?? null    // Preserve grade of 0 (use ?? not ||)
+        done: deadline.done ?? false,
+        grade: deadline.grade ?? null
     };
+
+    // CRITICAL FIX: Also update customDeadlines if this is a custom deadline
+    // editedDeadlines are only applied to STATIC deadlines in initUI().
+    // Custom deadlines load from customDeadlines — if we don't update it here,
+    // name/course/weight changes are lost on reload.
+    if (deadline.custom && deadline.id && roadmapData.customDeadlines && roadmapData.customDeadlines[deadline.id]) {
+        roadmapData.customDeadlines[deadline.id][field] = value;
+    }
 
     // Save immediately
     safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));

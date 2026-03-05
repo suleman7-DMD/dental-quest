@@ -404,21 +404,27 @@ function initUI() {
         const customDeadlineValues = getValues(roadmapData.customDeadlines);
         if (customDeadlineValues.length > 0) {
             customDeadlineValues.forEach(d => {
-                const dateObj = new Date(d.date + 'T12:00:00'); // Add noon to avoid timezone issues
-                const month = dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                const customStableId = d.id ? sanitizeFirebaseKey(d.id) : getDeadlineId({date: d.date, course: d.course || 'Other', what: d.what});
+                // CRITICAL FIX: Check if editedDeadlines has overrides for this custom deadline
+                // editedDeadlines loop (above) only matches STATIC deadlines — custom deadline
+                // edits stored in editedDeadlines would be orphaned without this check
+                const edited = roadmapData.editedDeadlines ? roadmapData.editedDeadlines[customStableId] : null;
+                const finalDate = edited?.date || d.date;
+                const dateObj = new Date(finalDate + 'T12:00:00');
+                const month = edited?.month || dateObj.toLocaleString('en-US', { month: 'long' }).toLowerCase();
                 deadlines.push({
-                    date: d.date,
-                    day: dateObj.toLocaleString('en-US', { weekday: 'short' }),
-                    what: d.what,
-                    course: d.course || 'Other',
-                    weight: d.weight || '—',
-                    type: d.type || 'Other',
+                    date: finalDate,
+                    day: edited?.day || dateObj.toLocaleString('en-US', { weekday: 'short' }),
+                    what: edited?.what || d.what,
+                    course: edited?.course || d.course || 'Other',
+                    weight: edited?.weight || d.weight || '—',
+                    type: edited?.type || d.type || 'Other',
                     month: month,
                     custom: true,
                     id: d.id,  // CRITICAL: Preserve the custom deadline ID!
-                    done: d.done ?? false,
-                    grade: d.grade ?? null,
-                    _originalStableId: d.id ? sanitizeFirebaseKey(d.id) : getDeadlineId({date: d.date, course: d.course || 'Other', what: d.what})
+                    done: edited?.done ?? d.done ?? false,
+                    grade: edited?.grade ?? d.grade ?? null,
+                    _originalStableId: customStableId
                 });
             });
         }
