@@ -98,7 +98,7 @@ function renderDeadlines() {
             return `
                 <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}">
                     <td>
-                        <button onclick="toggleDeadlineDoneById('${deadlineId}')"
+                        <button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById('${deadlineId}')"
                             style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'};
                                    border: 2px solid ${isDone ? '#059669' : '#4b5563'};
                                    color: ${isDone ? 'white' : '#94a3b8'};
@@ -335,8 +335,8 @@ function addNewDeadline() {
     const modal = document.createElement('div');
     modal.id = 'addDeadlineModal';
     modal.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-            <div style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #334155;">
+        <div class="js-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div class="js-modal-content" style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #334155;">
                 <h3 style="color: #60a5fa; margin-bottom: 20px; font-size: 1.2em;">➕ Add New Deadline</h3>
 
                 <div style="margin-bottom: 15px;">
@@ -569,8 +569,8 @@ function showGradeInputModal(index, deadline) {
     modal.id = 'gradeInputModal';
     modal.dataset.deadlineId = deadlineId;
     modal.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-            <div style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
+        <div class="js-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div class="js-modal-content" style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
                 <h3 style="color: #10b981; margin-bottom: 15px;">✓ Mark Complete</h3>
                 <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>${escapeHtml(deadline.what)}</strong></p>
                 <p style="color: #b0bcc8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>

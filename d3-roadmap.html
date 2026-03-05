@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>D3 Spring Roadmap | Suleman Shaikh, DMD</title>
     
     <!-- Firebase SDK - Same as Dental Quest App -->
@@ -22,28 +22,6 @@
             background: linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%);
             min-height: 100vh;
             color: #e2e8f0;
-        }
-
-        /* Global zoom for tablet/mobile - reduces scrolling by scaling entire app */
-        @media (max-width: 1024px) {
-            body {
-                zoom: 0.92;
-            }
-        }
-        @media (max-width: 768px) {
-            body {
-                zoom: 0.88;
-            }
-        }
-        @media (max-width: 600px) {
-            body {
-                zoom: 0.82;
-            }
-        }
-        @media (max-width: 480px) {
-            body {
-                zoom: 0.78;
-            }
         }
 
         /* Cross-App Navigation */
@@ -1591,42 +1569,7 @@
             }
         }
         
-        /* Extra small screens */
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.1em;
-            }
-            
-            .tab-btn {
-                padding: 8px 6px;
-                font-size: 0.65em;
-            }
-            
-            .tab-content {
-                padding: 10px;
-            }
-            
-            .card {
-                padding: 12px;
-            }
-            
-            table {
-                font-size: 0.7em;
-            }
-            
-            th, td {
-                padding: 6px 4px;
-            }
-            
-            .alert {
-                padding: 10px;
-            }
-            
-            .priority-item {
-                padding: 8px;
-                font-size: 0.85em;
-            }
-        }
+        /* Old 480px block replaced by comprehensive mobile CSS below */
 
         /* Toast Notification */
         .toast {
@@ -3022,37 +2965,7 @@
             }
         }
 
-        /* Scale calendar to fit mobile screens without scrolling */
-        /* Note: These compound with body zoom, so values are adjusted accordingly */
-        @media (max-width: 700px) {
-            .mp-calendar-wrapper {
-                zoom: 1.0; /* Body zoom handles most scaling */
-            }
-        }
-
-        @media (max-width: 600px) {
-            .mp-calendar-wrapper {
-                zoom: 0.95;
-            }
-        }
-
-        @media (max-width: 520px) {
-            .mp-calendar-wrapper {
-                zoom: 0.88;
-            }
-        }
-
-        @media (max-width: 450px) {
-            .mp-calendar-wrapper {
-                zoom: 0.82;
-            }
-        }
-
-        @media (max-width: 390px) {
-            .mp-calendar-wrapper {
-                zoom: 0.78;
-            }
-        }
+        /* Mobile calendar: horizontal scroll instead of zoom (handled in mobile CSS block below) */
 
         .mp-delete-btn {
             background: transparent;
@@ -5525,6 +5438,628 @@
         .legacy-content.visible {
             display: block;
         }
+
+        /* ============================================================
+           MOBILE CSS — iPhone Compatibility (480px + 375px)
+           All mobile overrides in ONE block at end of <style>
+           ============================================================ */
+
+        @media (max-width: 480px) {
+
+            /* --- Safe Area (notched iPhones) --- */
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+
+            /* --- Cross-App Nav --- */
+            .cross-app-nav {
+                padding: 6px 8px;
+                gap: 4px;
+                font-size: 0.75em;
+            }
+            .cross-app-nav .nav-link {
+                padding: 5px 8px;
+                font-size: 0.8em;
+            }
+
+            /* --- Header --- */
+            .header {
+                padding: 10px 12px;
+            }
+            .header h1 {
+                font-size: 1.05em;
+                margin-top: 3px;
+            }
+            .header p {
+                font-size: 0.75em;
+                margin-top: 2px;
+            }
+            .header > div[style*="margin-top: 10px"] {
+                font-size: 0.75em !important;
+                gap: 6px !important;
+                margin-top: 6px !important;
+            }
+
+            /* Checkpoint controls */
+            .checkpoint-controls {
+                gap: 3px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .checkpoint-btn {
+                font-size: 9px;
+                padding: 3px 6px;
+            }
+
+            /* --- Tab Nav: scrollable strip with fade --- */
+            .tab-nav {
+                gap: 4px;
+                padding: 6px;
+                background: #0f172a;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                mask-image: linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent);
+                -webkit-mask-image: linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent);
+            }
+            .tab-nav::-webkit-scrollbar {
+                display: none;
+            }
+            .tab-btn {
+                padding: 7px 10px;
+                font-size: 0.75em;
+                border-radius: 6px;
+                flex: 0 0 auto;
+                white-space: nowrap;
+                min-width: max-content;
+            }
+
+            /* --- Tab Content --- */
+            .tab-content {
+                padding: 10px;
+            }
+
+            /* --- Cards --- */
+            .card {
+                padding: 12px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            .card-title {
+                font-size: 0.95em;
+            }
+
+            /* --- Alerts --- */
+            .alert {
+                padding: 10px 12px;
+                flex-direction: column;
+                text-align: center;
+                gap: 6px;
+                font-size: 0.85em;
+            }
+            .alert span[style*="font-size: 2em"] {
+                font-size: 1.3em !important;
+            }
+
+            /* --- Grids --- */
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            /* --- Stats Row --- */
+            .stats-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .stat-box {
+                padding: 10px 12px;
+                min-width: auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+            .stat-box .number {
+                font-size: 1.4em;
+                order: 2;
+            }
+            .stat-box .label {
+                order: 1;
+                margin-top: 0;
+                font-size: 0.85em;
+            }
+
+            /* --- Tables: horizontal scroll inside container --- */
+            .table-container {
+                margin: 8px -10px;
+                padding: 0 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                /* Shadow scroll indicators */
+                background:
+                    linear-gradient(to right, #1e293b 30%, transparent),
+                    linear-gradient(to left, #1e293b 30%, transparent),
+                    linear-gradient(to right, rgba(0,0,0,0.4), transparent 15px),
+                    linear-gradient(to left, rgba(0,0,0,0.4), transparent 15px);
+                background-position: left center, right center, left center, right center;
+                background-size: 20px 100%, 20px 100%, 15px 100%, 15px 100%;
+                background-repeat: no-repeat;
+                background-attachment: local, local, scroll, scroll;
+            }
+            table {
+                font-size: 0.72em;
+                min-width: 500px;
+            }
+            th, td {
+                padding: 6px 5px;
+            }
+            th {
+                font-size: 0.7em;
+                position: sticky;
+                top: 0;
+                z-index: 2;
+            }
+
+            /* Deadline checkbox button — 44px touch target */
+            .deadline-checkbox-btn,
+            button[onclick*="toggleDeadlineDone"] {
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 1.2em !important;
+            }
+
+            /* Deadline what column */
+            .deadline-what-cell {
+                white-space: normal !important;
+                min-width: 150px !important;
+                max-width: 220px !important;
+                word-break: break-word;
+            }
+            .deadline-edit-input {
+                font-size: 16px !important;
+                padding: 6px 8px !important;
+                min-width: 80px !important;
+            }
+            .deadline-date-picker {
+                font-size: 16px !important;
+                padding: 6px !important;
+                min-width: 100px !important;
+            }
+
+            /* --- Countdown & Status badges --- */
+            .countdown {
+                padding: 3px 6px;
+                font-size: 0.7em;
+            }
+            .status {
+                padding: 3px 5px;
+                font-size: 0.65em;
+            }
+            .risk-critical, .risk-high, .risk-medium, .risk-low {
+                padding: 2px 6px;
+                font-size: 0.7em;
+            }
+
+            /* --- Priority items --- */
+            .priority-item {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+            .priority-number {
+                width: 26px;
+                height: 26px;
+                font-size: 0.8em;
+                flex-shrink: 0;
+            }
+
+            /* --- Course cards --- */
+            .course-card {
+                margin-bottom: 10px;
+            }
+            .course-header {
+                padding: 10px 12px;
+            }
+            .course-header strong {
+                font-size: 0.9em !important;
+            }
+            .course-body {
+                padding: 10px 12px;
+            }
+
+            /* --- Grade calculator inputs (prevent iOS auto-zoom) --- */
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            input[type="time"],
+            textarea,
+            select {
+                font-size: 16px !important;
+            }
+
+            /* --- JS-rendered inline style overrides --- */
+            /* Modal overlays created by JS */
+            .js-modal-overlay,
+            div[style*="position: fixed"][style*="z-index: 10000"] {
+                padding: 10px !important;
+            }
+            .js-modal-content,
+            div[style*="position: fixed"][style*="z-index: 10000"] > div {
+                width: 95% !important;
+                max-width: 95vw !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+                padding: 16px !important;
+                box-sizing: border-box !important;
+            }
+            /* Modal close/action buttons — 44px touch targets */
+            .js-modal-content button,
+            div[style*="position: fixed"][style*="z-index: 10000"] button {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 10px 16px !important;
+                font-size: 0.9em;
+            }
+
+            /* --- JS inline font-size overrides --- */
+            [style*="font-size: 1.5em"] {
+                font-size: 1.15em !important;
+            }
+            [style*="font-size: 1.3em"] {
+                font-size: 1.1em !important;
+            }
+            [style*="font-size: 1.2em"] {
+                font-size: 1.05em !important;
+            }
+            .header [style*="font-size: 1.2em"] {
+                font-size: 1em !important;
+            }
+
+            /* --- Toast: full-width, safe-area offset --- */
+            .toast {
+                left: 10px;
+                right: 10px;
+                bottom: calc(10px + env(safe-area-inset-bottom));
+                text-align: center;
+                font-size: 0.85em;
+                padding: 12px 16px;
+            }
+
+            /* --- Back button --- */
+            .back-btn {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 8px;
+                display: inline-block;
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+
+            /* --- Do Today list --- */
+            .do-today-list {
+                gap: 6px;
+            }
+            .do-today-task {
+                font-size: 0.85em;
+                padding: 8px 10px;
+            }
+
+            /* ---- DAILY PLANNER ---- */
+            .pomodoro-card {
+                padding: 12px;
+            }
+            .pomodoro-options {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .pomodoro-option {
+                flex: 1 1 calc(50% - 6px);
+                min-width: 0;
+                padding: 10px 6px;
+            }
+            .pomodoro-option .pomo-time {
+                font-size: 1.1em;
+            }
+            .pomodoro-option .pomo-label {
+                font-size: 0.7em;
+            }
+
+            /* Daily planner timeline */
+            .dp-timeline,
+            .daily-planner-blocks {
+                gap: 6px;
+            }
+            .dp-block,
+            .daily-planner-block {
+                padding: 8px 10px;
+                font-size: 0.85em;
+            }
+
+            /* ---- MONTHLY PLANNER ---- */
+            .mp-calendar-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -10px;
+                padding: 0 10px;
+            }
+            .mp-calendar-wrapper > * {
+                min-width: 600px;
+            }
+            .mp-sidebar {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .mp-week-row {
+                font-size: 0.8em;
+            }
+            .mp-cal-day {
+                padding: 4px 2px;
+                min-height: 60px;
+            }
+            .mp-cal-checkbox {
+                width: 14px;
+                height: 14px;
+            }
+            .mp-day-tasks {
+                font-size: 0.7em;
+            }
+            /* Monthly planner grid */
+            .mp-grid,
+            .monthly-planner-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            /* Monthly planner modal */
+            .mp-modal-overlay {
+                padding: 10px;
+            }
+            .mp-modal {
+                width: 95% !important;
+                max-width: 95vw;
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+            .mp-modal input,
+            .mp-modal select,
+            .mp-modal textarea {
+                font-size: 16px !important;
+            }
+
+            /* ---- CLINICAL TAB ---- */
+            .clinical-subtabs {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .clinical-subtab {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            /* Patient cards */
+            .patient-card {
+                padding: 12px;
+            }
+            .patient-card-header {
+                flex-direction: column;
+                gap: 6px;
+                align-items: flex-start;
+            }
+            .patient-name {
+                font-size: 0.95em;
+            }
+            .patient-flags {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .patient-flag {
+                font-size: 0.7em;
+                padding: 2px 6px;
+            }
+            .patient-actions {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .patient-action-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                min-height: 44px;
+                flex: 1 1 auto;
+            }
+
+            /* Competencies */
+            .comp-overall-dashboard {
+                grid-template-columns: 1fr;
+                padding: 12px;
+                gap: 12px;
+            }
+            .comp-overall-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .comp-stat-card {
+                padding: 10px 8px;
+            }
+            .comp-stat-value {
+                font-size: 1.4em;
+            }
+            .comp-stat-label {
+                font-size: 0.7em;
+            }
+
+            /* Competency category cards */
+            .comp-category {
+                padding: 12px;
+            }
+            .comp-category-header {
+                flex-direction: column;
+                gap: 6px;
+                align-items: flex-start;
+            }
+            .comp-section-item,
+            .comp-item {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+            .comp-item-actions button {
+                min-width: 36px;
+                min-height: 36px;
+                font-size: 0.85em;
+            }
+
+            /* ---- EXAM CONTENT ---- */
+            .exam-content-controls,
+            .exam-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .exam-content-controls select,
+            .exam-controls select {
+                width: 100%;
+                font-size: 16px !important;
+            }
+            .exam-topic-card {
+                padding: 10px;
+            }
+            .exam-topic-header {
+                flex-direction: column;
+                gap: 6px;
+                align-items: flex-start;
+            }
+            .exam-lecture-item {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+
+            /* ---- MANDATORY ITEMS ---- */
+            .mandatory-item {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+            .mandatory-item label {
+                gap: 8px;
+            }
+            .mandatory-item input[type="checkbox"] {
+                width: 22px;
+                height: 22px;
+                min-width: 22px;
+            }
+
+            /* ---- CLASSMATE SHARE ---- */
+            .share-card {
+                padding: 12px;
+            }
+
+            /* ---- REMEMBER TAB ---- */
+            .remember-item {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+
+            /* ---- Find Date warning ---- */
+            .find-date {
+                font-size: 0.75em;
+                padding: 3px 8px;
+            }
+
+            /* ---- Notes section ---- */
+            .note {
+                padding: 10px 12px;
+                font-size: 0.8em;
+            }
+
+        } /* end 480px */
+
+
+        /* ============================================================
+           375px breakpoint (iPhone SE / small phones)
+           ============================================================ */
+        @media (max-width: 375px) {
+
+            .tab-content {
+                padding: 8px;
+            }
+
+            .card {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .tab-btn {
+                padding: 6px 8px;
+                font-size: 0.7em;
+            }
+
+            .stat-box .number {
+                font-size: 1.3em;
+            }
+
+            .pomodoro-options {
+                flex-direction: column;
+            }
+            .pomodoro-option {
+                flex: 1 1 100%;
+            }
+
+            .comp-overall-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .comp-stat-value {
+                font-size: 1.2em;
+            }
+
+            .alert {
+                padding: 8px;
+                font-size: 0.8em;
+            }
+
+            table {
+                min-width: 450px;
+                font-size: 0.68em;
+            }
+
+            .mp-calendar-wrapper > * {
+                min-width: 550px;
+            }
+
+            .header h1 {
+                font-size: 0.95em;
+            }
+            .header p {
+                font-size: 0.7em;
+            }
+
+            .priority-item {
+                padding: 6px;
+                font-size: 0.8em;
+            }
+
+            .patient-action-btn {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+
+            .toast {
+                font-size: 0.8em;
+                padding: 10px 12px;
+            }
+
+        } /* end 375px */
+
     </style>
 </head>
 <body>
