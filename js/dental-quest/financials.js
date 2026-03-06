@@ -161,12 +161,109 @@ function renderMasterCockpit() {
     '</div>';
 }
 
+function renderOverviewDashboard() {
+    var status = calculateFinancialStatus();
+    var lastUpdated = financials.masterLiquidity.lastUpdated
+        ? new Date(financials.masterLiquidity.lastUpdated).toLocaleString()
+        : 'Never';
+    var totalDebt = getValues(financials.creditCards || {}).reduce(function(sum, c) { return sum + (c.balance || 0); }, 0);
+    var incompleteActions = getValues(financials.actionItems || {}).filter(function(a) { return !a.completed; }).length;
+    var progressPercent = Math.max(0, Math.min(100, (status.projectedBalance / status.targetCushion) * 100));
+
+    // Waterfall bar widths (relative to currentLiquid)
+    var maxVal = Math.max(status.currentLiquid, 1);
+    var billsPct = Math.min(100, (status.oneTimeExpenses / maxVal) * 100);
+    var monthlyPct = Math.min(100, (status.totalUnpaidMonthly / maxVal) * 100);
+    var projPct = Math.min(100, Math.max(0, (Math.abs(status.projectedBalance) / maxVal) * 100));
+
+    var html = '<div class="fd-grid">';
+
+    // === Row 1, Col 1: Cash Position ===
+    html += '<div class="fd-card">' +
+        '<div class="fd-card-title">CASH POSITION</div>' +
+        '<div class="fd-card-value">$' + status.currentLiquid.toLocaleString() + '</div>' +
+        '<button onclick="updateMasterLiquidity()" class="fd-btn-sm">Update Cash</button>' +
+        '<div class="fd-card-sub">Updated: ' + escapeHtml(lastUpdated) + '</div>' +
+        '<div style="margin-top:8px;">' +
+            '<span class="fd-card-value" style="font-size:1.1em;color:' + status.healthColor + ';">$' + status.projectedBalance.toLocaleString() + '</span>' +
+            ' <span class="fd-badge" style="background:' + status.healthColor + ';color:#fff;font-size:0.7em;padding:2px 6px;border-radius:4px;vertical-align:middle;">' + status.healthMessage + '</span>' +
+        '</div>' +
+    '</div>';
+
+    // === Row 1, Col 2: Runway Donut ===
+    html += '<div class="fd-card" style="text-align:center;">' +
+        '<div class="fd-card-title">RUNWAY</div>' +
+        '<div class="fd-chart-container"><canvas id="runwayDonutChart" width="150" height="150"></canvas></div>' +
+        '<div class="fd-card-sub">' + status.daysRemaining + ' days remaining</div>' +
+    '</div>';
+
+    // === Row 2: Monthly Burn (full width) ===
+    html += '<div class="fd-card fd-grid-full">' +
+        '<div class="fd-card-title">MONTHLY BURN</div>' +
+        '<div class="fd-chart-container"><canvas id="monthlyBarsChart" style="width:100%;height:120px;"></canvas></div>' +
+    '</div>';
+
+    // === Row 2b: Cash Flow (full width) ===
+    html += '<div class="fd-card fd-grid-full">' +
+        '<div class="fd-card-title">CASH FLOW</div>' +
+        '<div class="fd-waterfall-bar"><span class="fd-waterfall-label">Cash</span><span class="fd-waterfall-amount" style="color:var(--success);">$' + status.currentLiquid.toLocaleString() + '</span><div class="fd-waterfall-fill" style="width:100%;background:var(--success);"></div></div>' +
+        '<div class="fd-waterfall-bar"><span class="fd-waterfall-label">- Bills</span><span class="fd-waterfall-amount" style="color:var(--destructive);">-$' + status.oneTimeExpenses.toLocaleString() + '</span><div class="fd-waterfall-fill" style="width:' + billsPct + '%;background:var(--destructive);"></div></div>' +
+        '<div class="fd-waterfall-bar"><span class="fd-waterfall-label">- Monthly</span><span class="fd-waterfall-amount" style="color:var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + '</span><div class="fd-waterfall-fill" style="width:' + monthlyPct + '%;background:var(--warning);"></div></div>' +
+        '<div class="fd-waterfall-bar" style="border-top:1px solid var(--border-default);padding-top:6px;margin-top:4px;"><span class="fd-waterfall-label" style="font-weight:700;">= Projection</span><span class="fd-waterfall-amount" style="color:' + status.healthColor + ';font-weight:700;">$' + status.projectedBalance.toLocaleString() + '</span><div class="fd-waterfall-fill" style="width:' + projPct + '%;background:' + status.healthColor + ';"></div></div>' +
+    '</div>';
+
+    // === Row 3: Stats Strip (full width) ===
+    html += '<div class="fd-grid-full fd-stats-strip">' +
+        '<div class="fd-stat"><div class="fd-stat-label">One-Time Bills</div><div class="fd-stat-value" style="color:var(--destructive);">-$' + status.oneTimeExpenses.toLocaleString() + '</div></div>' +
+        '<div class="fd-stat"><div class="fd-stat-label">Expected Income</div><div class="fd-stat-value" style="color:var(--success);">+$' + status.oneTimeIncome.toLocaleString() + '</div></div>' +
+        '<div class="fd-stat"><div class="fd-stat-label">Unpaid Monthly</div><div class="fd-stat-value" style="color:var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + '</div></div>' +
+        '<div class="fd-stat"><div class="fd-stat-label">Days Left</div><div class="fd-stat-value">' + status.daysRemaining + '</div></div>' +
+    '</div>';
+
+    // === Row 4, Col 1: Projection Detail ===
+    html += '<div class="fd-card">' +
+        '<div class="fd-card-title">PROJECTION DETAIL</div>';
+
+    html += '<div class="fd-projection-row"><span>Current Cash</span><span style="color:var(--success);">$' + status.currentLiquid.toLocaleString() + '</span></div>';
+
+    if (status.oneTimeIncome > 0) {
+        html += '<div class="fd-projection-row"><span>+ Expected Income</span><span style="color:var(--success);">+$' + status.oneTimeIncome.toLocaleString() + '</span></div>';
+    }
+    if (status.oneTimeExpenses > 0) {
+        html += '<div class="fd-projection-row"><span>- One-Time Bills</span><span style="color:var(--destructive);">-$' + status.oneTimeExpenses.toLocaleString() + '</span></div>';
+    }
+
+    html += '<div class="fd-projection-row" style="border-top:1px solid var(--border-default);padding-top:4px;"><span>= After One-Time</span><span style="font-weight:600;">$' + status.availableCash.toLocaleString() + '</span></div>';
+
+    for (var mi = 0; mi < status.monthlyDetails.length; mi++) {
+        var month = status.monthlyDetails[mi];
+        html += '<div class="fd-projection-row"><span>- ' + escapeHtml(month.label) + (month.allPaid ? ' (PAID)' : '') + '</span><span style="color:' + (month.allPaid ? 'var(--success)' : 'var(--destructive)') + ';">' + (month.allPaid ? 'PAID' : '-$' + month.unpaidAmount.toLocaleString()) + '</span></div>';
+    }
+
+    html += '<div class="fd-projection-row total" style="border-top:2px solid var(--border-default);padding-top:6px;margin-top:4px;font-weight:700;"><span>Projected Balance</span><span style="color:' + status.healthColor + ';">$' + status.projectedBalance.toLocaleString() + '</span></div>';
+    html += '<div style="margin-top:6px;"><div style="display:flex;justify-content:space-between;font-size:0.75em;color:var(--fg-secondary);margin-bottom:3px;"><span>Target: $' + status.targetCushion.toLocaleString() + '</span><span style="color:' + status.healthColor + ';font-weight:600;">' + progressPercent.toFixed(0) + '%</span></div>' +
+        '<div style="height:6px;background:var(--surface-secondary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + progressPercent + '%;background:' + status.healthColor + ';border-radius:3px;transition:width 0.3s;"></div></div></div>';
+    html += '</div>';
+
+    // === Row 4, Col 2: Status Summary ===
+    html += '<div class="fd-card">' +
+        '<div class="fd-card-title">STATUS</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.8em;"><span>Health</span><span style="background:' + status.healthColor + ';color:#fff;padding:2px 8px;border-radius:4px;font-size:0.85em;font-weight:600;">' + status.healthMessage + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.8em;"><span>Incomplete Actions</span><span style="font-weight:600;color:' + (incompleteActions > 0 ? 'var(--warning)' : 'var(--success)') + ';">' + incompleteActions + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.8em;"><span>Credit Card Debt</span><span style="font-weight:600;color:' + (totalDebt > 0 ? 'var(--destructive)' : 'var(--success)') + ';">$' + totalDebt.toLocaleString() + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.8em;"><span>Days Remaining</span><span style="font-weight:600;">' + status.daysRemaining + '</span></div>' +
+    '</div>';
+
+    html += '</div>'; // close fd-grid
+    return html;
+}
+
 function updateMasterLiquidity() {
     var existing = document.getElementById('finInlineEdit');
     if (existing) existing.remove();
 
     var current = financials.masterLiquidity.currentCash;
-    var targetEl = document.querySelector('.fin-master-grid') || document.getElementById('finPanelOverview');
+    var targetEl = document.querySelector('.fd-grid') || document.getElementById('finPanelOverview');
     if (!targetEl) return;
 
     var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
@@ -222,19 +319,19 @@ function renderOneTimeBills() {
 
     var html = '<div class="fin-section">' +
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
-            '<div style="display: flex; align-items: center; gap: 15px;">' +
+            '<div style="display: flex; align-items: center; gap: 10px;">' +
                 '<h3 style="margin: 0;">One-Time Bills</h3>' +
                 '<button onclick="addOneTimeBill()" class="fin-add-btn">+ Add</button>' +
             '</div>' +
             '<div style="text-align: right;">' +
-                '<div style="font-size: 0.85em; color: var(--fg-secondary);">Unpaid</div>' +
-                '<div style="font-size: 1.3em; font-weight: 700; color: var(--destructive);">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
+                '<div style="font-size: 0.7em; color: var(--fg-secondary);">Unpaid</div>' +
+                '<div style="font-size: 1.05em; font-weight: 700; color: var(--destructive);">-$' + totalUnpaidExpenses.toLocaleString() + '</div>' +
                 (totalUnpaidIncome > 0 ? '<div style="font-size: 1em; color: var(--success);">+$' + totalUnpaidIncome.toLocaleString() + '</div>' : '') +
             '</div>' +
         '</div>';
 
     if (unpaid.length === 0 && paid.length === 0) {
-        html += '<p style="text-align: center; padding: 30px; color: var(--success); font-size: 1.1em;">No one-time bills</p>';
+        html += '<p style="text-align: center; padding: 15px; color: var(--success); font-size: 0.9em;">No one-time bills</p>';
     }
 
     var allBillsList = unpaid.concat(paid);
@@ -257,9 +354,9 @@ function renderOneTimeBills() {
                 '<div class="action-deadline ' + (urgencyClass === 'urgent' ? 'overdue' : urgencyClass === 'high' ? 'soon' : 'ok') + '">' + urgencyText + '</div>' +
                 (bill.notes ? '<div class="action-notes">' + escapeHtml(bill.notes) + '</div>' : '') + '</div>' +
                 '<div style="text-align: right;">' +
-                    '<div class="cash-amount ' + (bill.type === 'income' ? 'positive' : 'negative') + '" style="font-size: 1.3em;">' + (bill.type === 'income' ? '+' : '-') + '$' + bill.amount.toLocaleString() + '</div>' +
-                    (!bill.paid ? '<button onclick="event.stopPropagation(); editOneTimeBill(\'' + bill.id + '\')" style="background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px;">Edit</button>' +
-                    '<button onclick="event.stopPropagation(); deleteOneTimeBill(\'' + bill.id + '\')" style="background: var(--destructive); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-top: 6px; margin-left: 4px;">x</button>' : '') +
+                    '<div class="cash-amount ' + (bill.type === 'income' ? 'positive' : 'negative') + '" style="font-size: 1em;">' + (bill.type === 'income' ? '+' : '-') + '$' + bill.amount.toLocaleString() + '</div>' +
+                    (!bill.paid ? '<button onclick="event.stopPropagation(); editOneTimeBill(\'' + bill.id + '\')" style="background: var(--accent); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75em; margin-top: 4px;">Edit</button>' +
+                    '<button onclick="event.stopPropagation(); deleteOneTimeBill(\'' + bill.id + '\')" style="background: var(--destructive); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75em; margin-top: 4px; margin-left: 4px;">x</button>' : '') +
                 '</div></div></div></div>';
     }
 
@@ -388,12 +485,12 @@ function renderMonthlyExpenses() {
 
     var html = '<div class="fin-section">' +
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
-            '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0;">Monthly Expenses</h3></div>' +
+            '<div style="display: flex; align-items: center; gap: 10px;"><h3 style="margin: 0;">Monthly Expenses</h3></div>' +
             '<div style="text-align: right;">' +
-                '<div style="font-size: 0.85em; color: var(--fg-secondary);">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
-                '<div style="font-size: 1.3em; font-weight: 700; color: var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
+                '<div style="font-size: 0.7em; color: var(--fg-secondary);">' + totalPaidMonths + '/' + totalMonths + ' months complete</div>' +
+                '<div style="font-size: 1.05em; font-weight: 700; color: var(--warning);">-$' + status.totalUnpaidMonthly.toLocaleString() + ' remaining</div>' +
             '</div></div>' +
-        '<div style="margin-bottom: 15px; padding: 12px; background: var(--accent-light); border-left: 4px solid var(--accent); border-radius: 6px; font-size: 0.9em; color: var(--accent);">Tap a month header to expand/collapse. Check individual expenses or use "Pay All" for the entire month.</div>';
+        '<div style="margin-bottom: 8px; padding: 8px; background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 0.8em; color: var(--accent);">Tap a month to expand. Check expenses or use "Pay All".</div>';
 
     var now = new Date();
     var currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -411,32 +508,32 @@ function renderMonthlyExpenses() {
         var shouldExpand = monthKey === currentMonthKey || collapsedMonths[monthKey] === false;
         var collapsed = !shouldExpand && collapsedMonths[monthKey] !== false;
 
-        html += '<div style="margin-bottom: 12px; border: 1px solid ' + (allPaid ? 'var(--success)' : 'var(--border-default)') + '; border-radius: 10px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
-            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: ' + (allPaid ? 'var(--success-light)' : 'var(--canvas-subtle)') + '; cursor: pointer; user-select: none;">' +
-                '<div style="display: flex; align-items: center; gap: 12px;">' +
-                    '<span id="arrow_' + monthKey + '" style="color: var(--fg-secondary); font-size: 0.9em; font-family: monospace; min-width: 14px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
-                    '<div><div style="font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 1.05em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
-                    '<div style="font-size: 0.8em; color: var(--fg-tertiary);">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
-                '<div style="display: flex; align-items: center; gap: 12px;">' +
-                    '<div style="text-align: right;"><div style="font-size: 1.1em; font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--destructive)') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
-                    (!allPaid ? '<div style="font-size: 0.75em; color: var(--fg-tertiary);">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
-                    (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: var(--success); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
+        html += '<div style="margin-bottom: 8px; border: 1px solid ' + (allPaid ? 'var(--success)' : 'var(--border-default)') + '; border-radius: 8px; overflow: hidden;' + (allPaid ? ' opacity: 0.8;' : '') + '">' +
+            '<div onclick="toggleMonthCollapse(\'' + monthKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: ' + (allPaid ? 'var(--success-light)' : 'var(--canvas-subtle)') + '; cursor: pointer; user-select: none;">' +
+                '<div style="display: flex; align-items: center; gap: 8px;">' +
+                    '<span id="arrow_' + monthKey + '" style="color: var(--fg-secondary); font-size: 0.8em; font-family: monospace; min-width: 12px; text-align: center;">' + (collapsed ? '>' : 'v') + '</span>' +
+                    '<div><div style="font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 0.9em;">' + escapeHtml(monthData.label) + (monthData.partial ? ' (partial)' : '') + '</div>' +
+                    '<div style="font-size: 0.7em; color: var(--fg-tertiary);">' + paidCount + '/' + totalCount + ' paid</div></div></div>' +
+                '<div style="display: flex; align-items: center; gap: 8px;">' +
+                    '<div style="text-align: right;"><div style="font-size: 0.95em; font-weight: 700; color: ' + (allPaid ? 'var(--success)' : 'var(--destructive)') + ';">' + (allPaid ? 'PAID' : '-$' + unpaidAmount.toLocaleString()) + '</div>' +
+                    (!allPaid ? '<div style="font-size: 0.65em; color: var(--fg-tertiary);">of $' + totalAmount.toLocaleString() + '</div>' : '') + '</div>' +
+                    (!allPaid ? '<button onclick="event.stopPropagation(); payAllMonth(\'' + monthKey + '\')" style="background: var(--success); color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: 600; font-size: 0.75em; cursor: pointer; white-space: nowrap;">Pay All</button>' : '') +
                 '</div></div>';
 
-        html += '<div id="monthBody_' + monthKey + '" style="display: ' + (collapsed ? 'none' : 'block') + '; padding: 8px;">';
+        html += '<div id="monthBody_' + monthKey + '" style="display: ' + (collapsed ? 'none' : 'block') + '; padding: 4px;">';
         for (var ei = 0; ei < expEntries.length; ei++) {
             var expKey = expEntries[ei][0], exp = expEntries[ei][1];
-            html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; background: ' + (exp.paid ? 'var(--success-light)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
-                '<div style="display: flex; align-items: center; gap: 10px;">' +
-                    '<div class="action-checkbox ' + (exp.paid ? 'checked' : '') + '" style="width: 22px; height: 22px; min-width: 22px;" onclick="event.stopPropagation(); toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')"></div>' +
-                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 0.95em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
-                    '<div style="font-size: 0.75em; color: var(--fg-tertiary);">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
+            html += '<div onclick="toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 2px 0; border-radius: 4px; cursor: pointer; background: ' + (exp.paid ? 'var(--success-light)' : 'transparent') + '; opacity: ' + (exp.paid ? '0.7' : '1') + ';">' +
                 '<div style="display: flex; align-items: center; gap: 8px;">' +
-                    '<div style="font-weight: 700; color: ' + (exp.paid ? 'var(--success)' : 'var(--destructive)') + '; font-size: 1em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
-                    (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: var(--accent); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button>' : '') +
+                    '<div class="action-checkbox ' + (exp.paid ? 'checked' : '') + '" style="width: 18px; height: 18px; min-width: 18px;" onclick="event.stopPropagation(); toggleMonthExpensePaid(\'' + monthKey + '\', \'' + expKey + '\')"></div>' +
+                    '<div><div style="font-weight: 600; color: ' + (exp.paid ? 'var(--success)' : 'var(--fg-primary)') + '; font-size: 0.85em;' + (exp.paid ? ' text-decoration: line-through;' : '') + '">' + escapeHtml(exp.name) + '</div>' +
+                    '<div style="font-size: 0.65em; color: var(--fg-tertiary);">' + escapeHtml(exp.category) + (exp.notes ? ' - ' + escapeHtml(exp.notes) : '') + '</div></div></div>' +
+                '<div style="display: flex; align-items: center; gap: 6px;">' +
+                    '<div style="font-weight: 700; color: ' + (exp.paid ? 'var(--success)' : 'var(--destructive)') + '; font-size: 0.85em;">' + (exp.paid ? 'PAID' : '-$' + exp.amount.toLocaleString()) + '</div>' +
+                    (!exp.paid ? '<button onclick="event.stopPropagation(); editMonthExpense(\'' + monthKey + '\', \'' + expKey + '\')" style="background: var(--accent); color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7em;">Edit</button>' : '') +
                 '</div></div>';
         }
-        html += '<div style="padding: 8px 12px; margin-top: 4px;"><button onclick="addExpenseToMonth(\'' + monthKey + '\')" class="fin-add-btn" style="width: 100%; padding: 10px;">+ Add Expense to ' + escapeHtml(monthData.label) + '</button></div>';
+        html += '<div style="padding: 4px 8px; margin-top: 2px;"><button onclick="addExpenseToMonth(\'' + monthKey + '\')" class="fin-add-btn" style="width: 100%; padding: 6px;">+ Add Expense</button></div>';
         html += '</div></div>';
     });
 
@@ -591,10 +688,10 @@ function renderExpenseTemplate() {
 
     var html = '<div class="fin-section" style="border-color: var(--info);">' +
         '<div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center;">' +
-            '<div style="display: flex; align-items: center; gap: 15px;"><h3 style="margin: 0; color: var(--info);">Expense Template</h3></div>' +
-            '<div style="text-align: right;"><div style="font-size: 0.85em; color: var(--fg-secondary);">Template Total</div>' +
-            '<div style="font-size: 1.2em; font-weight: 700; color: var(--info);">$' + total.toLocaleString() + '/mo</div></div></div>' +
-        '<div style="margin-bottom: 12px; padding: 10px; background: var(--info-light); border-left: 4px solid var(--info); border-radius: 6px; font-size: 0.85em; color: var(--info);">Edit this template to change what gets created for future months. Existing months are NOT affected.</div>' +
+            '<div style="display: flex; align-items: center; gap: 10px;"><h3 style="margin: 0; color: var(--info);">Expense Template</h3></div>' +
+            '<div style="text-align: right;"><div style="font-size: 0.7em; color: var(--fg-secondary);">Template Total</div>' +
+            '<div style="font-size: 0.95em; font-weight: 700; color: var(--info);">$' + total.toLocaleString() + '/mo</div></div></div>' +
+        '<div style="margin-bottom: 8px; padding: 6px 8px; background: var(--info-light); border-left: 3px solid var(--info); border-radius: 4px; font-size: 0.75em; color: var(--info);">Template sets defaults for new months. Existing months unaffected.</div>' +
         '<div class="fin-expense-list">';
 
     Object.entries(template).forEach(function(entry) {
@@ -838,17 +935,17 @@ function renderCreditCards() {
 
     return `
         <div class="fin-section">
-            <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <h3 style="margin: 0;">Credit Cards (7 Cards)</h3>
-                    <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('negotiation')" style="background: var(--success-light); border-color: var(--success); color: var(--success);">
-                        How To Negotiate
+            <div class="fin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 style="margin: 0;">Credit Cards</h3>
+                    <button class="help-btn" onclick="event.stopPropagation(); showFinancialHelp('negotiation')" style="background: var(--success-light); border-color: var(--success); color: var(--success); font-size: 0.7em; padding: 3px 8px;">
+                        Negotiate
                     </button>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 0.9em; color: var(--fg-secondary);">Total Balance</div>
-                    <div style="font-size: 1.4em; font-weight: 700; color: var(--destructive);">$${totalBalance.toLocaleString()}</div>
-                    <div style="font-size: 0.85em; color: var(--fg-secondary); margin-top: 4px;">Target minimums: $${totalMinimums}/mo</div>
+                    <div style="font-size: 0.7em; color: var(--fg-secondary);">Total Balance</div>
+                    <div style="font-size: 1.1em; font-weight: 700; color: var(--destructive);">$${totalBalance.toLocaleString()}</div>
+                    <div style="font-size: 0.7em; color: var(--fg-secondary); margin-top: 2px;">Min: $${totalMinimums}/mo</div>
                 </div>
             </div>
 
@@ -882,7 +979,7 @@ function renderCreditCards() {
                     </div>
 
                     ${card.negotiationNotes ? `
-                        <div style="margin-top: 12px; padding: 10px; background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 0.9em; color: var(--fg-secondary);">
+                        <div style="margin-top: 6px; padding: 6px 8px; background: var(--accent-light); border-left: 2px solid var(--accent); border-radius: 3px; font-size: 0.75em; color: var(--fg-secondary);">
                             ${card.negotiationNotes}
                         </div>
                     ` : ''}
@@ -1266,7 +1363,8 @@ function renderFinTabContent(tabName, panel) {
     try {
         switch (tabName) {
             case 'overview':
-                panel.innerHTML = renderMasterCockpit() + renderProjectionPanel();
+                panel.innerHTML = renderOverviewDashboard();
+                setTimeout(function() { drawRunwayDonut('runwayDonutChart'); drawMonthlyBars('monthlyBarsChart'); }, 50);
                 break;
             case 'bills':
                 panel.innerHTML = renderOneTimeBills();
@@ -1281,7 +1379,8 @@ function renderFinTabContent(tabName, panel) {
                 panel.innerHTML = renderActionItems();
                 break;
             default:
-                panel.innerHTML = renderMasterCockpit() + renderProjectionPanel();
+                panel.innerHTML = renderOverviewDashboard();
+                setTimeout(function() { drawRunwayDonut('runwayDonutChart'); drawMonthlyBars('monthlyBarsChart'); }, 50);
         }
     } catch (error) {
         console.error('Error rendering fin tab:', tabName, error);
@@ -1341,3 +1440,122 @@ var _originalUpdateCockpitStats = typeof updateCockpitStats === 'function' ? upd
 
 // Note: The original renderFinancialCockpit and updateCockpitStats are still defined above
 // for the old modal path. These aliases are for any stray callers.
+
+// ============================================
+// CANVAS CHARTS — Overview Dashboard
+// ============================================
+
+function drawRunwayDonut(canvasId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var status = calculateFinancialStatus();
+
+    var dpr = window.devicePixelRatio || 1;
+    var size = 150;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.scale(dpr, dpr);
+
+    var cx = size / 2, cy = size / 2;
+    var outerR = 60, innerR = 42;
+    var percent = status.targetCushion > 0 ? Math.max(0, Math.min(200, (status.projectedBalance / status.targetCushion) * 100)) : 0;
+    var angle = (Math.min(percent, 100) / 100) * Math.PI * 2;
+
+    // Background ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+    ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fill();
+
+    // Progress ring
+    var color = percent >= 100 ? '#5E8A5E' : percent >= 50 ? '#C4923A' : '#B85C5C';
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, -Math.PI / 2, -Math.PI / 2 + angle);
+    ctx.arc(cx, cy, innerR, -Math.PI / 2 + angle, -Math.PI / 2, true);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Center text
+    ctx.fillStyle = color;
+    ctx.font = '700 22px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(percent) + '%', cx, cy - 6);
+    ctx.fillStyle = '#8B8178';
+    ctx.font = '500 9px system-ui, sans-serif';
+    ctx.fillText('OF TARGET', cx, cy + 10);
+}
+
+function drawMonthlyBars(canvasId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var status = calculateFinancialStatus();
+    var months = status.monthlyDetails;
+    if (!months || months.length === 0) return;
+
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.parentElement ? canvas.parentElement.offsetWidth - 24 : 300;
+    if (w < 100) w = 300;
+    var h = 120;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+
+    var maxTotal = 1;
+    for (var mi = 0; mi < months.length; mi++) {
+        if (months[mi].monthTotal > maxTotal) maxTotal = months[mi].monthTotal;
+    }
+
+    var barWidth = Math.min(40, (w - 20) / months.length - 8);
+    var startX = (w - (months.length * (barWidth + 8))) / 2;
+    var chartTop = 10, chartBottom = h - 20;
+    var chartHeight = chartBottom - chartTop;
+
+    for (var i = 0; i < months.length; i++) {
+        var m = months[i];
+        var x = startX + i * (barWidth + 8);
+        var totalH = (m.monthTotal / maxTotal) * chartHeight;
+        var paidAmount = m.monthTotal - m.unpaidAmount;
+        var paidH = (paidAmount / maxTotal) * chartHeight;
+        var unpaidH = totalH - paidH;
+
+        // Unpaid portion (top, warm red)
+        if (unpaidH > 0.5) {
+            ctx.fillStyle = '#B85C5C';
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(x, chartBottom - totalH, barWidth, unpaidH, [3, 3, 0, 0]);
+                ctx.fill();
+            } else {
+                ctx.fillRect(x, chartBottom - totalH, barWidth, unpaidH);
+            }
+        }
+
+        // Paid portion (bottom, warm green)
+        if (paidH > 0.5) {
+            ctx.fillStyle = '#5E8A5E';
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(x, chartBottom - paidH, barWidth, paidH, unpaidH > 0.5 ? [0, 0, 3, 3] : [3, 3, 3, 3]);
+                ctx.fill();
+            } else {
+                ctx.fillRect(x, chartBottom - paidH, barWidth, paidH);
+            }
+        }
+
+        // Month label
+        var label = m.label.replace(/\s*\d{4}/, '').substring(0, 3);
+        ctx.fillStyle = '#8B8178';
+        ctx.font = '500 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x + barWidth / 2, h - 4);
+    }
+}
