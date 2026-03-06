@@ -10,13 +10,13 @@ metadata:
   author: suleman7-DMD
   version: "2.0"
   file: "index.html + js/dental-quest/*.js"
-  lines: "~12,186 HTML + ~10,762 JS (12 modules)"
-  last-updated: "2026-02-20"
+  lines: "~13,881 HTML + ~11,143 JS (12 modules)"
+  last-updated: "2026-03-06"
 ---
 
 # Dental Quest Main App (index.html + 12 JS Modules)
 
-Multi-file app split from a 22,900-line monolith (Feb 2026). CSS + HTML in index.html (~12,186 lines, zero inline JS). JavaScript in 12 modules under `js/dental-quest/`. No build system. Hosted at `https://suleman7-dmd.github.io/dental-quest/`.
+Multi-file app split from a 22,900-line monolith (Feb 2026). CSS + HTML in index.html (~13,881 lines, zero inline JS). JavaScript in 12 modules under `js/dental-quest/`. No build system. Hosted at `https://suleman7-dmd.github.io/dental-quest/`.
 
 ## Instructions
 
@@ -51,7 +51,7 @@ state → firebase-sync → medications → financials → calendar → daily-pl
 | `state.js` | 1,076 | generateId, getValues, getCount, escapeHtml, isEmptyState, hasRealData, deepMerge, safeLocalStorageSet, all global vars | Globals, defaults, utilities |
 | `firebase-sync.js` | 1,922 | saveData (5 guards), saveDataImmediate (5 guards), buildSaveData, loadData, loadDataFromFirebase, initializeFirebase, createCheckpoint, forceUploadToCloud | Save/load, Firebase sync, checkpoints |
 | `medications.js` | 337 | updateMedicationDisplay, updateMedCard, takeMed, takeBothMeds, adjustMed, checkAndApplyDailyPillReduce, saveMedSettings | Pill tracking, med settings |
-| `financials.js` | 1,180 | openFinancials, renderFinancialCockpit, renderMasterLiquidity, renderOneTimeBills, renderMonthlyExpenses, renderCreditCards, renderActionItems | Financial Cockpit (7 renderers) |
+| `financials.js` | 1,561 | renderOverviewDashboard, renderOneTimeBills, renderMonthlyExpenses, renderCreditCards, renderActionItems, drawRunwayDonut, drawMonthlyBars, switchFinTab, renderFinTabContent | Financial dashboard (integrated tabbed view with canvas charts) |
 | `calendar.js` | 768 | generateCalendar, renderCountdowns, addCalendarEvent | Master calendar, countdowns |
 | `daily-planner.js` | 674 | checkCriticalEODReset, checkPlannerReset, renderDailyPlanner | Daily planner, EOD reset |
 | `notebook.js` | 252 | renderNotebook, addNotebookPage, deleteNotebookPage | Multi-page notebook CRUD |

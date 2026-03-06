@@ -35,6 +35,15 @@ const date = new Date(year, month - 1, day);
 - **Crash Out field cleanup**: resetCrashOutDay() must delete ALL 4 fields: crashOutScheduled, crashOutTime, crashOutDuration, crashOutOrder (fixed Mar 2026).
 - **onclick string IDs**: When generating onclick handlers with template literals for task IDs, ALWAYS quote: `onclick="fn('${taskId}')"` not `onclick="fn(${taskId})"` — string IDs cause ReferenceError (fixed Mar 2026).
 - **XSS in innerHTML**: ALL user text (task.text, event.description, card.name, notes) MUST use `escapeHtml()` when rendered in innerHTML. Audit any new innerHTML for unescaped user content.
+- **Flag ordering in loadFromFirebase**: ALL sync flags (`hasLoadedFromCloud`, `isInitialLoad`, `_dataLoaded`) MUST be set BEFORE `initUI()`. If initUI crashes, saves are permanently blocked. Wrap `initUI()` in try/catch (fixed Mar 5, 2026 in d3-roadmap).
+- **mergeRemoteState overwrites local-newer data**: `{ ...local, ...firebase }` spread means stale Firebase wins for same keys. Compare `lastSaved` timestamps BEFORE merging — if local is newer, SKIP merge entirely (fixed Mar 5, 2026 in d3-roadmap).
+- **`||` vs `??` for done/grade**: `d.done || false` loses `done: false` (treats as falsy). `d.grade || null` loses grade of 0. Use `?? false` / `?? null` (fixed Mar 5, 2026 in d3-roadmap init.js + deadlines.js).
+- **editedDeadlines stale done:false**: When completing a previously-edited deadline, MUST update `editedDeadlines[id].done = true` too. Otherwise `initUI()` applies `done: false` from editedDeadlines first, then completedDeadlines restore fails due to post-edit ID mismatch.
+- **completedDeadlines + _originalStableId**: After edits are applied in `initUI()`, `getDeadlineId(d)` returns the EDITED ID. But `completedDeadlines` keys use the ORIGINAL stable ID. Must add `_originalStableId` fallback search in completedDeadlines restore loop.
+- **CRUD localStorage safety**: ALL deadline CRUD functions (add/complete/uncheck/delete) MUST call `safeLocalStorageSet()` BEFORE `saveData()` — ensures changes persist even if save guards block.
+- **deleteDeadline stale index**: Capture stable ID at call time, re-lookup by stable ID INSIDE the confirm callback. Array index may shift between click and confirm.
+- **Cache-busting for split JS apps**: After code changes to multi-file JS apps, add `?v=YYYYMMDD` to ALL `<script src>` tags. GitHub Pages caches aggressively — browsers serve old JS without cache-busting params.
+- **Custom deadline edits lost on reload**: `handleDateChange()` and `handleTextEdit()` store edits in `roadmapData.editedDeadlines`, but `initUI()` only applies `editedDeadlines` to STATIC deadlines. Custom deadlines load from `roadmapData.customDeadlines`, which those handlers NEVER updated. FIX: When editing a custom deadline (`deadline.custom && deadline.id`), ALSO update `roadmapData.customDeadlines[deadline.id]` directly. AND in `initUI()`, apply `editedDeadlines` overrides when loading custom deadlines as a safety net.
 
 ---
 
@@ -589,7 +598,24 @@ Previously 4 duplicated merge blocks → now 1 function called by loadFromFireba
 
 ---
 
-## FINANCIALS SYSTEM (index.html)
+## FINANCIALS SYSTEM (index.html — financials.js, ~1,561 lines)
+
+### Architecture: Integrated Tabbed View (Mar 2026)
+- **NOT a modal** — converted from overlay to integrated view (commit `0831f6a`, Mar 6, 2026)
+- **5 tabs**: Overview, Bills, Monthly, Cards, Actions. Managed by `switchFinTab()` / `renderFinTabContent()`.
+- **Overview tab**: Dense 2-column modular dashboard with canvas charts (commit `10ca8a5`, Mar 6, 2026)
+- **Tab state**: Persisted in localStorage via `dq_finTab`. HTML container: `#financialsViewContainer`.
+- **Header**: Sticky `.fin-view-header` with 4 stat pills (debt, balance, actions, projection). Updated by `updateFinViewStats()`.
+
+### Overview Dashboard (renderOverviewDashboard)
+Dense `.fd-grid` (2-column CSS grid) with modular `.fd-card` cards:
+- **Row 1**: Cash Position (value + update button + projection badge) | Runway Donut (`drawRunwayDonut()` — 150px canvas ring chart)
+- **Row 2**: Monthly Burn (`drawMonthlyBars()` — stacked vertical bars per month, paid=green/unpaid=red)
+- **Row 2b**: Cash Flow waterfall (proportional bars: Cash → -Bills → -Monthly → =Projection)
+- **Row 3**: Stats strip (4 compact metrics)
+- **Row 4**: Projection Detail (per-month breakdown + progress bar) | Status Summary (health, actions, debt, days)
+- Charts use warm clinical palette: green=#5E8A5E, red=#B85C5C, amber=#C4923A, text=#8B8178
+- Charts support hi-DPI via `devicePixelRatio` scaling, `roundRect` fallback for older browsers
 
 ### Data Structure (v2: Per-Month Expenses)
 ```javascript
@@ -603,8 +629,9 @@ financials = {
     actionItems: [{ id, title, deadline, priority, completed, notes }]
 };
 ```
-Projection: `availableCash - unpaidMonthsTotal`. Health: GREEN (≥cushion) | YELLOW (>0) | RED (<0).
-7 render functions: `renderMasterLiquidity`, `renderOneTimeBills`, `renderMonthlyExpenses`, `renderExpenseTemplate`, `renderProjectionPanel`, `renderActionItems`, `renderCreditCards`.
+Projection: `availableCash - unpaidMonthsTotal`. Health: GREEN (>=cushion) | YELLOW (>0) | RED (<0).
+Key render functions: `renderOverviewDashboard`, `renderOneTimeBills`, `renderMonthlyExpenses`, `renderExpenseTemplate`, `renderProjectionPanel` (legacy), `renderActionItems`, `renderCreditCards`, `drawRunwayDonut`, `drawMonthlyBars`.
+CSS classes: `.fd-grid`, `.fd-card`, `.fd-card-title`, `.fd-card-value`, `.fd-chart-container`, `.fd-stats-strip`, `.fd-stat`, `.fd-waterfall-*`, `.fd-projection-row`, `.fd-btn-sm`.
 
 ---
 
