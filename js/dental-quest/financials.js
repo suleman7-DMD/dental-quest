@@ -13,40 +13,15 @@
 // ============================================
 
 function openFinancials() {
-    const modal = document.getElementById('financialModal');
-    if (!modal) {
-        console.error('Financial modal not found');
-        return;
-    }
-    ensureModalOnBody(modal);
-    _modalOpenTime = Date.now();
-    modal.classList.add('show');
-
-    try {
-        renderFinancialCockpit();
-        updateCockpitStats();
-    } catch (error) {
-        console.error('Error rendering financial cockpit:', error);
-        // Show error message in dashboard
-        const dashboard = document.getElementById('financialDashboard');
-        if (dashboard) {
-            dashboard.innerHTML = `
-                <div style="padding: 40px; text-align: center; color: var(--destructive);">
-                    <h2>Error Loading Financial Dashboard</h2>
-                    <p style="margin: 20px 0; color: var(--fg-secondary);">${error.message}</p>
-                    <p style="color: var(--fg-secondary);">Check the console for details.</p>
-                    <button onclick="closeFinancials()" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
-                        Close
-                    </button>
-                </div>
-            `;
-        }
+    // Redirect to integrated financials view (backwards-compatible alias)
+    if (typeof sidebarNavigate === 'function') {
+        sidebarNavigate('financials');
     }
 }
 
 function closeFinancials() {
-    const modal = document.getElementById('financialModal');
-    if (modal) modal.classList.remove('show');
+    // No-op — modal removed, financials is now an integrated view
+    // Kept for backwards compatibility with any stray callers
 }
 
 // Calculate real-time financial status with per-month expense tracking
@@ -187,45 +162,32 @@ function renderMasterCockpit() {
 }
 
 function updateMasterLiquidity() {
-    const current = financials.masterLiquidity.currentCash;
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
 
-    const overlay = document.createElement('div');
-    overlay.className = 'edit-overlay';
-    overlay.id = 'cashEditOverlay';
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+    var current = financials.masterLiquidity.currentCash;
+    var targetEl = document.querySelector('.fin-master-grid') || document.getElementById('finPanelOverview');
+    if (!targetEl) return;
 
-    overlay.innerHTML = `
-        <div class="edit-panel" onclick="event.stopPropagation()" style="max-width: 400px;">
-            <h3 style="text-align: center;">Update Cash Balance</h3>
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);text-align:center;">Update Cash Balance</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Actual Cash in Checking ($)</label>' +
+        '<input type="number" id="edit_cashAmount" value="' + current + '" step="0.01" inputmode="decimal" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1.5em;text-align:center;font-weight:700;"></div>' +
+        '</div>' +
+        '<div style="margin:15px 0;padding:12px;background:var(--accent-light);border-radius:8px;font-size:0.9em;color:var(--accent);">Enter your actual bank balance to get accurate projections.</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveMasterLiquidity()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Save</button>' +
+        '</div></div>';
 
-            <div class="edit-field">
-                <label>Actual Cash in Checking ($)</label>
-                <input type="number" id="edit_cashAmount" value="${current}" step="0.01"
-                       inputmode="decimal" style="font-size: 1.5em; text-align: center; font-weight: 700;">
-            </div>
+    targetEl.insertAdjacentHTML('beforebegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            <div style="margin: 15px 0; padding: 12px; background: var(--accent-light); border-radius: 8px; font-size: 0.9em; color: var(--accent);">
-                Enter your actual bank balance to get accurate projections.
-            </div>
-
-            <div class="edit-actions">
-                <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
-                <button class="btn-save" onclick="saveMasterLiquidity()">Save</button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    // Focus the input and select all
-    setTimeout(() => {
-        const input = document.getElementById('edit_cashAmount');
-        if (input) {
-            input.focus();
-            input.select();
-        }
+    setTimeout(function() {
+        var input = document.getElementById('edit_cashAmount');
+        if (input) { input.focus(); input.select(); }
     }, 100);
 }
 
@@ -241,10 +203,10 @@ function saveMasterLiquidity() {
     financials.masterLiquidity.lastUpdated = new Date().toISOString();
 
     saveData();
-    renderFinancialCockpit();
-    updateCockpitStats();
-    var el = document.getElementById('cashEditOverlay');
-    if (el) el.remove();
+    renderCurrentFinTab();
+    updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit');
+    if (inlineEdit) inlineEdit.remove();
 
     showToast('Updated: $' + amount.toLocaleString(), '$');
 }
@@ -309,23 +271,39 @@ function toggleOneTimeBillPaid(billId) {
     var bills = financials.oneTimeBills || {};
     if (!bills[billId]) return;
     bills[billId].paid = !bills[billId].paid;
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
     if (bills[billId].paid) showToast('Marked paid: ' + bills[billId].description, 'v');
 }
 
 function addOneTimeBill() {
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'oneTimeBillOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Add One-Time Bill</h3>' +
-        '<div class="edit-field"><label>Description</label><input type="text" id="new_otb_desc" placeholder="e.g., New textbook"></div>' +
-        '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_otb_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Type</label><select id="new_otb_type" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="expense">Expense</option><option value="income">Income</option></select></div>' +
-        '<div class="edit-field"><label>Due Date</label><input type="date" id="new_otb_date" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"></div>' +
-        '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="new_otb_notes" placeholder="Any notes..."></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewOneTimeBill()">Add Bill</button></div></div>';
-    document.body.appendChild(overlay);
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('finPanelBills');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Add One-Time Bill</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Description</label>' +
+        '<input type="text" id="new_otb_desc" placeholder="e.g., New textbook" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Amount ($)</label>' +
+        '<input type="number" id="new_otb_amount" value="0" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Type</label>' +
+        '<select id="new_otb_type" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);"><option value="expense">Expense</option><option value="income">Income</option></select></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Due Date</label>' +
+        '<input type="date" id="new_otb_date" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Notes (optional)</label>' +
+        '<input type="text" id="new_otb_notes" placeholder="Any notes..." style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveNewOneTimeBill()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Add Bill</button>' +
+        '</div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveNewOneTimeBill() {
@@ -339,25 +317,41 @@ function saveNewOneTimeBill() {
     var id = generateId('bill');
     if (!financials.oneTimeBills) financials.oneTimeBills = {};
     financials.oneTimeBills[id] = { id: id, description: desc, amount: amount, type: type, dueDate: dueDate || new Date().toISOString().split('T')[0], paid: false, category: 'other', notes: notes || null };
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('oneTimeBillOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Added: ' + desc, '+');
 }
 
 function editOneTimeBill(billId) {
     var bill = (financials.oneTimeBills || {})[billId];
     if (!bill) return;
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'editOTBOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Edit Bill</h3>' +
-        '<div class="edit-field"><label>Description</label><input type="text" id="edit_otb_desc" value="' + escapeHtml(bill.description) + '"></div>' +
-        '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_otb_amount" value="' + bill.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Due Date</label><input type="date" id="edit_otb_date" value="' + (bill.dueDate || '') + '" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"></div>' +
-        '<div class="edit-field"><label>Notes</label><textarea id="edit_otb_notes" rows="2">' + escapeHtml(bill.notes || '') + '</textarea></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveOneTimeBillEdit(\'' + billId + '\')">Save</button></div></div>';
-    document.body.appendChild(overlay);
+
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('finPanelBills');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Edit Bill</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Description</label>' +
+        '<input type="text" id="edit_otb_desc" value="' + escapeHtml(bill.description) + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Amount ($)</label>' +
+        '<input type="number" id="edit_otb_amount" value="' + bill.amount + '" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Due Date</label>' +
+        '<input type="date" id="edit_otb_date" value="' + (bill.dueDate || '') + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Notes</label>' +
+        '<textarea id="edit_otb_notes" rows="2" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;">' + escapeHtml(bill.notes || '') + '</textarea></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveOneTimeBillEdit(\'' + billId + '\')" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Save</button>' +
+        '</div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveOneTimeBillEdit(billId) {
@@ -367,8 +361,8 @@ function saveOneTimeBillEdit(billId) {
     bill.amount = parseFloat(document.getElementById('edit_otb_amount').value) || 0;
     bill.dueDate = document.getElementById('edit_otb_date').value;
     bill.notes = document.getElementById('edit_otb_notes').value || '';
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('editOTBOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Bill updated', 'v');
 }
 
@@ -377,7 +371,7 @@ function deleteOneTimeBill(billId) {
     if (!bill) return;
     showCustomConfirm('Delete "' + bill.description + '"?', function() {
         delete financials.oneTimeBills[billId];
-        saveData(); renderFinancialCockpit(); updateCockpitStats();
+        saveData(); renderCurrentFinTab(); updateFinViewStats();
         showToast('Deleted: ' + bill.description, 'x');
     }, null, 'Delete Bill');
 }
@@ -468,7 +462,7 @@ function toggleMonthExpensePaid(monthKey, expenseKey) {
     var month = (financials.months || {})[monthKey];
     if (!month || !month.expenses || !month.expenses[expenseKey]) return;
     month.expenses[expenseKey].paid = !month.expenses[expenseKey].paid;
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
     if (month.expenses[expenseKey].paid) showToast('Paid: ' + month.expenses[expenseKey].name, 'v');
 }
 
@@ -477,7 +471,7 @@ function payAllMonth(monthKey) {
     if (!month || !month.expenses) return;
     var allPaid = Object.values(month.expenses).every(function(e) { return e.paid; });
     Object.values(month.expenses).forEach(function(exp) { exp.paid = !allPaid; });
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
     showToast(month.label + (allPaid ? ' - all marked unpaid' : ' - all marked paid'), 'v');
 }
 
@@ -485,23 +479,39 @@ function editMonthExpense(monthKey, expenseKey) {
     var month = (financials.months || {})[monthKey];
     if (!month || !month.expenses || !month.expenses[expenseKey]) return;
     var exp = month.expenses[expenseKey];
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'editMonthExpOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Edit ' + escapeHtml(exp.name) + ' - ' + escapeHtml(month.label) + '</h3>' +
-        '<div class="edit-field"><label>Name</label><input type="text" id="edit_mexp_name" value="' + escapeHtml(exp.name) + '"></div>' +
-        '<div class="edit-field"><label>Amount ($)</label><input type="number" id="edit_mexp_amount" value="' + exp.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="edit_mexp_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;">' +
+
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('monthBody_' + monthKey) || document.getElementById('finPanelMonthly');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Edit ' + escapeHtml(exp.name) + ' - ' + escapeHtml(month.label) + '</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Name</label>' +
+        '<input type="text" id="edit_mexp_name" value="' + escapeHtml(exp.name) + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Amount ($)</label>' +
+        '<input type="number" id="edit_mexp_amount" value="' + exp.amount + '" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Category</label>' +
+        '<select id="edit_mexp_category" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);">' +
             '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
             '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
             '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
             '<option value="debt"' + (exp.category === 'debt' ? ' selected' : '') + '>Debt</option>' +
             '<option value="other"' + (exp.category === 'other' ? ' selected' : '') + '>Other</option></select></div>' +
-        '<div class="edit-field"><label>Notes (optional)</label><input type="text" id="edit_mexp_notes" value="' + escapeHtml(exp.notes || '') + '"></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveMonthExpenseEdit(\'' + monthKey + '\', \'' + expenseKey + '\')">Save</button></div>' +
-        '<div style="margin-top: 15px; text-align: center;"><button onclick="deleteMonthExpense(\'' + monthKey + '\', \'' + expenseKey + '\')" style="background: transparent; color: var(--destructive); border: 1px solid var(--destructive); padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">Delete from ' + escapeHtml(month.label) + '</button></div></div>';
-    document.body.appendChild(overlay);
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Notes (optional)</label>' +
+        '<input type="text" id="edit_mexp_notes" value="' + escapeHtml(exp.notes || '') + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveMonthExpenseEdit(\'' + monthKey + '\', \'' + expenseKey + '\')" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Save</button>' +
+        '</div>' +
+        '<div style="margin-top:15px;text-align:center;"><button onclick="deleteMonthExpense(\'' + monthKey + '\', \'' + expenseKey + '\')" style="background:transparent;color:var(--destructive);border:1px solid var(--destructive);padding:10px 20px;border-radius:6px;cursor:pointer;font-size:0.9em;">Delete from ' + escapeHtml(month.label) + '</button></div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveMonthExpenseEdit(monthKey, expenseKey) {
@@ -512,8 +522,8 @@ function saveMonthExpenseEdit(monthKey, expenseKey) {
     month.expenses[expenseKey].category = document.getElementById('edit_mexp_category').value;
     var notes = document.getElementById('edit_mexp_notes').value.trim();
     if (notes) { month.expenses[expenseKey].notes = notes; } else { delete month.expenses[expenseKey].notes; }
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Expense updated', 'v');
 }
 
@@ -523,8 +533,8 @@ function deleteMonthExpense(monthKey, expenseKey) {
     var name = month.expenses[expenseKey].name;
     showCustomConfirm('Delete "' + name + '" from ' + month.label + '?', function() {
         delete month.expenses[expenseKey];
-        saveData(); renderFinancialCockpit(); updateCockpitStats();
-        var el = document.getElementById('editMonthExpOverlay'); if (el) el.remove();
+        saveData(); renderCurrentFinTab(); updateFinViewStats();
+        var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
         showToast('Deleted: ' + name, 'x');
     }, null, 'Delete Expense');
 }
@@ -532,16 +542,31 @@ function deleteMonthExpense(monthKey, expenseKey) {
 function addExpenseToMonth(monthKey) {
     var month = (financials.months || {})[monthKey];
     if (!month) return;
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'addMonthExpOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Add Expense to ' + escapeHtml(month.label) + '</h3>' +
-        '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_mexp_name" placeholder="e.g., Insurance"></div>' +
-        '<div class="edit-field"><label>Amount ($)</label><input type="number" id="new_mexp_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="new_mexp_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewMonthExpense(\'' + monthKey + '\')">Add</button></div></div>';
-    document.body.appendChild(overlay);
+
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('monthBody_' + monthKey) || document.getElementById('finPanelMonthly');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Add Expense to ' + escapeHtml(month.label) + '</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Expense Name</label>' +
+        '<input type="text" id="new_mexp_name" placeholder="e.g., Insurance" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Amount ($)</label>' +
+        '<input type="number" id="new_mexp_amount" value="0" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Category</label>' +
+        '<select id="new_mexp_category" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveNewMonthExpense(\'' + monthKey + '\')" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Add</button>' +
+        '</div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveNewMonthExpense(monthKey) {
@@ -554,8 +579,8 @@ function saveNewMonthExpense(monthKey) {
     var key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now().toString(36);
     if (!month.expenses) month.expenses = {};
     month.expenses[key] = { name: name, amount: amount, category: category, paid: false };
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('addMonthExpOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Added: ' + name + ' to ' + month.label, '+');
 }
 
@@ -589,21 +614,36 @@ function renderExpenseTemplate() {
 function editTemplateExpense(expKey) {
     var exp = (financials.expenseTemplate || {})[expKey];
     if (!exp) return;
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'editTemplateOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Edit Template: ' + escapeHtml(exp.name || expKey) + '</h3>' +
-        '<div class="edit-field"><label>Name</label><input type="text" id="edit_tpl_name" value="' + escapeHtml(exp.name || expKey) + '"></div>' +
-        '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="edit_tpl_amount" value="' + exp.amount + '" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="edit_tpl_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;">' +
+
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('finPanelTemplate');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Edit Template: ' + escapeHtml(exp.name || expKey) + '</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Name</label>' +
+        '<input type="text" id="edit_tpl_name" value="' + escapeHtml(exp.name || expKey) + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Monthly Amount ($)</label>' +
+        '<input type="number" id="edit_tpl_amount" value="' + exp.amount + '" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Category</label>' +
+        '<select id="edit_tpl_category" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);">' +
             '<option value="housing"' + (exp.category === 'housing' ? ' selected' : '') + '>Housing</option>' +
             '<option value="living"' + (exp.category === 'living' ? ' selected' : '') + '>Living</option>' +
             '<option value="wellness"' + (exp.category === 'wellness' ? ' selected' : '') + '>Wellness</option>' +
             '<option value="debt"' + (exp.category === 'debt' ? ' selected' : '') + '>Debt</option>' +
             '<option value="other"' + (exp.category === 'other' ? ' selected' : '') + '>Other</option></select></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveTemplateExpenseEdit(\'' + expKey + '\')">Save</button></div></div>';
-    document.body.appendChild(overlay);
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveTemplateExpenseEdit(\'' + expKey + '\')" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Save</button>' +
+        '</div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveTemplateExpenseEdit(expKey) {
@@ -612,8 +652,8 @@ function saveTemplateExpenseEdit(expKey) {
     exp.name = document.getElementById('edit_tpl_name').value.trim() || exp.name;
     exp.amount = parseFloat(document.getElementById('edit_tpl_amount').value) || 0;
     exp.category = document.getElementById('edit_tpl_category').value;
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('editTemplateOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Template updated', 'v');
 }
 
@@ -622,22 +662,36 @@ function deleteTemplateExpense(expKey) {
     if (!exp) return;
     showCustomConfirm('Delete "' + (exp.name || expKey) + '" from template?', function() {
         delete financials.expenseTemplate[expKey];
-        saveData(); renderFinancialCockpit(); updateCockpitStats();
+        saveData(); renderCurrentFinTab(); updateFinViewStats();
         showToast('Removed from template', 'x');
     }, null, 'Delete Template Expense');
 }
 
 function addTemplateExpense() {
-    var overlay = document.createElement('div');
-    overlay.className = 'edit-overlay'; overlay.id = 'addTemplateOverlay';
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    overlay.innerHTML = '<div class="edit-panel" onclick="event.stopPropagation()">' +
-        '<h3>Add to Expense Template</h3>' +
-        '<div class="edit-field"><label>Expense Name</label><input type="text" id="new_tpl_name" placeholder="e.g., Insurance"></div>' +
-        '<div class="edit-field"><label>Monthly Amount ($)</label><input type="number" id="new_tpl_amount" value="0" step="0.01"></div>' +
-        '<div class="edit-field"><label>Category</label><select id="new_tpl_category" style="width: 100%; background: var(--canvas-subtle); border: 1px solid var(--border-default); color: var(--fg-primary); padding: 12px; border-radius: 6px;"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
-        '<div class="edit-actions"><button class="btn-cancel" onclick="this.closest(\'.edit-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveNewTemplateExpense()">Add</button></div></div>';
-    document.body.appendChild(overlay);
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
+
+    var targetEl = document.getElementById('finPanelTemplate');
+    if (!targetEl) return;
+
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Add to Expense Template</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Expense Name</label>' +
+        '<input type="text" id="new_tpl_name" placeholder="e.g., Insurance" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Monthly Amount ($)</label>' +
+        '<input type="number" id="new_tpl_amount" value="0" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Category</label>' +
+        '<select id="new_tpl_category" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;background:var(--canvas-subtle);color:var(--fg-primary);"><option value="housing">Housing</option><option value="living">Living</option><option value="wellness">Wellness</option><option value="debt">Debt</option><option value="other">Other</option></select></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveNewTemplateExpense()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Add</button>' +
+        '</div></div>';
+
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveNewTemplateExpense() {
@@ -649,8 +703,8 @@ function saveNewTemplateExpense() {
     if (!financials.expenseTemplate) financials.expenseTemplate = {};
     if (financials.expenseTemplate[key]) { showToast('Already exists in template', '!'); return; }
     financials.expenseTemplate[key] = { name: name, amount: amount, category: category };
-    saveData(); renderFinancialCockpit(); updateCockpitStats();
-    var el = document.getElementById('addTemplateOverlay'); if (el) el.remove();
+    saveData(); renderCurrentFinTab(); updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit'); if (inlineEdit) inlineEdit.remove();
     showToast('Added to template: ' + name, '+');
 }
 
@@ -768,8 +822,8 @@ function toggleActionItem(itemId) {
     if (item) {
         item.completed = !item.completed;
         saveData();
-        renderFinancialCockpit();
-        updateCockpitStats();
+        renderCurrentFinTab();
+        updateFinViewStats();
 
         if (item.completed) {
             showToast(`${item.title}`, 'ok');
@@ -839,52 +893,37 @@ function renderCreditCards() {
 }
 
 function editCreditCard(cardId) {
-    const card = getValues(financials.creditCards).find(c => c.id === cardId);
+    var card = getValues(financials.creditCards).find(function(c) { return c.id === cardId; });
     if (!card) return;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'edit-overlay';
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+    var existing = document.getElementById('finInlineEdit');
+    if (existing) existing.remove();
 
-    overlay.innerHTML = `
-        <div class="edit-panel" onclick="event.stopPropagation()">
-            <h3>Edit ${escapeHtml(card.name)}</h3>
+    var targetEl = document.getElementById('finPanelCards');
+    if (!targetEl) return;
 
-            <div class="edit-field">
-                <label>Current Balance ($)</label>
-                <input type="number" id="edit_balance" value="${card.balance}" step="0.01">
-            </div>
+    var formHtml = '<div id="finInlineEdit" class="fin-inline-edit">' +
+        '<h3 style="margin:0 0 15px;color:var(--accent);">Edit ' + escapeHtml(card.name) + '</h3>' +
+        '<div style="display:grid;gap:12px;">' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Current Balance ($)</label>' +
+        '<input type="number" id="edit_balance" value="' + card.balance + '" step="0.01" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Days Late</label>' +
+        '<input type="number" id="edit_daysLate" value="' + card.daysLate + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Status</label>' +
+        '<input type="text" id="edit_status" value="' + escapeHtml(card.status) + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Target Minimum Payment ($)</label>' +
+        '<input type="number" id="edit_targetMin" value="' + card.targetMin + '" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;"></div>' +
+        '<div><label style="display:block;margin-bottom:4px;font-weight:600;font-size:0.85em;color:var(--fg-secondary);">Notes</label>' +
+        '<textarea id="edit_cardNotes" rows="3" style="width:100%;padding:10px;border:1px solid var(--border-default);border-radius:8px;font-size:1em;">' + escapeHtml(card.negotiationNotes || '') + '</textarea></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'finInlineEdit\').remove()" style="padding:10px 20px;border:1px solid var(--border-default);border-radius:8px;background:var(--surface-primary);cursor:pointer;font-weight:600;">Cancel</button>' +
+        '<button onclick="saveCreditCardEdit(\'' + cardId + '\')" style="padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:600;">Save Changes</button>' +
+        '</div></div>';
 
-            <div class="edit-field">
-                <label>Days Late</label>
-                <input type="number" id="edit_daysLate" value="${card.daysLate}">
-            </div>
-
-            <div class="edit-field">
-                <label>Status</label>
-                <input type="text" id="edit_status" value="${card.status}">
-            </div>
-
-            <div class="edit-field">
-                <label>Target Minimum Payment ($)</label>
-                <input type="number" id="edit_targetMin" value="${card.targetMin}">
-            </div>
-
-            <div class="edit-field">
-                <label>Notes</label>
-                <textarea id="edit_cardNotes" rows="3">${escapeHtml(card.negotiationNotes || '')}</textarea>
-            </div>
-
-            <div class="edit-actions">
-                <button class="btn-cancel" onclick="this.closest('.edit-overlay').remove()">Cancel</button>
-                <button class="btn-save" onclick="saveCreditCardEdit('${cardId}')">Save Changes</button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
+    targetEl.insertAdjacentHTML('afterbegin', formHtml);
+    var formEl = document.getElementById('finInlineEdit');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function saveCreditCardEdit(cardId) {
@@ -904,9 +943,10 @@ function saveCreditCardEdit(cardId) {
     }
 
     saveData();
-    renderFinancialCockpit();
-    updateCockpitStats();
-    document.querySelector('.edit-overlay').remove();
+    renderCurrentFinTab();
+    updateFinViewStats();
+    var inlineEdit = document.getElementById('finInlineEdit');
+    if (inlineEdit) inlineEdit.remove();
 
     showToast(`Updated ${card.name}`, 'ok');
 }
@@ -923,7 +963,8 @@ function openFinancialHelp() {
 }
 
 function closeFinancialHelp() {
-    document.getElementById('financialHelpModal').style.display = 'none';
+    var modal = document.getElementById('financialHelpModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function showFinancialHelp(topic) {
@@ -1181,3 +1222,122 @@ function showFinancialHelp(topic) {
     helpContent.innerHTML = helpTopics[topic] || '<p>Help topic not found.</p>';
     openFinancialHelp();
 }
+
+// ============================================
+// TAB SYSTEM — Integrated Financial View
+// ============================================
+
+function renderFinancialsView() {
+    switchFinTab(currentFinTab);
+}
+
+function switchFinTab(tabName) {
+    currentFinTab = tabName;
+    safeLocalStorageSet('dq_finTab', tabName);
+
+    // Remove any open inline edit
+    var inlineEdit = document.getElementById('finInlineEdit');
+    if (inlineEdit) inlineEdit.remove();
+
+    // Update tab active states
+    var tabs = document.querySelectorAll('.fin-tab');
+    tabs.forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-tab') === tabName);
+    });
+
+    // Show/hide panels
+    var panels = document.querySelectorAll('.fin-tab-panel');
+    panels.forEach(function(p) {
+        p.classList.toggle('active', p.id === 'finPanel' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+    });
+
+    // Render content into the active panel
+    var panelId = 'finPanel' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    var panel = document.getElementById(panelId);
+    if (panel) {
+        renderFinTabContent(tabName, panel);
+    }
+
+    // Reinitialize Lucide icons
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+}
+
+function renderFinTabContent(tabName, panel) {
+    try {
+        switch (tabName) {
+            case 'overview':
+                panel.innerHTML = renderMasterCockpit() + renderProjectionPanel();
+                break;
+            case 'bills':
+                panel.innerHTML = renderOneTimeBills();
+                break;
+            case 'monthly':
+                panel.innerHTML = renderMonthlyExpenses() + renderExpenseTemplate();
+                break;
+            case 'cards':
+                panel.innerHTML = renderCreditCards();
+                break;
+            case 'actions':
+                panel.innerHTML = renderActionItems();
+                break;
+            default:
+                panel.innerHTML = renderMasterCockpit() + renderProjectionPanel();
+        }
+    } catch (error) {
+        console.error('Error rendering fin tab:', tabName, error);
+        panel.innerHTML = '<div style="padding: 40px; color: var(--destructive); text-align: center;"><h3>Error loading ' + escapeHtml(tabName) + '</h3><p style="margin-top: 10px; color: var(--fg-secondary);">' + escapeHtml(error.message) + '</p></div>';
+    }
+}
+
+function renderCurrentFinTab() {
+    // Only re-render if the financials view is currently active
+    var container = document.getElementById('financialsViewContainer');
+    if (!container || container.style.display === 'none') return;
+
+    var panelId = 'finPanel' + currentFinTab.charAt(0).toUpperCase() + currentFinTab.slice(1);
+    var panel = document.getElementById(panelId);
+    if (panel) {
+        renderFinTabContent(currentFinTab, panel);
+    }
+
+    // Reinitialize Lucide icons
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+}
+
+function updateFinViewStats() {
+    var debtEl = document.getElementById('finViewDebt');
+    var balanceEl = document.getElementById('finViewBalance');
+    var actionsEl = document.getElementById('finViewActions');
+    var projEl = document.getElementById('finViewProjection');
+
+    if (!debtEl) return; // Not rendered yet
+
+    var status = calculateFinancialStatus();
+    var totalDebt = getValues(financials.creditCards || {}).reduce(function(sum, card) { return sum + (card.balance || 0); }, 0);
+
+    debtEl.textContent = '$' + totalDebt.toLocaleString();
+    balanceEl.textContent = '$' + status.currentLiquid.toLocaleString();
+
+    // Count unpaid actions
+    var unpaidOneTime = getValues(financials.oneTimeBills || {}).filter(function(b) { return !b.paid && b.type === 'expense'; }).length;
+    var unpaidMonthlyItems = 0;
+    Object.values(financials.months || {}).forEach(function(month) {
+        Object.values(month.expenses || {}).forEach(function(exp) { if (!exp.paid) unpaidMonthlyItems++; });
+    });
+    actionsEl.textContent = unpaidOneTime + unpaidMonthlyItems;
+
+    // Projection
+    projEl.textContent = '$' + status.projectedBalance.toLocaleString();
+    projEl.className = 'fin-view-stat-value ' + (status.projectedBalance < 0 ? 'debt' : status.projectedBalance < (financials.masterLiquidity?.targetCushion || 0) ? 'warning' : 'positive');
+}
+
+// ============================================
+// BACKWARDS-COMPATIBLE ALIASES
+// ============================================
+
+// renderFinancialCockpit() is called from unknown locations — keep as alias
+var _originalRenderFinancialCockpit = typeof renderFinancialCockpit === 'function' ? renderFinancialCockpit : null;
+var _originalUpdateCockpitStats = typeof updateCockpitStats === 'function' ? updateCockpitStats : null;
+
+// Note: The original renderFinancialCockpit and updateCockpitStats are still defined above
+// for the old modal path. These aliases are for any stray callers.

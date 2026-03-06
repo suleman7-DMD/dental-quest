@@ -728,6 +728,8 @@ function switchToFocusMode() {
     document.body.classList.add('focus-active');
     document.getElementById('focusModeContainer').style.display = 'block';
     document.getElementById('fullViewContainer').style.display = 'none';
+    var finEl = document.getElementById('financialsViewContainer');
+    if (finEl) finEl.style.display = 'none';
     var focusModeBtn = document.getElementById('focusModeBtn');
     var fullViewBtn = document.getElementById('fullViewBtn');
     if (focusModeBtn) { focusModeBtn.style.background = 'rgba(255,255,255,0.95)'; focusModeBtn.style.color = 'var(--accent)'; }
@@ -746,14 +748,18 @@ function switchToFocusMode() {
     // Update compact header view toggle
     var fb = document.getElementById('compactFocusBtn');
     var tb = document.getElementById('compactFullBtn');
+    var ffb = document.getElementById('compactFinancialsBtn');
     if (fb) fb.classList.add('active');
     if (tb) tb.classList.remove('active');
+    if (ffb) ffb.classList.remove('active');
 
     // Update sidebar active state
     var sf = document.getElementById('sidebarFocusBtn');
     var su = document.getElementById('sidebarFullBtn');
+    var sfi = document.getElementById('sidebarFinancialsBtn');
     if (sf) sf.classList.add('active');
     if (su) su.classList.remove('active');
+    if (sfi) sfi.classList.remove('active');
 
     // Update breadcrumb
     var bc = document.getElementById('topBarBreadcrumb');
@@ -765,6 +771,8 @@ function switchToFullView() {
     safeLocalStorageSet('dq_currentView', 'full');
     document.body.classList.remove('focus-active');
     document.getElementById('focusModeContainer').style.display = 'none';
+    var finEl = document.getElementById('financialsViewContainer');
+    if (finEl) finEl.style.display = 'none';
 
     // Show view controls
     var vc = document.getElementById('viewControls');
@@ -791,18 +799,75 @@ function switchToFullView() {
     // Update compact header view toggle
     var fb = document.getElementById('compactFocusBtn');
     var tb = document.getElementById('compactFullBtn');
+    var ffb = document.getElementById('compactFinancialsBtn');
     if (fb) fb.classList.remove('active');
     if (tb) tb.classList.add('active');
+    if (ffb) ffb.classList.remove('active');
 
     // Update sidebar active state
     var sf = document.getElementById('sidebarFocusBtn');
     var su = document.getElementById('sidebarFullBtn');
+    var sfi = document.getElementById('sidebarFinancialsBtn');
     if (sf) sf.classList.remove('active');
     if (su) su.classList.add('active');
+    if (sfi) sfi.classList.remove('active');
 
     // Update breadcrumb
     var bc = document.getElementById('topBarBreadcrumb');
     if (bc) bc.textContent = '\u203A All Tasks';
+}
+
+function switchToFinancials() {
+    currentView = 'financials';
+    safeLocalStorageSet('dq_currentView', 'financials');
+    document.body.classList.remove('focus-active');
+
+    // Hide other views
+    var focusEl = document.getElementById('focusModeContainer');
+    var fullEl = document.getElementById('fullViewContainer');
+    var kb = document.getElementById('kanbanBoard');
+    var vc = document.getElementById('viewControls');
+    var finEl = document.getElementById('financialsViewContainer');
+    if (focusEl) focusEl.style.display = 'none';
+    if (fullEl) fullEl.style.display = 'none';
+    if (kb) kb.style.display = 'none';
+    if (vc) vc.style.display = 'none';
+
+    // Show financials
+    if (finEl) finEl.style.display = 'block';
+
+    // Render content
+    if (typeof renderFinancialsView === 'function') renderFinancialsView();
+    if (typeof updateFinViewStats === 'function') updateFinViewStats();
+
+    // Update sidebar active state
+    var sf = document.getElementById('sidebarFocusBtn');
+    var su = document.getElementById('sidebarFullBtn');
+    var sfi = document.getElementById('sidebarFinancialsBtn');
+    if (sf) sf.classList.remove('active');
+    if (su) su.classList.remove('active');
+    if (sfi) sfi.classList.add('active');
+
+    // Update header view toggle buttons (NOT the sidebar ones)
+    var focusModeBtn = document.getElementById('focusModeBtn');
+    var fullViewBtn = document.getElementById('fullViewBtn');
+    if (focusModeBtn) { focusModeBtn.style.background = 'rgba(255,255,255,0.1)'; focusModeBtn.style.color = 'white'; }
+    if (fullViewBtn) { fullViewBtn.style.background = 'rgba(255,255,255,0.1)'; fullViewBtn.style.color = 'white'; }
+
+    // Update compact header view toggle
+    var fb = document.getElementById('compactFocusBtn');
+    var tb = document.getElementById('compactFullBtn');
+    var ffb = document.getElementById('compactFinancialsBtn');
+    if (fb) fb.classList.remove('active');
+    if (tb) tb.classList.remove('active');
+    if (ffb) ffb.classList.add('active');
+
+    // Update breadcrumb
+    var bc = document.getElementById('topBarBreadcrumb');
+    if (bc) bc.textContent = '\u203A Finances';
+
+    // Reinitialize Lucide icons for new content
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 }
 
 // _renderFrame extracted to state.js
@@ -831,12 +896,18 @@ function sidebarNavigate(view) {
     // Update sidebar active state
     var focusBtn = document.getElementById('sidebarFocusBtn');
     var fullBtn = document.getElementById('sidebarFullBtn');
+    var finBtn = document.getElementById('sidebarFinancialsBtn');
     if (focusBtn) focusBtn.classList.toggle('active', view === 'focus');
     if (fullBtn) fullBtn.classList.toggle('active', view === 'full');
+    if (finBtn) finBtn.classList.toggle('active', view === 'financials');
 
     // Update top bar breadcrumb
     var bc = document.getElementById('topBarBreadcrumb');
-    if (bc) bc.textContent = view === 'focus' ? '\u203A Focus' : '\u203A All Tasks';
+    if (bc) {
+        if (view === 'focus') bc.textContent = '\u203A Focus';
+        else if (view === 'financials') bc.textContent = '\u203A Finances';
+        else bc.textContent = '\u203A All Tasks';
+    }
 
     // Show/hide view controls (only in full view)
     var vc = document.getElementById('viewControls');
@@ -849,6 +920,8 @@ function sidebarNavigate(view) {
     // Call existing view switching
     if (view === 'focus') {
         switchToFocusMode();
+    } else if (view === 'financials') {
+        switchToFinancials();
     } else {
         switchToFullView();
     }

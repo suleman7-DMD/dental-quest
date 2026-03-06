@@ -110,7 +110,8 @@ var breakMinutes = 5;
 var currentTask = null;
 
 // Focus Mode variables
-var currentView = localStorage.getItem('dq_currentView') || 'focus'; // 'focus' or 'full'
+var currentView = localStorage.getItem('dq_currentView') || 'focus'; // 'focus', 'full', or 'financials'
+var currentFinTab = localStorage.getItem('dq_finTab') || 'overview';
 var focusModeData = {
     oneThingId: null,
     microSteps: {},  // Object for Firebase safety

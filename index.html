@@ -3167,6 +3167,133 @@
             }
         }
 
+        /* ====== Financial View (Integrated — replaces modal) ====== */
+        .fin-view-header {
+            position: sticky;
+            top: 0;
+            background: var(--accent);
+            padding: 15px 20px 0;
+            z-index: var(--z-sticky);
+        }
+
+        .fin-view-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fin-view-title {
+            color: white;
+            margin: 0;
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .fin-view-subtitle {
+            color: rgba(255,255,255,0.85);
+            margin: 3px 0 0 0;
+            font-size: 0.8em;
+        }
+
+        .fin-view-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .fin-view-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .fin-view-stat-label {
+            font-size: 0.7em;
+            opacity: 0.9;
+            margin-bottom: 3px;
+            color: rgba(255,255,255,0.9);
+            display: block;
+        }
+
+        .fin-view-stat-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: white;
+        }
+
+        .fin-view-stat-value.debt { color: #ffb3b3; }
+        .fin-view-stat-value.positive { color: #b3ffb3; }
+        .fin-view-stat-value.warning { color: #ffe0a3; }
+
+        .fin-tab-bar {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0;
+        }
+
+        .fin-tab {
+            padding: 8px 16px;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.85);
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .fin-tab:hover { background: rgba(255,255,255,0.25); }
+
+        .fin-tab.active {
+            background: var(--canvas);
+            color: var(--fg-primary);
+        }
+
+        .fin-tab-content {
+            background: var(--canvas);
+            padding: 15px;
+            min-height: 300px;
+        }
+
+        .fin-tab-panel { display: none; }
+        .fin-tab-panel.active { display: block; }
+
+        .fin-inline-edit {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin: 10px 0;
+            animation: finSlideDown 0.2s ease-out;
+        }
+
+        @keyframes finSlideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .fin-view-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .fin-view-header { padding: 12px 15px 0; }
+            .fin-view-title { font-size: 1.1em; }
+            .fin-tab { padding: 6px 12px; font-size: 0.8em; }
+            .fin-tab-content { padding: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .fin-view-stat { padding: 6px; }
+            .fin-view-stat-label { font-size: 0.6em; }
+            .fin-view-stat-value { font-size: 0.85em; }
+            .fin-tab-content { padding: 10px; }
+        }
+
         .fin-section {
             background: var(--surface-primary);
             border: 1px solid var(--border-default);
@@ -12273,6 +12400,9 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 <i data-lucide="list"></i><span class="sidebar-label">All Tasks</span>
                 <span class="sidebar-badge" id="sidebarTaskCount">0</span>
             </button>
+            <button class="sidebar-item" id="sidebarFinancialsBtn" data-view="financials" onclick="sidebarNavigate('financials')">
+                <i data-lucide="wallet"></i><span class="sidebar-label">Financials</span>
+            </button>
         </div>
 
         <div class="sidebar-section">
@@ -12285,9 +12415,6 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
             </button>
             <button class="sidebar-item" onclick="openNotebook()">
                 <i data-lucide="notebook"></i><span class="sidebar-label">Notebook</span>
-            </button>
-            <button class="sidebar-item" onclick="openFinancials()">
-                <i data-lucide="wallet"></i><span class="sidebar-label">Financials</span>
             </button>
         </div>
 
@@ -12468,6 +12595,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 <div class="view-toggle-compact">
                     <button class="vtc-btn active" id="compactFocusBtn" onclick="switchToFocusMode()">Focus</button>
                     <button class="vtc-btn" id="compactFullBtn" onclick="switchToFullView()">Tasks</button>
+                    <button class="vtc-btn" id="compactFinancialsBtn" onclick="switchToFinancials()">$</button>
                 </div>
             </div>
             <div class="header-right">
@@ -12500,7 +12628,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                 <button onclick="toggleHeaderMenu();setTimeout(openNotebook,50)">Notebook</button>
                 <button onclick="toggleHeaderMenu();setTimeout(openDailyPlanner,50)">Planner</button>
                 <button onclick="toggleHeaderMenu();setTimeout(openCalendar,50)">Calendar</button>
-                <button onclick="toggleHeaderMenu();setTimeout(openFinancials,50)">Financials</button>
+                <button onclick="toggleHeaderMenu();setTimeout(function(){sidebarNavigate('financials')},50)">Financials</button>
             </div>
         </div>
         <div class="menu-section">
@@ -13291,6 +13419,50 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     </div>
     </div> <!-- Close fullViewContainer -->
 
+    <!-- ==================== FINANCIALS VIEW ==================== -->
+    <div id="financialsViewContainer" style="display:none;">
+        <div class="fin-view-header">
+            <div class="fin-view-header-top">
+                <div>
+                    <h2 class="fin-view-title"><i data-lucide="wallet" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Finances</h2>
+                    <p class="fin-view-subtitle">D3 Spring 2026</p>
+                </div>
+            </div>
+            <div class="fin-view-stats">
+                <div class="fin-view-stat">
+                    <span class="fin-view-stat-label">Total Debt</span>
+                    <span id="finViewDebt" class="fin-view-stat-value debt">$0</span>
+                </div>
+                <div class="fin-view-stat">
+                    <span class="fin-view-stat-label">Balance</span>
+                    <span id="finViewBalance" class="fin-view-stat-value positive">$0</span>
+                </div>
+                <div class="fin-view-stat">
+                    <span class="fin-view-stat-label">Actions</span>
+                    <span id="finViewActions" class="fin-view-stat-value warning">0</span>
+                </div>
+                <div class="fin-view-stat">
+                    <span class="fin-view-stat-label">Projection</span>
+                    <span id="finViewProjection" class="fin-view-stat-value positive">$0</span>
+                </div>
+            </div>
+            <div class="fin-tab-bar">
+                <button class="fin-tab active" data-tab="overview" onclick="switchFinTab('overview')">Overview</button>
+                <button class="fin-tab" data-tab="bills" onclick="switchFinTab('bills')">Bills</button>
+                <button class="fin-tab" data-tab="monthly" onclick="switchFinTab('monthly')">Monthly</button>
+                <button class="fin-tab" data-tab="cards" onclick="switchFinTab('cards')">Cards</button>
+                <button class="fin-tab" data-tab="actions" onclick="switchFinTab('actions')">Actions</button>
+            </div>
+        </div>
+        <div class="fin-tab-content">
+            <div class="fin-tab-panel active" id="finPanelOverview"></div>
+            <div class="fin-tab-panel" id="finPanelBills"></div>
+            <div class="fin-tab-panel" id="finPanelMonthly"></div>
+            <div class="fin-tab-panel" id="finPanelCards"></div>
+            <div class="fin-tab-panel" id="finPanelActions"></div>
+        </div>
+    </div>
+
         </div><!-- Close content-area -->
     </main><!-- Close main-panel -->
     </div><!-- Close app-layout -->
@@ -13540,53 +13712,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
                         </div>
                     </div>
                 </div>
-                <div class="modal-overlay" id="financialModal" onclick="safeModalClose(closeFinancials, event)">
-                    <div class="modal-content financial-modal fin-modal-container" onclick="event.stopPropagation()">
-                        <!-- Sticky Header -->
-                        <div class="fin-modal-header">
-                            <div class="fin-modal-header-top">
-                                <div class="fin-modal-title-section">
-                                    <h2 class="fin-modal-title"><i data-lucide="wallet" style="width:18px;height:18px;display:inline-block;vertical-align:middle"></i> Finances</h2>
-                                    <p class="fin-modal-subtitle">D3 Spring 2026</p>
-                                </div>
-                                <button onclick="closeFinancials()" class="fin-modal-close">✕</button>
-                            </div>
-
-                            <!-- Quick Stats -->
-                            <div class="fin-modal-stats">
-                                <div class="fin-modal-stat">
-                                    <div class="fin-modal-stat-label">Total Debt</div>
-                                    <div id="totalDebtStat" class="fin-modal-stat-value debt">$12,311</div>
-                                </div>
-                                <div class="fin-modal-stat">
-                                    <div class="fin-modal-stat-label">Balance</div>
-                                    <div id="currentBalanceStat" class="fin-modal-stat-value positive">$18,447</div>
-                                </div>
-                                <div class="fin-modal-stat">
-                                    <div class="fin-modal-stat-label">Actions</div>
-                                    <div id="actionsRemainingStat" class="fin-modal-stat-value warning">12</div>
-                                </div>
-                                <div class="fin-modal-stat">
-                                    <div class="fin-modal-stat-label">Disbursement</div>
-                                    <div class="fin-modal-stat-value positive">May 14</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Financial Content -->
-                        <div id="financialDashboard" class="fin-dashboard-content">
-                            <!-- Content will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                <div class="help-modal-overlay" id="financialHelpModal" onclick="closeFinancialHelp()">
-                    <div class="help-modal-content" onclick="event.stopPropagation()">
-                        <div id="helpContent"></div>
-                        <button onclick="closeFinancialHelp()" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 20px; width: 100%;">
-                            Close
-                        </button>
-                    </div>
-                </div>
+                <!-- Financial Modal removed — now integrated as financials view -->
                 <div class="modal-overlay" id="notebookModal" onclick="safeModalClose(closeNotebook, event)">
                     <div class="modal-content notebook-modal" onclick="event.stopPropagation()">
                         <button class="modal-close-x" onclick="closeNotebook()" title="Close">×</button>
@@ -13830,18 +13956,18 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         <p style="font-size: 1.2em; color: #666;">You've reached Level <span id="newLevel"></span>!</p>
     </div>
 
-    <script src="js/dental-quest/state.js"></script>
-    <script src="js/dental-quest/firebase-sync.js"></script>
-    <script src="js/dental-quest/medications.js"></script>
-    <script src="js/dental-quest/financials.js"></script>
-    <script src="js/dental-quest/calendar.js"></script>
-    <script src="js/dental-quest/daily-planner.js"></script>
-    <script src="js/dental-quest/notebook.js"></script>
-    <script src="js/dental-quest/tasks.js"></script>
-    <script src="js/dental-quest/triage.js"></script>
-    <script src="js/dental-quest/crash-out.js"></script>
-    <script src="js/dental-quest/focus-pomodoro.js"></script>
-    <script src="js/dental-quest/init.js"></script>
+    <script src="js/dental-quest/state.js?v=20260307"></script>
+    <script src="js/dental-quest/firebase-sync.js?v=20260307"></script>
+    <script src="js/dental-quest/medications.js?v=20260307"></script>
+    <script src="js/dental-quest/financials.js?v=20260307"></script>
+    <script src="js/dental-quest/calendar.js?v=20260307"></script>
+    <script src="js/dental-quest/daily-planner.js?v=20260307"></script>
+    <script src="js/dental-quest/notebook.js?v=20260307"></script>
+    <script src="js/dental-quest/tasks.js?v=20260307"></script>
+    <script src="js/dental-quest/triage.js?v=20260307"></script>
+    <script src="js/dental-quest/crash-out.js?v=20260307"></script>
+    <script src="js/dental-quest/focus-pomodoro.js?v=20260307"></script>
+    <script src="js/dental-quest/init.js?v=20260307"></script>
 
     <!-- Quick Add FAB -->
     <button id="quickAddFAB" onclick="openQuickAddPanel()" aria-label="Add task">

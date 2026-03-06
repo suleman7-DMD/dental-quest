@@ -267,6 +267,10 @@ function initApp() {
                 var taskDetails = document.getElementById('taskDetailsModal');
                 if (taskDetails) { taskDetails.remove(); return; }
 
+                // 3.5. Financial inline edit form
+                var finInlineEdit = document.getElementById('finInlineEdit');
+                if (finInlineEdit) { finInlineEdit.remove(); return; }
+
                 // 4. Task edit modal
                 var taskEditModal = document.getElementById('taskEditModal');
                 if (taskEditModal && taskEditModal.style.display !== 'none') { closeTaskEditModal(); return; }
@@ -326,6 +330,11 @@ function initApp() {
             var kanbanBtn = document.getElementById('kanbanViewBtn');
             if (listBtn) listBtn.classList.toggle('active', currentViewMode === 'list');
             if (kanbanBtn) kanbanBtn.classList.toggle('active', currentViewMode === 'kanban');
+        }
+
+        // Restore financials view if that was the last active view
+        if (currentView === 'financials' && typeof switchToFinancials === 'function') {
+            switchToFinancials();
         }
 
         // Focus mode init
