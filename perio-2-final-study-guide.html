@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perio 2 Final Study Guide | SULEMAN SHAIKH, DMD</title>
+<style>
+:root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232736;
+    --border: #2d3148;
+    --text: #e4e6f0;
+    --text-dim: #9498b0;
+    --accent: #5b8af5;
+    --accent-glow: rgba(91,138,245,0.15);
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --green: #22c55e;
+    --purple: #a78bfa;
+    --module1: #3b82f6;
+    --module2: #8b5cf6;
+    --module3: #06b6d4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* Top Header */
+.top-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: linear-gradient(135deg, #1a1d27 0%, #232736 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    backdrop-filter: blur(10px);
+}
+.top-header h1 {
+    font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.top-header .exam-date {
+    font-size: 13px; color: var(--red); font-weight: 600;
+}
+.top-header .brand {
+    font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+}
+
+/* Module Tabs */
+.module-tabs {
+    position: fixed; top: 46px; left: 0; right: 0; z-index: 99;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 0;
+    padding: 0 10px;
+}
+.module-tab {
+    flex: 1; padding: 10px 8px; text-align: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    color: var(--text-dim);
+    background: none; border-top: none; border-left: none; border-right: none;
+}
+.module-tab:hover { color: var(--text); background: var(--accent-glow); }
+.module-tab.active { color: var(--text); }
+.module-tab[data-mod="1"].active { border-bottom-color: var(--module1); }
+.module-tab[data-mod="2"].active { border-bottom-color: var(--module2); }
+.module-tab[data-mod="3"].active { border-bottom-color: var(--module3); }
+
+/* Sub-navigation */
+.sub-nav {
+    position: fixed; top: 89px; left: 0; right: 0; z-index: 98;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 4px;
+    padding: 6px 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.sub-nav::-webkit-scrollbar { height: 0; }
+.sub-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    font-size: 11px; font-weight: 500;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.sub-btn:hover { background: var(--accent-glow); color: var(--text); }
+.sub-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Content Area */
+.content { padding-top: 130px; padding-bottom: 40px; }
+.module-content { display: none; }
+.module-content.active { display: block; }
+
+/* Section containers */
+.section {
+    margin: 0 auto 30px;
+    max-width: 900px;
+    padding: 0 12px;
+}
+.section-title {
+    font-size: 18px; font-weight: 700;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    position: sticky; top: 126px; z-index: 10;
+}
+.mod1 .section-title { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); border-left: 4px solid var(--module1); }
+.mod2 .section-title { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05)); border-left: 4px solid var(--module2); }
+.mod3 .section-title { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.05)); border-left: 4px solid var(--module3); }
+
+/* Page images */
+.page-img-wrap {
+    margin-bottom: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.page-img-wrap img {
+    width: 100%;
+    display: block;
+}
+.page-label {
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--surface);
+    text-align: center;
+}
+
+/* Original diagrams toggle */
+.diagrams-toggle {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 16px 0 8px;
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+    background: var(--surface);
+    color: var(--amber);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.2s;
+}
+.diagrams-toggle:hover { background: var(--surface2); border-color: var(--amber); }
+.diagrams-toggle .arrow { transition: transform 0.3s; }
+.diagrams-toggle.open .arrow { transform: rotate(90deg); }
+.diagrams-container { display: none; }
+.diagrams-container.open { display: block; }
+.diagram-label {
+    text-align: center; padding: 6px; font-size: 12px;
+    color: var(--amber); font-weight: 500;
+    background: rgba(245,158,11,0.08);
+    border-radius: 6px; margin: 4px 0;
+}
+
+/* Scroll to top */
+.scroll-top {
+    position: fixed; bottom: 20px; right: 20px; z-index: 50;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white; font-size: 20px;
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(91,138,245,0.3);
+    display: none;
+    align-items: center; justify-content: center;
+}
+
+/* Progress bar */
+.progress-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    height: 3px;
+    background: transparent;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--module1), var(--purple), var(--module3));
+    width: 0%;
+    transition: width 0.1s;
+}
+
+/* View mode */
+.view-toggle {
+    display: flex; gap: 4px; align-items: center;
+}
+.view-btn {
+    padding: 4px 10px; font-size: 11px;
+    border-radius: 4px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer;
+}
+.view-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* All-in-one mode (show everything expanded) */
+body.expanded .diagrams-container { display: block !important; }
+body.expanded .diagrams-toggle .arrow { transform: rotate(90deg); }
+
+@media (max-width: 600px) {
+    .top-header h1 { font-size: 14px; }
+    .module-tab { font-size: 11px; padding: 8px 4px; }
+    .section-title { font-size: 15px; padding: 12px 14px; top: 122px; }
+    .sub-btn { font-size: 10px; padding: 4px 10px; }
+}
+
+/* Print styles */
+@media print {
+    .top-header, .module-tabs, .sub-nav, .scroll-top, .progress-bar, .view-toggle { display: none !important; }
+    .content { padding-top: 0; }
+    .module-content { display: block !important; }
+    .diagrams-container { display: block !important; }
+    .page-img-wrap { break-inside: avoid; page-break-inside: avoid; }
+    .section-title { position: static; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="top-header">
+    <div>
+        <h1>PERIO 2 FINAL STUDY GUIDE</h1>
+        <div class="brand">SULEMAN SHAIKH, DMD</div>
+    </div>
+    <div style="text-align:right">
+        <div class="exam-date">EXAM: MAR 11, 2026</div>
+        <div class="view-toggle" style="margin-top:4px">
+            <button class="view-btn active" onclick="setView('focused')" id="vFocused">Focused</button>
+            <button class="view-btn" onclick="setView('expanded')" id="vExpanded">All Open</button>
+        </div>
+    </div>
+</header>
+
+<nav class="module-tabs">
+    <button class="module-tab active" data-mod="1" onclick="switchModule(1)">Module 1: Gingival Surgery</button>
+    <button class="module-tab" data-mod="2" onclick="switchModule(2)">Module 2: Osseous Surgery</button>
+    <button class="module-tab" data-mod="3" onclick="switchModule(3)">Module 3: Mucogingival Surgery</button>
+</nav>
+
+<nav class="sub-nav" id="subNav"></nav>
+
+<div class="content">
+
+<!-- ==================== MODULE 1: GINGIVAL SURGERY ==================== -->
+<div class="module-content active mod1" id="mod1">
+
+<div class="section" id="m1-overview">
+    <div class="section-title">Overview &amp; Tissue Fundamentals</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p01.jpg" alt="Module 1 Page 1" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p02.jpg" alt="Module 1 Page 2" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Normal Sulcus vs Pseudopocket vs True Pocket
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Tissue Anatomy Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p001.jpg" alt="Original p1" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-initial-prep">
+    <div class="section-title">Initial Preparation &amp; Pseudopockets</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p03.jpg" alt="Module 1 Page 3" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p04.jpg" alt="Module 1 Page 4" loading="lazy"></div>
+</div>
+
+<div class="section" id="m1-four-types">
+    <div class="section-title">Four Types of Gingival Surgery</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p05.jpg" alt="Module 1 Page 5" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p06.jpg" alt="Module 1 Page 6" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Curettage, EBG, IBG, Gingivoplasty Procedures
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Procedure Illustrations (Curettage, EBG, IBG, Gingivoplasty)</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p005.jpg" alt="Original p5" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p006.jpg" alt="Original p6" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p007.jpg" alt="Original p7" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-limitations">
+    <div class="section-title">Limitations &amp; Contraindications</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p07.jpg" alt="Module 1 Page 7" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Limitations (Bony Craters, Exostoses, Tissue Types)
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Limitation Scenarios &amp; Tissue Assessment</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p008.jpg" alt="Original p8" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p009.jpg" alt="Original p9" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-ebg-technique">
+    <div class="section-title">7-Step EBG Technique</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p08.jpg" alt="Module 1 Page 8" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p09.jpg" alt="Module 1 Page 9" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: EBG Surgical Technique Step-by-Step
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - EBG Technique Illustrations</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p011.jpg" alt="Original p11" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p012.jpg" alt="Original p12" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p013.jpg" alt="Original p13" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p014.jpg" alt="Original p14" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p015.jpg" alt="Original p15" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p016.jpg" alt="Original p16" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-ibg-technique">
+    <div class="section-title">9-Step IBG Technique &amp; EBG vs IBG Comparison</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p10.jpg" alt="Module 1 Page 10" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p11.jpg" alt="Module 1 Page 11" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: EBG vs IBG Palatal, 2/3 Rule, Bleeding Points
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - IBG Technique &amp; Palatal Comparisons</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p017.jpg" alt="Original p17" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p019.jpg" alt="Original p19" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p020.jpg" alt="Original p20" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-flap-classification">
+    <div class="section-title">Flap Classification &amp; Suturing</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p12.jpg" alt="Module 1 Page 12" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p13.jpg" alt="Module 1 Page 13" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Flap Types, Distal Wedge, Scribing, Palatal Thinning
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Flap Classification &amp; Incision Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p021.jpg" alt="Original p21" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p022.jpg" alt="Original p22" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p023.jpg" alt="Original p23" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p024.jpg" alt="Original p24" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p025.jpg" alt="Original p25" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p026.jpg" alt="Original p26" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-suturing">
+    <div class="section-title">Suturing Techniques</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p14.jpg" alt="Module 1 Page 14" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: 27-Step Continuous Sling &amp; Interrupted Suture
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Complete Suture Sequences</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p027.jpg" alt="Original p27" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p028.jpg" alt="Original p28" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p029.jpg" alt="Original p29" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p030.jpg" alt="Original p30" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p031.jpg" alt="Original p31" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-healing">
+    <div class="section-title">Healing Timelines</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p15.jpg" alt="Module 1 Page 15" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p16.jpg" alt="Module 1 Page 16" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Complete Healing Histology (Excisional &amp; Incisional)
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Healing Histology Illustrations</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p033.jpg" alt="Original p33" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p034.jpg" alt="Original p34" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p035.jpg" alt="Original p35" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p036.jpg" alt="Original p36" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m1-postop">
+    <div class="section-title">Post-Op Care &amp; Recording</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p17.jpg" alt="Module 1 Page 17" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p18.jpg" alt="Module 1 Page 18" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Post-Op Care, Patient Instructions, Recording
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Post-Op &amp; Recording Details</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p038.jpg" alt="Original p38" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p039.jpg" alt="Original p39" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p040.jpg" alt="Original p40" loading="lazy"></div>
+    </div>
+</div>
+
+</div>
+
+<!-- ==================== MODULE 2: OSSEOUS SURGERY ==================== -->
+<div class="module-content mod2" id="mod2">
+
+<div class="section" id="m2-topography">
+    <div class="section-title">Topography of Alveolar Bone</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p19.jpg" alt="Module 2 Page 1" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p20.jpg" alt="Module 2 Page 2" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Bone Anatomy, Cortical Bone, Health vs Periodontitis
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Alveolar Bone Topography</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p044.jpg" alt="Original p44" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-bone-loss">
+    <div class="section-title">Bone Loss Patterns &amp; Defects</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p21.jpg" alt="Module 2 Page 3" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p22.jpg" alt="Module 2 Page 4" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Bone Loss Patterns, Craters, Hemiseptal Defects
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Bone Defect Classifications</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p046.jpg" alt="Original p46" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p047.jpg" alt="Original p47" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-rationale">
+    <div class="section-title">Rationale &amp; Indications for Osseous Surgery</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p23.jpg" alt="Module 2 Page 5" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p24.jpg" alt="Module 2 Page 6" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: 4-Panel Rationale Progression (MOST IMPORTANT FIGURE)
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">CRITICAL: Rationale 4-Panel Progression</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p049.jpg" alt="Original p49" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p050.jpg" alt="Original p50" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p051.jpg" alt="Original p51" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-technique">
+    <div class="section-title">Technique: Osteoplasty &amp; Ostectomy</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p25.jpg" alt="Module 2 Page 7" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p26.jpg" alt="Module 2 Page 8" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Osteoplasty/Ostectomy Technique, Schluger File
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Osseous Surgery Technique Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p055.jpg" alt="Original p55" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p057.jpg" alt="Original p57" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p058.jpg" alt="Original p58" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p059.jpg" alt="Original p59" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-modifications">
+    <div class="section-title">Modifications to Basic Technique</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p27.jpg" alt="Module 2 Page 9" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Crater Modifications, Lingual/Buccal Version, Vertical Bone Loss
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Modification Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p060.jpg" alt="Original p60 - Composite" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p061.jpg" alt="Original p61" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p062.jpg" alt="Original p62" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p063.jpg" alt="Original p63" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-healing">
+    <div class="section-title">Healing After Osseous Surgery</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p28.jpg" alt="Module 2 Page 10" loading="lazy"></div>
+</div>
+
+<div class="section" id="m2-furcation">
+    <div class="section-title">Furcation Invasion (Class I, II, III)</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p29.jpg" alt="Module 2 Page 11" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p30.jpg" alt="Module 2 Page 12" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Furcation Classes, X-Sections, Treatment Options
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Furcation Invasion Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p066.jpg" alt="Original p66" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p067.jpg" alt="Original p67" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p069.jpg" alt="Original p69" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p070.jpg" alt="Original p70" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p071.jpg" alt="Original p71" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p072.jpg" alt="Original p72" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m2-regeneration">
+    <div class="section-title">Periodontal Regeneration, Grafts &amp; GTR</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p31.jpg" alt="Module 2 Page 13" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p32.jpg" alt="Module 2 Page 14" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Bony Lesion Types, Regeneration, GTR
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Regeneration &amp; Bony Lesion Diagrams</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p075.jpg" alt="Original p75" loading="lazy"></div>
+    </div>
+</div>
+
+</div>
+
+<!-- ==================== MODULE 3: MUCOGINGIVAL SURGERY ==================== -->
+<div class="module-content mod3" id="mod3">
+
+<div class="section" id="m3-nomenclature">
+    <div class="section-title">Nomenclature &amp; Definitions</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p33.jpg" alt="Module 3 Page 1" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p34.jpg" alt="Module 3 Page 2" loading="lazy"></div>
+</div>
+
+<div class="section" id="m3-historical">
+    <div class="section-title">Historical Review &amp; Key Names</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p35.jpg" alt="Module 3 Page 3" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p36.jpg" alt="Module 3 Page 4" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Text: Full Historical Review Details
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Historical Review (Full Text)</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p084.jpg" alt="Original p84" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-causes">
+    <div class="section-title">Causes of Recession</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p37.jpg" alt="Module 3 Page 5" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p38.jpg" alt="Module 3 Page 6" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: Development of Recession (4-Step Sequence)
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Recession Development &amp; Anatomic Factors</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p086.jpg" alt="Original p86" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p087.jpg" alt="Original p87" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p088.jpg" alt="Original p88" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-types">
+    <div class="section-title">Types of Mucogingival Surgery (The Menu)</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p39.jpg" alt="Module 3 Page 7" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p40.jpg" alt="Module 3 Page 8" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: FGG, LPF, CPF, DPF, SECTG Procedures
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - All 5 Mucogingival Surgery Types</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p088.jpg" alt="Original p88 - Types" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p091.jpg" alt="Original p91 - FGG/LPF" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-decision">
+    <div class="section-title">Decision Making &amp; Clinical Framework</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p41.jpg" alt="Module 3 Page 9" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p42.jpg" alt="Module 3 Page 10" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Text: Full Decision Making Details
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - Decision Making In Mucogingival Surgery</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p091.jpg" alt="Original p91" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p092.jpg" alt="Original p92" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-fgg">
+    <div class="section-title">Free Gingival Graft (FGG) Full Technique</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p43.jpg" alt="Module 3 Page 11" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p44.jpg" alt="Module 3 Page 12" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p45.jpg" alt="Module 3 Page 13" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: FGG Complete Surgical Technique
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - FGG Technique: Template, Bed Prep, Donor, Suturing</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p093.jpg" alt="Original p93" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p094.jpg" alt="Original p94" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p095.jpg" alt="Original p95" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p096.jpg" alt="Original p96" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p097.jpg" alt="Original p97" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p098.jpg" alt="Original p98" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p099.jpg" alt="Original p99" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p100.jpg" alt="Original p100" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-lpf">
+    <div class="section-title">Laterally Positioned Flap (LPF)</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p46.jpg" alt="Module 3 Page 14" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p47.jpg" alt="Module 3 Page 15" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: LPF Donor Site, Flap Design, Technique
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - LPF Complete Technique</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p101.jpg" alt="Original p101" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p102.jpg" alt="Original p102" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p103.jpg" alt="Original p103" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p104.jpg" alt="Original p104" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p105.jpg" alt="Original p105" loading="lazy"></div>
+    </div>
+</div>
+
+<div class="section" id="m3-cpf-dpf">
+    <div class="section-title">CPF, DPF &amp; SECTG</div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p48.jpg" alt="Module 3 Page 16" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p49.jpg" alt="Module 3 Page 17" loading="lazy"></div>
+    <div class="page-img-wrap"><img src="perio-study-guide/new_p50.jpg" alt="Module 3 Page 18" loading="lazy"></div>
+    <button class="diagrams-toggle" onclick="toggleDiagrams(this)">
+        <span class="arrow">&#9654;</span> Original Diagrams: CPF, DPF &amp; SECTG Procedures
+    </button>
+    <div class="diagrams-container">
+        <div class="diagram-label">Original PDF - CPF, DPF, SECTG Illustrations</div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p106.jpg" alt="Original p106" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p107.jpg" alt="Original p107" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p108.jpg" alt="Original p108" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p109.jpg" alt="Original p109" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p110.jpg" alt="Original p110" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p111.jpg" alt="Original p111" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p112.jpg" alt="Original p112" loading="lazy"></div>
+        <div class="page-img-wrap"><img src="perio-study-guide/orig_p113.jpg" alt="Original p113" loading="lazy"></div>
+    </div>
+</div>
+
+</div>
+
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+// Sub-nav configuration
+var subNavData = {
+    1: [
+        { id: 'm1-overview', label: 'Overview' },
+        { id: 'm1-initial-prep', label: 'Initial Prep' },
+        { id: 'm1-four-types', label: '4 Types' },
+        { id: 'm1-limitations', label: 'Limitations' },
+        { id: 'm1-ebg-technique', label: 'EBG (7-Step)' },
+        { id: 'm1-ibg-technique', label: 'IBG (9-Step)' },
+        { id: 'm1-flap-classification', label: 'Flaps' },
+        { id: 'm1-suturing', label: 'Suturing' },
+        { id: 'm1-healing', label: 'Healing' },
+        { id: 'm1-postop', label: 'Post-Op' }
+    ],
+    2: [
+        { id: 'm2-topography', label: 'Bone Topography' },
+        { id: 'm2-bone-loss', label: 'Bone Loss' },
+        { id: 'm2-rationale', label: 'Rationale' },
+        { id: 'm2-technique', label: 'Technique' },
+        { id: 'm2-modifications', label: 'Modifications' },
+        { id: 'm2-healing', label: 'Healing' },
+        { id: 'm2-furcation', label: 'Furcation' },
+        { id: 'm2-regeneration', label: 'Regeneration' }
+    ],
+    3: [
+        { id: 'm3-nomenclature', label: 'Nomenclature' },
+        { id: 'm3-historical', label: 'History' },
+        { id: 'm3-causes', label: 'Recession Causes' },
+        { id: 'm3-types', label: 'Surgery Types' },
+        { id: 'm3-decision', label: 'Decision Making' },
+        { id: 'm3-fgg', label: 'FGG' },
+        { id: 'm3-lpf', label: 'LPF' },
+        { id: 'm3-cpf-dpf', label: 'CPF/DPF/SECTG' }
+    ]
+};
+
+var currentModule = 1;
+
+function switchModule(mod) {
+    currentModule = mod;
+    var contents = document.querySelectorAll('.module-content');
+    for (var i = 0; i < contents.length; i++) contents[i].classList.remove('active');
+    var tabs = document.querySelectorAll('.module-tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+    document.getElementById('mod' + mod).classList.add('active');
+    document.querySelector('.module-tab[data-mod="' + mod + '"]').classList.add('active');
+    buildSubNav(mod);
+    window.scrollTo({ top: 0 });
+}
+
+function buildSubNav(mod) {
+    var nav = document.getElementById('subNav');
+    var items = subNavData[mod] || [];
+    // Clear existing buttons
+    while (nav.firstChild) nav.removeChild(nav.firstChild);
+    // Create new buttons
+    for (var i = 0; i < items.length; i++) {
+        var btn = document.createElement('button');
+        btn.className = 'sub-btn';
+        btn.textContent = items[i].label;
+        btn.setAttribute('data-target', items[i].id);
+        btn.addEventListener('click', (function(id) {
+            return function() { scrollToSection(id); };
+        })(items[i].id));
+        nav.appendChild(btn);
+    }
+}
+
+function scrollToSection(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function toggleDiagrams(btn) {
+    btn.classList.toggle('open');
+    var container = btn.nextElementSibling;
+    container.classList.toggle('open');
+}
+
+function setView(mode) {
+    document.getElementById('vFocused').classList.toggle('active', mode === 'focused');
+    document.getElementById('vExpanded').classList.toggle('active', mode === 'expanded');
+    document.body.classList.toggle('expanded', mode === 'expanded');
+}
+
+// Scroll progress and sub-nav highlighting
+window.addEventListener('scroll', function() {
+    var scrollTopBtn = document.getElementById('scrollTop');
+    var progress = document.getElementById('progressFill');
+    var scrolled = window.scrollY;
+    var height = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = height > 0 ? (scrolled / height) * 100 : 0;
+    progress.style.width = pct + '%';
+    scrollTopBtn.style.display = scrolled > 400 ? 'flex' : 'none';
+
+    // Update active sub-nav
+    var items = subNavData[currentModule] || [];
+    var activeIdx = 0;
+    for (var i = items.length - 1; i >= 0; i--) {
+        var el = document.getElementById(items[i].id);
+        if (el && el.getBoundingClientRect().top <= 180) {
+            activeIdx = i;
+            break;
+        }
+    }
+    var btns = document.querySelectorAll('.sub-btn');
+    for (var i = 0; i < btns.length; i++) {
+        if (i === activeIdx) btns[i].classList.add('active');
+        else btns[i].classList.remove('active');
+    }
+});
+
+// Init
+buildSubNav(1);
+</script>
+</body>
+</html>
