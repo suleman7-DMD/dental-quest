@@ -33,35 +33,34 @@ body {
 /* Top Header */
 .top-header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: linear-gradient(135deg, #1a1d27 0%, #232736 100%);
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 10px 20px;
+    padding: 8px 16px;
     display: flex; align-items: center; justify-content: space-between;
-    backdrop-filter: blur(10px);
 }
 .top-header h1 {
-    font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+    font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
     background: linear-gradient(135deg, var(--accent), var(--purple));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .top-header .exam-date {
-    font-size: 13px; color: var(--red); font-weight: 600;
+    font-size: 12px; color: var(--red); font-weight: 600;
 }
 .top-header .brand {
-    font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+    font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
 }
 
 /* Module Tabs */
 .module-tabs {
-    position: fixed; top: 46px; left: 0; right: 0; z-index: 99;
-    background: var(--surface);
+    position: fixed; top: 42px; left: 0; right: 0; z-index: 99;
+    background: var(--surface2);
     border-bottom: 1px solid var(--border);
     display: flex; gap: 0;
-    padding: 0 10px;
+    padding: 0 8px;
 }
 .module-tab {
-    flex: 1; padding: 10px 8px; text-align: center;
-    font-size: 13px; font-weight: 600; cursor: pointer;
+    flex: 1; padding: 8px 6px; text-align: center;
+    font-size: 12px; font-weight: 600; cursor: pointer;
     border-bottom: 3px solid transparent;
     transition: all 0.2s;
     color: var(--text-dim);
@@ -75,18 +74,18 @@ body {
 
 /* Sub-navigation */
 .sub-nav {
-    position: fixed; top: 89px; left: 0; right: 0; z-index: 98;
-    background: var(--surface2);
+    position: fixed; top: 79px; left: 0; right: 0; z-index: 98;
+    background: var(--bg);
     border-bottom: 1px solid var(--border);
     display: flex; gap: 4px;
-    padding: 6px 10px;
+    padding: 5px 8px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 .sub-nav::-webkit-scrollbar { height: 0; }
 .sub-btn {
     flex-shrink: 0;
-    padding: 5px 12px;
+    padding: 4px 10px;
     font-size: 11px; font-weight: 500;
     border-radius: 20px;
     border: 1px solid var(--border);
@@ -100,22 +99,21 @@ body {
 .sub-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
 /* Content Area */
-.content { padding-top: 130px; padding-bottom: 40px; }
+.content { padding-top: 112px; padding-bottom: 40px; }
 .module-content { display: none; }
 .module-content.active { display: block; }
 
 /* Section containers */
 .section {
-    margin: 0 auto 30px;
+    margin: 0 auto 24px;
     max-width: 900px;
     padding: 0 12px;
 }
 .section-title {
-    font-size: 18px; font-weight: 700;
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    border-radius: 10px;
-    position: sticky; top: 126px; z-index: 10;
+    font-size: 17px; font-weight: 700;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    border-radius: 8px;
 }
 .mod1 .section-title { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); border-left: 4px solid var(--module1); }
 .mod2 .section-title { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05)); border-left: 4px solid var(--module2); }
@@ -193,27 +191,46 @@ body {
     transition: width 0.1s;
 }
 
-/* View mode */
+/* View mode toggle in header */
 .view-toggle {
-    display: flex; gap: 4px; align-items: center;
+    display: flex; gap: 0; align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 4px;
 }
 .view-btn {
-    padding: 4px 10px; font-size: 11px;
-    border-radius: 4px; border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 10px; font-weight: 600;
+    border: none;
     background: transparent; color: var(--text-dim);
     cursor: pointer;
+    transition: all 0.15s;
 }
-.view-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.view-btn.active { background: var(--accent); color: white; }
+.view-btn + .view-btn { border-left: 1px solid var(--border); }
 
 /* All-in-one mode (show everything expanded) */
 body.expanded .diagrams-container { display: block !important; }
 body.expanded .diagrams-toggle .arrow { transform: rotate(90deg); }
 
-@media (max-width: 600px) {
-    .top-header h1 { font-size: 14px; }
-    .module-tab { font-size: 11px; padding: 8px 4px; }
-    .section-title { font-size: 15px; padding: 12px 14px; top: 122px; }
-    .sub-btn { font-size: 10px; padding: 4px 10px; }
+/* iPad landscape */
+@media (min-width: 768px) and (max-width: 1200px) {
+    .section { max-width: 800px; }
+    .page-img-wrap { border-radius: 10px; }
+}
+
+/* Mobile / iPad portrait */
+@media (max-width: 767px) {
+    .top-header { padding: 6px 12px; }
+    .top-header h1 { font-size: 13px; }
+    .top-header .brand { display: none; }
+    .module-tab { font-size: 11px; padding: 7px 4px; }
+    .module-tabs { top: 36px; }
+    .sub-nav { top: 72px; }
+    .content { padding-top: 102px; }
+    .section-title { font-size: 14px; padding: 10px 14px; }
+    .sub-btn { font-size: 10px; padding: 4px 8px; }
+    .diagrams-toggle { font-size: 12px; padding: 10px 14px; }
 }
 
 /* Print styles */
@@ -236,11 +253,11 @@ body.expanded .diagrams-toggle .arrow { transform: rotate(90deg); }
         <h1>PERIO 2 FINAL STUDY GUIDE</h1>
         <div class="brand">SULEMAN SHAIKH, DMD</div>
     </div>
-    <div style="text-align:right">
-        <div class="exam-date">EXAM: MAR 11, 2026</div>
-        <div class="view-toggle" style="margin-top:4px">
-            <button class="view-btn active" onclick="setView('focused')" id="vFocused">Focused</button>
-            <button class="view-btn" onclick="setView('expanded')" id="vExpanded">All Open</button>
+    <div style="display:flex;align-items:center;gap:10px">
+        <div class="exam-date">MAR 11</div>
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="setView('focused')" id="vFocused">Condensed</button>
+            <button class="view-btn" onclick="setView('expanded')" id="vExpanded">+ Diagrams</button>
         </div>
     </div>
 </header>
@@ -721,7 +738,9 @@ function buildSubNav(mod) {
 function scrollToSection(id) {
     var el = document.getElementById(id);
     if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var offset = window.innerWidth <= 767 ? 105 : 115;
+        var y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
     }
 }
 
