@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Perio 2 Essay Memorizer — SULEMAN SHAIKH, DMD</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  #root { min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ══════════════════════════════════════════════════════════════
+// ESSAY DATA — {1:L1 blank} {2:L2 blank} {3:L3 blank}
+// ══════════════════════════════════════════════════════════════
+const ESSAYS = [
+{
+id:1, title:"CROWN LENGTHENING", color:"#4fc3f7",
+skeleton:[
+{finger:"Thumb",topic:"Biologic Width",key:"Gargiulo 1961 → CT 1.07 + JE 0.97 = 2.04mm biologic width. Need 3-4mm total margin-to-bone."},
+{finger:"Index",topic:"Process of Elimination",key:"Remove cement → fix temp → reinforce OH → reassess. If still inflamed = BW violation. Radiographs NOT reliable."},
+{finger:"Middle",topic:"Coslet 1977",key:"1A=gingivectomy, 1B=flap+bone, 2A=APF, 2B=osseous+tissue mgmt. Most CL cases need flap+bone."},
+{finger:"Ring",topic:"Healing Time",key:"Posterior 6-8wk. Anterior MIN 3 months. Creeping attachment (Goldman 1964), gingival rebound (Van der Velden 1982). ~2mm coronal migration."},
+{finger:"Pinky",topic:"Complications",key:"Bleeding=tea bag. Pain/swelling=NSAID+ice. Root sensitivity=SuperSeal (potassium oxalate→calcium oxalate crystals)."}
+],
+refs:[
+{author:"Gargiulo et al.",year:"1961",journal:"J Periodont 42:8",finding:"Biologic width: CT 1.07mm + JE 0.97mm = 2.04mm. Sulcus 0.69mm. Significant variability between sites."},
+{author:"Coslet",year:"1977",journal:"",finding:"Classification of altered passive eruption: 1A/1B/2A/2B based on KT amount and bone position relative to CEJ."},
+{author:"Goldman",year:"1964",journal:"Periodontal Therapy 3rd ed",finding:"Described creeping attachment — coronal migration of gingival margin over time."},
+{author:"Matter & Cimasoni",year:"1976",journal:"J Perio 47:574",finding:"Documented creeping attachment after free gingival grafts."},
+{author:"Van der Velden",year:"1982",journal:"J Clin Perio 9:455",finding:"Described gingival rebound — regeneration of interdental soft tissues following denudation."}
+],
+sections:[
+{q:"Question 1 — Biologic Width", paras:[
+"The biologic width was characterized by {1:Gargiulo et al.} in {1:1961} (J Periodont 42:8) in a histologic study of human cadaver jaws measuring the dimensions of the supracrestal tissue attachment. The average measurements were: connective tissue attachment approximately {1:1.07 mm}, junctional epithelium approximately {1:0.97 mm}, and sulcus depth approximately {1:0.69 mm}. The biologic width is defined as the {2:connective tissue attachment plus the junctional epithelium}, totaling approximately {1:2.04 mm}. This represents the minimum distance the body demands between the crest of alveolar bone and the base of the sulcus.",
+"Critically, these are AVERAGE measurements with significant variability — some sites measured considerably more, others considerably less. {2:The biologic width of any specific tooth may differ from this average, and you cannot reliably assess one tooth's biologic width based on measurements from adjacent teeth in the same mouth.}",
+"When a restorative margin is placed too close to the osseous crest and invades this biologic width, the body responds with {2:a chronic inflammatory process resulting in unpredictable, irregular bone resorption} as it attempts to re-establish its biological buffer zone. The clinical goal is to maintain approximately {1:3-4 mm} between the restorative margin and the crest of bone — accounting for the biologic width (~2 mm) plus a physiologic sulcus (~1 mm) plus a safety margin."
+]},
+{q:"Question 2 — Determining Necessity", paras:[
+"When removing a temporary restoration and observing bleeding and ulceration of the sulcus, biologic width violation is only ONE of several possible causes. Other causes include: {2:excess subgingival cement, overextended or ill-fitting temporary margins, and poor patient oral hygiene}. Any of these can produce identical clinical findings.",
+"The determination is made through a {1:process of elimination}, not through radiographic measurement. First, remove all excess cement. Second, evaluate the temp margins — if overextended or poorly adapted, remake the temporary with proper contours. Third, ensure the patient is maintaining adequate home care and reinforce oral hygiene instruction. Then have the patient return for reassessment.",
+"If after eliminating all other variables the tissue STILL demonstrates inflammation upon temp removal, then biologic width violation is confirmed. No radiographic measurement is needed — {2:the clinical picture is definitive}.",
+"Radiographs are NOT reliable for diagnosing biologic width invasion. {2:Radiographs only show approximately 50% of the bone (interproximal only) — buccal and lingual bone are invisible.} The Gargiulo measurements are averages with wide variability. {3:If a radiograph shows less than 2 mm from the margin to bone but the clinical picture shows zero inflammation, crown lengthening may not be necessary — that tooth may have a biologic width less than the average.} The clinical assessment supersedes the radiographic measurement."
+]},
+{q:"Question 2b — Indications and Contraindications", paras:[
+"Indications for crown lengthening include: {2:tooth decay at or below the gingival margin, tooth fracture below the gingival margin with adequate remaining periodontal support and attachment, teeth with excessive wear, teeth with insufficient interocclusal space, and delayed passive eruption}.",
+"Contraindications include: {2:inadequate remaining attachment after establishing physiologic osseous morphology, esthetic limitations particularly in the anterior smile zone, anatomic limitations such as proximity to the furcation or vital structures, root hypersensitivity limitations, and when an alternative more effective therapy exists}. For example, orthodontic super-eruption may expose tooth structure without bone removal, or deep margin elevation (Dietschi and Speafico, 1998) offers a conservative alternative that raises a subgingival margin to a supragingival position using composite."
+]},
+{q:"Question 3 — Gingivectomy vs. Flap + Bone", paras:[
+"The decision depends on {1:the amount of keratinized tissue present and the position of bone relative to the CEJ}. This framework is captured by the {1:Coslet 1977} classification of altered passive eruption. In Type 1A, there is excessive KT with bone at its normal position 1-2 mm apical to the CEJ — {2:gingivectomy alone is appropriate}. In Type 1B, there is excessive KT but bone is AT the CEJ — {2:gingivectomy alone will FAIL because tissue regenerates when the osseous crest is immediately adjacent; you must raise a flap and reduce bone}. In Type 2A, there is minimal KT with normal bone — {2:an apically positioned flap is preferred because gingivectomy could remove all KT, creating a mucogingival problem}. In Type 2B, there is minimal KT with bone AT the CEJ — the most complex situation requiring both osseous surgery and careful tissue management.",
+"In most clinical crown lengthening situations, {3:bone is typically too close to the margin, so the majority require a flap with osseous surgery, not gingivectomy alone}."
+]},
+{q:"Question 4 — Healing Time", paras:[
+"Following crown lengthening, tissue at the bone crest migrates coronally through two phenomena: {1:creeping attachment} ({1:Goldman 1964}; {1:Matter and Cimasoni 1976}) and {1:gingival rebound} ({1:Van der Velden 1982}). Approximately {1:2 mm} of coronal migration is expected. This takes {1:6-8-12 weeks or more}, with {2:0.5-1.2 mm of additional migration possible over 12 months}.",
+"For posterior teeth, healing is {1:6-8 weeks} because margin position is less critical outside the smile zone. For anterior teeth, {1:MINIMUM 3 months} is required because {2:the exact gingival margin position determines the esthetic outcome — premature impressions produce margins that become exposed as tissue creeps coronally, causing visible margin lines and esthetic failure requiring restoration replacement}."
+]},
+{q:"Question 5 — Complications and Remedies", paras:[
+"The first complication is {1:bleeding}, which is rare with adequate sutures. Home remedy: {2:tea bag (tannin promotes coagulation)}. Office: additional sutures under local anesthesia.",
+"The second is {1:pain and swelling}. Swelling contributes significantly to pain. {2:NSAID reduces both inflammation and pain}. Ice for at least 24 hours. Narcotic analgesic (Tylenol with codeine, ~5 pills, no refills) for nighttime.",
+"The third is {1:root sensitivity} from exposed root surfaces with patent dentin tubules. Mechanism: {2:hydrodynamic theory — cold or rapid air causes bi-directional fluid movement in tubules, transmitted to the pulp}. Week 1: periodontal pack prevents sensitivity. After pack removal: {1:SuperSeal} — {2:potassium oxalate forms calcium oxalate crystals that occlude tubules, instantaneous, single application}. Long-term: final restoration covers exposed root."
+]}
+]
+},
+{
+id:2, title:"GTR / GBR", color:"#81c784",
+skeleton:[
+{finger:"Thumb",topic:"GTR Definition",key:"Membrane blocks fast cells (epithelium/gingival CT), lets slow PDL cells through → new attachment. Melcher 1969 defined regeneration."},
+{finger:"Index",topic:"4 Landmark Studies",key:"Karring80=bone→resorption. Nyman80=CT→resorption. Nyman82=filter→NEW ATTACHMENT. Nyman86=elastic→PDL must migrate coronally."},
+{finger:"Middle",topic:"Grafting Materials",key:"Auto=gold(all 3 properties). FDBA=scaffold only. DFDBA=unreliable(Schwartz96). BioOss=xeno scaffold. Alloplast=filler. GEM21/EMD/PRP/BMP."},
+{finger:"Ring",topic:"GTR vs GBR",key:"GTR=teeth, PDL cells, 4-6wk. GBR=edentulous, osteoblasts only, up to 6mo. Gore-Tex=non-resorbable. Collagen=resorbable."},
+{finger:"Pinky",topic:"Complications",key:"Infection, membrane exposure(most common), recession/flap sloughing, gingival irregularities. Only histology confirms new attachment."}
+],
+refs:[
+{author:"Melcher",year:"1969",journal:"",finding:"Defined regeneration: new cementum + new PDL + new alveolar bone on previously diseased root surface."},
+{author:"Karring et al.",year:"1980",journal:"J Clin Perio 7:96",finding:"Roots in bone cavities (beagle dogs) → root resorption and ankylosis only. Bone alone cannot produce new attachment."},
+{author:"Nyman et al.",year:"1980",journal:"J Clin Perio 7:39",finding:"Roots half in bone/half in gingival CT (monkeys) → CT side=resorption, bone side=ankylosis. Gingival CT causes root resorption."},
+{author:"Nyman et al.",year:"1982",journal:"J Clin Perio 9:257",finding:"Millipore filter barrier (monkeys) → new cementum with inserting collagen fibers. PDL cells can re-establish attachment with barrier exclusion."},
+{author:"Nyman et al.",year:"1986",journal:"J Clin Perio 13:145",finding:"Tight elastic prevented PDL coronal migration → NO new attachment. PDL cells must migrate coronally for regeneration."},
+{author:"Urist",year:"1965",journal:"Science",finding:"Demineralized bone implanted in rabbit muscle pouches induced new bone formation. Exposed BMPs. Named BMP in J Dent Res 1971."},
+{author:"Schwartz et al.",year:"1996",journal:"",finding:"14 batches DFDBA from 6 banks: 3 of 6 banks showed NO osteoinductive potential. Different lots from same bank inconsistent."}
+],
+sections:[
+{q:"Question 1 — Definition of GTR", paras:[
+"Guided Tissue Regeneration is a surgical technique that promotes regeneration of lost periodontal structures by {2:selectively allowing certain cell types to participate in wound healing while physically excluding others}. The goal is true {1:regeneration} — defined by {1:Melcher (1969)} as formation of {2:new cementum, new periodontal ligament, and new alveolar bone} on a previously diseased root surface. This is distinct from {1:repair}, which produces a {2:long junctional epithelial adhesion that prevents connective tissue attachment}.",
+"GTR works by placing a physical barrier membrane over the defect, {2:blocking the rapidly migrating epithelial and gingival connective tissue cells from reaching the root surface}, allowing the slower-migrating {2:PDL cells to repopulate the area and produce new attachment}."
+]},
+{q:"Question 2 — Landmark Studies", paras:[
+"{1:Karring 1980} (J Clin Perio 7:96): {2:3 beagle dogs, 12 teeth with induced periodontitis to half root length}. Roots extracted and implanted into bone cavities with epithelial migration prevented. Result: {2:NO new connective tissue attachment — only root resorption and ankylosis}. Conclusion: {2:bone alone CANNOT produce new attachment}.",
+"{1:Nyman 1980} (J Clin Perio 7:39): {2:2 monkeys, 28 teeth with experimental periodontal breakdown}. Roots implanted half in bone, half covered by gingival connective tissue. {2:Gingival CT side produced root resorption; bone side produced ankylosis}. Conclusion: gingival CT in contact with root surfaces causes resorption — must be excluded.",
+"{1:Nyman 1982} (J Clin Perio 9:257) — THE breakthrough study. {2:3 monkeys; bone removed from mid-root to 2 mm apical to marginal crest. Root surfaces curetted.} A {1:millipore filter} was placed as a barrier. Histology revealed {2:new cementum with inserting collagen fibers on curetted root}. Conclusion: PDL cells can re-establish attachment when given the opportunity through barrier exclusion.",
+"{1:Nyman 1986} (J Clin Perio 13:145): {2:4 monkeys; angular defects to mid-root level}. Tight elastic placed around half the teeth to prevent PDL coronal migration; loose elastic on the rest. Result: {2:tight elastic = NO new attachment; loose elastic = new attachment}. Conclusion: {2:PDL cells must migrate coronally from the defect base for regeneration}."
+]},
+{q:"Question 2a — Tissue Interactions with Root Surface", paras:[
+"Four cell types compete to populate the root surface after surgery. {1:Epithelial cells} are the {1:fastest} and produce {2:long junctional epithelium — repair, the body's default}. {1:Gingival CT cells} are fast and produce {1:root resorption} — the most destructive outcome. {1:PDL cells} are moderate speed and produce {2:new cementum with new collagen fibers — new attachment, the goal}. {1:Bone cells} are the {1:slowest} and produce {1:ankylosis} — direct bone-root fusion with no PDL space. The GTR membrane blocks the two fast cell types while allowing PDL cells unimpeded access from the defect base."
+]},
+{q:"Question 3 — Grafting Materials", paras:[
+"{1:Autografts} are harvested from the same patient. Intraoral: tuberosity, extraction sites, osseous coagulum. Extraoral: {1:iliac crest}. The ONLY material with all three properties: {1:osteogenic} (living cells), {1:osteoinductive} (growth factors/BMPs), {1:osteoconductive} (scaffold). Disadvantages: second surgical site, limited volume. {2:Iliac crest grafts can cause root resorption — controlled by freezing the bone (Schallhorn et al.). Intraoral sites do NOT cause the same resorption.} Cancellous bone has greater osteogenic potential than cortical.",
+"{1:Allografts} are human cadaver bone. {1:FDBA} retains minerals — {2:osteoconductive only, minerals block BMP access}. {1:DFDBA} is demineralized — {1:Urist (1965, Science)} showed demineralization exposes {2:bone morphogenetic proteins, theoretically making DFDBA osteoinductive}. However, {1:Schwartz et al. (1996)} tested {2:14 batches from 6 banks — 3 of 6 showed NO osteoinductive potential, and different lots from the same bank were inconsistent}. DFDBA osteoinductivity is unreliable.",
+"{1:Xenografts}: {1:Bio-Oss} (anorganic bovine bone). Processed at high temperatures >15 hours with strong alkaline solutions, removing all organic material — {2:prion-free, exclusively osteoconductive}. Excellent scaffold, particularly effective for sinus lifts.",
+"{1:Alloplasts}: synthetic materials — hydroxyapatite, tricalcium phosphate, calcium sulfate, bioactive glass. Inert biologic fillers, {2:osteoconductive only, unlikely to result in true regeneration alone}.",
+"{1:GEM 21} (rhPDGF-BB on beta-TCP): after implantation, PDGF binds to cell receptors triggering {2:chemotaxis and mitogenesis of osteoblasts, PDL fibroblasts, AND cementoblasts} — new bone, new PDL, new cementum simultaneously.",
+"{1:EMD (Emdogain)}: from {2:porcine tooth buds containing amelogenins, ameloblastin, and enamelin}. Enhances PDL cell protein production and proliferation.",
+"{1:PRP}: concentrates platelets {1:330-900%}. Contains {2:PDGF, TGF-beta, EGF/TGF-alpha, IGF-1}. Improves wound healing but {2:has NOT demonstrated increased total bone formation}.",
+"{1:BMP}: regulatory glycoproteins that {2:differentiate mesenchymal stem cells into osteoblasts}. Research focused on {2:BMP-2, BMP-3 (osteogenin), BMP-7 (OP-1)}. rhBMP-2 (Infuse) is the most potent but causes {2:exuberant inflammatory response, expensive, dose-sensitive}."
+]},
+{q:"Question 4/5 — GTR vs GBR, Barriers, and Complications", paras:[
+"{1:GTR} is around {1:TEETH} — {2:PDL provides the critical cell population}, membrane stays {1:4-6 weeks}. {1:GBR} is in {1:EDENTULOUS areas} (extraction sockets, ridge augmentation, sinus lifts, immediate implants) — {2:osteoblasts are the sole regenerative cells}. Membranes stay {1:up to 6 months} because bone cells are slowest.",
+"The {1:Gore-Tex (ePTFE)} membrane: non-resorbable, medical-grade ePTFE with {2:open microstructure coronally for tissue integration and occlusive barrier body}. Advantage: timing control. Disadvantage: second surgery. Titanium-reinforced for space-making. {2:Resorbable collagen membranes} eliminate second surgery but have unpredictable resorption. Membranes stabilized with tacks. Ideal properties: {2:biocompatible, occlusive, space-making, tissue integration, clinically manageable}.",
+"{2:Membrane exposure to the oral environment = bacterial colonization = failure}. Primary flap closure completely covering the membrane is critical — material should be {2:2-3 mm below the coronal aspect of the flap}.",
+"Complications: {1:infection} (debridement, antibiotics, possible membrane removal); {1:membrane exposure/perforation} — most common (minor: trim + CHX; extensive: remove); {1:recession/flap sloughing} (tension-free primary closure with vertical releases); {1:gingival irregularities} (gingivoplasty after maturation).",
+"New attachment can ONLY be confirmed through {1:histologic evaluation}. Clinical probing, radiographs, and re-entry surgery cannot distinguish true new attachment from repair (long junctional epithelium)."
+]}
+]
+},
+{
+id:3, title:"NON-SURGICAL / SURGICAL THERAPY", color:"#ffb74d",
+skeleton:[
+{finger:"Thumb",topic:"SRP Definition + Evidence",key:"Scaling=deposits. Root planing=diseased cementum. Greenstein 1992: definitive for mild-mod AND initial phase for severe. Harper/Robinson 1987: temporary microbe reduction."},
+{finger:"Index",topic:"Limitations + Escalation",key:"Caffesse 1986: 65% inadequate at 5mm+. Critical PD=4.2mm (Lindhe). Fleisher says 5mm+BOP. Re-eval at 4-6 weeks."},
+{finger:"Middle",topic:"75-yr-old Scenario",key:"GM 1-2mm coronal to CEJ = pseudopocket! CAL=PD minus coronal distance. SRP→re-eval→D4910 q3mo. 30yo=Grade C, may need abx/Periostat."},
+{finger:"Ring",topic:"Adjunctive Therapies",key:"Periostat 20mg BID=MMP inhibitor. Arestin/PerioChip/Atridox at re-eval only. CHX: 30min after SLS. Stannous fluoride > sodium fluoride."},
+{finger:"Pinky",topic:"Compliance Studies",key:"Nyman77=no recall=failure. Rosling76=recall=success. Axelsson/Lindhe81: 99% vs 45%. 3-month maintenance is non-negotiable."}
+],
+refs:[
+{author:"Greenstein",year:"1992",journal:"J Perio",finding:"SRP is definitive for mild-moderate periodontitis AND initial phase before surgery for severe cases."},
+{author:"Harper & Robinson",year:"1987",journal:"J Clin Perio",finding:"SRP reduces motile microbes and spirochetes — but effect is TEMPORARY. Rationale for 3-month maintenance."},
+{author:"Caffesse et al.",year:"1986",journal:"J Clin Perio",finding:"At PD ≥5mm, clinicians inadequately debrided roots 65% of the time."},
+{author:"Nyman et al.",year:"1977",journal:"J Clin Perio",finding:"Without recall program, pocket depths rebounded to pre-surgical levels in 2 years regardless of surgical technique."},
+{author:"Rosling et al.",year:"1976",journal:"J Clin Perio",finding:"With recall every 2 weeks for 2 years, patients maintained reduced PD and showed attachment gains."},
+{author:"Lindhe et al.",year:"1984",journal:"J Clin Perio",finding:"5-year study: high home care standard → better maintenance of attachment and PD reductions."},
+{author:"Ramfjord et al.",year:"1982",journal:"J Perio",finding:"Professional scaling every 3 months partly compensated for varying self-performed plaque control."},
+{author:"Axelsson & Lindhe",year:"1981",journal:"J Clin Perio",finding:"77 pts post-tx. Recall group: 99% of surfaces ≤1mm loss over 6yr. Non-recall: only 45%."},
+{author:"Isidor & Karring",year:"1986",journal:"J Clin Perio",finding:"5-year study confirming professional subgingival scaling every 3 months compensated for varying plaque control."}
+],
+sections:[
+{q:"Question 1 — Goals and Evidence for SRP", paras:[
+"{1:Scaling} is the removal of soft and hard deposits adhering to the tooth surface. {1:Root planing} is the removal of diseased root surfaces to create a smooth, non-contaminated surface favorable for tissue healing. These are two distinct procedures — scaling addresses calculus, root planing addresses contaminated cementum.",
+"The clinical goals are to reduce the subgingival bacterial load, shift the microflora from pathogenic to health-associated organisms, reduce probing depths, resolve bleeding on probing, and achieve stability of clinical attachment levels.",
+"{1:Greenstein (J Perio, 1992)} established that SRP is both a {2:definitive approach for mild-to-moderate periodontitis AND the initial phase of therapy before surgery} for severe cases. The determination of which role SRP served is made retrospectively at the re-evaluation, {1:4-6 weeks} after the last quadrant.",
+"{1:Harper and Robinson (J Clin Perio, 1987)} demonstrated that SRP {2:reduces motile microorganisms and spirochetes}, but this effect is {1:TEMPORARY}. Pathogenic flora will recolonize, which is the fundamental rationale for {2:periodontal maintenance at 3-month intervals}."
+]},
+{q:"Question 2 — Limitations and Escalation", paras:[
+"{1:Caffesse et al. (J Clin Perio, 1986)} demonstrated that at probing depths of {1:5 mm or greater}, clinicians inadequately debrided root surfaces {1:65%} of the time. Complete calculus removal is rarely attained and is somewhat unrealistic at deeper depths.",
+"The critical probing depth concept: Lindhe showed that at initial probing depths above {1:4.2 mm}, more attachment gain occurred following Widman flap surgery than SRP alone. {2:Fleisher considers this 'a little on the low side' and recommends surgery at 5 mm or greater WITH bleeding on probing}.",
+"Escalation occurs at the 4-6 week re-evaluation when sites show {2:persistent PD of 5 mm+ with BOP despite adequate SRP}. Before surgery, {2:adjunctive local antimicrobials may be attempted (Arestin, PerioChip)}. If non-responsive, Phase II surgical therapy is indicated."
+]},
+{q:"Question 3 — Clinical Scenario: 75-Year-Old", paras:[
+"The gingival margin is {1:1-2 mm CORONAL to the CEJ}, so true CAL is NOT the same as PD — you must {2:subtract the distance the margin sits coronal to the CEJ}. For a 7 mm pocket with margin 2 mm coronal: CAL = 7-2 = {1:5 mm}. For a 5 mm pocket with margin 1 mm coronal: CAL = 5-1 = {1:4 mm}. The {2:pseudopocket component inflates probing depth beyond actual attachment loss}.",
+"To distinguish pseudopocket from true pocket: {2:assess gingival margin position relative to CEJ. If margin is coronal to CEJ, some PD is pseudopocket. You do NOT need a radiograph.}",
+"Treatment: comprehensive SRP ({2:D4341/D4342}), thorough OHI, risk factor control. Re-evaluate at 4-6 weeks. If pockets resolve to 3-4 mm with no BOP, SRP was definitive → {1:D4910 maintenance every 3 months}. If 5 mm+ persists with BOP → surgery.",
+"For a {1:30-year-old}: same initial treatment. However, this represents a much more aggressive pattern — likely {1:Grade C} under 2018 classification ({2:rapid progression based on bone loss to age ratio}). May warrant {2:systemic antibiotics (especially if A. actinomycetemcomitans suspected — tissue-invasive, SRP can't eliminate it)}, host modulation with {1:Periostat (20 mg doxycycline BID, sub-antimicrobial dose inhibiting matrix metalloproteinases)}, and potentially earlier surgery."
+]},
+{q:"Question 4 — Adjunctive Therapies", paras:[
+"Systemic: {1:Periostat} ({1:20 mg doxycycline BID}) — {2:inhibits matrix metalloproteinases at sub-antimicrobial dose; does NOT kill bacteria but slows host-mediated tissue destruction}. For acute infections (NUG/NUP): full-dose antibiotics (metronidazole, tetracycline, penicillin).",
+"Local delivery — placed at re-evaluation into non-responsive pockets, {2:NOT at every SRP appointment}. {1:Arestin}: minocycline microspheres, sustained release 14 days. {1:PerioChip}: 2.5 mg chlorhexidine gluconate. {1:Atridox}: doxycycline gel.",
+"{1:Chlorhexidine rinse} (0.12% US): CHX is cationic; toothpastes contain anionic sodium lauryl sulfate which {2:neutralizes CHX — patients must wait minimum 30 minutes} between brushing and rinsing. {1:Stannous fluoride} toothpaste recommended over sodium fluoride: provides {2:anti-plaque, anti-gingivitis, anti-sensitivity, AND anti-caries benefits}."
+]},
+{q:"Question 5 — Compliance and Maintenance", paras:[
+"{1:Nyman et al. (J Clin Perio, 1977)}: different surgical techniques, single home care session, no recall. Result: {2:pocket depths rebounded to pre-surgical levels over 2 years with further attachment loss}. Surgery without maintenance is futile.",
+"{1:Rosling et al. (J Clin Perio, 1976)}: different techniques, repeated OHI, recall every {2:2 weeks for 2 years}. Result: maintained reduced PD and attachment gains.",
+"{1:Lindhe et al. (J Clin Perio, 1984)}: 5-year study — {2:high home care standard maintained attachment and PD reductions more consistently}.",
+"{1:Ramfjord et al. (J Perio, 1982)}: professional scaling every 3 months {2:partly compensated for varying self-performed plaque control}.",
+"{1:Isidor and Karring (J Clin Perio, 1986)}: 5-year study confirming the same.",
+"{1:Axelsson and Lindhe (J Clin Perio, 1981)}: 77 patients post-treatment. 52 in SPT (every 2 months × 2 years, then every 3 months × 4 years). 25 returned to GP with sporadic recalls. Recall group: {1:99%} of surfaces maintained ≤1 mm loss over 6 years. Non-recall: only {1:45%}."
+]},
+{q:"Question 8 — Assumptions", paras:[
+"When deciding treatment is indicated, we assume: {2:the disease will progress without intervention; the patient will comply with maintenance; the benefits outweigh risks and costs; and we can achieve a maintainable result}. Without compliance, all gains are lost regardless of surgical expertise (Nyman 1977). Periodontal maintenance at 3-month intervals is evidence-based and non-negotiable. Surgery creates a maintainable environment — it does not cure the disease."
+]}
+]
+},
+{
+id:4, title:"OCCLUSAL TRAUMA", color:"#ef9a9a",
+skeleton:[
+{finger:"Thumb",topic:"Definition + Diagnosis",key:"AAP 2001: attachment apparatus lesion from undue force. INCREASING mobility over time = diagnosis. Wear/cracks alone ≠ OT."},
+{finger:"Index",topic:"Primary vs Secondary",key:"Primary=excess force on normal support→equilibration. Secondary=normal force on weak support→splinting. Reinhart 1984: 60% bone loss threshold."},
+{finger:"Middle",topic:"TFO ≠ Attachment Loss",key:"Force affects attachment apparatus ONLY, not supracrestal tissues. Co-destruction = force + ACTIVE INFLAMMATION (not force + bone loss). Glickman zone theory = unproven."},
+{finger:"Ring",topic:"Treatment Sequence",key:"Step A: eliminate inflammation FIRST. Step B: address occlusion (equilibrate or splint). Step C: stable arch relationships. Polson 1986: don't treat unless pathology confirmed."},
+{finger:"Pinky",topic:"Mobility vs Fremitus",key:"Mobility=clinician-applied (2 rigid instruments). Fremitus=patient's own bite (functional test). Both together=bad sign. Stable mobility ≠ disease. Coolidge 1930."}
+],
+refs:[
+{author:"AAP Glossary",year:"2001",journal:"",finding:"Occlusal traumatism: pathologic or adaptive changes in periodontium from undue force by masticatory muscles."},
+{author:"Reinhart, Pao & Krejeci",year:"1984",journal:"J Perio Res 19:238",finding:"Bone height reduction has little effect on PDL stress until ~60% of support is lost."},
+{author:"Coolidge",year:"1930",journal:"JADA 24:1260",finding:"Normal PDL width decreases with age: 0.23mm (11-16yo) → 0.17mm (51-67yo) at crest."}
+],
+sections:[
+{q:"Question 1 — Definition and Diagnosis", paras:[
+"Occlusal traumatism is defined by the {1:AAP Glossary of Periodontal Terms (2001)} as {2:pathologic or adaptive changes which develop in the periodontium as a result of undue force produced by the masticatory muscles}. It is exclusively a lesion of the {1:ATTACHMENT APPARATUS} — the periodontal ligament, alveolar bone, and cementum. The pathologic lesion causes {2:loss of alveolar and crestal lamina dura, resulting in widening of the PDL space}, appearing clinically as {1:increasing mobility over time}.",
+"Any force applied to a tooth has the potential to produce a pathologic effect. Whether it does depends on {2:the nature of the forces and the resistance and repair capacity of the individual's system}. An etiologic agent does NOT guarantee an occlusal traumatic lesion.",
+"Diagnosis requires: {1:INCREASING mobility over time}. A tooth that is Grade 1 today and Grade 1 in six months has {2:ADAPTED — increased but stable mobility, NOT active trauma}. A tooth progressing from Grade 1 toward Grade 2 IS active occlusal trauma.",
+"Cracked teeth, wear facets, fractures, and abrasion alone are {2:NOT sufficient to diagnose occlusal trauma} — these are changes in TOOTH morphology, not the attachment apparatus. {2:Dental wear may NOT correlate with the occlusal traumatic lesion — extensive wear with no mobility, or minimal wear with severe mobility, are both possible.}"
+]},
+{q:"Light Force vs. Heavy Force", paras:[
+"With a {1:light force} within the adaptive range, the lesion resolves as the wound heals. {2:A permanent widening of the PDL space compensates for the force. Healing occurs but the PDL remains widened.} Mobility is increased but {2:NOT increasing — so long as force intensity stays constant}. If force is removed, {2:bone apposition occurs at the lamina dura, PDL returns to original width, and mobility normalizes}.",
+"With a {1:heavy force} exceeding adaptive capacity, {2:the tooth becomes increasingly mobile and never adapts — mobility continues increasing}. This is active occlusal trauma."
+]},
+{q:"Question 2 — Primary vs. Secondary", paras:[
+"{1:Primary occlusal trauma}: {2:EXCESSIVE forces on NORMAL support}. Core problem is the FORCE. {2:Reversible and repairable}. Treatment: {1:occlusal equilibration}. Once forces are reduced, {2:the lesion resolves, PDL width returns to pre-force levels, and mobility is reduced}. Clinical signs: increasing mobility, migration, and/or fremitus.",
+"{1:Secondary occlusal trauma}: {2:normal or excessive forces on WEAKENED support}. Core problem is BONE SUPPORT. {2:Usually NOT reversible by adjustment alone}. Treatment: {1:splinting} to distribute forces over a multi-tooth abutment. {2:You must have attachment loss to have secondary occlusal trauma. However, you can still have primary occlusal trauma even with attachment loss if sufficient support remains.}",
+"{1:Reinhart, Pao, and Krejeci (J Perio Res 19:238, 1984)} demonstrated that {2:reduction of alveolar bone height has little effect on PDL stress until approximately 60% of bone support is lost}. A tooth with 10-40% bone loss is still biomechanically adequate."
+]},
+{q:"Question 3 — Does TFO Cause Attachment Loss?", paras:[
+"Occlusal trauma does {1:NOT} cause attachment loss, pocketing, or recession. {2:The effects of occlusal force are limited to the attachment apparatus. The supracrestal soft tissues (CT attachment and JE) are NOT damaged by excessive force.} Therefore, occlusal trauma cannot cause apical migration of the JE.",
+"However, TFO CAN {1:co-destruct} with existing periodontal disease. {2:Heavy force combined with ACTIVE periodontal infection creates a co-destructive environment exacerbating breakdown.} The co-destructive environment is NOT (Force + Bone Loss) — it IS {2:(Force + ACTIVE INFLAMMATION)}. Animal studies showed occlusal trauma on a {2:healthy but reduced periodontium (treated case) has no different effect than on a healthy periodontium with normal bone}.",
+"{1:Glickman and Smulow} proposed the Zone of Irritation (supracrestal) and Zone of Co-Destruction (attachment apparatus) theory. However, {2:this remains unproven — it has not been proven to any great extent}."
+]},
+{q:"Question 4 — Treatment Sequence", paras:[
+"{1:Step A (FIRST): Eliminate inflammation} — SRP, prophylaxis, OHI. {2:This must come first because inflammation itself causes mobility. You must resolve inflammation to determine how much mobility is from TFO versus active infection.}",
+"{1:Step B (SECOND): Address the occlusal etiology.} For primary: {2:occlusal equilibration to reduce forces}. For secondary: {2:splinting to compensate for lost support}.",
+"{1:Step C}: Develop stable intra- and inter-arch relationships through prosthetics, orthodontics, or orthognathic surgery.",
+"Important: a CO-CR discrepancy or malocclusion does NOT mean treatment is needed. {2:Polson (1986) placed decreased emphasis on mobility and increased emphasis on marginal inflammation}, correcting the 1970s 'occlusion mania.' If asymptomatic with stable occlusion and no progressive disease — leave it alone."
+]},
+{q:"Question 5 — Mobility vs. Fremitus", paras:[
+"{1:Mobility}: displacement when force is applied by the clinician, assessed with {2:two rigid instruments (mirror handles, NOT fingers — soft pads mask movement)}. {1:Physiologic}: <0.2 mm. {1:Grade 1}: {1:0.2-1.0 mm}. {1:Grade 2}: {1:1.0-2.0 mm}. {1:Grade 3}: {2:>2.0 mm horizontal AND/OR vertical displacement — any vertical depression = automatic Grade 3}.",
+"{1:Fremitus}: vibration/movement during the {2:PATIENT'S own occlusal function} — place gloved finger on facial of maxillary teeth while patient taps into MIP and grinds through excursions. It is a {2:FUNCTIONAL test detecting trauma during the patient's own bite}.",
+"{2:Fremitus and mobility on the same tooth = 'a bad sign'} — the patient's own forces are causing pathologic movement in an already compromised PDL.",
+"Mobility is {1:NOT inherently a disease}. {2:Increased but STABLE mobility can be accepted if the tooth doesn't disturb masticatory function or comfort.} Stable mobility, even Grade 2, can be functional for years. Only {2:PROGRESSIVE (increasing) mobility requires treatment}.",
+"{1:Coolidge (JADA 24:1260, 1930)} measured PDL widths by age: {2:0.23 mm at crest in 11-16yo decreasing to 0.17 mm in 51-67yo}. The PDL is a dynamic structure."
+]}
+]
+}
+];
+
+// ══════════════════════════════════════════════════════════════
+// PARSER: converts {L:text} markers to segments
+// ══════════════════════════════════════════════════════════════
+function parseMarked(str) {
+  const segs = [];
+  let i = 0;
+  while (i < str.length) {
+    const idx = str.indexOf("{", i);
+    if (idx === -1) { segs.push({ type: "text", t: str.slice(i) }); break; }
+    if (idx > i) segs.push({ type: "text", t: str.slice(i, idx) });
+    const colon = str.indexOf(":", idx);
+    const close = findClosingBrace(str, idx);
+    if (colon > idx && colon < close) {
+      const lv = parseInt(str.slice(idx + 1, colon));
+      segs.push({ type: "blank", t: str.slice(colon + 1, close), lv });
+    } else {
+      segs.push({ type: "text", t: str.slice(idx, close + 1) });
+    }
+    i = close + 1;
+  }
+  return segs;
+}
+function findClosingBrace(s, start) {
+  let depth = 0;
+  for (let i = start; i < s.length; i++) {
+    if (s[i] === "{") depth++;
+    if (s[i] === "}") { depth--; if (depth === 0) return i; }
+  }
+  return s.length - 1;
+}
+function stripMarkers(str) { return str.replace(/\{[123]:/g, "").replace(/\}/g, ""); }
+
+// ══════════════════════════════════════════════════════════════
+// MAIN APP
+// ══════════════════════════════════════════════════════════════
+function App() {
+  const [tab, setTab] = useState("exam");
+  const [mode, setMode] = useState("skeleton");
+  const [essayIdx, setEssayIdx] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [revealed, setRevealed] = useState({});
+  const [recallText, setRecallText] = useState("");
+  const [recallShow, setRecallShow] = useState(false);
+  const [recallQ, setRecallQ] = useState(0);
+  const [refMode, setRefMode] = useState("find2auth");
+  const [refIdx, setRefIdx] = useState(0);
+  const [refShow, setRefShow] = useState(false);
+  const [scores, setScores] = useState({sk:0,fill:0,ref:0,rec:0});
+  const [skelShow, setSkelShow] = useState({});
+  const [skelQuiz, setSkelQuiz] = useState(false);
+  const [examEssay, setExamEssay] = useState(0);
+
+  const essay = ESSAYS[essayIdx];
+  const allRefs = ESSAYS.flatMap((e,ei) => e.refs.map(r => ({...r, essayIdx:ei, essayTitle:e.title})));
+
+  // fill-the-gaps tracking
+  const totalBlanks = essay.sections.reduce((acc, sec) =>
+    acc + sec.paras.reduce((a2, p) =>
+      a2 + parseMarked(p).filter(s => s.type === "blank" && s.lv <= level).length, 0), 0);
+  const revealedCount = Object.keys(revealed).filter(k => k.startsWith(`${essayIdx}-`)).length;
+  const pct = totalBlanks > 0 ? Math.round((revealedCount / totalBlanks) * 100) : 0;
+
+  const resetLevel = () => {
+    const newR = {};
+    Object.entries(revealed).forEach(([k,v]) => { if (!k.startsWith(`${essayIdx}-`)) newR[k] = v; });
+    setRevealed(newR);
+  };
+
+  useEffect(() => { resetLevel(); }, [level, essayIdx]);
+
+  const toggleBlank = (key) => {
+    setRevealed(p => {
+      const n = {...p};
+      if (n[key]) delete n[key]; else { n[key] = true; setScores(s => ({...s, fill: s.fill + 1})); }
+      return n;
+    });
+  };
+
+  // ── RENDER ──
+  return (
+    <div style={{minHeight:"100vh",background:"#0d1117",color:"#e6edf3",fontFamily:"'Georgia','Times New Roman',serif"}}>
+      {/* NAV BAR */}
+      <div style={{position:"sticky",top:0,zIndex:50,background:"#161b22",borderBottom:"1px solid #30363d",padding:"0 16px"}}>
+        <div style={{display:"flex",alignItems:"center",maxWidth:900,margin:"0 auto",gap:8}}>
+          <span style={{fontSize:13,fontWeight:700,color:"#58a6ff",padding:"12px 0",letterSpacing:1}}>PE 530 FINAL</span>
+          <div style={{flex:1}}/>
+          {[["exam","📝 EXAM DAY"],["memorize","🧠 MEMORIZE"]].map(([k,label]) => (
+            <button key={k} onClick={() => setTab(k)} style={{
+              padding:"10px 20px",fontSize:13,fontWeight:600,cursor:"pointer",border:"none",
+              borderBottom: tab===k ? "2px solid #58a6ff" : "2px solid transparent",
+              background:"transparent",color: tab===k ? "#58a6ff" : "#8b949e",
+              transition:"all 0.2s"
+            }}>{label}</button>
+          ))}
+          <div style={{flex:1}}/>
+          <span style={{fontSize:11,color:"#484f58"}}>🔥 {scores.fill + scores.ref + scores.rec + scores.sk} pts</span>
+        </div>
+      </div>
+
+      <div style={{maxWidth:900,margin:"0 auto",padding:"20px 16px 100px"}}>
+
+      {/* ═══════ TAB 1: EXAM DAY ═══════ */}
+      {tab === "exam" && (
+        <div>
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <h1 style={{fontSize:22,fontWeight:700,color:"#f0f6fc",margin:"0 0 4px"}}>EXAM DAY — WRITE THIS</h1>
+            <p style={{fontSize:13,color:"#8b949e",margin:0}}>Pure paragraph form. Exactly what goes in your blue book.</p>
+          </div>
+          {/* Essay selector */}
+          <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap",justifyContent:"center"}}>
+            {ESSAYS.map((e,i) => (
+              <button key={i} onClick={() => setExamEssay(i)} style={{
+                padding:"8px 16px",fontSize:12,fontWeight:600,cursor:"pointer",borderRadius:6,
+                border: examEssay===i ? `2px solid ${e.color}` : "1px solid #30363d",
+                background: examEssay===i ? e.color+"22" : "#21262d",
+                color: examEssay===i ? e.color : "#8b949e",transition:"all 0.2s"
+              }}>Essay {i+1}: {e.title}</button>
+            ))}
+          </div>
+          {/* Full essay text */}
+          {(() => { const e = ESSAYS[examEssay]; return (
+            <div>
+              <h2 style={{fontSize:18,fontWeight:700,color:e.color,marginBottom:16,textAlign:"center"}}>
+                ESSAY {e.id}: {e.title}
+              </h2>
+              {e.sections.map((sec, si) => (
+                <div key={si} style={{marginBottom:20}}>
+                  <h3 style={{fontSize:15,fontWeight:700,color:"#c9d1d9",marginBottom:8}}>{sec.q}</h3>
+                  {sec.paras.map((p, pi) => (
+                    <p key={pi} style={{fontSize:14,lineHeight:1.75,color:"#c9d1d9",marginBottom:10,textAlign:"justify"}}>
+                      {stripMarkers(p)}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          );})()}
+        </div>
+      )}
+
+      {/* ═══════ TAB 2: MEMORIZE ═══════ */}
+      {tab === "memorize" && (
+        <div>
+          {/* Mode selector */}
+          <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap",justifyContent:"center"}}>
+            {[
+              ["skeleton","🖐 SKELETON","Lock the 5-finger framework"],
+              ["fill","🧩 FILL GAPS","Progressive cloze deletion"],
+              ["ref","📚 REFERENCES","Citation speed drill"],
+              ["recall","✍️ FREE RECALL","Type from memory"]
+            ].map(([k,icon,desc]) => (
+              <button key={k} onClick={() => setMode(k)} style={{
+                padding:"10px 14px",fontSize:12,cursor:"pointer",borderRadius:8,textAlign:"left",
+                border: mode===k ? "2px solid #58a6ff" : "1px solid #30363d",
+                background: mode===k ? "#58a6ff15" : "#21262d",
+                color: mode===k ? "#58a6ff" : "#8b949e",transition:"all 0.2s",minWidth:140
+              }}>
+                <div style={{fontWeight:700}}>{icon}</div>
+                <div style={{fontSize:10,marginTop:2,opacity:.7}}>{desc}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Essay selector (for skeleton, fill, recall) */}
+          {mode !== "ref" && (
+            <div style={{display:"flex",gap:6,marginBottom:16,justifyContent:"center",flexWrap:"wrap"}}>
+              {ESSAYS.map((e,i) => (
+                <button key={i} onClick={() => { setEssayIdx(i); setRecallQ(0); setRecallShow(false); setRecallText(""); setSkelShow({}); setSkelQuiz(false); }} style={{
+                  padding:"6px 14px",fontSize:11,fontWeight:600,cursor:"pointer",borderRadius:6,
+                  border: essayIdx===i ? `2px solid ${e.color}` : "1px solid #30363d",
+                  background: essayIdx===i ? e.color+"22" : "#161b22",
+                  color: essayIdx===i ? e.color : "#8b949e"
+                }}>E{i+1}: {e.title}</button>
+              ))}
+            </div>
+          )}
+
+          {/* ── SKELETON MODE ── */}
+          {mode === "skeleton" && (
+            <div>
+              <div style={{textAlign:"center",marginBottom:16}}>
+                <p style={{fontSize:13,color:"#8b949e",margin:0}}>
+                  {skelQuiz ? "🎯 Quiz mode: Can you recall each finger?" : "👆 Tap each finger to reveal, then switch to quiz mode"}
+                </p>
+                <button onClick={() => { setSkelQuiz(!skelQuiz); setSkelShow({}); }} style={{
+                  marginTop:8,padding:"6px 16px",fontSize:11,borderRadius:6,cursor:"pointer",
+                  border:"1px solid #58a6ff",background:skelQuiz?"#58a6ff":"transparent",
+                  color:skelQuiz?"#0d1117":"#58a6ff",fontWeight:600
+                }}>{skelQuiz ? "Back to Learn" : "Switch to Quiz"}</button>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {essay.skeleton.map((sk, si) => {
+                  const shown = skelShow[si];
+                  return (
+                    <div key={si} onClick={() => { setSkelShow(p => ({...p,[si]:!p[si]})); if(!shown) setScores(s=>({...s,sk:s.sk+1})); }}
+                      style={{
+                        padding:"14px 18px",borderRadius:10,cursor:"pointer",
+                        background: shown ? "#21262d" : "#161b22",
+                        border: `1px solid ${shown ? essay.color+"66" : "#30363d"}`,
+                        transition:"all 0.3s"
+                      }}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:22}}>{["👍","👆","🖕","💍","🤙"][si]}</span>
+                        <span style={{fontWeight:700,fontSize:14,color:essay.color}}>{sk.finger}: {skelQuiz && !shown ? "???" : sk.topic}</span>
+                      </div>
+                      {shown && (
+                        <p style={{fontSize:13,lineHeight:1.6,color:"#c9d1d9",marginTop:8,paddingLeft:38}}>{sk.key}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{marginTop:20,padding:16,background:"#161b22",borderRadius:10,border:"1px solid #30363d"}}>
+                <p style={{fontSize:12,fontWeight:700,color:"#f0883e",margin:"0 0 6px"}}>🔑 TWO KEY REFERENCES:</p>
+                <p style={{fontSize:13,color:"#c9d1d9",margin:0,lineHeight:1.6}}>
+                  {essayIdx===0 && "1) Gargiulo 1961 (biologic width numbers) — 2) Coslet 1977 (gingivectomy vs flap decision tree)"}
+                  {essayIdx===1 && "1) Nyman 1982 (millipore filter = THE breakthrough proving GTR) — 2) Urist 1965 (Science, demineralization exposes BMPs)"}
+                  {essayIdx===2 && "1) Greenstein 1992 (SRP = definitive AND initial phase) — 2) Axelsson & Lindhe 1981 (99% vs 45% recall vs non-recall)"}
+                  {essayIdx===3 && "1) AAP Glossary 2001 (definition: attachment apparatus + undue force) — 2) Reinhart/Pao/Krejeci 1984 (60% bone loss threshold)"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── FILL THE GAPS MODE ── */}
+          {mode === "fill" && (
+            <div>
+              {/* Level selector + progress */}
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap",justifyContent:"center"}}>
+                {[1,2,3].map(l => (
+                  <button key={l} onClick={() => setLevel(l)} style={{
+                    padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",borderRadius:6,
+                    background: level===l ? ["#238636","#9e6a03","#da3633"][l-1] : "#21262d",
+                    color: level===l ? "#fff" : "#8b949e",
+                    border: level===l ? "none" : "1px solid #30363d"
+                  }}>
+                    {["🟢 L1: Key Terms","🟡 L2: Phrases","🔴 L3: Sentences"][l-1]}
+                  </button>
+                ))}
+              </div>
+              {/* Progress bar */}
+              <div style={{background:"#21262d",borderRadius:8,height:24,marginBottom:16,overflow:"hidden",position:"relative"}}>
+                <div style={{
+                  height:"100%",borderRadius:8,transition:"width 0.5s ease",
+                  width:`${pct}%`,
+                  background: pct < 33 ? "#da3633" : pct < 66 ? "#9e6a03" : pct < 100 ? "#238636" : "#58a6ff"
+                }}/>
+                <span style={{position:"absolute",top:3,left:"50%",transform:"translateX(-50%)",fontSize:12,fontWeight:700,color:"#f0f6fc"}}>
+                  {revealedCount}/{totalBlanks} ({pct}%) {pct===100 && "✅"}
+                </span>
+              </div>
+              <button onClick={resetLevel} style={{
+                display:"block",margin:"0 auto 16px",padding:"4px 12px",fontSize:10,cursor:"pointer",
+                background:"transparent",border:"1px solid #30363d",borderRadius:4,color:"#8b949e"
+              }}>Reset blanks for this essay</button>
+              {/* Paragraphs with blanks */}
+              {essay.sections.map((sec, si) => (
+                <div key={si} style={{marginBottom:20}}>
+                  <h3 style={{fontSize:14,fontWeight:700,color:essay.color,marginBottom:8}}>{sec.q}</h3>
+                  {sec.paras.map((p, pi) => {
+                    const segs = parseMarked(p);
+                    return (
+                      <p key={pi} style={{fontSize:14,lineHeight:1.85,color:"#c9d1d9",marginBottom:10,textAlign:"justify"}}>
+                        {segs.map((seg, sgi) => {
+                          if (seg.type === "text") return <span key={sgi}>{seg.t}</span>;
+                          if (seg.lv > level) return <span key={sgi}>{seg.t}</span>;
+                          const key = `${essayIdx}-${si}-${pi}-${sgi}`;
+                          const isRevealed = revealed[key];
+                          return (
+                            <span key={sgi} onClick={() => toggleBlank(key)} style={{
+                              cursor:"pointer",padding:"1px 4px",borderRadius:4,transition:"all 0.3s",
+                              background: isRevealed ? (seg.lv===1?"#238636":seg.lv===2?"#9e6a03":"#da3633")+"44" : "#30363d",
+                              color: isRevealed ? "#f0f6fc" : "transparent",
+                              borderBottom: isRevealed ? "none" : `2px dashed ${["#238636","#9e6a03","#da3633"][seg.lv-1]}`,
+                              userSelect: isRevealed ? "auto" : "none",
+                              display:"inline",
+                              textShadow: isRevealed ? "none" : "0 0 8px #30363d"
+                            }}>
+                              {isRevealed ? seg.t : seg.t.replace(/[^ ]/g, "█")}
+                            </span>
+                          );
+                        })}
+                      </p>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── REFERENCE DRILL ── */}
+          {mode === "ref" && (
+            <div>
+              <div style={{display:"flex",gap:8,marginBottom:16,justifyContent:"center"}}>
+                {[["find2auth","Finding → Author"],["auth2find","Author → Finding"]].map(([k,l]) => (
+                  <button key={k} onClick={() => { setRefMode(k); setRefShow(false); setRefIdx(0); }} style={{
+                    padding:"8px 16px",fontSize:12,fontWeight:600,cursor:"pointer",borderRadius:6,
+                    background: refMode===k ? "#58a6ff22" : "#21262d",
+                    border: refMode===k ? "2px solid #58a6ff" : "1px solid #30363d",
+                    color: refMode===k ? "#58a6ff" : "#8b949e"
+                  }}>{l}</button>
+                ))}
+              </div>
+              <div style={{textAlign:"center",marginBottom:8}}>
+                <span style={{fontSize:12,color:"#8b949e"}}>{refIdx+1} / {allRefs.length}</span>
+              </div>
+              {(() => {
+                const r = allRefs[refIdx];
+                return (
+                  <div style={{background:"#161b22",borderRadius:12,padding:24,border:"1px solid #30363d",textAlign:"center",minHeight:200,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                    <div style={{fontSize:10,color:ESSAYS[r.essayIdx].color,marginBottom:8,fontWeight:600}}>
+                      Essay {r.essayIdx+1}: {r.essayTitle}
+                    </div>
+                    {refMode==="find2auth" ? (
+                      <>
+                        <p style={{fontSize:15,color:"#c9d1d9",lineHeight:1.6,marginBottom:16}}>{r.finding}</p>
+                        <div style={{fontSize:18,fontWeight:700,color: refShow ? "#58a6ff" : "#30363d",
+                          transition:"all 0.3s",cursor:"pointer",letterSpacing:.5}}
+                          onClick={() => { setRefShow(true); setScores(s=>({...s,ref:s.ref+1})); }}>
+                          {refShow ? `${r.author} (${r.year})${r.journal ? " — "+r.journal : ""}` : "TAP TO REVEAL"}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{fontSize:18,fontWeight:700,color:"#58a6ff",marginBottom:16}}>
+                          {r.author} ({r.year}){r.journal ? " — "+r.journal : ""}
+                        </p>
+                        <div style={{fontSize:14,color: refShow ? "#c9d1d9" : "#30363d",
+                          lineHeight:1.6,transition:"all 0.3s",cursor:"pointer"}}
+                          onClick={() => { setRefShow(true); setScores(s=>({...s,ref:s.ref+1})); }}>
+                          {refShow ? r.finding : "TAP TO REVEAL"}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+              <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:16}}>
+                <button onClick={() => { setRefIdx(p => Math.max(0,p-1)); setRefShow(false); }}
+                  style={{padding:"8px 20px",borderRadius:6,cursor:"pointer",background:"#21262d",border:"1px solid #30363d",color:"#8b949e",fontSize:12}}>← Prev</button>
+                <button onClick={() => { setRefIdx(p => Math.min(allRefs.length-1,p+1)); setRefShow(false); }}
+                  style={{padding:"8px 20px",borderRadius:6,cursor:"pointer",background:"#21262d",border:"1px solid #30363d",color:"#8b949e",fontSize:12}}>Next →</button>
+                <button onClick={() => { setRefIdx(Math.floor(Math.random()*allRefs.length)); setRefShow(false); }}
+                  style={{padding:"8px 20px",borderRadius:6,cursor:"pointer",background:"#58a6ff22",border:"1px solid #58a6ff",color:"#58a6ff",fontSize:12,fontWeight:600}}>🔀 Shuffle</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── FREE RECALL MODE ── */}
+          {mode === "recall" && (
+            <div>
+              <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",justifyContent:"center"}}>
+                {essay.sections.map((sec,si) => (
+                  <button key={si} onClick={() => { setRecallQ(si); setRecallShow(false); setRecallText(""); }} style={{
+                    padding:"4px 10px",fontSize:10,cursor:"pointer",borderRadius:4,
+                    background: recallQ===si ? essay.color+"33" : "#21262d",
+                    border: recallQ===si ? `1px solid ${essay.color}` : "1px solid #30363d",
+                    color: recallQ===si ? essay.color : "#8b949e"
+                  }}>Q{si+1}</button>
+                ))}
+              </div>
+              <div style={{background:"#161b22",borderRadius:12,padding:20,border:`1px solid ${essay.color}44`,marginBottom:16}}>
+                <h3 style={{fontSize:15,fontWeight:700,color:essay.color,margin:"0 0 8px"}}>{essay.sections[recallQ].q}</h3>
+                <p style={{fontSize:12,color:"#8b949e",margin:0}}>Write your answer from memory below, then reveal to compare.</p>
+              </div>
+              <textarea value={recallText} onChange={e => setRecallText(e.target.value)}
+                placeholder="Type your answer from memory here..."
+                style={{
+                  width:"100%",minHeight:180,padding:16,fontSize:14,lineHeight:1.7,borderRadius:10,
+                  background:"#0d1117",border:"1px solid #30363d",color:"#c9d1d9",resize:"vertical",
+                  fontFamily:"Georgia,serif",boxSizing:"border-box"
+                }}/>
+              <div style={{display:"flex",gap:8,marginTop:12,justifyContent:"center"}}>
+                <button onClick={() => { setRecallShow(!recallShow); if(!recallShow) setScores(s=>({...s,rec:s.rec+1})); }} style={{
+                  padding:"10px 24px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:8,
+                  background: recallShow ? "#21262d" : "#58a6ff",
+                  border: recallShow ? "1px solid #30363d" : "none",
+                  color: recallShow ? "#8b949e" : "#0d1117"
+                }}>{recallShow ? "Hide Answer" : "Reveal Answer"}</button>
+                {recallQ < essay.sections.length-1 && (
+                  <button onClick={() => { setRecallQ(recallQ+1); setRecallShow(false); setRecallText(""); }} style={{
+                    padding:"10px 24px",fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:8,
+                    background:"transparent",border:`1px solid ${essay.color}`,color:essay.color
+                  }}>Next Question →</button>
+                )}
+              </div>
+              {recallShow && (
+                <div style={{marginTop:16,padding:20,background:"#21262d",borderRadius:12,border:"1px solid #30363d"}}>
+                  <h4 style={{fontSize:13,fontWeight:700,color:"#58a6ff",margin:"0 0 10px"}}>✅ MODEL ANSWER:</h4>
+                  {essay.sections[recallQ].paras.map((p,pi) => (
+                    <p key={pi} style={{fontSize:13,lineHeight:1.75,color:"#c9d1d9",marginBottom:8}}>{stripMarkers(p)}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}
+
+
+// Find and render the component
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
