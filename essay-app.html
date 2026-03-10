@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perio II Final — Essay Cramsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #242836;
+  --border: #2e3345;
+  --text: #e2e4eb;
+  --text2: #9399ab;
+  --accent1: #6c9bff;
+  --accent2: #ff6b8a;
+  --accent3: #4ecdc4;
+  --accent4: #ffd166;
+  --essay1: #6c9bff;
+  --essay2: #4ecdc4;
+  --essay3: #ff6b8a;
+  --essay4: #ffd166;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* NAV */
+.topbar { position:sticky; top:0; z-index:100; background:rgba(15,17,23,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.topbar h1 { font-size:15px; font-weight:700; letter-spacing:-0.3px; color:var(--text2); white-space:nowrap; }
+.tab-group { display:flex; gap:4px; margin-left:auto; }
+.tab-btn { padding:7px 16px; border:1px solid var(--border); background:transparent; color:var(--text2); border-radius:6px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:500; transition:all .2s; }
+.tab-btn.active { background:var(--accent1); color:#0f1117; border-color:var(--accent1); }
+.tab-btn:hover:not(.active) { border-color:var(--text2); color:var(--text); }
+
+/* CONTENT */
+.container { max-width:860px; margin:0 auto; padding:20px 16px 80px; }
+.view { display:none; }
+.view.active { display:block; }
+
+/* ESSAY CARDS */
+.essay-block { margin-bottom:32px; }
+.essay-title { font-size:18px; font-weight:700; padding:14px 18px; border-radius:10px 10px 0 0; display:flex; align-items:center; gap:10px; }
+.essay-title .num { font-family:'JetBrains Mono',monospace; font-size:12px; padding:3px 8px; border-radius:4px; font-weight:600; }
+.e1 .essay-title { background:rgba(108,155,255,0.12); color:var(--essay1); }
+.e1 .num { background:rgba(108,155,255,0.2); }
+.e2 .essay-title { background:rgba(78,205,196,0.12); color:var(--essay2); }
+.e2 .num { background:rgba(78,205,196,0.2); }
+.e3 .essay-title { background:rgba(255,107,138,0.12); color:var(--essay3); }
+.e3 .num { background:rgba(255,107,138,0.2); }
+.e4 .essay-title { background:rgba(255,209,102,0.12); color:var(--essay4); }
+.e4 .num { background:rgba(255,209,102,0.2); }
+
+.qa-block { background:var(--surface); border:1px solid var(--border); border-top:none; padding:16px 18px; }
+.qa-block:last-child { border-radius:0 0 10px 10px; }
+.qa-block .q { font-weight:700; font-size:13px; color:var(--accent1); margin-bottom:8px; font-family:'JetBrains Mono',monospace; letter-spacing:-0.3px; }
+.e2 .qa-block .q { color:var(--accent3); }
+.e3 .qa-block .q { color:var(--accent2); }
+.e4 .qa-block .q { color:var(--accent4); }
+.qa-block .a { font-size:14px; line-height:1.7; color:var(--text); }
+.qa-block .a strong { color:var(--text); }
+.qa-block .a em { color:var(--text2); font-style:normal; font-size:12px; }
+
+.ref-bar { background:var(--surface2); border:1px solid var(--border); border-top:none; border-radius:0 0 10px 10px; padding:10px 18px; font-size:12px; color:var(--text2); font-family:'JetBrains Mono',monospace; }
+
+/* SKELETON VIEW */
+.skel-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:16px; }
+.skel-block h3 { font-size:14px; margin-bottom:10px; }
+.skel-item { font-size:13px; line-height:1.8; color:var(--text); padding-left:8px; border-left:2px solid var(--border); margin-bottom:8px; }
+.skel-item strong { font-weight:600; }
+
+/* FLASHCARDS */
+.fc-controls { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.fc-filter { padding:6px 14px; border:1px solid var(--border); background:transparent; color:var(--text2); border-radius:6px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:500; transition:all .2s; }
+.fc-filter.active { border-color:var(--accent1); color:var(--accent1); }
+.fc-filter:hover:not(.active) { border-color:var(--text2); }
+
+.card-container { perspective:1000px; margin-bottom:20px; min-height:240px; }
+.card { width:100%; min-height:240px; position:relative; transform-style:preserve-3d; transition:transform 0.5s ease; cursor:pointer; }
+.card.flipped { transform:rotateY(180deg); }
+.card-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; padding:24px; display:flex; flex-direction:column; justify-content:center; border:1px solid var(--border); }
+.card-front { background:var(--surface); }
+.card-back { background:var(--surface2); transform:rotateY(180deg); overflow-y:auto; max-height:400px; }
+.card-front .card-label { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text2); margin-bottom:12px; }
+.card-front .card-q { font-size:16px; font-weight:600; line-height:1.5; }
+.card-back .card-a { font-size:13px; line-height:1.7; }
+.card-back .card-a strong { color:var(--text); }
+.card-hint { font-size:11px; color:var(--text2); margin-top:12px; text-align:center; }
+
+.card-nav { display:flex; justify-content:center; align-items:center; gap:16px; margin-top:8px; }
+.card-nav button { padding:8px 20px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:6px; cursor:pointer; font-family:inherit; font-size:13px; transition:all .2s; }
+.card-nav button:hover { border-color:var(--accent1); }
+.card-nav .counter { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text2); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>PERIO II FINAL — ESSAYS</h1>
+  <div class="tab-group">
+    <button class="tab-btn active" onclick="showView('full')">Full Essays</button>
+    <button class="tab-btn" onclick="showView('skeleton')">Skeleton</button>
+    <button class="tab-btn" onclick="showView('flash')">Flashcards</button>
+    <button class="tab-btn" onclick="showView('examday')" style="border-color:var(--accent2);color:var(--accent2)">🔥 Exam Day</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ============ FULL ESSAY VIEW ============ -->
+<div id="view-full" class="view active">
+
+<!-- ESSAY 1 -->
+<div class="essay-block e1">
+<div class="essay-title"><span class="num">01</span> Crown Lengthening</div>
+
+<div class="qa-block"><div class="q">Q1 — Explain biologic width in depth</div><div class="a">
+Biologic width is the zone of root surface between the crest of alveolar bone and the base of the sulcus where the connective tissue and junctional epithelium attach. <strong>Gargiulo et al. (1961, J Periodont 42:8)</strong> measured this in a histologic study of human cadaver jaws. The averages: CT attachment ~1.07 mm, junctional epithelium ~0.97 mm, sulcus depth ~0.69 mm. Biologic width = CT + JE = ~2.04 mm. Total from bone crest to gingival margin = ~2.73 mm.<br><br>
+These are <strong>averages with significant variability</strong> — some patients have more, some less. You cannot predict one tooth's biologic width from adjacent teeth.<br><br>
+When a restorative margin is placed too close to the bone crest and invades this zone, the body responds with chronic inflammation and unpredictable bone resorption as it tries to re-establish its buffer. The clinical goal is <strong>3-4 mm</strong> between the restorative margin and bone crest.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Bleeding/ulceration upon temp removal: how to determine if CL is needed?</div><div class="a">
+Biologic width violation is only ONE possible cause. Others include: excess subgingival cement, an overextended or ill-fitting temp, food impaction from lack of contact, and poor oral hygiene. All produce identical findings.<br><br>
+<strong>Next steps — process of elimination:</strong><br>
+1. Remove all excess cement.<br>
+2. Evaluate the temp — if poorly adapted, remake it with proper contours and contacts.<br>
+3. Reinforce oral hygiene instruction.<br>
+4. Have the patient return in a few weeks.<br><br>
+If the tissue <strong>still</strong> shows inflammation after eliminating all other causes, biologic width violation is confirmed.<br><br>
+<strong>Radiographs are NOT reliable</strong> for diagnosing biologic width invasion — they only show ~50% of bone (interproximal). Buccal and lingual bone are invisible. Clinical assessment supersedes radiographic measurement.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2b — Indications and contraindications</div><div class="a">
+<strong>Indications:</strong> Tooth decay at or below the gingival margin. Tooth fracture below the gingival margin (with adequate remaining support). Teeth with excessive wear. Teeth with insufficient interocclusal space. Delayed passive eruption.<br><br>
+<strong>Contraindications:</strong> Poor crown-to-root ratio. Loss of periodontal support from adjacent teeth. Location of the furcation. Inability to keep clean after restoration. Better alternative treatments exist. Poor long-term prognosis.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Gingivectomy vs. flap with bone removal</div><div class="a">
+Depends on two things: how much keratinized tissue (KT) is present, and where bone sits relative to the CEJ.<br><br>
+<strong>Lots of KT + bone at normal position</strong> (1-2 mm apical to CEJ) → Gingivectomy alone works.<br><br>
+<strong>Lots of KT + bone AT the CEJ</strong> → Gingivectomy alone will FAIL. Tissue regenerates when bone is right at the CEJ. Must raise a flap and reduce bone.<br><br>
+<strong>Minimal KT + bone at normal position</strong> → Apically positioned flap. Gingivectomy would remove all KT, creating a mucogingival problem.<br><br>
+<strong>Minimal KT + bone AT the CEJ</strong> → Most complex case. Requires both osseous surgery and careful tissue management.<br><br>
+In most crown lengthening situations, bone is too close, so <strong>most cases require a flap with osseous surgery</strong>.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — Healing time before restoration</div><div class="a">
+After crown lengthening, tissue at the bone crest migrates coronally over time (creeping attachment / gingival rebound). Approximately 2 mm of coronal migration is expected.<br><br>
+<strong>Posterior:</strong> 6-8 weeks — margin position is less critical outside the esthetic zone.<br><br>
+<strong>Anterior:</strong> Minimum 3 months (up to 16 weeks) — exact gingival margin position determines the esthetic outcome.<br><br>
+<strong>If you restore too early:</strong> Tissue continues creeping coronally after the restoration is placed. The gingival margin covers the restoration margin, causing visible margin lines, esthetic failure, and potentially needing to redo the restoration.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — 3 complications and remedies</div><div class="a">
+<strong>1. Bleeding:</strong> Rare with adequate suturing. Home: tea bag (tannin promotes coagulation). Office: additional sutures under local anesthesia.<br><br>
+<strong>2. Pain and swelling:</strong> NSAIDs reduce both inflammation and pain. Ice for at least 24 hours.<br><br>
+<strong>3. Root sensitivity:</strong> Exposed root surfaces with open dentin tubules. Week 1: periodontal pack protects the area. After pack removal: desensitizing agents (e.g., SuperSeal — potassium oxalate that occludes tubules). Long-term: the final restoration covers the exposed root.
+</div></div>
+
+<div class="ref-bar">REF: Gargiulo et al. 1961 (J Periodont 42:8) — biologic width measurements</div>
+</div>
+
+<!-- ESSAY 2 -->
+<div class="essay-block e2">
+<div class="essay-title"><span class="num">02</span> Guided Tissue / Bone Regeneration</div>
+
+<div class="qa-block"><div class="q">Q1 — Define and explain GTR</div><div class="a">
+The ultimate goal in periodontics is to reestablish a periodontium to its original state of health. To achieve that, new attachment must take place. Regeneration = the biologic process by which the architecture and function of lost tissue is completely returned (Melcher, 1969). This is different from repair, which produces a long junctional epithelial adhesion — not true attachment.<br><br>
+After surgery, 4 tissue types compete to repopulate the root surface. Without interference, epithelium (fastest) wins and you get repair. GTR uses a physical barrier membrane placed over the bony defect to block the fast-migrating epithelium and gingival CT, giving the slower PDL cells time to repopulate and produce true regeneration — new cementum, new PDL, new bone.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Major studies proving GTR</div><div class="a">
+<strong>Karring et al. 1980:</strong> 3 dogs, 12 teeth with induced periodontitis. Roots implanted into bone cavities with epithelium blocked. Result: NO new CT attachment — only resorption and ankylosis. <em>→ Bone alone can't produce new attachment.</em><br><br>
+<strong>Nyman et al. 1980:</strong> 2 monkeys, 28 teeth. Roots implanted half in bone, half covered by gingival CT. Result: gingival CT side caused resorption. <em>→ Gingival CT must be excluded.</em><br><br>
+<strong>Nyman et al. 1982:</strong> 3 monkeys. Bone removed mid-root to 2 mm apical to marginal crest. Root surfaces curetted. Millipore filter placed as barrier. Result: new cementum with inserting collagen fibers. <em>→ PDL cells CAN re-establish attachment when given opportunity through barrier exclusion.</em><br><br>
+<strong>Isidor et al. 1986:</strong> 4 monkeys, angular defects. Tight elastic on half the teeth (blocks PDL migration), loose on rest. Tight = NO new attachment. Loose = new attachment. <em>→ PDL cells must migrate coronally for regeneration.</em>
+</div></div>
+
+<div class="qa-block"><div class="q">Q2a — Tissue interactions with root surface</div><div class="a">
+<strong>Epithelium</strong> (fastest) → long junctional epithelium = repair, not regeneration.<br>
+<strong>Gingival CT</strong> (fast) → root resorption = most destructive outcome.<br>
+<strong>Bone cells</strong> (slowest) → ankylosis = bone fuses directly to root, no PDL space.<br>
+<strong>PDL cells</strong> (moderate) → new cementum + new collagen fibers = true new attachment. <strong>This is the goal.</strong><br><br>
+The membrane blocks the two fast cell types while allowing PDL cells access from the defect base.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Bone grafting materials</div><div class="a">
+<strong>Osteoconductive</strong> = scaffold that facilitates new bone growth from existing bone. <strong>Osteoinductive</strong> = induces new bone from undifferentiated cells.<br><br>
+<strong>Autograft:</strong> Same patient. Intraoral (tuberosity, extraction sites) or extraoral (iliac crest). The ONLY graft with osteogenic + osteoinductive + osteoconductive properties. Cancellous > cortical for osteogenic potential. Disadvantage: second surgical site, limited volume. Iliac grafts can cause root resorption (controlled by freezing).<br><br>
+<strong>Allograft:</strong> Human cadaver bone. FDBA = mineralized, osteoconductive only. DFDBA = demineralized, theoretically osteoinductive (exposes BMPs) but reliability is inconsistent. Advantage: no second surgical site.<br><br>
+<strong>Xenograft:</strong> Another species. Bio-Oss (anorganic bovine bone) — processed at high temps >15 hours, prion-free. Osteoconductive only, excellent scaffold.<br><br>
+<strong>Alloplast:</strong> Synthetic (hydroxyapatite, tricalcium phosphate, calcium sulfate, bioactive glass). Inert biologic fillers, osteoconductive only. Unlikely to result in true regeneration.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — GBR vs GTR + when GBR is indicated</div><div class="a">
+<strong>GTR</strong> = around a TOOTH. 4 cell types compete. Goal: new attachment (new cementum + PDL + bone). PDL cells are the key.<br><br>
+<strong>GBR</strong> = in EDENTULOUS areas. Only 3 cell types (no PDL). Goal: new bone formation only.<br><br>
+<strong>GBR indications:</strong> Immediate placement of implants, extraction sites, ridge augmentation procedures.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — Complications and remedies</div><div class="a">
+<strong>Infection:</strong> Antibiotics, debridement, possible membrane removal.<br>
+<strong>Membrane exposure/perforation:</strong> Most common. Minor: trim material + CHX. Extensive: remove.<br>
+<strong>Recession or flap sloughing:</strong> Prevention = tension-free primary closure, proper flap design.<br>
+<strong>Gingival irregularities:</strong> Gingivoplasty after tissue maturation.<br><br>
+Membrane must be completely covered by flap, 2-3 mm below the coronal aspect. If not removable with a gentle tug, a small incision may be needed.
+</div></div>
+
+<div class="qa-block"><div class="q">Q8 — Regenerative barrier types</div><div class="a">
+Ideal barrier properties: withstands cellular ingrowth, nutrient/fluid diffusible, excellent handling, minimal tissue reaction, no allergic properties, resists infection, eventual absorption after repair.<br><br>
+<strong>Non-resorbable (Gore-Tex / ePTFE):</strong> Medical-grade stretched Teflon. Titanium-reinforced for space-making. Stabilized with tacks. Advantage: predictable, timing control. Disadvantage: second surgery to remove, infection risk.<br><br>
+<strong>Resorbable (collagen membranes, synthetic polymers):</strong> Advantage: no second surgery, more tissue compatible. Disadvantage: less predictable resorption timing.
+</div></div>
+
+<div class="qa-block"><div class="q">Q9 — Growth factors, PRP, EMD, BMPs</div><div class="a">
+<strong>PRP (Platelet Rich Plasma):</strong> Concentrates platelets by 330-900%. Contains PDGF, TGF-B, EGF/TGF-alpha, IGF-1. Improves wound healing and faster healing. Disadvantage: equipment needed, technique sensitive.<br><br>
+<strong>GEM 21 (rhPDGF-BB on beta-TCP):</strong> PDGF released from matrix, binds to cell receptors, triggers chemotaxis and mitogenesis of osteoblasts, PDL fibroblasts, and cementoblasts → new bone, new PDL, new cementum.<br><br>
+<strong>EMD (Enamel Matrix Derivative / Emdogain):</strong> From porcine tooth buds — contains amelogenins, ameloblastin, enamelin. PDL cells show enhanced protein production and proliferation. "Osteopromotive" when combined with DFDBA. NOT osteoinductive on its own.<br><br>
+<strong>BMPs (Bone Morphogenetic Proteins):</strong> Regulatory glycoproteins that differentiate mesenchymal stem cells into osteoblasts. Research focused on BMP-2, BMP-3 (osteogenin), BMP-7 (OP-1). Advantage: rapid new bone, truly osteoinductive. Disadvantage: exuberant inflammatory response.<br><br>
+<em>New attachment can only be confirmed through histologic evaluation — not probing, radiographs, or re-entry surgery.</em>
+</div></div>
+
+<div class="ref-bar">REF: Nyman et al. 1982 (J Clin Perio 9:257) — PDL regenerative potential / millipore filter study</div>
+</div>
+
+<!-- ESSAY 3 -->
+<div class="essay-block e3">
+<div class="essay-title"><span class="num">03</span> Non-Surgical / Surgical Therapy</div>
+
+<div class="qa-block"><div class="q">Q1 — Clinical/radiographic findings indicating SRP</div><div class="a">
+SRP is indicated when you find: bleeding upon probing (active inflammation), increased probing depths associated with clinical attachment loss, radiographic bone loss, and subgingival calculus. A patient has periodontitis when one or more sites show BOP, increased PD with CAL, and possibly radiographic bone loss.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Root planing vs. scaling</div><div class="a">
+<strong>Scaling</strong> = removal of soft and hard deposits (plaque and calculus) from the tooth surface — crown and root.<br><br>
+<strong>Root planing</strong> = removal of diseased root surfaces to create a smooth, non-contaminated root surface. It removes contaminated cementum and has nothing to do with calculus. Two distinct procedures.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Goals and evidence of success</div><div class="a">
+The goal is to remove diseased root surface, disrupt the subgingival microbial flora, and create a non-contaminated surface that promotes healing.<br><br>
+<strong>Harper and Robinson (J Clin Perio, 1987)</strong> showed SRP reduces motile microbes and spirochetes, but this effect is temporary — bacteria recolonize. This is the fundamental rationale for 3-month maintenance.<br><br>
+SRP is both a definitive treatment for mild-to-moderate periodontitis AND an initial phase before surgery for more severe cases. Which role it served is determined at re-evaluation 4-6 weeks later.<br><br>
+Complete calculus removal is rarely attained and somewhat unrealistic. At depths of 5 mm+, clinicians inadequately debride root surfaces 65% of the time.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — When is additional therapy needed? Rationale for surgery?</div><div class="a">
+At the 4-6 week re-evaluation after SRP, if sites still show persistent probing depths of 5 mm+ with BOP, additional therapy is indicated.<br><br>
+The objectives of periodontal surgery: (1) gain access for effective removal of etiologic factors following SRP, and (2) reduce pocket depth, making it more maintainable for the patient.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — Adjunctive antimicrobials + clinical examples</div><div class="a">
+Since complete debridement of deep pockets is unrealistic, adjunctive antimicrobials help eliminate remaining bacteria.<br><br>
+<strong>Systemic:</strong> Periostat (20 mg doxycycline 2x/day) — sub-antimicrobial dose. Does NOT kill bacteria — inhibits matrix metalloproteinases, slowing tissue destruction. For aggressive disease: amoxicillin + metronidazole or azithromycin.<br><br>
+<strong>Local delivery</strong> (placed into non-responsive pockets at re-evaluation): Arestin (minocycline microspheres), PerioChip (2.5 mg CHX), Atridox (doxycycline gel).<br><br>
+<strong>Examples:</strong> (a) Localized deep pockets not improving after SRP → Arestin. (b) Furcation involvement on a molar that can't be cleaned → Arestin. (c) Young patient with molar-incisor aggressive pattern → SRP + systemic antibiotics.<br><br>
+<em>CHX is cationic; toothpaste contains anionic sodium lauryl sulfate which neutralizes it. Wait minimum 30 minutes between brushing and CHX rinse.</em>
+</div></div>
+
+<div class="qa-block"><div class="q">Q6 — Clinical outcomes sought</div><div class="a">
+Measurable endpoints: loss or gain in clinical attachment levels, probing depths, gingival inflammation, bleeding upon probing, changes in subgingival microflora.<br><br>
+<strong>Non-surgical success:</strong> Decreased PD with attachment gains, resolution of BOP, decreased inflammation.<br><br>
+<strong>Surgical success adds:</strong> Restoration of physiologic gingival and osseous contours, minimal residual PD allowing complete debridement during maintenance and effective daily home care. Shallow gingival sulcus = prerequisite for adequate plaque control and maintenance.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — 75-year-old scenario + treatment + 30yo</div><div class="a">
+<strong>Patient explanation:</strong> "We found pocket depths of 5-7 mm with bleeding around your teeth. This means you have periodontitis — gum disease where the bone and tissue around teeth has been lost, creating deep pockets where bacteria hide. Brushing can't reach these deep pockets. If untreated, this can lead to tooth loss. We recommend a deep cleaning called scaling and root planing to remove the bacteria and diseased root surfaces. After that, we need to see you every 3 months to keep bacteria from coming back."<br><br>
+<strong>Important:</strong> Gingival margin is 1-2 mm CORONAL to CEJ → there is a pseudopocket component. True CAL ≠ PD here. A 7 mm pocket with margin 2 mm coronal = 5 mm true CAL.<br><br>
+<strong>Treatment:</strong> Diagnose with generalized moderate-severe periodontitis. SRP + OHI. Re-evaluate 4-6 weeks after last quadrant. If pockets resolve to 3-4 mm with no BOP → SRP was definitive → 3-month maintenance. If 5 mm+ persists with BOP → surgery.<br><br>
+<strong>30-year-old?</strong> Same initial treatment. But this degree of disease in a 30yo = much more aggressive pattern (likely Grade C). May warrant systemic antibiotics and potentially earlier surgical intervention.
+</div></div>
+
+<div class="qa-block"><div class="q">Q8 — Assumptions</div><div class="a">
+We assume: (1) the disease will progress without intervention, (2) the patient will comply with treatment and maintenance, and (3) the benefits outweigh the risks. Without maintenance, all surgical gains are lost — surgery creates a maintainable environment, it does not cure the disease.
+</div></div>
+
+<div class="ref-bar">REF: Harper & Robinson 1987 (J Clin Perio) — SRP reduces microbes temporarily, rationale for 3-month maintenance</div>
+</div>
+
+<!-- ESSAY 4 -->
+<div class="essay-block e4">
+<div class="essay-title"><span class="num">04</span> Occlusal Trauma</div>
+
+<div class="qa-block"><div class="q">Q1 — What is trauma from occlusion?</div><div class="a">
+Occlusal traumatism = pathologic or adaptive changes in the periodontium from undue force produced by the masticatory muscles (AAP Glossary, 2001). It is exclusively a lesion of the <strong>attachment apparatus</strong> — PDL, alveolar bone, cementum.<br><br>
+The pathologic lesion causes loss of alveolar and crestal lamina dura → widening of PDL → appears clinically as increasing mobility over time.<br><br>
+Any force applied to a tooth has the potential to produce a pathologic effect. But an etiologic agent does NOT guarantee a lesion — depends on force nature and the individual's resistance and repair capacity.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — How to diagnose the different types</div><div class="a">
+You must have <strong>increasing mobility over time</strong>. Cracked teeth, wear, fractures alone are NOT enough — those are tooth morphology changes, not attachment apparatus.<br><br>
+<strong>Light force (adaptive range):</strong> Lesion resolves as wound heals. PDL widens permanently to compensate. Mobility is <strong>increased but NOT increasing</strong>. If force removed → bone apposition → PDL returns to original width → mobility normalizes.<br><br>
+<strong>Heavy force (exceeds adaptive capacity):</strong> Tooth becomes increasingly mobile and never adapts. Mobility keeps increasing = active occlusal trauma.<br><br>
+<strong>Primary:</strong> Excessive forces on normal support. Reversible. Signs: increasing mobility, migration, fremitus. Radiographically: widened PDL, possible angular bone loss appearance.<br><br>
+<strong>Secondary:</strong> Normal forces on weakened support (periodontal disease). Usually NOT reversible. Must have attachment loss to have secondary OT. However, you can still have primary OT even with attachment loss if sufficient support remains.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Periodontal breakdown with and without occlusal trauma</div><div class="a">
+<strong>Without OT:</strong> Attachment loss and bone loss from plaque-driven inflammation alone.<br><br>
+<strong>With OT:</strong> The combination of heavy force + ACTIVE periodontal infection can be co-destructive, exacerbating the destructive rate. <strong>Glickman & Smulow (1962)</strong> proposed that trauma redirects inflammatory exudate from the gingival unit to the attachment apparatus.<br><br>
+The co-destructive environment requires Force + ACTIVE INFLAMMATION — not just force + bone loss. Breakdown is still predominantly caused by plaque; occlusal trauma is minor but aggravating.<br><br>
+Animal studies showed: occlusal trauma on a healthy but reduced periodontium (treated case) has no different effect than on a healthy periodontium with normal bone. It's the active inflammation that matters.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — Treatment</div><div class="a">
+<strong>Step A (FIRST):</strong> Eliminate inflammation. Must come first because inflammation itself causes mobility. Resolve it to determine how much mobility is from TFO vs active infection.<br><br>
+<strong>Step B:</strong> Eliminate or control occlusal etiology.<br><br>
+<strong>Step C:</strong> Develop stable intra- and inter-arch relationships.<br><br>
+Treatment may require: occlusal equilibration, orthodontics, and/or prosthetics (splinting).<br><br>
+<strong>Primary:</strong> Reduce force → equilibration. Once reduced, lesion resolves, PDL returns to pre-force width, mobility decreases.<br><br>
+<strong>Secondary:</strong> Splinting to compensate for lost support that left the tooth unable to withstand even normal forces.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — Is mobility disease? When to treat?</div><div class="a">
+Mobility is NOT inherently disease. A certain increase in mobility can be accepted, provided the tooth does not disturb masticatory function or patient comfort.<br><br>
+What matters: <strong>stable vs progressive</strong>. Stable increased mobility (same grade over months) = adapted, not active trauma. Progressive (increasing over time) = active trauma, needs treatment.<br><br>
+Grading: Physiologic ≤0.2 mm. Grade 1 = 0.2-1.0 mm. Grade 2 = 1.0-2.0 mm. Grade 3 = >2.0 mm and/or vertical displacement.
+</div></div>
+
+<div class="qa-block"><div class="q">Q6 — Mobility vs. fremitus</div><div class="a">
+<strong>Mobility</strong> = displacement when the operator applies force with two rigid instruments. Operator-generated.<br><br>
+<strong>Fremitus</strong> = vibration/movement when the patient bites down or functions. Place gloved finger on facial of maxillary teeth while patient taps into occlusion and grinds through excursions. Patient-generated functional test.<br><br>
+Both on the same tooth = bad sign — patient's own forces are causing pathologic movement.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — Does TFO cause attachment loss?</div><div class="a">
+<strong>No.</strong> The effects of occlusal force are limited to the attachment apparatus. The gingival soft tissues coronal to bone (CT attachment and JE) are NOT damaged by excessive force. Therefore, occlusal trauma does not cause (initiate) attachment loss, pocketing, or recession.<br><br>
+However, when OT exists alongside ACTIVE periodontal disease, it can aggravate and exacerbate the rate of attachment loss already being caused by plaque inflammation.
+</div></div>
+
+<div class="ref-bar">REF: Glickman & Smulow 1962 — co-destruction theory (OT redirects inflammatory exudate to attachment apparatus)</div>
+</div>
+
+</div><!-- end full view -->
+
+<!-- ============ SKELETON VIEW ============ -->
+<div id="view-skeleton" class="view">
+
+<div class="skel-block e1">
+<h3 style="color:var(--essay1)">01 — Crown Lengthening</h3>
+<div class="skel-item"><strong>Biologic width:</strong> CT (1.07) + JE (0.97) = ~2.04 mm. Total to gingival margin = 2.73 mm. Need 3-4 mm from margin to bone. Gargiulo 1961. Averages with variability.</div>
+<div class="skel-item"><strong>Bleeding on temp removal:</strong> Rule out cement, bad temp, poor OH first → remake temp → return in weeks → still inflamed = BW violation. X-rays NOT reliable.</div>
+<div class="skel-item"><strong>Indications:</strong> Decay/fracture at or below margin, excessive wear, insufficient interocclusal space, delayed passive eruption.</div>
+<div class="skel-item"><strong>Contraindications:</strong> Poor crown:root ratio, adjacent support loss, furcation location, can't maintain, better alternatives, poor prognosis.</div>
+<div class="skel-item"><strong>Gingivectomy vs flap:</strong> Lots of KT + bone normal → gingivectomy. Bone AT CEJ → must do flap + bone. Minimal KT → apically positioned flap. Most cases = flap + osseous.</div>
+<div class="skel-item"><strong>Healing:</strong> Posterior 6-8 wks. Anterior minimum 3 months. Too early = tissue creeps over margin = esthetic failure.</div>
+<div class="skel-item"><strong>Complications:</strong> Bleeding (tea bag / sutures). Pain/swelling (NSAIDs + ice). Root sensitivity (perio pack → SuperSeal → final restoration).</div>
+</div>
+
+<div class="skel-block e2">
+<h3 style="color:var(--essay2)">02 — GTR / GBR</h3>
+<div class="skel-item"><strong>GTR:</strong> Barrier membrane blocks fast cells (epithelium, gingival CT), lets slow PDL cells regenerate. Goal = new cementum + PDL + bone. Nyman 1982 = breakthrough.</div>
+<div class="skel-item"><strong>4 studies:</strong> Karring 1980 (bone = ankylosis). Nyman 1980 (gingival CT = resorption). Nyman 1982 (millipore filter = new attachment). Isidor 1986 (tight elastic = no migration = no attachment).</div>
+<div class="skel-item"><strong>4 tissue outcomes:</strong> Epithelium → long JE (repair). Gingival CT → resorption. Bone → ankylosis. PDL → regeneration (goal).</div>
+<div class="skel-item"><strong>Grafts:</strong> Autograft = only one with all 3 properties. Allograft (FDBA=osteoconductive, DFDBA=maybe osteoinductive but unreliable). Xenograft = Bio-Oss, scaffold only. Alloplast = inert filler.</div>
+<div class="skel-item"><strong>GTR vs GBR:</strong> GTR = around teeth (4 cell types, PDL is key). GBR = edentulous areas (3 cell types, bone is key). GBR for implants, extractions, ridge augmentation.</div>
+<div class="skel-item"><strong>Barriers:</strong> Non-resorbable (Gore-Tex) = predictable but 2nd surgery. Resorbable (collagen) = no 2nd surgery but less predictable.</div>
+<div class="skel-item"><strong>Biologics:</strong> PRP = concentrates platelets 330-900%. GEM 21 = PDGF on beta-TCP → new bone/PDL/cementum. EMD = from porcine tooth buds, osteopromotive not osteoinductive. BMPs = differentiate stem cells → osteoblasts, rapid bone but inflammatory.</div>
+<div class="skel-item"><strong>Complications:</strong> Infection, membrane exposure (trim/remove), recession (tension-free closure), gingival irregularities. New attachment confirmed ONLY by histology.</div>
+</div>
+
+<div class="skel-block e3">
+<h3 style="color:var(--essay3)">03 — Non-Surgical / Surgical Therapy</h3>
+<div class="skel-item"><strong>SRP indicated:</strong> BOP + increased PD + CAL + radiographic bone loss + subgingival calculus.</div>
+<div class="skel-item"><strong>Scaling vs RP:</strong> Scaling = removes deposits (calculus). Root planing = removes diseased cementum, nothing to do with calculus.</div>
+<div class="skel-item"><strong>Evidence:</strong> Harper & Robinson 1987 — SRP reduces microbes temporarily → rationale for 3-month maintenance. At 5mm+ clinicians fail 65% of time.</div>
+<div class="skel-item"><strong>Escalation:</strong> Re-eval 4-6 wks. PD 5mm+ with BOP still → surgery. Surgery goals: access for debridement + reduce PD for maintainability.</div>
+<div class="skel-item"><strong>Antimicrobials:</strong> Systemic: Periostat (sub-antimicrobial doxy, inhibits MMPs). Local: Arestin, PerioChip, Atridox — placed at re-eval, not routine SRP. CHX + toothpaste = wait 30 min.</div>
+<div class="skel-item"><strong>Outcomes:</strong> Decreased PD, attachment gain, resolved BOP, decreased inflammation, flora shift. Surgery adds: physiologic contours, shallow sulcus for plaque control.</div>
+<div class="skel-item"><strong>75yo:</strong> Margin coronal to CEJ = pseudopocket component. SRP → re-eval → resolve or surgery. 30yo same tx but Grade C likely, may need systemic abx.</div>
+<div class="skel-item"><strong>Assumptions:</strong> Disease will progress, patient will comply, benefits outweigh risks. Without maintenance all gains are lost.</div>
+</div>
+
+<div class="skel-block e4">
+<h3 style="color:var(--essay4)">04 — Occlusal Trauma</h3>
+<div class="skel-item"><strong>Definition:</strong> Pathologic/adaptive changes in periodontium from undue force (AAP 2001). Lesion of attachment apparatus only. Appears as increasing mobility + widened PDL.</div>
+<div class="skel-item"><strong>Light vs heavy:</strong> Light = adapts, PDL widens but heals, mobility increased but NOT increasing. Heavy = never adapts, mobility keeps increasing.</div>
+<div class="skel-item"><strong>Primary:</strong> Excessive force + normal support. Reversible. Tx = equilibration.</div>
+<div class="skel-item"><strong>Secondary:</strong> Normal force + weakened support. Usually irreversible. Tx = splinting. Must have attachment loss.</div>
+<div class="skel-item"><strong>Co-destruction:</strong> Heavy force + ACTIVE infection = exacerbated breakdown (Glickman & Smulow 1962). Force + treated/healthy reduced periodontium = no extra damage. It's the active inflammation that matters.</div>
+<div class="skel-item"><strong>Treatment order:</strong> A) Eliminate inflammation FIRST. B) Address occlusal etiology. C) Stable arch relationships.</div>
+<div class="skel-item"><strong>Mobility:</strong> NOT disease. Stable increased mobility = OK if no function/comfort issues. Progressive = needs treatment. Grades: 1(0.2-1mm), 2(1-2mm), 3(>2mm or vertical).</div>
+<div class="skel-item"><strong>Mobility vs fremitus:</strong> Mobility = operator-generated (2 instruments). Fremitus = patient-generated (own bite). Both on same tooth = bad.</div>
+<div class="skel-item"><strong>TFO does NOT cause attachment loss.</strong> Force affects attachment apparatus only, not supracrestal soft tissues. Can't initiate pocketing or recession. But can aggravate existing active perio disease.</div>
+</div>
+
+</div><!-- end skeleton view -->
+
+<!-- ============ FLASHCARD VIEW ============ -->
+<div id="view-flash" class="view">
+
+<div class="fc-controls">
+  <button class="fc-filter active" onclick="filterCards('all',this)">All</button>
+  <button class="fc-filter" onclick="filterCards('e1',this)">Crown Lengthening</button>
+  <button class="fc-filter" onclick="filterCards('e2',this)">GTR/GBR</button>
+  <button class="fc-filter" onclick="filterCards('e3',this)">Non-Surg/Surg</button>
+  <button class="fc-filter" onclick="filterCards('e4',this)">Occlusal Trauma</button>
+</div>
+
+<div class="card-container" id="cardContainer">
+  <div class="card" id="flashcard" onclick="flipCard()">
+    <div class="card-face card-front">
+      <div class="card-label" id="cardLabel"></div>
+      <div class="card-q" id="cardQ"></div>
+      <div class="card-hint">tap to flip</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-a" id="cardA"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card-nav">
+  <button onclick="prevCard()">← Prev</button>
+  <span class="counter" id="cardCounter">1 / 29</span>
+  <button onclick="nextCard()">Next →</button>
+</div>
+
+</div><!-- end flash view -->
+
+<!-- ============ EXAM DAY VIEW ============ -->
+<div id="view-examday" class="view">
+
+<div style="background:rgba(255,107,138,0.08);border:1px solid rgba(255,107,138,0.25);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:13px;color:var(--accent2);line-height:1.6;">
+<strong>Fleisher said it himself:</strong> "45 minutes to answer those questions, to get across the important points to make sure I understand that you understand the concepts, is more than enough time. Anything else is just extra fluff." This tab is what you actually write on exam day. No fluff. Just proof you know it.
+</div>
+
+<!-- EXAM DAY ESSAY 1 -->
+<div class="essay-block e1">
+<div class="essay-title"><span class="num">01</span> Crown Lengthening</div>
+
+<div class="qa-block"><div class="q">Q1 — Biologic width</div><div class="a">
+Biologic width is the zone between the bone crest and sulcus base where CT and JE attach. <strong>Gargiulo et al. (1961)</strong> measured it histologically: CT ~1.07 mm + JE ~0.97 mm = ~2.04 mm. These are averages with significant variability. When a restorative margin invades this zone, the body responds with chronic inflammation and bone resorption. Clinical goal: maintain <strong>3-4 mm</strong> from restorative margin to bone crest.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Bleeding on temp removal</div><div class="a">
+BW violation is only one cause. Others: excess cement, bad temp margins, food impaction, poor OH.<br><br>
+<strong>Steps:</strong> Remove excess cement → evaluate/remake temp → reinforce OH → have patient return in a few weeks. If tissue is STILL inflamed after ruling out everything else → biologic width violation. X-rays are NOT reliable for this diagnosis.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2b — Indications / contraindications</div><div class="a">
+<strong>Indications:</strong> Decay or fracture at/below margin, excessive wear, insufficient interocclusal space, delayed passive eruption.<br>
+<strong>Contraindications:</strong> Poor crown:root ratio, adjacent support loss, furcation proximity, can't maintain, better alternatives, poor prognosis.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Gingivectomy vs flap + bone</div><div class="a">
+Depends on keratinized tissue (KT) and bone position relative to CEJ.<br>
+Lots of KT + bone normal → <strong>gingivectomy</strong>.<br>
+Lots of KT + bone AT CEJ → gingivectomy fails, must do <strong>flap + bone removal</strong>.<br>
+Minimal KT + bone normal → <strong>apically positioned flap</strong> (gingivectomy would remove all KT).<br>
+Minimal KT + bone AT CEJ → most complex, requires <strong>both osseous surgery + tissue management</strong>.<br>
+Most cases require flap + osseous surgery.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — Healing time</div><div class="a">
+Tissue creeps coronally ~2 mm after surgery. <strong>Posterior:</strong> 6-8 weeks. <strong>Anterior:</strong> minimum 3 months.<br>
+Too early → tissue covers restoration margin → esthetic failure → redo the restoration.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — 3 complications + remedies</div><div class="a">
+<strong>Bleeding:</strong> Tea bag at home (tannin); additional sutures in office.<br>
+<strong>Pain/swelling:</strong> NSAIDs + ice ≥24 hours.<br>
+<strong>Root sensitivity:</strong> Perio pack week 1 → desensitizing agents → final restoration covers the root.
+</div></div>
+
+<div class="ref-bar">REF: Gargiulo et al. 1961</div>
+</div>
+
+<!-- EXAM DAY ESSAY 2 -->
+<div class="essay-block e2">
+<div class="essay-title"><span class="num">02</span> Guided Tissue / Bone Regeneration</div>
+
+<div class="qa-block"><div class="q">Q1 — Define GTR</div><div class="a">
+GTR allows certain cell types to participate in healing while excluding others, promoting new attachment. After surgery, 4 tissue types compete for the root surface — epithelium is fastest and wins by default (= repair, not regeneration). A barrier membrane blocks the fast cells (epithelium + gingival CT) and lets the slower PDL cells repopulate → true regeneration: new cementum, new PDL, new bone.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Major studies</div><div class="a">
+<strong>Karring 1980:</strong> Roots placed in bone → resorption and ankylosis. Bone alone can't make new attachment.<br>
+<strong>Nyman 1980:</strong> Roots covered by gingival CT → resorption. Gingival CT must be excluded.<br>
+<strong>Nyman 1982:</strong> Millipore filter used as barrier → new cementum with inserting collagen fibers. PDL cells CAN regenerate.<br>
+<strong>Isidor 1986:</strong> Tight elastic blocks PDL migration → no attachment. Loose → new attachment. PDL must migrate coronally.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2a — 4 tissue interactions</div><div class="a">
+<strong>Epithelium</strong> (fastest) → long junctional epithelium = repair.<br>
+<strong>Gingival CT</strong> (fast) → root resorption.<br>
+<strong>Bone</strong> (slowest) → ankylosis.<br>
+<strong>PDL</strong> (moderate) → new cementum + collagen fibers = regeneration. <strong>This is the goal.</strong>
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Grafting materials</div><div class="a">
+<strong>Autograft:</strong> Same patient. ONLY graft with all 3 properties (osteogenic + osteoinductive + osteoconductive). Disadvantage: second site, limited volume.<br>
+<strong>Allograft:</strong> Cadaver bone. FDBA = osteoconductive. DFDBA = theoretically osteoinductive but unreliable. No second site needed.<br>
+<strong>Xenograft:</strong> Bio-Oss (bovine). Osteoconductive scaffold only.<br>
+<strong>Alloplast:</strong> Synthetic (HA, TCP, calcium sulfate). Inert filler, unlikely true regeneration.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — GTR vs GBR + GBR indications</div><div class="a">
+<strong>GTR</strong> = around teeth. 4 cell types. PDL is key. Goal: new attachment.<br>
+<strong>GBR</strong> = edentulous areas. 3 cell types (no PDL). Goal: new bone only.<br>
+GBR indicated for: immediate implant placement, extraction sites, ridge augmentation.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — Complications</div><div class="a">
+<strong>Infection:</strong> Antibiotics, debridement, possible membrane removal.<br>
+<strong>Membrane exposure:</strong> Most common — trim + CHX if minor, remove if extensive.<br>
+<strong>Recession/flap sloughing:</strong> Prevent with tension-free primary closure.<br>
+<strong>Gingival irregularities:</strong> Gingivoplasty after maturation.
+</div></div>
+
+<div class="qa-block"><div class="q">Q8 — Barrier types</div><div class="a">
+<strong>Non-resorbable (Gore-Tex/ePTFE):</strong> Predictable, titanium-reinforced for space, stabilized with tacks. Needs second surgery.<br>
+<strong>Resorbable (collagen, synthetic polymers):</strong> No second surgery. Less predictable resorption.
+</div></div>
+
+<div class="qa-block"><div class="q">Q9 — Growth factors, PRP, EMD, BMPs</div><div class="a">
+<strong>PRP:</strong> Concentrates platelets 330-900%. Contains PDGF, TGF-B, EGF, IGF-1. Faster healing. Needs equipment.<br>
+<strong>GEM 21:</strong> PDGF on beta-TCP scaffold → triggers new bone, PDL, and cementum formation via chemotaxis and mitogenesis.<br>
+<strong>EMD (Emdogain):</strong> From porcine tooth buds. Enhances PDL cell activity. Osteopromotive, NOT osteoinductive alone.<br>
+<strong>BMPs:</strong> Glycoproteins that differentiate stem cells → osteoblasts. BMP-2, BMP-3, BMP-7. Truly osteoinductive. Disadvantage: exuberant inflammatory response.<br><br>
+<em>New attachment confirmed ONLY by histologic evaluation.</em>
+</div></div>
+
+<div class="ref-bar">REF: Nyman et al. 1982</div>
+</div>
+
+<!-- EXAM DAY ESSAY 3 -->
+<div class="essay-block e3">
+<div class="essay-title"><span class="num">03</span> Non-Surgical / Surgical Therapy</div>
+
+<div class="qa-block"><div class="q">Q1 — Findings indicating SRP</div><div class="a">
+BOP + increased probing depths with clinical attachment loss + radiographic bone loss + subgingival calculus.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — Root planing vs scaling</div><div class="a">
+<strong>Scaling</strong> = removes plaque and calculus from the tooth surface.<br>
+<strong>Root planing</strong> = removes diseased cementum to create a smooth non-contaminated surface. Has nothing to do with calculus. Two distinct procedures.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Goals + evidence</div><div class="a">
+Goal: remove diseased root surface, disrupt subgingival flora, create surface favorable for healing. <strong>Harper & Robinson (1987)</strong> showed SRP reduces motile microbes and spirochetes but the effect is TEMPORARY → fundamental rationale for 3-month maintenance. SRP is definitive for mild-moderate periodontitis AND initial phase before surgery for severe cases. At 5 mm+, clinicians inadequately debride 65% of the time.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — When is surgery needed?</div><div class="a">
+Re-evaluate 4-6 weeks after SRP. If PD 5 mm+ with BOP persists → surgery. Objectives: (1) gain access for effective debridement, (2) reduce PD for maintainability.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — Adjunctive antimicrobials</div><div class="a">
+<strong>Systemic:</strong> Periostat (20 mg doxy 2x/day) — sub-antimicrobial, inhibits MMPs, does NOT kill bacteria. Aggressive disease: amoxicillin + metronidazole or azithromycin.<br>
+<strong>Local</strong> (at re-eval, not routine SRP): Arestin (minocycline), PerioChip (CHX), Atridox (doxy).<br>
+<strong>Examples:</strong> Non-responsive deep pockets → Arestin. Furcation involvement → Arestin. Young patient with molar-incisor pattern → systemic antibiotics.
+</div></div>
+
+<div class="qa-block"><div class="q">Q6 — Outcomes sought</div><div class="a">
+Measurable endpoints: CAL gain/loss, PD, inflammation, BOP, subgingival microflora. Success = decreased PD, attachment gain, resolved BOP. Surgery adds: physiologic contours and shallow sulcus — prerequisite for plaque control and maintenance.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — 75yo scenario</div><div class="a">
+<strong>To patient:</strong> "You have 5-7mm pockets with bleeding — that's periodontitis. Bone and tissue around your teeth has been lost creating pockets brushing can't reach. Without treatment it can lead to tooth loss. We'll do a deep cleaning, then see you every 3 months."<br><br>
+<strong>Key detail:</strong> Margin 1-2mm coronal to CEJ = pseudopocket component. True CAL = PD minus the coronal margin distance.<br><br>
+<strong>Plan:</strong> SRP + OHI → re-eval 4-6 wks → resolves = 3-month maintenance; persists 5mm+ with BOP = surgery.<br>
+<strong>30yo?</strong> Same initial tx. But likely Grade C (aggressive). May need systemic abx.
+</div></div>
+
+<div class="qa-block"><div class="q">Q8 — Assumptions</div><div class="a">
+We assume disease will progress without intervention, patient will comply, and benefits outweigh risks. Without maintenance all gains are lost — surgery creates maintainability, it doesn't cure disease.
+</div></div>
+
+<div class="ref-bar">REF: Harper & Robinson 1987</div>
+</div>
+
+<!-- EXAM DAY ESSAY 4 -->
+<div class="essay-block e4">
+<div class="essay-title"><span class="num">04</span> Occlusal Trauma</div>
+
+<div class="qa-block"><div class="q">Q1 — What is TFO?</div><div class="a">
+Pathologic or adaptive changes in the periodontium from undue masticatory force (AAP 2001). Exclusively a lesion of the <strong>attachment apparatus</strong> (PDL, bone, cementum). Causes loss of lamina dura → widened PDL → increasing mobility over time. Any force CAN produce a lesion, but doesn't guarantee one.
+</div></div>
+
+<div class="qa-block"><div class="q">Q2 — How to diagnose</div><div class="a">
+Must have <strong>increasing mobility over time</strong>. Cracked teeth, wear, fractures alone are NOT enough — those are tooth changes, not attachment apparatus.<br><br>
+<strong>Light force:</strong> Within adaptive range. PDL widens but heals. Mobility increased but NOT increasing. Reversible if force removed.<br>
+<strong>Heavy force:</strong> Exceeds adaptive capacity. Mobility keeps increasing. Never adapts.<br><br>
+<strong>Primary:</strong> Excessive force + normal support. Reversible. Signs: increasing mobility, migration, fremitus. X-ray: widened PDL.<br>
+<strong>Secondary:</strong> Normal force + weakened support. Usually NOT reversible. Must have attachment loss.
+</div></div>
+
+<div class="qa-block"><div class="q">Q3 — Perio breakdown with/without OT</div><div class="a">
+<strong>Without:</strong> Attachment loss from plaque-driven inflammation alone.<br>
+<strong>With:</strong> Heavy force + ACTIVE infection = co-destructive — exacerbates breakdown rate. <strong>Glickman & Smulow (1962)</strong> proposed OT redirects inflammatory exudate to the attachment apparatus. Breakdown still predominantly from plaque; OT is minor but aggravating. Key: it's Force + ACTIVE INFLAMMATION that causes co-destruction, not force + reduced bone. OT on a treated reduced periodontium has no extra effect.
+</div></div>
+
+<div class="qa-block"><div class="q">Q4 — Treatment</div><div class="a">
+<strong>A) Eliminate inflammation FIRST</strong> — inflammation itself causes mobility, must resolve to see true TFO contribution.<br>
+<strong>B) Address occlusal etiology</strong> — Primary: equilibration. Secondary: splinting.<br>
+<strong>C) Develop stable arch relationships</strong> — equilibration, orthodontics, prosthetics.
+</div></div>
+
+<div class="qa-block"><div class="q">Q5 — Is mobility disease?</div><div class="a">
+No. Increased but STABLE mobility is acceptable if no function/comfort issues. Only PROGRESSIVE (increasing) mobility needs treatment. Grades: Physio ≤0.2mm. G1=0.2-1mm. G2=1-2mm. G3=>2mm and/or vertical.
+</div></div>
+
+<div class="qa-block"><div class="q">Q6 — Mobility vs fremitus</div><div class="a">
+<strong>Mobility</strong> = operator applies force with two instruments. Operator-generated.<br>
+<strong>Fremitus</strong> = movement when patient bites down. Finger on facial, patient taps/grinds. Patient-generated.<br>
+Both on same tooth = bad sign.
+</div></div>
+
+<div class="qa-block"><div class="q">Q7 — Does TFO cause attachment loss?</div><div class="a">
+<strong>No.</strong> Force only affects the attachment apparatus. Supracrestal soft tissues (CT attachment + JE) are NOT damaged by force. Cannot initiate attachment loss, pocketing, or recession. But CAN aggravate existing active periodontal disease.
+</div></div>
+
+<div class="ref-bar">REF: Glickman & Smulow 1962</div>
+</div>
+
+</div><!-- end examday view -->
+
+</div><!-- end container -->
+
+<script>
+// VIEW SWITCHING
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// FLASHCARD DATA
+const allCards = [
+  // ESSAY 1
+  {essay:'e1',label:'Crown Lengthening — Q1',q:'Explain biologic width in depth.',a:'Zone between bone crest and sulcus base where CT and JE attach. <strong>Gargiulo 1961:</strong> CT ~1.07mm + JE ~0.97mm = ~2.04mm biologic width. Total to gingival margin = ~2.73mm. These are AVERAGES with significant variability. When restorative margin invades this zone → chronic inflammation + unpredictable bone resorption. Goal: <strong>3-4mm</strong> from margin to bone crest.'},
+  {essay:'e1',label:'Crown Lengthening — Q2',q:'Bleeding/ulceration on temp removal — how do you determine if crown lengthening is needed?',a:'Rule out other causes first: excess cement, bad temp margins, food impaction, poor OH. Remake temp → reinforce OH → return in a few weeks. If tissue STILL inflamed after eliminating all variables → biologic width violation confirmed. <strong>X-rays NOT reliable</strong> — only show interproximal bone. Clinical assessment supersedes radiographs.'},
+  {essay:'e1',label:'Crown Lengthening — Q2b',q:'List indications and contraindications for crown lengthening.',a:'<strong>Indications:</strong> Decay/fracture at or below margin, excessive wear, insufficient interocclusal space, delayed passive eruption.<br><br><strong>Contraindications:</strong> Poor crown:root ratio, adjacent support loss, furcation proximity, inability to maintain, better alternatives exist, poor prognosis.'},
+  {essay:'e1',label:'Crown Lengthening — Q3',q:'When gingivectomy vs. flap + bone removal?',a:'Depends on KT amount and bone position relative to CEJ. <strong>Lots KT + bone normal</strong> → gingivectomy. <strong>Lots KT + bone AT CEJ</strong> → flap + bone (gingivectomy fails — tissue regenerates). <strong>Minimal KT + normal bone</strong> → apically positioned flap. <strong>Minimal KT + bone AT CEJ</strong> → most complex, osseous surgery + tissue management. Most cases = flap + osseous.'},
+  {essay:'e1',label:'Crown Lengthening — Q4',q:'Healing time before restoration? Anterior vs posterior?',a:'Tissue creeps coronally ~2mm after surgery. <strong>Posterior:</strong> 6-8 weeks. <strong>Anterior:</strong> minimum 3 months (up to 16 wks). <strong>Too early =</strong> tissue covers restoration margin → visible margin lines → esthetic failure → redo restoration.'},
+  {essay:'e1',label:'Crown Lengthening — Q5',q:'Name 3 complications and remedies.',a:'<strong>1. Bleeding:</strong> Tea bag (tannin) at home; additional sutures in office.<br><strong>2. Pain/swelling:</strong> NSAIDs + ice ≥24 hrs.<br><strong>3. Root sensitivity:</strong> Perio pack week 1 → SuperSeal (potassium oxalate occludes tubules) → final restoration covers root long-term.'},
+
+  // ESSAY 2
+  {essay:'e2',label:'GTR/GBR — Q1',q:'Define and explain GTR in detail.',a:'Technique that allows certain cell types to participate in healing while excluding others, promoting new attachment. 4 cell types compete post-surgery — epithelium is fastest and wins by default (= repair). GTR uses a barrier membrane to block epithelium + gingival CT, letting PDL cells repopulate → true regeneration: new cementum + new PDL + new bone. Regeneration (Melcher 1969) = architecture and function completely restored.'},
+  {essay:'e2',label:'GTR/GBR — Q2',q:'What are the major studies proving GTR?',a:'<strong>Karring 1980:</strong> Roots in bone cavities → resorption/ankylosis, no new attachment.<br><strong>Nyman 1980:</strong> Gingival CT on root → resorption.<br><strong>Nyman 1982:</strong> Millipore filter barrier → NEW cementum with collagen fibers. PDL CAN regenerate.<br><strong>Isidor 1986:</strong> Tight elastic blocks PDL migration → no attachment. Loose → new attachment. PDL must migrate coronally.'},
+  {essay:'e2',label:'GTR/GBR — Q2a',q:'What happens when each tissue type contacts root surface?',a:'<strong>Epithelium</strong> (fastest) → long JE = repair.<br><strong>Gingival CT</strong> (fast) → root resorption = worst outcome.<br><strong>Bone</strong> (slowest) → ankylosis.<br><strong>PDL</strong> (moderate) → new cementum + collagen fibers = regeneration = GOAL.'},
+  {essay:'e2',label:'GTR/GBR — Q3',q:'Bone grafting materials — types, advantages, disadvantages?',a:'<strong>Autograft:</strong> Same patient. ONLY graft with osteogenic + osteoinductive + osteoconductive. Disadvantage: 2nd site, limited volume.<br><strong>Allograft:</strong> Cadaver. FDBA = osteoconductive. DFDBA = maybe osteoinductive but unreliable.<br><strong>Xenograft:</strong> Bio-Oss (bovine). Scaffold only, prion-free.<br><strong>Alloplast:</strong> Synthetic (HA, TCP). Inert filler, unlikely true regeneration.'},
+  {essay:'e2',label:'GTR/GBR — Q4',q:'GTR vs GBR — how do they differ?',a:'<strong>GTR</strong> = around TEETH. 4 cell types compete. PDL is the key cell. Goal: new attachment.<br><strong>GBR</strong> = EDENTULOUS areas. 3 cell types (no PDL). Goal: new bone only.<br>GBR indicated for: immediate implant placement, extraction sites, ridge augmentation.'},
+  {essay:'e2',label:'GTR/GBR — Q7',q:'Complications of GTR/GBR and remedies?',a:'<strong>Infection:</strong> Abx, debridement, possible membrane removal.<br><strong>Membrane exposure:</strong> Most common. Minor = trim + CHX. Major = remove.<br><strong>Recession/flap sloughing:</strong> Prevention = tension-free closure.<br><strong>Gingival irregularities:</strong> Gingivoplasty after maturation. Membrane must be 2-3mm below flap coronal edge.'},
+  {essay:'e2',label:'GTR/GBR — Q8',q:'Types of regenerative barriers?',a:'<strong>Non-resorbable (Gore-Tex/ePTFE):</strong> Ti-reinforced for space. Predictable, timing control. Needs 2nd surgery, stabilized with tacks.<br><strong>Resorbable (collagen, synthetic polymers):</strong> No 2nd surgery, more biocompatible. Less predictable resorption.<br>Ideal properties: withstands cellular ingrowth, nutrient diffusible, space-making, tissue integration, clinically manageable.'},
+  {essay:'e2',label:'GTR/GBR — Q9',q:'Compare growth factors, PRP, EMD, and BMPs.',a:'<strong>PRP:</strong> Concentrates platelets 330-900%. Contains PDGF, TGF-B, EGF, IGF-1. Faster healing. Needs equipment.<br><strong>GEM 21:</strong> PDGF on beta-TCP → chemotaxis/mitogenesis of osteoblasts, PDL fibroblasts, cementoblasts → new bone/PDL/cementum.<br><strong>EMD:</strong> Porcine tooth buds. Osteopromotive, NOT osteoinductive. Enhances PDL cell activity.<br><strong>BMPs:</strong> Differentiate stem cells → osteoblasts. BMP-2,3,7. Truly osteoinductive. Exuberant inflammatory response.'},
+
+  // ESSAY 3
+  {essay:'e3',label:'Non-Surg/Surg — Q1',q:'What findings indicate SRP is needed?',a:'BOP (active inflammation) + increased probing depths with CAL + radiographic bone loss + subgingival calculus. Patient has periodontitis when BOP + increased PD + CAL + possible radiographic bone loss.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q2',q:'Root planing vs. scaling?',a:'<strong>Scaling</strong> = removes plaque and calculus from tooth surface (crown and root).<br><strong>Root planing</strong> = removes diseased cementum to create a smooth non-contaminated root surface. Has nothing to do with calculus. Two distinct procedures.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q3',q:'Goals of root planing and evidence of success?',a:'Goal: remove diseased root surface, disrupt subgingival flora, create surface for healing. <strong>Harper & Robinson 1987:</strong> SRP reduces motile microbes and spirochetes but effect is TEMPORARY → rationale for 3-month maintenance. SRP = definitive for mild-moderate AND initial phase before surgery. At 5mm+ clinicians fail to debride 65% of the time.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q4',q:'When is surgery indicated beyond SRP?',a:'Re-evaluate 4-6 weeks after SRP. If PD 5mm+ with BOP persists → surgery. Objectives: (1) gain access for effective debridement, (2) reduce PD for maintainability.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q5',q:'Adjunctive antimicrobials — rationale and examples?',a:'Complete debridement of deep pockets unrealistic, so antimicrobials help. <strong>Systemic:</strong> Periostat (20mg doxy 2x/day) = inhibits MMPs, NOT bactericidal. Aggressive disease: amoxicillin + metronidazole. <strong>Local:</strong> Arestin, PerioChip, Atridox — placed at re-eval into non-responsive pockets. CHX + toothpaste = wait 30 min (cationic vs anionic).'},
+  {essay:'e3',label:'Non-Surg/Surg — Q6',q:'What outcomes show therapy was successful?',a:'<strong>Measurable endpoints:</strong> CAL gain/loss, PD, inflammation, BOP, subgingival microflora changes. Non-surgical success = decreased PD, attachment gain, resolved BOP. Surgical adds: physiologic contours, shallow sulcus = prerequisite for plaque control and maintenance.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q7',q:'75-year-old patient scenario — treatment plan?',a:'Margin 1-2mm coronal to CEJ = pseudopocket component. True CAL ≠ PD (7mm pocket with 2mm coronal margin = 5mm CAL). Tx: SRP + OHI → re-eval 4-6 wks → pockets resolve = maintenance q3mo; persist 5mm+ with BOP = surgery. <strong>30yo:</strong> Same initial tx but likely Grade C (aggressive). May need systemic abx and earlier surgery.'},
+  {essay:'e3',label:'Non-Surg/Surg — Q8',q:'What assumptions do we make about treatment?',a:'(1) Disease will progress without intervention. (2) Patient will comply with treatment and maintenance. (3) Benefits outweigh risks. Without maintenance, all gains are lost. Surgery creates maintainability — it does not cure disease.'},
+
+  // ESSAY 4
+  {essay:'e4',label:'Occlusal Trauma — Q1',q:'What is trauma from occlusion?',a:'Pathologic or adaptive changes in the periodontium from undue masticatory force (AAP 2001). Exclusively affects the <strong>attachment apparatus</strong> (PDL, bone, cementum). Causes loss of lamina dura → widened PDL → increasing mobility. An etiologic agent does NOT guarantee a lesion.'},
+  {essay:'e4',label:'Occlusal Trauma — Q2',q:'How do you diagnose the different types?',a:'Must have <strong>increasing mobility over time</strong>. Wear/cracks/fractures alone ≠ diagnosis.<br><strong>Light force:</strong> Adapts. PDL widens but heals. Mobility increased but NOT increasing. Removable.<br><strong>Heavy force:</strong> Never adapts. Mobility keeps increasing.<br><strong>Primary:</strong> Excessive force + normal support. Reversible. Signs: increasing mobility, migration, fremitus.<br><strong>Secondary:</strong> Normal force + weakened support. Must have attachment loss. Usually irreversible.'},
+  {essay:'e4',label:'Occlusal Trauma — Q3',q:'Periodontal breakdown with vs without occlusal trauma?',a:'<strong>Without OT:</strong> Bone/attachment loss from plaque only.<br><strong>With OT:</strong> Heavy force + ACTIVE infection = co-destructive (Glickman & Smulow 1962). OT redirects inflammatory exudate to attachment apparatus. Breakdown still predominantly from plaque. Animal studies: OT on treated/reduced periodontium = same as normal periodontium. It\'s the ACTIVE INFLAMMATION, not reduced bone, that creates co-destruction.'},
+  {essay:'e4',label:'Occlusal Trauma — Q4',q:'Treatment for occlusal trauma?',a:'<strong>A) Eliminate inflammation FIRST</strong> (inflammation causes mobility too).<br><strong>B) Address occlusal etiology</strong> — Primary: equilibration. Secondary: splinting.<br><strong>C) Develop stable arch relationships</strong> (equilibration, ortho, prosthetics).'},
+  {essay:'e4',label:'Occlusal Trauma — Q5',q:'Is mobility disease? When to treat?',a:'Mobility is NOT disease. Increased but STABLE mobility = acceptable if no functional or comfort issues. Only PROGRESSIVE (increasing) mobility needs treatment. Grades: Physio ≤0.2mm. G1=0.2-1mm. G2=1-2mm. G3=>2mm and/or vertical displacement.'},
+  {essay:'e4',label:'Occlusal Trauma — Q6',q:'Mobility vs. fremitus?',a:'<strong>Mobility</strong> = operator applies force with 2 rigid instruments. Operator-generated.<br><strong>Fremitus</strong> = patient bites/functions, you feel movement with finger on facial surface. Patient-generated functional test.<br>Both on same tooth = bad sign.'},
+  {essay:'e4',label:'Occlusal Trauma — Q7',q:'Does TFO cause attachment loss?',a:'<strong>NO.</strong> Occlusal force only affects attachment apparatus. Supracrestal soft tissues (CT attachment + JE) are NOT damaged by force. Cannot initiate attachment loss, pocketing, or recession. BUT can aggravate existing ACTIVE periodontal disease (co-destruction).'},
+];
+
+let currentFilter = 'all';
+let filteredCards = [...allCards];
+let currentIdx = 0;
+
+function filterCards(filter, btn) {
+  document.querySelectorAll('.fc-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = filter;
+  filteredCards = filter === 'all' ? [...allCards] : allCards.filter(c => c.essay === filter);
+  currentIdx = 0;
+  renderCard();
+}
+
+function renderCard() {
+  const card = filteredCards[currentIdx];
+  document.getElementById('cardLabel').textContent = card.label;
+  document.getElementById('cardQ').textContent = card.q;
+  document.getElementById('cardA').innerHTML = card.a;
+  document.getElementById('cardCounter').textContent = (currentIdx+1) + ' / ' + filteredCards.length;
+  document.getElementById('flashcard').classList.remove('flipped');
+}
+
+function flipCard() {
+  document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function nextCard() {
+  currentIdx = (currentIdx + 1) % filteredCards.length;
+  renderCard();
+}
+function prevCard() {
+  currentIdx = (currentIdx - 1 + filteredCards.length) % filteredCards.length;
+  renderCard();
+}
+
+// init
+renderCard();
+</script>
+</body>
+</html>
