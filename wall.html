@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PE 530 Final — Essay Prep</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#e6edf3;font-family:'Crimson Pro',Georgia,serif;font-size:16px;line-height:1.7}
+.nav{position:sticky;top:0;z-index:50;background:#161b22ee;backdrop-filter:blur(8px);border-bottom:1px solid #30363d;padding:0 16px}
+.nav-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.brand{font:700 12px/1 'JetBrains Mono',monospace;color:#58a6ff;padding:12px 0;letter-spacing:1.5px}
+.spacer{flex:1}
+.tab-btn{padding:10px 22px;font:600 12px/1 'JetBrains Mono',monospace;cursor:pointer;border:none;background:0;color:#8b949e;border-bottom:2px solid transparent;transition:.2s}
+.tab-btn:hover{color:#c9d1d9}
+.tab-btn.on{color:#58a6ff;border-color:#58a6ff}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 140px}
+.etabs{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+.ebtn{padding:8px 18px;font:600 11px/1 'JetBrains Mono',monospace;cursor:pointer;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#8b949e;transition:.2s}
+.ebtn.on{border:2px solid var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c)}
+.etitle{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px}
+.eref{text-align:center;font:600 12px/1.4 'JetBrains Mono',monospace;color:#58a6ff;margin-bottom:24px;padding:8px 16px;border-radius:6px;background:#58a6ff0d;border:1px solid #58a6ff22}
+/* Question box */
+.qbox{border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid color-mix(in srgb,var(--c) 40%,transparent);background:color-mix(in srgb,var(--c) 8%,transparent)}
+.qbox p{font:700 12.5px/1.55 'JetBrains Mono',monospace;color:var(--c)}
+/* Exam answers */
+.ans{font-size:15px;line-height:1.9;color:#c9d1d9;text-align:justify;margin-bottom:32px}
+/* Memo skeleton */
+.skel{list-style:none;padding:0;margin:0 0 2px}
+.skel li{padding:5px 0 5px 20px;position:relative;font-size:13.5px;line-height:1.55;color:#c9d1d9}
+.skel li::before{content:"→";position:absolute;left:0;color:#484f58;font-size:12px}
+.n{color:#7ee787;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px}
+.r{color:#58a6ff;font-weight:600;font-family:'JetBrains Mono',monospace;font-size:12px}
+.l{color:#f0883e}
+.t{color:#f85149;font-weight:600}
+b{color:#f0f6fc}
+/* Hook zone */
+.hk{margin-top:8px;padding:8px 12px;border-top:1px solid #21262d;background:#161b2288;border-radius:0 0 6px 6px}
+.hk-label{font:700 9px/1 'JetBrains Mono',monospace;color:#484f58;letter-spacing:1.5px;margin-bottom:4px}
+.hk-text{font-size:12px;color:#8b949e;line-height:1.5}
+.hk-text em{color:#d2a8ff;font-style:normal;font-weight:600}
+.mcard{margin-bottom:22px;padding:14px 16px;background:#161b22;border-radius:10px;border:1px solid #30363d}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="nav"><div class="nav-inner">
+<span class="brand">PE 530 FINAL</span><div class="spacer"></div>
+<button class="tab-btn on" id="t-exam" onclick="tab('exam')">📝 EXAM DAY</button>
+<button class="tab-btn" id="t-memo" onclick="tab('memo')">🧠 MEMORIZE</button>
+<div class="spacer"></div>
+</div></div>
+<div class="wrap">
+<div class="etabs" id="etabs"></div>
+<div id="content"></div>
+</div>
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const E=[
+{id:1,title:"CROWN LENGTHENING",color:"#4fc3f7",
+ref:"Gargiulo et al., J Periodontol 42:8, 1961",
+qa:[
+{q:"1. Explain the concept of Biologic Width in depth.",
+a:`Biologic width is the combined dimension of the connective tissue attachment and junctional epithelium between the base of the sulcus and the crest of alveolar bone. Gargiulo et al. (1961) measured these dimensions on cadaver specimens and found the connective tissue attachment averaged approximately 1.07mm and the junctional epithelium averaged approximately 0.97mm, totaling roughly 2.04mm. These are averages with significant individual variability. The 2018 classification replaced "biologic width" with the term "supracrestal supporting tissues." The clinical significance is that the body requires this space between any restorative margin and the bone crest. If a restoration invades this zone, the body will attempt to re-establish it \u2014 either through chronic inflammation, bone resorption, or both. The clinical goal is to maintain approximately 3-4mm between the restorative margin and the bone crest to ensure adequate space for the biologic width plus a sulcus.`,
+sk:[
+`BW = <span class="r">Gargiulo 1961</span> — cadaver jaws`,
+`CT = <span class="n">1.07mm</span> + JE = <span class="n">0.97mm</span> = <span class="n">2.04mm</span> total BW`,
+`<span class="t">AVERAGES with significant variability</span>`,
+`2018 reclassified as "supracrestal supporting tissues"`,
+`<span class="l">Invasion → chronic inflammation + unpredictable bone resorption</span>`,
+`Goal: <span class="n">3-4mm</span> margin-to-bone (BW + sulcus)`
+],hk:`<em>2-0-4</em> = "Two Oh Four, bone wants more." CT+JE only. Sulcus (0.69) is extra. Total clearance needed = <em>3-4mm</em>.`},
+
+{q:"2. Temp removed, bleeding and ulceration. How do you determine if CL is needed vs another problem? What else could cause it? How do you distinguish? Next steps?",
+a:`You use a process of elimination. When you remove a temporary and see bleeding and ulceration, several things could be causing it OTHER than biologic width invasion. You must rule each one out systematically before concluding crown lengthening is necessary.\n\nPossible causes other than BW invasion: (1) Excess cement left subgingivally from the temp \u2014 check for and remove any residual cement. (2) Overextended or poorly adapted temporary margins \u2014 evaluate the temp margins for overhangs or open margins that are trapping plaque. (3) Poor patient hygiene around the temp \u2014 is the patient cleaning the area? Instruct and reinforce. (4) Allergic or material reaction to the temp material.\n\nHow you distinguish: Eliminate every variable one at a time. Remove excess cement, refit the temp with proper margins, reinforce hygiene instructions, and then give the tissue time to heal (typically 2-4 weeks). Then re-evaluate. If after eliminating ALL other variables the tissue is STILL inflamed and bleeding, then the problem is biologic width invasion \u2014 the margin is too close to bone and the body cannot establish healthy attachment.\n\nYou do NOT use a radiograph alone to diagnose biologic width invasion. Radiographs only show interproximal bone \u2014 they cannot show facial or lingual bone levels. And the Gargiulo measurements are averages, so you cannot simply measure 2mm on a radiograph and declare invasion. The clinical picture \u2014 persistent inflammation after eliminating all other causes \u2014 is the definitive diagnostic tool.\n\nNext steps: If BW invasion is confirmed, refer for crown lengthening to establish adequate distance between the margin and bone.`,
+sk:[
+`<span class="t">BW invasion is only ONE cause</span> — must rule out others first`,
+`Other causes: <b>(1)</b> excess cement <b>(2)</b> bad temp margins <b>(3)</b> poor OH <b>(4)</b> allergic/material reaction`,
+`<span class="l">Eliminate one at a time → refit temp → reinforce OH → wait 2-4 weeks → re-eval</span>`,
+`Still inflamed after all eliminated → <span class="l">BW invasion confirmed</span>`,
+`<span class="t">Radiographs NOT reliable</span> — only show interproximal bone, B/L invisible`,
+`<span class="l">Clinical picture = definitive diagnostic tool</span>`
+],hk:`<em>C-T-O-A</em> = Cement, Temp, OH, Allergy — rule out in order. <em>"Clinical is king, radiograph is the jester."</em>`},
+
+{q:"3 (listed as second #2). Indications and contraindications for crown lengthening.",
+a:`Indications: tooth decay at or below the gingival margin, tooth fracture below the gingival margin (with adequate remaining support), teeth with excessive wear, teeth with insufficient interocclusal space, and delayed passive eruption.\n\nContraindications: poor crown-to-root ratio after bone removal (tooth would become unstable), aesthetic limitations (exposed roots in the smile zone), anatomic limitations (proximity to furcation, mental foramen, or other vital structures), inadequate remaining attachment, and situations where the cost-risk-benefit ratio favors an alternative treatment like extraction and implant.`,
+sk:[
+`<b>Indications:</b> decay at/below GM, fracture below GM (w/ support), excessive wear, insufficient interocclusal space, delayed passive eruption`,
+`<b>Contraindications:</b> poor crown-root ratio, esthetic limitations, anatomic limitations (furcation, mental foramen), inadequate remaining attachment, better alternative (ext + implant)`
+],hk:`Indications = <em>D-F-W-I-D</em> (Decay, Fracture, Wear, Interocclusal, Delayed). Contraindications = <em>"PEAIA"</em> — Poor ratio, Esthetic, Anatomic, Inadequate attachment, Alternative tx.`},
+
+{q:"4. Gingivectomy alone vs flap and removing bone.",
+a:`This depends on two factors: how much keratinized tissue is present and where the bone is relative to the CEJ. This maps to the Coslet (1977) classification of altered passive eruption.\n\nIf the patient has excess keratinized tissue AND the bone is at a normal distance from the CEJ (1-2mm apical to it), then the tissue is simply covering too much crown. A gingivectomy alone \u2014 removing the excess tissue \u2014 will solve the problem because the bone doesn't need to be touched. This is the simplest scenario.\n\nIf the patient has excess keratinized tissue BUT the bone is right at the CEJ, a gingivectomy alone will FAIL. You can cut the tissue away, but it will grow right back because the bone is too coronal and the body will regenerate tissue to cover it. In this case, you need a flap procedure with osseous recontouring \u2014 you must move the bone apically to establish proper biologic width, THEN manage the tissue. This is the more common clinical scenario for crown lengthening.`,
+sk:[
+`Decision = <span class="n">KT amount</span> + <span class="n">bone position relative to CEJ</span>`,
+`<span class="r">Coslet 1977</span> classification:`,
+`Excess KT + bone normal (1-2mm apical CEJ) → <span class="l">gingivectomy alone</span>`,
+`Excess KT + bone AT CEJ → <span class="t">gingivectomy FAILS (tissue grows back)</span> → <span class="l">flap + osseous recontouring</span>`,
+`<span class="l">Flap + bone = the more common CL scenario</span>`
+],hk:`<em>"Bone at CEJ = Bad news for gingivectomy."</em> If bone is normal, just cut tissue. If bone is AT the CEJ, you MUST move it — tissue will always grow back to cover bone.`},
+
+{q:"5. Healing time, rationale, consequences if insufficient, anterior vs posterior.",
+a:`After crown lengthening, the gingival margin undergoes creeping attachment (Goldman 1964) and gingival rebound \u2014 the tissue migrates coronally from where it was positioned at surgery, approximately 0.5-1.2mm over 12 months.\n\nPosterior teeth: 6-8 weeks of healing is generally sufficient before restoring, because aesthetics are less critical and the tissue position doesn't need to be as precise.\n\nAnterior teeth: MINIMUM 3 months before final restoration. Tissue movement can continue for up to 12 months in the anterior.\n\nRationale: If you take a final impression too early, you are capturing the tissue at an intermediate position. Over the following weeks and months, the tissue will continue migrating coronally. This means your margin \u2014 which was placed at the tissue level at the time of impression \u2014 will eventually become EXPOSED as the tissue moves past it. The consequence is a visible margin line, poor aesthetics, possible sensitivity, and the need to redo the entire restoration.`,
+sk:[
+`<span class="l">Creeping attachment</span> (Goldman 1964) + gingival rebound — tissue migrates coronally <span class="n">0.5-1.2mm</span> over 12mo`,
+`Posterior: <span class="n">6-8 weeks</span>`,
+`Anterior: <span class="n">MINIMUM 3 months</span> (up to 12mo movement)`,
+`<span class="t">Too early → impression captures intermediate position → margin exposed as tissue creeps → visible line → redo</span>`
+],hk:`<em>"Post 6, Ant 3"</em> — Posterior 6 wks, Anterior 3 mo. <em>"Creep will expose your work"</em> — if you impress too early, the tissue moves past your margin.`},
+
+{q:"6. Three complications and remedies.",
+a:`(1) Bleeding: Rare with adequate suturing, but can occur. Remedy: Patient applies a tea bag (tannins promote coagulation). If bleeding is significant, see the patient in the office, anesthetize, and place additional sutures.\n\n(2) Pain and swelling: The swelling drives the pain. Remedy: NSAIDs for inflammation and pain management, ice application for at least 24 hours. Prescribe a small narcotic supply (5 pills, no refills) for nighttime when pain may interfere with sleep.\n\n(3) Root sensitivity: Exposed root surfaces after bone and tissue removal expose dentin tubules. Remedy: Periodontal dressing for the first week prevents sensitivity entirely. After pack removal, apply SuperSeal (potassium oxalate) \u2014 blocks dentin tubules immediately in a single application. Long-term, the final restoration will cover the exposed root and eliminate the sensitivity permanently.`,
+sk:[
+`<b>1. Bleeding:</b> tea bag (<span class="l">tannins → coagulation</span>). Office: more sutures`,
+`<b>2. Pain/Swelling:</b> <span class="l">NSAID (both)</span>, ice ≥24hr, narcotics (5 pills, no refills) for nighttime`,
+`<b>3. Root Sensitivity:</b> exposed tubules → <span class="l">hydrodynamic theory</span>`,
+`Wk1: perio dressing. Then: <span class="n">SuperSeal</span> (potassium oxalate → blocks tubules, <span class="l">single application</span>). Long-term: restoration covers root`
+],hk:`<em>B-P-S</em> = Bleeding, Pain, Sensitivity. SuperSeal = <em>"potassium oxalate plugs the tubes, one shot."</em>`}
+]},
+
+// ═══════════════════════════════════════════
+// ESSAY 2: GTR/GBR
+// ═══════════════════════════════════════════
+{id:2,title:"GTR / GBR",color:"#81c784",
+ref:"Nyman et al., J Clin Perio 9:257, 1982",
+qa:[
+{q:"1. Define and explain GTR in detail.",
+a:`Guided tissue regeneration is the process of allowing certain cell types to participate in wound healing while excluding other cell types, for the purpose of promoting new attachment. The ultimate goal of periodontics is to restore a diseased periodontium to its original state of health. For that to happen, new attachment must form \u2014 meaning new cementum with inserting collagen fibers on a previously diseased root surface. Regeneration, as defined by Melcher (1969), is the complete restoration of lost tissues: new cementum, new periodontal ligament, and new alveolar bone.\n\nThe concept works because four different cell types compete to populate a periodontal wound after surgery, and each produces a different outcome when it contacts the root surface. GTR uses a physical barrier (membrane) to block the fast-moving cells and give the slow-moving desirable cells time to reach the root surface first.`,
+sk:[
+`GTR = <span class="l">membrane blocks fast cells, lets slow PDL cells reach root</span>`,
+`Goal = <b>regeneration</b> (<span class="r">Melcher 1969</span>): new cementum + new PDL + new bone`,
+`<span class="t">Repair ≠ regeneration</span> — repair = long junctional epithelium`,
+`4 cell types compete; membrane gives PDL cells time to win the race`
+],hk:`<em>"The 3 News"</em> = new cementum, new PDL, new bone. Repair = body's lazy default (LJE). GTR = rigging the race so PDL wins.`},
+
+{q:"2. Major studies proving GTR + tissue type interactions with root surface.",
+a:`Four cell types can contact the root, each producing a different result:\n\nEpithelium is the FASTEST cell type. If it reaches the root first, it migrates down the root surface and forms a long junctional epithelium. This is called repair. It seals the area but does not produce true connective tissue attachment.\n\nGingival connective tissue is the second fastest. If it contacts the root, it causes root resorption \u2014 the CT cells treat the root as foreign material and begin dissolving it. This was proven by Nyman et al. (J Clin Perio 7:39, 1980), who implanted periodontally-affected roots into gingival connective tissue in monkeys and found root resorption on the surfaces covered by gingival CT.\n\nBone cells are the slowest. If bone contacts the root directly without PDL in between, it causes ankylosis \u2014 the root fuses to the bone with no PDL space. The tooth becomes rigid, cannot be moved orthodontically, and may eventually resorb. This was demonstrated by Karring, Nyman, and Lindhe (J Clin Perio 7:96, 1980), who implanted periodontally-affected roots into bone cavities in dogs and found resorption and ankylosis.\n\nPDL cells produce the desired outcome \u2014 new attachment. PDL cells can form new cementum with inserting collagen fibers on previously diseased root surfaces. This IS regeneration.\n\nThe breakthrough study: Nyman et al. (J Clin Perio 9:257, 1982) placed a Millipore filter over angular bony defects in monkeys after debriding the roots. The filter physically blocked epithelium and gingival CT from reaching the root. Result: new cementum with inserting collagen fibers formed on the curetted root surfaces. This proved that if you block the unwanted cells, PDL cells CAN regenerate attachment.\n\nA fourth study by Nyman et al. (J Clin Perio 13:145, 1986) placed a tight elastic around roots at the base of defects, physically preventing PDL cells from migrating coronally. Result: no new attachment formed. This proved that PDL cells MUST be able to migrate coronally from the apical healthy PDL for regeneration to occur.`,
+sk:[
+`<b>Epithelium</b> (FASTEST) → long junctional epithelium = <span class="l">repair</span>`,
+`<b>Gingival CT</b> (fast) → <span class="t">root resorption</span> — <span class="r">Nyman 1980 (7:39)</span> monkeys`,
+`<b>Bone</b> (SLOWEST) → <span class="t">ankylosis</span> — <span class="r">Karring 1980 (7:96)</span> dogs`,
+`<b>PDL</b> → <span class="n">new cementum + collagen fibers = NEW ATTACHMENT</span>`,
+`<span class="r">Nyman 1982 (9:257)</span> = THE breakthrough: Millipore filter → blocked fast cells → new attachment formed`,
+`<span class="r">Nyman 1986 (13:145)</span> = tight elastic blocked PDL migration → <span class="t">NO new attachment</span> → PDL must migrate coronally`
+],hk:`Speed ranking: <em>E-G-P-B</em> (Epithelium, Gingival CT, PDL, Bone — fast to slow). Outcomes: <em>Repair, Resorption, Regeneration, Ankylosis</em>. The 1982 Millipore filter study = the one that changed everything.`},
+
+{q:"3. Grafting materials — advantages and disadvantages.",
+a:`Autograft (patient's own bone \u2014 tuberosity, chin, ramus, or iliac crest): The ONLY material that is osteogenic (contains living bone cells), osteoinductive (has growth factors that recruit and transform cells into osteoblasts), AND osteoconductive (provides scaffold). Gold standard biologically. Disadvantage: requires a second surgical site and has limited supply.\n\nAllograft (human cadaver bone from tissue banks): Two types. FDBA (freeze-dried bone allograft) is mineralized and acts as an osteoconductive scaffold only. DFDBA (demineralized freeze-dried bone allograft) has minerals removed to expose BMPs (bone morphogenetic proteins, discovered by Urist, 1965), making it theoretically osteoinductive. However, Schwartz (1996) tested samples from multiple bone banks and found that not all were osteoinductive \u2014 reliability varies between banks and even between batches from the same bank. Advantage: no second surgical site. Disadvantage: inconsistent osteoinductive potential.\n\nXenograft (bone from another species \u2014 Bio-Oss is anorganic bovine bone): Processed at high temperatures to remove all organic material, making it completely biocompatible and prion-free. Osteoconductive scaffold only. Excellent for sinus lifts. Advantage: abundant supply, no disease transmission. Disadvantage: scaffold only, not osteoinductive.\n\nAlloplast (synthetic materials \u2014 hydroxyapatite, tricalcium phosphate, bioactive glass): Osteoconductive only. As stated on lecture slides: "unlikely to result in true regeneration." Advantage: unlimited supply, no disease risk. Disadvantage: just a filler with no biological activity.`,
+sk:[
+`<b>Autograft</b> = ONLY material with ALL 3: <span class="n">osteogenic + osteoinductive + osteoconductive</span>. Gold standard. Disadv: 2nd surgical site, limited supply`,
+`<b>FDBA</b> = mineralized allograft → <span class="l">osteoconductive only</span> (scaffold)`,
+`<b>DFDBA</b> = demineralized → exposes BMPs (<span class="r">Urist 1965</span>) → theoretically osteoinductive. BUT <span class="r">Schwartz 1996</span>: <span class="t">not all banks reliable, varies batch to batch</span>`,
+`<b>Xenograft</b> (Bio-Oss) = bovine, high-temp processed, prion-free. <span class="l">Osteoconductive only</span>. Great for sinus lifts`,
+`<b>Alloplast</b> = synthetic filler. <span class="t">"Unlikely to result in true regeneration"</span>`
+],hk:`Only autograft has all 3 properties — remember <em>"Auto = All Three."</em> DFDBA = the tricky one (Urist says yes, Schwartz says maybe not). Bio-Oss = <em>"Bovine scaffold, that's it."</em>`},
+
+{q:"4. GBR vs GTR, when GBR is indicated.",
+a:`GTR is performed around TEETH. The goal is new attachment \u2014 new cementum with PDL fibers \u2014 which requires PDL cells. Membranes are typically removed at 4-6 weeks because PDL cells repopulate relatively quickly.\n\nGBR is performed in EDENTULOUS areas (no teeth present). There are no PDL cells available, so the goal is bone regeneration only, driven by osteoblasts from surrounding bone. This is a slower process, so membranes may stay for up to 6 months. GBR is indicated for immediate implant placement, extraction site preservation (socket grafting), and ridge augmentation procedures. The materials used (membranes, grafts) are the same \u2014 the difference is the location and the biology driving the healing.`,
+sk:[
+`<b>GTR</b> = around <span class="n">TEETH</span>, PDL cells drive healing, membrane <span class="n">4-6 weeks</span>`,
+`<b>GBR</b> = <span class="n">EDENTULOUS</span> areas, osteoblasts only (no PDL), membrane up to <span class="n">6 months</span>`,
+`GBR indicated: immediate implants, socket preservation, ridge augmentation`,
+`Same materials — <span class="l">difference is location and biology</span>`
+],hk:`<em>"T for Teeth, B for Bone-only."</em> GTR has PDL (fast) = 4-6 wks. GBR has osteoblasts only (slow) = up to 6 mo.`}
+]},
+
+// ═══════════════════════════════════════════
+// ESSAY 3: NON-SURGICAL/SURGICAL
+// ═══════════════════════════════════════════
+{id:3,title:"NON-SURG / SURGICAL",color:"#ffb74d",
+ref:"Axelsson & Lindhe, J Clin Perio, 1981",
+qa:[
+{q:"1. What clinical and radiographic findings indicate SRP is needed?",
+a:`SRP is indicated when the patient presents with clinical signs of periodontitis: bleeding on probing, increased probing depths associated with clinical attachment loss, and radiographic bone loss. The presence of subgingival calculus on radiographs and clinical detection of calculus with an explorer (11/12 After Five) further support the need for instrumentation. Even generalized gingivitis with BOP at >10% of sites and probing depths \u22643mm warrants scaling, though this is prophylaxis-level treatment, not SRP.`,
+sk:[
+`<span class="n">BOP</span> + <span class="n">increased PD with CAL</span> + <span class="n">radiographic bone loss</span>`,
+`Subgingival calculus (radiographic + clinical w/ 11/12 After Five explorer)`,
+`Gingivitis alone (BOP >10%, PD ≤3mm) = prophylaxis, not SRP`
+],hk:`The triad: <em>BOP + PD/CAL + bone loss</em> = SRP. No CAL? Might just be gingivitis → prophy.`},
+
+{q:"2. What is root planing and how does it differ from scaling?",
+a:`Scaling is the removal of soft and hard deposits (plaque and calculus) adhering to the tooth surface. Root planing is the removal of diseased root surfaces (contaminated cementum) to create a smooth, non-contaminated surface that promotes healing. They are two distinct procedures performed together. Scaling addresses what is ON the tooth. Root planing addresses what IS the tooth surface itself.`,
+sk:[
+`<b>Scaling</b> = removes what's <span class="l">ON</span> the tooth (plaque + calculus)`,
+`<b>Root planing</b> = removes what <span class="l">IS</span> the tooth surface (contaminated cementum)`,
+`Two distinct procedures done together`
+],hk:`<em>"Scaling = ON it. Root planing = IS it."</em>`},
+
+{q:"3. Goals of root planing and evidence of success.",
+a:`The goals are: reduce the subgingival bacterial load, shift the microflora from pathogenic to health-associated species, reduce probing depths, resolve BOP, and gain or stabilize clinical attachment levels. Greenstein (J Perio, 1992) established that SRP remains a definitive therapeutic approach for mild to moderate periodontitis and serves as the initial phase of therapy before surgery in more severe cases. Measurable endpoints include: changes in probing depths, clinical attachment levels, BOP, gingival inflammation, and subgingival microflora.\n\nHowever, apparent "attachment gains" after SRP are mostly due to decreased inflammation allowing tighter tissue adaptation \u2014 not true new connective tissue insertion into cementum (Listgarten, 1976). Also, SRP in shallow pockets (1-3mm) can actually cause attachment LOSS due to mechanical trauma from instrumentation (Ramfjord & Kiester, 1954). This is why you don't aggressively instrument shallow, healthy sites.`,
+sk:[
+`Goals: reduce bacteria, shift flora, reduce PD, resolve BOP, stabilize CAL`,
+`<span class="r">Greenstein 1992</span>: SRP = definitive for mild-mod AND initial phase for severe`,
+`<span class="t">"Attachment gains" are mostly decreased inflammation → tighter tissue, NOT true new CT insertion</span> (Listgarten 1976)`,
+`<span class="t">SRP in shallow pockets (1-3mm) → attachment LOSS</span> (Ramfjord & Kiester 1954) — don't instrument healthy sites`
+],hk:`Greenstein = <em>"SRP is both definitive AND a stepping stone."</em> Beware: apparent gains aren't real new attachment, and going after shallow sites causes harm.`},
+
+{q:"4. What findings indicate you need to go beyond non-surgical? Rationale for surgery.",
+a:`At re-evaluation (4-6 weeks after the last quadrant of SRP), if sites still have probing depths \u22655mm with BOP, non-surgical therapy was insufficient for those sites. The rationale for surgery: Caffesse (1986) demonstrated that at pocket depths \u22655mm, clinicians inadequately debride root surfaces 65% of the time. The critical probing depth value is 4.2mm \u2014 above this, more attachment gain occurs with flap surgery than with SRP alone. The objectives of surgery are to gain direct access for thorough debridement and to reduce pocket depths to levels the patient can maintain.`,
+sk:[
+`Re-eval at <span class="n">4-6 weeks</span>: PD <span class="n">≥5mm + BOP</span> = non-surgical failed`,
+`<span class="r">Caffesse 1986</span>: at ≥5mm, <span class="n">65%</span> inadequate debridement`,
+`Critical PD = <span class="n">4.2mm</span> — above this, surgery > SRP for attachment gain`,
+`Surgery objectives: <span class="l">direct access + reduce PD to maintainable levels</span>`
+],hk:`<em>"5 and bleeding = surgery time."</em> Caffesse = <em>"65% failure rate blind."</em> 4.2mm = the magic number.`},
+
+{q:"5. Rationale for adjunctive antimicrobials with clinical examples.",
+a:`Systemic antibiotics are indicated for acute infections (NUG \u2014 treat with metronidazole before any instrumentation), aggressive disease patterns, or when A. actinomycetemcomitans is suspected (this organism is tissue-invasive and cannot be eliminated by SRP alone \u2014 it requires systemic antibiotics). Periostat (20mg doxycycline BID) is NOT an antibiotic at this dose \u2014 it is a host-modulating agent that inhibits matrix metalloproteinases, slowing tissue destruction. It is indicated as an adjunct for patients at elevated risk.\n\nLocally administered antimicrobials (Arestin = minocycline microspheres, PerioChip = 2.5mg chlorhexidine, Atridox = doxycycline gel) are placed into specific non-responsive pockets at RE-EVALUATION, not at the initial SRP appointment. They are for isolated sites that did not respond to thorough SRP.`,
+sk:[
+`Systemic abx: NUG (metronidazole first), aggressive patterns, A.a. (<span class="t">tissue-invasive, SRP can't reach it</span>)`,
+`<span class="n">Periostat</span> = 20mg doxy BID = <span class="t">NOT an antibiotic</span> → <span class="l">MMP inhibitor, slows host destruction</span>`,
+`Local: <span class="n">Arestin</span> (minocycline), <span class="n">PerioChip</span> (2.5mg CHX), <span class="n">Atridox</span> (doxy gel)`,
+`<span class="t">Local agents at RE-EVAL only</span>, not at initial SRP`
+],hk:`Periostat = <em>"not killing bugs, slowing your own body's wrecking crew (MMPs)."</em> Local agents = re-eval only, never day one.`},
+
+{q:"6. What clinical outcomes indicate success?",
+a:`Reduced probing depths (ideally \u22643mm), resolution of BOP, stable or improved clinical attachment levels, absence of suppuration, healthy gingival color and contour, and adequate patient plaque control.`,
+sk:[
+`PD ideally <span class="n">≤3mm</span>, no BOP, stable/improved CAL`,
+`No suppuration, healthy color/contour, adequate plaque control`
+],hk:`<em>"3 and clean"</em> = the goal. No bleeding, no pus, tissue looks healthy, patient is brushing.`},
+
+{q:"7. The 75-year-old patient scenario — treatment recs, and would they differ for a 30-year-old?",
+a:`This patient has 5-7mm pockets generalized, BOP, minimal recession, and the gingival margin is 1-2mm CORONAL to the CEJ. That last detail is critical \u2014 because the margin is coronal to the CEJ, the true clinical attachment loss is LESS than the probing depth. You subtract the coronal tissue from the PD to get real CAL. A 7mm pocket with the margin 2mm coronal to CEJ = 5mm true CAL. A 5mm pocket with the margin 1mm coronal = 4mm CAL. Part of the pocket depth is a pseudopocket component from excess tissue sitting coronal to the CEJ.\n\nTreatment recommendation: Comprehensive SRP all quadrants with thorough oral hygiene instruction. Re-evaluate at 4-6 weeks. Some pocket depth reduction will come from resolution of the pseudopocket component as inflammation resolves and tissue shrinks. If pockets resolve to \u22643mm with no BOP, the patient enters periodontal maintenance (D4910) every 3 months. If pockets persist \u22655mm with BOP, surgical intervention is indicated.\n\nFor a 30-year-old: The same treatment principles apply \u2014 SRP first, re-evaluate, then decide. However, the clinical significance is different. A 30-year-old with this degree of attachment loss represents a much more rapidly progressing disease (likely Grade C under the 2018 classification based on bone loss relative to age). This may warrant more aggressive adjunctive therapy and the long-term maintenance commitment is even more critical because this patient has decades of function ahead.`,
+sk:[
+`GM <span class="n">1-2mm CORONAL to CEJ</span> → <span class="t">true CAL ≠ PD</span>. Subtract coronal distance`,
+`7mm PD - 2mm coronal = <span class="n">5mm CAL</span>. 5mm PD - 1mm = <span class="n">4mm CAL</span>`,
+`<span class="l">Tx: SRP all quads → OHI → re-eval 4-6wk → D4910 q3mo OR surgery</span>`,
+`<b>30yo:</b> same sequence but = <span class="n">Grade C</span> (bone loss ÷ age ratio). <span class="l">More aggressive adjuncts, decades of maintenance ahead</span>`
+],hk:`The pseudopocket trap: <em>"Coronal margin = inflated PD. Do the subtraction."</em> 30yo = <em>"same treatment, different urgency."</em>`},
+
+{q:"8. What assumptions are we making when deciding treatment is indicated?",
+a:`We assume that: (1) the bacterial biofilm is the primary etiologic agent and reducing it will halt progression, (2) the patient will comply with recall and home care, (3) risk factors can be identified and managed, and (4) disease activity follows the patterns described in our evidence base. We also assume our diagnostic measurements (probing depths, attachment levels) are accurate representations of the disease state, though we know probing has inherent variability based on force, inflammation, and operator factors.`,
+sk:[
+`(1) Biofilm = primary cause, reducing it works`,
+`(2) Patient will comply with recall + home care`,
+`(3) Risk factors can be ID'd and managed`,
+`(4) Disease follows evidence-based patterns`,
+`<span class="t">Also: our measurements are accurate (but probing varies with force, inflammation, operator)</span>`
+],hk:`<em>"Bacteria, Compliance, Risk, Patterns, Probing"</em> — the 5 assumptions. #2 (compliance) is the one that kills outcomes most often.`},
+
+{q:"9. Real pocket vs pseudopocket — in precise terms.",
+a:`A true pocket has attachment loss \u2014 the probe extends apical to the CEJ. A pseudopocket has NO attachment loss \u2014 the probe remains coronal to the CEJ; the depth is entirely due to excess tissue (swelling or gingival enlargement) sitting above the CEJ. The ONLY way to distinguish them clinically is to determine WHERE the gingival margin sits relative to the CEJ. If the margin is at or apical to the CEJ, any probing depth represents true pocket/attachment loss. If the margin is coronal to the CEJ, the pocket depth may be inflated by the pseudopocket component. You subtract the coronal excess from the probing depth to get true CAL.`,
+sk:[
+`<b>True pocket:</b> probe goes <span class="l">apical to CEJ</span> = attachment loss`,
+`<b>Pseudopocket:</b> probe stays <span class="l">coronal to CEJ</span> = NO attachment loss, just excess tissue`,
+`<span class="l">Key: WHERE is GM relative to CEJ?</span>`,
+`GM at/apical to CEJ → any PD = true loss. GM coronal → <span class="l">subtract coronal excess from PD = true CAL</span>`
+],hk:`<em>"Find the CEJ, find the truth."</em> Coronal margin = pseudopocket component. Always do the subtraction.`},
+
+{q:"Compliance and maintenance evidence.",
+a:`Axelsson and Lindhe (J Clin Perio, 1981) studied 77 patients after periodontal treatment. 52 remained in structured SPT (every 2 months for 2 years, then every 3 months for 4 years). 25 returned to their GP with sporadic or no recalls. In the recall group, 99% of tooth surfaces showed \u22641mm attachment loss over 6 years. In the non-recall group, only 45%. Nyman et al. (1977) showed that without a recall program, pocket depths rebounded to pre-surgical levels within 2 years regardless of surgical technique. Rosling et al. (1976) showed the opposite: with repeated OHI and recall every 2 weeks for 2 years, patients maintained reduced PD and gained attachment. These studies are the foundation for the 3-month maintenance interval in periodontitis patients.`,
+sk:[
+`<span class="r">Axelsson & Lindhe 1981</span>: 77 pts. Recall = <span class="n">99%</span> surfaces ≤1mm loss / 6yr. No recall = <span class="n">45%</span>`,
+`<span class="r">Nyman 1977</span>: no recall → PD rebounded in 2yr regardless of surgery`,
+`<span class="r">Rosling 1976</span>: with recall q2wk × 2yr → maintained PD + attachment gains`,
+`<span class="l">Foundation for 3-month maintenance</span>`
+],hk:`<em>"99 vs 45"</em> — that's the number that sells maintenance to every patient. Nyman = <em>"no recall = all your surgery wasted."</em>`}
+]},
+
+// ═══════════════════════════════════════════
+// ESSAY 4: OCCLUSAL TRAUMA
+// ═══════════════════════════════════════════
+{id:4,title:"OCCLUSAL TRAUMA",color:"#ef9a9a",
+ref:"Glossary of Periodontal Terms, AAP, 2001",
+qa:[
+{q:"1. What is trauma from occlusion?",
+a:`Occlusal traumatism is defined as "pathologic or adaptive changes which develop in the periodontium as a result of undue force produced by the masticatory muscles" (Glossary of Periodontal Terms, AAP, 2001). The lesion occurs exclusively in the attachment apparatus \u2014 the periodontal ligament, alveolar bone, and cementum. It causes loss of the lamina dura and widening of the PDL space, which appears clinically as increasing mobility over time.`,
+sk:[
+`<span class="r">AAP 2001</span>: "pathologic or adaptive changes from undue force by masticatory muscles"`,
+`Lesion exclusively in <span class="n">attachment apparatus</span> (PDL, bone, cementum)`,
+`→ loss of lamina dura → widened PDL → <span class="l">increasing mobility over time</span>`
+],hk:`<em>"Attachment apparatus ONLY."</em> It's a PDL/bone/cementum problem, never a gingival problem.`},
+
+{q:"2. How do you diagnose the different types? What are you looking for?",
+a:`The key diagnostic finding is INCREASING mobility over time \u2014 not just increased mobility at a single visit, but documented progression from one appointment to the next. Cracked teeth, wear facets, fractures, and abrasion alone are NOT sufficient to diagnose occlusal trauma. You are looking for: progressive increase in mobility over sequential visits, migration of teeth, fremitus during functional movements, and radiographic widening of the PDL space with possible loss of lamina dura distinctness.\n\nPrimary occlusal trauma: EXCESSIVE force on a periodontium with NORMAL support. The force overwhelms a healthy PDL. You'll see increasing mobility, possible migration, and fremitus, but probing depths are normal because the supracrestal tissues are not involved. Radiographically you may see widened PDL and angular bone loss patterns \u2014 do NOT confuse this with periodontitis-related bone loss.\n\nSecondary occlusal trauma: NORMAL forces on a periodontium with REDUCED support from prior periodontal disease. The remaining bone is insufficient to handle even ordinary chewing forces. You must have pre-existing attachment loss to diagnose secondary occlusal trauma. However, a tooth WITH attachment loss can still experience primary occlusal trauma if the force is excessive \u2014 both can coexist.`,
+sk:[
+`Diagnosis = <span class="n">INCREASING mobility over time</span> (documented across visits)`,
+`<span class="t">Wear, cracks, fractures alone ≠ occlusal trauma</span>`,
+`<b>Primary:</b> <span class="l">EXCESSIVE force + NORMAL support</span> → equilibrate. PDs normal, radiograph: widened PDL`,
+`<b>Secondary:</b> <span class="l">NORMAL force + REDUCED support</span> → splint. Must have pre-existing attachment loss`,
+`<span class="t">Both can coexist on same tooth</span>`
+],hk:`<em>"Increasing, not just increased."</em> Primary = force problem (reduce it). Secondary = support problem (splint it). <em>Wear facets are tooth damage, NOT attachment apparatus damage.</em>`},
+
+{q:"3. Relationship of periodontal breakdown with and without occlusal trauma.",
+a:`Occlusal trauma does NOT cause attachment loss, pocketing, or recession. The effects of occlusal force are limited to the attachment apparatus (PDL, bone, cementum). The supracrestal soft tissues \u2014 the connective tissue attachment and junctional epithelium \u2014 are NOT damaged by excessive force. Therefore, occlusal trauma cannot initiate apical migration of the junctional epithelium, which is the mechanism of pocket formation and attachment loss.\n\nHowever, occlusal trauma CAN be co-destructive with active periodontal infection. It is the combination of a relatively heavy force AND an active periodontal infection that is co-destructive \u2014 exacerbating and augmenting the rate of periodontal breakdown. The key distinction: co-destruction requires force PLUS active inflammation, NOT force plus bone loss. Animal studies showed that occlusal trauma induced in a healthy but reduced periodontium (successfully treated, no active infection) had no different effect than occlusal trauma on a periodontium with normal bone levels. A treated, stable patient responds to forces the same way a healthy patient does. It is only when active infection is present that force becomes co-destructive.`,
+sk:[
+`<span class="t">TFO does NOT cause attachment loss, pocketing, or recession</span>`,
+`Force affects attachment apparatus only — <span class="t">supracrestal tissues (CT + JE) are NOT damaged</span>`,
+`<span class="l">CAN co-destruct with ACTIVE infection</span> — force + inflammation = accelerated breakdown`,
+`<span class="t">Co-destruction ≠ force + bone loss. It = force + ACTIVE INFLAMMATION</span>`,
+`Treated/stable reduced periodontium responds same as healthy one — <span class="l">only active infection makes force dangerous</span>`
+],hk:`<em>"Force can't start it, only speed it up — and only if infection is active."</em> The bone loss alone doesn't matter; the bacteria do.`},
+
+{q:"4. Treatment for each type of occlusal trauma.",
+a:`Treatment follows a strict sequence: (A) First, eliminate inflammation \u2014 SRP, plaque control, address the periodontal disease. You must resolve the inflammatory component before addressing occlusion, because inflammation itself causes mobility. (B) Second, address the occlusal etiology. For primary occlusal trauma, treatment is occlusal equilibration \u2014 selectively adjusting the bite to reduce excessive force to a level the attachment apparatus can tolerate. Once force is reduced, the lesion resolves, PDL width returns to normal, and mobility decreases. For secondary occlusal trauma, treatment is splinting \u2014 connecting the weak tooth to adjacent teeth so forces are distributed across a larger root surface area. Splinting compensates for the lost bone support. (C) Third, develop stable intra- and inter-arch occlusal relationships.`,
+sk:[
+`<b>A (FIRST):</b> <span class="l">Eliminate inflammation</span> — because inflammation itself causes mobility`,
+`<b>B:</b> Primary → <span class="l">occlusal equilibration</span> (reduce force). Secondary → <span class="l">splinting</span> (distribute force)`,
+`<b>C:</b> Stable intra/inter-arch relationships`,
+`<span class="t">ALWAYS inflammation first — can't tell what's TFO vs infection until inflammation resolved</span>`
+],hk:`<em>A-B-C</em>: <em>A</em>lways inflammation first. <em>B</em>ite adjustment or splint. <em>C</em>reate stable occlusion. <em>"You can't fix the bite until you fix the bugs."</em>`},
+
+{q:"5. Is mobility disease? Does it always need treatment? When?",
+a:`Mobility is NOT inherently disease. A certain increase in mobility can be accepted, provided the mobile tooth does not disturb masticatory function or patient comfort (directly from lecture slides). The critical distinction is whether mobility is STABLE or PROGRESSIVE. If a tooth has increased mobility but that mobility is NOT increasing over time \u2014 the PDL has adapted, widened, but healed \u2014 that is acceptable and does NOT require treatment. If mobility IS increasing over time, that is active occlusal trauma and it does require treatment.\n\nCoolidge (JADA 24:1260, 1930) measured normal PDL widths and found they decrease with age \u2014 from 0.23mm at the crest in adolescents to 0.17mm in older adults. This demonstrates that the PDL is a dynamic, adaptive structure.`,
+sk:[
+`<span class="t">Mobility ≠ disease</span>`,
+`OK if: doesn't disturb function or comfort AND is <span class="n">STABLE</span> (not increasing)`,
+`Treat only when: <span class="l">PROGRESSIVE (increasing over time)</span> = active OT`,
+`<span class="r">Coolidge 1930</span>: PDL width decreases with age (<span class="n">0.23mm</span> young → <span class="n">0.17mm</span> old) — PDL is dynamic`
+],hk:`<em>"Stable = fine. Progressive = problem."</em> Coolidge proved the PDL changes throughout life — widening from force is just another adaptation unless it keeps getting worse.`},
+
+{q:"6. Distinguish mobility and fremitus.",
+a:`Mobility is the physical displacement of a tooth when force is applied by the CLINICIAN. You place two rigid instruments (mirror handles) on the facial and lingual surfaces and apply alternating pressure, then check for vertical depression. Graded: physiologic (\u22640.2mm), Grade 1 (0.2-1.0mm), Grade 2 (1.0-2.0mm), Grade 3 (>2.0mm and/or vertical displacement).\n\nFremitus is the vibration or movement of a tooth detected during the PATIENT'S OWN occlusal function. You place a finger on the facial surface of the tooth while the patient taps into maximum intercuspation and grinds through excursive movements. Fremitus tests whether the patient's bite is causing pathologic movement \u2014 it is a functional assessment rather than a static force test.`,
+sk:[
+`<b>Mobility:</b> <span class="l">clinician-applied force</span>. 2 rigid instruments (mirror handles, <span class="t">NOT fingers</span>)`,
+`Grades: physio <span class="n">≤0.2mm</span>, G1 <span class="n">0.2-1.0</span>, G2 <span class="n">1.0-2.0</span>, G3 <span class="n">>2.0 and/or vertical</span>`,
+`<b>Fremitus:</b> <span class="l">patient's own bite</span>. Finger on facial, pt taps MIP + excursions`,
+`Mobility = static test. Fremitus = <span class="l">functional test</span>`
+],hk:`<em>"Mobility = you push it. Fremitus = their bite pushes it."</em> Grade 3 = any vertical depression, automatic. <em>Never use fingers for mobility — soft pads mask movement.</em>`},
+
+{q:"7. Does TFO cause attachment loss?",
+a:`No. Occlusal trauma does not cause (initiate) attachment loss, pocketing, or recession. This is stated directly on the lecture slides. The effects of occlusal force are limited to the attachment apparatus. The gingival soft tissues coronal to bone (connective tissue attachment and junctional epithelium) are not damaged by excessive force on a tooth. Occlusal trauma can only be co-destructive in the presence of active periodontal infection \u2014 it accelerates destruction that is already being driven by bacterial inflammation, but it cannot start that destruction on its own.`,
+sk:[
+`<span class="t">NO. TFO does NOT cause attachment loss</span>`,
+`Force limited to attachment apparatus — CT + JE (coronal to bone) = untouched`,
+`<span class="l">Can only CO-DESTRUCT with active infection</span> — accelerates, but cannot initiate`
+],hk:`<em>"Force can't fire the first shot — only bacteria can."</em> Force speeds up existing destruction, but only when infection is active.`}
+]}
+];
+
+// ═══════════════════════════════════════════
+// APP STATE & RENDERING
+// ═══════════════════════════════════════════
+let curTab='exam', curE=0;
+
+function tab(t){
+  curTab=t;
+  document.getElementById('t-exam').className='tab-btn'+(t==='exam'?' on':'');
+  document.getElementById('t-memo').className='tab-btn'+(t==='memo'?' on':'');
+  render();
+}
+
+function pickE(i){ curE=i; render(); }
+
+function render(){
+  const e=E[curE];
+  // essay tabs
+  let tb='';
+  E.forEach((es,i)=>{
+    tb+=`<button class="ebtn${i===curE?' on':''}" style="--c:${es.color}" onclick="pickE(${i})">E${es.id}: ${es.title}</button>`;
+  });
+  document.getElementById('etabs').innerHTML=tb;
+
+  let h='';
+  h+=`<div class="etitle" style="color:${e.color}">ESSAY ${e.id}: ${e.title}</div>`;
+  h+=`<div class="eref">${e.ref}</div>`;
+
+  if(curTab==='exam'){
+    e.qa.forEach(item=>{
+      h+=`<div class="qbox" style="--c:${e.color}"><p>${item.q}</p></div>`;
+      h+=`<div class="ans">${item.a.replace(/\n/g,'<br><br>')}</div>`;
+    });
+  } else {
+    e.qa.forEach(item=>{
+      h+=`<div class="mcard">`;
+      h+=`<div class="qbox" style="--c:${e.color}"><p>${item.q}</p></div>`;
+      h+=`<ul class="skel">`;
+      item.sk.forEach(s=>{ h+=`<li>${s}</li>`; });
+      h+=`</ul>`;
+      h+=`<div class="hk"><div class="hk-label">MEMORY HOOK</div><div class="hk-text">${item.hk}</div></div>`;
+      h+=`</div>`;
+    });
+  }
+  document.getElementById('content').innerHTML=h;
+  window.scrollTo(0,0);
+}
+
+render();
+</script>
+</body>
+</html>
