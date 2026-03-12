@@ -550,6 +550,39 @@ function mergeRemoteState(data) {
             ...migrateArrayToObject(roadmapData.exams, 'exam'),
             ...migrateArrayToObject(data.exams, 'exam')
         },
+        graduationPrep: data.graduationPrep ? {
+            externship: {
+                startDate: data.graduationPrep?.externship?.startDate ?? null,
+                endDate: data.graduationPrep?.externship?.endDate ?? null,
+                patients: data.graduationPrep?.externship?.patients ?? {},
+                logistics: data.graduationPrep?.externship?.logistics ?? '',
+                notes: data.graduationPrep?.externship?.notes ?? ''
+            },
+            cdcaAdex: {
+                sessions: data.graduationPrep?.cdcaAdex?.sessions ?? {},
+                notes: data.graduationPrep?.cdcaAdex?.notes ?? ''
+            },
+            inbde: { notes: data.graduationPrep?.inbde?.notes ?? '' },
+            jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? '' }
+        } : (roadmapData.graduationPrep || {
+            externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+            cdcaAdex: { sessions: {}, notes: '' },
+            inbde: { notes: '' },
+            jobSearch: { notes: '' }
+        }),
+        clinicHeadlines: data.clinicHeadlines ? {
+            appointments: {
+                completed: data.clinicHeadlines?.appointments?.completed ?? 0,
+                target: data.clinicHeadlines?.appointments?.target ?? 90
+            },
+            procedures: {
+                completed: data.clinicHeadlines?.procedures?.completed ?? 0,
+                target: data.clinicHeadlines?.procedures?.target ?? 116
+            }
+        } : (roadmapData.clinicHeadlines || {
+            appointments: { completed: 0, target: 90 },
+            procedures: { completed: 0, target: 116 }
+        }),
         lastSaved: data.lastSaved,
         _version: Math.max(data._version || 0, roadmapData._version || 0),
         _lastModified: data._lastModified || roadmapData._lastModified,
@@ -609,6 +642,39 @@ function loadFromLocalStorage(finalize = true) {
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(data.exams, 'exam'),
+                graduationPrep: data.graduationPrep ? {
+                    externship: {
+                        startDate: data.graduationPrep?.externship?.startDate ?? null,
+                        endDate: data.graduationPrep?.externship?.endDate ?? null,
+                        patients: data.graduationPrep?.externship?.patients ?? {},
+                        logistics: data.graduationPrep?.externship?.logistics ?? '',
+                        notes: data.graduationPrep?.externship?.notes ?? ''
+                    },
+                    cdcaAdex: {
+                        sessions: data.graduationPrep?.cdcaAdex?.sessions ?? {},
+                        notes: data.graduationPrep?.cdcaAdex?.notes ?? ''
+                    },
+                    inbde: { notes: data.graduationPrep?.inbde?.notes ?? '' },
+                    jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? '' }
+                } : (roadmapData.graduationPrep || {
+                    externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+                    cdcaAdex: { sessions: {}, notes: '' },
+                    inbde: { notes: '' },
+                    jobSearch: { notes: '' }
+                }),
+                clinicHeadlines: data.clinicHeadlines ? {
+                    appointments: {
+                        completed: data.clinicHeadlines?.appointments?.completed ?? 0,
+                        target: data.clinicHeadlines?.appointments?.target ?? 90
+                    },
+                    procedures: {
+                        completed: data.clinicHeadlines?.procedures?.completed ?? 0,
+                        target: data.clinicHeadlines?.procedures?.target ?? 116
+                    }
+                } : (roadmapData.clinicHeadlines || {
+                    appointments: { completed: 0, target: 90 },
+                    procedures: { completed: 0, target: 116 }
+                }),
                 lastSaved: data.lastSaved || roadmapData.lastSaved,
                 _version: data._version || roadmapData._version || 0,
                 _lastModified: data._lastModified || roadmapData._lastModified
