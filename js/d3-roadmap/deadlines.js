@@ -76,13 +76,6 @@ function renderDeadlines() {
     // First, sort ALL deadlines by date to ensure correct ordering
     deadlines.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
-    // Determine today for archive split (using local date, no UTC issues)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Collect past+completed deadlines for the archive across all months
-    const pastCompleted = [];
-
     months.forEach(month => {
         const tbody = document.getElementById(month + 'Body');
         if (!tbody) return;
@@ -90,24 +83,7 @@ function renderDeadlines() {
         // Filter for this month - already sorted from above
         const monthDeadlines = deadlines.filter(d => d.month === month);
 
-        // Separate active vs past-completed for this month
-        const activeMonthDeadlines = [];
-        monthDeadlines.forEach(d => {
-            const isDone = d.done ?? false;
-            const [y, mo, day] = (d.date || '').split('-').map(Number);
-            if (y) {
-                const dDate = new Date(y, mo - 1, day);
-                if (dDate < today && isDone) {
-                    // Past and completed — send to archive
-                    pastCompleted.push(d);
-                    return;
-                }
-            }
-            // Active: future, or past-but-not-done (overdue!), or no valid date
-            activeMonthDeadlines.push(d);
-        });
-
-        tbody.innerHTML = activeMonthDeadlines.map(function(d, idx) {
+        tbody.innerHTML = monthDeadlines.map((d, idx) => {
             const days = getCountdown(d.date);
             const isPassed = days < 0;
             const deadlineId = getDeadlineId(d);
@@ -119,130 +95,69 @@ function renderDeadlines() {
             const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
             const rowClass = isPassed ? 'passed' : '';
 
-            return '<tr class="' + rowClass + '" data-deadline-id="' + deadlineId + '" style="' + rowStyle + '">'
-                + '<td>'
-                + '<button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById(\'' + deadlineId + '\')"'
-                + ' style="background: ' + (isDone ? '#059669' : 'rgba(255,255,255,0.1)') + ';'
-                + ' border: 2px solid ' + (isDone ? '#059669' : '#4b5563') + ';'
-                + ' color: ' + (isDone ? 'white' : '#94a3b8') + ';'
-                + ' width: 32px; height: 32px;'
-                + ' border-radius: 6px; cursor: pointer;'
-                + ' font-size: 1.1em; display: flex;'
-                + ' align-items: center; justify-content: center;"'
-                + ' title="' + (isDone ? 'Mark incomplete' : 'Mark complete') + '">'
-                + (isDone ? '\u2713' : '\u25CB')
-                + '</button>'
-                + '</td>'
-                + '<td>'
-                + '<input type="date" class="deadline-date-picker"'
-                + ' value="' + d.date + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' onchange="handleDateChange(this)">'
-                + '</td>'
-                + '<td>' + d.day + '</td>'
-                + '<td>' + (isDone && grade !== null ? '<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">' + grade + '%</span>' : getCountdownBadge(days, d.tbd)) + '</td>'
-                + '<td class="deadline-what-cell">'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.what) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="what"'
-                + ' data-original="' + escapeHtml(d.what) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">'
-                + '</td>'
-                + '<td>'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.course) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="course"'
-                + ' data-original="' + escapeHtml(d.course) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">'
-                + '</td>'
-                + '<td>'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.weight) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="weight"'
-                + ' data-original="' + escapeHtml(d.weight) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">'
-                + '</td>'
-                + '<td>' + d.type + '</td>'
-                + '<td>'
-                + '<button onclick="deleteDeadlineById(\'' + deadlineId + '\')"'
-                + ' style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"'
-                + ' title="Delete this deadline">\uD83D\uDDD1\uFE0F</button>'
-                + '</td>'
-                + '</tr>';
+            return `
+                <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}">
+                    <td>
+                        <button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById('${deadlineId}')"
+                            style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'};
+                                   border: 2px solid ${isDone ? '#059669' : '#4b5563'};
+                                   color: ${isDone ? 'white' : '#94a3b8'};
+                                   width: 32px; height: 32px;
+                                   border-radius: 6px; cursor: pointer;
+                                   font-size: 1.1em; display: flex;
+                                   align-items: center; justify-content: center;"
+                            title="${isDone ? 'Mark incomplete' : 'Mark complete'}">
+                            ${isDone ? '✓' : '○'}
+                        </button>
+                    </td>
+                    <td>
+                        <input type="date" class="deadline-date-picker"
+                            value="${d.date}"
+                            data-deadline-id="${deadlineId}"
+                            onchange="handleDateChange(this)">
+                    </td>
+                    <td>${d.day}</td>
+                    <td>${isDone && grade !== null ? `<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">${grade}%</span>` : getCountdownBadge(days, d.tbd)}</td>
+                    <td class="deadline-what-cell">
+                        <input type="text" class="deadline-edit-input"
+                            value="${escapeHtml(d.what)}"
+                            data-deadline-id="${deadlineId}"
+                            data-field="what"
+                            data-original="${escapeHtml(d.what)}"
+                            onblur="handleTextEdit(this)"
+                            onkeydown="if(event.key==='Enter'){this.blur();}"
+                            style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">
+                    </td>
+                    <td>
+                        <input type="text" class="deadline-edit-input"
+                            value="${escapeHtml(d.course)}"
+                            data-deadline-id="${deadlineId}"
+                            data-field="course"
+                            data-original="${escapeHtml(d.course)}"
+                            onblur="handleTextEdit(this)"
+                            onkeydown="if(event.key==='Enter'){this.blur();}"
+                            style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">
+                    </td>
+                    <td>
+                        <input type="text" class="deadline-edit-input"
+                            value="${escapeHtml(d.weight)}"
+                            data-deadline-id="${deadlineId}"
+                            data-field="weight"
+                            data-original="${escapeHtml(d.weight)}"
+                            onblur="handleTextEdit(this)"
+                            onkeydown="if(event.key==='Enter'){this.blur();}"
+                            style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">
+                    </td>
+                    <td>${d.type}</td>
+                    <td>
+                        <button onclick="deleteDeadlineById('${deadlineId}')"
+                            style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"
+                            title="Delete this deadline">🗑️</button>
+                    </td>
+                </tr>
+            `;
         }).join('');
-
-        // Hide entire month section if no active deadlines remain
-        const monthTable = document.getElementById(month + 'Table');
-        if (monthTable) {
-            const section = monthTable.closest('.table-container');
-            const header = section ? section.previousElementSibling : null;
-            if (activeMonthDeadlines.length === 0) {
-                if (section) section.style.display = 'none';
-                if (header && header.classList.contains('month-header')) header.style.display = 'none';
-            } else {
-                if (section) section.style.display = '';
-                if (header && header.classList.contains('month-header')) header.style.display = '';
-            }
-        }
     });
-
-    // Build archive section for past completed deadlines
-    var archiveEl = document.getElementById('past-deadlines-archive-section');
-    if (pastCompleted.length === 0) {
-        // No past completed deadlines — remove archive if it exists
-        if (archiveEl) archiveEl.remove();
-        return;
-    }
-
-    // Build past deadlines list items
-    var pastRows = '';
-    pastCompleted.forEach(function(d) {
-        var grade = d.grade !== undefined && d.grade !== null ? d.grade : null;
-        var gradeInfo = grade !== null ? (' \u2014 Grade: ' + escapeHtml(String(grade)) + '%') : '';
-        pastRows += '<div style="padding: 6px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline;">'
-            + '<span style="color: #6b7280; min-width: 90px;">' + escapeHtml(d.date || '') + '</span>'
-            + '<span style="color: #60a5fa; min-width: 100px;">' + escapeHtml(d.course || '') + '</span>'
-            + '<span style="flex: 1;">' + escapeHtml(d.what || '') + '</span>'
-            + '<span style="color: #10b981;">' + gradeInfo + '</span>'
-            + '</div>';
-    });
-
-    // Create archive container if it doesn't exist yet
-    if (!archiveEl) {
-        archiveEl = document.createElement('div');
-        archiveEl.id = 'past-deadlines-archive-section';
-        // Insert at end of the deadlines card (after last month table)
-        var aprilTable = document.getElementById('aprilTable');
-        if (aprilTable) {
-            var card = aprilTable.closest('.card');
-            if (card) {
-                card.appendChild(archiveEl);
-            }
-        }
-    }
-
-    // Preserve open/closed state across re-renders
-    var archiveContent = document.getElementById('past-deadlines-archive-content');
-    var wasOpen = archiveContent ? archiveContent.style.display !== 'none' : false;
-
-    archiveEl.innerHTML = '<div style="margin-top: 24px; border-top: 1px solid #374151; padding-top: 16px;">'
-        + '<button onclick="var arc=document.getElementById(\'past-deadlines-archive-content\'); arc.style.display = arc.style.display===\'none\' ? \'block\' : \'none\'; this.querySelector(\'.archive-arrow\').textContent = arc.style.display===\'none\' ? \'\u25B8\' : \'\u25BE\';"'
-        + ' style="background: #1e293b; border: 1px solid #374151; color: #9ca3af; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; width: 100%; text-align: left;">'
-        + '<span class="archive-arrow">' + (wasOpen ? '\u25BE' : '\u25B8') + '</span> \uD83D\uDCE6 Past Deadlines (' + pastCompleted.length + ' completed)'
-        + '</button>'
-        + '<div id="past-deadlines-archive-content" style="display: ' + (wasOpen ? 'block' : 'none') + '; margin-top: 12px;">'
-        + '<div style="opacity: 0.7;">' + pastRows + '</div>'
-        + '</div>'
-        + '</div>';
 }
 
 // Handle date picker changes
