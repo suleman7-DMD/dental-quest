@@ -1010,8 +1010,8 @@ function mpRenderNotes() {
                     <div class="mp-note-timestamp">${dateStr}</div>
                 </div>
                 <div class="mp-note-actions">
-                    <button class="mp-note-action-btn" onclick="mpEditNote(${note.id})" title="Edit">✏️</button>
-                    <button class="mp-note-action-btn delete" onclick="mpDeleteNote(${note.id})" title="Delete">🗑️</button>
+                    <button class="mp-note-action-btn" onclick="mpEditNote('${note.id}')" title="Edit">✏️</button>
+                    <button class="mp-note-action-btn delete" onclick="mpDeleteNote('${note.id}')" title="Delete">🗑️</button>
                 </div>
             </div>
         `;
@@ -1031,11 +1031,11 @@ function mpEditNote(noteId) {
     // Replace with editable textarea
     contentEl.innerHTML = `
         <textarea class="mp-note-edit-input" id="mpEditInput-${noteId}"
-            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpSaveNoteEdit(${noteId});}"
-            onkeyup="if(event.key==='Escape'){mpCancelNoteEdit(${noteId}, '${escapeHtml(currentText).replace(/'/g, "\\'")}');}">${escapeHtml(currentText)}</textarea>
+            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpSaveNoteEdit('${noteId}');}"
+            onkeyup="if(event.key==='Escape'){mpCancelNoteEdit('${noteId}', '${escapeHtml(currentText).replace(/'/g, "\\'")}');}">${escapeHtml(currentText)}</textarea>
         <div class="mp-note-edit-actions">
-            <button onclick="mpSaveNoteEdit(${noteId})" class="mp-note-save-btn">Save</button>
-            <button onclick="mpCancelNoteEdit(${noteId})" class="mp-note-cancel-btn">Cancel</button>
+            <button onclick="mpSaveNoteEdit('${noteId}')" class="mp-note-save-btn">Save</button>
+            <button onclick="mpCancelNoteEdit('${noteId}')" class="mp-note-cancel-btn">Cancel</button>
         </div>
     `;
 

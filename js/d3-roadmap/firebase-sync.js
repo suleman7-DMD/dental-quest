@@ -880,7 +880,7 @@ function renderDoTodayTasks() {
 
     listEl.innerHTML = sorted.map(task => `
         <div class="do-today-item ${task.completed ? 'completed' : ''}"
-             onclick="toggleMainAppTask(${task.id})">
+             onclick="toggleMainAppTask('${task.id}')">
             <div class="do-today-checkbox">
                 ${task.completed ? '✓' : ''}
             </div>
