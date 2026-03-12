@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>D3 Spring Roadmap | Suleman Shaikh, DMD</title>
+    <title>Graduation Roadmap | Suleman Shaikh, DMD</title>
     
     <!-- Firebase SDK - Same as Dental Quest App -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -6302,6 +6302,58 @@
 
         } /* end 375px */
 
+
+        /* Mission Control */
+        .mission-card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #374151; }
+        .clinic-requirements-card { border-left: 4px solid #10b981; }
+        .headline-counters { display: flex; gap: 24px; margin: 16px 0; flex-wrap: wrap; }
+        .headline-counter { flex: 1; min-width: 200px; }
+        .headline-counter .counter-label { color: #9ca3af; font-size: 13px; margin-bottom: 4px; }
+        .headline-counter .counter-value { font-size: 24px; font-weight: bold; color: white; }
+        .headline-counter .counter-value input { background: transparent; border: 1px solid #374151; color: white; width: 60px; text-align: center; font-size: 24px; font-weight: bold; border-radius: 4px; padding: 2px; }
+        .progress-bar { height: 8px; background: #374151; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #10b981; border-radius: 4px; transition: width 0.3s; }
+        .competency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin: 16px 0; }
+        .comp-mini-card { background: #0f172a; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: background 0.2s; }
+        .comp-mini-card:hover { background: #1e293b; }
+        .comp-icon { margin-right: 4px; }
+        .comp-name { color: #e2e8f0; font-size: 12px; }
+        .comp-progress { float: right; color: #9ca3af; font-size: 12px; }
+        .comp-mini-bar { height: 3px; background: #374151; border-radius: 2px; margin-top: 4px; }
+        .comp-mini-fill { height: 100%; border-radius: 2px; }
+        .auto-total { color: #9ca3af; font-size: 13px; text-align: center; margin: 8px 0; }
+        .open-clinical-btn { background: #1e40af; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 8px; }
+        .open-clinical-btn:hover { background: #2563eb; }
+
+        /* Key Dates Countdown */
+        .countdown-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .countdown-card { flex: 1; min-width: 150px; background: #0f172a; border-radius: 8px; padding: 12px; text-align: center; }
+        .countdown-days { font-size: 28px; font-weight: bold; color: #f59e0b; }
+        .countdown-label { color: #9ca3af; font-size: 12px; margin-top: 4px; }
+
+        /* Graduation Prep */
+        .gradprep-card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #374151; }
+        .gradprep-card h3 { color: white; margin-bottom: 12px; }
+        .gradprep-card h4 { color: #9ca3af; font-size: 13px; margin: 12px 0 4px; }
+        .gradprep-card textarea { width: 100%; min-height: 80px; background: #0f172a; border: 1px solid #374151; color: #e2e8f0; border-radius: 8px; padding: 8px; resize: vertical; font-family: inherit; }
+        .gradprep-card input[type="date"] { background: #0f172a; border: 1px solid #374151; color: #e2e8f0; border-radius: 4px; padding: 4px 8px; }
+        .gradprep-fields { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+        .gradprep-fields label { color: #9ca3af; font-size: 13px; }
+
+        /* Schedule sub-tabs */
+        .schedule-subtab-btn.active { background: #1e40af !important; color: white !important; }
+
+        /* Academics accordion */
+        .academics-accordion button:hover { background: #334155 !important; }
+
+        @media (max-width: 600px) {
+            .headline-counters { flex-direction: column; }
+            .competency-grid { grid-template-columns: repeat(2, 1fr); }
+            .countdown-row { flex-direction: column; }
+            .headline-counter .counter-value { font-size: 20px; }
+            .headline-counter .counter-value input { font-size: 20px; width: 50px; }
+        }
+
     </style>
 </head>
 <body>
@@ -6315,8 +6367,8 @@
     </nav>
 
     <div class="header">
-        <h1>📚 D3 Spring 2026 Roadmap</h1>
-        <p>Your complete academic survival guide</p>
+        <h1>📚 Graduation Roadmap</h1>
+        <p>Suleman Shaikh, DMD 2027</p>
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
             <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
             <span id="syncText" style="color: #b0b8c4;">Connecting...</span>
@@ -6331,23 +6383,24 @@
         </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <nav class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('dashboard', event)" aria-label="View Dashboard tab">🎯 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('deadlines', event)" aria-label="View Deadlines tab">📅 Deadlines</button>
-        <button class="tab-btn" onclick="switchTab('courses', event)" aria-label="View Courses tab">📚 Courses</button>
-        <button class="tab-btn" onclick="switchTab('grades', event)" aria-label="View Grades tab">📊 Grades</button>
-        <button class="tab-btn" onclick="switchTab('examcontent', event)" aria-label="View Exam Content tab">📖 Exam Content</button>
-        <button class="tab-btn" onclick="switchTab('classmates', event)" aria-label="View Classmate Share tab">👥 Classmate Share</button>
-        <button class="tab-btn" onclick="switchTab('mandatory', event)" aria-label="View Mandatory Items tab">⚠️ Mandatory</button>
-        <button class="tab-btn" onclick="switchTab('dailyplanner', event)" aria-label="View Daily Planner tab">📋 Daily Planner</button>
-        <button class="tab-btn" onclick="switchTab('monthlyplanner', event)" aria-label="View Monthly Planner tab">🗓️ Monthly</button>
-        <button class="tab-btn" onclick="switchTab('clinical', event)" aria-label="View Clinical Patients tab">🏥 Clinical</button>
-        <button class="tab-btn" onclick="switchTab('remember', event)" aria-label="View Always Remember tab" style="color: #c4b5fd;">🛡️ Remember</button>
-    </nav>
+    <!-- Tab Navigation (7-tab layout) -->
+    <div class="tab-nav" style="display:flex; gap:4px; overflow-x:auto; padding:8px; background:#0f172a; position:sticky; top:0; z-index:100;">
+        <button class="tab-btn active" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
+        <button class="tab-btn" onclick="switchTab('deadlines', event)">⏰ Deadlines</button>
+        <button class="tab-btn" onclick="switchTab('clinical', event)">🏥 Clinical</button>
+        <button class="tab-btn" onclick="switchTab('schedule', event)">📅 Schedule</button>
+        <button class="tab-btn" onclick="switchTab('academics', event)">📚 D3 Academics</button>
+        <button class="tab-btn" onclick="switchTab('gradprep', event)">🎓 Grad Prep</button>
+        <button class="tab-btn" onclick="switchTab('remember', event)" style="background:#7c3aed;">🛡️ Remember</button>
+    </div>
 
-    <!-- ==================== DASHBOARD TAB ==================== -->
-    <div id="tab-dashboard" class="tab-content active">
+    <!-- ==================== MISSION CONTROL TAB ==================== -->
+    <div id="tab-missioncontrol" class="tab-content active">
+        <!-- Populated by renderDashboard() in init.js -->
+    </div>
+
+    <!-- Hidden: old dashboard content preserved for reference -->
+    <div id="tab-dashboard" class="tab-content" style="display:none !important;">
         <!-- At-Risk Alert -->
         <div class="alert alert-critical">
             <span style="font-size: 2em;">🚨</span>
@@ -6638,8 +6691,17 @@
         </div>
     </div>
 
-    <!-- ==================== COURSES TAB ==================== -->
-    <div id="tab-courses" class="tab-content">
+    <!-- ==================== D3 ACADEMICS TAB (accordion sections) ==================== -->
+    <div id="tab-academics" class="tab-content" style="display:none;">
+        <h2 style="color:#f59e0b; margin-bottom:16px;">📚 D3 Academics</h2>
+
+    <!-- Course Info Accordion (collapsed) -->
+    <div class="academics-accordion">
+        <button onclick="toggleAcademicsSection('courses')" style="width:100%; text-align:left; padding:12px 16px; background:#1e293b; border:1px solid #374151; border-radius:8px; color:white; cursor:pointer; font-size:16px; margin-bottom:4px;">
+            <span id="academics-courses-arrow">&#9656;</span> 📚 Course Info
+        </button>
+        <div id="academics-courses-content" style="display:none; padding:12px; border:1px solid #1e293b; border-radius:0 0 8px 8px; margin-bottom:12px;">
+    <div id="tab-courses">
         <!-- ORAL MEDICINE -->
         <div class="course-card">
             <div class="course-header" onclick="toggleCourse('oralmed')">
@@ -6983,10 +7045,17 @@
                 </table>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-courses -->
+    </div><!-- end academics-courses-content -->
+    </div><!-- end academics-accordion (courses) -->
 
-    <!-- ==================== GRADES TAB ==================== -->
-    <div id="tab-grades" class="tab-content">
+    <!-- Grades Accordion (expanded by default) -->
+    <div class="academics-accordion">
+        <button onclick="toggleAcademicsSection('grades')" style="width:100%; text-align:left; padding:12px 16px; background:#1e293b; border:1px solid #374151; border-radius:8px; color:white; cursor:pointer; font-size:16px; margin-bottom:4px;">
+            <span id="academics-grades-arrow">&#9662;</span> 📊 Grade Calculator
+        </button>
+        <div id="academics-grades-content" style="display:block; padding:12px; border:1px solid #1e293b; border-radius:0 0 8px 8px; margin-bottom:12px;">
+    <div id="tab-grades">
         <div class="alert alert-info">
             <span style="font-size: 1.5em;">📊</span>
             <div>
@@ -7054,10 +7123,17 @@
                 <p style="color: #b0bcc8;">Select a course and enter your grades to see calculations.</p>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-grades -->
+    </div><!-- end academics-grades-content -->
+    </div><!-- end academics-accordion (grades) -->
 
-    <!-- ==================== EXAM CONTENT TAB ==================== -->
-    <div id="tab-examcontent" class="tab-content">
+    <!-- Exam Content Accordion (collapsed) -->
+    <div class="academics-accordion">
+        <button onclick="toggleAcademicsSection('exams')" style="width:100%; text-align:left; padding:12px 16px; background:#1e293b; border:1px solid #374151; border-radius:8px; color:white; cursor:pointer; font-size:16px; margin-bottom:4px;">
+            <span id="academics-exams-arrow">&#9656;</span> 📖 Remaining Exams (4)
+        </button>
+        <div id="academics-exams-content" style="display:none; padding:12px; border:1px solid #1e293b; border-radius:0 0 8px 8px; margin-bottom:12px;">
+    <div id="tab-examcontent">
         <!-- Header Info -->
         <div class="alert alert-info">
             <span style="font-size: 1.5em;">📖</span>
@@ -7102,10 +7178,17 @@
                 <!-- Populated by JS based on course -->
             </div>
         </div>
-    </div>
+    </div><!-- end tab-examcontent -->
+    </div><!-- end academics-exams-content -->
+    </div><!-- end academics-accordion (exams) -->
 
-    <!-- ==================== CLASSMATE SHARE TAB ==================== -->
-    <div id="tab-classmates" class="tab-content">
+    <!-- Classmate Resources Accordion (collapsed) -->
+    <div class="academics-accordion">
+        <button onclick="toggleAcademicsSection('classmates')" style="width:100%; text-align:left; padding:12px 16px; background:#1e293b; border:1px solid #374151; border-radius:8px; color:white; cursor:pointer; font-size:16px; margin-bottom:4px;">
+            <span id="academics-classmates-arrow">&#9656;</span> 👥 Classmate Resources
+        </button>
+        <div id="academics-classmates-content" style="display:none; padding:12px; border:1px solid #1e293b; border-radius:0 0 8px 8px; margin-bottom:12px;">
+    <div id="tab-classmates">
         <div class="alert alert-warning">
             <span style="font-size: 1.5em;">👥</span>
             <div>
@@ -7358,10 +7441,17 @@
                 <div>For Jan 29 Take Home Exam 1: Identify 1-2 people you can work through it with</div>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-classmates -->
+    </div><!-- end academics-classmates-content -->
+    </div><!-- end academics-accordion (classmates) -->
 
-    <!-- ==================== MANDATORY TAB ==================== -->
-    <div id="tab-mandatory" class="tab-content">
+    <!-- Mandatory Items Accordion (collapsed) -->
+    <div class="academics-accordion">
+        <button onclick="toggleAcademicsSection('mandatory')" style="width:100%; text-align:left; padding:12px 16px; background:#1e293b; border:1px solid #374151; border-radius:8px; color:white; cursor:pointer; font-size:16px; margin-bottom:4px;">
+            <span id="academics-mandatory-arrow">&#9656;</span> ⚠️ Mandatory Items
+        </button>
+        <div id="academics-mandatory-content" style="display:none; padding:12px; border:1px solid #1e293b; border-radius:0 0 8px 8px; margin-bottom:12px;">
+    <div id="tab-mandatory">
         <div class="alert alert-critical">
             <span style="font-size: 2em;">⚠️</span>
             <div>
@@ -7528,10 +7618,22 @@
                 </table>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-mandatory -->
+    </div><!-- end academics-mandatory-content -->
+    </div><!-- end academics-accordion (mandatory) -->
 
-    <!-- ==================== DAILY PLANNER TAB ==================== -->
-    <div id="tab-dailyplanner" class="tab-content">
+    </div><!-- end tab-academics -->
+
+    <!-- ==================== SCHEDULE TAB (wraps Monthly + Daily) ==================== -->
+    <div id="tab-schedule" class="tab-content" style="display:none;">
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button id="schedule-monthly-btn" class="schedule-subtab-btn active" onclick="switchScheduleSubTab('monthly')" style="padding:8px 16px; border-radius:8px; background:#1e40af; color:white; border:none; cursor:pointer;">🗓️ Monthly</button>
+            <button id="schedule-daily-btn" class="schedule-subtab-btn" onclick="switchScheduleSubTab('daily')" style="padding:8px 16px; border-radius:8px; background:#374151; color:#9ca3af; border:none; cursor:pointer;">📋 Daily</button>
+        </div>
+
+    <!-- Daily planner content nested inside schedule tab -->
+    <div id="schedule-daily" class="schedule-subtab-content" style="display:none;">
+    <div id="tab-dailyplanner">
         <!-- Header with Date, Time, Countdowns -->
         <div class="planner-header-card">
             <div class="planner-header-top">
@@ -7697,10 +7799,12 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-dailyplanner -->
+    </div><!-- end schedule-daily -->
 
-    <!-- ==================== MONTHLY PLANNER TAB ==================== -->
-    <div id="tab-monthlyplanner" class="tab-content">
+    <!-- Monthly planner content nested inside schedule tab -->
+    <div id="schedule-monthly" class="schedule-subtab-content">
+    <div id="tab-monthlyplanner">
         <!-- Header -->
         <div class="card" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; margin-bottom: 20px;">
             <h2 style="color: white; margin: 0 0 5px 0; font-size: 1.8em;">🗓️ COMPLETE BATTLE MAP</h2>
@@ -7782,7 +7886,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- end tab-monthlyplanner -->
+    </div><!-- end schedule-monthly -->
+    </div><!-- end tab-schedule -->
 
     <!-- ==================== CLINICAL TAB ==================== -->
     <div id="tab-clinical" class="tab-content">
@@ -7880,6 +7986,11 @@
             <!-- Requirements List - Rendered by JS -->
             <div id="competenciesContainer"></div>
         </div>
+    </div>
+
+    <!-- ==================== GRADUATION PREP TAB ==================== -->
+    <div id="tab-gradprep" class="tab-content" style="display:none;">
+        <!-- Populated by renderGraduationPrep() in init.js -->
     </div>
 
     <!-- ==================== ALWAYS REMEMBER TAB ==================== -->
@@ -9167,15 +9278,15 @@ CHAIR: 9F
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/d3-roadmap/state.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/firebase-sync.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/deadlines.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/grades.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/exam-content.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/clinical.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/import-system.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/daily-planner.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/monthly-planner.js?v=20260305c"></script>
-    <script src="js/d3-roadmap/init.js?v=20260305c"></script>
+    <script src="js/d3-roadmap/state.js?v=20260312"></script>
+    <script src="js/d3-roadmap/firebase-sync.js?v=20260312"></script>
+    <script src="js/d3-roadmap/deadlines.js?v=20260312"></script>
+    <script src="js/d3-roadmap/grades.js?v=20260312"></script>
+    <script src="js/d3-roadmap/exam-content.js?v=20260312"></script>
+    <script src="js/d3-roadmap/clinical.js?v=20260312"></script>
+    <script src="js/d3-roadmap/import-system.js?v=20260312"></script>
+    <script src="js/d3-roadmap/daily-planner.js?v=20260312"></script>
+    <script src="js/d3-roadmap/monthly-planner.js?v=20260312"></script>
+    <script src="js/d3-roadmap/init.js?v=20260312"></script>
 </body>
 </html>

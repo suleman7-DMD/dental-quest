@@ -5,110 +5,239 @@
 
 // ==================== RENDER FUNCTIONS ====================
 function renderDashboard() {
+    const container = document.getElementById('tab-missioncontrol') || document.getElementById('tab-dashboard');
+    if (!container) return;
+
     // Get current date for all calculations
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Stats row - dynamically calculated from deadlines array
-    const upcomingExams = exams.filter(e => getCountdown(e.date) >= 0 && getCountdown(e.date) <= 30).length;
-    const urgentDeadlines = deadlines.filter(d => !d.done && getCountdown(d.date) >= 0 && getCountdown(d.date) <= 7).length;
-    const next14Deadlines = deadlines.filter(d => {
-        if (d.done) return false;
-        const days = getCountdown(d.date);
-        return days > 7 && days <= 14;
-    }).length;
-    const mandatoryDone = Object.values(roadmapData.mandatoryItems).filter(v => v).length;
+    // === Row 1: Clinic Requirements Card ===
+    // Load headline counters from saved data
+    roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
+    const clinicHeadlines = {
+        appointments: {
+            completed: roadmapData.clinicHeadlines.appointments?.completed ?? 0,
+            target: roadmapData.clinicHeadlines.appointments?.target ?? 0
+        },
+        procedures: {
+            completed: roadmapData.clinicHeadlines.procedures?.completed ?? 0,
+            target: roadmapData.clinicHeadlines.procedures?.target ?? 0
+        }
+    };
 
-    document.getElementById('dashboardStats').innerHTML = `
-        <div class="stat-box">
-            <div class="number">${upcomingExams}</div>
-            <div class="label">Exams in 30 days</div>
-        </div>
-        <div class="stat-box">
-            <div class="number" style="color: ${urgentDeadlines > 0 ? '#f87171' : '#10b981'};">${urgentDeadlines}</div>
-            <div class="label">Due in 7 days</div>
-        </div>
-        <div class="stat-box">
-            <div class="number" style="color: #d97706;">${next14Deadlines}</div>
-            <div class="label">Due in 8-14 days</div>
-        </div>
-        <div class="stat-box">
-            <div class="number">${mandatoryDone}/${Object.keys(roadmapData.mandatoryItems).length}</div>
-            <div class="label">Mandatory Done</div>
-        </div>
-    `;
+    const aptPct = clinicHeadlines.appointments.target > 0
+        ? Math.min(100, Math.round((clinicHeadlines.appointments.completed / clinicHeadlines.appointments.target) * 100))
+        : 0;
+    const procPct = clinicHeadlines.procedures.target > 0
+        ? Math.min(100, Math.round((clinicHeadlines.procedures.completed / clinicHeadlines.procedures.target) * 100))
+        : 0;
 
-    // Helper function to render deadline items
+    // Build competency category progress grid
+    const competencies = getCompetenciesData();
+    const overallStats = calculateOverallStats(competencies);
+    let categoryProgressHTML = '';
+    Object.entries(competencies).forEach(function(entry) {
+        const key = entry[0];
+        const cat = entry[1];
+        const stats = calculateCategoryStats(cat);
+        const pct = stats.totalUnits > 0 ? Math.round((stats.completedUnits / stats.totalUnits) * 100) : 0;
+        categoryProgressHTML += '<div class="comp-mini-card" onclick="switchTab(\'clinical\')" style="cursor:pointer; background:rgba(30,41,59,0.6); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:4px;">'
+            + '<div style="display:flex; align-items:center; gap:6px; justify-content:space-between;">'
+            + '<span style="font-size:1.1em;">' + (cat.icon ?? '📌') + '</span>'
+            + '<span style="flex:1; font-size:0.8em; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(cat.name) + '</span>'
+            + '<span style="font-size:0.75em; color:#94a3b8; white-space:nowrap;">' + stats.completed + '/' + stats.totalItems + '</span>'
+            + '</div>'
+            + '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:5px; overflow:hidden;">'
+            + '<div style="background:' + (cat.color ?? '#3b82f6') + '; height:100%; width:' + pct + '%; transition:width 0.3s;"></div>'
+            + '</div>'
+            + '</div>';
+    });
+
+    // === Row 2: Deadline helper ===
     function renderDeadlineItems(items, emptyMessage) {
         if (items.length === 0) {
-            return `<p style="color: #10b981; padding: 20px;">✅ ${emptyMessage}</p>`;
+            return '<p style="color: #10b981; padding: 20px;">✅ ' + emptyMessage + '</p>';
         }
-        return items.map(d => {
+        return items.map(function(d) {
             const days = getCountdown(d.date);
-            return `
-                <div class="action-item">
-                    ${getCountdownBadge(days, d.tbd)}
-                    <div style="flex: 1;">
-                        <strong>${d.what}</strong>
-                        <span style="color: #b0bcc8; margin-left: 10px;">${d.course}</span>
-                    </div>
-                    <span style="color: #b0bcc8;">${d.weight}</span>
-                </div>
-            `;
+            return '<div class="action-item">'
+                + getCountdownBadge(days, d.tbd)
+                + '<div style="flex: 1;">'
+                + '<strong>' + escapeHtml(d.what) + '</strong>'
+                + '<span style="color: #b0bcc8; margin-left: 10px;">' + escapeHtml(d.course) + '</span>'
+                + '</div>'
+                + '<span style="color: #b0bcc8;">' + escapeHtml(d.weight || '') + '</span>'
+                + '</div>';
         }).join('');
     }
 
     // Next 7 days - directly from deadlines array (synced with Deadlines tab)
-    // FIX: Filter out completed deadlines so they don't clutter the dashboard
-    const next7 = deadlines.filter(d => {
+    const next7 = deadlines.filter(function(d) {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days >= 0 && days <= 7;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
-
-    document.getElementById('next7Days').innerHTML = renderDeadlineItems(next7, 'No deadlines in the next 7 days!');
-    document.getElementById('next7Count').textContent = next7.length;
-    document.getElementById('next7Count').style.background = next7.length > 0 ? '#dc2626' : '#059669';
+    }).sort(function(a, b) { return parseLocalDate(a.date) - parseLocalDate(b.date); });
 
     // Next 8-14 days
-    const next14 = deadlines.filter(d => {
+    const next14 = deadlines.filter(function(d) {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 7 && days <= 14;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
-
-    document.getElementById('next14Days').innerHTML = renderDeadlineItems(next14, 'No deadlines in days 8-14!');
-    document.getElementById('next14Count').textContent = next14.length;
-    document.getElementById('next14Count').style.background = next14.length > 0 ? '#d97706' : '#059669';
+    }).sort(function(a, b) { return parseLocalDate(a.date) - parseLocalDate(b.date); });
 
     // Next 15-30 days (next month)
-    const nextMonth = deadlines.filter(d => {
+    const nextMonth = deadlines.filter(function(d) {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 14 && days <= 30;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+    }).sort(function(a, b) { return parseLocalDate(a.date) - parseLocalDate(b.date); });
 
-    document.getElementById('nextMonthDays').innerHTML = renderDeadlineItems(nextMonth, 'No deadlines in days 15-30!');
-    document.getElementById('nextMonthCount').textContent = nextMonth.length;
+    // === Row 4: Key Dates Countdown ===
+    const d3End = new Date(2026, 4, 13);       // May 13, 2026
+    const extStart = new Date(2026, 4, 19);    // May 19, 2026
+    const graduation = new Date(2027, 4, 12);  // May 12, 2027
+    const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
 
-    // Update current date display
-    const dateDisplay = document.getElementById('currentDateDisplay');
-    if (dateDisplay) {
-        dateDisplay.textContent = today.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    }
+    // Build the full dashboard HTML
+    let html = '';
 
-    // Render clinical dashboard widget
-    renderClinicalDashboardWidget();
+    // Current date display
+    html += '<div id="currentDateDisplay" style="text-align:center; color:#94a3b8; font-size:0.9em; margin-bottom:16px;">'
+        + today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        + '</div>';
 
-    // Render study progress widget
-    renderStudyProgressWidget();
+    // === ROW 1: Clinic Requirements Hero Card ===
+    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:20px; margin-bottom:16px;">';
+    html += '<h2 style="color:#93c5fd; margin:0 0 16px 0; font-size:1.3em;">🏥 Clinic Requirements</h2>';
 
-    // Render Do Today tasks widget (cross-app sync)
+    // Headline counters
+    html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">';
+
+    // Appointments counter
+    html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px;">';
+    html += '<div style="font-size:0.85em; color:#93c5fd; margin-bottom:8px; font-weight:600;">Appointments</div>';
+    html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
+    html += '<input type="number" id="headline-apt-completed" value="' + clinicHeadlines.appointments.completed + '" min="0" '
+        + 'onchange="updateHeadlineCounter(\'appointments\', this.value)" '
+        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
+    html += '<input type="number" id="headline-apt-target" value="' + clinicHeadlines.appointments.target + '" min="0" '
+        + 'onchange="updateHeadlineTarget(\'appointments\', this.value)" '
+        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '</div>';
+    html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
+    html += '<div style="background:#3b82f6; height:100%; width:' + aptPct + '%; transition:width 0.3s;"></div>';
+    html += '</div>';
+    html += '</div>';
+
+    // Procedures counter
+    html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:14px;">';
+    html += '<div style="font-size:0.85em; color:#6ee7b7; margin-bottom:8px; font-weight:600;">Procedures</div>';
+    html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
+    html += '<input type="number" id="headline-proc-completed" value="' + clinicHeadlines.procedures.completed + '" min="0" '
+        + 'onchange="updateHeadlineCounter(\'procedures\', this.value)" '
+        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
+    html += '<input type="number" id="headline-proc-target" value="' + clinicHeadlines.procedures.target + '" min="0" '
+        + 'onchange="updateHeadlineTarget(\'procedures\', this.value)" '
+        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '</div>';
+    html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
+    html += '<div style="background:#10b981; height:100%; width:' + procPct + '%; transition:width 0.3s;"></div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>'; // end headline counters grid
+
+    // Competency category grid
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px;">';
+    html += categoryProgressHTML;
+    html += '</div>';
+
+    // Overall competency total
+    html += '<div style="text-align:center; color:#94a3b8; font-size:0.85em; margin-bottom:12px;">'
+        + 'Competency items: ' + overallStats.completedItems + '/' + overallStats.totalItems + ' completed'
+        + ' (' + overallStats.overallPercent + '%)'
+        + '</div>';
+
+    // Open Clinical button
+    html += '<div style="text-align:center;">';
+    html += '<button onclick="switchTab(\'clinical\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Clinical Tab →</button>';
+    html += '</div>';
+
+    html += '</div>'; // end clinic requirements card
+
+    // === ROW 2: Do Today Widget ===
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">';
+    html += '<h3 style="color:#fbbf24; margin:0; font-size:1.1em;">⚡ Do Today</h3>';
+    html += '<span id="doTodayCount" class="empty" style="background:#f59e0b; color:#000; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">0</span>';
+    html += '</div>';
+    html += '<div id="doTodayTasksList"></div>';
+    html += '</div>';
+
+    // === ROW 3: Deadline Windows ===
+    // Next 7 days
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:16px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+    html += '<h3 style="color:#f87171; margin:0; font-size:1.05em;">🔴 Next 7 Days</h3>';
+    html += '<span id="next7Count" style="background:' + (next7.length > 0 ? '#dc2626' : '#059669') + '; color:#fff; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">' + next7.length + '</span>';
+    html += '</div>';
+    html += '<div id="next7Days">' + renderDeadlineItems(next7, 'No deadlines in the next 7 days!') + '</div>';
+    html += '</div>';
+
+    // Next 8-14 days
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(217,119,6,0.3); border-radius:14px; padding:16px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+    html += '<h3 style="color:#fbbf24; margin:0; font-size:1.05em;">🟡 Next 8–14 Days</h3>';
+    html += '<span id="next14Count" style="background:' + (next14.length > 0 ? '#d97706' : '#059669') + '; color:#fff; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">' + next14.length + '</span>';
+    html += '</div>';
+    html += '<div id="next14Days">' + renderDeadlineItems(next14, 'No deadlines in days 8-14!') + '</div>';
+    html += '</div>';
+
+    // Next 15-30 days
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.3); border-radius:14px; padding:16px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+    html += '<h3 style="color:#94a3b8; margin:0; font-size:1.05em;">📅 Next 15–30 Days</h3>';
+    html += '<span id="nextMonthCount" style="background:#475569; color:#fff; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">' + nextMonth.length + '</span>';
+    html += '</div>';
+    html += '<div id="nextMonthDays">' + renderDeadlineItems(nextMonth, 'No deadlines in days 15-30!') + '</div>';
+    html += '</div>';
+
+    // === ROW 4: Key Dates Countdown ===
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
+    html += '<h3 style="color:#fbbf24; margin:0 0 12px 0; font-size:1.1em;">🎯 Key Dates</h3>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;">';
+
+    // D3 End
+    html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25); border-radius:10px; padding:12px; text-align:center;">';
+    html += '<div style="font-size:1.8em; font-weight:800; color:#60a5fa;">' + daysTo(d3End) + '</div>';
+    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to D3 End</div>';
+    html += '<div style="font-size:0.7em; color:#64748b;">May 13, 2026</div>';
+    html += '</div>';
+
+    // Externship Start
+    html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px; text-align:center;">';
+    html += '<div style="font-size:1.8em; font-weight:800; color:#34d399;">' + daysTo(extStart) + '</div>';
+    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Externship</div>';
+    html += '<div style="font-size:0.7em; color:#64748b;">May 19, 2026</div>';
+    html += '</div>';
+
+    // Graduation
+    html += '<div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px; text-align:center;">';
+    html += '<div style="font-size:1.8em; font-weight:800; color:#fbbf24;">' + daysTo(graduation) + '</div>';
+    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Graduation</div>';
+    html += '<div style="font-size:0.7em; color:#64748b;">May 12, 2027</div>';
+    html += '</div>';
+
+    html += '</div>'; // end countdown grid
+    html += '</div>'; // end key dates card
+
+    // Write the entire dashboard
+    container.innerHTML = html;
+
+    // Render Do Today tasks widget (cross-app sync) — populates #doTodayTasksList inside the container
     renderDoTodayTasks();
 }
 
@@ -281,6 +410,97 @@ function renderStudyProgressWidget() {
     }
 
     container.innerHTML = html;
+}
+
+// ==================== HEADLINE COUNTER HELPERS ====================
+function updateHeadlineCounter(type, value) {
+    roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
+    roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
+    roadmapData.clinicHeadlines[type].completed = parseInt(value) || 0;
+    saveData();
+}
+
+function updateHeadlineTarget(type, value) {
+    roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
+    roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
+    roadmapData.clinicHeadlines[type].target = parseInt(value) || 0;
+    saveData();
+}
+
+// ==================== GRADUATION PREP TAB ====================
+function renderGraduationPrep() {
+    const container = document.getElementById('tab-gradprep');
+    if (!container) return;
+
+    const gp = roadmapData.graduationPrep || {};
+    const ext = gp.externship || {};
+    const cdca = gp.cdcaAdex || {};
+    const inbde = gp.inbde || {};
+    const jobs = gp.jobSearch || {};
+
+    let html = '<h2 style="color:#f59e0b; margin-bottom:16px; font-size:1.3em;">🎓 Graduation Prep</h2>';
+
+    // Externship Card
+    html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
+    html += '<h3 style="color:#6ee7b7; margin:0 0 12px 0;">🌴 Externship (Florida)</h3>';
+    html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">';
+    html += '<label style="display:flex; flex-direction:column; gap:4px; color:#94a3b8; font-size:0.85em;">Start Date';
+    html += '<input type="date" value="' + (ext.startDate || '') + '" onchange="updateGradPrep(\'externship\',\'startDate\',this.value)" '
+        + 'style="background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:6px 8px;">';
+    html += '</label>';
+    html += '<label style="display:flex; flex-direction:column; gap:4px; color:#94a3b8; font-size:0.85em;">End Date';
+    html += '<input type="date" value="' + (ext.endDate || '') + '" onchange="updateGradPrep(\'externship\',\'endDate\',this.value)" '
+        + 'style="background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:6px 8px;">';
+    html += '</label>';
+    html += '</div>';
+    html += '<h4 style="color:#94a3b8; font-size:0.9em; margin:8px 0 6px 0;">Active Patients Needing Management</h4>';
+    html += '<textarea placeholder="Track patients with active treatments, denture deliveries, etc..." '
+        + 'onchange="updateGradPrep(\'externship\',\'notes\',this.value)" '
+        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
+        + escapeHtml(ext.notes || '') + '</textarea>';
+    html += '<h4 style="color:#94a3b8; font-size:0.9em; margin:12px 0 6px 0;">Logistics</h4>';
+    html += '<textarea placeholder="Housing, travel, schedule details..." '
+        + 'onchange="updateGradPrep(\'externship\',\'logistics\',this.value)" '
+        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
+        + escapeHtml(ext.logistics || '') + '</textarea>';
+    html += '</div>';
+
+    // CDCA/ADEX Card
+    html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
+    html += '<h3 style="color:#93c5fd; margin:0 0 8px 0;">🦷 CDCA/ADEX</h3>';
+    html += '<p style="color:#9ca3af; font-size:0.8em; margin:0 0 10px 0;">1 formative + 2-3 summative sessions before externship. Summative scores = 10% of Fixed 2 grade.</p>';
+    html += '<textarea placeholder="Session dates, scores, prep notes..." '
+        + 'onchange="updateGradPrep(\'cdcaAdex\',\'notes\',this.value)" '
+        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
+        + escapeHtml(cdca.notes || '') + '</textarea>';
+    html += '</div>';
+
+    // INBDE Card
+    html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(124,58,237,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
+    html += '<h3 style="color:#a78bfa; margin:0 0 10px 0;">📝 INBDE Prep</h3>';
+    html += '<textarea placeholder="Study plan, resources, timeline..." '
+        + 'onchange="updateGradPrep(\'inbde\',\'notes\',this.value)" '
+        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
+        + escapeHtml(inbde.notes || '') + '</textarea>';
+    html += '</div>';
+
+    // Job Search Card
+    html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
+    html += '<h3 style="color:#fbbf24; margin:0 0 10px 0;">💼 Job Search</h3>';
+    html += '<textarea placeholder="Target locations, contacts, timeline..." '
+        + 'onchange="updateGradPrep(\'jobSearch\',\'notes\',this.value)" '
+        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
+        + escapeHtml(jobs.notes || '') + '</textarea>';
+    html += '</div>';
+
+    container.innerHTML = html;
+}
+
+function updateGradPrep(category, field, value) {
+    roadmapData.graduationPrep = roadmapData.graduationPrep || {};
+    roadmapData.graduationPrep[category] = roadmapData.graduationPrep[category] || {};
+    roadmapData.graduationPrep[category][field] = value;
+    saveData();
 }
 
 // ==================== INITIALIZE ====================

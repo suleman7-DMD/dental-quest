@@ -1,8 +1,8 @@
 ---
 name: d3-roadmap-dev
 description: |
-  Develop and debug the D3 Roadmap app (d3-roadmap.html) — an academic tracking app for a D3 dental student with grades, deadlines, clinical tracking, planners, and exam content.
-  Use this skill when the user asks to modify, fix, or add features to d3-roadmap.html. Trigger phrases: "d3 roadmap", "d3-roadmap.html", "roadmap app", "deadlines", "clinical tracking", "competencies", "dental school", "academic tracker", "grade calculator", "monthly planner", "daily planner", "exam content", "mandatory items", "checkpoint", "course grades", "peds exam", "perio final", "roadmap", "grades", "GPA", "courses", "classes", "school", "academic", "clinic", "patients", "appointments", "exams", "studying", "schedule", "planner", "tabs", "dashboard", "oral medicine", "pain control", "perio", "peds", "critical thinking", "ortho", "classmates", "share", "do today", "always remember".
+  Develop and debug the Graduation Roadmap app (d3-roadmap.html) — a clinical/academic tracker for a D3/D4 dental student with graduation requirements, competencies, grades, deadlines, planners, and exam content.
+  Use this skill when the user asks to modify, fix, or add features to d3-roadmap.html. Trigger phrases: "d3 roadmap", "graduation roadmap", "d3-roadmap.html", "roadmap app", "deadlines", "clinical tracking", "competencies", "dental school", "academic tracker", "grade calculator", "monthly planner", "daily planner", "exam content", "mandatory items", "checkpoint", "course grades", "roadmap", "grades", "GPA", "courses", "classes", "school", "academic", "clinic", "patients", "appointments", "exams", "studying", "schedule", "planner", "tabs", "dashboard", "mission control", "clinic requirements", "graduation prep", "CDCA", "ADEX", "INBDE", "externship", "competency", "formative", "summative", "do today", "always remember".
   Do NOT use this skill for dental quest index.html, body-comp-tracker.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
   - "d3-roadmap.html"
@@ -10,10 +10,10 @@ globs:
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
 metadata:
   author: Sully
-  version: 2.0.0
+  version: 4.0.0
   file: d3-roadmap.html + js/d3-roadmap/*.js (10 modules)
-  lines: ~8394 HTML + ~9135 JS
-  last-verified: 2026-02-20
+  lines: ~9290 HTML + ~9600 JS
+  last-verified: 2026-03-12
 ---
 
 # D3 Roadmap Development Patterns
@@ -127,8 +127,18 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Solution:** Read `getCompetenciesData()` in clinical.js and verify saved competency data structure matches expected shape. Check `migrateCompetencies()` in state.js for array-to-object migration.
 
 ### Error: Data not saving / changes lost
-**Cause:** One of the 5 guards in `saveData()` is blocking. Most common: `hasLoadedFromCloud` stuck false (Firebase load failed silently).
-**Solution:** Read `saveData()` in firebase-sync.js. Check console diagnostic log for which guard is blocking. Trace the flag that's stuck — see `loadFromFirebase()` and `loadFromLocalStorage()` in firebase-sync.js.
+**Cause (most common — fixed Mar 5, 2026):** 8 interconnected bugs: (1) flag ordering — `isInitialLoad = false` set AFTER `initUI()` blocked saves, (2) `mergeRemoteState()` overwrote newer local data with stale Firebase, (3) visibility handler merged without timestamp check, (4) `completedDeadlines` restore missed `_originalStableId` fallback, (5) `editedDeadlines` had stale `done:false`, (6) CRUD functions missing `safeLocalStorageSet()` before `saveData()`, (7) stale array index in delete callback, (8) `isLocalUpdate` timeout too short. All fixed in commit `21acdb0`.
+**If still broken after fix:** User's browser may be caching old JS. Check `?v=` params on script tags — bump version to force re-download. Call `debugSaveState()` in browser console to see all guard values.
+**Solution:** Read `saveData()` in firebase-sync.js. Call `debugSaveState()` in console — it logs all guard values, collection counts, and timestamps. Check `[D3-SAVE]` console logs for which guard is blocking. Trace the flag that's stuck — see `loadFromFirebase()` and `loadFromLocalStorage()` in firebase-sync.js.
+
+### Error: Changes lost after browser cache serves old JS
+**Cause:** GitHub Pages caches JS files aggressively. After deploying code changes, user's browser serves old cached files without the fixes.
+**Solution:** Add `?v=YYYYMMDD` cache-busting param to ALL `<script src>` tags in d3-roadmap.html. Bump the version on each deploy. This forces browsers to re-download.
+
+### Error: Custom deadline date/name/weight edits lost on reload (THE BIG ONE — fixed Mar 5, 2026)
+**Cause:** `handleDateChange()` and `handleTextEdit()` stored edits ONLY in `roadmapData.editedDeadlines`. But `initUI()` only applies `editedDeadlines` to STATIC deadlines (steps 1-4). Custom deadlines are added later (step 5) from `roadmapData.customDeadlines`, which was NEVER updated by the edit handlers. Result: every reload reverted custom deadline edits to their original `customDeadlines` values.
+**Why it was hard to find:** The completion handlers (`toggleDeadlineDone`, `submitDeadlineGrade`) DID update `customDeadlines` — only date/text/weight editors were missing. And testing with newly-created custom deadlines didn't expose the bug because the initial values matched. Only editing EXISTING custom deadlines with stale data in `customDeadlines` revealed the revert.
+**Solution (commit `af30cef`):** (1) `handleDateChange()` now also updates `customDeadlines[deadline.id].date/day/month`. (2) `handleTextEdit()` now also updates `customDeadlines[deadline.id][field]`. (3) `initUI()` now applies `editedDeadlines` overrides when loading custom deadlines as a safety net.
 
 ### Error: Data wiped on new device
 **Cause:** Default state has `_version: Date.now()` instead of `0`, causing empty local state to appear "newer" than cloud data.
@@ -225,22 +235,20 @@ syncDeadlineToGrades(deadline, isComplete, grade);
 **10 Modules (load order):**
 state.js (614) -> firebase-sync.js (1,760) -> deadlines.js (804) -> grades.js (384) -> exam-content.js (1,327) -> clinical.js (1,451) -> import-system.js (543) -> daily-planner.js (573) -> monthly-planner.js (1,142) -> init.js (537)
 
-**11 Tabs:**
+**7 Tabs (redesigned Mar 12, 2026):**
 | Tab | ID | Key Function | Module |
 |-----|----|-------------|--------|
-| Dashboard | `dashboard` | `renderDashboard()` | init.js |
+| Mission Control | `missioncontrol` | `renderDashboard()` | init.js |
 | Deadlines | `deadlines` | `renderDeadlines()` | deadlines.js |
-| Courses | `courses` | Static HTML display | — |
-| Grades | `grades` | `loadCourseGrades()` | grades.js |
-| Exam Content | `examcontent` | `loadExamCourseContent()` | exam-content.js |
-| Classmate Share | `classmates` | Static HTML | — |
-| Mandatory | `mandatory` | `toggleMandatory()` | deadlines.js |
-| Daily Planner | `dailyplanner` | `initDailyPlanner()` | daily-planner.js |
-| Monthly | `monthlyplanner` | `initMonthlyPlanner()` | monthly-planner.js |
 | Clinical | `clinical` | `initClinicalTab()` | clinical.js |
+| Schedule | `schedule` | Sub-tabs: Monthly + Daily | monthly-planner.js, daily-planner.js |
+| D3 Academics | `academics` | Accordion: Grades, Exams, Mandatory, Courses, Classmates | grades.js, exam-content.js |
+| Graduation Prep | `gradprep` | `renderGraduationPrep()` | init.js |
 | Remember | `remember` | Static HTML | — |
 
-**Clinical Sub-tabs:** Patients, Appointments, Procedures, Competencies
+**Old tab IDs map to new:** dashboard→missioncontrol, grades→academics, examcontent→academics, mandatory→academics, courses→academics, classmates→academics, dailyplanner→schedule, monthlyplanner→schedule (backward compat in switchTab)
+
+**Clinical Sub-tabs:** Patients, Appointments, Procedures, Competencies (14 categories now)
 
 ---
 
@@ -272,6 +280,16 @@ let roadmapData = {
         competencies: null                  // Initialized from DEFAULT_COMPETENCIES
     },
     exams: {},                              // For cross-app integration (Body Comp reads this)
+    graduationPrep: {                       // Graduation Prep tab data
+        externship: { startDate, endDate, patients: {}, logistics: '', notes: '' },
+        cdcaAdex: { sessions: {}, notes: '' },
+        inbde: { notes: '' },
+        jobSearch: { notes: '' }
+    },
+    clinicHeadlines: {                      // Mission Control headline counters
+        appointments: { completed: 0, target: 90 },
+        procedures: { completed: 0, target: 116 }
+    },
     lastSaved: null,
     _version: 0,                            // MUST be 0 in defaults (cloud always wins on fresh device)
     _lastModified: null,
@@ -390,7 +408,12 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `adjustCompItem(cat, id, delta)` | clinical.js | Increment/decrement competency count |
 | `initDailyPlanner()` | daily-planner.js | Daily planner initialization |
 | `initMonthlyPlanner()` | monthly-planner.js | Monthly planner initialization |
-| `renderDashboard()` | init.js | Dashboard tab rendering |
+| `renderDashboard()` | init.js | Mission Control tab rendering (clinic requirements, deadlines, countdowns) |
+| `renderGraduationPrep()` | init.js | Graduation Prep tab rendering (externship, CDCA, INBDE, job search) |
+| `updateHeadlineCounter(type, val)` | init.js | Save clinic headline counter (appointments/procedures) |
+| `updateGradPrep(cat, field, val)` | init.js | Save graduation prep field |
+| `switchScheduleSubTab(subTabId)` | state.js | Toggle monthly/daily sub-tab in Schedule tab |
+| `toggleAcademicsSection(sectionId)` | state.js | Toggle accordion in D3 Academics tab |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
 | `init()` | init.js | App entry point (calls initFirebase) |
 
@@ -400,7 +423,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 
 Competencies live at `roadmapData.clinicalData.competencies` and are initialized from `DEFAULT_COMPETENCIES` (in clinical.js).
 
-**10 Categories (real BU dental school requirements):**
+**14 Categories (real BU DMD 2027 graduation requirements):**
 | Key | Name | Icon |
 |-----|------|------|
 | `fixed` | Fixed Prosthodontics | Formatives + summatives for crowns, FPD, CEREC |
@@ -412,7 +435,10 @@ Competencies live at `roadmapData.clinicalData.competencies` and are initialized
 | `oralsurg` | Oral Surgery | 3rd/4th year rotations, extractions |
 | `peds` | Pediatric Dentistry | PD 530 course, rotations, log sheet |
 | `perio` | Periodontology | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice (GD 640) | Reviews, analyses, workshops |
+| `grouppractice` | Group Practice (GD 640 & GD 642) | 3rd+4th year reviews, analyses, leadership |
+| `txplanning` | Treatment Planning (RS 545) | Seminar presentation, OHRA, caries detection |
+| `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
+| `externship` | Externship & SPS | Case presentation, community outreach, SPS log |
 
 **Each category has:** `{ name, icon, color, summary, notes, sections: [{ title, items: [{ id, text, required, completed }] }] }`
 
@@ -449,3 +475,12 @@ If you see ANY of these in code you're writing:
 - Shallow grades merge: `{ ...roadmapData.grades, ...(data.grades) }` — MUST deep-merge per course
 - Using native `alert()`/`confirm()`/`prompt()` — use `showCustomAlert()`/`showCustomConfirm()`/`showToast()` from state.js
 - Calling `mergeRemoteState(data)` without first loading localStorage in `loadFromFirebase()`
+- Setting sync flags (`isInitialLoad = false`) AFTER `initUI()` — MUST be BEFORE, wrapped in try/catch
+- Calling `mergeRemoteState()` without comparing `lastSaved` timestamps — local-newer data gets overwritten
+- Missing `safeLocalStorageSet()` BEFORE `saveData()` in CRUD functions — guard blocks lose changes silently
+- Using `||` instead of `??` for `done`/`grade` fields — `done || false` loses explicit `false`, `grade || null` loses grade of 0
+- Not updating `editedDeadlines[id].done` when completing a previously-edited deadline — stale `done:false` wins on reload
+- Missing `_originalStableId` fallback in completedDeadlines restore loop — post-edit `getDeadlineId()` won't match stored key
+- Deploying JS changes without bumping `?v=` cache-busting params on `<script src>` tags
+- Editing custom deadline date/name/weight without updating `roadmapData.customDeadlines[deadline.id]` — `editedDeadlines` only applies to STATIC deadlines in initUI; custom deadlines load from `customDeadlines` which must ALSO be updated
+- Testing only with NEW custom deadlines instead of editing EXISTING ones — custom-vs-static code paths differ and bugs only surface with real user data
