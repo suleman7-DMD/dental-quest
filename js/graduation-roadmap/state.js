@@ -552,6 +552,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'clinical') initClinicalTab();
     if (resolvedTabId === 'academics' && typeof loadCourseGrades === 'function') loadCourseGrades();
     if (resolvedTabId === 'gradprep' && typeof renderGraduationPrep === 'function') renderGraduationPrep();
+    if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
     // schedule and remember tabs: sub-tabs / static content handle their own init
 
     // If navigating to exam content, open the exams accordion

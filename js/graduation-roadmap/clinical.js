@@ -19,7 +19,6 @@ function initClinicalTab() {
     renderPatientsList();
     renderAppointmentsList();
     updateClinicalStats();
-    renderCompetencies();
 }
 
 function updateClinicalStats() {

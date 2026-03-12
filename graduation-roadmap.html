@@ -6389,6 +6389,7 @@
         <button class="tab-btn active" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
         <button class="tab-btn" onclick="switchTab('deadlines', event)">⏰ Deadlines</button>
         <button class="tab-btn" onclick="switchTab('clinical', event)">🏥 Clinical</button>
+        <button class="tab-btn" onclick="switchTab('competencies', event)">🎯 Competencies</button>
         <button class="tab-btn" onclick="switchTab('schedule', event)">📅 Schedule</button>
         <button class="tab-btn" onclick="switchTab('academics', event)">📚 D3 Academics</button>
         <button class="tab-btn" onclick="switchTab('gradprep', event)">🎓 Grad Prep</button>
@@ -7738,7 +7739,6 @@
         <div class="clinical-subtabs" role="tablist" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
             <button class="clinical-subtab active" onclick="switchClinicalSubtab('patients', this)" aria-label="View My Patients" role="tab">👤 My Patients</button>
             <button class="clinical-subtab" onclick="switchClinicalSubtab('appointments', this)" aria-label="View Appointments" role="tab">📅 Appointments</button>
-            <button class="clinical-subtab" onclick="switchClinicalSubtab('competencies', this)" aria-label="View Competencies" role="tab">🎯 Competencies</button>
             <div style="flex-grow: 1;"></div>
             <button onclick="openClinicalImportModal()" style="padding: 8px 16px; background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">📥 Import from axiUm</button>
         </div>
@@ -7786,22 +7786,23 @@
             </div>
         </div>
 
-        <!-- Competencies Sub-tab - GRADUATION REQUIREMENTS -->
-        <div id="clinical-competencies" class="clinical-panel" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
-                    <h3 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.3em;">🎓 Graduation Requirements</h3>
-                    <p style="color: #94a3b8; margin: 0; font-size: 0.85em;">Track all clinical competencies required for graduation</p>
-                </div>
-                <button onclick="resetCompetencies()" style="padding: 8px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; cursor: pointer; font-size: 0.85em; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'">🔄 Reset All</button>
+    </div>
+
+    <!-- ==================== COMPETENCIES TAB ==================== -->
+    <div id="tab-competencies" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h3 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.3em;">🎓 Graduation Requirements</h3>
+                <p style="color: #94a3b8; margin: 0; font-size: 0.85em;">Track all clinical competencies required for graduation</p>
             </div>
-
-            <!-- Overall Progress Dashboard - Rendered by JS -->
-            <div id="overallProgressSummary"></div>
-
-            <!-- Requirements List - Rendered by JS -->
-            <div id="competenciesContainer"></div>
+            <button onclick="resetCompetencies()" style="padding: 8px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; cursor: pointer; font-size: 0.85em; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'">🔄 Reset All</button>
         </div>
+
+        <!-- Overall Progress Dashboard - Rendered by JS -->
+        <div id="overallProgressSummary"></div>
+
+        <!-- Requirements List - Rendered by JS -->
+        <div id="competenciesContainer"></div>
     </div>
 
     <!-- ==================== GRADUATION PREP TAB ==================== -->

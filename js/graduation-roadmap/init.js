@@ -42,7 +42,7 @@ function renderDashboard() {
         const cat = entry[1];
         const stats = calculateCategoryStats(cat);
         const pct = stats.totalUnits > 0 ? Math.round((stats.completedUnits / stats.totalUnits) * 100) : 0;
-        categoryProgressHTML += '<div class="comp-mini-card" onclick="switchTab(\'clinical\')" style="cursor:pointer; background:rgba(30,41,59,0.6); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:4px;">'
+        categoryProgressHTML += '<div class="comp-mini-card" onclick="switchTab(\'competencies\')" style="cursor:pointer; background:rgba(30,41,59,0.6); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:4px;">'
             + '<div style="display:flex; align-items:center; gap:6px; justify-content:space-between;">'
             + '<span style="font-size:1.1em;">' + (cat.icon ?? '📌') + '</span>'
             + '<span style="flex:1; font-size:0.8em; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(cat.name) + '</span>'
@@ -163,7 +163,7 @@ function renderDashboard() {
 
     // Open Clinical button
     html += '<div style="text-align:center;">';
-    html += '<button onclick="switchTab(\'clinical\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Clinical Tab →</button>';
+    html += '<button onclick="switchTab(\'competencies\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Competencies →</button>';
     html += '</div>';
 
     html += '</div>'; // end clinic requirements card
@@ -587,6 +587,7 @@ function initUI() {
 
     // Initialize Clinical tab if data exists
     try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }
+    try { renderCompetencies(); } catch(e) { console.error('renderCompetencies error:', e); }
 }
 
 function init() {
