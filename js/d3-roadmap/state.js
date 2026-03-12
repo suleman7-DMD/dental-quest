@@ -72,6 +72,18 @@ let roadmapData = {
     },
     // Exams array for cross-app integration (Body Comp Tracker pulls this)
     exams: {},  // Object with ID keys for Firebase safety
+    // Graduation prep tracking
+    graduationPrep: {
+        externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+        cdcaAdex: { sessions: {}, notes: '' },
+        inbde: { notes: '' },
+        jobSearch: { notes: '' }
+    },
+    // Clinic headline stats
+    clinicHeadlines: {
+        appointments: { completed: 0, target: 90 },
+        procedures: { completed: 0, target: 116 }
+    },
     lastSaved: null,
     // Version control for conflict detection
     // CRITICAL: _version MUST be 0 for default state so cloud ALWAYS wins on fresh device
@@ -128,6 +140,16 @@ function getDefaultRoadmapData() {
             competencies: null
         },
         exams: {},
+        graduationPrep: {
+            externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+            cdcaAdex: { sessions: {}, notes: '' },
+            inbde: { notes: '' },
+            jobSearch: { notes: '' }
+        },
+        clinicHeadlines: {
+            appointments: { completed: 0, target: 90 },
+            procedures: { completed: 0, target: 116 }
+        },
         lastSaved: null,
         _version: 0,
         _lastModified: null,
@@ -488,28 +510,70 @@ function formatDate(dateStr) {
 }
 
 // ==================== TAB SWITCHING ====================
+
+// Map old tab IDs to new ones for backward compatibility
+const TAB_ID_MAP = {
+    'dashboard': 'missioncontrol',
+    'grades': 'academics',
+    'mandatory': 'academics',
+    'dailyplanner': 'schedule',
+    'monthlyplanner': 'schedule',
+    'exams': 'academics'
+};
+
 function switchTab(tabId, evt) {
     // Close any open modals when switching tabs
     document.querySelectorAll('.mp-modal-overlay').forEach(modal => {
         modal.style.display = 'none';
     });
 
+    // Map old tab IDs to new ones for backward compatibility
+    const resolvedTabId = TAB_ID_MAP[tabId] || tabId;
+
     // Update buttons
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    if(evt && evt.target) evt.target.classList.add('active');
+    if (evt && evt.target) {
+        evt.target.classList.add('active');
+    } else {
+        // Find and activate the matching tab button
+        const matchingBtn = document.querySelector(`.tab-btn[onclick*="'${resolvedTabId}'"]`);
+        if (matchingBtn) matchingBtn.classList.add('active');
+    }
 
     // Update content
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById('tab-' + tabId).classList.add('active');
+    const tabEl = document.getElementById('tab-' + resolvedTabId);
+    if (tabEl) tabEl.classList.add('active');
 
     // Refresh dynamic content
-    if (tabId === 'dashboard') renderDashboard();
-    if (tabId === 'deadlines') renderDeadlines();
-    if (tabId === 'grades') loadCourseGrades();
-    if (tabId === 'mandatory') renderExamCountdown();
-    if (tabId === 'dailyplanner') initDailyPlanner();
-    if (tabId === 'monthlyplanner') initMonthlyPlanner();
-    if (tabId === 'clinical') initClinicalTab();
+    if (resolvedTabId === 'missioncontrol') renderDashboard();
+    if (resolvedTabId === 'deadlines') renderDeadlines();
+    if (resolvedTabId === 'clinical') initClinicalTab();
+    if (resolvedTabId === 'academics' && typeof loadCourseGrades === 'function') loadCourseGrades();
+    if (resolvedTabId === 'gradprep' && typeof renderGraduationPrep === 'function') renderGraduationPrep();
+    // schedule and remember tabs: sub-tabs / static content handle their own init
+}
+
+// ==================== SCHEDULE SUB-TABS ====================
+function switchScheduleSubTab(subTabId) {
+    document.querySelectorAll('.schedule-subtab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.schedule-subtab-btn').forEach(btn => btn.classList.remove('active'));
+    const target = document.getElementById('schedule-' + subTabId);
+    if (target) target.style.display = 'block';
+    const btn = document.getElementById('schedule-' + subTabId + '-btn');
+    if (btn) btn.classList.add('active');
+    if (subTabId === 'monthly' && typeof initMonthlyPlanner === 'function') initMonthlyPlanner();
+    if (subTabId === 'daily' && typeof initDailyPlanner === 'function') initDailyPlanner();
+}
+
+// ==================== ACADEMICS ACCORDION ====================
+function toggleAcademicsSection(sectionId) {
+    const content = document.getElementById('academics-' + sectionId + '-content');
+    const arrow = document.getElementById('academics-' + sectionId + '-arrow');
+    if (!content) return;
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.textContent = isOpen ? '\u25b8' : '\u25be';
 }
 
 // ==================== REMEMBER TAB TOGGLE ====================

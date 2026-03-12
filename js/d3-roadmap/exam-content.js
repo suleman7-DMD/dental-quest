@@ -36,7 +36,7 @@ const examContentData = {
                 date: '2026-02-18',
                 weight: 45,
                 isCumulative: true,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '4:00-5:20 PM',
                 notes: '55 questions from Dr. Shikui. SURVIVAL EXAM - you need ~70% to pass the course!',
@@ -129,7 +129,7 @@ const examContentData = {
                 date: '2026-03-11',
                 weight: 45,
                 isCumulative: true,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '12:00-3:50 PM',
                 notes: 'Format: MCQ (70%) + Break (~15 min) + 2 Essays (30%, ~45 min each). Blue book, MUST BE LEGIBLE or Fleisher gives 0. Need 1 reference per essay. Answer as numbered list matching question parts.',
@@ -201,7 +201,7 @@ const examContentData = {
                 date: '2026-02-06',
                 weight: 50,
                 isCumulative: true,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '12:00-1:50 PM',
                 notes: '📚 USE OLD EXAMS! "Current year\'s examinations will contain a large number of questions similar to those on old examinations." — Get them from course website!',
@@ -249,7 +249,7 @@ const examContentData = {
                 date: '2026-02-02',
                 weight: 30,
                 isCumulative: false,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '4:00-5:15 PM',
                 notes: 'NOT cumulative — only Lectures 1-4! Don\'t forget: Gate Control Video (before Jan 15) and Acute Dental Pain Module (before Jan 29) — questions WILL be on exam.',
@@ -328,7 +328,7 @@ const examContentData = {
                 date: '2026-02-27',
                 weight: 25,
                 isCumulative: false,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '4:00-5:50 PM',
                 notes: 'Covers Lectures 1-5 only. Notecard allowed: handwritten, 5"×8", double-sided. Write your name on it!',
@@ -341,6 +341,24 @@ const examContentData = {
                 ],
                 noClassDates: [
                     { date: '2026-02-13', day: 'Fri', note: '❌ NO CLASS — Passion Project work time (GCal may show lecture — trust syllabus!)' }
+                ]
+            },
+            {
+                id: 'oralmed-midterm-makeup',
+                name: 'Midterm (Makeup)',
+                date: '2026-05-06',
+                weight: 25,
+                isCumulative: false,
+                isPast: false,
+                room: 'TBD',
+                time: 'TBD',
+                notes: 'Rescheduled from Feb 27 due to illness. Same content as original midterm (Lectures 1-5). Notecard allowed: handwritten, 5"x8", double-sided. Write your name on it! Confirm room/time with Dr. Henderson.',
+                lectures: [
+                    { num: 1, date: '2026-01-09', day: 'Fri', time: '3:00-4:50 PM', topic: 'Introduction to Oral Medicine', lecturer: 'Dr. Henderson', room: '670 Aud' },
+                    { num: 2, date: '2026-01-16', day: 'Fri', time: '3:00-4:50 PM', topic: 'Infectious Diseases', lecturer: 'Dr. Henderson', room: '670 Aud' },
+                    { num: 3, date: '2026-01-23', day: 'Fri', time: '3:00-4:50 PM', topic: 'Allergies and Immune Diseases', lecturer: 'Dr. Henderson', room: '670 Aud' },
+                    { num: 4, date: '2026-02-06', day: 'Fri', time: '3:00-4:50 PM', topic: 'Epithelial Pathoses and Squamous Cell Carcinoma', lecturer: 'Dr. Henderson', room: '670 Aud' },
+                    { num: 5, date: '2026-02-20', day: 'Fri', time: '2:00-3:50 PM', topic: 'Salivary Gland Disorders', lecturer: 'Dr. Henderson', room: '670 Aud' }
                 ]
             },
             {
@@ -398,7 +416,7 @@ const examContentData = {
                 date: '2026-02-11',
                 weight: 'TBD',
                 isCumulative: true,
-                isPast: false,
+                isPast: true,
                 room: 'L-1101',
                 time: '4:00-5:20 PM',
                 notes: 'COURSE ENDS after this exam. Covers all 6 lectures (Lectures 1-6). Short course = less content to manage!',
@@ -502,7 +520,7 @@ const examContentData = {
                 date: '2026-01-29',
                 weight: 20,
                 isCumulative: false,
-                isPast: false,
+                isPast: true,
                 room: 'Online (Blackboard)',
                 time: 'Evening, 1-hour window',
                 notes: 'Open Blackboard ONLY. Study Paul & Elder Critical Thinking Guide. Focus on: 8 Universal Elements of Thought, Intellectual Standards, Intellectual Traits/Virtues.',
@@ -1055,8 +1073,10 @@ function renderExamCard(exam) {
         urgencyClass = 'completed';
     }
 
+    const pastClass = isPast ? 'exam-past' : '';
+
     let html = `
-        <div class="exam-card ${urgencyClass}">
+        <div class="exam-card ${urgencyClass} ${pastClass}">
             <div class="exam-card-header ${exam.colorClass}">
                 <div class="exam-card-title">
                     <div>
@@ -1071,6 +1091,7 @@ function renderExamCard(exam) {
                         <span class="exam-badge ${daysClass}">
                             ${isPast ? (exam.score ? `Scored: ${exam.score}%` : 'Past') : `${daysUntil} days`}
                         </span>
+                        ${isPast ? '<span style="background:#059669; color:white; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px;">COMPLETED</span>' : ''}
                     </div>
                 </div>
 

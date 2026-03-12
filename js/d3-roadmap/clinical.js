@@ -821,7 +821,7 @@ const DEFAULT_COMPETENCIES = {
         ]
     },
     grouppractice: {
-        name: 'Group Practice (GD 640)',
+        name: 'Group Practice (GD 640 & GD 642)',
         icon: '👥',
         color: '#0ea5e9',
         summary: { completed: 6, inProgress: 1, planned: 0, required: 9, unit: 'items' },
@@ -835,7 +835,69 @@ const DEFAULT_COMPETENCIES = {
                 { id: 'gp-sum-analysis', text: '1 Summative Written Analysis', required: 1, completed: 0 },
                 { id: 'gp-comm', text: 'Communication Workshop', required: 1, completed: 1 },
                 { id: 'gp-leader', text: 'Leadership Workshop', required: 1, completed: 0 },
-                { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 1 }
+                { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 1 },
+                { id: 'gp-pms-3rd', text: 'Practice Management Scenarios (1 formative + 4 summative, cumulative)', required: 1, completed: 0, note: '', status: 'pending' }
+            ]},
+            { title: '4th Year (GD 642) Summatives', items: [
+                { id: 'gp4-comm-txplan', text: '1 Communication Treatment Plan Presentation', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-periodicrev-1', text: '2 Periodic Reviews', required: 2, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-written-analysis', text: '4 Written Analyses', required: 4, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-pms', text: '4 Practice Management Scenarios (cumulative from 3rd+4th year)', required: 4, completed: 0, note: '', status: 'pending' }
+            ]},
+            { title: '4th Year Leadership Requirements', items: [
+                { id: 'gp4-posttreat-eval', text: '3 Post Treatment Evaluations', required: 3, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-aux-tech', text: 'Auxiliary Team Assessment with Dental Technician - 1 formative', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-aux-asst', text: 'Auxiliary Team Assessment with Dental Assistant - 1 formative', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-aux-summatives', text: 'Auxiliary Team Summatives (Tech + Assistant combined)', required: 4, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-rounds-form', text: 'Leading Rounds - 1 formative', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'gp4-rounds-sum', text: 'Leading Rounds - 1 summative', required: 1, completed: 0, note: '', status: 'pending' }
+            ]}
+        ]
+    },
+    txplanning: {
+        name: 'Treatment Planning (RS 545)',
+        icon: '📋',
+        color: '#6366f1',
+        summary: { completed: 0, inProgress: 0, planned: 0, required: 7, unit: 'items' },
+        notes: 'RS 545 Seminar presentation + Data Collection/Tx Planning Rotation',
+        sections: [
+            { title: 'Seminar Presentation (20% of grade)', items: [
+                { id: 'tx-seminar-1', text: '1 Summative small group presentation - Type 2 case (by Apr 24, 2026)', required: 1, completed: 0, note: '', status: 'pending' }
+            ]},
+            { title: 'Seminar Attendance (80% of grade)', items: [
+                { id: 'tx-attend-1', text: '2 Attend classmate seminar presentations (by Apr 23, 2027)', required: 2, completed: 0, note: '', status: 'pending' }
+            ]},
+            { title: 'Data Collection/Treatment Planning Rotation', items: [
+                { id: 'tx-ohra-1', text: '2 OHRA Summatives', required: 2, completed: 0, note: '', status: 'pending' },
+                { id: 'tx-caries-1', text: '2 Caries Detection Summatives', required: 2, completed: 0, note: '', status: 'pending' }
+            ]}
+        ]
+    },
+    geriatrics: {
+        name: 'Geriatric Dental Medicine',
+        icon: '👴',
+        color: '#8b5cf6',
+        summary: { completed: 0, inProgress: 0, planned: 0, required: 3, unit: 'items' },
+        notes: 'DMD 27 must challenge didactic course Spring 2026, then complete rotation + assignment',
+        sections: [
+            { title: 'Requirements', items: [
+                { id: 'geri-course', text: 'Successful completion of PH 541 Didactic Course', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'geri-rotation', text: 'Geriatric Dental Medicine Rotation', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'geri-assignment', text: 'Clinical Assignment (any GSDM patient or rotation/externship patient)', required: 1, completed: 0, note: '', status: 'pending' }
+            ]}
+        ]
+    },
+    externship: {
+        name: 'Externship & SPS',
+        icon: '🌴',
+        color: '#059669',
+        summary: { completed: 0, inProgress: 0, planned: 0, required: 3, unit: 'items' },
+        notes: 'Complete during 10-week externship rotation',
+        sections: [
+            { title: 'Externship Requirements', items: [
+                { id: 'ext-casepres', text: 'Case Presentation (Upload on BB + self-assessment + mock referral)', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'ext-outreach', text: 'Community Outreach Project', required: 1, completed: 0, note: '', status: 'pending' },
+                { id: 'ext-spslog', text: 'SPS Log of all procedures + debriefing', required: 1, completed: 0, note: '', status: 'pending' }
             ]}
         ]
     }
