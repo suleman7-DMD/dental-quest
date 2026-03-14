@@ -203,4 +203,26 @@ Result: Data recovered, root cause prevented from recurring.
 
 ### Error: Realtime listener overwrites local changes
 **Cause:** Missing echo prevention or conflict resolution. Own Firebase write bounces back via realtime listener.
-**Solution:** Check app's conflict resolution strategy (see Step 3 table). d3-roadmap uses `setLocalUpdateFlag()` 2s timer; body-comp uses version comparison. See `references/sync-and-realtime.md`.
+**Solution:** Check app's conflict resolution strategy (see Step 3 table). d3-roadmap uses `setLocalUpdateFlag()` 10s timer (increased from 5s, Mar 5 2026); body-comp uses version comparison. See `references/sync-and-realtime.md`.
+
+### Error: mergeRemoteState overwrites newer local changes (d3-roadmap, fixed Mar 5 2026)
+**Cause:** `mergeRemoteState()` uses `{ ...local, ...firebase }` spread — Firebase data wins for same keys. If local data is newer (saved to localStorage but Firebase write hasn't arrived yet), the stale Firebase data overwrites the local change on page reload.
+**Solution:** In `loadFromFirebase()`, compare `roadmapData.lastSaved` (from localStorage) vs `data.lastSaved` (from Firebase) BEFORE calling `mergeRemoteState()`. If local is newer, skip merge entirely. Also add timestamp check in visibility handler.
+
+### Error: Sync flags set AFTER initUI blocks saves (d3-roadmap, fixed Mar 5 2026)
+**Cause:** `isInitialLoad = false` set AFTER `initUI()` in `loadFromFirebase()` callback. If initUI triggers any save (even via setTimeout), it's blocked by Guard A. If initUI throws, flags are never set — ALL saves permanently blocked.
+**Solution:** Set ALL sync flags (`hasLoadedFromCloud`, `isInitialLoad`, `_dataLoaded`) BEFORE `initUI()`. Wrap `initUI()` in try/catch so flags are always set regardless of rendering errors.
+
+### Error: Changes lost because browser caches old JS files
+**Cause:** GitHub Pages caches JS files aggressively. After deploying code fixes to multi-file split apps, the browser serves cached OLD JS without the fixes.
+**Solution:** Add `?v=YYYYMMDD` cache-busting params to ALL `<script src>` tags in the HTML file. Bump the version string on every code deploy. This forces browsers to download the updated files.
+
+### Error: CRUD localStorage not written before saveData guard check
+**Cause:** CRUD functions mutate `roadmapData` then call `saveData()`. If save guards block (e.g., race condition), the in-memory change exists but is never persisted anywhere. On refresh, the change is lost.
+**Solution:** ALL CRUD functions must call `safeLocalStorageSet('key', JSON.stringify(data))` BEFORE `saveData()`. This ensures changes survive even if guards block. The next page load picks them up from localStorage.
+
+### Error: Custom deadline edits lost on reload (d3-roadmap, fixed Mar 5 2026) — THE BIG ONE
+**Cause:** `handleDateChange()` and `handleTextEdit()` only wrote to `editedDeadlines`. But `initUI()` only applied `editedDeadlines` to STATIC deadlines. Custom deadlines loaded from `customDeadlines`, which was never updated. Every reload reverted custom deadline edits.
+**Why hard to find:** Completion handlers (`toggleDeadlineDone`, `submitDeadlineGrade`) DID update `customDeadlines` — only date/text/weight handlers were missing. Testing with new custom deadlines didn't expose it because initial values matched.
+**Solution:** When editing a custom deadline (`deadline.custom && deadline.id`), ALSO update `roadmapData.customDeadlines[deadline.id]` directly. AND apply `editedDeadlines` overrides in `initUI()` when loading custom deadlines.
+**Universal rule:** Any system with TWO parallel data stores (e.g., `editedDeadlines` for overrides + `customDeadlines` for custom entries) must update BOTH stores on every mutation, or the stores diverge silently.

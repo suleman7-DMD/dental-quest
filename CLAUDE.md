@@ -38,6 +38,10 @@ const date = new Date(year, month - 1, day);
 - **Stats counters**: `stats.totalTasks` drifts — use live `getValues(tasks)` count.
 - **Double loadData()**: Causes race conditions. **Orphan function calls**: Verify function exists.
 - **Failsafe timer**: Must set `hasLoadedFromCloud = true` + `markInitialLoadComplete()`.
+- **Flex full-width items need `flex-wrap`**: When mixing flex columns with full-width cards, the container MUST have `flex-wrap: wrap` and the full-width item needs `flex: 1 1 100%`. Without `flex-wrap`, all items squeeze into one row.
+- **Expensive renders in update loops**: Never put heavy canvas/analytics renders in `updateUI()`/`recalculate()` (runs every 5s). Call only on init + navigation events.
+- **Canvas tooltip stale closure**: Scrollable/resizable canvas containers must recompute `graphWidth`/`pointSpacing` inside `onmousemove`, not capture at setup time.
+- **Division by zero in graph spacing**: Always guard `pointSpacing = width / (data.length - 1)` with `if (data.length < 2) return`.
 
 ---
 

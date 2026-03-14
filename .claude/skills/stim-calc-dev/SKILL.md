@@ -14,9 +14,10 @@ metadata:
   version: 3.1.0
   file: stimulant-elimination-calculator.html + js/stimcalc/*.js (11 modules)
   lines: ~14,600 total (4,270 HTML/CSS + 10,955 JS)
-  last-verified: 2026-02-24
+  last-verified: 2026-03-14
   theme: warm-clinical (cream/olive, CSS vars, zero neon colors)
   layout: sidebar-nav + page-based (Synchro-style, 7 pages including Inventory)
+  dashboard-layout: 3-column flex (main:5, mid:4, side:3) + full-width Sleep History below
 ---
 
 # Stimulant Elimination Calculator Development Patterns
@@ -327,20 +328,20 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 `logNicotine()`, `updateNicotineDisplay()`, `checkRLSRisk()`, `toggleModifier()`, `toggleAllNighterMode()`, `renderGhostLoad()`, `initWorkoutPlanner()`, `calculateWorkoutImpact()`, `applyWorkoutPlan()`, `updateScenarios()`, `updateForecastLogic()`
 
 ### history-calendar.js — History, Calendar, Analytics Dashboard, Accuracy Transparency
-`saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderSleepPerformance()`, `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`,
+`saveDay()`, `renderHistory()`, `renderSleepCalendar()` (7-day overview), `renderSleepCalendarMonth()` (full month grid), `navigateCalendar()`, `renderCalendarLegend()`, `renderCalendarMonthStats()`, `showSleepDayDetails()` (day detail modal), `closeSleepDayDetailModal()`, `cleanupPhantomSleepLogs()`, `saveDailyLogicLog()`, `renderCircadianPhase()`, `renderSleepPerformance()`, `renderDashSleepHistoryFull()` (dashboard full-history scrollable graph + stat chips — called on initial load and scNavigate('dashboard'), NOT in updateUI), `renderSleepStatChips(allData)` (8 analysis chips: 7d/15d/30d/60d avg, 14d/30d all-nighters, sleep debt, recovery hrs), `calculateAccuracyStats()`, `suggestCalibration()`, `getCalibrationRecommendation()`,
 **Analytics Engine:** `gatherAllDayData()` (unified with Calendar tab via `getSleepForDate()`, builds history lookup by date, uses dailyLogs as primary source with `?? null` for dose fields to allow history fallback, derives allNighterMode from actual sleep hours), `toggleInsSection()`, `buildInsSection()`
 **Insights Tab (14 sections):** `renderInsightsTab()`, `renderInsKeyMetrics()`, `renderInsDoseResponse()`, `renderInsCaffeineImpact()`, `renderInsSleepPatterns()`, `renderInsModifierImpact()`, `renderInsDosingWindows()`, `renderInsCaffeineTiming()`, `renderInsSleepEfficiency()`, `renderInsPredictionReliability()`, `renderInsCircadianConsistency()`, `renderInsStimulantTrends()`, `renderInsRiskIndicators()`, `renderInsPersonalRecords()`, `renderInsResearchBenchmarks()`
 **Accuracy Tab (7 sections):** `renderAccuracyTab()`, `renderAccOverallGrade()`, `renderAccMethodology()`, `renderAccErrorDistribution()`, `renderAccDirectionalBias()`, `renderAccContextBreakdowns()`, `renderAccDataInventory()`, `renderAccInputVerification()`
 **Legacy wrappers:** `renderPredictionInsights()` → `renderInsightsTab()`, `renderAccuracyDashboard()` → `renderAccuracyTab()`, `renderCalibrationContexts()` (no-op)
 
 ### graph.js — Canvas Rendering
-`drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()`, `_drawSleepGraphToCanvas(canvasId, data)` (shared renderer for calendar + dashboard), `_setupSleepTooltipForCanvas(...)` (shared tooltip for both canvases)
+`drawGraph()`, `setupGraphTooltip()`, `drawSleepPerformanceGraph()` (Calendar page only), `_drawSleepGraphToCanvas(canvasId, data)` (shared canvas renderer, adaptive x-axis labels for 30-365+ data points), `_setupSleepTooltipForCanvas(...)` (live-recomputing tooltip — uses fresh canvasRect for scrollable canvases)
 
 ### med-inventory.js — Medication Inventory (Cross-App Shared)
 `scInvLoadFromFirebase()` (reads appData/medications + pillAssignments + calendarNotes), `scInvSaveMedInventory()` (writes to shared appData path), `scInvRender()`, `scInvUpdateMedCard(medType)`, `scInvTakeMed(medType)`, `scInvTakeBothMeds()`, `scInvAdjustMed(medType, amount)`, `scInvCheckAndApplyDailyPillReduce()`, `scInvOpenMedSettings(medType)`, `scInvCloseMedModal()`, `scInvSaveMedSettings()`, `scInvGenerateCalendar(...)`, `scInvToggleCalendar(medType)`, `scInvHandleCalendarDayClick(...)`, `scInvAssignPillToNearestAvailableDay(...)`, `scInvRemovePillFromNearestAssignedDay(...)`, `scInvResetPillAssignments(medType)`, `scInvOpenNoteModal(dateStr, displayDate)`, `scInvCloseNoteModal()`, `scInvSaveNote()`, `scInvDeleteNote()`, `scInvGetTimeAgo(date)`, `scInvCountWeekdays(start, end)`
 
 ### init.js — App Bootstrap, Heartbeat & Sidebar Navigation
-`syncStateFromDOM()`, `runCalculations()`, `updateUI()` (guarded: skips DOM when not on dashboard), `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()`, `updateFeelingsTimeline()`, `scNavigate(page)` (7 pages: dashboard/modifiers/calendar/insights/accuracy/settings/inventory), `scToggleSidebar()` (mobile drawer), `scToggleCalibration()` (dashboard calibration card), `updateMetricsRow(vm)` (5-stat bar, always runs regardless of page), `updateSidebarBadges()` (med/caff/modifier counts)
+`syncStateFromDOM()`, `runCalculations()`, `updateUI()` (runs every 5s via recalculate — intentionally excludes expensive renders like renderDashSleepHistoryFull), `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()` (target: insRecommendations on Insights page), `updateFeelingsTimeline()`, `toggleModifierChip(modName)` (chip toggle for VitC/HeavyLift/Sauna), `scNavigate(page)` (7 pages: dashboard/modifiers/calendar/insights/accuracy/settings/inventory), `scToggleSidebar()` (mobile drawer), `scToggleCalibration()` (no-op, calibration always visible), `updateMetricsRow(vm)` (5-stat bar, always runs regardless of page), `updateSidebarBadges()` (med/caff/modifier counts)
 
 ---
 
