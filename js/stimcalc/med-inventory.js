@@ -753,3 +753,81 @@ function scInvDeleteNote() {
         showToast('Note deleted');
     }
 }
+
+// ============================================
+// DASHBOARD COMPACT INVENTORY CARD
+// ============================================
+
+function scInvRenderDashboard() {
+    var container = document.getElementById('scDashInvContent');
+    if (!container) return;
+
+    var today = getLocalDateString(new Date());
+    var allTakenToday = true;
+
+    // Clear existing content
+    container.textContent = '';
+
+    ['30mg', '20mg'].forEach(function(medType) {
+        var med = scInvMedications[medType];
+        if (!med) return;
+
+        var pills = med.pills ?? 0;
+        var dailyDose = med.dailyDose ?? 1;
+        var daysSupply = dailyDose > 0 ? Math.floor(pills / dailyDose) : 0;
+        var label = med.label ?? ('Adderall XR ' + medType);
+        var takenToday = (med.dosesLogged && med.dosesLogged[today]);
+
+        if (!takenToday) allTakenToday = false;
+
+        var row = document.createElement('div');
+        row.className = 'sc-inv-dash-row';
+
+        var infoDiv = document.createElement('div');
+
+        var labelDiv = document.createElement('div');
+        labelDiv.className = 'sc-inv-dash-label';
+        labelDiv.textContent = label;
+        infoDiv.appendChild(labelDiv);
+
+        var daysDiv = document.createElement('div');
+        daysDiv.className = 'sc-inv-dash-days';
+        daysDiv.textContent = daysSupply + ' day' + (daysSupply !== 1 ? 's' : '') + ' supply';
+        infoDiv.appendChild(daysDiv);
+
+        row.appendChild(infoDiv);
+
+        var pillsDiv = document.createElement('div');
+        pillsDiv.className = 'sc-inv-dash-pills';
+        pillsDiv.textContent = String(pills);
+        row.appendChild(pillsDiv);
+
+        container.appendChild(row);
+    });
+
+    var actionDiv = document.createElement('div');
+    actionDiv.style.marginTop = '8px';
+
+    if (allTakenToday) {
+        actionDiv.style.textAlign = 'center';
+        actionDiv.style.color = '#4caf50';
+        actionDiv.style.fontWeight = '600';
+
+        var checkSpan = document.createElement('span');
+        checkSpan.style.marginRight = '4px';
+        checkSpan.textContent = '\u2713';
+        actionDiv.appendChild(checkSpan);
+
+        var takenText = document.createTextNode('Taken Today');
+        actionDiv.appendChild(takenText);
+    } else {
+        var btn = document.createElement('button');
+        btn.className = 'sc-btn sc-btn--primary sc-btn--sm';
+        btn.style.width = '100%';
+        btn.setAttribute('onclick', 'scInvTakeBothMeds(); scInvRenderDashboard();');
+        btn.textContent = 'Take Daily Dose';
+        actionDiv.appendChild(btn);
+    }
+
+    container.appendChild(actionDiv);
+}

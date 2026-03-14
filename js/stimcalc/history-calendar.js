@@ -476,46 +476,31 @@ function renderCircadianPhase() {
 
     const analysis = analyzeCircadianPhase();
 
-    container.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
-            <div style="flex: 1; min-width: 200px;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span style="font-size: 1.8em;">${analysis.icon}</span>
-                    <div>
-                        <div style="font-size: 0.75em; color: #6B635B; text-transform: uppercase; letter-spacing: 0.5px;">Circadian Phase</div>
-                        <div style="font-size: 1.2em; font-weight: 700; color: ${analysis.color};">${analysis.label}</div>
-                    </div>
-                </div>
-                ${analysis.avgWakeTime ? `
-                    <div style="display: flex; gap: 20px; font-size: 0.85em; color: #6B635B;">
-                        <div>
-                            <span style="color: #2C2825; font-weight: 600;">${minutesToTime(analysis.avgWakeTime)}</span> avg wake
-                        </div>
-                        ${analysis.avgSleep ? `
-                            <div>
-                                <span style="color: #2C2825; font-weight: 600;">${analysis.avgSleep.toFixed(1)}h</span> avg sleep
-                            </div>
-                        ` : ''}
-                        ${analysis.dataPoints ? `
-                            <div>
-                                <span style="color: #2C2825; font-weight: 600;">${analysis.dataPoints}</span> days logged
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
-            </div>
-            ${analysis.consistency !== undefined && analysis.dataPoints >= 3 ? `
-                <div style="text-align: right;">
-                    <div style="font-size: 0.75em; color: #6B635B;">Consistency</div>
-                    <div style="font-size: 1.4em; font-weight: 700; color: ${analysis.consistency > 70 ? '#5E8A5E' : analysis.consistency > 40 ? '#C4923A' : '#B85C5C'};">${Math.round(analysis.consistency)}%</div>
-                    ${analysis.stdDev ? `<div style="font-size: 0.7em; color: #9C948B;">±${Math.round(analysis.stdDev)}min variation</div>` : ''}
-                </div>
-            ` : ''}
-        </div>
-        <div style="margin-top: 12px; padding: 12px; background: rgba(${analysis.color === '#B85C5C' ? '184, 92, 92' : analysis.color === '#C4923A' ? '196, 146, 58' : analysis.color === '#5E8A5E' ? '94, 138, 94' : '94, 122, 138'}, 0.1); border-radius: 8px; border-left: 3px solid ${analysis.color};">
-            <div style="font-size: 0.85em; color: #2C2825; line-height: 1.5; white-space: pre-wrap;">${analysis.recommendation}</div>
-        </div>
-    `;
+    // Truncate recommendation for compact tile display
+    const recText = analysis.recommendation.length > 120
+        ? analysis.recommendation.substring(0, 117) + '...'
+        : analysis.recommendation;
+
+    const consistencyBadge = analysis.consistency !== undefined && analysis.dataPoints >= 3
+        ? '<span style="margin-left:auto; font-size:0.75em; font-weight:700; color:' + (analysis.consistency > 70 ? '#5E8A5E' : analysis.consistency > 40 ? '#C4923A' : '#B85C5C') + ';">' + Math.round(analysis.consistency) + '%' + (analysis.stdDev ? ' \u00b1' + Math.round(analysis.stdDev) + 'm' : '') + '</span>'
+        : '';
+
+    container.innerHTML = '<div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">'
+        + '<span style="font-size:1.3em; line-height:1;">' + analysis.icon + '</span>'
+        + '<div style="min-width:0;">'
+            + '<div style="font-size:0.65em; color:#6B635B; text-transform:uppercase; letter-spacing:0.3px; line-height:1.2;">Circadian Phase</div>'
+            + '<div style="font-size:1em; font-weight:700; color:' + analysis.color + '; line-height:1.2;">' + analysis.label + '</div>'
+        + '</div>'
+        + consistencyBadge
+    + '</div>'
+    + (analysis.avgWakeTime ? '<div style="display:flex; gap:10px; font-size:0.75em; color:#6B635B; margin-bottom:4px;">'
+        + '<span><b style="color:#2C2825;">' + minutesToTime(analysis.avgWakeTime) + '</b> wake</span>'
+        + (analysis.avgSleep ? '<span><b style="color:#2C2825;">' + analysis.avgSleep.toFixed(1) + 'h</b> sleep</span>' : '')
+        + (analysis.dataPoints ? '<span><b style="color:#2C2825;">' + analysis.dataPoints + 'd</b> logged</span>' : '')
+    + '</div>' : '')
+    + '<div style="padding:6px 8px; background:rgba(' + (analysis.color === '#B85C5C' ? '184,92,92' : analysis.color === '#C4923A' ? '196,146,58' : analysis.color === '#5E8A5E' ? '94,138,94' : '94,122,138') + ', 0.1); border-radius:6px; border-left:2px solid ' + analysis.color + ';">'
+        + '<div style="font-size:0.73em; color:#2C2825; line-height:1.4;">' + recText + '</div>'
+    + '</div>';
 }
 
 function openSleepEditModal(dateStr) {

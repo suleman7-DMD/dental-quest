@@ -355,7 +355,6 @@ function updateUI(vm) {
     }
 
     // --- Delegate to other UI update functions ---
-    updateRecommendations(vm.sleepTime, vm.sleepHours, vm.blockingFactors);
     updateFeelingsTimeline();
     updateNicotineDisplay();
     updateScenarios();
@@ -367,6 +366,7 @@ function updateUI(vm) {
     updateStatusPillColors();
     updateVitCBadge();
     updateForecastLogic();
+    if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
 }
 
 /**
@@ -458,7 +458,7 @@ function updateWorkoutStatus() {
 // ============================================
 
 function updateRecommendations(sleepTime, sleepHours, blockingFactors) {
-    var container = document.getElementById('recommendations');
+    var container = document.getElementById('insRecommendations') || document.getElementById('recommendations');
     var recommendations = [];
     var now = getCurrentMinutes();
     var noon = 12 * 60;
@@ -1121,9 +1121,28 @@ function initUnifiedView() {
 // ============================================
 
 function scToggleCalibration() {
-    var body = document.getElementById('scCalibrationBody');
-    if (body) {
-        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    // Calibration now always visible — no-op for backward compat
+}
+
+function toggleModifierChip(modName) {
+    var chipMap = { vitaminC: 'vitCChip', heavyLift: 'liftChip', sauna: 'saunaChip' };
+    var checkboxMap = { vitaminC: 'vitCToggle', heavyLift: 'liftToggle', sauna: 'saunaToggle' };
+
+    var cb = document.getElementById(checkboxMap[modName]);
+    if (cb) {
+        cb.checked = !cb.checked;
+        toggleModifier(cb, modName);
+    }
+
+    var chip = document.getElementById(chipMap[modName]);
+    if (chip) chip.classList.toggle('active', cb && cb.checked);
+
+    if (modName === 'vitaminC') {
+        var row = document.getElementById('vitCTimeRow');
+        if (row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
+    } else if (modName === 'sauna') {
+        var row = document.getElementById('saunaTimeRow');
+        if (row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
     }
 }
 
@@ -1166,6 +1185,12 @@ function scNavigate(page) {
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
     } else if (page === 'insights') {
         if (typeof renderInsightsTab === 'function') renderInsightsTab();
+        if (typeof updateRecommendations === 'function') {
+            try {
+                var vm = runCalculations();
+                updateRecommendations(vm.sleepTime, vm.sleepHours, vm.blockingFactors);
+            } catch(e) { console.error('Recommendations error:', e); }
+        }
     } else if (page === 'accuracy') {
         if (typeof renderAccuracyTab === 'function') renderAccuracyTab();
     } else if (page === 'dashboard') {
@@ -1173,6 +1198,7 @@ function scNavigate(page) {
         if (typeof drawGraph === 'function') drawGraph();
         if (typeof renderSleepPerformance === 'function') renderSleepPerformance();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
+        if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
     } else if (page === 'inventory') {
         if (typeof scInvRender === 'function') scInvRender();
     }

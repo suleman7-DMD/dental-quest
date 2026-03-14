@@ -499,6 +499,15 @@ function restoreModifierUI() {
         const saunaTime = document.getElementById('saunaTime');
         if (saunaTime) saunaTime.value = state.modifiers.sauna.time || '18:00';
     }
+
+    // Sync chip visuals with checkbox states
+    var chipMap = { vitaminC: 'vitCChip', heavyLift: 'liftChip', sauna: 'saunaChip' };
+    var checkboxMap = { vitaminC: 'vitCToggle', heavyLift: 'liftToggle', sauna: 'saunaToggle' };
+    Object.keys(chipMap).forEach(function(mod) {
+        var chip = document.getElementById(chipMap[mod]);
+        var cb = document.getElementById(checkboxMap[mod]);
+        if (chip && cb) chip.classList.toggle('active', cb.checked);
+    });
 }
 
 // ============================================
@@ -527,12 +536,12 @@ function updateAllNighterUI() {
     const hint = document.getElementById('allNighterHint');
 
     if (state.allNighterMode) {
-        if (btn) { btn.style.background = '#6B7C5E'; btn.style.borderColor = '#6B7C5E'; }
+        if (btn) { btn.classList.add('sc-allnighter-chip', 'active'); btn.style.background = '#6B7C5E'; btn.style.borderColor = '#6B7C5E'; }
         if (icon) icon.textContent = '🔥';
         if (text) text.textContent = 'All-Nighter Mode: ON';
         if (hint) hint.style.display = 'block';
     } else {
-        if (btn) { btn.style.background = '#F5F2ED'; btn.style.borderColor = 'rgba(0,0,0,0.12)'; }
+        if (btn) { btn.classList.add('sc-allnighter-chip'); btn.classList.remove('active'); btn.style.background = '#F5F2ED'; btn.style.borderColor = 'rgba(0,0,0,0.12)'; }
         if (icon) icon.textContent = '🌙';
         if (text) text.textContent = 'All-Nighter Mode: OFF';
         if (hint) hint.style.display = 'none';

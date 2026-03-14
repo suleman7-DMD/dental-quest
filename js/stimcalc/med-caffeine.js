@@ -96,11 +96,11 @@ function renderMedEntries() {
         const isToday = medDate === today;
         // Use string ID with quotes in onclick handlers
         const dateSelector = `
-            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: #1A1D25; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: ${isToday ? '#5EAA8D' : '#D4A05A'}; width: 110px;">
+            <input type="date" value="${medDate}" max="${today}" onchange="updateMedEntry('${med.id}', 'date', this.value)" style="font-size: 0.75em; padding: 4px; background: var(--sc-surface, #1A1D25); border: 1px solid var(--sc-border, rgba(255,255,255,0.08)); border-radius: 4px; color: ${isToday ? 'var(--sc-accent, #5EAA8D)' : 'var(--sc-warning, #D4A05A)'}; width: 110px;">
         `;
 
         return `
-        <div class="med-entry">
+        <div class="med-entry sc-med-entry">
             ${dateSelector}
             <select onchange="updateMedEntry('${med.id}', 'dose', this.value)">
                 <option value="20" ${med.dose === 20 ? 'selected' : ''}>20mg XR</option>
@@ -112,7 +112,7 @@ function renderMedEntries() {
             </select>
             <input type="time" value="${med.time}" onchange="updateMedEntry('${med.id}', 'time', this.value)">
             ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
-            <button class="remove-btn" onclick="removeMedEntry('${med.id}')">×</button>
+            <button class="remove-btn sc-btn sc-btn--ghost" onclick="removeMedEntry('${med.id}')">×</button>
         </div>
     `}).join('');
 
@@ -252,16 +252,16 @@ function renderCaffeineEntries() {
         const isToday = caffDate === today;
         // Use string ID in onclick handlers
         const dateSelector = `
-            <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate('${caff.id}', this.value)" style="font-size: 0.7em; padding: 3px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; color: ${isToday ? '#5E8A5E' : '#C4923A'}; width: 100px;">
+            <input type="date" value="${caffDate}" max="${today}" onchange="updateCaffeineDate('${caff.id}', this.value)" style="font-size: 0.7em; padding: 3px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 4px; color: ${isToday ? 'var(--sc-accent-green, #5E8A5E)' : 'var(--sc-warning, #C4923A)'}; width: 100px;">
         `;
 
         return `
-        <div class="caffeine-entry" ${isSipPart ? 'style="background: rgba(107, 124, 94, 0.08); border-color: rgba(107, 124, 94, 0.15);"' : ''}>
+        <div class="caffeine-entry sc-caff-entry" ${isSipPart ? 'style="background: rgba(107, 124, 94, 0.08); border-color: rgba(107, 124, 94, 0.15);"' : ''}>
             ${dateSelector}
             <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
             <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
-                   style="padding: 4px 8px; background: #F5F2ED; border: 1px solid rgba(0,0,0,0.12); border-radius: 6px; color: #2C2825; font-size: 0.85em; width: 100px;">
-            <button class="remove-btn" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
+                   style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 100px;">
+            <button class="remove-btn sc-btn sc-btn--ghost" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
         </div>
     `}).join('');
 }

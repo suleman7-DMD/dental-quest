@@ -480,9 +480,14 @@
         /* Dashboard Card Grid */
         .sc-dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
             align-items: start;
+            grid-template-areas:
+                "hero hero hero hero hero inputs inputs inputs inv inv inv inv"
+                "meds meds meds meds caff caff caff caff mods mods mods mods"
+                "graph graph graph graph graph graph intel intel intel shist shist shist"
+                "block block block block block block block block block block block block";
         }
 
         .sc-card {
@@ -499,6 +504,9 @@
             border-color: var(--border-strong);
         }
 
+        .sc-card--compact { padding: 12px 14px; }
+        .sc-card--compact .sc-card-title { font-size: 10px; margin-bottom: 6px; }
+
         .sc-card-title {
             font-size: 11px;
             font-weight: 700;
@@ -514,6 +522,17 @@
         .sc-card.full-width {
             grid-column: 1 / -1;
         }
+
+        #scHeroCard         { grid-area: hero; }
+        #scInputsCalibCard  { grid-area: inputs; }
+        #scDashInvCard      { grid-area: inv; }
+        #scMedsCard         { grid-area: meds; }
+        #scCaffeineCard     { grid-area: caff; }
+        #scModifiersCard    { grid-area: mods; }
+        #scGraphCard        { grid-area: graph; }
+        .sc-intel-card      { grid-area: intel; }
+        #scSleepHistoryCard { grid-area: shist; }
+        #scBlockingCard     { grid-area: block; }
 
         /* Quick Inputs Card */
         .sc-quick-inputs .sc-input-row {
@@ -1030,7 +1049,16 @@
 
             /* Tablet: keep 2 columns but tighter */
             .sc-dashboard-grid {
-                gap: 14px;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 10px;
+                grid-template-areas:
+                    "hero hero hero hero hero hero"
+                    "inputs inputs inputs inv inv inv"
+                    "meds meds meds caff caff caff"
+                    "mods mods mods mods mods mods"
+                    "graph graph graph graph graph graph"
+                    "intel intel intel shist shist shist"
+                    "block block block block block block";
             }
         }
 
@@ -1107,7 +1135,10 @@
 
             .sc-dashboard-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 10px;
+                grid-template-areas:
+                    "hero" "inputs" "inv" "meds" "caff" "mods"
+                    "graph" "intel" "shist" "block";
             }
 
             .sc-metrics-row {
@@ -1246,8 +1277,13 @@
             }
 
             .sc-dashboard-grid {
-                gap: 10px;
+                gap: 8px;
             }
+
+            .sc-btn { min-height: 44px; }
+            .sc-modifier-chip { gap: 4px; padding: 5px 10px; font-size: 0.75em; }
+            .sc-calibration-inline { grid-template-columns: repeat(2, 1fr); }
+            .sc-btn--caff { padding: 6px 10px; }
 
             .hero-time {
                 font-size: 2.4rem !important;
@@ -1620,6 +1656,252 @@
         .add-btn:hover {
             background: var(--accent-lighter);
             border-style: solid;
+        }
+
+        /* ============================================
+           UNIFIED BUTTON SYSTEM (Dashboard Redesign)
+           ============================================ */
+        .sc-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 9999px;
+            padding: 7px 14px;
+            font-size: 0.8em;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .sc-btn--primary {
+            background: var(--accent);
+            color: var(--accent-fg);
+            border-color: var(--accent);
+        }
+        .sc-btn--primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 2px 8px rgba(107, 124, 94, 0.3);
+        }
+
+        .sc-btn--caff {
+            background: var(--warning-light);
+            color: var(--warning);
+            border-color: rgba(196, 146, 58, 0.3);
+            font-size: 0.78em;
+            padding: 5px 12px;
+        }
+        .sc-btn--caff:hover {
+            background: var(--warning);
+            color: var(--accent-fg);
+        }
+
+        .sc-btn--ghost {
+            background: transparent;
+            color: var(--fg-tertiary);
+            padding: 4px 8px;
+            font-size: 1em;
+        }
+        .sc-btn--ghost:hover {
+            background: var(--destructive-light);
+            color: var(--destructive);
+        }
+
+        .sc-btn--sm {
+            padding: 4px 10px;
+            font-size: 0.75em;
+        }
+
+        .sc-btn--add {
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed var(--accent);
+            background: transparent;
+            color: var(--accent);
+            border-radius: var(--radius-md);
+            font-size: 0.85em;
+        }
+        .sc-btn--add:hover {
+            background: var(--accent-lighter);
+            border-style: solid;
+        }
+
+        /* Modifier Chip Toggles */
+        .sc-modifier-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sc-modifier-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: 1px solid var(--border-default);
+            background: var(--surface-primary);
+            color: var(--fg-secondary);
+            font-size: 0.82em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .sc-modifier-chip:hover {
+            border-color: var(--accent);
+            background: var(--accent-lighter);
+        }
+
+        .sc-modifier-chip.active {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .sc-modifier-chip .chip-icon {
+            font-size: 1.1em;
+        }
+
+        .sc-allnighter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: 1px solid var(--warning);
+            background: var(--warning-light);
+            color: var(--warning);
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 8px;
+        }
+
+        .sc-allnighter-chip:hover {
+            background: rgba(196, 146, 58, 0.2);
+        }
+
+        .sc-allnighter-chip.active {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* Compact Calibration Grid */
+        .sc-calibration-inline {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .sc-calibration-inline .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .sc-calibration-inline .input-group label {
+            font-size: 0.7em;
+            color: var(--fg-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .sc-calibration-inline .input-group input {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--control-border);
+            background: var(--control-bg);
+            color: var(--fg-primary);
+            font-size: 0.85em;
+            min-height: 34px;
+            font-family: var(--font-body);
+        }
+
+        .sc-calibration-inline .input-group input:focus {
+            outline: none;
+            border-color: var(--control-border-focus);
+            box-shadow: 0 0 0 3px var(--control-ring);
+        }
+
+        /* Inline Divider */
+        .sc-divider {
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 10px 0;
+        }
+
+        /* Med/Caff Entry Rows (Dashboard Redesign) */
+        .sc-med-entry {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+        .sc-med-entry select,
+        .sc-med-entry input {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--control-border);
+            background: var(--control-bg);
+            color: var(--fg-primary);
+            font-size: 0.88em;
+            font-family: var(--font-body);
+        }
+
+        .sc-caff-entry {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: rgba(196, 146, 58, 0.06);
+            border: 1px solid rgba(196, 146, 58, 0.15);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+        }
+
+        /* Dashboard Inventory Compact */
+        #scDashInvCard .sc-inv-dash-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        #scDashInvCard .sc-inv-dash-row:last-child {
+            border-bottom: none;
+        }
+
+        #scDashInvCard .sc-inv-dash-pills {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--fg-primary);
+        }
+
+        #scDashInvCard .sc-inv-dash-label {
+            font-size: 0.82em;
+            color: var(--fg-secondary);
+        }
+
+        #scDashInvCard .sc-inv-dash-days {
+            font-size: 0.75em;
+            color: var(--fg-tertiary);
         }
 
         /* Caffeine Quick Buttons */
@@ -3803,8 +4085,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="sc-card" id="scQuickInputsCard">
-                            <div class="sc-card-title">Today's Inputs</div>
+                        <div class="sc-card sc-card--compact" id="scInputsCalibCard">
+                            <div class="sc-card-title">Inputs</div>
                             <div class="sc-quick-inputs">
                                 <div class="sc-input-row">
                                     <div class="input-group" style="flex:1;">
@@ -3819,6 +4101,20 @@
                                 <div id="sleepDebtDisplay" class="sleep-debt-display"></div>
                                 <div id="recentNightsContainer" class="recent-nights" style="margin-top:6px;"></div>
                             </div>
+                            <div class="sc-divider"></div>
+                            <div class="sc-card-title" style="margin-top:4px;">Calibration</div>
+                            <div class="sc-calibration-inline">
+                                <div class="input-group"><label>Amp t&#189;</label><input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Amp Thresh</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Caff t&#189;</label><input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Caff Thresh</label><input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Weight</label><input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Sleep Goal</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
+                            </div>
+                        </div>
+                        <div class="sc-card sc-card--compact" id="scDashInvCard">
+                            <div class="sc-card-title">Inventory</div>
+                            <div id="scDashInvContent"></div>
                         </div>
                         <!-- Sleep History fills under Hero -->
                         <div class="sc-card" id="scSleepHistoryCard">
@@ -3836,7 +4132,7 @@
                         <!-- Medications + Caffeine -->
                         <div class="sc-card" id="scMedsCard">
                             <div class="sc-card-title">Medications</div>
-                            <button class="all-nighter-btn" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
+                            <button class="all-nighter-btn sc-allnighter-chip" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
                                 <span id="allNighterIcon">~</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
                             </button>
                             <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:8px;">Extended tracking active -- includes yesterday's residual load</div>
@@ -3846,24 +4142,24 @@
                                 <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
                             </div>
                             <div id="medEntries"></div>
-                            <button class="add-btn" onclick="addMedEntry()">+ Add Medication Dose</button>
+                            <button class="sc-btn sc-btn--add" onclick="addMedEntry()">+ Add Medication Dose</button>
                             <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
                         </div>
                         <div class="sc-card" id="scCaffeineCard">
                             <div class="sc-card-title">Caffeine</div>
-                            <div class="quick-actions">
-                                <button class="quick-btn" onclick="addCaffeine(100, 'Coffee')">Coffee 100mg</button>
-                                <button class="quick-btn" onclick="addCaffeine(160, 'Celsius')">Celsius 160mg</button>
-                                <button class="quick-btn" onclick="addCaffeine(225, 'Starbucks')">Starbucks 225mg</button>
-                                <button class="quick-btn" onclick="addCaffeine(63, 'Espresso')">Espresso 63mg</button>
-                                <button class="quick-btn" onclick="addCaffeine(47, 'Tea')">Tea 47mg</button>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                                <button class="sc-btn sc-btn--caff" onclick="addCaffeine(100, 'Coffee')">Coffee 100mg</button>
+                                <button class="sc-btn sc-btn--caff" onclick="addCaffeine(160, 'Celsius')">Celsius 160mg</button>
+                                <button class="sc-btn sc-btn--caff" onclick="addCaffeine(225, 'Starbucks')">Starbucks 225mg</button>
+                                <button class="sc-btn sc-btn--caff" onclick="addCaffeine(63, 'Espresso')">Espresso 63mg</button>
+                                <button class="sc-btn sc-btn--caff" onclick="addCaffeine(47, 'Tea')">Tea 47mg</button>
                             </div>
-                            <button class="quick-btn" onclick="addCustomCaffeine()" style="width:100%; margin-top:8px; margin-bottom:8px;">+ Custom Amount</button>
+                            <button class="sc-btn sc-btn--add" onclick="addCustomCaffeine()">+ Custom Amount</button>
                             <div id="caffeineEntries"></div>
                             <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
                         </div>
                         <!-- Row 3: Sleep Intelligence + Modifiers side by side -->
-                        <div class="sc-card">
+                        <div class="sc-card sc-intel-card">
                             <div class="sc-card-title">Sleep Intelligence</div>
                             <div id="circadianPhaseDisplay" style="margin-bottom:8px;"></div>
                             <div id="sleepCalendar"></div>
@@ -3881,27 +4177,33 @@
                                 <div id="explainerAction" style="font-size:0.78em; color:var(--accent); margin-top:4px;"></div>
                             </div>
                         </div>
-                        <div class="sc-card" id="scModifiersCard">
+                        <div class="sc-card sc-card--compact" id="scModifiersCard">
                             <div class="sc-card-title">Modifiers</div>
-                            <div class="modifier-toggle">
-                                <label><input type="checkbox" id="vitCToggle" onchange="toggleModifier(this, 'vitaminC'); recalculate();"> Vitamin C (1000mg)</label>
-                                <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
-                                <div class="modifier-time" id="vitCTimeRow" style="display:none;">
-                                    <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
-                                    <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;">
-                                        <option value="today">Today</option>
-                                        <option value="tomorrow">Tomorrow</option>
-                                    </select>
-                                </div>
+                            <div class="sc-modifier-chips">
+                                <button class="sc-modifier-chip" id="vitCChip" onclick="toggleModifierChip('vitaminC')">
+                                    <span class="chip-icon">&#127818;</span> Vitamin C
+                                </button>
+                                <button class="sc-modifier-chip" id="liftChip" onclick="toggleModifierChip('heavyLift')">
+                                    <span class="chip-icon">&#127947;</span> Heavy Lift
+                                </button>
+                                <button class="sc-modifier-chip" id="saunaChip" onclick="toggleModifierChip('sauna')">
+                                    <span class="chip-icon">&#9832;</span> Sauna
+                                </button>
                             </div>
-                            <div class="modifier-toggle">
-                                <label><input type="checkbox" id="liftToggle" onchange="toggleModifier(this, 'heavyLift'); recalculate();"> Heavy Lifting</label>
+                            <!-- Hidden checkboxes for backward compat with toggleModifier/restoreModifierUI -->
+                            <input type="checkbox" id="vitCToggle" style="display:none;">
+                            <input type="checkbox" id="liftToggle" style="display:none;">
+                            <input type="checkbox" id="saunaToggle" style="display:none;">
+                            <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
+                            <div class="modifier-time" id="vitCTimeRow" style="display:none; margin-top:8px;">
+                                <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
+                                <select id="vitaminCDate" onchange="updateVitaminCDate(); recalculate();" style="padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;">
+                                    <option value="today">Today</option>
+                                    <option value="tomorrow">Tomorrow</option>
+                                </select>
                             </div>
-                            <div class="modifier-toggle">
-                                <label><input type="checkbox" id="saunaToggle" onchange="toggleModifier(this, 'sauna'); recalculate();"> Sauna Session</label>
-                                <div class="modifier-time" id="saunaTimeRow" style="display:none;">
-                                    <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
-                                </div>
+                            <div class="modifier-time" id="saunaTimeRow" style="display:none; margin-top:8px;">
+                                <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
                             </div>
                         </div>
                         <!-- Row 4: Graphs side by side -->
@@ -3917,32 +4219,6 @@
                             <div class="unified-blocking" id="blockingFactors" style="display: none;">
                                 <h4>What's Keeping You Awake</h4>
                                 <div id="blockingList"></div>
-                            </div>
-                        </div>
-                        <!-- Recommendations -->
-                        <div class="sc-card full-width">
-                            <div class="sc-card-title">Recommendations</div>
-                            <div id="recommendations"></div>
-                        </div>
-                        <!-- Calibration (collapsed, bottom) -->
-                        <div class="sc-card full-width" id="scCalibrationCard">
-                            <div class="sc-calibration-header" onclick="scToggleCalibration()" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
-                                <div class="sc-card-title" style="margin-bottom:0;">Calibration</div>
-                                <span style="font-size:0.75em; color:var(--fg-tertiary);">Tap to adjust</span>
-                            </div>
-                            <div id="scCalibrationBody" style="display:none; margin-top:12px;">
-                                <div class="input-row">
-                                    <div class="input-group"><label>Amp Half-Life (hrs)</label><input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()"></div>
-                                    <div class="input-group"><label>Sleep Threshold (mg)</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()"></div>
-                                </div>
-                                <div class="input-row">
-                                    <div class="input-group"><label>Caffeine Half-Life (hrs)</label><input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()"></div>
-                                    <div class="input-group"><label>Caffeine Threshold (mg)</label><input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()"></div>
-                                </div>
-                                <div class="input-row">
-                                    <div class="input-group"><label>Body Weight (lbs)</label><input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()"></div>
-                                    <div class="input-group"><label>Sleep Target (hrs)</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -4059,6 +4335,7 @@
                 <div class="sc-page" id="scPageInsights">
                     <div id="insightsContent" class="sc-card" style="padding:24px;">
                         <div id="insKeyMetrics" class="ins-section ins-section--open"></div>
+                        <div id="insRecommendations" class="ins-section"></div>
                         <div id="insDoseResponse" class="ins-section"></div>
                         <div id="insCaffeineImpact" class="ins-section"></div>
                         <div id="insSleepPatterns" class="ins-section"></div>
@@ -4267,16 +4544,16 @@
     </div>
 
     <!-- Scripts (unchanged order) -->
-    <script src="js/stimcalc/state.js"></script>
-    <script src="js/stimcalc/circadian.js"></script>
-    <script src="js/stimcalc/pharma-engine.js"></script>
-    <script src="js/stimcalc/sleep-prediction.js"></script>
-    <script src="js/stimcalc/firebase-sync.js"></script>
-    <script src="js/stimcalc/med-caffeine.js"></script>
-    <script src="js/stimcalc/ui-sections.js"></script>
-    <script src="js/stimcalc/history-calendar.js"></script>
-    <script src="js/stimcalc/graph.js"></script>
-    <script src="js/stimcalc/med-inventory.js"></script>
-    <script src="js/stimcalc/init.js"></script>
+    <script src="js/stimcalc/state.js?v=20260314"></script>
+    <script src="js/stimcalc/circadian.js?v=20260314"></script>
+    <script src="js/stimcalc/pharma-engine.js?v=20260314"></script>
+    <script src="js/stimcalc/sleep-prediction.js?v=20260314"></script>
+    <script src="js/stimcalc/firebase-sync.js?v=20260314"></script>
+    <script src="js/stimcalc/med-caffeine.js?v=20260314"></script>
+    <script src="js/stimcalc/ui-sections.js?v=20260314"></script>
+    <script src="js/stimcalc/history-calendar.js?v=20260314"></script>
+    <script src="js/stimcalc/graph.js?v=20260314"></script>
+    <script src="js/stimcalc/med-inventory.js?v=20260314"></script>
+    <script src="js/stimcalc/init.js?v=20260314"></script>
 </body>
 </html>
