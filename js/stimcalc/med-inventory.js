@@ -435,8 +435,8 @@ function scInvToggleCalendar(medType) {
 // CALENDAR GENERATION
 // ============================================
 
-function scInvGenerateCalendar(medType, startDate, refillDate, pillsAvailable, daysNeeded) {
-    var contentElement = document.getElementById('sc-inv-calendarContent-' + medType);
+function scInvGenerateCalendar(medType, startDate, refillDate, pillsAvailable, daysNeeded, targetElementId) {
+    var contentElement = document.getElementById(targetElementId || ('sc-inv-calendarContent-' + medType));
     if (!contentElement) return;
 
     var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -762,10 +762,13 @@ function scInvRenderDashboard() {
     var container = document.getElementById('scDashInvContent');
     if (!container) return;
 
-    var today = getLocalDateString(new Date());
+    var todayStr = getLocalDateString(new Date());
     var allTakenToday = true;
+    var todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    var tomorrowDate = new Date(todayDate);
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
 
-    // Clear existing content
     container.textContent = '';
 
     ['30mg', '20mg'].forEach(function(medType) {
@@ -776,14 +779,16 @@ function scInvRenderDashboard() {
         var dailyDose = med.dailyDose ?? 1;
         var daysSupply = dailyDose > 0 ? Math.floor(pills / dailyDose) : 0;
         var label = med.label ?? ('Adderall XR ' + medType);
-        var takenToday = (med.dosesLogged && med.dosesLogged[today]);
+        var takenToday = (med.dosesLogged && med.dosesLogged[todayStr]);
 
         if (!takenToday) allTakenToday = false;
 
+        // Main row: label + pills count
         var row = document.createElement('div');
         row.className = 'sc-inv-dash-row';
 
         var infoDiv = document.createElement('div');
+        infoDiv.style.flex = '1';
 
         var labelDiv = document.createElement('div');
         labelDiv.className = 'sc-inv-dash-label';
@@ -795,6 +800,57 @@ function scInvRenderDashboard() {
         daysDiv.textContent = daysSupply + ' day' + (daysSupply !== 1 ? 's' : '') + ' supply';
         infoDiv.appendChild(daysDiv);
 
+        // Refill countdown + deficit/surplus
+        if (med.refillDate) {
+            var refillDateObj = parseLocalDate(med.refillDate);
+            var daysUntilRefill = Math.ceil((refillDateObj - todayDate) / (1000 * 60 * 60 * 24));
+            var daysFromTomorrow = Math.ceil((refillDateObj - tomorrowDate) / (1000 * 60 * 60 * 24));
+            var pillsNeeded = Math.max(0, daysFromTomorrow);
+            var difference = pills - pillsNeeded;
+
+            // Refill line
+            var refillDiv = document.createElement('div');
+            refillDiv.className = 'sc-inv-dash-refill';
+            if (daysUntilRefill <= 0) {
+                refillDiv.textContent = 'Refill date reached!';
+                refillDiv.style.color = 'var(--success)';
+            } else {
+                refillDiv.textContent = 'Refill in ' + daysUntilRefill + ' day' + (daysUntilRefill !== 1 ? 's' : '');
+            }
+            infoDiv.appendChild(refillDiv);
+
+            // Status badge
+            var statusSpan = document.createElement('span');
+            statusSpan.className = 'sc-inv-dash-status';
+            if (daysUntilRefill <= 0) {
+                statusSpan.className += ' on-track';
+                statusSpan.textContent = 'Refill ready';
+            } else if (difference >= 0) {
+                if (difference === 0) {
+                    statusSpan.className += ' on-track';
+                    statusSpan.textContent = 'On track';
+                } else {
+                    statusSpan.className += ' ahead';
+                    statusSpan.textContent = '+' + difference + ' ahead';
+                }
+            } else {
+                var deficit = Math.abs(difference);
+                if (deficit <= 3) {
+                    statusSpan.className += ' slightly-behind';
+                    statusSpan.textContent = '-' + deficit + ' behind';
+                } else {
+                    statusSpan.className += ' behind';
+                    statusSpan.textContent = '-' + deficit + ' behind';
+                }
+            }
+            infoDiv.appendChild(statusSpan);
+        } else {
+            var noRefillDiv = document.createElement('div');
+            noRefillDiv.className = 'sc-inv-dash-refill';
+            noRefillDiv.textContent = 'No refill date set';
+            infoDiv.appendChild(noRefillDiv);
+        }
+
         row.appendChild(infoDiv);
 
         var pillsDiv = document.createElement('div');
@@ -803,8 +859,52 @@ function scInvRenderDashboard() {
         row.appendChild(pillsDiv);
 
         container.appendChild(row);
+
+        // Collapsible calendar toggle
+        if (med.refillDate) {
+            var calToggle = document.createElement('button');
+            calToggle.className = 'sc-inv-dash-cal-toggle';
+            calToggle.textContent = 'Planning Calendar \u25B6';
+            var calWrapId = 'sc-inv-dashCal-' + medType;
+
+            var calWrap = document.createElement('div');
+            calWrap.className = 'sc-inv-dash-cal-wrap';
+            calWrap.id = calWrapId;
+            calWrap.style.display = 'none';
+
+            calToggle.addEventListener('click', (function(mt, wrapId, toggleBtn) {
+                return function() {
+                    var wrap = document.getElementById(wrapId);
+                    if (!wrap) return;
+                    var isShowing = wrap.style.display !== 'none';
+                    wrap.style.display = isShowing ? 'none' : 'block';
+                    toggleBtn.textContent = isShowing ? 'Planning Calendar \u25B6' : 'Planning Calendar \u25BC';
+                    // Lazy-render calendar on first open
+                    if (!isShowing && wrap.children.length === 0) {
+                        var m = scInvMedications[mt];
+                        if (m && m.refillDate) {
+                            var td = new Date();
+                            td.setHours(0, 0, 0, 0);
+                            var tmrw = new Date(td);
+                            tmrw.setDate(tmrw.getDate() + 1);
+                            var rDate = parseLocalDate(m.refillDate);
+                            var dFromTmrw = Math.ceil((rDate - tmrw) / (1000 * 60 * 60 * 24));
+                            var calContentId = 'sc-inv-dashCalContent-' + mt;
+                            var contentDiv = document.createElement('div');
+                            contentDiv.id = calContentId;
+                            wrap.appendChild(contentDiv);
+                            scInvGenerateCalendar(mt, tmrw, rDate, m.pills ?? 0, dFromTmrw, calContentId);
+                        }
+                    }
+                };
+            })(medType, calWrapId, calToggle));
+
+            container.appendChild(calToggle);
+            container.appendChild(calWrap);
+        }
     });
 
+    // Take Daily Dose button or Taken Today indicator
     var actionDiv = document.createElement('div');
     actionDiv.style.marginTop = '8px';
 
@@ -812,12 +912,10 @@ function scInvRenderDashboard() {
         actionDiv.style.textAlign = 'center';
         actionDiv.style.color = '#4caf50';
         actionDiv.style.fontWeight = '600';
-
         var checkSpan = document.createElement('span');
         checkSpan.style.marginRight = '4px';
         checkSpan.textContent = '\u2713';
         actionDiv.appendChild(checkSpan);
-
         var takenText = document.createTextNode('Taken Today');
         actionDiv.appendChild(takenText);
     } else {

@@ -1414,6 +1414,45 @@ function clearToday() {
     }
 }
 
+function resetDay() {
+    showCustomConfirm(
+        'Save today\'s prediction to history, then clear all medications, caffeine, modifiers, workout, and nicotine for a fresh start.\n\nWake time and sleep hours will NOT be cleared.',
+        function() {
+            // 1. Archive before clearing
+            saveDay();
+            saveDailyLogicLog();
+            // 2. Clear daily data (same fields as clearToday + nicotine)
+            state.medications = {};
+            state.caffeine = {};
+            Object.keys(state.modifiers).forEach(function(k) {
+                if (state.modifiers[k]) state.modifiers[k].active = false;
+            });
+            state.workoutPlan = {
+                active: false, time: null, duration: 45, type: 'lifting',
+                intensity: 'medium', fasted: false, coldShower: false,
+                applied: false, adenosineBonus: 0, cortisolDelay: 0,
+                thermalDelay: 0, cooldownComplete: null
+            };
+            state.nicotine = { active: false, type: 'vape', lastHitTime: null };
+            state.allNighterMode = false;
+            // 3. Re-render
+            renderMedEntries();
+            renderCaffeineEntries();
+            if (typeof renderFocusCaffeineList === 'function') renderFocusCaffeineList();
+            document.querySelectorAll('.modifier-item').forEach(function(el) { el.classList.remove('active'); });
+            updateModifierTimeInputs();
+            initWorkoutPlanner();
+            if (typeof updateNicotineDisplay === 'function') updateNicotineDisplay();
+            if (typeof updateAllNighterUI === 'function') updateAllNighterUI();
+            // 4. Save + recalculate
+            recalculate();
+            saveStateImmediate();
+            showToast('Day reset! Previous prediction archived.');
+        },
+        null, 'Reset Day'
+    );
+}
+
 function toggleForecastLogic() {
     forecastExpanded = !forecastExpanded;
     const content = document.getElementById('forecastLogicContent');

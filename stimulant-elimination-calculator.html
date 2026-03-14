@@ -432,7 +432,7 @@
         }
 
         .sc-metric-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
@@ -457,7 +457,7 @@
 
         /* Content Area */
         .sc-content-area {
-            padding: 20px 28px;
+            padding: 16px 22px;
             width: 100%;
             flex: 1;
         }
@@ -481,13 +481,13 @@
         .sc-dashboard-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             align-items: flex-start;
         }
         .sc-dash-col {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             min-width: 0;
         }
         .sc-dash-col--main { flex: 5; }
@@ -500,7 +500,7 @@
             border: 1px solid var(--border-default);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
-            padding: 16px 18px;
+            padding: 14px 16px;
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
@@ -509,7 +509,7 @@
             border-color: var(--border-strong);
         }
 
-        .sc-card--compact { padding: 12px 14px; }
+        .sc-card--compact { padding: 10px 12px; }
         .sc-card--compact .sc-card-title { font-size: 10px; margin-bottom: 6px; }
 
         .sc-card-title {
@@ -518,7 +518,7 @@
             text-transform: uppercase;
             letter-spacing: 0.6px;
             color: var(--fg-tertiary);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -1034,7 +1034,7 @@
             }
 
             .sc-content-area {
-                padding: 18px 20px;
+                padding: 16px 18px;
             }
 
             .sc-top-bar {
@@ -1119,7 +1119,7 @@
             }
 
             .sc-content-area {
-                padding: 14px 10px;
+                padding: 12px 8px;
             }
 
             .sc-dashboard-grid {
@@ -1161,7 +1161,7 @@
 
             /* Mobile cards tighter */
             .sc-card {
-                padding: 12px 10px;
+                padding: 10px 10px;
             }
 
             .sc-card-title {
@@ -1723,14 +1723,14 @@
         .sc-modifier-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .sc-modifier-chip {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 9999px;
             border: 1px solid var(--border-default);
             background: var(--surface-primary);
@@ -1891,6 +1891,44 @@
         #scDashInvCard .sc-inv-dash-days {
             font-size: 0.75em;
             color: var(--fg-tertiary);
+        }
+
+        .sc-inv-dash-refill {
+            font-size: 0.72em;
+            color: var(--fg-tertiary);
+            margin-top: 1px;
+        }
+        .sc-inv-dash-status {
+            display: inline-block;
+            font-size: 0.7em;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+        .sc-inv-dash-status.on-track,
+        .sc-inv-dash-status.ahead { color: var(--success); background: rgba(94, 138, 94, 0.1); }
+        .sc-inv-dash-status.slightly-behind { color: var(--warning); background: rgba(196, 146, 58, 0.1); }
+        .sc-inv-dash-status.behind { color: var(--destructive); background: rgba(184, 92, 92, 0.1); }
+        .sc-inv-dash-cal-toggle {
+            display: block;
+            width: 100%;
+            padding: 5px 0;
+            margin-top: 6px;
+            background: none;
+            border: none;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--fg-tertiary);
+            font-size: 0.72em;
+            cursor: pointer;
+            text-align: center;
+            transition: color 0.15s ease;
+        }
+        .sc-inv-dash-cal-toggle:hover { color: var(--accent); }
+        .sc-inv-dash-cal-wrap {
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         /* Sleep History Stat Chips */
@@ -3296,6 +3334,25 @@
             transition: width 1s linear;
         }
 
+        .sc-btn--reset-day {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 14px;
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--fg-tertiary);
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .sc-btn--reset-day:hover {
+            color: var(--destructive);
+            border-color: var(--destructive);
+            background: #fdf2f2;
+        }
+
         .status-pills {
             display: flex;
             gap: 8px;
@@ -4112,6 +4169,7 @@
                                 <div class="hero-progress-bar">
                                     <div class="hero-progress-fill" id="heroProgressFill" style="width: 0%;"></div>
                                 </div>
+                                <button class="sc-btn sc-btn--reset-day" onclick="resetDay()">Reset Day</button>
                             </div>
                         </div>
                         <!-- Medications -->
