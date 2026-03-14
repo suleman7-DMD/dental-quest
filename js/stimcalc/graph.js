@@ -528,10 +528,8 @@ function _setupSleepTooltipForCanvas(canvasId, tooltipId, dateId, hoursId, statu
 }
 
 function setupSleepGraphTooltip(data, avg) {
-    // Calendar page tooltip
+    // Calendar page tooltip only — dashboard tooltip handled by renderDashSleepHistoryFull
     _setupSleepTooltipForCanvas('sleepPerformanceGraph', 'sleepGraphTooltip', 'tooltipDate', 'tooltipHours', 'tooltipStatus', 'tooltipVsAvg', data, avg);
-    // Dashboard page tooltip
-    _setupSleepTooltipForCanvas('sleepHistoryGraphDash', 'sleepHistoryTooltipDash', 'tooltipDateDash', 'tooltipHoursDash', 'tooltipStatusDash', 'tooltipVsAvgDash', data, avg);
 }
 
 function _drawSleepGraphToCanvas(canvasId, data) {
@@ -681,15 +679,18 @@ function _drawSleepGraphToCanvas(canvasId, data) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // X-axis labels (minimal - only every 7 days + today)
+    // X-axis labels — adaptive spacing based on data length
     ctx.font = '9px SF Mono, Consolas, monospace';
     ctx.textAlign = 'center';
+
+    // Pick label interval: every 7 days for <=60 points, every 14 for <=120, every 30 for more
+    const labelInterval = data.length <= 60 ? 7 : data.length <= 120 ? 14 : 30;
 
     data.forEach((d, i) => {
         const x = padding.left + i * pointSpacing;
 
-        // Show label every 7 days or if today
-        if (i === 0 || i === 7 || i === 14 || i === 21 || i === 29 || d.isToday) {
+        // Show label at interval boundaries, first point, and today
+        if (i === 0 || i % labelInterval === 0 || d.isToday) {
             ctx.fillStyle = d.isToday ? '#5E8A5E' : '#9C948B';
             ctx.font = d.isToday ? 'bold 10px Inter, sans-serif' : '9px SF Mono, Consolas, monospace';
             ctx.fillText(d.isToday ? 'Today' : d.dayLabel, x, height - 10);
@@ -708,10 +709,8 @@ function _drawSleepGraphToCanvas(canvasId, data) {
 }
 
 function drawSleepPerformanceGraph(data) {
-    // Draw to Calendar page canvas
+    // Draw to Calendar page canvas only — dashboard has its own full-history renderer
     _drawSleepGraphToCanvas('sleepPerformanceGraph', data);
-    // Draw to Dashboard page canvas
-    _drawSleepGraphToCanvas('sleepHistoryGraphDash', data);
 }
 
 // ============================================

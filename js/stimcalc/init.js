@@ -367,6 +367,7 @@ function updateUI(vm) {
     updateVitCBadge();
     updateForecastLogic();
     if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
+    if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
 }
 
 /**
@@ -1196,9 +1197,9 @@ function scNavigate(page) {
     } else if (page === 'dashboard') {
         recalculate();
         if (typeof drawGraph === 'function') drawGraph();
-        if (typeof renderSleepPerformance === 'function') renderSleepPerformance();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
         if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
+        if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
     } else if (page === 'inventory') {
         if (typeof scInvRender === 'function') scInvRender();
     }

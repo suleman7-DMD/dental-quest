@@ -1891,6 +1891,45 @@
             color: var(--fg-tertiary);
         }
 
+        /* Sleep History Stat Chips */
+        .sc-sleep-stat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .sc-sleep-stat-chip {
+            background: var(--canvas-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 6px 12px;
+            min-width: 80px;
+            text-align: center;
+        }
+        .sc-sleep-stat-chip__label {
+            font-size: 0.65em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--fg-tertiary);
+            margin-bottom: 2px;
+        }
+        .sc-sleep-stat-chip__value {
+            font-size: 1.05em;
+            font-weight: 700;
+        }
+        .sc-sleep-graph-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .sc-sleep-graph-scroll::-webkit-scrollbar-track {
+            background: var(--canvas-subtle);
+            border-radius: 3px;
+        }
+        .sc-sleep-graph-scroll::-webkit-scrollbar-thumb {
+            background: var(--border-default);
+            border-radius: 3px;
+        }
+
         /* Caffeine Quick Buttons */
         .caffeine-presets {
             display: flex;
@@ -4199,11 +4238,14 @@
                                 <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
                             </div>
                         </div>
-                        <!-- Sleep History -->
-                        <div class="sc-card" id="scSleepHistoryCard">
+                        </div><!-- /sc-dash-col--side -->
+
+                        <!-- Sleep History — full-width, scrollable -->
+                        <div class="sc-card" id="scSleepHistoryCard" style="width:100%;">
                             <div class="sc-card-title">Sleep History</div>
-                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
-                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
+                            <div id="sleepHistStatChips" class="sc-sleep-stat-chips"></div>
+                            <div class="sc-sleep-graph-scroll" style="overflow-x:auto; border-radius:8px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); padding:8px; position:relative;">
+                                <canvas id="sleepHistoryGraphDash" style="height:220px;"></canvas>
                                 <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
                                     <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
                                     <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
@@ -4212,7 +4254,6 @@
                                 </div>
                             </div>
                         </div>
-                        </div><!-- /sc-dash-col--side -->
 
                         <!-- Blocking Factors (full-width, usually hidden) -->
                         <div class="sc-card full-width" id="scBlockingCard" style="display:none">

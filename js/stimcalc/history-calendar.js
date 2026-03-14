@@ -1376,6 +1376,134 @@ function renderSleepPerformance() {
     renderSleepHistoryList(data);
 }
 
+// ============================================
+// DASHBOARD FULL SLEEP HISTORY (scrollable + stat chips)
+// ============================================
+
+function renderDashSleepHistoryFull() {
+    var canvas = document.getElementById('sleepHistoryGraphDash');
+    if (!canvas) return;
+
+    // Find date range — first tracked day to today
+    var allDates = [];
+    if (state.sleepHistory) Object.keys(state.sleepHistory).forEach(function(k) { allDates.push(k); });
+    if (state.sleepDailyLogs) Object.keys(state.sleepDailyLogs).forEach(function(k) {
+        if (allDates.indexOf(k) === -1) allDates.push(k);
+    });
+    allDates.sort();
+
+    var numDays = 30;
+    if (allDates.length > 0) {
+        var parts = allDates[0].split('-').map(Number);
+        var startDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        numDays = Math.max(30, Math.ceil((today - startDate) / 86400000) + 1);
+    }
+
+    var data = getSleepDataForDays(numDays);
+
+    // Set canvas width for scrolling — 20px per day minimum, or container width
+    var scrollContainer = canvas.parentElement;
+    var containerWidth = scrollContainer ? scrollContainer.clientWidth - 16 : 600;
+    var pxPerDay = 20;
+    var canvasWidth = Math.max(containerWidth, numDays * pxPerDay);
+    canvas.style.width = canvasWidth + 'px';
+
+    // Draw graph
+    _drawSleepGraphToCanvas('sleepHistoryGraphDash', data);
+
+    // Auto-scroll to right (most recent)
+    if (scrollContainer) {
+        setTimeout(function() { scrollContainer.scrollLeft = scrollContainer.scrollWidth; }, 50);
+    }
+
+    // Setup tooltip
+    var validData = data.filter(function(d) { return d.hoursSlept !== null; });
+    var avgVal = validData.length > 0 ? validData.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / validData.length : 0;
+    _setupSleepTooltipForCanvas('sleepHistoryGraphDash', 'sleepHistoryTooltipDash', 'tooltipDateDash', 'tooltipHoursDash', 'tooltipStatusDash', 'tooltipVsAvgDash', data, avgVal);
+
+    // Render stat chips
+    renderSleepStatChips(data);
+}
+
+function renderSleepStatChips(allData) {
+    var container = document.getElementById('sleepHistStatChips');
+    if (!container) return;
+
+    var target = state.settings.sleepTarget ?? 8;
+
+    function avgForDays(n) {
+        var subset = allData.slice(-n).filter(function(d) { return d.hoursSlept !== null; });
+        if (subset.length === 0) return null;
+        return subset.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / subset.length;
+    }
+
+    function allNightersForDays(n) {
+        return allData.slice(-n).filter(function(d) { return d.hoursSlept !== null && d.hoursSlept < 4; }).length;
+    }
+
+    // Current sleep debt (last 7 days cumulative deficit)
+    var last7 = allData.slice(-7).filter(function(d) { return d.hoursSlept !== null; });
+    var sleepDebt = 0;
+    last7.forEach(function(d) {
+        var deficit = target - d.hoursSlept;
+        if (deficit > 0) sleepDebt += deficit;
+    });
+
+    // Recovery hours needed to clear debt
+    var recoveryHrs = sleepDebt > 0 ? sleepDebt : 0;
+
+    var chips = [
+        { label: '7d Avg', value: avgForDays(7), fmt: 'hours' },
+        { label: '15d Avg', value: avgForDays(15), fmt: 'hours' },
+        { label: '30d Avg', value: avgForDays(30), fmt: 'hours' },
+        { label: '60d Avg', value: avgForDays(60), fmt: 'hours' },
+        { label: '14d All-Nighters', value: allNightersForDays(14), fmt: 'count' },
+        { label: '30d All-Nighters', value: allNightersForDays(30), fmt: 'count' },
+        { label: 'Sleep Debt', value: sleepDebt, fmt: 'debt' },
+        { label: 'Recovery Needed', value: recoveryHrs, fmt: 'recovery' }
+    ];
+
+    // Build chips with safe DOM methods — all values are computed numbers, not user text
+    container.textContent = '';
+    chips.forEach(function(c) {
+        var display, color;
+        if (c.fmt === 'hours') {
+            if (c.value === null) { display = '--'; color = '#9C948B'; }
+            else {
+                display = c.value.toFixed(1) + 'h';
+                color = c.value >= 7 ? '#5E8A5E' : c.value >= 5.5 ? '#C4923A' : '#B85C5C';
+            }
+        } else if (c.fmt === 'count') {
+            display = String(c.value);
+            color = c.value === 0 ? '#5E8A5E' : c.value <= 2 ? '#C4923A' : '#B85C5C';
+        } else if (c.fmt === 'debt') {
+            display = c.value > 0 ? c.value.toFixed(1) + 'h' : '0h \u2713';
+            color = c.value > 10 ? '#B85C5C' : c.value > 5 ? '#C4923A' : c.value > 0 ? '#C4923A' : '#5E8A5E';
+        } else if (c.fmt === 'recovery') {
+            display = c.value > 0 ? c.value.toFixed(1) + 'h' : '\u2713 Clear';
+            color = c.value > 10 ? '#B85C5C' : c.value > 5 ? '#C4923A' : c.value > 0 ? '#9C948B' : '#5E8A5E';
+        }
+
+        var chip = document.createElement('div');
+        chip.className = 'sc-sleep-stat-chip';
+
+        var labelEl = document.createElement('div');
+        labelEl.className = 'sc-sleep-stat-chip__label';
+        labelEl.textContent = c.label;
+        chip.appendChild(labelEl);
+
+        var valueEl = document.createElement('div');
+        valueEl.className = 'sc-sleep-stat-chip__value';
+        valueEl.style.color = color;
+        valueEl.textContent = display;
+        chip.appendChild(valueEl);
+
+        container.appendChild(chip);
+    });
+}
+
 // Explainer content for stats and achievements
 var explainerContent = {
     avg: { icon: '📊', title: '30-Day Average Sleep', getDesc: function(s) { return 'Your average sleep over the last 30 days is ' + s.avg.toFixed(1) + ' hours per night. The recommended amount for adults is 7-9 hours. ' + (s.avg >= 7 ? '✓ You\'re meeting the minimum!' : 'You\'re ' + (7 - s.avg).toFixed(1) + 'h below the minimum recommendation.'); }, getAction: function(s) { return s.avg >= 7 ? 'Keep it up! Consistency is key.' : 'Try to add 30 minutes to your sleep each night.'; } },
