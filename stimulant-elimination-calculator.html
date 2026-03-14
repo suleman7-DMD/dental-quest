@@ -477,18 +477,21 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Dashboard Card Grid */
+        /* Dashboard Card Grid — flex columns for independent stacking */
         .sc-dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
+            display: flex;
             gap: 12px;
-            align-items: start;
-            grid-template-areas:
-                "hero hero hero hero hero inputs inputs inputs inv inv inv inv"
-                "meds meds meds meds caff caff caff caff mods mods mods mods"
-                "graph graph graph graph graph graph intel intel intel shist shist shist"
-                "block block block block block block block block block block block block";
+            align-items: flex-start;
         }
+        .sc-dash-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+        .sc-dash-col--main { flex: 5; }
+        .sc-dash-col--mid  { flex: 4; }
+        .sc-dash-col--side { flex: 3; }
 
         .sc-card {
             background: var(--surface-primary);
@@ -520,19 +523,8 @@
         }
 
         .sc-card.full-width {
-            grid-column: 1 / -1;
+            width: 100%;
         }
-
-        #scHeroCard         { grid-area: hero; }
-        #scInputsCalibCard  { grid-area: inputs; }
-        #scDashInvCard      { grid-area: inv; }
-        #scMedsCard         { grid-area: meds; }
-        #scCaffeineCard     { grid-area: caff; }
-        #scModifiersCard    { grid-area: mods; }
-        #scGraphCard        { grid-area: graph; }
-        .sc-intel-card      { grid-area: intel; }
-        #scSleepHistoryCard { grid-area: shist; }
-        #scBlockingCard     { grid-area: block; }
 
         /* Quick Inputs Card */
         .sc-quick-inputs .sc-input-row {
@@ -1047,19 +1039,14 @@
                 padding: 10px 20px;
             }
 
-            /* Tablet: keep 2 columns but tighter */
+            /* Tablet: main full-width, mid+side side by side */
             .sc-dashboard-grid {
-                grid-template-columns: repeat(6, 1fr);
+                flex-wrap: wrap;
                 gap: 10px;
-                grid-template-areas:
-                    "hero hero hero hero hero hero"
-                    "inputs inputs inputs inv inv inv"
-                    "meds meds meds caff caff caff"
-                    "mods mods mods mods mods mods"
-                    "graph graph graph graph graph graph"
-                    "intel intel intel shist shist shist"
-                    "block block block block block block";
             }
+            .sc-dash-col--main { flex: 1 1 100%; }
+            .sc-dash-col--mid  { flex: 1 1 48%; }
+            .sc-dash-col--side { flex: 1 1 48%; }
         }
 
         /* ============================================
@@ -1134,12 +1121,12 @@
             }
 
             .sc-dashboard-grid {
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 gap: 10px;
-                grid-template-areas:
-                    "hero" "inputs" "inv" "meds" "caff" "mods"
-                    "graph" "intel" "shist" "block";
             }
+            .sc-dash-col--main,
+            .sc-dash-col--mid,
+            .sc-dash-col--side { flex: 1 1 100%; }
 
             .sc-metrics-row {
                 flex-wrap: wrap;
@@ -4071,7 +4058,8 @@
                 <!-- ==================== DASHBOARD PAGE ==================== -->
                 <div class="sc-page active" id="scPageDashboard">
                     <div class="sc-dashboard-grid">
-                        <!-- Row 1: Hero + Today's Inputs side by side -->
+                        <div class="sc-dash-col sc-dash-col--main">
+                        <!-- Column 1: Hero, Meds, Graph -->
                         <div class="sc-card" id="scHeroCard" style="border-left: 4px solid var(--accent);">
                             <div class="unified-hero">
                                 <div class="hero-label">Projected Sleep Window</div>
@@ -4085,6 +4073,34 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Medications -->
+                        <div class="sc-card" id="scMedsCard">
+                            <div class="sc-card-title">Medications</div>
+                            <button class="all-nighter-btn sc-allnighter-chip" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
+                                <span id="allNighterIcon">~</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
+                            </button>
+                            <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:8px;">Extended tracking active -- includes yesterday's residual load</div>
+                            <div id="ghostLoadSection" style="display:none; margin-bottom:8px; padding:8px; background:var(--warning-light); border:1px solid var(--warning); border-radius:8px;">
+                                <div style="font-size:0.82em; color:var(--warning); font-weight:600; margin-bottom:4px;">Ghost Load (Yesterday)</div>
+                                <div id="ghostMedEntries"></div>
+                                <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                            </div>
+                            <div id="medEntries"></div>
+                            <button class="sc-btn sc-btn--add" onclick="addMedEntry()">+ Add Medication Dose</button>
+                            <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
+                        </div>
+                        <!-- Drug Concentration Graph -->
+                        <div class="sc-card" id="scGraphCard">
+                            <div class="sc-card-title">Drug Concentration</div>
+                            <div class="unified-graph-wrap" id="graphContainer" style="min-height:200px;">
+                                <canvas id="graphCanvas"></canvas>
+                                <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
+                            </div>
+                        </div>
+                        </div><!-- /sc-dash-col--main -->
+
+                        <div class="sc-dash-col sc-dash-col--mid">
+                        <!-- Inputs + Calibration -->
                         <div class="sc-card sc-card--compact" id="scInputsCalibCard">
                             <div class="sc-card-title">Inputs</div>
                             <div class="sc-quick-inputs">
@@ -4112,39 +4128,7 @@
                                 <div class="input-group"><label>Sleep Goal</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
                             </div>
                         </div>
-                        <div class="sc-card sc-card--compact" id="scDashInvCard">
-                            <div class="sc-card-title">Inventory</div>
-                            <div id="scDashInvContent"></div>
-                        </div>
-                        <!-- Sleep History fills under Hero -->
-                        <div class="sc-card" id="scSleepHistoryCard">
-                            <div class="sc-card-title">Sleep History</div>
-                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
-                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
-                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
-                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
-                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
-                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
-                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Medications + Caffeine -->
-                        <div class="sc-card" id="scMedsCard">
-                            <div class="sc-card-title">Medications</div>
-                            <button class="all-nighter-btn sc-allnighter-chip" id="allNighterToggleBtn" onclick="toggleAllNighterMode()">
-                                <span id="allNighterIcon">~</span> <span id="allNighterText">All-Nighter Mode: OFF</span>
-                            </button>
-                            <div id="allNighterHint" style="display:none; font-size:0.78em; color:var(--warning); margin-bottom:8px;">Extended tracking active -- includes yesterday's residual load</div>
-                            <div id="ghostLoadSection" style="display:none; margin-bottom:8px; padding:8px; background:var(--warning-light); border:1px solid var(--warning); border-radius:8px;">
-                                <div style="font-size:0.82em; color:var(--warning); font-weight:600; margin-bottom:4px;">Ghost Load (Yesterday)</div>
-                                <div id="ghostMedEntries"></div>
-                                <div id="ghostLoadTotal" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
-                            </div>
-                            <div id="medEntries"></div>
-                            <button class="sc-btn sc-btn--add" onclick="addMedEntry()">+ Add Medication Dose</button>
-                            <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
-                        </div>
+                        <!-- Caffeine -->
                         <div class="sc-card" id="scCaffeineCard">
                             <div class="sc-card-title">Caffeine</div>
                             <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
@@ -4158,7 +4142,7 @@
                             <div id="caffeineEntries"></div>
                             <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
                         </div>
-                        <!-- Row 3: Sleep Intelligence + Modifiers side by side -->
+                        <!-- Sleep Intelligence -->
                         <div class="sc-card sc-intel-card">
                             <div class="sc-card-title">Sleep Intelligence</div>
                             <div id="circadianPhaseDisplay" style="margin-bottom:8px;"></div>
@@ -4177,6 +4161,15 @@
                                 <div id="explainerAction" style="font-size:0.78em; color:var(--accent); margin-top:4px;"></div>
                             </div>
                         </div>
+                        </div><!-- /sc-dash-col--mid -->
+
+                        <div class="sc-dash-col sc-dash-col--side">
+                        <!-- Inventory -->
+                        <div class="sc-card sc-card--compact" id="scDashInvCard">
+                            <div class="sc-card-title">Inventory</div>
+                            <div id="scDashInvContent"></div>
+                        </div>
+                        <!-- Modifiers -->
                         <div class="sc-card sc-card--compact" id="scModifiersCard">
                             <div class="sc-card-title">Modifiers</div>
                             <div class="sc-modifier-chips">
@@ -4206,15 +4199,22 @@
                                 <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
                             </div>
                         </div>
-                        <!-- Row 4: Graphs side by side -->
-                        <div class="sc-card" id="scGraphCard">
-                            <div class="sc-card-title">Drug Concentration</div>
-                            <div class="unified-graph-wrap" id="graphContainer" style="min-height:200px;">
-                                <canvas id="graphCanvas"></canvas>
-                                <div id="graphTooltip" class="graph-tooltip" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:8px 12px; border-radius:8px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md);"></div>
+                        <!-- Sleep History -->
+                        <div class="sc-card" id="scSleepHistoryCard">
+                            <div class="sc-card-title">Sleep History</div>
+                            <div style="background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; padding:8px; position:relative; min-height:200px;">
+                                <canvas id="sleepHistoryGraphDash" style="width:100%; height:200px;"></canvas>
+                                <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
+                                    <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
+                                    <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
+                                    <div id="tooltipStatusDash" style="font-size:0.9em; margin-bottom:2px;"></div>
+                                    <div id="tooltipVsAvgDash" style="font-size:0.85em; color:var(--fg-tertiary);"></div>
+                                </div>
                             </div>
                         </div>
-                        <!-- Blocking Factors (hidden) -->
+                        </div><!-- /sc-dash-col--side -->
+
+                        <!-- Blocking Factors (full-width, usually hidden) -->
                         <div class="sc-card full-width" id="scBlockingCard" style="display:none">
                             <div class="unified-blocking" id="blockingFactors" style="display: none;">
                                 <h4>What's Keeping You Awake</h4>
