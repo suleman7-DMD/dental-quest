@@ -480,6 +480,7 @@
         /* Dashboard Card Grid — flex columns for independent stacking */
         .sc-dashboard-grid {
             display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             align-items: flex-start;
         }
@@ -492,6 +493,7 @@
         .sc-dash-col--main { flex: 5; }
         .sc-dash-col--mid  { flex: 4; }
         .sc-dash-col--side { flex: 3; }
+        #scSleepHistoryCard { flex: 1 1 100%; }
 
         .sc-card {
             background: var(--surface-primary);
@@ -4241,7 +4243,7 @@
                         </div><!-- /sc-dash-col--side -->
 
                         <!-- Sleep History — full-width, scrollable -->
-                        <div class="sc-card" id="scSleepHistoryCard" style="width:100%;">
+                        <div class="sc-card" id="scSleepHistoryCard">
                             <div class="sc-card-title">Sleep History</div>
                             <div id="sleepHistStatChips" class="sc-sleep-stat-chips"></div>
                             <div class="sc-sleep-graph-scroll" style="overflow-x:auto; border-radius:8px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); padding:8px; position:relative;">

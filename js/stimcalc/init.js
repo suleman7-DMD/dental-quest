@@ -367,7 +367,10 @@ function updateUI(vm) {
     updateVitCBadge();
     updateForecastLogic();
     if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
-    if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
+    // NOTE: renderDashSleepHistoryFull() intentionally NOT called here.
+    // updateUI() runs every 5s via recalculate(). The sleep history render is expensive
+    // (recalculates ALL data from first day, re-renders canvas + stat chips).
+    // Instead, it's called only from scNavigate('dashboard') and on initial load.
 }
 
 /**
@@ -850,6 +853,10 @@ function init() {
 
     // Initial calculation
     recalculate();
+
+    // Render dashboard sleep history once on initial load
+    // (Not in updateUI() which runs every 5s — too expensive for that interval)
+    if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
 
     // Save projectedSleepTime to Firebase and snapshot today's sleep log
     setTimeout(function() {

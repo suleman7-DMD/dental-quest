@@ -435,16 +435,18 @@ function _setupSleepTooltipForCanvas(canvasId, tooltipId, dateId, hoursId, statu
     const tooltip = document.getElementById(tooltipId);
     if (!canvas || !tooltip) return;
 
-    const rect = canvas.getBoundingClientRect();
+    if (data.length < 2) return;
     const padding = { top: 25, right: 15, bottom: 35, left: 35 };
-    const graphWidth = rect.width - padding.left - padding.right;
     const graphHeight = 220 - padding.top - padding.bottom;
-    const pointSpacing = graphWidth / (data.length - 1);
 
     canvas.onmousemove = function(e) {
         const canvasRect = canvas.getBoundingClientRect();
         const x = e.clientX - canvasRect.left;
         const y = e.clientY - canvasRect.top;
+
+        // Recompute graphWidth & pointSpacing live (canvas may be scrollable/resized)
+        const liveGraphWidth = canvasRect.width - padding.left - padding.right;
+        const livePointSpacing = liveGraphWidth / (data.length - 1);
 
         // Find closest data point
         let closestPoint = null;
@@ -453,7 +455,7 @@ function _setupSleepTooltipForCanvas(canvasId, tooltipId, dateId, hoursId, statu
         data.forEach((d, i) => {
             if (d.hoursSlept === null) return;
 
-            const px = padding.left + i * pointSpacing;
+            const px = padding.left + i * livePointSpacing;
             const py = padding.top + graphHeight - (Math.min(d.hoursSlept, 12) / 12) * graphHeight;
             const dist = Math.sqrt(Math.pow(x - px, 2) + Math.pow(y - py, 2));
 
@@ -470,8 +472,8 @@ function _setupSleepTooltipForCanvas(canvasId, tooltipId, dateId, hoursId, statu
             let tooltipX = closestPoint.px + 15;
             let tooltipY = closestPoint.py - 60;
 
-            // Adjust if too far right
-            if (tooltipX + 150 > rect.width) {
+            // Adjust if too far right — use live canvas width
+            if (tooltipX + 150 > canvasRect.width) {
                 tooltipX = closestPoint.px - 160;
             }
             // Adjust if too high
@@ -560,6 +562,7 @@ function _drawSleepGraphToCanvas(canvasId, data) {
 
     // Collect valid data points for the curve
     const validPoints = [];
+    if (data.length < 2) return;
     const pointSpacing = graphWidth / (data.length - 1);
 
     data.forEach((d, i) => {
