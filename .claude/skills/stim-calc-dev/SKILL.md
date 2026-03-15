@@ -11,10 +11,10 @@ globs:
   - ".claude/skills/stim-calc-dev/**"
 metadata:
   author: Sully
-  version: 3.1.0
-  file: stimulant-elimination-calculator.html + js/stimcalc/*.js (11 modules)
-  lines: ~14,600 total (4,270 HTML/CSS + 10,955 JS)
-  last-verified: 2026-03-14
+  version: 3.2.0
+  file: stimulant-elimination-calculator.html + js/stimcalc/*.js (12 modules)
+  lines: ~15,100 total (4,500 HTML/CSS + 11,200 JS)
+  last-verified: 2026-03-15
   theme: warm-clinical (cream/olive, CSS vars, zero neon colors)
   layout: sidebar-nav + page-based (Synchro-style, 7 pages including Inventory)
   dashboard-layout: 3-column flex (main:5, mid:4, side:3) + full-width Sleep History below
@@ -70,6 +70,7 @@ The app is split into 11 JS modules. Use the MODULE MAP below to identify which 
 | History, calibration, calendar, analytics dashboard, accuracy transparency | `js/stimcalc/history-calendar.js` (2,888 lines) |
 | Canvas graphs, tooltips | `js/stimcalc/graph.js` (733 lines) |
 | Medication inventory (cross-app shared pills/calendar/notes) | `js/stimcalc/med-inventory.js` (~755 lines) |
+| Week at a Glance + Upcoming Deadlines (cross-app from d3Roadmap) | `js/stimcalc/week-glance.js` (~240 lines) |
 | recalculate(), init, accordion, hero UI, sidebar nav | `js/stimcalc/init.js` (~1,109 lines) |
 | CSS or HTML markup | `stimulant-elimination-calculator.html` (~4,270 lines, zero JS) |
 
@@ -339,6 +340,9 @@ if (!state._dataLoaded) return false;   // Guard D: State not ready
 
 ### med-inventory.js — Medication Inventory (Cross-App Shared)
 `scInvLoadFromFirebase()` (reads appData/medications + pillAssignments + calendarNotes), `scInvSaveMedInventory()` (writes to shared appData path), `scInvRender()`, `scInvUpdateMedCard(medType)`, `scInvTakeMed(medType)`, `scInvTakeBothMeds()`, `scInvAdjustMed(medType, amount)`, `scInvCheckAndApplyDailyPillReduce()`, `scInvOpenMedSettings(medType)`, `scInvCloseMedModal()`, `scInvSaveMedSettings()`, `scInvGenerateCalendar(medType, startDate, refillDate, pillsAvailable, daysNeeded, targetElementId)` (optional targetElementId for dashboard reuse), `scInvToggleCalendar(medType)`, `scInvHandleCalendarDayClick(...)`, `scInvAssignPillToNearestAvailableDay(...)`, `scInvRemovePillFromNearestAssignedDay(...)`, `scInvResetPillAssignments(medType)`, `scInvOpenNoteModal(dateStr, displayDate)`, `scInvCloseNoteModal()`, `scInvSaveNote()`, `scInvDeleteNote()`, `scInvGetTimeAgo(date)`, `scInvCountWeekdays(start, end)`, `scInvRenderDashboard()` (data-rich dashboard card: refill countdown, surplus/deficit badges, collapsible lazy-rendered planning calendar per med)
+
+### week-glance.js — Week at a Glance + Upcoming Deadlines (Cross-App)
+`scWeekGlanceLoadFromFirebase()` (real-time `.on('value')` listeners on d3Roadmap/monthlyPlanner + clinicalData + deadlines), `scWeekGlanceGetCurrentWeek()` (Mon-Sun date range), `scWeekGlanceRender()` (DOM-based, 2 sections: weekly schedule + 20-day deadlines), `scWeekGlanceFormatTime()`, `scWeekGlanceGetDeadlines(start, end)` (merges editedDeadlines + customDeadlines, excludes completed)
 
 ### init.js — App Bootstrap, Heartbeat & Sidebar Navigation
 `syncStateFromDOM()`, `runCalculations()`, `updateUI()` (runs every 5s via recalculate — intentionally excludes expensive renders like renderDashSleepHistoryFull), `recalculate()` (try/catch wrapper), `init()`, `scheduleEndOfDayLogicSave()`, `toggleAccordion()`, `updateAccordionSummaries()`, `initUnifiedView()`, `updateRecommendations()` (target: insRecommendations on Insights page), `updateFeelingsTimeline()`, `toggleModifierChip(modName)` (chip toggle for VitC/HeavyLift/Sauna), `scNavigate(page)` (7 pages: dashboard/modifiers/calendar/insights/accuracy/settings/inventory), `scToggleSidebar()` (mobile drawer), `scToggleCalibration()` (no-op, calibration always visible), `updateMetricsRow(vm)` (5-stat bar, always runs regardless of page), `updateSidebarBadges()` (med/caff/modifier counts)

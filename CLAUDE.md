@@ -51,7 +51,7 @@ const date = new Date(year, month - 1, day);
 |------|---------|
 | `index.html` + `js/dental-quest/*.js` (12 modules) | Main app: gamified task management, focus mode, financials, calendar, meds |
 | `d3-roadmap.html` + `js/d3-roadmap/*.js` (10 modules) | Academic tracker: grades, deadlines, clinical, planners, exam content |
-| `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (11 modules) | Sleep prediction: pharmacokinetics, circadian rhythm, workout planning |
+| `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian rhythm, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |
 
@@ -144,8 +144,10 @@ getCount(collection)  // Safe key count
 ```
 Stim Calc --> projectedSleepTime, meds, caffeine --> Body Comp ecosystemContext.stimulant
 Index.html --> medications (pill counts) --> Body Comp ecosystemContext.inventory
+Index.html --> medications (pill counts) --> Stim Calc inventory module (shared read/write)
 Index.html --> tasks (doToday flag) --> D3 Roadmap "Do Today" widget (realtime listener)
 D3 Roadmap --> exams, monthlyPlanner --> Body Comp ecosystemContext.academic + schedule
+D3 Roadmap --> monthlyPlanner, clinicalData, deadlines --> Stim Calc "Week at a Glance" (realtime listeners)
 ```
 All cross-app reads are READ-ONLY. Lecture Prompt is standalone.
 
