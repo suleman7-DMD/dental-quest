@@ -481,13 +481,13 @@
         .sc-dashboard-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             align-items: flex-start;
         }
         .sc-dash-col {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             min-width: 0;
         }
         .sc-dash-col--main { flex: 5; }
@@ -500,7 +500,7 @@
             border: 1px solid var(--border-default);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
-            padding: 14px 16px;
+            padding: 12px 14px;
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
@@ -718,19 +718,22 @@
             border-color: var(--border-strong);
         }
 
-        .sc-inv-calendar-wrap {
+        .sc-inv-calendar-wrap,
+        .sc-inv-dash-cal-wrap {
             margin-top: 14px;
             padding-top: 14px;
             border-top: 1px solid var(--border-subtle);
         }
 
-        .sc-inv-calendar-wrap .calendar-grid {
+        .sc-inv-calendar-wrap .calendar-grid,
+        .sc-inv-dash-cal-wrap .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
         }
 
-        .sc-inv-calendar-wrap .calendar-day-header {
+        .sc-inv-calendar-wrap .calendar-day-header,
+        .sc-inv-dash-cal-wrap .calendar-day-header {
             text-align: center;
             font-size: 0.7em;
             font-weight: 600;
@@ -738,7 +741,8 @@
             padding: 4px 0;
         }
 
-        .sc-inv-calendar-wrap .calendar-day {
+        .sc-inv-calendar-wrap .calendar-day,
+        .sc-inv-dash-cal-wrap .calendar-day {
             text-align: center;
             padding: 6px 2px;
             border-radius: var(--radius-sm);
@@ -749,46 +753,55 @@
             position: relative;
         }
 
-        .sc-inv-calendar-wrap .calendar-day:hover {
+        .sc-inv-calendar-wrap .calendar-day:hover,
+        .sc-inv-dash-cal-wrap .calendar-day:hover {
             border-color: var(--border-strong);
         }
 
-        .sc-inv-calendar-wrap .calendar-day.empty {
+        .sc-inv-calendar-wrap .calendar-day.empty,
+        .sc-inv-dash-cal-wrap .calendar-day.empty {
             cursor: default;
         }
 
-        .sc-inv-calendar-wrap .calendar-day.has-pill {
+        .sc-inv-calendar-wrap .calendar-day.has-pill,
+        .sc-inv-dash-cal-wrap .calendar-day.has-pill {
             background: rgba(94, 138, 94, 0.12);
             color: var(--success);
         }
 
-        .sc-inv-calendar-wrap .calendar-day.no-pill-weekday {
+        .sc-inv-calendar-wrap .calendar-day.no-pill-weekday,
+        .sc-inv-dash-cal-wrap .calendar-day.no-pill-weekday {
             background: rgba(184, 92, 92, 0.12);
             color: var(--destructive);
         }
 
-        .sc-inv-calendar-wrap .calendar-day.no-pill-weekend {
+        .sc-inv-calendar-wrap .calendar-day.no-pill-weekend,
+        .sc-inv-dash-cal-wrap .calendar-day.no-pill-weekend {
             background: rgba(196, 146, 58, 0.08);
             color: var(--warning);
         }
 
-        .sc-inv-calendar-wrap .calendar-day.refill {
+        .sc-inv-calendar-wrap .calendar-day.refill,
+        .sc-inv-dash-cal-wrap .calendar-day.refill {
             background: rgba(94, 122, 138, 0.15);
             color: var(--info);
             font-weight: 600;
         }
 
-        .sc-inv-calendar-wrap .calendar-day-num {
+        .sc-inv-calendar-wrap .calendar-day-num,
+        .sc-inv-dash-cal-wrap .calendar-day-num {
             font-weight: 600;
             font-size: 0.85em;
         }
 
-        .sc-inv-calendar-wrap .calendar-day-icon {
+        .sc-inv-calendar-wrap .calendar-day-icon,
+        .sc-inv-dash-cal-wrap .calendar-day-icon {
             font-size: 0.9em;
             margin-top: 2px;
         }
 
-        .sc-inv-calendar-wrap .calendar-day-note {
+        .sc-inv-calendar-wrap .calendar-day-note,
+        .sc-inv-dash-cal-wrap .calendar-day-note {
             font-size: 0.65em;
             color: var(--fg-tertiary);
             overflow: hidden;
@@ -815,7 +828,8 @@
             line-height: 14px;
         }
 
-        .sc-inv-calendar-wrap .calendar-day:hover .sc-inv-day-note-btn {
+        .sc-inv-calendar-wrap .calendar-day:hover .sc-inv-day-note-btn,
+        .sc-inv-dash-cal-wrap .calendar-day:hover .sc-inv-day-note-btn {
             opacity: 1;
         }
 
@@ -1044,7 +1058,7 @@
             /* Tablet: main full-width, mid+side side by side */
             .sc-dashboard-grid {
                 flex-wrap: wrap;
-                gap: 10px;
+                gap: 8px;
             }
             .sc-dash-col--main { flex: 1 1 100%; }
             .sc-dash-col--mid  { flex: 1 1 48%; }
@@ -1124,7 +1138,7 @@
 
             .sc-dashboard-grid {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
             }
             .sc-dash-col--main,
             .sc-dash-col--mid,
@@ -1266,7 +1280,7 @@
             }
 
             .sc-dashboard-grid {
-                gap: 8px;
+                gap: 6px;
             }
 
             .sc-btn { min-height: 44px; }
@@ -1335,6 +1349,36 @@
             #scPageInventory .sc-inv-calendar-wrap .calendar-day {
                 padding: 4px 1px;
                 font-size: 0.68em;
+            }
+
+            /* Dashboard inventory calendar — mobile */
+            .sc-inv-dash-cal-wrap .calendar-grid {
+                gap: 2px;
+            }
+            .sc-inv-dash-cal-wrap .calendar-day {
+                padding: 3px 1px;
+                font-size: 0.65em;
+            }
+
+            /* Week at a Glance — mobile */
+            .sc-week-glance-day-dot {
+                font-size: 0.6em;
+                padding: 4px 0;
+            }
+            .sc-week-glance-item {
+                padding: 5px 6px;
+                font-size: 0.82em;
+                min-height: 32px;
+            }
+            .sc-week-glance-day-label {
+                font-size: 0.75em;
+                margin-top: 6px;
+            }
+
+            /* Med entry — mobile tighter */
+            .sc-med-entry {
+                gap: 4px;
+                padding: 6px 8px;
             }
         }
 
@@ -1435,6 +1479,17 @@
                 padding: 6px 10px;
                 font-size: 0.8em;
             }
+
+            /* iPhone: Week at a Glance tighter */
+            .sc-week-glance-days { gap: 1px; }
+            .sc-week-glance-day-dot { font-size: 0.55em; padding: 3px 0; }
+            .sc-week-glance-item { font-size: 0.76em; gap: 4px; }
+
+            /* iPhone: Med entry wrap on very small screens */
+            .sc-med-entry { flex-wrap: wrap; gap: 4px; padding: 6px; }
+            .sc-med-entry input[type="date"] { flex: 1 1 45%; }
+            .sc-med-entry select { flex: 1 1 45%; }
+            .sc-med-entry input[type="time"] { flex: 1 1 40%; }
         }
 
         /* Motion reduction for users who prefer reduced motion */
@@ -1602,11 +1657,12 @@
 
         .med-entry select {
             flex: 1;
-            min-width: 120px;
+            min-width: 0;
         }
 
         .med-entry input[type="time"] {
-            width: 130px;
+            width: auto;
+            max-width: 130px;
         }
 
         .med-entry .remove-btn {
@@ -1833,16 +1889,19 @@
         .sc-med-entry {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            gap: 6px;
+            padding: 8px 10px;
             background: var(--canvas-subtle);
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
             margin-bottom: 6px;
+            overflow: hidden;
         }
 
         .sc-med-entry select,
         .sc-med-entry input {
+            min-width: 0;
+            flex-shrink: 1;
             padding: 6px 8px;
             border-radius: 6px;
             border: 1px solid var(--control-border);
@@ -1931,12 +1990,101 @@
             overflow-y: auto;
         }
 
+        /* Week at a Glance */
+        .sc-week-glance-header {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--fg-secondary);
+            margin-bottom: 6px;
+        }
+        .sc-week-glance-days {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 8px;
+        }
+        .sc-week-glance-day-dot {
+            flex: 1;
+            text-align: center;
+            font-size: 0.65em;
+            font-weight: 600;
+            color: var(--fg-tertiary);
+            padding: 3px 0;
+            border-radius: 4px;
+            background: var(--canvas-subtle);
+        }
+        .sc-week-glance-day-dot.has-items {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        .sc-week-glance-day-dot.is-today {
+            background: var(--accent);
+            color: var(--accent-fg);
+        }
+        .sc-week-glance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sc-week-glance-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.78em;
+            background: var(--canvas-subtle);
+        }
+        .sc-week-glance-item.completed {
+            opacity: 0.45;
+        }
+        .sc-week-glance-item.completed .sc-week-glance-item-text {
+            text-decoration: line-through;
+        }
+        .sc-week-glance-type-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .sc-week-glance-item-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--fg-secondary);
+        }
+        .sc-week-glance-item-time {
+            font-size: 0.85em;
+            color: var(--fg-tertiary);
+            flex-shrink: 0;
+        }
+        .sc-week-glance-day-label {
+            font-size: 0.72em;
+            font-weight: 700;
+            color: var(--fg-tertiary);
+            text-transform: uppercase;
+            margin-top: 5px;
+            margin-bottom: 1px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .sc-week-glance-day-label:first-child {
+            margin-top: 0;
+        }
+        .sc-week-glance-empty {
+            color: var(--fg-tertiary);
+            font-size: 0.82em;
+            text-align: center;
+            padding: 10px 0;
+            font-style: italic;
+        }
+
         /* Sleep History Stat Chips */
         .sc-sleep-stat-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .sc-sleep-stat-chip {
             background: var(--canvas-subtle);
@@ -4268,6 +4416,13 @@
                             <div class="sc-card-title">Inventory</div>
                             <div id="scDashInvContent"></div>
                         </div>
+                        <!-- Week at a Glance (cross-app from D3 Roadmap) -->
+                        <div class="sc-card sc-card--compact" id="scWeekGlanceCard">
+                            <div class="sc-card-title">Week at a Glance</div>
+                            <div id="scWeekGlanceContent">
+                                <div style="color:var(--fg-tertiary);font-size:0.82em;text-align:center;padding:12px 0;">Loading schedule...</div>
+                            </div>
+                        </div>
                         <!-- Modifiers -->
                         <div class="sc-card sc-card--compact" id="scModifiersCard">
                             <div class="sc-card-title">Modifiers</div>
@@ -4304,8 +4459,8 @@
                         <div class="sc-card" id="scSleepHistoryCard">
                             <div class="sc-card-title">Sleep History</div>
                             <div id="sleepHistStatChips" class="sc-sleep-stat-chips"></div>
-                            <div class="sc-sleep-graph-scroll" style="overflow-x:auto; border-radius:8px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); padding:8px; position:relative;">
-                                <canvas id="sleepHistoryGraphDash" style="height:220px;"></canvas>
+                            <div class="sc-sleep-graph-scroll" style="overflow-x:auto; border-radius:8px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); padding:4px; position:relative;">
+                                <canvas id="sleepHistoryGraphDash" style="height:180px;"></canvas>
                                 <div id="sleepHistoryTooltipDash" style="display:none; position:absolute; background:var(--surface-primary); color:var(--fg-primary); padding:10px 14px; border-radius:10px; font-size:0.8em; pointer-events:none; z-index:10; border:1px solid var(--border-default); box-shadow:var(--shadow-md); min-width:140px;">
                                     <div id="tooltipDateDash" style="font-weight:600; margin-bottom:4px;"></div>
                                     <div id="tooltipHoursDash" style="font-size:1.2em; margin-bottom:2px;"></div>
@@ -4645,16 +4800,17 @@
     </div>
 
     <!-- Scripts (unchanged order) -->
-    <script src="js/stimcalc/state.js?v=20260314"></script>
-    <script src="js/stimcalc/circadian.js?v=20260314"></script>
-    <script src="js/stimcalc/pharma-engine.js?v=20260314"></script>
-    <script src="js/stimcalc/sleep-prediction.js?v=20260314"></script>
-    <script src="js/stimcalc/firebase-sync.js?v=20260314"></script>
-    <script src="js/stimcalc/med-caffeine.js?v=20260314"></script>
-    <script src="js/stimcalc/ui-sections.js?v=20260314"></script>
-    <script src="js/stimcalc/history-calendar.js?v=20260314"></script>
-    <script src="js/stimcalc/graph.js?v=20260314"></script>
-    <script src="js/stimcalc/med-inventory.js?v=20260314"></script>
-    <script src="js/stimcalc/init.js?v=20260314"></script>
+    <script src="js/stimcalc/state.js?v=20260315"></script>
+    <script src="js/stimcalc/circadian.js?v=20260315"></script>
+    <script src="js/stimcalc/pharma-engine.js?v=20260315"></script>
+    <script src="js/stimcalc/sleep-prediction.js?v=20260315"></script>
+    <script src="js/stimcalc/firebase-sync.js?v=20260315"></script>
+    <script src="js/stimcalc/med-caffeine.js?v=20260315"></script>
+    <script src="js/stimcalc/ui-sections.js?v=20260315"></script>
+    <script src="js/stimcalc/history-calendar.js?v=20260315"></script>
+    <script src="js/stimcalc/graph.js?v=20260315"></script>
+    <script src="js/stimcalc/med-inventory.js?v=20260315"></script>
+    <script src="js/stimcalc/week-glance.js?v=20260315"></script>
+    <script src="js/stimcalc/init.js?v=20260315"></script>
 </body>
 </html>

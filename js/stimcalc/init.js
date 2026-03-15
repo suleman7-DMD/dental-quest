@@ -1206,6 +1206,7 @@ function scNavigate(page) {
         if (typeof drawGraph === 'function') drawGraph();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
         if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
+        if (typeof scWeekGlanceRender === 'function') scWeekGlanceRender();
         if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
     } else if (page === 'inventory') {
         if (typeof scInvRender === 'function') scInvRender();

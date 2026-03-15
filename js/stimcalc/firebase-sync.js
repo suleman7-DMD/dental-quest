@@ -463,6 +463,8 @@ function loadFromFirebase() {
 
             // Load medication inventory from cross-app shared path
             if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
+            // Load week-at-a-glance from d3Roadmap cross-app path
+            if (typeof scWeekGlanceLoadFromFirebase === 'function') scWeekGlanceLoadFromFirebase();
         })
         .catch(error => {
             console.error('\u274C Firebase load error:', error);
@@ -1108,6 +1110,7 @@ function renderAll() {
     renderGhostLoad();
     recalculate();
     if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
+    if (typeof scWeekGlanceLoadFromFirebase === 'function') scWeekGlanceLoadFromFirebase();
 
     if (focusMode) {
         renderFocusMode();
