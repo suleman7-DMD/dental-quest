@@ -539,7 +539,7 @@ function syncClinicalToMonthlyPlanner() {
         if (!task?.clinicalAppointmentId) return; // Not a clinic task
         if (task.userEdited) return; // User owns this now
         const aptStillExists = appointments[task.clinicalAppointmentId];
-        if (!aptStillExists || aptStillExists.status === 'cancelled') {
+        if (!aptStillExists || aptStillExists.status === 'cancelled' || !validAptIds.has(task.clinicalAppointmentId)) {
             delete roadmapData.monthlyPlanner.customTasks[id];
         }
     });
