@@ -185,6 +185,28 @@ function initMonthlyPlanner() {
     // Extend weeks dynamically if we have tasks/appointments beyond Feb 22
     extendWeeksIfNeeded();
 
+    // Sync current week's full schedule (static + custom + clinical) to Firebase
+    // so Stim Calc can show the complete weekly view
+    try {
+        const today = getLocalDateString();
+        const currentWeek = MP_WEEKS.find(w => today >= w.start && today <= w.end);
+        if (currentWeek) {
+            const weekTasks = mpGetWeekTasks(currentWeek);
+            const scheduleObj = {};
+            weekTasks.forEach(function(t, i) {
+                scheduleObj['t_' + i] = {
+                    date: t.date, time: t.time || null, endTime: t.endTime || null,
+                    item: t.item, type: t.type || 'other'
+                };
+            });
+            const oldCount = getCount(roadmapData.monthlyPlanner.currentWeekSchedule ?? {});
+            roadmapData.monthlyPlanner.currentWeekSchedule = scheduleObj;
+            if (oldCount !== getCount(scheduleObj)) {
+                setTimeout(function() { saveData(); }, 2000);
+            }
+        }
+    } catch(e) { console.error('Error syncing week schedule:', e); }
+
     mpRenderAllCalendars();
     mpRenderNotes();
     mpUpdateStats();

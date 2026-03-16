@@ -12,7 +12,7 @@
 var scWeekGlanceData = {
     customTasks: {}, completedTasks: {}, appointments: {},
     editedDeadlines: {}, customDeadlines: {}, completedDeadlines: {},
-    upcomingDeadlines: {}
+    upcomingDeadlines: {}, currentWeekSchedule: {}
 };
 var scWeekGlanceListenersSet = false;
 
@@ -38,7 +38,8 @@ function scWeekGlanceLoadFromFirebase() {
         editedDeadlines: base + 'editedDeadlines',
         customDeadlines: base + 'customDeadlines',
         completedDeadlines: base + 'completedDeadlines',
-        upcomingDeadlines: base + 'upcomingDeadlines'
+        upcomingDeadlines: base + 'upcomingDeadlines',
+        currentWeekSchedule: base + 'monthlyPlanner/currentWeekSchedule'
     };
 
     Object.keys(paths).forEach(function(key) {
@@ -191,41 +192,47 @@ function scWeekGlanceRender() {
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     // --- Collect weekly schedule items ---
+    // Primary source: currentWeekSchedule (pre-built by d3-roadmap, includes static + custom + clinical, pre-deduped)
+    // Fallback: customTasks + appointments (if currentWeekSchedule not yet synced)
     var items = [];
-
-    // Dedup set: prevents same item showing from customTasks + appointments
     var seenKeys = new Set();
-    // Track which appointment IDs are already in customTasks (clinic-synced tasks)
-    var clinicAptIds = new Set();
 
-    getValues(scWeekGlanceData.customTasks).forEach(function(task) {
-        if (task.date && task.date >= week.start && task.date <= week.end) {
-            var dedupKey = (task.date || '') + '|' + (task.time || '') + '|' + (task.item || '').substring(0, 30);
-            if (seenKeys.has(dedupKey)) return;
-            seenKeys.add(dedupKey);
-            if (task.clinicalAppointmentId) clinicAptIds.add(task.clinicalAppointmentId);
-            items.push({
-                date: task.date, time: task.time ?? null,
-                name: task.item ?? 'Untitled', type: task.type ?? 'other',
-                id: task.id ?? ''
-            });
-        }
-    });
-
-    getValues(scWeekGlanceData.appointments).forEach(function(apt) {
-        if (apt.date && apt.date >= week.start && apt.date <= week.end && apt.status !== 'cancelled') {
-            // Skip if this appointment is already shown via customTasks (clinic-synced)
-            if (clinicAptIds.has(apt.id)) return;
-            var dedupKey = (apt.date || '') + '|' + (apt.time || '') + '|' + (apt.procedures || 'Clinic').substring(0, 30);
+    var scheduleItems = getValues(scWeekGlanceData.currentWeekSchedule);
+    if (scheduleItems.length > 0) {
+        // Use the pre-built schedule from d3-roadmap (complete: static tasks + custom + clinical)
+        scheduleItems.forEach(function(t) {
+            if (!t.date || t.date < week.start || t.date > week.end) return;
+            var dedupKey = (t.date || '') + '|' + (t.time || '') + '|' + (t.item || '').substring(0, 30);
             if (seenKeys.has(dedupKey)) return;
             seenKeys.add(dedupKey);
             items.push({
-                date: apt.date, time: apt.time ?? null,
-                name: apt.procedures ?? 'Clinic', type: 'clinic',
-                id: apt.id ?? ''
+                date: t.date, time: t.time ?? null,
+                name: t.item ?? 'Untitled', type: t.type ?? 'other',
+                id: ''
             });
-        }
-    });
+        });
+    } else {
+        // Fallback: combine customTasks + appointments (missing static tasks)
+        var clinicAptIds = new Set();
+        getValues(scWeekGlanceData.customTasks).forEach(function(task) {
+            if (task.date && task.date >= week.start && task.date <= week.end) {
+                var dedupKey = (task.date || '') + '|' + (task.time || '') + '|' + (task.item || '').substring(0, 30);
+                if (seenKeys.has(dedupKey)) return;
+                seenKeys.add(dedupKey);
+                if (task.clinicalAppointmentId) clinicAptIds.add(task.clinicalAppointmentId);
+                items.push({ date: task.date, time: task.time ?? null, name: task.item ?? 'Untitled', type: task.type ?? 'other', id: task.id ?? '' });
+            }
+        });
+        getValues(scWeekGlanceData.appointments).forEach(function(apt) {
+            if (apt.date && apt.date >= week.start && apt.date <= week.end && apt.status !== 'cancelled') {
+                if (clinicAptIds.has(apt.id)) return;
+                var dedupKey = (apt.date || '') + '|' + (apt.time || '') + '|' + (apt.procedures || 'Clinic').substring(0, 30);
+                if (seenKeys.has(dedupKey)) return;
+                seenKeys.add(dedupKey);
+                items.push({ date: apt.date, time: apt.time ?? null, name: apt.procedures ?? 'Clinic', type: 'clinic', id: apt.id ?? '' });
+            }
+        });
+    }
 
     items.sort(function(a, b) {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -261,8 +268,15 @@ function scWeekGlanceRender() {
 
     // --- Clear & render ---
     container.textContent = '';
-    container.style.maxHeight = '500px';
-    container.style.overflowY = 'auto';
+    container.style.maxHeight = 'none';
+    container.style.overflowY = 'visible';
+    // Let the parent card handle overflow if needed
+    var parentCard = document.getElementById('scWeekGlanceCard');
+    if (parentCard) {
+        parentCard.style.flex = '1 1 auto';
+        parentCard.style.maxHeight = '800px';
+        parentCard.style.overflowY = 'auto';
+    }
 
     // == SECTION 1: This Week ==
     var header = document.createElement('div');
