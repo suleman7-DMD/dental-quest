@@ -378,8 +378,7 @@ function scWeekGlanceRender() {
                 badge.style.color = 'var(--warning)';
                 badge.style.fontWeight = '600';
             } else {
-                var dateLabel = months[dateObj.getMonth()] + ' ' + dateObj.getDate();
-                badge.textContent = dateLabel;
+                badge.textContent = daysOut + 'd';
             }
             row.appendChild(badge);
 
