@@ -482,43 +482,68 @@ function syncClinicalToMonthlyPlanner() {
     if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
         roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
     }
+    if (!roadmapData.monthlyPlanner.hiddenClinicTasks) {
+        roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+    }
 
     const appointments = roadmapData.clinicalData.appointments;
     const patients = roadmapData.clinicalData.patients || {};
+    const hiddenSet = new Set(getValues(roadmapData.monthlyPlanner.hiddenClinicTasks).map(h => h.value ?? h));
 
-    // Remove all existing clinic tasks that were synced from Clinical tab
-    Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(id => {
-        if (roadmapData.monthlyPlanner.customTasks[id]?.clinicalAppointmentId) {
-            delete roadmapData.monthlyPlanner.customTasks[id];
-        }
+    // Dedup appointments: same patient + date + time → keep only first
+    const seenAptKeys = new Set();
+    const validAptIds = new Set();
+
+    getValues(appointments).forEach(apt => {
+        if (apt.status === 'cancelled') return;
+        const patient = patients[apt.patientId] || {};
+        const dedupKey = (patient.name || apt.patientId || '') + '|' + (apt.date || '') + '|' + (apt.time || '09:00');
+        if (seenAptKeys.has(dedupKey)) return; // Skip duplicate
+        seenAptKeys.add(dedupKey);
+        validAptIds.add(apt.id);
     });
 
-    // Add current appointments as Monthly Planner tasks
+    // Incremental sync: add new, skip hidden/edited, remove orphaned
     getValues(appointments).forEach(apt => {
-        if (apt.status === 'cancelled') return; // Skip cancelled
+        if (!validAptIds.has(apt.id)) return; // Deduped out
+        if (apt.status === 'cancelled') return;
+        if (hiddenSet.has(apt.id)) return; // User deleted this — respect it
+
+        const taskId = 'clinic_' + apt.id;
+        const existing = roadmapData.monthlyPlanner.customTasks[taskId];
+
+        // If user has edited this task, don't overwrite their changes
+        if (existing?.userEdited) return;
 
         const patient = patients[apt.patientId] || {};
         const patientName = patient.name || 'Unknown Patient';
 
-        // Create task linked to this appointment
-        const taskId = 'clinic_' + apt.id;
-        const task = {
+        roadmapData.monthlyPlanner.customTasks[taskId] = {
             id: taskId,
-            clinicalAppointmentId: apt.id, // Link back to clinical appointment
+            clinicalAppointmentId: apt.id,
             date: apt.date,
-            item: `${patientName} - ${apt.procedures || 'Appointment'}`,
+            item: patientName + ' - ' + (apt.procedures || 'Appointment'),
             time: apt.time || '09:00',
             endTime: calculateEndTime(apt.time || '09:00', apt.duration || 60),
             type: 'clinic',
             notes: apt.notes || '',
-            createdAt: new Date().toISOString(),
+            createdAt: existing?.createdAt || new Date().toISOString(),
             syncedFromClinical: true
         };
-
-        roadmapData.monthlyPlanner.customTasks[taskId] = task;
     });
 
-    // Extend MP_WEEKS if needed for dates beyond current range
+    // Remove orphaned clinic tasks (appointment deleted from Clinical tab)
+    // but keep user-edited ones
+    Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(id => {
+        const task = roadmapData.monthlyPlanner.customTasks[id];
+        if (!task?.clinicalAppointmentId) return; // Not a clinic task
+        if (task.userEdited) return; // User owns this now
+        const aptStillExists = appointments[task.clinicalAppointmentId];
+        if (!aptStillExists || aptStillExists.status === 'cancelled') {
+            delete roadmapData.monthlyPlanner.customTasks[id];
+        }
+    });
+
     extendWeeksIfNeeded();
 }
 

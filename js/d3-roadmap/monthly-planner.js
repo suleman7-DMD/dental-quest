@@ -832,6 +832,10 @@ function mpSaveTask() {
             mpCurrentTask.endTime = endTime;
             mpCurrentTask.type = type;
             mpCurrentTask.notes = notes;
+            // Mark clinic-synced tasks so sync doesn't overwrite user edits
+            if (mpCurrentTask.clinicalAppointmentId || mpCurrentTask.syncedFromClinical) {
+                mpCurrentTask.userEdited = true;
+            }
             showToast('Task updated!');
         }
     } else {
@@ -855,6 +859,7 @@ function mpSaveTask() {
     }
 
     // Save immediately and re-render
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     mpCloseTaskModal();
     mpRenderAllCalendars();
@@ -881,6 +886,15 @@ function _mpDeleteCurrentTaskConfirmed() {
         }
         showToast('Task removed');
     } else {
+        // If this is a clinic-synced task, track it in hiddenClinicTasks so sync doesn't recreate it
+        if (mpCurrentTask.clinicalAppointmentId) {
+            if (!roadmapData.monthlyPlanner.hiddenClinicTasks) {
+                roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+            }
+            const hideId = generateId('hide');
+            roadmapData.monthlyPlanner.hiddenClinicTasks[hideId] = { id: hideId, value: mpCurrentTask.clinicalAppointmentId };
+        }
+
         // Delete custom task
         if (roadmapData.monthlyPlanner?.customTasks?.[mpCurrentTask.id]) {
             delete roadmapData.monthlyPlanner.customTasks[mpCurrentTask.id];
@@ -888,6 +902,7 @@ function _mpDeleteCurrentTaskConfirmed() {
         }
     }
 
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     mpCloseTaskModal();
     mpRenderAllCalendars();

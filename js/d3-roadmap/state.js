@@ -61,7 +61,8 @@ let roadmapData = {
         notes: {},
         customTasks: {},
         overriddenStatic: {},
-        completedTasks: {}
+        completedTasks: {},
+        hiddenClinicTasks: {}
     },
     // Clinical patient tracking
     clinicalData: {
@@ -119,7 +120,8 @@ function getDefaultRoadmapData() {
             notes: {},
             customTasks: {},
             overriddenStatic: {},
-            completedTasks: {}
+            completedTasks: {},
+            hiddenClinicTasks: {}
         },
         clinicalData: {
             patients: {},

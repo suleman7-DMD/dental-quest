@@ -528,6 +528,10 @@ function mergeRemoteState(data) {
             completedTasks: {
                 ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'),
                 ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+            },
+            hiddenClinicTasks: {
+                ...(roadmapData.monthlyPlanner?.hiddenClinicTasks || {}),
+                ...(data.monthlyPlanner?.hiddenClinicTasks || {})
             }
         },
         clinicalData: {
@@ -599,7 +603,8 @@ function loadFromLocalStorage(finalize = true) {
                     notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
                     customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
                     overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
+                    hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks || {}
                 },
                 clinicalData: {
                     patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
@@ -1201,7 +1206,8 @@ function restoreCheckpoint(index) {
                     notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
                     customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
                     overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed')
+                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed'),
+                    hiddenClinicTasks: cpData.monthlyPlanner?.hiddenClinicTasks || {}
                 },
                 clinicalData: {
                     patients: cpData.clinicalData?.patients || {},
@@ -1476,7 +1482,8 @@ function importAndRestoreDirectly() {
                             notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
                             customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
                             overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
+                            hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks || {}
                         },
                         clinicalData: {
                             patients: data.clinicalData?.patients || {},
