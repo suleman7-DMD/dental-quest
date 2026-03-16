@@ -4,6 +4,41 @@
 // Only this file may auto-execute initialization code.
 
 // ==================== RENDER FUNCTIONS ====================
+function formatDashTime(time) {
+    if (!time) return '';
+    var parts = time.split(':');
+    var h = parseInt(parts[0]) || 0;
+    var m = parseInt(parts[1]) || 0;
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    var hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return m === 0 ? hour + ampm : hour + ':' + String(m).padStart(2, '0') + ampm;
+}
+
+function mergeClinicalAptsIntoBucket(bucket, minDays, maxDays) {
+    var dashPts = roadmapData.clinicalData?.patients || {};
+    var dashAptList = getValues(roadmapData.clinicalData?.appointments);
+    var seen = new Set(bucket.map(function(d) { return d.date + '|' + d.what.substring(0, 25); }));
+    dashAptList.forEach(function(apt) {
+        if (apt.status === 'cancelled') return;
+        var days = getCountdown(apt.date);
+        if (days < minDays || days > maxDays) return;
+        var patient = dashPts[apt.patientId] || {};
+        var patientName = patient.name || 'Patient';
+        var timeLabel = apt.time ? formatDashTime(apt.time) + ' ' : '';
+        var label = timeLabel + patientName + ' — ' + (apt.procedures || 'Appointment');
+        var dedupKey = apt.date + '|' + label.substring(0, 25);
+        if (seen.has(dedupKey)) return;
+        seen.add(dedupKey);
+        bucket.push({
+            date: apt.date,
+            what: label + (apt.notes ? ' (' + apt.notes + ')' : ''),
+            course: 'Clinic',
+            weight: '—',
+            done: false
+        });
+    });
+}
+
 function renderDashboard() {
     // Get current date for all calculations
     const today = new Date();
@@ -58,13 +93,18 @@ function renderDashboard() {
         }).join('');
     }
 
-    // Next 7 days - directly from deadlines array (synced with Deadlines tab)
-    // FIX: Filter out completed deadlines so they don't clutter the dashboard
+    // Next 7 days - deadlines + clinical appointments merged
+    // All user text is escaped via escapeHtml() in renderDeadlineItems — safe for innerHTML
     const next7 = deadlines.filter(d => {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days >= 0 && days <= 7;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+    });
+
+    // Merge clinical appointments into the next 7 days view
+    mergeClinicalAptsIntoBucket(next7, 0, 7);
+
+    next7.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
     document.getElementById('next7Days').innerHTML = renderDeadlineItems(next7, 'No deadlines in the next 7 days!');
     document.getElementById('next7Count').textContent = next7.length;
@@ -75,7 +115,9 @@ function renderDashboard() {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 7 && days <= 14;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+    });
+    mergeClinicalAptsIntoBucket(next14, 8, 14);
+    next14.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
     document.getElementById('next14Days').innerHTML = renderDeadlineItems(next14, 'No deadlines in days 8-14!');
     document.getElementById('next14Count').textContent = next14.length;
@@ -86,7 +128,9 @@ function renderDashboard() {
         if (d.done) return false;
         const days = getCountdown(d.date);
         return days > 14 && days <= 30;
-    }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+    });
+    mergeClinicalAptsIntoBucket(nextMonth, 15, 30);
+    nextMonth.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
     document.getElementById('nextMonthDays').innerHTML = renderDeadlineItems(nextMonth, 'No deadlines in days 15-30!');
     document.getElementById('nextMonthCount').textContent = nextMonth.length;
