@@ -422,6 +422,9 @@ function scInvSaveMedSettings() {
 // TOGGLE CALENDAR
 // ============================================
 
+// Track expanded state so updateUI rebuild doesn't collapse calendars
+var scInvDashCalExpanded = { '30mg': false, '20mg': false };
+
 function scInvToggleCalendar(medType) {
     var calendar = document.getElementById('sc-inv-calendar-' + medType);
 
@@ -488,13 +491,45 @@ function scInvGenerateCalendar(medType, startDate, refillDate, pillsAvailable, d
     }
 
     // Check if we have custom assignments, otherwise use default
-    var hasCustomAssignments = Object.keys(scInvPillAssignments[medType]).length > 0;
+    // Also clean up stale assignments for dates no longer in range
+    var validDates = new Set(allDays.map(function(d) { return d.dateStr; }));
+    Object.keys(scInvPillAssignments[medType]).forEach(function(k) {
+        if (!validDates.has(k)) delete scInvPillAssignments[medType][k];
+    });
 
-    if (!hasCustomAssignments) {
-        // Initialize default assignments (first N days get pills)
-        for (var j = 0; j < allDays.length && j < pillsAvailable; j++) {
+    var currentGreenCount = Object.keys(scInvPillAssignments[medType]).filter(function(k) {
+        return scInvPillAssignments[medType][k] === true;
+    }).length;
+
+    if (currentGreenCount === 0) {
+        // Initialize default assignments (first N non-refill days get pills)
+        var assigned = 0;
+        for (var j = 0; j < allDays.length && assigned < pillsAvailable; j++) {
             if (!allDays[j].isRefillDay) {
                 scInvPillAssignments[medType][allDays[j].dateStr] = true;
+                assigned++;
+            }
+        }
+    } else if (currentGreenCount !== pillsAvailable) {
+        // Re-balance: adjust green count to match pills available
+        var greenDates = Object.keys(scInvPillAssignments[medType])
+            .filter(function(k) { return scInvPillAssignments[medType][k] === true; })
+            .sort();
+        if (currentGreenCount > pillsAvailable) {
+            // Too many green — remove from the end
+            var toRemove = currentGreenCount - pillsAvailable;
+            for (var r = greenDates.length - 1; r >= 0 && toRemove > 0; r--) {
+                delete scInvPillAssignments[medType][greenDates[r]];
+                toRemove--;
+            }
+        } else {
+            // Too few green — add from unassigned days (earliest first)
+            var toAdd = pillsAvailable - currentGreenCount;
+            for (var a = 0; a < allDays.length && toAdd > 0; a++) {
+                if (!allDays[a].isRefillDay && scInvPillAssignments[medType][allDays[a].dateStr] !== true) {
+                    scInvPillAssignments[medType][allDays[a].dateStr] = true;
+                    toAdd--;
+                }
             }
         }
     }
@@ -624,61 +659,66 @@ function scInvHandleCalendarDayClick(event, medType, dateStr, displayDate, isRef
         return;
     }
 
-    // Toggle pill assignment
+    // Toggle pill assignment — swap green↔red while keeping total green = pills count
     var currentlyHas = scInvPillAssignments[medType][dateStr] === true;
 
     if (currentlyHas) {
-        scInvAssignPillToNearestAvailableDay(medType, dateStr, totalPills);
+        scInvSwapGreenToRed(medType, dateStr);
     } else {
-        scInvRemovePillFromNearestAssignedDay(medType, dateStr, totalPills);
+        scInvSwapRedToGreen(medType, dateStr);
     }
 
     scInvSaveMedInventory();
     scInvRender();
 }
 
-function scInvAssignPillToNearestAvailableDay(medType, excludeDate, totalPills) {
-    // Remove pill from this day
-    delete scInvPillAssignments[medType][excludeDate];
+function scInvSwapGreenToRed(medType, clickedDate) {
+    // User clicked a GREEN day → make it RED
+    // Find the LAST RED (unassigned, non-refill) day and make it GREEN
+    // This keeps total green = pills count
+    delete scInvPillAssignments[medType][clickedDate];
 
-    // Find nearest available day to assign pill (prioritize weekdays, then nearest)
-    var allDates = Object.keys(scInvPillAssignments[medType]).sort();
-    var weekdays = allDates.filter(function(date) {
-        var d = parseLocalDate(date);
-        var dow = d.getDay();
-        return dow >= 1 && dow <= 5 && !scInvPillAssignments[medType][date];
-    });
+    // Get all calendar dates from assignments + the range
+    var med = scInvMedications[medType];
+    if (!med || !med.refillDate) return;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    var refillDateObj = parseLocalDate(med.refillDate);
 
-    var weekends = allDates.filter(function(date) {
-        var d = parseLocalDate(date);
-        var dow = d.getDay();
-        return (dow === 0 || dow === 6) && !scInvPillAssignments[medType][date];
-    });
+    // Build list of all dates in range
+    var current = new Date(tomorrow);
+    var allDatesInRange = [];
+    while (current <= refillDateObj) {
+        var ds = getLocalDateString(current);
+        var isRefill = current.getTime() === refillDateObj.getTime();
+        if (!isRefill) allDatesInRange.push(ds);
+        current.setDate(current.getDate() + 1);
+    }
 
-    // Try weekdays first, then weekends
-    var targetDate = weekdays[0] || weekends[0];
-    if (targetDate) {
-        scInvPillAssignments[medType][targetDate] = true;
+    // Find the last unassigned day (red) and make it green
+    for (var i = allDatesInRange.length - 1; i >= 0; i--) {
+        var d = allDatesInRange[i];
+        if (d !== clickedDate && scInvPillAssignments[medType][d] !== true) {
+            scInvPillAssignments[medType][d] = true;
+            break;
+        }
     }
 }
 
-function scInvRemovePillFromNearestAssignedDay(medType, targetDate, totalPills) {
-    // Count current assignments
-    var currentAssignments = Object.values(scInvPillAssignments[medType]).filter(function(v) { return v === true; }).length;
+function scInvSwapRedToGreen(medType, clickedDate) {
+    // User clicked a RED day → make it GREEN
+    // Find the LAST GREEN (assigned) day and make it RED
+    // This keeps total green = pills count
+    scInvPillAssignments[medType][clickedDate] = true;
 
-    // Can't exceed total pills
-    if (currentAssignments >= totalPills) {
-        var assignedDates = Object.keys(scInvPillAssignments[medType])
-            .filter(function(date) { return scInvPillAssignments[medType][date] === true && date !== targetDate; })
-            .sort();
+    // Find the last assigned day (green) that isn't the clicked one and remove it
+    var assignedDates = Object.keys(scInvPillAssignments[medType])
+        .filter(function(d) { return scInvPillAssignments[medType][d] === true && d !== clickedDate; })
+        .sort();
 
-        if (assignedDates.length > 0) {
-            delete scInvPillAssignments[medType][assignedDates[0]];
-        }
+    if (assignedDates.length > 0) {
+        delete scInvPillAssignments[medType][assignedDates[assignedDates.length - 1]];
     }
-
-    // Assign pill to target day
-    scInvPillAssignments[medType][targetDate] = true;
 }
 
 function scInvResetPillAssignments(medType) {
@@ -879,8 +919,9 @@ function scInvRenderDashboard() {
                     var isShowing = wrap.style.display !== 'none';
                     wrap.style.display = isShowing ? 'none' : 'block';
                     toggleBtn.textContent = isShowing ? 'Planning Calendar \u25B6' : 'Planning Calendar \u25BC';
-                    // Lazy-render calendar on first open
-                    if (!isShowing && wrap.children.length === 0) {
+                    scInvDashCalExpanded[mt] = !isShowing;
+                    // Render calendar content
+                    if (!isShowing) {
                         var m = scInvMedications[mt];
                         if (m && m.refillDate) {
                             var td = new Date();
@@ -890,6 +931,7 @@ function scInvRenderDashboard() {
                             var rDate = parseLocalDate(m.refillDate);
                             var dFromTmrw = Math.ceil((rDate - tmrw) / (1000 * 60 * 60 * 24));
                             var calContentId = 'sc-inv-dashCalContent-' + mt;
+                            wrap.textContent = '';
                             var contentDiv = document.createElement('div');
                             contentDiv.id = calContentId;
                             wrap.appendChild(contentDiv);
@@ -898,6 +940,27 @@ function scInvRenderDashboard() {
                     }
                 };
             })(medType, calWrapId, calToggle));
+
+            // Restore expanded state if it was open before updateUI rebuild
+            if (scInvDashCalExpanded[medType]) {
+                calWrap.style.display = 'block';
+                calToggle.textContent = 'Planning Calendar \u25BC';
+                // Render calendar content immediately
+                (function(mt, wrap) {
+                    var m = scInvMedications[mt];
+                    if (m && m.refillDate) {
+                        var td = new Date(); td.setHours(0, 0, 0, 0);
+                        var tmrw = new Date(td); tmrw.setDate(tmrw.getDate() + 1);
+                        var rDate = parseLocalDate(m.refillDate);
+                        var dFromTmrw = Math.ceil((rDate - tmrw) / (1000 * 60 * 60 * 24));
+                        var calContentId = 'sc-inv-dashCalContent-' + mt;
+                        var contentDiv = document.createElement('div');
+                        contentDiv.id = calContentId;
+                        wrap.appendChild(contentDiv);
+                        scInvGenerateCalendar(mt, tmrw, rDate, m.pills ?? 0, dFromTmrw, calContentId);
+                    }
+                })(medType, calWrap);
+            }
 
             container.appendChild(calToggle);
             container.appendChild(calWrap);
