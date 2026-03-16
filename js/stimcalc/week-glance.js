@@ -11,7 +11,8 @@
 
 var scWeekGlanceData = {
     customTasks: {}, completedTasks: {}, appointments: {},
-    editedDeadlines: {}, customDeadlines: {}, completedDeadlines: {}
+    editedDeadlines: {}, customDeadlines: {}, completedDeadlines: {},
+    upcomingDeadlines: {}
 };
 var scWeekGlanceListenersSet = false;
 
@@ -36,7 +37,8 @@ function scWeekGlanceLoadFromFirebase() {
         appointments: base + 'clinicalData/appointments',
         editedDeadlines: base + 'editedDeadlines',
         customDeadlines: base + 'customDeadlines',
-        completedDeadlines: base + 'completedDeadlines'
+        completedDeadlines: base + 'completedDeadlines',
+        upcomingDeadlines: base + 'upcomingDeadlines'
     };
 
     Object.keys(paths).forEach(function(key) {
@@ -139,6 +141,24 @@ function scWeekGlanceGetDeadlines(startDate, endDate) {
         var isDone = dl.done === true || completedIds.has(key);
         if (isDone) return;
         // Avoid duplicates with custom deadlines
+        var isDuplicate = deadlines.some(function(existing) {
+            return existing.date === dl.date && existing.what === dl.what;
+        });
+        if (isDuplicate) return;
+        deadlines.push({
+            date: dl.date,
+            what: dl.what ?? 'Deadline',
+            course: dl.course ?? '',
+            type: dl.type ?? 'other',
+            weight: dl.weight ?? '',
+            isDone: false
+        });
+    });
+
+    // Upcoming deadlines (all static + recurring, synced from d3-roadmap initUI)
+    getValues(scWeekGlanceData.upcomingDeadlines).forEach(function(dl) {
+        if (!dl.date || dl.date < startDate || dl.date > endDate) return;
+        // Avoid duplicates with custom and edited deadlines
         var isDuplicate = deadlines.some(function(existing) {
             return existing.date === dl.date && existing.what === dl.what;
         });

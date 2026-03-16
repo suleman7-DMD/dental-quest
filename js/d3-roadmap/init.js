@@ -430,10 +430,59 @@ function initUI() {
         }
     } catch(e) { console.error('Error adding custom deadlines:', e); }
 
+    // Generate recurring reminder deadlines from RECURRING_REMINDERS
+    try {
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        RECURRING_REMINDERS.forEach(r => {
+            const startParts = r.startDate.split('-').map(Number);
+            let current = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+            const endParts = r.endDate.split('-').map(Number);
+            const end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+            while (current <= end) {
+                const dateStr = getLocalDateString(current);
+                const monthName = current.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                if (['january', 'february', 'march', 'april'].includes(monthName)) {
+                    deadlines.push({
+                        date: dateStr,
+                        day: dayNames[current.getDay()],
+                        what: r.what,
+                        course: r.course,
+                        weight: r.weight,
+                        type: r.type,
+                        month: monthName,
+                        recurring: true
+                    });
+                }
+                current.setDate(current.getDate() + r.intervalDays);
+            }
+        });
+    } catch(e) { console.error('Error generating recurring reminders:', e); }
+
     // Sort deadlines by date to ensure consistent order
     try {
         deadlines.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
     } catch(e) { console.error('Error sorting deadlines:', e); }
+
+    // Sync upcoming deadlines to roadmapData.upcomingDeadlines for cross-app visibility (Stim Calc)
+    try {
+        const todayStr = getLocalDateString(new Date());
+        const upcomingObj = {};
+        let idx = 0;
+        deadlines.forEach(d => {
+            if (d.date < todayStr || d.done) return;
+            const key = 'dl_' + idx++;
+            upcomingObj[key] = {
+                date: d.date, day: d.day ?? '', what: d.what,
+                course: d.course ?? '', weight: d.weight ?? '—', type: d.type ?? 'Other'
+            };
+        });
+        const newJson = JSON.stringify(upcomingObj);
+        const oldJson = JSON.stringify(roadmapData.upcomingDeadlines ?? {});
+        roadmapData.upcomingDeadlines = upcomingObj;
+        if (newJson !== oldJson) {
+            setTimeout(() => saveData(), 1500);
+        }
+    } catch(e) { console.error('Error syncing upcoming deadlines:', e); }
 
     // CRITICAL FIX: Restore completed deadlines using stable ID matching
     try {
