@@ -143,21 +143,22 @@ function renderDeadlines() {
 
         // Filter for this month - already sorted from above
         const monthDeadlines = deadlines.filter(d => d.month === month);
+        const activeDeadlines = monthDeadlines.filter(d => !(d.done ?? false));
+        const completedDeadlines = monthDeadlines.filter(d => d.done ?? false);
 
-        tbody.innerHTML = monthDeadlines.map((d, idx) => {
+        // All user text is escaped via escapeHtml() — safe for innerHTML
+        function buildRow(d, extraAttr) {
             const days = getCountdown(d.date);
             const isPassed = days < 0;
             const deadlineId = getDeadlineId(d);
-            const isCustom = d.custom ?? false;
             const isDone = d.done ?? false;
             const grade = d.grade !== undefined ? d.grade : null;
-
-            // Row styling based on done status
             const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
             const rowClass = isPassed ? 'passed' : '';
+            const attr = extraAttr ?? '';
 
             return `
-                <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}">
+                <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}" ${attr}>
                     <td>
                         <button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById('${deadlineId}')"
                             style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'};
@@ -215,10 +216,38 @@ function renderDeadlines() {
                             style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"
                             title="Delete this deadline">🗑️</button>
                     </td>
-                </tr>
-            `;
-        }).join('');
+                </tr>`;
+        }
+
+        let html = activeDeadlines.map(d => buildRow(d)).join('');
+
+        // Collapsible completed section — collapsed by default
+        if (completedDeadlines.length > 0) {
+            const safeMonth = escapeHtml(month);
+            html += `
+                <tr class="completed-toggle-row" onclick="toggleCompletedDeadlines('${safeMonth}')" style="cursor: pointer;">
+                    <td colspan="9" style="padding: 8px 12px; background: rgba(5, 150, 105, 0.1); border: 1px dashed #059669; border-radius: 6px; text-align: center;">
+                        <span style="color: #059669; font-weight: 600; font-size: 0.9em;">
+                            <span id="${safeMonth}CompletedArrow">&#9654;</span>
+                            ${completedDeadlines.length} completed
+                        </span>
+                    </td>
+                </tr>`;
+            html += completedDeadlines.map(d =>
+                buildRow(d, `data-completed-month="${safeMonth}" style="display: none; opacity: 0.6; text-decoration: line-through;"`)
+            ).join('');
+        }
+
+        tbody.innerHTML = html;
     });
+}
+
+function toggleCompletedDeadlines(month) {
+    const rows = document.querySelectorAll('tr[data-completed-month="' + month + '"]');
+    const arrow = document.getElementById(month + 'CompletedArrow');
+    const isHidden = rows.length > 0 && rows[0].style.display === 'none';
+    rows.forEach(function(r) { r.style.display = isHidden ? '' : 'none'; });
+    if (arrow) arrow.textContent = isHidden ? '\u25BC' : '\u25B6';
 }
 
 // Handle date picker changes
