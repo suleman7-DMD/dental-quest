@@ -213,7 +213,8 @@ function sanitizeFirebaseKey(key) {
 function getDeadlineId(deadline) {
     if (deadline.id) return sanitizeFirebaseKey(deadline.id); // Custom deadlines have their own ID
     // For static deadlines, create a stable hash from key properties
-    const key = `${deadline.date}_${deadline.course}_${deadline.what}`.toLowerCase().replace(/\s+/g, '_');
+    // Strip quotes/backslashes to keep IDs safe for onclick attributes
+    const key = `${deadline.date}_${deadline.course}_${deadline.what}`.toLowerCase().replace(/\s+/g, '_').replace(/['"\\]/g, '');
     return sanitizeFirebaseKey('dl_' + key);
 }
 

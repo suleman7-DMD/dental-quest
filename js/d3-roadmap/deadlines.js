@@ -63,13 +63,17 @@ const STATIC_DEADLINES = [
     { date: '2026-03-19', day: 'Thu', what: '8:30–11:30 AM — Moe composite redo (patient appointment)', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
     // March 20 — Friday
     { date: '2026-03-20', day: 'Fri', what: 'Oral Medicine Quiz due by 1:00 PM — DO NOT FORGET', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Adderall Rx for externship — Can prescriber do telehealth to FL? FL-licensed provider? Pharmacy transfer?', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Renew license plate (due May 15) — check IL SOS website, may be doable online', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Renew drivers license (due May 15) — check IL online renewal or if you need in-person trip', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'NPI assignment — requires processing time per Reboucas. Start now, do not wait until Mar 30', course: 'Peds', weight: 'MANDATORY', type: 'Assignment', month: 'march' },
     // March 21 — Saturday
     { date: '2026-03-21', day: 'Sat', what: '8:30–11:30 AM — Annette Woods (LOE) — review chart, progress notes ready, know tx plan', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
     { date: '2026-03-21', day: 'Sat', what: '12:30–3:30 PM — Tawana recall — full mouth probing, perio charting, prophylaxis', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
     // March 23 — Monday
     { date: '2026-03-23', day: 'Mon', what: 'Critical Thinking group PowerPoint — coordinate with Dimpy, Saif, Jiji on division of labor', course: 'Critical Thinking', weight: '—', type: 'Project', month: 'march' },
     // March 25 — Wednesday
-    { date: '2026-03-25', day: 'Wed', what: '11:30 AM–12:15 PM — MANDATORY Group Practice Meeting (G170) — Dr. Maseli. Email in advance if can\'t attend.', course: 'Group Practice', weight: 'MANDATORY', type: 'Mandatory', month: 'march' },
+    { date: '2026-03-25', day: 'Wed', what: '11:30 AM–12:15 PM — MANDATORY Group Practice Meeting (G170) — Dr. Maseli. Email in advance if cannot attend.', course: 'Group Practice', weight: 'MANDATORY', type: 'Mandatory', month: 'march' },
     // March 30 — Monday (Peds study reminder)
     { date: '2026-03-30', day: 'Mon', what: 'Pediatric Dentistry Exam — start studying after Pain Control is done', course: 'Peds', weight: '—', type: 'Study', month: 'march' },
 
@@ -89,30 +93,6 @@ const STATIC_DEADLINES = [
     { date: '2026-04-16', day: 'Thu', what: 'Live Presentation (1-2:50pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
     { date: '2026-04-17', day: 'Fri', what: 'FINAL EXAM (4-5:50pm, L1101) — notecard allowed', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'april' },
     { date: '2026-04-17', day: 'Fri', what: 'Passion Project due (4pm) — needs DATED JOURNAL LOG', course: 'Oral Med', weight: '12.5%', type: 'Project', month: 'april' }
-];
-
-// Recurring reminders — generated every N days between start/end dates in initUI()
-const RECURRING_REMINDERS = [
-    {
-        what: '🔁 Adderall Rx for externship — Can prescriber do telehealth to FL? FL-licensed provider? Pharmacy transfer?',
-        course: 'Life Admin', weight: '—', type: 'Reminder',
-        startDate: '2026-03-16', endDate: '2026-04-30', intervalDays: 3
-    },
-    {
-        what: '🔁 Renew license plate (due May 15) — check IL SOS website, may be doable online',
-        course: 'Life Admin', weight: '—', type: 'Reminder',
-        startDate: '2026-03-16', endDate: '2026-04-30', intervalDays: 3
-    },
-    {
-        what: '🔁 Renew driver\'s license (due May 15) — check IL online renewal or if you need in-person trip',
-        course: 'Life Admin', weight: '—', type: 'Reminder',
-        startDate: '2026-03-16', endDate: '2026-04-30', intervalDays: 3
-    },
-    {
-        what: '🔁 NPI assignment — requires processing time per Reboucas. Start now, don\'t wait until Mar 30',
-        course: 'Peds', weight: 'MANDATORY', type: 'Reminder',
-        startDate: '2026-03-16', endDate: '2026-03-28', intervalDays: 3
-    }
 ];
 
 // Working deadlines array - reset from STATIC_DEADLINES at start of each initUI() call
@@ -153,14 +133,20 @@ function renderDeadlines() {
             const deadlineId = getDeadlineId(d);
             const isDone = d.done ?? false;
             const grade = d.grade !== undefined ? d.grade : null;
-            const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
+            let rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
             const rowClass = isPassed ? 'passed' : '';
             const attr = extraAttr ?? '';
+            // For collapsed completed rows, prepend display:none to the SAME style attribute
+            if (attr.includes('data-completed-month')) {
+                rowStyle = 'display: none; ' + rowStyle;
+            }
+            // Escape deadlineId for safe use in onclick JS string attributes
+            const safeId = deadlineId.replace(/'/g, "\\'");
 
             return `
                 <tr class="${rowClass}" data-deadline-id="${deadlineId}" style="${rowStyle}" ${attr}>
                     <td>
-                        <button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById('${deadlineId}')"
+                        <button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById('${safeId}')"
                             style="background: ${isDone ? '#059669' : 'rgba(255,255,255,0.1)'};
                                    border: 2px solid ${isDone ? '#059669' : '#4b5563'};
                                    color: ${isDone ? 'white' : '#94a3b8'};
@@ -212,7 +198,7 @@ function renderDeadlines() {
                     </td>
                     <td>${d.type}</td>
                     <td>
-                        <button onclick="deleteDeadlineById('${deadlineId}')"
+                        <button onclick="deleteDeadlineById('${safeId}')"
                             style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"
                             title="Delete this deadline">🗑️</button>
                     </td>
@@ -234,7 +220,7 @@ function renderDeadlines() {
                     </td>
                 </tr>`;
             html += completedDeadlines.map(d =>
-                buildRow(d, `data-completed-month="${safeMonth}" style="display: none; opacity: 0.6; text-decoration: line-through;"`)
+                buildRow(d, `data-completed-month="${safeMonth}"`)
             ).join('');
         }
 
