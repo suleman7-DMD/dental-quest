@@ -54,6 +54,8 @@ function scInvLoadFromFirebase() {
             if (data['30mg']) scInvPillAssignments['30mg'] = data['30mg'];
             if (data['20mg']) scInvPillAssignments['20mg'] = data['20mg'];
         }
+        // Re-render so calendars reflect loaded assignments
+        scInvRender();
     }).catch(function(err) {
         console.error('Failed to load pill assignments:', err);
     });
@@ -64,6 +66,8 @@ function scInvLoadFromFirebase() {
         if (data) {
             scInvCalendarNotes = data;
         }
+        // Re-render so calendar notes appear
+        scInvRender();
     }).catch(function(err) {
         console.error('Failed to load calendar notes:', err);
     });
@@ -103,6 +107,8 @@ function scInvSaveMedInventory() {
 function scInvRender() {
     scInvUpdateMedCard('30mg');
     scInvUpdateMedCard('20mg');
+    // Also update dashboard card so it doesn't wait for the 5s recalculate cycle
+    scInvRenderDashboard();
 }
 
 // ============================================
