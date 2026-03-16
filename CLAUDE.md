@@ -117,7 +117,7 @@ users/user_[hashedPin]/
 ├── d3Roadmap/
 │   ├── grades{}, editedDeadlines{}, customDeadlines{}, deletedDeadlines{}, completedDeadlines{}
 │   ├── examStudyProgress{}, exams{}, mandatoryItems{}, pedsLockedIn
-│   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{} }
+│   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{}, currentWeekSchedule{} }
 │   ├── upcomingDeadlines{} (cross-app: all upcoming deadlines for Stim Calc)
 │   ├── clinicalData{ patients{}, appointments{}, competencies{} }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
@@ -152,8 +152,9 @@ Index.html --> medications (pill counts) --> Body Comp ecosystemContext.inventor
 Index.html --> medications (pill counts) --> Stim Calc inventory module (shared read/write)
 Index.html --> tasks (doToday flag) --> D3 Roadmap "Do Today" widget (realtime listener)
 D3 Roadmap --> exams, monthlyPlanner --> Body Comp ecosystemContext.academic + schedule
-D3 Roadmap --> monthlyPlanner, clinicalData, deadlines --> Stim Calc "Week at a Glance" (realtime listeners)
-D3 Roadmap --> upcomingDeadlines --> Stim Calc "Week at a Glance" Upcoming Deadlines (realtime listener)
+D3 Roadmap --> monthlyPlanner/currentWeekSchedule --> Stim Calc "Week at a Glance" schedule (primary, pre-deduped)
+D3 Roadmap --> monthlyPlanner/customTasks, clinicalData/appointments --> Stim Calc "Week at a Glance" (fallback)
+D3 Roadmap --> upcomingDeadlines --> Stim Calc "Week at a Glance" Upcoming Deadlines (realtime, capped 15, Xd badges)
 ```
 All cross-app reads are READ-ONLY. Lecture Prompt is standalone.
 

@@ -280,7 +280,7 @@ let roadmapData = {
     completedDeadlines: {},                 // Completed deadlines with grades (keyed by stableId)
     examStudyProgress: {},                  // { 'peds-exam2-lec11': true, ... }
     dailyPlanner: { date, focus, notes, blocks: {}, pomodorosCompleted, bedtime },
-    monthlyPlanner: { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {}, hiddenClinicTasks: {} },
+    monthlyPlanner: { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {}, hiddenClinicTasks: {}, currentWeekSchedule: {} },
     clinicalData: {
         patients: {},                       // Patient records keyed by ID
         appointments: {},                   // Appointment records keyed by ID
