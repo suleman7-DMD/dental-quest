@@ -144,6 +144,14 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** Default state has `_version: Date.now()` instead of `0`, causing empty local state to appear "newer" than cloud data.
 **Solution:** Verify `getDefaultRoadmapData()` in state.js has `_version: 0` and `_dataLoaded: false`. Check all 5 guards. Use `forcePullFromCloud()` to recover.
 
+### Error: Clinic task edits/deletions not persisting in Monthly Planner (fixed Mar 16, 2026)
+**Cause:** `syncClinicalToMonthlyPlanner()` deleted ALL clinic-synced tasks and recreated them from scratch on every `initMonthlyPlanner()` call (page load, tab switch, visibility change), wiping any user edits or deletions.
+**Solution (commit `e5124b8`):** Incremental sync: skip tasks with `userEdited: true`, skip appointments in `hiddenClinicTasks`, dedup by patient+date+time. When user deletes a clinic task, its `clinicalAppointmentId` is stored in `hiddenClinicTasks`. When user edits, `userEdited: true` is set. `hiddenClinicTasks` is in all 4 Firebase merge sites + defaults.
+
+### Error: Deadline delete/edit buttons broken (fixed Mar 16, 2026)
+**Cause:** `getDeadlineId()` produced IDs containing `'` (apostrophe from deadline text like `can't`), which broke `onclick="fn('${deadlineId}')"` JS syntax. Also, collapsed completed rows had duplicate `style` attributes causing `display:none` to be ignored.
+**Solution (commit `e24d328`):** Strip `'"\\` from `getDeadlineId()` key generation. Escape `safeId` in onclick handlers. Merge display:none into the single `rowStyle` in `buildRow()`.
+
 ---
 
 ## PERFORMANCE NOTES
@@ -272,7 +280,7 @@ let roadmapData = {
     completedDeadlines: {},                 // Completed deadlines with grades (keyed by stableId)
     examStudyProgress: {},                  // { 'peds-exam2-lec11': true, ... }
     dailyPlanner: { date, focus, notes, blocks: {}, pomodorosCompleted, bedtime },
-    monthlyPlanner: { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {} },
+    monthlyPlanner: { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {}, hiddenClinicTasks: {} },
     clinicalData: {
         patients: {},                       // Patient records keyed by ID
         appointments: {},                   // Appointment records keyed by ID
@@ -398,6 +406,8 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `submitDeadlineGrade(index)` | deadlines.js | Submit grade for deadline |
 | `syncDeadlineToGrades(d, done, grade)` | deadlines.js | Sync deadline grade to courseStructures |
 | `deleteDeadline(index)` | deadlines.js | Delete a deadline |
+| `toggleCompletedDeadlines(month)` | deadlines.js | Toggle collapsed completed rows per month |
+| `syncClinicalToMonthlyPlanner()` | import-system.js | Incremental clinic→planner sync (respects hiddenClinicTasks, userEdited) |
 | `loadCourseGrades()` | grades.js | Grade calculator rendering |
 | `calculateNeeded()` | grades.js | "What grade do I need" calculator |
 | `syncGradeToDeadline()` | grades.js | Sync grade to deadline tab |

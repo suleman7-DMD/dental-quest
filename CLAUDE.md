@@ -42,6 +42,10 @@ const date = new Date(year, month - 1, day);
 - **Expensive renders in update loops**: Never put heavy canvas/analytics renders in `updateUI()`/`recalculate()` (runs every 5s). Call only on init + navigation events.
 - **Canvas tooltip stale closure**: Scrollable/resizable canvas containers must recompute `graphWidth`/`pointSpacing` inside `onmousemove`, not capture at setup time.
 - **Division by zero in graph spacing**: Always guard `pointSpacing = width / (data.length - 1)` with `if (data.length < 2) return`.
+- **Nuke-and-rebuild sync**: NEVER delete all items then recreate from source on every render/init. Use incremental sync — track user edits (`userEdited: true`) and deletions (`hiddenClinicTasks`) so sync respects them.
+- **DeadlineId in onclick**: `getDeadlineId()` must strip `'"\\` from keys. Escape IDs in onclick: `onclick="fn('${safeId}')"` where `safeId = deadlineId.replace(/'/g, "\\'")`.
+- **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if the element already has a `style` attr. Browsers use the first and ignore the second. Merge into one style.
+- **Cross-app dedup**: Stim calc reads both `appointments` AND `customTasks` from d3Roadmap — clinic-synced tasks appear in BOTH. Dedup by `clinicalAppointmentId` and by `date|time|name`.
 
 ---
 
@@ -113,7 +117,8 @@ users/user_[hashedPin]/
 ├── d3Roadmap/
 │   ├── grades{}, editedDeadlines{}, customDeadlines{}, deletedDeadlines{}, completedDeadlines{}
 │   ├── examStudyProgress{}, exams{}, mandatoryItems{}, pedsLockedIn
-│   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{} }
+│   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{} }
+│   ├── upcomingDeadlines{} (cross-app: all upcoming deadlines for Stim Calc)
 │   ├── clinicalData{ patients{}, appointments{}, competencies{} }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
 │   └── (Body Comp reads exams{} and monthlyPlanner{})
@@ -148,6 +153,7 @@ Index.html --> medications (pill counts) --> Stim Calc inventory module (shared 
 Index.html --> tasks (doToday flag) --> D3 Roadmap "Do Today" widget (realtime listener)
 D3 Roadmap --> exams, monthlyPlanner --> Body Comp ecosystemContext.academic + schedule
 D3 Roadmap --> monthlyPlanner, clinicalData, deadlines --> Stim Calc "Week at a Glance" (realtime listeners)
+D3 Roadmap --> upcomingDeadlines --> Stim Calc "Week at a Glance" Upcoming Deadlines (realtime listener)
 ```
 All cross-app reads are READ-ONLY. Lecture Prompt is standalone.
 
