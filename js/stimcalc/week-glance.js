@@ -193,8 +193,17 @@ function scWeekGlanceRender() {
     // --- Collect weekly schedule items ---
     var items = [];
 
+    // Dedup set: prevents same item showing from customTasks + appointments
+    var seenKeys = new Set();
+    // Track which appointment IDs are already in customTasks (clinic-synced tasks)
+    var clinicAptIds = new Set();
+
     getValues(scWeekGlanceData.customTasks).forEach(function(task) {
         if (task.date && task.date >= week.start && task.date <= week.end) {
+            var dedupKey = (task.date || '') + '|' + (task.time || '') + '|' + (task.item || '').substring(0, 30);
+            if (seenKeys.has(dedupKey)) return;
+            seenKeys.add(dedupKey);
+            if (task.clinicalAppointmentId) clinicAptIds.add(task.clinicalAppointmentId);
             items.push({
                 date: task.date, time: task.time ?? null,
                 name: task.item ?? 'Untitled', type: task.type ?? 'other',
@@ -205,6 +214,11 @@ function scWeekGlanceRender() {
 
     getValues(scWeekGlanceData.appointments).forEach(function(apt) {
         if (apt.date && apt.date >= week.start && apt.date <= week.end && apt.status !== 'cancelled') {
+            // Skip if this appointment is already shown via customTasks (clinic-synced)
+            if (clinicAptIds.has(apt.id)) return;
+            var dedupKey = (apt.date || '') + '|' + (apt.time || '') + '|' + (apt.procedures || 'Clinic').substring(0, 30);
+            if (seenKeys.has(dedupKey)) return;
+            seenKeys.add(dedupKey);
             items.push({
                 date: apt.date, time: apt.time ?? null,
                 name: apt.procedures ?? 'Clinic', type: 'clinic',
@@ -247,6 +261,8 @@ function scWeekGlanceRender() {
 
     // --- Clear & render ---
     container.textContent = '';
+    container.style.maxHeight = '500px';
+    container.style.overflowY = 'auto';
 
     // == SECTION 1: This Week ==
     var header = document.createElement('div');
@@ -313,7 +329,7 @@ function scWeekGlanceRender() {
         container.appendChild(empty);
     }
 
-    // == SECTION 2: Upcoming Deadlines ==
+    // == SECTION 2: Upcoming Deadlines (max 15) ==
     if (deadlines.length > 0) {
         var dlHeader = document.createElement('div');
         dlHeader.className = 'sc-week-glance-header';
@@ -326,7 +342,8 @@ function scWeekGlanceRender() {
         var dlList = document.createElement('div');
         dlList.className = 'sc-week-glance-list';
 
-        deadlines.forEach(function(dl) {
+        var dlToShow = deadlines.slice(0, 15);
+        dlToShow.forEach(function(dl) {
             var dateObj = parseLocalDate(dl.date);
             var today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -375,5 +392,12 @@ function scWeekGlanceRender() {
             dlList.appendChild(row);
         });
         container.appendChild(dlList);
+
+        if (deadlines.length > 15) {
+            var moreLabel = document.createElement('div');
+            moreLabel.style.cssText = 'text-align:center;color:var(--fg-tertiary);font-size:0.78em;padding:4px 0;';
+            moreLabel.textContent = '+ ' + (deadlines.length - 15) + ' more on Roadmap app';
+            container.appendChild(moreLabel);
+        }
     }
 }

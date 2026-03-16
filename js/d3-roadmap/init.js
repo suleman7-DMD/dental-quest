@@ -436,7 +436,6 @@ function initUI() {
     } catch(e) { console.error('Error sorting deadlines:', e); }
 
     // Sync upcoming deadlines to roadmapData.upcomingDeadlines for cross-app visibility (Stim Calc)
-    // Only sets the data — saved on next natural saveData() call, no aggressive setTimeout
     try {
         const todayStr = getLocalDateString(new Date());
         const upcomingObj = {};
@@ -449,7 +448,12 @@ function initUI() {
                 course: d.course ?? '', weight: d.weight ?? '—', type: d.type ?? 'Other'
             };
         });
+        const oldCount = getCount(roadmapData.upcomingDeadlines ?? {});
         roadmapData.upcomingDeadlines = upcomingObj;
+        // Save once on first population (subsequent saves happen naturally via user actions)
+        if (oldCount === 0 && idx > 0) {
+            setTimeout(() => saveData(), 2000);
+        }
     } catch(e) { console.error('Error syncing upcoming deadlines:', e); }
 
     // CRITICAL FIX: Restore completed deadlines using stable ID matching
