@@ -513,6 +513,126 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 #r5 table {font-size:11.5px}
 }
 
+
+/* ===== MOBILE RESPONSIVENESS ===== */
+@media (max-width: 768px) {
+  /* Tables: horizontal scroll */
+  #r1 table, #r2 table, #r3 table, #r4 table, #r5 table {
+    display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%;
+  }
+  #r1 thead, #r1 tbody, #r2 thead, #r2 tbody, #r3 thead, #r3 tbody,
+  #r4 thead, #r4 tbody, #r5 thead, #r5 tbody {
+    display: table; width: 100%;
+  }
+  #r1 td, #r1 th, #r2 td, #r2 th, #r3 td, #r3 th, #r4 td, #r4 th, #r5 td, #r5 th {
+    word-break: break-word; overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto;
+  }
+  /* Pre blocks: wrap or scroll */
+  pre { overflow-x: auto !important; -webkit-overflow-scrolling: touch; white-space: pre-wrap !important; max-width: 100%; font-size: 11px !important; }
+  /* Container padding reduction */
+  #r1 .container { padding: 12px 12px 60px !important; }
+  #r2 .container, #r2 { padding: 12px 10px !important; }
+  #r3 .container { padding: 16px 12px 60px !important; }
+  #r4 .container { padding: 12px 12px 60px !important; }
+  #r5 { padding: 8px !important; max-width: 100% !important; }
+  /* R1 mobile */
+  #r1 .hero h1 { font-size: 1.4em !important; }
+  #r1 .lecture-header { padding: 14px 14px; }
+  #r1 .lecture-header h2 { font-size: 1.3em; }
+  #r1 .obj-header { padding: 10px 12px; gap: 6px; }
+  #r1 .obj-body { padding: 12px 12px; }
+  #r1 .obj-header h3 { font-size: 0.95em; }
+  #r1 table { font-size: 0.78em !important; }
+  #r1 th { padding: 6px 8px !important; font-size: 0.75em !important; }
+  #r1 td { padding: 5px 8px !important; }
+  #r1 .flow { font-size: 0.75em !important; gap: 3px; }
+  #r1 .flow .step { padding: 3px 7px; font-size: 0.85em; }
+  #r1 .prof-hint { padding: 8px 10px; font-size: 0.88em; }
+  #r1 .mcq { padding: 12px 12px; }
+  #r1 .recall-box { padding: 12px 14px; }
+  /* R2 mobile */
+  #r2 .header h1 { font-size: 1.4rem !important; }
+  #r2 .header { padding: 1.5rem 1rem !important; }
+  #r2 .lecture-header { padding: 1rem 1rem; }
+  #r2 .lecture-header h2 { font-size: 1.15rem; }
+  #r2 .obj-section { padding: 1rem; }
+  #r2 table { font-size: 0.78rem !important; }
+  #r2 th { font-size: 0.65rem !important; padding: 0.4rem 0.5rem !important; }
+  #r2 td { padding: 0.4rem 0.5rem !important; }
+  #r2 .card-grid { grid-template-columns: 1fr !important; }
+  #r2 .alert { padding: 0.75rem 0.9rem; font-size: 0.85rem; }
+  /* R3 mobile */
+  #r3 .header h1 { font-size: 20px !important; }
+  #r3 .header { padding: 28px 14px 22px; }
+  #r3 .section h2 { font-size: 17px !important; }
+  #r3 table { font-size: 12px !important; }
+  #r3 th { font-size: 11px !important; padding: 6px 8px !important; }
+  #r3 td { padding: 6px 8px !important; }
+  #r3 .compare-grid { grid-template-columns: 1fr !important; }
+  #r3 .card { padding: 12px 14px; }
+  #r3 .exam-box, #r3 .prof-box, #r3 .pearl-box { padding: 10px 12px; }
+  #r3 .formula { padding: 12px 14px; }
+  #r3 .formula .f-eq { font-size: 14px; word-break: break-all; }
+  /* R4 mobile */
+  #r4 .header h1 { font-size: 1.4em !important; }
+  #r4 .section-title { font-size: 1.1em !important; }
+  #r4 .section-header { gap: 8px; flex-wrap: wrap; }
+  #r4 .container { padding: 12px 12px 60px !important; }
+  #r4 table { font-size: 0.78em !important; }
+  #r4 th { padding: 7px 8px !important; font-size: 0.72em !important; }
+  #r4 td { padding: 7px 8px !important; }
+  #r4 .vs { grid-template-columns: 1fr !important; }
+  #r4 .rg { grid-template-columns: 1fr !important; }
+  #r4 .card { padding: 14px 14px; }
+  #r4 .chain { font-size: 0.75em; padding: 12px 14px; line-height: 1.8; }
+  #r4 details .content { padding: 0 12px 14px; }
+  #r4 summary { padding: 10px 14px; font-size: 0.88em; }
+  /* R5 mobile */
+  #r5 .hdr h1 { font-size: 16px !important; }
+  #r5 .hdr { padding: 18px 12px 16px; }
+  #r5 .lh { padding: 10px 12px; }
+  #r5 .lh h2 { font-size: 16px; }
+  #r5 table { font-size: 11px !important; }
+  #r5 th { font-size: 10px !important; padding: 5px 6px !important; }
+  #r5 td { padding: 4px 6px !important; }
+  #r5 .t { margin-bottom: 10px; }
+  #r5 .tt { padding: 8px 10px; font-size: 13px; }
+  #r5 .tb { padding: 10px 10px; }
+  /* TOC/body/footer */
+  #toc-nav { padding: 4px 8px; }
+  .toc-link { padding: 3px 6px !important; font-size: 10px !important; }
+  body { padding-top: 36px; }
+  html { scroll-padding-top: 44px; }
+  #reading-footer { padding: 28px 12px 60px; font-size: 10px; }
+}
+
+@media (max-width: 420px) {
+  #r1 table { font-size: 0.72em !important; }
+  #r2 table { font-size: 0.72rem !important; }
+  #r3 table { font-size: 11px !important; }
+  #r4 table { font-size: 0.72em !important; }
+  #r5 table { font-size: 10px !important; }
+  #r1 .hero h1 { font-size: 1.2em !important; }
+  #r2 .header h1 { font-size: 1.2rem !important; }
+  #r3 .header h1 { font-size: 18px !important; }
+  #r4 .header h1 { font-size: 1.2em !important; }
+  #r5 .hdr h1 { font-size: 15px !important; }
+  #r1 .flow .step { padding: 2px 5px; font-size: 0.78em; }
+  #r1 .container, #r3 .container, #r4 .container { padding: 8px 8px 48px !important; }
+  #r2 .container, #r2 { padding: 8px 6px !important; }
+  #r5 { padding: 6px !important; }
+  pre { font-size: 10px !important; padding: 6px 8px !important; }
+  #r4 .chain { font-size: 0.7em; padding: 10px 10px; }
+  #r5 .tt { font-size: 12px; }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  #r1 .container, #r2 .container, #r3 .container, #r4 .container { padding-left: 16px; padding-right: 16px; }
+  #r1 td, #r1 th, #r2 td, #r2 th, #r3 td, #r3 th, #r4 td, #r4 th, #r5 td, #r5 th {
+    word-break: break-word; overflow-wrap: break-word;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -547,10 +667,10 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
   </div>
   <div class="obj-body">
     <ul class="fact-list">
-      <li><span style="color:var(--danger);font-weight:700">Slides = the exam.</span> All questions come basically from the slides. If it's on a slide, it's fair game.</li>
+      <li><span style="color:var(--danger);font-weight:700">Slides = the exam.</span> <strong><em style="color:var(--text-dim)">"All the questions are basically gonna come from the slides."</em></strong> — If it's on a slide, it's fair game.</li>
       <li><span style="color:var(--danger);font-weight:700">Objectives = exam blueprint.</span> Know the objectives and you'll be OK. This guide is organized by objective for that reason.</li>
       <li><span style="color:var(--accent);font-weight:700">Prior material carries forward:</span> No obscure Exam 1 details, BUT <span style="color:var(--warn)">prescription writing</span>, <span style="color:var(--warn)">narcotic knowledge</span> (transfers to IV sedation drugs), and <span style="color:var(--warn)">consult writing</span> WILL appear.</li>
-      <li><span style="color:var(--danger);font-weight:700">Harder exam:</span> 6 lectures (vs. 4 on Exam 1) → more material → more questions.</li>
+      <li><span style="color:var(--danger);font-weight:700">Harder exam:</span> 6 lectures (vs. 4 on Exam 1) → more material → more questions. <em style="color:var(--text-dim)">"Don't get a false sense... that was only 4 lectures. The next one's 6... there's gonna be more material... I will put more questions on that one."</em></li>
       <li><span style="color:var(--accent)">Case review lecture</span> (last lecture) is basically a review of the second half — strongly implied you should attend.</li>
     </ul>
 
@@ -638,7 +758,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <ul class="fact-list">
       <li><span style="color:var(--accent);font-weight:700">Suprasternal Notch:</span> Divot at base of neck, above sternum — absolute starting point</li>
       <li><span style="color:var(--accent);font-weight:700">Manubrium:</span> Top segment of sternum, from notch down to first indentation</li>
-      <li><span style="color:var(--accent);font-weight:700">Sternal Angle (Angle of Louis):</span> Where manubrium meets body of sternum — <span style="color:var(--danger);font-weight:700">CRITICAL landmark</span>. Go laterally from this indentation → feel 2nd rib. Where 2nd rib connects with manubrium = Angle of Louis = sternal angle.</li>
+      <li><span style="color:var(--accent);font-weight:700">Sternal Angle (Angle of Louis):</span> Where manubrium meets body of sternum — <span style="color:var(--danger);font-weight:700">CRITICAL landmark</span>. <em style="color:var(--text-dim)">"If you were on that suprasternal notch and keep going inferiorly until you feel that indentation... go a little bit to your right, you're gonna feel a hard area that is gonna be your second rib."</em> Where 2nd rib connects with manubrium = Angle of Louis = sternal angle.</li>
       <li><span style="color:var(--danger);font-weight:700">Interspaces — NAMING CONVENTION:</span> Interspace is ALWAYS named for the rib <strong>ABOVE</strong> it. Interspace 2 = below rib 2, interspace 3 = below rib 3, etc. Matters hugely for cardiac auscultation (valve locations).</li>
     </ul>
 
@@ -839,7 +959,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <h3>Describe the Examination of the Lungs: Inspection, Palpation, Percussion &amp; Auscultation</h3>
   </div>
   <div class="obj-body">
-    <p>Four components in order: <strong><span style="color:var(--accent)">Inspection → Palpation → Percussion → Auscultation.</span></strong> Percussion and auscultation are the biggest exam targets. Prof values physical exam skills and WILL test them.</p>
+    <p>Four components in order: <strong><span style="color:var(--accent)">Inspection → Palpation → Percussion → Auscultation.</span></strong> Percussion and auscultation are the biggest exam targets. Prof values physical exam skills and WILL test them: <em style="color:var(--text-dim)">"The art of the physical exam is probably gone away... we've got so many other machines, ultrasound, etc. But back in the day, to be a really good clinician, you had to have these really good skills."</em></p>
 
     <!-- INSPECTION -->
     <h4>1. Inspection</h4>
@@ -945,7 +1065,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <h4>The Ladder Pattern (Used for BOTH Percussion AND Auscultation)</h4>
     <p>Side-to-side comparison: <strong>1-1, 2-2, 3-3</strong> — always comparing one side to the other at the same level, looking for differences.</p>
 
-    <h4>Stethoscope Basics</h4>
+    <h4>Stethoscope Basics <span style="color:var(--warn)">(moderately likely for MCQ about equipment)</span></h4>
     <table>
       <tr><th>Feature</th><th>Detail</th></tr>
       <tr><td><strong>Earpieces</strong></td><td>Should point <strong><span style="color:var(--accent)">ANTERIORLY</span></strong> (forward) when placed in ears — follows the canal direction. TV shows get this wrong.</td></tr>
@@ -1068,7 +1188,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <h4>Emphysema</h4>
     <table>
       <tr><th>Feature</th><th>Finding</th><th>Explanation</th></tr>
-      <tr><td>Pathology</td><td>Overinflation of lungs</td><td>COPD — <span style="color:var(--accent)">pink puffers</span>, thin, cachectic. Destruction of alveolar wall, breakdown of elastin.</td></tr>
+      <tr><td>Pathology</td><td>Overinflation of lungs</td><td>COPD — <span style="color:var(--accent)">pink puffers</span>, thin, cachectic — <em style="color:var(--text-dim)">"not the bronchitis patient"</em> (emphysema = pink puffer vs. chronic bronchitis = blue bloater within COPD). Destruction of alveolar wall, breakdown of elastin.</td></tr>
       <tr><td>Lung volume</td><td>Increased but NOT functional</td><td>More volume, but no gas exchange in destroyed tissue</td></tr>
       <tr><td>Breath sounds</td><td class="warn">Decreased</td><td>Nothing transmitted through destroyed tissue</td></tr>
       <tr><td>Fremitus</td><td class="warn"><span style="color:var(--warn);font-weight:700">DECREASED</span></td><td>Hyperinflated → vibration doesn't transmit well</td></tr>
@@ -1104,7 +1224,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       <tr><td>Auscultation</td><td class="hi"><strong><span style="color:var(--danger);font-weight:700">Crackles at the BASES of the lungs</span></strong></td></tr>
       <tr><td>Symptoms</td><td><strong><span style="color:var(--accent)">Dyspnea</span></strong> (shortness of breath)</td></tr>
       <tr><td></td><td><strong><span style="color:var(--accent)">Orthopnea</span></strong> (SOB when lying FLAT)</td></tr>
-      <tr><td></td><td><strong><span style="color:var(--accent)">Paroxysmal Nocturnal Dyspnea (PND)</span></strong> — wake up at night SOB</td></tr>
+      <tr><td></td><td><strong><span style="color:var(--accent)">Paroxysmal Nocturnal Dyspnea (PND)</span></strong> — wake up at night SOB. <em style="color:var(--text-dim)">"In the old days, they'd run to the window, open it up and try to breathe."</em></td></tr>
     </table>
 
     <div class="prof-hint">If L-sided heart failure progresses → everything keeps backing up → <span style="color:var(--danger);font-weight:700">right-sided heart failure</span>. Signs: <strong>peripheral edema + ascites</strong>. Bridge to cardiovascular lecture and Mr. Jones case.</div>
@@ -1452,6 +1572,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     </ul>
 
     <h4>Valve Auscultation Sites</h4>
+    <p><em style="color:var(--text-dim)">"Remember we were talking about different spaces, so we do the suprasternal notch, go down the manubrium, find that indentation, go laterally, feel the rib, drop below the rib into that second space."</em> — callback connecting cardiac exam to thorax landmarks.</p>
     <table>
       <tr><th>Valve</th><th>Location</th></tr>
       <tr><td class="hi"><span style="color:var(--accent);font-weight:700">Aortic</span></td><td><strong>Right 2nd interspace</strong>, 2 cm lateral to sternum</td></tr>
@@ -1614,6 +1735,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       </tr>
     </table>
     <div class="prof-hint danger"><span style="color:var(--danger);font-weight:700">Brackets vs. Bands:</span> Orthodontic <span style="color:var(--success)">BRACKETS</span> = bonded to surface = no AP. Orthodontic <span style="color:var(--danger)">BANDS</span> = go subgingival = may need AP. Subtle MCQ trap.</div>
+    <p><em style="color:var(--text-dim)">Prof noted AP for facial trauma is <strong>"off the table."</strong></em></p>
 
     <h4>Antibiotic Regimen <span style="color:var(--accent)">(Single Dose, 30–60 Min Before Procedure)</span></h4>
     <table>
@@ -1755,7 +1877,8 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <span style="color:var(--accent)">Between S2 and S1</span> → Diastole.<br>
     During diastole, pulmonic valve should be <strong>CLOSED</strong>.<br>
     Murmur of a closed valve = <span style="color:var(--danger);font-weight:700">Regurgitation</span>.<br>
-    <strong>= B) Pulmonic Regurgitation</strong>
+    <strong>= B) Pulmonic Regurgitation</strong><br>
+    <em style="color:var(--text-dim)">Prof: "I made it easy, I could have put some other stuff up there too."</em> — signals harder questions on the actual exam.
   </div>
 </div>
 
@@ -3093,7 +3216,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       <li><strong>Old machines with damage</strong> — been using it for years, suddenly patient on "100% O₂" is getting deeper</li>
     </ul>
     <div class="card" style="margin-top:10px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
   Dial reads "100% O₂"
        ↓
   Patient gets MORE sedated       ← <span style="color:var(--red)">RED FLAG</span>
@@ -3353,6 +3476,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 
   <div class="prof-box">
     <div class="tag">Critical Teaching Point — Deeper ≠ Better</div>
+    <blockquote style="margin:8px 0">"You may put them deeper and think, well, maybe that's a good thing. No, it's not good — they're NOT gonna be comfortable and they're gonna be MORE anxious in the end."</blockquote>
     <p><strong style="color:var(--red)">Pushing deeper makes them MORE anxious, not less.</strong> The patient will NOT be comfortable — oversedation produces distressing experiences (hallucinations, loss of control, dissociation).</p>
   </div>
 
@@ -3381,6 +3505,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 
   <div class="exam-box">
     <div class="tag">🎯 Major Exam Rule — Prof QUIZZED Class, Stated 3 Times Across Recording</div>
+    <p style="margin-bottom:10px"><span style="color:var(--accent)">Prof asked the class directly.</span> Students guess 30, 70, 40... someone says 50. <em>"Who said 50? Good, come on up here, you can take over for me now."</em></p>
     <table style="margin-top:10px">
       <thead><tr><th>Scenario</th><th>Sedation Level</th></tr></thead>
       <tbody>
@@ -3555,7 +3680,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       </tbody>
     </table>
     <p style="margin-top:10px"><strong style="color:var(--yellow)">Bottom line:</strong> Pulse ox = <span style="color:var(--orange)">required for moderate</span>, <span style="color:var(--blue)">recommended but NOT required for minimal</span>.</p>
-  </div>
+    <p style="margin-top:10px; color:var(--accent)"><strong>Prof's exact framing:</strong> <em>"You should think about moderate sedation using a pulse oximeter."</em> Then: <em>"If you got a pulse ox, put it on your patient, but you don't have to put any numbers down."</em> — meaning for minimal sedation, pulse ox is fine to use but you are not required to record SpO₂ values. This is a testable nuance.</p>  </div>
 
   <div class="prof-box">
     <div class="tag">Historical Context — How They Used to Assess Oxygenation</div>
@@ -3680,7 +3805,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <div class="tag">🎯 Duration Mismatch — Re-Sedation Risk</div>
     <p><strong style="color:var(--red)">If sedative has a longer half-life than the reversal agent → patient can re-sedate.</strong></p>
     <div class="card" style="margin-top:8px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
   Sedative duration:   ████████████████████  (long)
   Reversal duration:   █████████             (short)
                                   ↑
@@ -3696,7 +3821,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <div class="tag">🎯 Core Principle — Repeated Across MULTIPLE Lectures</div>
     <p><strong style="color:var(--accent)">You must always be able to manage one level deeper than you're targeting.</strong></p>
     <div class="card" style="margin-top:8px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
   <span style="color:var(--green)">Minimal</span> → <span style="color:var(--yellow)">Moderate</span> → <span style="color:var(--orange)">Deep</span> → <span style="color:var(--red)">General Anesthesia</span>
      ↑          ↑          ↑          ↑
   TARGET    must be     must be     must be
@@ -3981,7 +4106,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
   <div class="exam-box">
     <div class="tag">🎯 Prescribing Hierarchy — Know This</div>
     <div class="card" style="margin-top:8px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
   <span style="color:var(--green)">FIRST-LINE</span>:  Acetaminophen + NSAIDs
        ↓
   <span style="color:var(--yellow)">SECOND-LINE</span>: Combination narcotic (e.g., hydrocodone/acetaminophen)
@@ -4169,7 +4294,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       </tbody>
     </table>
     <div class="card" style="margin-top:10px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.8;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.8;">
   N₂O
    ├── <span style="color:var(--blue)">ANALGESIC pathway</span>
    │    └── Endogenous opioid peptides + GABA-A
@@ -4198,7 +4323,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
     <div class="tag">🎯 Safety-Critical for Pediatric Patients</div>
     <p><strong style="color:var(--red)">Chain of events:</strong></p>
     <div class="card" style="margin-top:8px; background:var(--card-alt);">
-<pre style="color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
+<pre style="overflow-x:auto;color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6;">
   Patient goes <span style="color:var(--red)">unconscious</span>
        ↓
   Pharyngeal-laryngeal reflexes <span style="color:var(--red)">LOST</span>
@@ -4988,7 +5113,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       </div>
       <div class="hy">
         <div class="hy-label">🔴 CLINICAL BOTTOM LINE</div>
-        <p><span style="color:var(--danger)"><b>Avoid N₂O in the first trimester of pregnancy.</b></span> During organogenesis, folic acid demand is high and DNA replication is critical. This pathway is the mechanistic reason N₂O is concerning in pregnancy.</p>
+        <p>Prof's exact words: <span style="color:var(--danger)"><b>"You really want to avoid this in the first trimester of pregnancy."</b></span> This connects to organogenesis — folic acid demand is high, DNA replication is critical during this period. This pathway is the reason N₂O is concerning in pregnancy.</p>
         <p><b>If you remember nothing else from biohazards, remember this chain and its pregnancy implication.</b></p>
       </div>
     </div>
@@ -5181,7 +5306,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
         <li><b>Poor fitting mask</b></li>
         <li><b>Displacement of mask during patient movement</b></li>
         <li><b>Stuck flutter valve</b> — specific to the 4-tube/bag system, not the low-profile</li>
-        <li><b>Mouth breathing</b> — Prof's solution: <span style="color:var(--success)"><b>Rubber dam!</b></span> Forces nasal breathing. In through nose, out through nose</li>
+        <li><b>Mouth breathing</b> — Prof directly asks the class: <em>"How could you get away from the patient mouth breathing? What do you have in your arsenal?"</em> Prof's solution: <span style="color:var(--success)"><b>Rubber dam!</b></span> Forces nasal breathing. In through nose, out through nose</li>
         <li><b>Facial hair</b> preventing tight seal</li>
         <li><b>Rubber dam + high-speed evacuation suction</b> around oral cavity can help pick up trace N₂O</li>
       </ul>
@@ -5254,7 +5379,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
       <p><b>Supplemental anatomy (Slide 40):</b> Ulnar artery → main supply to superficial palmar arch. Radial artery → main supply to deep palmar arch.</p>
       <p><b>Supplemental anatomy (Slide 41):</b> Radial artery pulse palpated on anterior surface of distal radius, lateral to flexor carpi radialis tendon, covered only by fascia and skin.</p>
 
-      <p><span style="color:var(--accent)"><b>Dental uses:</b></span></p>
+      <p>Prof calls this "very simple" and asks the class: <b>"What are we using these arteries for in dentistry?"</b></p>
       <ul>
         <li><b>Brachial artery</b> → blood pressure measurement</li>
         <li><b>Radial artery</b> → pulse check</li>
@@ -5274,7 +5399,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
         <li><span style="color:var(--danger)"><b>If hand stays pale</b> → no collateral from ulnar artery → do NOT put arterial line in radial artery ✗</span></li>
       </ol>
       <p style="margin-top:10px;font-weight:700;color:var(--danger)">⚠ POSITIVE Allen's Test = NO adequate dual blood supply to the hand = do NOT catheterize the radial artery</p>
-      <p style="margin-top:8px">Prof considers this testable knowledge — relevant to hospital rotations and residency.</p>
+      <p style="margin-top:8px">"You may never do an art line, but if you do any hospital rotation or residency, you're probably gonna see a patient with one." — This tells you the prof considers it testable knowledge.</p>
     </div>
   </div>
 </details>
@@ -5690,7 +5815,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
   <div class="content">
     <div class="card">
       <div class="card-title"><span class="tag tag-time">TIME</span> William Harvey — moderate pace. Jorgensen — briefly.</div>
-      <p><b>William Harvey:</b> Demonstrated continuous circulation of blood within a <b>closed system</b>. Showed that valves in heart and veins → <b>unidirectional</b> blood flow. This is the fundamental principle that makes IV medication delivery possible.</p>
+      <p><b>William Harvey:</b> Demonstrated continuous circulation of blood within a <b>closed system</b>. Showed that valves in heart and veins → <b>unidirectional</b> blood flow. This is the fundamental principle that makes IV medication delivery possible. Before Harvey, people thought blood left the body (open system).</p>
       <p><b>Neils Bjorn Jorgensen (1945):</b> Probably first to use IV route for premedication. <span style="color:var(--accent)"><b>"Jorgensen's technique"</b></span> / <b>"Loma Linda technique"</b>:</p>
       <ul>
         <li><b>Pentobarbital</b> (barbiturate)</li>
@@ -6501,7 +6626,8 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 
 <div class="t"><div class="tt">&#x1F4A8; Inhalation Anesthetics &mdash; N&#x2082;O in the GA Context</div><div class="tb">
 <p>Inhalation anesthetics = <strong>most frequently used</strong> means of producing GA. Agents: N&#x2082;O, Halothane, Enflurane, Isoflurane, Desflurane, Sevoflurane.</p>
-<div class="hy"><strong>Is N&#x2082;O a good general anesthetic? &rarr; NO.</strong><br>
+<p>Prof immediately pivoted to testing the class on N&#x2082;O.</p>
+<div class="hy"><strong>Prof asked the class directly:</strong> <span class="q">&ldquo;Is N&#x2082;O a good general anesthetic?&rdquo;</span> &rarr; <strong>NO.</strong><br>
 <ul>
 <li>N&#x2082;O alone = only <strong>minimal sedation</strong>. Can reach moderate sedation if &gt;<strong class="ds">50%</strong></li>
 <li>A hyper-responder could drift to deep sedation &mdash; must rescue them back</li>
@@ -6519,7 +6645,8 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 </div></div>
 
 <div class="t"><div class="tt">&#x1F4D0; Understanding MAC (Minimum Alveolar Concentration)</div><div class="tb">
-<div class="hy"><strong>MAC = concentration at which <span style="color:var(--o)">50%</span> of patients won&rsquo;t respond to a surgical stimulus</strong> (without local anesthetic).<br><br>
+<div class="hy">Prof re-explained MAC with a vivid example: <span class="q">&ldquo;If I had 50 people here and the MAC was 0.75, I gave everybody 0.75 MAC, and I did a standard surgical incision &mdash; half would move, half wouldn&rsquo;t move &mdash; that&rsquo;s without a local anesthetic.&rdquo;</span><br><br>
+<strong>MAC = concentration at which <span style="color:var(--o)">50%</span> of patients won&rsquo;t respond to a surgical stimulus</strong> (without local anesthetic).<br><br>
 <strong style="color:var(--r)">CRITICAL RULE: Lower MAC = More Potent.</strong><br>
 <ul>
 <li>MAC <span class="ds">0.75%</span> = strong anesthetic (little drug needed)</li>
@@ -6535,12 +6662,12 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <tr><td><span class="d">Halothane</span></td><td class="ds">0.75%</td><td><strong>Most potent</strong></td><td class="dng">Rarely used</td><td><strong class="dng">Sensitizes myocardium to catecholamines</strong> &rarr; avoid epi &rarr; use mepivacaine. <span style="color:var(--y)">Not on his exam, but maybe boards.</span> Halothane+catecholamine concept IS fair game. Used in peds (non-irritating to airway). Hepatic necrosis risk.</td></tr>
 <tr><td><span class="d">Isoflurane</span></td><td class="ds">1.28%</td><td>Potent</td><td class="ok">Still used</td><td>Pleasant odor, non-irritating &rarr; good for &ldquo;breathing down&rdquo; squirmy patients before IV start. <strong>Bronchodilator</strong> (good for asthmatics). Excellent muscle relaxant. Avoid in renal failure, hepatotoxicity possible.</td></tr>
 <tr><td><span class="d">Enflurane</span></td><td class="ds">1.58%</td><td>Moderate</td><td class="dng">Rarely used</td><td>Compatible with epi (unlike halothane). 1963. <span style="color:var(--b)">Low priority per prof.</span> Avoid in renal failure.</td></tr>
-<tr><td><span class="d">Sevoflurane</span></td><td class="ds">1.71%</td><td>Moderate</td><td><strong class="ok">&starf; THE BIG ONE</strong></td><td>Prof called this <span class="q">&ldquo;the big one.&rdquo;</span> Low solubility &rarr; <span style="color:var(--g)">rapid induction AND emergence</span> (same principle as N&#x2082;O: low blood-gas solubility = fast on/off). <strong>Least irritating to airway.</strong> Most used in <strong>ambulatory dental anesthesia</strong>. Great for mask induction (peds).</td></tr>
+<tr><td><span class="d">Sevoflurane</span></td><td class="ds">1.71%</td><td>Moderate</td><td><strong class="ok">&starf; THE BIG ONE</strong></td><td>Prof called this <span class="q">&ldquo;the big one.&rdquo;</span> Low solubility &rarr; <span style="color:var(--g)">rapid induction AND emergence</span>. Asked class <span class="q">&ldquo;What does that sound like?&rdquo;</span> &rarr; <strong>N&#x2082;O</strong> (same principle: low blood-gas solubility = fast on/off via pressure gradients). <strong>Least irritating to airway.</strong> Most used in <strong>ambulatory dental anesthesia</strong>. Great for mask induction (peds).</td></tr>
 <tr><td><span class="d">Desflurane</span></td><td class="ds">4.6&ndash;6.0%</td><td><strong>Least potent</strong></td><td class="ok">Used today</td><td>NOT metabolized in body. Fastest emergence. But <strong class="dng">very irritating + unpleasant odor &rarr; CANNOT use for induction</strong>. Strategy: induce with sevo &rarr; switch to des once under GA.</td></tr>
 </table></div>
 <div class="cp"><strong>Clinical induction strategy (explicitly taught):</strong><br>
 <span class="d">Sevoflurane</span> <span style="color:var(--txd)">(pleasant, non-irritating)</span> &rarr; induce &rarr; switch to <span class="d">Desflurane</span> once under GA &rarr; benefit of <strong>rapid emergence</strong> at end of case.
-<pre style="margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--g);background:rgba(52,211,153,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
+<pre style="overflow-x:auto;margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--g);background:rgba(52,211,153,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
   INDUCTION              MAINTENANCE            EMERGENCE
   ┌─────────┐            ┌───────────┐          ┌──────────┐
   │ Sevo    │ ────────▶  │ Desflurane│ ──────▶  │ FAST     │
@@ -6592,7 +6719,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <li><strong>Asthmatic patients</strong> &mdash; bronchodilating properties</li>
 </ul>
 <div class="cb"><strong>Ketamine <span style="color:var(--r)">&uarr; BP</span></strong> (good for hypovolemic) vs. <strong>Barbiturates <span style="color:var(--r)">&darr; BP</span></strong> (dangerous if hypovolemic). <strong style="color:var(--y)">Classic MCQ!</strong>
-<pre style="margin:6px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:6px 10px;border-radius:4px;line-height:1.5">
+<pre style="overflow-x:auto;margin:6px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:6px 10px;border-radius:4px;line-height:1.5">
   Hypovolemic patient needs anesthesia?
   ┌────────────┐     ┌──────────────┐
   │ Ketamine   │     │ Barbiturates │
@@ -6610,7 +6737,8 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 </ul></div>
 
 <h4>&starf; ALWAYS Give Midazolam with Ketamine</h4>
-<div class="hy"><strong>Rule:</strong> If giving ketamine &rarr; <strong>always</strong> co-administer <span class="d">midazolam (Versed)</span>.<br>
+<div class="hy">Prof: <span class="q">&ldquo;Definitely give it &mdash; if I&rsquo;m giving ketamine, I&rsquo;m giving them a benzodiazepine with it, Versed.&rdquo;</span> (Direct quote.)<br><br>
+<strong>Rule:</strong> If giving ketamine &rarr; <strong>always</strong> co-administer <span class="d">midazolam (Versed)</span>.<br>
 <ul>
 <li><strong>Why:</strong> Prevents <strong>emergence delirium</strong> (confused state, unpleasant dreams, frightening hallucinations)</li>
 <li><strong>More common in adults</strong> than peds</li>
@@ -6795,7 +6923,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <div class="cb">
 <table>
 <tr><th></th><th>Barbiturates</th><th>Opioids</th></tr>
-<tr><td><strong>ADR distinction</strong></td><td>Greatest <strong style="color:var(--r)">POTENTIAL</strong> for adverse reaction<br><span style="color:var(--txd)">(narrow therapeutic index &mdash; S-shaped curve)</span></td><td>Greater <strong style="color:var(--r)">NUMBER</strong> of adverse reactions<br><span style="color:var(--txd)">(more widely used)</span></td></tr>
+<tr><td><strong>ADR distinction</strong></td><td>Greatest <strong style="color:var(--r)">POTENTIAL</strong> for adverse reaction<br><span style="color:var(--txd)">(narrow therapeutic index &mdash; S-shaped dose-response curves from oral sedation lecture)</span></td><td>Greater <strong style="color:var(--r)">NUMBER</strong> of adverse reactions<br><span style="color:var(--txd)">(more widely used)</span></td></tr>
 </table>
 <strong style="color:var(--y)">Don&rsquo;t confuse potential (barbs) vs. frequency (opioids).</strong></div>
 <div class="hy"><strong>Only IV and inhalation routes permit titration.</strong>
@@ -6838,7 +6966,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <tr><td><strong>Other clues</strong></td><td>Ataxia, slurred speech</td><td>Altered LOC</td></tr>
 <tr><td><strong>Reversal</strong></td><td>Benzos&rarr;flumazenil; Barbs&rarr;NONE</td><td>Naloxone (Narcan)</td></tr>
 </table>
-<pre style="margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
+<pre style="overflow-x:auto;margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
   QUICK ID:
   Slow resp + pinpoint pupils ──▶ OPIOID OD
   Rapid/shallow resp           ──▶ SEDATIVE-HYPNOTIC OD
@@ -6894,7 +7022,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <tr><td><strong>Laryngeal edema</strong> <span style="color:var(--txd)">(stridor or SILENCE)</span></td><td><span class="d">Epi</span> + O&#x2082; + <span class="d">Diphenhydramine</span> + <span class="d">Hydrocortisone</span> <span class="ds">100mg</span>. Last resort: <strong class="dng">Cricothyrotomy</strong></td></tr>
 </table>
 <div class="cb"><strong>Bronchospasm vs. Laryngeal Edema &mdash; KNOW THE DIFFERENCE:</strong>
-<pre style="margin:6px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
+<pre style="overflow-x:auto;margin:6px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:8px 10px;border-radius:4px;line-height:1.5">
   BRONCHOSPASM              LARYNGEAL EDEMA
   ─────────────             ───────────────
   Some air moving           Little/no air
@@ -6914,7 +7042,7 @@ body { background: #0f1117; margin: 0; padding: 0; padding-top: 42px; }
 <p><strong>11 Causes:</strong> Excessive premedication, steroids/anti-HTN/tranquilizers, sedative overdose, reflex (pain), vascular absorption of LA, hemorrhage, positional changes, hypoxia/hypercarbia, CV abnormalities, adrenocortical insufficiency, metabolic derangement.</p>
 <p><strong>Signs:</strong> Chest pain, SBP&lt;90, HF, restlessness, anxiety, disorientation, pallor, cold/clammy skin, <strong>dilated pupils</strong>, prolonged cap refill, dyspnea.</p>
 <div class="cb"><strong>Pupil cheat sheet:</strong>
-<pre style="margin:4px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:6px 10px;border-radius:4px;line-height:1.5">
+<pre style="overflow-x:auto;margin:4px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--p);background:rgba(167,139,250,.06);padding:6px 10px;border-radius:4px;line-height:1.5">
   Dilated pupils    ──▶ Hypotension / Shock
   Constricted pupils ──▶ Opioid OD
   (OPPOSITE!)
