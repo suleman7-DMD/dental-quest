@@ -349,58 +349,97 @@ function getPatientRecords() {
 }
 
 function renderPatientsSidebar() {
-    const container = document.getElementById('patientsSidebar');
+    var container = document.getElementById('patientsSidebar');
     if (!container) return;
 
-    const records = getPatientRecords();
-    const searchInput = container.querySelector('.pt-sidebar-search');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    var records = getPatientRecords();
+    var existingSearch = container.querySelector('.pt-sidebar-search');
+    var searchTerm = existingSearch ? existingSearch.value.toLowerCase() : '';
 
-    const reliabilityDotColor = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    var dotColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    var dotLabels = { green: 'Reliable', yellow: 'Inconsistent', red: 'Unreachable' };
 
-    let listHtml = '';
+    // Group patients by reliability
+    var groups = { green: [], yellow: [], red: [], other: [] };
     Object.keys(records).forEach(function(id) {
-        const patient = records[id];
-        if (!patient) return;
-        const name = patient.name || 'Unnamed';
-
-        // Filter by search
-        if (searchTerm && !name.toLowerCase().includes(searchTerm) && !(patient.chartNumber || '').toLowerCase().includes(searchTerm)) {
-            return;
-        }
-
-        const isActive = id === activePatientId;
-        const dotColor = reliabilityDotColor[patient.reliability] || '#6b7280';
-
-        listHtml += '<div class="pt-sidebar-item' + (isActive ? ' pt-sidebar-item-active' : '') + '" '
-            + 'onclick="selectPatient(\'' + escapeHtml(id) + '\')" '
-            + 'style="display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer; '
-            + 'border-left:3px solid ' + (isActive ? '#3b82f6' : 'transparent') + '; '
-            + 'background:' + (isActive ? 'rgba(59,130,246,0.12)' : 'transparent') + '; '
-            + 'transition: all 0.15s ease;"'
-            + ' onmouseenter="if(this.className.indexOf(\'active\')===-1){this.style.background=\'rgba(255,255,255,0.05)\'}"'
-            + ' onmouseleave="if(this.className.indexOf(\'active\')===-1){this.style.background=\'transparent\'}"'
-            + '>'
-            + '<span style="width:8px; height:8px; border-radius:50%; background:' + dotColor + '; flex-shrink:0;"></span>'
-            + '<span style="color:' + (isActive ? '#e2e8f0' : '#94a3b8') + '; font-size:0.88em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(name) + '</span>'
-            + '</div>';
+        var p = records[id];
+        if (!p) return;
+        var name = p.name || 'Unnamed';
+        if (searchTerm && !name.toLowerCase().includes(searchTerm) && !(p.chartNumber || '').toLowerCase().includes(searchTerm)) return;
+        var rel = p.reliability || 'yellow';
+        (groups[rel] || groups.other).push({ id: id, patient: p });
     });
 
-    // Build the full sidebar content
+    var totalCount = groups.green.length + groups.yellow.length + groups.red.length + groups.other.length;
+
+    function renderGroup(items, groupLabel, groupColor) {
+        if (items.length === 0) return '';
+        var html = '<div style="padding:6px 14px 4px; margin-top:4px;">'
+            + '<div style="font-size:0.65em; font-weight:700; color:' + groupColor + '; text-transform:uppercase; letter-spacing:0.1em; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:4px;">'
+            + groupLabel + ' (' + items.length + ')</div></div>';
+        items.forEach(function(item) {
+            var p = item.patient;
+            var isActive = item.id === activePatientId;
+            var matches = computeRequirementMatches(p);
+            var isHV = matches.length >= 3;
+            var nextVisitShort = '';
+            if (p.nextVisit) {
+                var dateMatch = (p.nextVisit || '').match(/(\d{1,2}\/\d{1,2}\/?\d{0,4})/);
+                if (dateMatch) nextVisitShort = dateMatch[1];
+            }
+
+            html += '<div onclick="selectPatient(\'' + escapeHtml(item.id) + '\')" '
+                + 'style="display:flex; align-items:flex-start; gap:10px; padding:9px 14px; cursor:pointer; '
+                + 'border-left:3px solid ' + (isActive ? '#3b82f6' : 'transparent') + '; '
+                + 'background:' + (isActive ? 'rgba(59,130,246,0.1)' : 'transparent') + '; '
+                + 'transition:all 0.15s;" '
+                + 'onmouseenter="this.style.background=\'' + (isActive ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.04)') + '\'" '
+                + 'onmouseleave="this.style.background=\'' + (isActive ? 'rgba(59,130,246,0.1)' : 'transparent') + '\'">'
+                + '<span style="width:8px; height:8px; border-radius:50%; background:' + (dotColors[p.reliability] || '#6b7280') + '; flex-shrink:0; margin-top:5px;"></span>'
+                + '<div style="flex:1; min-width:0;">'
+                +   '<div style="display:flex; align-items:center; gap:6px;">'
+                +     '<span style="color:' + (isActive ? '#f1f5f9' : '#cbd5e1') + '; font-size:0.88em; font-weight:' + (isActive ? '600' : '400') + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(p.name || 'Unnamed') + '</span>'
+                +     (isHV ? '<span style="font-size:0.6em; background:rgba(251,191,36,0.2); color:#fbbf24; padding:1px 5px; border-radius:3px; flex-shrink:0;">HV</span>' : '')
+                +   '</div>'
+                +   '<div style="font-size:0.7em; color:#64748b; margin-top:1px;">'
+                +     (p.chartNumber ? '#' + escapeHtml(p.chartNumber) : '')
+                +     (nextVisitShort ? ' &middot; Next: ' + escapeHtml(nextVisitShort) : '')
+                +   '</div>'
+                + '</div>'
+                + '</div>';
+        });
+        return html;
+    }
+
+    var listHtml = renderGroup(groups.green, 'Active & Reliable', '#22c55e')
+        + renderGroup(groups.yellow, 'Needs Follow-up', '#eab308')
+        + renderGroup(groups.red, 'Unreachable / Dead Weight', '#ef4444')
+        + renderGroup(groups.other, 'Other', '#64748b');
+
     container.innerHTML = ''
-        + '<div style="padding:12px;">'
-        +   '<input type="text" class="pt-sidebar-search" placeholder="Search patients..." '
+        + '<div style="padding:12px; border-bottom:1px solid #1e293b;">'
+        +   '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">'
+        +     '<span style="font-size:0.8em; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Patients</span>'
+        +     '<span style="font-size:0.72em; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:2px 8px; border-radius:10px;">' + totalCount + '</span>'
+        +   '</div>'
+        +   '<input type="text" class="pt-sidebar-search" placeholder="Search name or chart#..." '
         +     'value="' + escapeHtml(searchTerm) + '" '
         +     'oninput="renderPatientsSidebar()" '
-        +     'style="width:100%; padding:8px 10px; background:#1e293b; border:1px solid #334155; border-radius:6px; color:#e2e8f0; font-size:0.85em; outline:none; margin-bottom:8px; box-sizing:border-box;">'
+        +     'style="width:100%; padding:7px 10px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0; font-size:0.82em; outline:none; box-sizing:border-box; margin-bottom:8px;">'
         +   '<div style="display:flex; gap:6px;">'
-        +     '<button onclick="openPatientImportModal()" style="flex:1; padding:7px 0; background:#1e40af; border:none; border-radius:6px; color:#93c5fd; font-size:0.78em; cursor:pointer; font-weight:600;">Import from Claude</button>'
-        +     '<button onclick="addNewPatientRecord()" style="flex:1; padding:7px 0; background:#065f46; border:none; border-radius:6px; color:#6ee7b7; font-size:0.78em; cursor:pointer; font-weight:600;">+ Add Patient</button>'
+        +     '<button onclick="openPatientImportModal()" style="flex:1; padding:7px 0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:6px; color:#a5b4fc; font-size:0.76em; cursor:pointer; font-weight:600; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.25)\'" onmouseleave="this.style.background=\'rgba(99,102,241,0.15)\'">Import</button>'
+        +     '<button onclick="addNewPatientRecord()" style="flex:1; padding:7px 0; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px; color:#6ee7b7; font-size:0.76em; cursor:pointer; font-weight:600; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(16,185,129,0.22)\'" onmouseleave="this.style.background=\'rgba(16,185,129,0.12)\'">+ New</button>'
         +   '</div>'
         + '</div>'
-        + '<div style="flex:1; overflow-y:auto;">'
+        + '<div style="flex:1; overflow-y:auto; padding-bottom:20px;">'
         +   listHtml
         + '</div>';
+
+    // Re-focus search if it was focused
+    if (existingSearch && document.activeElement === existingSearch) {
+        var newSearch = container.querySelector('.pt-sidebar-search');
+        if (newSearch) { newSearch.focus(); newSearch.selectionStart = newSearch.selectionEnd = searchTerm.length; }
+    }
 }
 
 function selectPatient(patientId) {
@@ -410,101 +449,136 @@ function selectPatient(patientId) {
 }
 
 function renderPatientRecord(patientId) {
-    const container = document.getElementById('patientRecordView');
+    var container = document.getElementById('patientRecordView');
     if (!container) return;
 
-    const records = getPatientRecords();
-    const patient = records[patientId];
+    var records = getPatientRecords();
+    var patient = records[patientId];
     if (!patient) {
-        container.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8;">Select a patient from the sidebar.</div>';
+        container.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#64748b; font-size:0.95em;">Select a patient from the sidebar</div>';
         return;
     }
 
-    // Compute requirement matches
-    const matches = computeRequirementMatches(patient);
-    const badgesHtml = renderRequirementBadges(matches);
+    var matches = computeRequirementMatches(patient);
+    var badgesHtml = renderRequirementBadges(matches);
 
-    // Build the record fields
-    const fields = [
-        { field: 'medicalHx', label: 'Medical Hx:', bg: '#f4cccc', labelColor: '#990000' },
-        { field: 'medications', label: 'Medications:', bg: '#cfe2f3', labelColor: '#073763' },
-        { field: 'dentalHx', label: 'Dental Hx:', bg: '#d9ead3', labelColor: '#274e13' },
-        { field: 'txSummaryBU', label: 'Summary of history of tx at bu:', bg: '#fff2cc', labelColor: '#7f6000' },
-        { field: 'poeLast', label: 'POE/Prophy/Recall:', bg: '#d9d9d9', labelColor: '#434343' },
-        { field: 'poeNext', label: 'POE/Prophy/Recall:', bg: '#d9ead3', labelColor: '#274e13' },
-        { field: 'txPlan', label: 'Tx plan:', bg: '#d9d2e9', labelColor: '#351c75' },
-        { field: 'lastVisit', label: 'Last Visit:', bg: '#fce5cd', labelColor: '#783f04' },
-        { field: 'nextVisit', label: 'Next Visit:', bg: '#d9ead3', labelColor: '#274e13' }
-    ];
-
-    let fieldsHtml = '';
-    fields.forEach(function(f) {
-        fieldsHtml += '<div class="pt-record-field" style="background:' + f.bg + '; padding:12px 16px; border-radius:4px; margin-bottom:8px;">'
-            + '<span class="pt-field-label" style="font-weight:700; color:' + f.labelColor + ';">' + f.label + ' </span>'
-            + '<span class="pt-field-value" contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + f.field + '" onblur="savePatientField(this)" style="white-space:pre-wrap; color:#1a1a1a; outline:none;">' + escapeHtml(patient[f.field] || '') + '</span>'
+    // Helper: render a field card with colored left border
+    function field(fieldName, label, accentColor, extraStyle) {
+        var val = patient[fieldName] || '';
+        return '<div style="background:#0f172a; border:1px solid #1e293b; border-left:3px solid ' + accentColor + '; border-radius:8px; padding:0; margin-bottom:6px; ' + (extraStyle || '') + '">'
+            + '<div style="padding:8px 14px 4px; font-size:0.68em; font-weight:700; color:' + accentColor + '; text-transform:uppercase; letter-spacing:0.08em;">' + label + '</div>'
+            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + fieldName + '" onblur="savePatientField(this)" '
+            + 'style="padding:2px 14px 10px; font-size:0.87em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:20px; line-height:1.55; cursor:text;" '
+            + 'onfocus="this.parentElement.style.borderColor=\'#334155\'; this.parentElement.style.borderLeftColor=\'' + accentColor + '\'" '
+            + 'onblur="savePatientField(this); this.parentElement.style.borderColor=\'#1e293b\'; this.parentElement.style.borderLeftColor=\'' + accentColor + '\'">'
+            + escapeHtml(val)
+            + '</div>'
             + '</div>';
+    }
+
+    // Section header
+    function sectionHeader(title) {
+        return '<div style="font-size:0.65em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.12em; padding:14px 0 6px; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:8px;">' + title + '</div>';
+    }
+
+    // Imaging cell
+    function imgCell(fieldName, label) {
+        var val = patient[fieldName] || '';
+        var isOverdue = val.toLowerCase().indexOf('overdue') !== -1 || val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1;
+        return '<div style="background:#0f172a; border:1px solid #1e293b; border-radius:6px; padding:8px 12px;">'
+            + '<div style="font-size:0.65em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">' + label + '</div>'
+            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + fieldName + '" onblur="savePatientField(this)" '
+            + 'style="font-size:0.84em; color:' + (isOverdue ? '#fbbf24' : '#e2e8f0') + '; white-space:pre-wrap; outline:none; min-height:16px; cursor:text;">'
+            + escapeHtml(val)
+            + '</div>'
+            + '</div>';
+    }
+
+    // Reliability dots
+    var relColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    var relLabels = { green: 'Reliable', yellow: 'Inconsistent', red: 'Unreachable' };
+    var currentRel = patient.reliability || 'yellow';
+    var relHtml = '';
+    ['green', 'yellow', 'red'].forEach(function(r) {
+        var isSel = r === currentRel;
+        relHtml += '<span onclick="setPatientReliability(\'' + escapeHtml(patientId) + '\', \'' + r + '\')" title="' + relLabels[r] + '" '
+            + 'style="width:14px; height:14px; border-radius:50%; background:' + relColors[r] + '; cursor:pointer; display:inline-block; opacity:' + (isSel ? '1' : '0.3') + '; '
+            + 'border:2px solid ' + (isSel ? '#ffffff44' : 'transparent') + '; transition:opacity 0.2s;" '
+            + 'onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + (isSel ? '1' : '0.3') + '\'"></span>';
     });
 
-    // Imaging table
-    const imagingFields = [
-        { field: 'lastFMX', label: 'Last FMX:' },
-        { field: 'lastBW', label: 'Last BW:' },
-        { field: 'lastCBCT', label: 'Last CBCT:' },
-        { field: 'lastPANO', label: 'Last PANO:' }
-    ];
-    let imagingRows = '';
-    imagingFields.forEach(function(f) {
-        imagingRows += '<tr>'
-            + '<td style="padding:8px 12px; font-weight:600; color:#434343; border:1px solid #d4d4d4; background:#f5f5f5; width:120px;">' + f.label + '</td>'
-            + '<td style="padding:8px 12px; border:1px solid #d4d4d4; background:#ffffff;">'
-            + '<span contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + f.field + '" onblur="savePatientField(this)" style="white-space:pre-wrap; color:#1a1a1a; outline:none; display:block; min-width:200px;">' + escapeHtml(patient[f.field] || '') + '</span>'
-            + '</td>'
-            + '</tr>';
-    });
-
-    // Reliability selector
-    const reliabilityOptions = ['green', 'yellow', 'red'];
-    let reliabilityHtml = '<div style="display:flex; gap:6px; align-items:center; margin-bottom:12px;">'
-        + '<span style="font-weight:600; color:#64748b; font-size:0.85em;">Reliability:</span>';
-    reliabilityOptions.forEach(function(r) {
-        const colors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
-        const isSelected = (patient.reliability || 'yellow') === r;
-        reliabilityHtml += '<span onclick="setPatientReliability(\'' + escapeHtml(patientId) + '\', \'' + r + '\')" '
-            + 'style="width:20px; height:20px; border-radius:50%; background:' + colors[r] + '; cursor:pointer; display:inline-block; '
-            + 'border:3px solid ' + (isSelected ? '#ffffff' : 'transparent') + '; '
-            + 'box-shadow:' + (isSelected ? '0 0 0 2px ' + colors[r] : 'none') + ';"'
-            + '></span>';
-    });
-    reliabilityHtml += '</div>';
-
-    // Delete button
-    var deleteBtn = '<button onclick="deletePatientRecord(\'' + escapeHtml(patientId) + '\')" '
-        + 'style="padding:6px 14px; background:#7f1d1d; border:1px solid #991b1b; border-radius:6px; color:#fca5a5; font-size:0.8em; cursor:pointer; float:right;">'
-        + 'Delete Patient</button>';
+    // Last updated
+    var lastUpdatedText = patient.lastUpdated ? 'Last edited: ' + new Date(patient.lastUpdated).toLocaleDateString() : '';
 
     container.innerHTML = ''
-        // Requirement badges
-        + '<div style="margin-bottom:12px;">' + badgesHtml + '</div>'
-        // Header row
-        + '<div style="background:#4a4a4a; padding:14px 18px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
-        +   '<div style="color:#ffffff; font-weight:700; font-size:1.1em;">Chart #: ' + escapeHtml(patient.chartNumber || '') + ' ' + escapeHtml(patient.name || '') + '</div>'
-        +   '<div style="color:#e0e0e0; font-size:0.9em;">Type: ' + escapeHtml(patient.type || '') + '</div>'
+        // ===== HEADER CARD =====
+        + '<div style="background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border:1px solid #334155; border-radius:12px; padding:18px 20px; margin-bottom:14px;">'
+        +   '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">'
+        +     '<div style="flex:1; min-width:200px;">'
+        +       '<div style="font-size:1.3em; font-weight:800; color:#f1f5f9; letter-spacing:-0.01em;">' + escapeHtml(patient.name || 'Unnamed Patient') + '</div>'
+        +       '<div style="display:flex; align-items:center; gap:10px; margin-top:4px; flex-wrap:wrap;">'
+        +         '<span style="font-size:0.82em; color:#94a3b8;">Chart #' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
+        +         '<span style="font-size:0.75em; background:rgba(99,102,241,0.15); color:#a5b4fc; padding:2px 8px; border-radius:4px;">' + escapeHtml(patient.type || 'Active') + '</span>'
+        +       '</div>'
+        +       '<div style="display:flex; align-items:center; gap:8px; margin-top:8px;">'
+        +         '<span style="font-size:0.72em; color:#64748b;">Status:</span>'
+        +         '<div style="display:flex; gap:5px;">' + relHtml + '</div>'
+        +         '<span style="font-size:0.7em; color:#64748b; margin-left:4px;">' + relLabels[currentRel] + '</span>'
+        +       '</div>'
+        +     '</div>'
+        +     '<div style="display:flex; gap:6px; align-items:flex-start;">'
+        +       '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(patient.chartNumber || '') + '\'); showToast(\'Chart # copied\')" style="padding:5px 10px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.25); border-radius:6px; color:#a5b4fc; font-size:0.72em; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.2)\'" onmouseleave="this.style.background=\'rgba(99,102,241,0.12)\'">Copy Chart#</button>'
+        +       '<button onclick="deletePatientRecord(\'' + escapeHtml(patientId) + '\')" style="padding:5px 10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:6px; color:#f87171; font-size:0.72em; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(239,68,68,0.15)\'" onmouseleave="this.style.background=\'rgba(239,68,68,0.08)\'">Delete</button>'
+        +     '</div>'
+        +   '</div>'
+        +   (lastUpdatedText ? '<div style="font-size:0.68em; color:#475569; margin-top:8px;">' + lastUpdatedText + '</div>' : '')
         + '</div>'
-        // Reliability + delete
-        + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">'
-        +   reliabilityHtml
-        +   deleteBtn
+
+        // ===== REQUIREMENT BADGES =====
+        + (badgesHtml ? '<div style="margin-bottom:14px;">' + badgesHtml + '</div>' : '')
+
+        // ===== PATIENT INFORMATION =====
+        + sectionHeader('Patient Information')
+        + field('medicalHx', 'Medical History', '#ef4444')
+        + field('medications', 'Medications & Allergies', '#f87171')
+
+        // ===== CLINICAL HISTORY =====
+        + sectionHeader('Clinical History')
+        + field('dentalHx', 'Dental History', '#10b981')
+        + field('txSummaryBU', 'Treatment History at BU', '#34d399')
+
+        // ===== PERIODONTAL & RECALL =====
+        + sectionHeader('Periodontal & Recall')
+        + field('poeLast', 'Last POE / Prophy / Recall', '#f59e0b')
+        + field('poeNext', 'Next POE / Prophy / Recall', '#fbbf24')
+
+        // ===== TREATMENT =====
+        + sectionHeader('Treatment')
+        + field('txPlan', 'Treatment Plan', '#3b82f6', 'min-height:60px;')
+        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">'
+        +   field('lastVisit', 'Last Visit', '#60a5fa')
+        +   field('nextVisit', 'Next Visit', '#93c5fd')
         + '</div>'
-        // Fields
-        + fieldsHtml
-        // Imaging table
-        + '<table style="width:100%; border-collapse:collapse; margin-bottom:8px; border-radius:4px; overflow:hidden;">'
-        +   imagingRows
-        + '</table>'
-        // Notes field
-        + '<div class="pt-record-field" style="background:#fff2cc; padding:12px 16px; border-radius:4px; margin-bottom:8px; min-height:120px;">'
-        +   '<span class="pt-field-label" style="font-weight:700; color:#990000;">NOTES: </span>'
-        +   '<span class="pt-field-value" contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" style="white-space:pre-wrap; color:#1a1a1a; outline:none; display:block; margin-top:6px; min-height:80px;">' + escapeHtml(patient.notes || '') + '</span>'
+
+        // ===== IMAGING =====
+        + sectionHeader('Imaging')
+        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">'
+        +   imgCell('lastFMX', 'Last FMX')
+        +   imgCell('lastBW', 'Last BW')
+        +   imgCell('lastCBCT', 'Last CBCT')
+        +   imgCell('lastPANO', 'Last PANO')
+        + '</div>'
+
+        // ===== NOTES =====
+        + sectionHeader('Notes')
+        + '<div style="background:#0f172a; border:1px solid #1e293b; border-left:3px solid #a855f7; border-radius:8px; padding:0; margin-bottom:16px;">'
+        +   '<div style="padding:8px 14px 4px; font-size:0.68em; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.08em;">Clinical Notes</div>'
+        +   '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
+        +   'style="padding:2px 14px 14px; font-size:0.87em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:120px; line-height:1.55; cursor:text;" '
+        +   'onfocus="this.parentElement.style.borderColor=\'#334155\'; this.parentElement.style.borderLeftColor=\'#a855f7\'" '
+        +   'onblur="savePatientField(this); this.parentElement.style.borderColor=\'#1e293b\'; this.parentElement.style.borderLeftColor=\'#a855f7\'">'
+        +   escapeHtml(patient.notes || '')
+        +   '</div>'
         + '</div>';
 }
 
