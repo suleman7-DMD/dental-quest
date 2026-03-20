@@ -1096,33 +1096,52 @@ function parsePatientUpdate(text) {
 }
 
 function parseRequirementsMatch(text) {
-    var result = { canFulfill: [], completedToday: [] };
+    var result = { canFulfill: [], completedToday: [], chartNumber: '', name: '' };
     var lines = text.split('\n');
+    var inSection = null; // 'canFulfill' or 'completedToday'
 
     lines.forEach(function(line) {
         var trimmed = line.trim();
+        if (!trimmed) return;
         var upper = trimmed.toUpperCase();
 
+        // Section headers
         if (upper.indexOf('CAN_FULFILL:') === 0) {
-            var value = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            var parts = value.split('|').map(function(s) { return s.trim(); });
-            if (parts.length >= 1) {
-                result.canFulfill.push({
-                    reqId: parts[0],
-                    description: parts[1] || '',
-                    procedure: parts[2] || ''
-                });
+            inSection = 'canFulfill';
+            var inlineVal = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            if (inlineVal && inlineVal.indexOf('|') !== -1) {
+                var parts = inlineVal.split('|').map(function(s) { return s.trim(); });
+                if (parts[0]) result.canFulfill.push({ reqId: parts[0], description: parts[1] || '', procedure: parts[2] || '' });
             }
-        } else if (upper.indexOf('COMPLETED_TODAY:') === 0) {
-            var value2 = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            var parts2 = value2.split('|').map(function(s) { return s.trim(); });
-            if (parts2.length >= 1) {
-                result.completedToday.push({
-                    reqId: parts2[0],
-                    description: parts2[1] || '',
-                    procedure: parts2[2] || '',
-                    date: parts2[3] || ''
-                });
+            return;
+        }
+        if (upper.indexOf('COMPLETED_TODAY:') === 0) {
+            inSection = 'completedToday';
+            var inlineVal2 = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            if (inlineVal2 && inlineVal2.indexOf('|') !== -1) {
+                var parts2 = inlineVal2.split('|').map(function(s) { return s.trim(); });
+                if (parts2[0]) result.completedToday.push({ reqId: parts2[0], description: parts2[1] || '', procedure: parts2[2] || '', date: parts2[3] || '' });
+            }
+            return;
+        }
+        // Other known headers exit the section
+        if (upper.indexOf('HIGH_VALUE:') === 0 || upper.indexOf('PRIORITY_NOTES:') === 0 ||
+            upper.indexOf('CHART:') === 0 || upper.indexOf('NAME:') === 0) {
+            inSection = null;
+            if (upper.indexOf('CHART:') === 0) result.chartNumber = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            if (upper.indexOf('NAME:') === 0) result.name = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            return;
+        }
+
+        // In a section: parse lines with | delimiter as entries
+        if (inSection && trimmed.indexOf('|') !== -1) {
+            if (trimmed.toLowerCase().indexOf('(none') === 0 || trimmed.toLowerCase().indexOf('none') === 0) return;
+            var parts3 = trimmed.split('|').map(function(s) { return s.trim(); });
+            if (!parts3[0]) return;
+            if (inSection === 'canFulfill') {
+                result.canFulfill.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '' });
+            } else if (inSection === 'completedToday') {
+                result.completedToday.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '', date: parts3[3] || '' });
             }
         }
     });
@@ -1133,22 +1152,49 @@ function parseRequirementsMatch(text) {
 function parseRequirementsStatus(text) {
     var statuses = [];
     var lines = text.split('\n');
+    var inUpdates = false;
 
     lines.forEach(function(line) {
         var trimmed = line.trim();
+        if (!trimmed) return;
         var upper = trimmed.toUpperCase();
 
+        // Section header
         if (upper.indexOf('UPDATES:') === 0) {
-            var value = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            var parts = value.split('|').map(function(s) { return s.trim(); });
-            if (parts.length >= 1) {
-                var status = { reqId: parts[0] };
-                for (var i = 1; i < parts.length; i++) {
-                    var kv = parts[i].split(':').map(function(s) { return s.trim(); });
-                    if (kv[0] === 'completed') status.completed = parseInt(kv[1], 10) || 0;
-                    if (kv[0] === 'note') status.note = kv.slice(1).join(':').trim();
+            inUpdates = true;
+            // Check for inline content
+            var inlineVal = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            if (inlineVal && inlineVal.indexOf('|') !== -1) {
+                var parts = inlineVal.split('|').map(function(s) { return s.trim(); });
+                if (parts[0]) {
+                    var status = { reqId: parts[0] };
+                    for (var i = 1; i < parts.length; i++) {
+                        var kv = parts[i].split(':').map(function(s) { return s.trim(); });
+                        if (kv[0] === 'completed') status.completed = parseInt(kv[1], 10) || 0;
+                        if (kv[0] === 'note') status.note = kv.slice(1).join(':').trim();
+                    }
+                    statuses.push(status);
                 }
-                statuses.push(status);
+            }
+            return;
+        }
+
+        // Other headers exit the section
+        if (upper.indexOf('UPDATED:') === 0 || upper.indexOf('SOURCE:') === 0) {
+            return; // metadata lines, skip
+        }
+
+        // In updates section: parse lines with | delimiter
+        if (inUpdates && trimmed.indexOf('|') !== -1) {
+            var parts2 = trimmed.split('|').map(function(s) { return s.trim(); });
+            if (parts2[0]) {
+                var status2 = { reqId: parts2[0] };
+                for (var j = 1; j < parts2.length; j++) {
+                    var kv2 = parts2[j].split(':').map(function(s) { return s.trim(); });
+                    if (kv2[0] === 'completed') status2.completed = parseInt(kv2[1], 10) || 0;
+                    if (kv2[0] === 'note') status2.note = kv2.slice(1).join(':').trim();
+                }
+                statuses.push(status2);
             }
         }
     });
