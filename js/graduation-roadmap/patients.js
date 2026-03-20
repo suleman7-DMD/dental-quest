@@ -310,6 +310,8 @@ const DEFAULT_PATIENT_RECORDS = {
 // ==================== SECTION 2: CORE RENDERING FUNCTIONS ====================
 
 let activePatientId = null;
+var patientEditMode = false;
+var collapsedSections = {};
 
 function initPatientsTab() {
     // Initialize default records if empty
@@ -355,91 +357,70 @@ function renderPatientsSidebar() {
     var records = getPatientRecords();
     var existingSearch = container.querySelector('.pt-sidebar-search');
     var searchTerm = existingSearch ? existingSearch.value.toLowerCase() : '';
+    var currentFilter = container.dataset.filter || 'all';
 
     var dotColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
-    var dotLabels = { green: 'Reliable', yellow: 'Inconsistent', red: 'Unreachable' };
-
-    // Group patients by reliability
-    var groups = { green: [], yellow: [], red: [], other: [] };
+    var allItems = [];
     Object.keys(records).forEach(function(id) {
         var p = records[id];
         if (!p) return;
         var name = p.name || 'Unnamed';
         if (searchTerm && !name.toLowerCase().includes(searchTerm) && !(p.chartNumber || '').toLowerCase().includes(searchTerm)) return;
-        var rel = p.reliability || 'yellow';
-        (groups[rel] || groups.other).push({ id: id, patient: p });
+        allItems.push({ id: id, patient: p });
     });
 
-    var totalCount = groups.green.length + groups.yellow.length + groups.red.length + groups.other.length;
+    // Count by category
+    var greenCount = 0, attentionCount = 0;
+    allItems.forEach(function(item) {
+        if (item.patient.reliability === 'green') greenCount++;
+        else attentionCount++;
+    });
 
-    function renderGroup(items, groupLabel, groupColor) {
-        if (items.length === 0) return '';
-        var html = '<div style="padding:6px 14px 4px; margin-top:4px;">'
-            + '<div style="font-size:0.65em; font-weight:700; color:' + groupColor + '; text-transform:uppercase; letter-spacing:0.1em; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:4px;">'
-            + groupLabel + ' (' + items.length + ')</div></div>';
-        items.forEach(function(item) {
-            var p = item.patient;
-            var isActive = item.id === activePatientId;
-            var matches = computeRequirementMatches(p);
-            var isHV = matches.length >= 3;
-            var nextVisitShort = '';
-            if (p.nextVisit) {
-                var dateMatch = (p.nextVisit || '').match(/(\d{1,2}\/\d{1,2}\/?\d{0,4})/);
-                if (dateMatch) nextVisitShort = dateMatch[1];
-            }
+    // Apply filter
+    var filtered = allItems;
+    if (currentFilter === 'active') filtered = allItems.filter(function(i) { return i.patient.reliability === 'green'; });
+    else if (currentFilter === 'attention') filtered = allItems.filter(function(i) { return i.patient.reliability !== 'green'; });
 
-            html += '<div onclick="selectPatient(\'' + escapeHtml(item.id) + '\')" '
-                + 'style="display:flex; align-items:flex-start; gap:10px; padding:9px 14px; cursor:pointer; '
-                + 'border-left:3px solid ' + (isActive ? '#3b82f6' : 'transparent') + '; '
-                + 'background:' + (isActive ? 'rgba(59,130,246,0.1)' : 'transparent') + '; '
-                + 'transition:all 0.15s;" '
-                + 'onmouseenter="this.style.background=\'' + (isActive ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.04)') + '\'" '
-                + 'onmouseleave="this.style.background=\'' + (isActive ? 'rgba(59,130,246,0.1)' : 'transparent') + '\'">'
-                + '<span style="width:8px; height:8px; border-radius:50%; background:' + (dotColors[p.reliability] || '#6b7280') + '; flex-shrink:0; margin-top:5px;"></span>'
-                + '<div style="flex:1; min-width:0;">'
-                +   '<div style="display:flex; align-items:center; gap:6px;">'
-                +     '<span style="color:' + (isActive ? '#f1f5f9' : '#cbd5e1') + '; font-size:0.88em; font-weight:' + (isActive ? '600' : '400') + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(p.name || 'Unnamed') + '</span>'
-                +     (isHV ? '<span style="font-size:0.6em; background:rgba(251,191,36,0.2); color:#fbbf24; padding:1px 5px; border-radius:3px; flex-shrink:0;">HV</span>' : '')
-                +   '</div>'
-                +   '<div style="font-size:0.7em; color:#64748b; margin-top:1px;">'
-                +     (p.chartNumber ? '#' + escapeHtml(p.chartNumber) : '')
-                +     (nextVisitShort ? ' &middot; Next: ' + escapeHtml(nextVisitShort) : '')
-                +   '</div>'
-                + '</div>'
-                + '</div>';
-        });
-        return html;
+    var listHtml = '';
+    filtered.forEach(function(item) {
+        var p = item.patient;
+        var isActive = item.id === activePatientId;
+        var dotColor = dotColors[p.reliability] || '#6b7280';
+
+        listHtml += '<div onclick="selectPatient(\'' + escapeHtml(item.id) + '\')" '
+            + 'title="Chart #' + escapeHtml(p.chartNumber || 'N/A') + (p.nextVisit ? ' | Next: ' + escapeHtml((p.nextVisit || '').substring(0, 30)) : '') + '" '
+            + 'style="display:flex; align-items:center; gap:8px; padding:7px 12px; cursor:pointer; '
+            + 'border-left:3px solid ' + (isActive ? '#3b82f6' : 'transparent') + '; '
+            + 'background:' + (isActive ? 'rgba(59,130,246,0.1)' : 'transparent') + '; '
+            + 'transition:all 0.12s;" '
+            + 'onmouseenter="if(\'' + item.id + '\'!==activePatientId)this.style.background=\'rgba(255,255,255,0.03)\'" '
+            + 'onmouseleave="if(\'' + item.id + '\'!==activePatientId)this.style.background=\'transparent\'">'
+            + '<span style="width:7px; height:7px; border-radius:50%; background:' + dotColor + '; flex-shrink:0;"></span>'
+            + '<span style="color:' + (isActive ? '#f1f5f9' : '#94a3b8') + '; font-size:0.82em; font-weight:' + (isActive ? '600' : '400') + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">' + escapeHtml(p.name || 'Unnamed') + '</span>'
+            + '</div>';
+    });
+
+    function filterBtn(value, label, count) {
+        var isOn = currentFilter === value;
+        return '<button onclick="this.closest(\'#patientsSidebar\').dataset.filter=\'' + value + '\'; renderPatientsSidebar()" '
+            + 'style="padding:3px 8px; font-size:0.68em; border-radius:10px; cursor:pointer; border:1px solid ' + (isOn ? '#3b82f6' : '#334155') + '; '
+            + 'background:' + (isOn ? 'rgba(59,130,246,0.2)' : 'transparent') + '; color:' + (isOn ? '#93c5fd' : '#64748b') + '; font-weight:600; transition:all 0.15s;">'
+            + label + ' (' + count + ')</button>';
     }
 
-    var listHtml = renderGroup(groups.green, 'Active & Reliable', '#22c55e')
-        + renderGroup(groups.yellow, 'Needs Follow-up', '#eab308')
-        + renderGroup(groups.red, 'Unreachable / Dead Weight', '#ef4444')
-        + renderGroup(groups.other, 'Other', '#64748b');
-
-    container.innerHTML = ''
-        + '<div style="padding:12px; border-bottom:1px solid #1e293b;">'
-        +   '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">'
-        +     '<span style="font-size:0.8em; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Patients</span>'
-        +     '<span style="font-size:0.72em; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:2px 8px; border-radius:10px;">' + totalCount + '</span>'
+    container.innerHTML = '<div style="padding:10px 10px 8px;">'
+        +   '<input type="text" class="pt-sidebar-search" placeholder="Search..." '
+        +     'value="' + escapeHtml(searchTerm) + '" oninput="renderPatientsSidebar()" '
+        +     'style="width:100%; padding:6px 9px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0; font-size:0.8em; outline:none; box-sizing:border-box; margin-bottom:6px;">'
+        +   '<div style="display:flex; gap:4px; margin-bottom:6px;">'
+        +     filterBtn('all', 'All', allItems.length) + filterBtn('active', 'Active', greenCount) + filterBtn('attention', 'Attn', attentionCount)
         +   '</div>'
-        +   '<input type="text" class="pt-sidebar-search" placeholder="Search name or chart#..." '
-        +     'value="' + escapeHtml(searchTerm) + '" '
-        +     'oninput="renderPatientsSidebar()" '
-        +     'style="width:100%; padding:7px 10px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0; font-size:0.82em; outline:none; box-sizing:border-box; margin-bottom:8px;">'
-        +   '<div style="display:flex; gap:6px;">'
-        +     '<button onclick="openPatientImportModal()" style="flex:1; padding:7px 0; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:6px; color:#a5b4fc; font-size:0.76em; cursor:pointer; font-weight:600; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.25)\'" onmouseleave="this.style.background=\'rgba(99,102,241,0.15)\'">Import</button>'
-        +     '<button onclick="addNewPatientRecord()" style="flex:1; padding:7px 0; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px; color:#6ee7b7; font-size:0.76em; cursor:pointer; font-weight:600; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(16,185,129,0.22)\'" onmouseleave="this.style.background=\'rgba(16,185,129,0.12)\'">+ New</button>'
+        +   '<div style="display:flex; gap:5px;">'
+        +     '<button onclick="openPatientImportModal()" style="flex:1; padding:5px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.25); border-radius:5px; color:#a5b4fc; font-size:0.7em; cursor:pointer; font-weight:600;">Import</button>'
+        +     '<button onclick="addNewPatientRecord()" style="flex:1; padding:5px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:5px; color:#6ee7b7; font-size:0.7em; cursor:pointer; font-weight:600;">+ New</button>'
         +   '</div>'
         + '</div>'
-        + '<div style="flex:1; overflow-y:auto; padding-bottom:20px;">'
-        +   listHtml
-        + '</div>';
-
-    // Re-focus search if it was focused
-    if (existingSearch && document.activeElement === existingSearch) {
-        var newSearch = container.querySelector('.pt-sidebar-search');
-        if (newSearch) { newSearch.focus(); newSearch.selectionStart = newSearch.selectionEnd = searchTerm.length; }
-    }
+        + '<div style="flex:1; overflow-y:auto;">' + listHtml + '</div>';
 }
 
 function selectPatient(patientId) {
@@ -455,131 +436,166 @@ function renderPatientRecord(patientId) {
     var records = getPatientRecords();
     var patient = records[patientId];
     if (!patient) {
-        container.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#64748b; font-size:0.95em;">Select a patient from the sidebar</div>';
+        container.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#475569;">Select a patient</div>';
         return;
     }
 
     var matches = computeRequirementMatches(patient);
-    var badgesHtml = renderRequirementBadges(matches);
+    var isEdit = patientEditMode;
 
-    // Helper: render a field card with colored left border
-    function field(fieldName, label, accentColor, extraStyle) {
+    // Helper: render a field
+    function fld(fieldName, label, accentColor) {
         var val = patient[fieldName] || '';
-        return '<div style="background:#0f172a; border:1px solid #1e293b; border-left:3px solid ' + accentColor + '; border-radius:8px; padding:0; margin-bottom:6px; ' + (extraStyle || '') + '">'
-            + '<div style="padding:8px 14px 4px; font-size:0.68em; font-weight:700; color:' + accentColor + '; text-transform:uppercase; letter-spacing:0.08em;">' + label + '</div>'
-            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + fieldName + '" onblur="savePatientField(this)" '
-            + 'style="padding:2px 14px 10px; font-size:0.87em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:20px; line-height:1.55; cursor:text;" '
-            + 'onfocus="this.parentElement.style.borderColor=\'#334155\'; this.parentElement.style.borderLeftColor=\'' + accentColor + '\'" '
-            + 'onblur="savePatientField(this); this.parentElement.style.borderColor=\'#1e293b\'; this.parentElement.style.borderLeftColor=\'' + accentColor + '\'">'
-            + escapeHtml(val)
+        if (isEdit) {
+            return '<div style="margin-bottom:5px;">'
+                + '<div style="font-size:0.65em; font-weight:600; color:' + accentColor + '; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:2px;">' + label + '</div>'
+                + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + fieldName + '" onblur="savePatientField(this)" '
+                + 'style="background:#0f172a; border:1px solid #334155; border-left:3px solid ' + accentColor + '; border-radius:6px; padding:8px 12px; font-size:0.85em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:24px; line-height:1.5; cursor:text;" '
+                + 'onfocus="this.style.borderColor=\'#475569\'; this.style.borderLeftColor=\'' + accentColor + '\'" '
+                + 'onblur="savePatientField(this); this.style.borderColor=\'#334155\'; this.style.borderLeftColor=\'' + accentColor + '\'">'
+                + escapeHtml(val)
+                + '</div></div>';
+        } else {
+            if (!val) return '';
+            return '<div style="margin-bottom:5px;">'
+                + '<span style="font-size:0.65em; font-weight:600; color:' + accentColor + '; text-transform:uppercase; letter-spacing:0.06em;">' + label + '</span>'
+                + '<div style="font-size:0.85em; color:#cbd5e1; line-height:1.5; margin-top:1px; white-space:pre-wrap;">' + escapeHtml(val) + '</div>'
+                + '</div>';
+        }
+    }
+
+    // Collapsible section
+    function section(id, title, content) {
+        var isCollapsed = collapsedSections[id] || false;
+        return '<div style="margin-bottom:10px;">'
+            + '<div onclick="collapsedSections[\'' + id + '\']=!collapsedSections[\'' + id + '\']; renderPatientRecord(\'' + escapeHtml(patientId) + '\')" '
+            + 'style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:6px; user-select:none;">'
+            +   '<span style="font-size:0.6em; color:#475569;">' + (isCollapsed ? '\u25B6' : '\u25BC') + '</span>'
+            +   '<span style="font-size:0.68em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">' + title + '</span>'
             + '</div>'
+            + '<div style="display:' + (isCollapsed ? 'none' : 'block') + ';">' + content + '</div>'
             + '</div>';
     }
 
-    // Section header
-    function sectionHeader(title) {
-        return '<div style="font-size:0.65em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.12em; padding:14px 0 6px; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:8px;">' + title + '</div>';
+    // Imaging inline
+    function imgInline() {
+        var fields = [
+            { f: 'lastFMX', l: 'FMX' }, { f: 'lastBW', l: 'BW' },
+            { f: 'lastCBCT', l: 'CBCT' }, { f: 'lastPANO', l: 'PANO' }
+        ];
+        if (isEdit) {
+            var html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">';
+            fields.forEach(function(x) {
+                var val = patient[x.f] || '';
+                var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1;
+                html += '<div style="background:#0f172a; border:1px solid #334155; border-radius:5px; padding:6px 10px;">'
+                    + '<div style="font-size:0.6em; font-weight:600; color:#64748b; text-transform:uppercase;">' + x.l + '</div>'
+                    + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + x.f + '" onblur="savePatientField(this)" '
+                    + 'style="font-size:0.82em; color:' + (warn ? '#fbbf24' : '#e2e8f0') + '; outline:none; min-height:16px; white-space:pre-wrap; cursor:text;">'
+                    + escapeHtml(val) + '</div></div>';
+            });
+            return html + '</div>';
+        } else {
+            var parts = [];
+            fields.forEach(function(x) {
+                var val = patient[x.f] || '\u2014';
+                var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1;
+                parts.push('<span style="color:#64748b; font-size:0.72em;">' + x.l + ': </span><span style="color:' + (warn ? '#fbbf24' : '#cbd5e1') + '; font-size:0.82em;">' + escapeHtml(val) + '</span>');
+            });
+            return '<div style="display:flex; flex-wrap:wrap; gap:8px 18px;">' + parts.join('') + '</div>';
+        }
     }
 
-    // Imaging cell
-    function imgCell(fieldName, label) {
-        var val = patient[fieldName] || '';
-        var isOverdue = val.toLowerCase().indexOf('overdue') !== -1 || val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1;
-        return '<div style="background:#0f172a; border:1px solid #1e293b; border-radius:6px; padding:8px 12px;">'
-            + '<div style="font-size:0.65em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">' + label + '</div>'
-            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + fieldName + '" onblur="savePatientField(this)" '
-            + 'style="font-size:0.84em; color:' + (isOverdue ? '#fbbf24' : '#e2e8f0') + '; white-space:pre-wrap; outline:none; min-height:16px; cursor:text;">'
-            + escapeHtml(val)
+    // Requirements summary (collapsed by default, expandable)
+    var reqHtml = '';
+    if (matches.length > 0) {
+        var isHV = matches.length >= 3;
+        var grouped = {};
+        matches.forEach(function(m) { if (!grouped[m.category]) grouped[m.category] = []; grouped[m.category].push(m); });
+
+        var expandId = 'reqExpand_' + patientId.replace(/[^a-zA-Z0-9]/g, '');
+        reqHtml = '<div style="margin-bottom:10px;">'
+            + (isHV ? '<div style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2); border-radius:6px; padding:5px 12px; margin-bottom:6px; display:flex; align-items:center; gap:6px;">'
+                + '<span style="color:#fbbf24; font-weight:700; font-size:0.78em;">HIGH VALUE</span>'
+                + '<span style="color:#92400e; font-size:0.72em;">' + matches.length + ' requirements matchable</span></div>' : '')
+            + '<div onclick="var d=document.getElementById(\'' + expandId + '\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'" '
+            + 'style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 0;">'
+            +   '<span style="font-size:0.75em; color:#6366f1; font-weight:600;">Can fulfill ' + matches.length + ' requirements</span>'
+            +   '<span style="font-size:0.6em; color:#475569;">&#9660;</span>'
             + '</div>'
-            + '</div>';
+            + '<div id="' + expandId + '" style="display:none; padding:6px 0;">';
+        Object.keys(grouped).forEach(function(cat) {
+            reqHtml += '<div style="margin-bottom:4px;"><span style="font-size:0.65em; font-weight:600; color:' + grouped[cat][0].categoryColor + '; text-transform:uppercase;">' + escapeHtml(cat) + ': </span>';
+            reqHtml += '<span style="font-size:0.72em; color:#94a3b8;">' + grouped[cat].map(function(m) { return escapeHtml(m.reqLabel); }).join(', ') + '</span></div>';
+        });
+        reqHtml += '</div></div>';
     }
 
     // Reliability dots
     var relColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
-    var relLabels = { green: 'Reliable', yellow: 'Inconsistent', red: 'Unreachable' };
     var currentRel = patient.reliability || 'yellow';
     var relHtml = '';
     ['green', 'yellow', 'red'].forEach(function(r) {
         var isSel = r === currentRel;
-        relHtml += '<span onclick="setPatientReliability(\'' + escapeHtml(patientId) + '\', \'' + r + '\')" title="' + relLabels[r] + '" '
-            + 'style="width:14px; height:14px; border-radius:50%; background:' + relColors[r] + '; cursor:pointer; display:inline-block; opacity:' + (isSel ? '1' : '0.3') + '; '
-            + 'border:2px solid ' + (isSel ? '#ffffff44' : 'transparent') + '; transition:opacity 0.2s;" '
-            + 'onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + (isSel ? '1' : '0.3') + '\'"></span>';
+        relHtml += '<span onclick="setPatientReliability(\'' + escapeHtml(patientId) + '\', \'' + r + '\')" '
+            + 'style="width:12px; height:12px; border-radius:50%; background:' + relColors[r] + '; cursor:pointer; display:inline-block; opacity:' + (isSel ? '1' : '0.25') + '; transition:opacity 0.15s;" '
+            + 'onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + (isSel ? '1' : '0.25') + '\'"></span>';
     });
 
-    // Last updated
-    var lastUpdatedText = patient.lastUpdated ? 'Last edited: ' + new Date(patient.lastUpdated).toLocaleDateString() : '';
+    // Edit mode toggle button
+    var editBtnHtml = '<button onclick="patientEditMode=!patientEditMode; renderPatientRecord(\'' + escapeHtml(patientId) + '\')" '
+        + 'style="padding:4px 10px; background:' + (isEdit ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)') + '; border:1px solid ' + (isEdit ? '#3b82f6' : '#334155') + '; border-radius:5px; color:' + (isEdit ? '#93c5fd' : '#94a3b8') + '; font-size:0.72em; cursor:pointer; font-weight:600; transition:all 0.15s;">'
+        + (isEdit ? 'Done Editing' : 'Edit') + '</button>';
 
     container.innerHTML = ''
-        // ===== HEADER CARD =====
-        + '<div style="background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border:1px solid #334155; border-radius:12px; padding:18px 20px; margin-bottom:14px;">'
-        +   '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">'
-        +     '<div style="flex:1; min-width:200px;">'
-        +       '<div style="font-size:1.3em; font-weight:800; color:#f1f5f9; letter-spacing:-0.01em;">' + escapeHtml(patient.name || 'Unnamed Patient') + '</div>'
-        +       '<div style="display:flex; align-items:center; gap:10px; margin-top:4px; flex-wrap:wrap;">'
-        +         '<span style="font-size:0.82em; color:#94a3b8;">Chart #' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
-        +         '<span style="font-size:0.75em; background:rgba(99,102,241,0.15); color:#a5b4fc; padding:2px 8px; border-radius:4px;">' + escapeHtml(patient.type || 'Active') + '</span>'
-        +       '</div>'
-        +       '<div style="display:flex; align-items:center; gap:8px; margin-top:8px;">'
-        +         '<span style="font-size:0.72em; color:#64748b;">Status:</span>'
-        +         '<div style="display:flex; gap:5px;">' + relHtml + '</div>'
-        +         '<span style="font-size:0.7em; color:#64748b; margin-left:4px;">' + relLabels[currentRel] + '</span>'
-        +       '</div>'
-        +     '</div>'
-        +     '<div style="display:flex; gap:6px; align-items:flex-start;">'
-        +       '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(patient.chartNumber || '') + '\'); showToast(\'Chart # copied\')" style="padding:5px 10px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.25); border-radius:6px; color:#a5b4fc; font-size:0.72em; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.2)\'" onmouseleave="this.style.background=\'rgba(99,102,241,0.12)\'">Copy Chart#</button>'
-        +       '<button onclick="deletePatientRecord(\'' + escapeHtml(patientId) + '\')" style="padding:5px 10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:6px; color:#f87171; font-size:0.72em; cursor:pointer; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(239,68,68,0.15)\'" onmouseleave="this.style.background=\'rgba(239,68,68,0.08)\'">Delete</button>'
+        // Header
+        + '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:10px; flex-wrap:wrap;">'
+        +   '<div>'
+        +     '<div style="font-size:1.2em; font-weight:800; color:#f1f5f9;">' + escapeHtml(patient.name || 'Unnamed') + '</div>'
+        +     '<div style="display:flex; align-items:center; gap:8px; margin-top:3px; flex-wrap:wrap;">'
+        +       '<span style="font-size:0.78em; color:#64748b;">#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
+        +       '<span style="font-size:0.68em; background:rgba(99,102,241,0.12); color:#a5b4fc; padding:1px 7px; border-radius:3px;">' + escapeHtml(patient.type || 'Active') + '</span>'
+        +       '<div style="display:flex; gap:4px; align-items:center;">' + relHtml + '</div>'
         +     '</div>'
         +   '</div>'
-        +   (lastUpdatedText ? '<div style="font-size:0.68em; color:#475569; margin-top:8px;">' + lastUpdatedText + '</div>' : '')
-        + '</div>'
-
-        // ===== REQUIREMENT BADGES =====
-        + (badgesHtml ? '<div style="margin-bottom:14px;">' + badgesHtml + '</div>' : '')
-
-        // ===== PATIENT INFORMATION =====
-        + sectionHeader('Patient Information')
-        + field('medicalHx', 'Medical History', '#ef4444')
-        + field('medications', 'Medications & Allergies', '#f87171')
-
-        // ===== CLINICAL HISTORY =====
-        + sectionHeader('Clinical History')
-        + field('dentalHx', 'Dental History', '#10b981')
-        + field('txSummaryBU', 'Treatment History at BU', '#34d399')
-
-        // ===== PERIODONTAL & RECALL =====
-        + sectionHeader('Periodontal & Recall')
-        + field('poeLast', 'Last POE / Prophy / Recall', '#f59e0b')
-        + field('poeNext', 'Next POE / Prophy / Recall', '#fbbf24')
-
-        // ===== TREATMENT =====
-        + sectionHeader('Treatment')
-        + field('txPlan', 'Treatment Plan', '#3b82f6', 'min-height:60px;')
-        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">'
-        +   field('lastVisit', 'Last Visit', '#60a5fa')
-        +   field('nextVisit', 'Next Visit', '#93c5fd')
-        + '</div>'
-
-        // ===== IMAGING =====
-        + sectionHeader('Imaging')
-        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">'
-        +   imgCell('lastFMX', 'Last FMX')
-        +   imgCell('lastBW', 'Last BW')
-        +   imgCell('lastCBCT', 'Last CBCT')
-        +   imgCell('lastPANO', 'Last PANO')
-        + '</div>'
-
-        // ===== NOTES =====
-        + sectionHeader('Notes')
-        + '<div style="background:#0f172a; border:1px solid #1e293b; border-left:3px solid #a855f7; border-radius:8px; padding:0; margin-bottom:16px;">'
-        +   '<div style="padding:8px 14px 4px; font-size:0.68em; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.08em;">Clinical Notes</div>'
-        +   '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
-        +   'style="padding:2px 14px 14px; font-size:0.87em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:120px; line-height:1.55; cursor:text;" '
-        +   'onfocus="this.parentElement.style.borderColor=\'#334155\'; this.parentElement.style.borderLeftColor=\'#a855f7\'" '
-        +   'onblur="savePatientField(this); this.parentElement.style.borderColor=\'#1e293b\'; this.parentElement.style.borderLeftColor=\'#a855f7\'">'
-        +   escapeHtml(patient.notes || '')
+        +   '<div style="display:flex; gap:5px;">'
+        +     editBtnHtml
+        +     '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(patient.chartNumber || '') + '\');showToast(\'Copied\')" style="padding:4px 8px; background:rgba(255,255,255,0.04); border:1px solid #334155; border-radius:5px; color:#64748b; font-size:0.7em; cursor:pointer;">#Copy</button>'
+        +     '<button onclick="deletePatientRecord(\'' + escapeHtml(patientId) + '\')" style="padding:4px 8px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.15); border-radius:5px; color:#ef4444; font-size:0.7em; cursor:pointer; opacity:0.6;" onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'0.6\'">Del</button>'
         +   '</div>'
-        + '</div>';
+        + '</div>'
+
+        // Requirements (collapsed)
+        + reqHtml
+
+        // Sections
+        + section('info', 'Patient Information',
+            fld('medicalHx', 'Medical History', '#ef4444')
+            + fld('medications', 'Medications & Allergies', '#f87171'))
+
+        + section('clinical', 'Clinical History',
+            fld('dentalHx', 'Dental History', '#10b981')
+            + fld('txSummaryBU', 'Treatment at BU', '#34d399'))
+
+        + section('perio', 'Periodontal & Recall',
+            fld('poeLast', 'Last POE / Prophy', '#f59e0b')
+            + fld('poeNext', 'Next POE / Prophy', '#fbbf24'))
+
+        + section('treatment', 'Treatment',
+            fld('txPlan', 'Treatment Plan', '#3b82f6')
+            + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">'
+            + fld('lastVisit', 'Last Visit', '#60a5fa')
+            + fld('nextVisit', 'Next Visit', '#93c5fd')
+            + '</div>')
+
+        + section('imaging', 'Imaging', imgInline())
+
+        + section('notes', 'Notes',
+            isEdit
+                ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
+                  + 'style="background:#0f172a; border:1px solid #334155; border-left:3px solid #a855f7; border-radius:6px; padding:10px 12px; font-size:0.85em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:100px; line-height:1.5; cursor:text;">'
+                  + escapeHtml(patient.notes || '') + '</div>'
+                : '<div style="font-size:0.85em; color:#cbd5e1; line-height:1.5; white-space:pre-wrap;">' + escapeHtml(patient.notes || '') + '</div>');
 }
 
 
@@ -791,28 +807,7 @@ function getRequirementInfo(reqId) {
 }
 
 function renderRequirementBadges(matches) {
-    if (!matches || matches.length === 0) {
-        return '<div style="color:#64748b; font-size:0.82em; font-style:italic;">No outstanding requirements matched for this patient.</div>';
-    }
-
-    var html = '';
-
-    // High value patient banner
-    if (matches.length >= 3) {
-        html += '<div style="background:linear-gradient(90deg, #92400e, #78350f); border:1px solid #d97706; border-radius:6px; padding:8px 14px; margin-bottom:8px; text-align:center;">'
-            + '<span style="color:#fbbf24; font-weight:700; font-size:0.9em;">HIGH VALUE PATIENT &mdash; ' + matches.length + ' outstanding requirements matchable</span>'
-            + '</div>';
-    }
-
-    html += '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
-    matches.forEach(function(m) {
-        html += '<span style="display:inline-flex; align-items:center; gap:4px; background:' + m.categoryColor + '22; border:1px solid ' + m.categoryColor + '55; color:' + m.categoryColor + '; border-radius:12px; padding:3px 10px; font-size:0.75em; font-weight:600;">'
-            + escapeHtml(m.category) + ': ' + escapeHtml(m.reqLabel)
-            + '</span>';
-    });
-    html += '</div>';
-
-    return html;
+    return '';
 }
 
 
@@ -822,123 +817,69 @@ function renderCountdownRadar() {
     var container = document.getElementById('patientsCountdownRadar');
     if (!container) return;
 
-    // Days until May 15, 2026
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var target = new Date(2026, 4, 15); // May 15, 2026
+    var target = new Date(2026, 4, 15);
     var daysRemaining = Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24)));
 
-    // Count outstanding requirements from competencies
     var competencies = getCompetenciesData();
     var outstandingCount = 0;
     var categoryData = [];
-
     Object.entries(competencies).forEach(function(entry) {
-        var catKey = entry[0];
         var cat = entry[1];
         var stats = calculateCategoryStats(cat);
         var outstanding = stats.totalItems - stats.completed;
         outstandingCount += outstanding;
-        categoryData.push({
-            name: cat.name || catKey,
-            color: cat.color || '#64748b',
-            completed: stats.completed,
-            total: stats.totalItems,
-            pctDone: stats.totalItems > 0 ? Math.round((stats.completed / stats.totalItems) * 100) : 0
-        });
+        categoryData.push({ name: cat.name || entry[0], color: cat.color || '#64748b', completed: stats.completed, total: stats.totalItems });
     });
 
-    // Pace calculation
     var weeksRemaining = Math.max(1, daysRemaining / 7);
     var pace = (outstandingCount / weeksRemaining).toFixed(1);
-
-    // Burndown color
-    var burndownColor = '#22c55e';
-    if (daysRemaining <= 30) burndownColor = '#ef4444';
-    else if (daysRemaining <= 90) burndownColor = '#f59e0b';
-
-    // Pace color
-    var paceColor = '#22c55e';
     var paceNum = parseFloat(pace);
-    if (paceNum >= 4) paceColor = '#ef4444';
-    else if (paceNum >= 2) paceColor = '#f59e0b';
 
-    // Category mini progress bars
-    var miniProgressHtml = '';
-    categoryData.forEach(function(c) {
-        miniProgressHtml += '<div style="flex:1; min-width:80px; background:#1e293b; border-radius:6px; padding:6px 8px; text-align:center;">'
-            + '<div style="font-size:0.7em; color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(c.name) + '</div>'
-            + '<div style="font-size:0.85em; font-weight:700; color:' + c.color + ';">' + c.completed + '/' + c.total + '</div>'
-            + '<div style="height:3px; background:#374151; border-radius:2px; margin-top:3px;">'
-            + '<div style="height:100%; background:' + c.color + '; border-radius:2px; width:' + c.pctDone + '%;"></div>'
-            + '</div>'
-            + '</div>';
-    });
+    var daysColor = daysRemaining <= 30 ? '#ef4444' : daysRemaining <= 60 ? '#f59e0b' : '#22c55e';
+    var paceColor = paceNum >= 5 ? '#ef4444' : paceNum >= 3 ? '#f59e0b' : '#22c55e';
 
-    // High-value patients
-    var records = getPatientRecords();
-    var highValueNames = [];
-    Object.keys(records).forEach(function(id) {
-        var patient = records[id];
-        if (!patient) return;
-        var matches = computeRequirementMatches(patient);
-        if (matches.length >= 3) {
-            highValueNames.push(patient.name || 'Unknown');
-        }
-    });
-    var highValueHtml = highValueNames.length > 0
-        ? highValueNames.map(function(n) { return escapeHtml(n); }).join(', ')
-        : 'None identified';
-
-    // Dashboard snapshot KPIs
-    var dashKpiHtml = '';
+    // Dashboard snapshot data
     var snapshots = getDashboardSnapshots();
+    var aptsHtml = '', procsHtml = '', notesHtml = '';
     if (snapshots.length > 0) {
-        var latest = snapshots[0];
-        var apts = latest.appointments || {};
-        var procs = latest.procedures || {};
-        var notesColor = (apts.notesAtRisk || 0) >= 6 ? '#ef4444' : (apts.notesAtRisk || 0) >= 5 ? '#f59e0b' : '#22c55e';
-        dashKpiHtml = '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">'
-            + '<div style="flex:1; min-width:140px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px; text-align:center;">'
-            +   '<div style="font-size:0.75em; color:#93c5fd; text-transform:uppercase; letter-spacing:0.05em;">Appointments</div>'
-            +   '<div style="font-size:1.8em; font-weight:800; color:#3b82f6;">' + (apts.attended || 0) + '<span style="font-size:0.5em; color:#64748b;">/90</span></div>'
-            +   '<div style="font-size:0.75em; color:#64748b;">+' + (apts.booked || 0) + ' booked → ' + (apts.projected || 0) + '/90</div>'
-            + '</div>'
-            + '<div style="flex:1; min-width:140px; background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:8px; padding:12px; text-align:center;">'
-            +   '<div style="font-size:0.75em; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.05em;">Procedures</div>'
-            +   '<div style="font-size:1.8em; font-weight:800; color:#a855f7;">' + (procs.totalCompleted || 0) + '<span style="font-size:0.5em; color:#64748b;">/116</span></div>'
-            +   '<div style="font-size:0.75em; color:#64748b;">~' + (procs.weeklyPaceNeeded || '?') + '/week needed</div>'
-            + '</div>'
-            + '<div style="flex:1; min-width:140px; background:rgba(' + (notesColor === '#ef4444' ? '239,68,68' : notesColor === '#f59e0b' ? '245,158,11' : '34,197,94') + ',0.1); border:1px solid rgba(' + (notesColor === '#ef4444' ? '239,68,68' : notesColor === '#f59e0b' ? '245,158,11' : '34,197,94') + ',0.3); border-radius:8px; padding:12px; text-align:center;">'
-            +   '<div style="font-size:0.75em; color:' + notesColor + '; text-transform:uppercase; letter-spacing:0.05em;">Notes Risk</div>'
-            +   '<div style="font-size:1.8em; font-weight:800; color:' + notesColor + ';">' + (apts.notesAtRisk || 0) + '</div>'
-            +   '<div style="font-size:0.75em; color:#64748b;">Unclosed: ' + (apts.unclosed || 0) + ' | Blank: ' + (apts.blank || 0) + '</div>'
-            + '</div>'
-            + '</div>';
+        var s = snapshots[0];
+        var a = s.appointments || {};
+        var p = s.procedures || {};
+        var notesRisk = a.notesAtRisk || 0;
+        var nc = notesRisk >= 6 ? '#ef4444' : notesRisk >= 5 ? '#f59e0b' : '#64748b';
+        aptsHtml = '<div class="pts-stat-chip" title="Attended appointments toward 90 requirement"><span style="color:#3b82f6; font-weight:700;">' + (a.attended||0) + '</span><span style="color:#64748b;">/90 apts</span></div>';
+        procsHtml = '<div class="pts-stat-chip" title="Completed procedures toward 116 requirement"><span style="color:#a855f7; font-weight:700;">' + (p.totalCompleted||0) + '</span><span style="color:#64748b;">/116 procs</span></div>';
+        notesHtml = '<div class="pts-stat-chip" title="Unclosed/blank notes (limit: 6)"><span style="color:' + nc + '; font-weight:700;">' + notesRisk + '</span><span style="color:#64748b;"> notes risk</span></div>';
     }
 
-    container.innerHTML = dashKpiHtml
-        + '<div style="background:linear-gradient(135deg, #1e293b, #0f172a); border:1px solid #334155; border-radius:12px; padding:16px 20px; margin-bottom:16px;">'
-        + '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">'
-        +   '<div>'
-        +     '<span style="font-size:2em; font-weight:800; color:' + burndownColor + ';">' + daysRemaining + '</span>'
-        +     '<span style="color:#94a3b8; margin-left:4px;">days until May 15</span>'
-        +   '</div>'
-        +   '<div>'
-        +     '<span style="font-size:2em; font-weight:800; color:#f59e0b;">' + outstandingCount + '</span>'
-        +     '<span style="color:#94a3b8; margin-left:4px;">requirements remaining</span>'
-        +   '</div>'
-        +   '<div>'
-        +     '<span style="font-size:2em; font-weight:800; color:' + paceColor + ';">~' + pace + '</span>'
-        +     '<span style="color:#94a3b8; margin-left:4px;">per week needed</span>'
-        +   '</div>'
+    // Expandable detail panel
+    var detailId = 'ptsRadarDetail';
+    var detailHtml = '<div id="' + detailId + '" style="display:none; padding:12px 0 0; border-top:1px solid #1e293b; margin-top:10px;">';
+    // Category grid — 2 columns
+    detailHtml += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px;">';
+    categoryData.forEach(function(c) {
+        var pct = c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0;
+        var status = c.completed >= c.total ? '#22c55e' : (c.completed > 0 ? '#f59e0b' : '#ef4444');
+        detailHtml += '<div style="display:flex; align-items:center; gap:6px; padding:3px 0;">'
+            + '<span style="width:85px; font-size:0.72em; color:#94a3b8; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">' + escapeHtml(c.name) + '</span>'
+            + '<div style="flex:1; height:4px; background:#1e293b; border-radius:2px;"><div style="height:100%; background:' + c.color + '; border-radius:2px; width:' + pct + '%;"></div></div>'
+            + '<span style="font-size:0.72em; font-weight:600; color:' + status + '; width:32px; text-align:right;">' + c.completed + '/' + c.total + '</span>'
+            + '</div>';
+    });
+    detailHtml += '</div></div>';
+
+    container.innerHTML = '<div style="background:#111827; border:1px solid #1e293b; border-radius:10px; padding:10px 16px; margin-bottom:12px;">'
+        + '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; cursor:pointer;" onclick="var d=document.getElementById(\'' + detailId + '\');d.style.display=d.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.pts-expand-arrow\').textContent=d.style.display===\'none\'?\'\\u25BC\':\'\\u25B2\'">'
+        +   '<div class="pts-stat-chip"><span style="color:' + daysColor + '; font-weight:800; font-size:1.15em;">' + daysRemaining + '</span><span style="color:#64748b;"> days</span></div>'
+        +   aptsHtml + procsHtml
+        +   '<div class="pts-stat-chip"><span style="color:#f59e0b; font-weight:700;">' + outstandingCount + '</span><span style="color:#64748b;"> reqs left</span></div>'
+        +   '<div class="pts-stat-chip"><span style="color:' + paceColor + '; font-weight:700;">~' + pace + '</span><span style="color:#64748b;">/wk</span></div>'
+        +   notesHtml
+        +   '<span class="pts-expand-arrow" style="color:#64748b; font-size:0.7em; margin-left:auto;">&#9660;</span>'
         + '</div>'
-        + '<div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">'
-        +   miniProgressHtml
-        + '</div>'
-        + '<div style="margin-top:8px; font-size:0.85em; color:#fbbf24;">'
-        +   'High-value: ' + highValueHtml
-        + '</div>'
+        + detailHtml
         + '</div>';
 }
 
@@ -1748,6 +1689,11 @@ function parseDashboardUpdate(text) {
 function renderDashboardMetrics() {
     var container = document.getElementById('dashboardMetricsCard');
     if (!container) return;
+
+    // Dashboard metrics are now shown in the compact countdown bar
+    // Only render if there are snapshots AND we want to show the full detail card
+    container.innerHTML = '';
+    return;
 
     var snapshots = getDashboardSnapshots();
     if (snapshots.length === 0) {

@@ -6365,8 +6365,8 @@
 
         /* Sidebar */
         #patientsSidebar {
-            width: 270px;
-            min-width: 270px;
+            width: 240px;
+            min-width: 240px;
             background: #111827;
             border-radius: 12px 0 0 12px;
             border: 1px solid #1e293b;
@@ -6626,6 +6626,17 @@
             background: rgba(239, 68, 68, 0.25);
         }
 
+        /* Compact stat chips */
+        .pts-stat-chip {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
+            font-size: 0.82em;
+            padding: 2px 0;
+        }
+
+        /* Sidebar width adjustment */
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             #patientsMainLayout {
@@ -6636,30 +6647,22 @@
                 min-width: 100%;
                 border-radius: 12px 12px 0 0;
                 border-right: none;
-                border-bottom: 2px solid #1e293b;
-                max-height: 200px;
-            }
-            .pts-sidebar-list {
-                display: flex;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 4px;
-                gap: 4px;
-            }
-            .pts-sidebar-item {
-                white-space: nowrap;
-                border-left: none;
-                border-bottom: 3px solid transparent;
-                padding: 8px 12px;
-            }
-            .pts-sidebar-item.active {
-                border-left-color: transparent;
-                border-bottom-color: #3b82f6;
+                border-bottom: 1px solid #1e293b;
+                max-height: 180px;
             }
             .pts-record-view {
                 border-radius: 0 0 12px 12px;
                 border-left: 1px solid #1e293b;
                 max-height: none;
+                padding: 14px 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            #patientsSidebar {
+                max-height: 150px;
+            }
+            .pts-stat-chip {
+                font-size: 0.72em;
             }
         }
 
