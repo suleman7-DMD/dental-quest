@@ -910,11 +910,11 @@ function openPatientImportModal() {
         document.body.appendChild(modal);
     }
     // Reset contents
-    var textarea = modal.querySelector('#patientImportTextarea');
+    var textarea = modal.querySelector('#patientImportText');
     if (textarea) textarea.value = '';
     var preview = modal.querySelector('#patientImportPreview');
     if (preview) preview.innerHTML = '<div style="color:#64748b; padding:20px; text-align:center;">Paste text and click Preview to see what will be imported.</div>';
-    var importBtn = modal.querySelector('#patientImportConfirmBtn');
+    var importBtn = modal.querySelector('#patientImportBtn');
     if (importBtn) importBtn.disabled = true;
 
     modal.style.display = 'flex';
@@ -926,11 +926,11 @@ function buildImportModalHtml() {
         +   '<h3 style="color:#60a5fa; margin:0; font-size:1.2em;">Import from Claude</h3>'
         +   '<button onclick="closePatientImportModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4em; cursor:pointer; padding:4px 8px;">&times;</button>'
         + '</div>'
-        + '<textarea id="patientImportTextarea" placeholder="Paste Claude output here...\n\nSupported formats:\n--- PATIENT_RECORD ---\nNAME: Last, First\nCHART: 1234567\n...\n\n--- PATIENT_UPDATE ---\nCHART: 1234567\nNOTES_APPEND: New note text\n...\n\n--- REQUIREMENTS_MATCH ---\nCAN_FULFILL: req-id | description | procedure\n...\n\n--- REQUIREMENTS_STATUS ---\nUPDATES: req-id | completed: 1 | note: text\n..." '
+        + '<textarea id="patientImportText" placeholder="Paste Claude output here...\n\nSupported formats:\n--- PATIENT_RECORD ---\nNAME: Last, First\nCHART: 1234567\n...\n\n--- PATIENT_UPDATE ---\nCHART: 1234567\nNOTES_APPEND: New note text\n...\n\n--- REQUIREMENTS_MATCH ---\nCAN_FULFILL: req-id | description | procedure\n...\n\n--- REQUIREMENTS_STATUS ---\nUPDATES: req-id | completed: 1 | note: text\n..." '
         +   'style="flex:1; min-height:200px; padding:12px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; font-family:monospace; font-size:0.85em; resize:vertical; outline:none; margin-bottom:12px;"></textarea>'
         + '<div style="display:flex; gap:8px; margin-bottom:12px;">'
         +   '<button onclick="previewPatientImport()" style="flex:1; padding:10px; background:#1e40af; border:none; border-radius:8px; color:#93c5fd; font-weight:600; cursor:pointer;">Preview</button>'
-        +   '<button id="patientImportConfirmBtn" onclick="confirmPatientImport()" disabled style="flex:1; padding:10px; background:#065f46; border:none; border-radius:8px; color:#6ee7b7; font-weight:600; cursor:pointer; opacity:0.5;">Import</button>'
+        +   '<button id="patientImportBtn" onclick="confirmPatientImport()" disabled style="flex:1; padding:10px; background:#065f46; border:none; border-radius:8px; color:#6ee7b7; font-weight:600; cursor:pointer; opacity:0.5;">Import</button>'
         + '</div>'
         + '<div id="patientImportPreview" style="max-height:250px; overflow-y:auto; background:#0f172a; border-radius:8px; padding:12px; border:1px solid #334155;">'
         +   '<div style="color:#64748b; padding:20px; text-align:center;">Paste text and click Preview to see what will be imported.</div>'
@@ -1206,9 +1206,9 @@ function parseRequirementsStatus(text) {
 }
 
 function previewPatientImport() {
-    var textarea = document.getElementById('patientImportTextarea');
+    var textarea = document.getElementById('patientImportText');
     var preview = document.getElementById('patientImportPreview');
-    var importBtn = document.getElementById('patientImportConfirmBtn');
+    var importBtn = document.getElementById('patientImportBtn');
     if (!textarea || !preview) return;
 
     var parsed = parsePatientImportText(textarea.value);
@@ -1293,6 +1293,7 @@ function previewPatientImport() {
     }
 
     preview.innerHTML = html;
+    preview.style.display = 'block';
     if (importBtn) {
         importBtn.disabled = !hasContent;
         importBtn.style.opacity = hasContent ? '1' : '0.5';
