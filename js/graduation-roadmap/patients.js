@@ -425,6 +425,7 @@ function renderPatientsSidebar() {
 
 function selectPatient(patientId) {
     activePatientId = patientId;
+    patientEditMode = false;
     renderPatientsSidebar();
     renderPatientRecord(patientId);
 }
@@ -457,9 +458,9 @@ function renderPatientRecord(patientId) {
                 + '</div></div>';
         } else {
             if (!val) return '';
-            return '<div style="margin-bottom:5px;">'
+            return '<div style="margin-bottom:5px; background:#0b1120; border:1px solid #1a2435; border-left:3px solid ' + accentColor + '33; border-radius:6px; padding:8px 12px;">'
                 + '<span style="font-size:0.65em; font-weight:600; color:' + accentColor + '; text-transform:uppercase; letter-spacing:0.06em;">' + label + '</span>'
-                + '<div style="font-size:0.85em; color:#cbd5e1; line-height:1.5; margin-top:1px; white-space:pre-wrap;">' + escapeHtml(val) + '</div>'
+                + '<div style="font-size:0.85em; color:#cbd5e1; line-height:1.5; margin-top:2px; white-space:pre-wrap; word-break:break-word;">' + escapeHtml(val) + '</div>'
                 + '</div>';
         }
     }
@@ -500,9 +501,12 @@ function renderPatientRecord(patientId) {
             fields.forEach(function(x) {
                 var val = patient[x.f] || '\u2014';
                 var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1;
-                parts.push('<span style="color:#64748b; font-size:0.72em;">' + x.l + ': </span><span style="color:' + (warn ? '#fbbf24' : '#cbd5e1') + '; font-size:0.82em;">' + escapeHtml(val) + '</span>');
+                parts.push('<div style="background:#0b1120; border:1px solid #1a2435; border-radius:5px; padding:5px 10px; flex:1; min-width:100px;">'
+                    + '<span style="color:#64748b; font-size:0.65em; font-weight:600; text-transform:uppercase; display:block;">' + x.l + '</span>'
+                    + '<span style="color:' + (warn ? '#fbbf24' : '#cbd5e1') + '; font-size:0.82em;">' + escapeHtml(val) + '</span>'
+                    + '</div>');
             });
-            return '<div style="display:flex; flex-wrap:wrap; gap:8px 18px;">' + parts.join('') + '</div>';
+            return '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + parts.join('') + '</div>';
         }
     }
 
@@ -543,7 +547,7 @@ function renderPatientRecord(patientId) {
     });
 
     // Edit mode toggle button
-    var editBtnHtml = '<button onclick="patientEditMode=!patientEditMode; renderPatientRecord(\'' + escapeHtml(patientId) + '\')" '
+    var editBtnHtml = '<button onclick="document.querySelectorAll(\'[contenteditable=true]\').forEach(function(el){el.blur()}); patientEditMode=!patientEditMode; renderPatientRecord(\'' + escapeHtml(patientId) + '\')" '
         + 'style="padding:4px 10px; background:' + (isEdit ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)') + '; border:1px solid ' + (isEdit ? '#3b82f6' : '#334155') + '; border-radius:5px; color:' + (isEdit ? '#93c5fd' : '#94a3b8') + '; font-size:0.72em; cursor:pointer; font-weight:600; transition:all 0.15s;">'
         + (isEdit ? 'Done Editing' : 'Edit') + '</button>';
 
@@ -595,7 +599,7 @@ function renderPatientRecord(patientId) {
                 ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
                   + 'style="background:#0f172a; border:1px solid #334155; border-left:3px solid #a855f7; border-radius:6px; padding:10px 12px; font-size:0.85em; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; outline:none; min-height:100px; line-height:1.5; cursor:text;">'
                   + escapeHtml(patient.notes || '') + '</div>'
-                : '<div style="font-size:0.85em; color:#cbd5e1; line-height:1.5; white-space:pre-wrap;">' + escapeHtml(patient.notes || '') + '</div>');
+                : '<div style="background:#0b1120; border:1px solid #1a2435; border-left:3px solid #a855f733; border-radius:6px; padding:8px 12px; font-size:0.85em; color:#cbd5e1; line-height:1.5; white-space:pre-wrap; word-break:break-word; min-height:40px;">' + escapeHtml(patient.notes || '') + '</div>');
 }
 
 
@@ -774,9 +778,12 @@ function isRequirementOutstanding(reqId) {
 
     for (var catKey in competencies) {
         var cat = competencies[catKey];
+        if (!cat || !cat.sections) continue;
         var sections = getValues(cat.sections);
         for (var s = 0; s < sections.length; s++) {
-            var items = getValues(sections[s].items);
+            var sec = sections[s];
+            if (!sec || !sec.items) continue;
+            var items = getValues(sec.items);
             for (var i = 0; i < items.length; i++) {
                 if (items[i].id === reqId) {
                     return (items[i].completed || 0) < (items[i].required || 1);
@@ -793,9 +800,12 @@ function getRequirementInfo(reqId) {
 
     for (var catKey in competencies) {
         var cat = competencies[catKey];
+        if (!cat || !cat.sections) continue;
         var sections = getValues(cat.sections);
         for (var s = 0; s < sections.length; s++) {
-            var items = getValues(sections[s].items);
+            var sec = sections[s];
+            if (!sec || !sec.items) continue;
+            var items = getValues(sec.items);
             for (var i = 0; i < items.length; i++) {
                 if (items[i].id === reqId) {
                     return items[i];
@@ -1688,139 +1698,5 @@ function parseDashboardUpdate(text) {
 
 function renderDashboardMetrics() {
     var container = document.getElementById('dashboardMetricsCard');
-    if (!container) return;
-
-    // Dashboard metrics are now shown in the compact countdown bar
-    // Only render if there are snapshots AND we want to show the full detail card
-    container.innerHTML = '';
-    return;
-
-    var snapshots = getDashboardSnapshots();
-    if (snapshots.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-
-    var latest = snapshots[0];
-    var apts = latest.appointments || {};
-    var procs = latest.procedures || {};
-    var rost = latest.roster || {};
-    var cp = latest.clinicalProgress || {};
-    var delta = latest.delta || {};
-
-    // Notes color
-    var nar = apts.notesAtRisk || 0;
-    var notesColor = nar >= 6 ? '#ef4444' : nar >= 5 ? '#f59e0b' : '#22c55e';
-    var notesBg = nar >= 6 ? 'rgba(239,68,68,0.1)' : nar >= 5 ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)';
-    var notesBorder = nar >= 6 ? 'rgba(239,68,68,0.3)' : nar >= 5 ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)';
-
-    // Clinical progress categories
-    var categories = [
-        { key: 'fixed', label: 'Fixed', target: 10, color: '#3b82f6' },
-        { key: 'operative', label: 'Operative', target: 8, color: '#10b981' },
-        { key: 'remoComplete', label: 'Dentures', target: 4, color: '#8b5cf6' },
-        { key: 'perioSrp', label: 'Perio SRP', target: 3, color: '#ef4444' },
-        { key: 'remoPartial', label: 'RPD', target: 1, color: '#f59e0b' },
-        { key: 'endo', label: 'Endo', target: 2, color: '#06b6d4' },
-        { key: 'implant', label: 'Implant', target: 1, color: '#ec4899' },
-        { key: 'bridge', label: 'Bridge', target: 1, color: '#6366f1' },
-        { key: 'overdenture', label: 'Overdenture', target: 1, color: '#84cc16' },
-        { key: 'implSurg', label: 'Impl Surg', target: 0, color: '#a1a1aa' }
-    ];
-
-    var cpGridHtml = '';
-    categories.forEach(function(cat) {
-        var data = cp[cat.key] || {};
-        var c = data.c || 0;
-        var ip = data.ip || 0;
-        var p = data.p || 0;
-        var target = cat.target;
-        var pctDone = target > 0 ? Math.min(100, Math.round((c / target) * 100)) : (c > 0 ? 100 : 0);
-
-        // Status color
-        var statusColor = '#ef4444'; // red = gap
-        if (c >= target && target > 0) statusColor = '#22c55e'; // green = done
-        else if (c + ip + p >= target && target > 0) statusColor = '#f59e0b'; // yellow = pipeline exists
-
-        // Delta for this category
-        var catDelta = delta[cat.key + '_c'] ? ' (' + delta[cat.key + '_c'] + ')' : '';
-
-        cpGridHtml += '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">'
-            + '<div style="width:80px; font-size:0.8em; color:#94a3b8; font-weight:600;">' + cat.label + '</div>'
-            + '<div style="width:50px; text-align:center;">'
-            +   '<span style="font-size:0.9em; font-weight:700; color:' + statusColor + ';">' + c + '</span>'
-            +   (target > 0 ? '<span style="font-size:0.7em; color:#64748b;">/' + target + '</span>' : '')
-            + '</div>'
-            + '<div style="flex:1; height:6px; background:#1e293b; border-radius:3px; overflow:hidden;">'
-            +   '<div style="height:100%; background:' + cat.color + '; border-radius:3px; width:' + pctDone + '%;"></div>'
-            + '</div>'
-            + '<div style="width:80px; font-size:0.72em; color:#64748b; text-align:right;">'
-            +   (ip > 0 ? 'IP:' + ip + ' ' : '') + (p > 0 ? 'P:' + p : '')
-            +   '<span style="color:' + statusColor + ';">' + catDelta + '</span>'
-            + '</div>'
-            + '</div>';
-    });
-
-    // Delta summary text
-    var deltaHtml = '';
-    if (delta && Object.keys(delta).length > 0) {
-        var deltaParts = [];
-        if (delta.attended) deltaParts.push('Apts: ' + delta.attended);
-        if (delta.totalCompleted) deltaParts.push('Procs: ' + delta.totalCompleted);
-        Object.keys(delta).forEach(function(k) {
-            if (k.endsWith('_c') && delta[k]) {
-                var catLabel = k.replace('_c', '');
-                deltaParts.push(catLabel + ' C: ' + delta[k]);
-            }
-        });
-        if (deltaParts.length > 0) {
-            deltaHtml = '<div style="margin-top:8px; padding:6px 10px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); border-radius:6px; font-size:0.78em; color:#4ade80;">'
-                + 'Since last update: ' + deltaParts.join(' | ')
-                + '</div>';
-        }
-    }
-
-    // Alerts
-    var alertsHtml = '';
-    if (latest.alerts && latest.alerts.length > 0) {
-        latest.alerts.forEach(function(alert) {
-            alertsHtml += '<div style="padding:6px 10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; font-size:0.8em; color:#f87171; margin-top:4px;">'
-                + escapeHtml(alert)
-                + '</div>';
-        });
-    }
-
-    container.innerHTML = '<div style="background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:12px;">'
-        + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
-        +   '<div style="font-weight:700; color:#e2e8f0; font-size:1.05em;">SPS Dashboard</div>'
-        +   '<div style="font-size:0.75em; color:#64748b;">Updated: ' + escapeHtml(latest.capturedAt || 'Unknown') + '</div>'
-        + '</div>'
-        // Three KPI blocks
-        + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px;">'
-        +   '<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:10px; text-align:center;">'
-        +     '<div style="font-size:0.7em; color:#93c5fd; text-transform:uppercase; letter-spacing:0.05em;">Appointments</div>'
-        +     '<div style="font-size:1.6em; font-weight:800; color:#3b82f6;">' + (apts.attended || 0) + '<span style="font-size:0.45em; color:#64748b; font-weight:400;">/90</span></div>'
-        +     '<div style="font-size:0.7em; color:#64748b;">+' + (apts.booked || 0) + ' booked → ' + (apts.projected || 0) + '/90</div>'
-        +   '</div>'
-        +   '<div style="background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.2); border-radius:8px; padding:10px; text-align:center;">'
-        +     '<div style="font-size:0.7em; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.05em;">Procedures</div>'
-        +     '<div style="font-size:1.6em; font-weight:800; color:#a855f7;">' + (procs.totalCompleted || 0) + '<span style="font-size:0.45em; color:#64748b; font-weight:400;">/116</span></div>'
-        +     '<div style="font-size:0.7em; color:#64748b;">~' + (procs.weeklyPaceNeeded || '?') + '/week needed</div>'
-        +   '</div>'
-        +   '<div style="background:' + notesBg + '; border:1px solid ' + notesBorder + '; border-radius:8px; padding:10px; text-align:center;">'
-        +     '<div style="font-size:0.7em; color:' + notesColor + '; text-transform:uppercase; letter-spacing:0.05em;">Notes Risk</div>'
-        +     '<div style="font-size:1.6em; font-weight:800; color:' + notesColor + ';">' + nar + '</div>'
-        +     '<div style="font-size:0.7em; color:#64748b;">Unclosed: ' + (apts.unclosed || 0) + ' | Blank: ' + (apts.blank || 0) + '</div>'
-        +   '</div>'
-        + '</div>'
-        // Clinical progress grid
-        + '<div style="font-weight:600; color:#94a3b8; font-size:0.8em; margin-bottom:6px;">CLINICAL PROGRESS</div>'
-        + cpGridHtml
-        // Roster
-        + '<div style="margin-top:10px; font-size:0.78em; color:#64748b;">'
-        +   'Roster: ' + (rost.ptsAssigned || 0) + ' pts | ' + (rost.notSeen6Mo || 0) + ' not seen 6mo | ' + (rost.tpNotConsented || 0) + ' no TP consent | ' + (apts.missed || 0) + ' missed'
-        + '</div>'
-        + deltaHtml
-        + alertsHtml
-        + '</div>';
+    if (container) container.innerHTML = '';
 }
