@@ -331,6 +331,11 @@ function initPatientsTab() {
 
 function getPatientRecords() {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
+    // Guard: don't initialize defaults until real data has loaded from cloud
+    // This prevents wiping imported data with defaults during the load race
+    if (!roadmapData._dataLoaded) {
+        return roadmapData.clinicalData.patientRecords || {};
+    }
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
         roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
         saveData();

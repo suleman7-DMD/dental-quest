@@ -543,7 +543,9 @@ function mergeRemoteState(data) {
             competencies: mergeCompetencies(
                 roadmapData.clinicalData?.competencies,
                 data.clinicalData?.competencies
-            )
+            ),
+            patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
+            dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
         },
         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
         exams: {
@@ -638,7 +640,9 @@ function loadFromLocalStorage(finalize = true) {
                     patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
                     appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies)
+                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
+                    patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
+                    dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(data.exams, 'exam'),
@@ -1273,7 +1277,9 @@ function restoreCheckpoint(index) {
                     patients: cpData.clinicalData?.patients || {},
                     appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies)
+                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies),
+                    patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
+                    dashboardSnapshots: cpData.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(cpData.exams, 'exam'),
@@ -1548,7 +1554,9 @@ function importAndRestoreDirectly() {
                             patients: data.clinicalData?.patients || {},
                             appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies)
+                            competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
+                            patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
+                            dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),
