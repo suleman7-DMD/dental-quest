@@ -558,7 +558,7 @@ function renderPatientRecord(patientId) {
         +     '<div style="font-size:1.2em; font-weight:800; color:#f1f5f9;">' + escapeHtml(patient.name || 'Unnamed') + '</div>'
         +     '<div style="display:flex; align-items:center; gap:8px; margin-top:3px; flex-wrap:wrap;">'
         +       '<span style="font-size:0.78em; color:#64748b;">#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
-        +       '<span style="font-size:0.68em; background:rgba(99,102,241,0.12); color:#a5b4fc; padding:1px 7px; border-radius:3px;">' + escapeHtml(patient.type || 'Active') + '</span>'
+        +       '<span style="font-size:0.68em; background:rgba(99,102,241,0.12); color:#a5b4fc; padding:1px 7px; border-radius:3px; white-space:pre-wrap;">' + escapeHtml(patient.type || 'Active') + '</span>'
         +       '<div style="display:flex; gap:4px; align-items:center;">' + relHtml + '</div>'
         +     '</div>'
         +   '</div>'
@@ -680,7 +680,10 @@ function deletePatientRecord(id) {
     );
 }
 
+var _suppressBlurSave = false; // Guard against stale blur during import re-render
+
 function savePatientField(element) {
+    if (_suppressBlurSave) return; // Skip saves triggered by DOM replacement during import
     var patientId = element.getAttribute('data-patient-id');
     var field = element.getAttribute('data-field');
     if (!patientId || !field) return;
@@ -1306,11 +1309,13 @@ function confirmPatientImport() {
     var records = getPatientRecords();
     var created = 0;
     var updated = 0;
+    var lastImportedId = null;
 
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
         var chartNumber = (rec.chartNumber || '').trim();
         var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
+        lastImportedId = id;
 
         if (records[id]) {
             // Update existing
@@ -1345,9 +1350,10 @@ function confirmPatientImport() {
         var chartNumber = (upd.chartNumber || '').trim();
         var id = 'pt_' + chartNumber;
         if (!records[id]) {
-            // Patient not found, skip
+            showToast('Update skipped: patient #' + chartNumber + ' not found');
             return;
         }
+        lastImportedId = lastImportedId || id;
         Object.keys(upd).forEach(function(key) {
             if (key === '_notesAppend' || key === 'chartNumber') return;
             if (!upd[key]) return;
@@ -1385,13 +1391,19 @@ function confirmPatientImport() {
 
     saveData();
 
-    // Re-render
+    // Re-render with blur suppression to prevent stale onblur handlers from overwriting imported data
+    _suppressBlurSave = true;
     closePatientImportModal();
     renderCountdownRadar();
     renderPatientsSidebar();
-    if (activePatientId && records[activePatientId]) {
+
+    // Auto-select the first imported/updated patient
+    if (lastImportedId && records[lastImportedId]) {
+        selectPatient(lastImportedId);
+    } else if (activePatientId && records[activePatientId]) {
         renderPatientRecord(activePatientId);
     }
+    _suppressBlurSave = false;
 
     var msg = '';
     if (created > 0) msg += created + ' patient(s) created. ';
