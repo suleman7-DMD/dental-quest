@@ -862,37 +862,44 @@ function renderCountdownRadar() {
         var p = s.procedures || {};
         var notesRisk = a.notesAtRisk || 0;
         var nc = notesRisk >= 6 ? '#ef4444' : notesRisk >= 5 ? '#f59e0b' : '#64748b';
-        aptsHtml = '<div class="pts-stat-chip" title="Attended appointments toward 90 requirement"><span style="color:#3b82f6; font-weight:700;">' + (a.attended||0) + '</span><span style="color:#64748b;">/90 apts</span></div>';
-        procsHtml = '<div class="pts-stat-chip" title="Completed procedures toward 116 requirement"><span style="color:#a855f7; font-weight:700;">' + (p.totalCompleted||0) + '</span><span style="color:#64748b;">/116 procs</span></div>';
-        notesHtml = '<div class="pts-stat-chip" title="Unclosed/blank notes (limit: 6)"><span style="color:' + nc + '; font-weight:700;">' + notesRisk + '</span><span style="color:#64748b;"> notes risk</span></div>';
+        aptsHtml = '<div class="pts-stat-chip" title="Attended appointments toward 90"><span style="color:#3b82f6; font-weight:700;">' + (a.attended||0) + '</span><span style="color:#64748b;">/90 apts</span></div>';
+        procsHtml = '<div class="pts-stat-chip" title="Completed procedures toward 116"><span style="color:#a855f7; font-weight:700;">' + (p.totalCompleted||0) + '</span><span style="color:#64748b;">/116 procs</span></div>';
+        notesHtml = '<div class="pts-stat-chip" title="Unclosed/blank notes (limit: 6)"><span style="color:' + nc + '; font-weight:700;">' + notesRisk + '</span><span style="color:#64748b;"> notes</span></div>';
     }
 
-    // Expandable detail panel
-    var detailId = 'ptsRadarDetail';
-    var detailHtml = '<div id="' + detailId + '" style="display:none; padding:12px 0 0; border-top:1px solid #1e293b; margin-top:10px;">';
-    // Category grid — 2 columns
-    detailHtml += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px;">';
+    // Category progress grid — always visible, compact 3 columns
+    var gridHtml = '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:3px 10px; margin-top:8px;">';
     categoryData.forEach(function(c) {
-        var pct = c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0;
-        var status = c.completed >= c.total ? '#22c55e' : (c.completed > 0 ? '#f59e0b' : '#ef4444');
-        detailHtml += '<div style="display:flex; align-items:center; gap:6px; padding:3px 0;">'
-            + '<span style="width:85px; font-size:0.72em; color:#94a3b8; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">' + escapeHtml(c.name) + '</span>'
-            + '<div style="flex:1; height:4px; background:#1e293b; border-radius:2px;"><div style="height:100%; background:' + c.color + '; border-radius:2px; width:' + pct + '%;"></div></div>'
-            + '<span style="font-size:0.72em; font-weight:600; color:' + status + '; width:32px; text-align:right;">' + c.completed + '/' + c.total + '</span>'
+        var pct = c.total > 0 ? Math.min(100, Math.round((c.completed / c.total) * 100)) : 0;
+        var done = c.completed >= c.total;
+        var hasProgress = c.completed > 0;
+        var statusColor = done ? '#22c55e' : (hasProgress ? '#f59e0b' : '#ef4444');
+        var shortName = c.name.replace('Fixed Prosthodontics', 'Fixed').replace('Complete Dentures', 'Dentures')
+            .replace('Pediatric Dentistry', 'Peds').replace('Periodontology', 'Perio')
+            .replace('Endodontics', 'Endo').replace('Oral Surgery', 'Oral Surg')
+            .replace('Group Practice (GD 640 & GD 642)', 'Group Prac')
+            .replace('Treatment Planning (RS 545)', 'Tx Planning')
+            .replace('Geriatric Dental Medicine', 'Geriatrics')
+            .replace('Externship & SPS', 'Externship');
+        gridHtml += '<div style="display:flex; align-items:center; gap:5px; padding:2px 0;">'
+            + '<span style="width:65px; font-size:0.66em; color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.name) + '">' + escapeHtml(shortName) + '</span>'
+            + '<div style="flex:1; height:3px; background:#1e293b; border-radius:2px; min-width:30px;"><div style="height:100%; background:' + c.color + '; border-radius:2px; width:' + pct + '%; transition:width 0.3s;"></div></div>'
+            + '<span style="font-size:0.64em; font-weight:700; color:' + statusColor + '; width:28px; text-align:right;">' + c.completed + '/' + c.total + '</span>'
             + '</div>';
     });
-    detailHtml += '</div></div>';
+    gridHtml += '</div>';
 
-    container.innerHTML = '<div style="background:#111827; border:1px solid #1e293b; border-radius:10px; padding:10px 16px; margin-bottom:12px;">'
-        + '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; cursor:pointer;" onclick="var d=document.getElementById(\'' + detailId + '\');d.style.display=d.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.pts-expand-arrow\').textContent=d.style.display===\'none\'?\'\\u25BC\':\'\\u25B2\'">'
-        +   '<div class="pts-stat-chip"><span style="color:' + daysColor + '; font-weight:800; font-size:1.15em;">' + daysRemaining + '</span><span style="color:#64748b;"> days</span></div>'
+    container.innerHTML = '<div style="background:#111827; border:1px solid #1e293b; border-radius:10px; padding:10px 14px; margin-bottom:10px;">'
+        // Top row: key metrics
+        + '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">'
+        +   '<div class="pts-stat-chip"><span style="color:' + daysColor + '; font-weight:800; font-size:1.1em;">' + daysRemaining + '</span><span style="color:#64748b;"> days</span></div>'
         +   aptsHtml + procsHtml
-        +   '<div class="pts-stat-chip"><span style="color:#f59e0b; font-weight:700;">' + outstandingCount + '</span><span style="color:#64748b;"> reqs left</span></div>'
+        +   '<div class="pts-stat-chip"><span style="color:#f59e0b; font-weight:700;">' + outstandingCount + '</span><span style="color:#64748b;"> reqs</span></div>'
         +   '<div class="pts-stat-chip"><span style="color:' + paceColor + '; font-weight:700;">~' + pace + '</span><span style="color:#64748b;">/wk</span></div>'
         +   notesHtml
-        +   '<span class="pts-expand-arrow" style="color:#64748b; font-size:0.7em; margin-left:auto;">&#9660;</span>'
         + '</div>'
-        + detailHtml
+        // Category grid — always visible
+        + gridHtml
         + '</div>';
 }
 
