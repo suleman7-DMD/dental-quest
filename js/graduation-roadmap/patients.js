@@ -332,6 +332,18 @@ function getPatientRecords() {
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
         roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
         saveData();
+    } else {
+        // Merge: fill in any missing default patients without overwriting existing ones
+        var defaults = DEFAULT_PATIENT_RECORDS;
+        var existing = roadmapData.clinicalData.patientRecords;
+        var added = false;
+        Object.keys(defaults).forEach(function(id) {
+            if (!existing[id]) {
+                existing[id] = JSON.parse(JSON.stringify(defaults[id]));
+                added = true;
+            }
+        });
+        if (added) saveData();
     }
     return roadmapData.clinicalData.patientRecords;
 }
