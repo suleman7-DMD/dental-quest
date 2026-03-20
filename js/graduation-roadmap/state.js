@@ -68,7 +68,9 @@ let roadmapData = {
         patients: {},           // Patient records keyed by ID
         appointments: {},       // Object with ID keys for Firebase safety
         completedProcedures: {}, // Object with ID keys for Firebase safety
-        competencies: null      // Graduation requirements - initialized from DEFAULT_COMPETENCIES
+        competencies: null,     // Graduation requirements - initialized from DEFAULT_COMPETENCIES
+        patientRecords: {},     // Detailed patient records (Patients tab — Google Docs style)
+        dashboardSnapshots: []
     },
     // Exams array for cross-app integration (Body Comp Tracker pulls this)
     exams: {},  // Object with ID keys for Firebase safety
@@ -137,7 +139,9 @@ function getDefaultRoadmapData() {
             patients: {},
             appointments: {},
             completedProcedures: {},
-            competencies: null
+            competencies: null,
+            patientRecords: {},
+            dashboardSnapshots: []
         },
         exams: {},
         graduationPrep: {
@@ -553,6 +557,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'academics' && typeof loadCourseGrades === 'function') loadCourseGrades();
     if (resolvedTabId === 'gradprep' && typeof renderGraduationPrep === 'function') renderGraduationPrep();
     if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
+    if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
     // schedule and remember tabs: sub-tabs / static content handle their own init
 
     // If navigating to exam content, open the exams accordion

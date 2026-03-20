@@ -166,6 +166,20 @@ function renderDashboard() {
     html += '<button onclick="switchTab(\'competencies\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Competencies →</button>';
     html += '</div>';
 
+    // Patient tracker summary
+    if (typeof getPatientRecords === 'function') {
+        const ptRecords = roadmapData.clinicalData?.patientRecords || {};
+        const ptCount = Object.keys(ptRecords).length;
+        if (ptCount > 0) {
+            html += '<div class="card" style="border: 2px solid #7c3aed; margin-top: 15px;">'
+                + '<div class="card-header"><span class="card-title">🩺 Patient Tracker</span>'
+                + '<span style="color: #a78bfa; font-size: 0.85em;">' + ptCount + ' patients</span></div>'
+                + '<p style="color: #94a3b8; font-size: 0.9em; margin: 0 0 10px 0;">Track your patient records, requirements fulfillment, and clinical progress.</p>'
+                + '<button onclick="switchTab(\'patients\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Patients →</button>'
+                + '</div>';
+        }
+    }
+
     html += '</div>'; // end clinic requirements card
 
     // === ROW 2: Do Today Widget ===
