@@ -148,6 +148,10 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** `syncClinicalToMonthlyPlanner()` deleted ALL clinic-synced tasks and recreated them from scratch on every `initMonthlyPlanner()` call (page load, tab switch, visibility change), wiping any user edits or deletions.
 **Solution (commit `e5124b8`):** Incremental sync: skip tasks with `userEdited: true`, skip appointments in `hiddenClinicTasks`, dedup by patient+date+time. When user deletes a clinic task, its `clinicalAppointmentId` is stored in `hiddenClinicTasks`. When user edits, `userEdited: true` is set. `hiddenClinicTasks` is in all 4 Firebase merge sites + defaults.
 
+### Error: Patient/clinical data disappears on refresh/sync/checkpoint (fixed Mar 21, 2026)
+**Cause:** 10 interconnected bugs: (1) `hiddenClinicTasks` and `currentWeekSchedule` missing from monthlyPlanner in all 4 merge/restore sites + defaults, (2) `graduationPrep` and `clinicHeadlines` missing from `restoreCheckpoint()` and `importAndRestoreDirectly()`, (3) `dashboardSnapshots` used unsafe `||` merge that discarded local data when remote had empty `[]`, (4) `isEmptyState()` missing checks for `patientRecords`, `dashboardSnapshots`, `completedProcedures`, `competencies` — Guard C silently blocked saves when only these fields had data, (5) `syncClinicalToMonthlyPlanner()` used nuke-and-rebuild pattern wiping user edits, (6) all CRUD functions in patients.js and clinical.js missing `safeLocalStorageSet()` before `saveData()`, (7) both import functions missing localStorage persistence before saveData().
+**Solution (commit `6dbe396`):** Added missing fields to all 4 merge/restore sites + defaults. New `mergeDashboardSnapshots()` function deduplicates by `capturedAt`. Added `patientRecords`/`dashboardSnapshots`/`completedProcedures`/`competencies` to `isEmptyState()`. Replaced nuke-and-rebuild `syncClinicalToMonthlyPlanner()` with incremental sync respecting `hiddenClinicTasks` and `userEdited`. Added `safeLocalStorageSet()` before `saveData()` in all 17 CRUD functions across patients.js and clinical.js.
+
 ### Error: Deadline delete/edit buttons broken (fixed Mar 16, 2026)
 **Cause:** `getDeadlineId()` produced IDs containing `'` (apostrophe from deadline text like `can't`), which broke `onclick="fn('${deadlineId}')"` JS syntax. Also, collapsed completed rows had duplicate `style` attributes causing `display:none` to be ignored.
 **Solution (commit `e24d328`):** Strip `'"\\` from `getDeadlineId()` key generation. Escape `safeId` in onclick handlers. Merge display:none into the single `rowStyle` in `buildRow()`.
@@ -389,6 +393,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `initFirebase()` | firebase-sync.js | Firebase initialization with 3s fallback |
 | `setupUserAuth(pin)` | firebase-sync.js | PIN hash + Firebase path setup |
 | `mergeRemoteState(data)` | firebase-sync.js | Consolidated merge (4 call sites) |
+| `mergeDashboardSnapshots(local, remote)` | firebase-sync.js | Dedup+merge dashboardSnapshots arrays by capturedAt |
 | `loadFromLocalStorage(finalize)` | firebase-sync.js | Load from localStorage (finalize=true sets all flags) |
 | `loadFromFirebase()` | firebase-sync.js | Initial Firebase load |
 | `setupRealtimeSync()` | firebase-sync.js | Cross-device realtime listener |
@@ -494,3 +499,7 @@ If you see ANY of these in code you're writing:
 - Deploying JS changes without bumping `?v=` cache-busting params on `<script src>` tags
 - Editing custom deadline date/name/weight without updating `roadmapData.customDeadlines[deadline.id]` — `editedDeadlines` only applies to STATIC deadlines in initUI; custom deadlines load from `customDeadlines` which must ALSO be updated
 - Testing only with NEW custom deadlines instead of editing EXISTING ones — custom-vs-static code paths differ and bugs only surface with real user data
+- Adding a new field to `roadmapData` without updating ALL 4 merge/restore sites in firebase-sync.js — field gets silently wiped on every sync/refresh/restore/checkpoint
+- Adding a new collection field without adding it to `isEmptyState()` in state.js — Guard C silently blocks saves when only that field has data
+- Using `data.arr || local.arr || []` for array fields instead of a proper merge function — empty `[]` is truthy and discards local data
+- `syncClinicalToMonthlyPlanner()` must use incremental sync, NOT nuke-and-rebuild — respect `hiddenClinicTasks` and `userEdited` flags

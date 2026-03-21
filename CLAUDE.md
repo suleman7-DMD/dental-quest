@@ -46,6 +46,9 @@ const date = new Date(year, month - 1, day);
 - **DeadlineId in onclick**: `getDeadlineId()` must strip `'"\\` from keys. Escape IDs in onclick: `onclick="fn('${safeId}')"` where `safeId = deadlineId.replace(/'/g, "\\'")`.
 - **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if the element already has a `style` attr. Browsers use the first and ignore the second. Merge into one style.
 - **Cross-app dedup**: Stim calc reads both `appointments` AND `customTasks` from d3Roadmap — clinic-synced tasks appear in BOTH. Dedup by `clinicalAppointmentId` and by `date|time|name`.
+- **Field-by-field reconstruction drops new fields**: All 4 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`) reconstruct `roadmapData` field-by-field. When adding ANY new field, it MUST be added to ALL 4 sites or it gets silently wiped on every sync/refresh/restore.
+- **`isEmptyState()` must check ALL collection fields**: When adding new collection fields to any app, also add them to `isEmptyState()` — otherwise Guard C silently blocks saves when ONLY those fields have data.
+- **Array merge with `||` loses data**: `data.arr || local.arr || []` — if remote has empty `[]` (truthy), local data is lost. Use dedicated merge functions for arrays (dedup + concat).
 
 ---
 
@@ -177,7 +180,7 @@ Index.html: 5 guards behind `firebaseInitialized` check, uses `buildSaveData()` 
 | App | Empty If Missing ALL Of |
 |-----|------------------------|
 | index.html | tasks, calendarNotes, calendarEvents, notebook.pages, stats.totalXPGained, focusModeData, commandCenterData |
-| d3-roadmap | customDeadlines, customTasks, appointments, blocks, notes, patients, completedDeadlines, examStudyProgress, grades, exams |
+| d3-roadmap | customDeadlines, customTasks, appointments, blocks, notes, patients, completedDeadlines, examStudyProgress, grades, exams, editedDeadlines, patientRecords, dashboardSnapshots, completedProcedures, competencies |
 | stim-calc | medications, caffeine, history, sleepHistory, allNighterMode, _dataLoaded |
 | body-comp | weighIns, today.meals, today.workouts, dailyLogs, bodyCompHistory, today.setupComplete |
 
