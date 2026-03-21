@@ -453,6 +453,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `backfillClinicalData()` | clinical.js | One-click backfill: auto-complete past apts, create proc records, evidence entries, link patients |
 | `autoSuggestClinicalDeadlines()` | deadlines.js | Generate soft deadline suggestions from competency gaps before externship |
 | `dpRenderClinicDayBanner()` | daily-planner.js | Clinic day banner with patient list, completion tracking, post-clinic summary |
+| `parseImportAppointmentBlock(text)` | patients.js | Parse PATIENT:/CHART:/DATE:/TIME:/PROCEDURE: appointment block from unified import |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
 | `init()` | init.js | App entry point (calls initFirebase) |
 

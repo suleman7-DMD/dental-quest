@@ -56,7 +56,9 @@ const date = new Date(year, month - 1, day);
 - **Smart counting vs narrow counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (in state.js) which aggregate from ALL data sources. NEVER replace these with narrow `getValues(appointments).filter(completed)` — that was the original bug (showed 0/90 despite real data existing).
 - **Evidence trail on manual adjustments**: `adjustCompItem()` and `setCompItemStatus()` auto-create `completionEntries[]` for manual changes. Do NOT remove this — the smart procedure counter depends on deduping manual entries vs procedure-linked entries.
 - **Backfill creates checkpoint**: `backfillClinicalData()` calls `createCheckpoint('pre-backfill')` before mutations. Always preserve this safety net.
-- **Import auto-completes past appointments**: `confirmClinicalImport()` sets `status: 'completed'` for appointments with dates before today. Do NOT revert to always `'scheduled'`.
+- **Import auto-completes past appointments**: `confirmClinicalImport()` AND `confirmPatientImport()` both set `status: 'completed'` for appointments with dates before today. Do NOT revert to always `'scheduled'`.
+- **SPS dashboard is ground truth**: `getSmartAppointmentCount()` and `getSmartProcedureCount()` use `MAX(computed, dashboardSnapshots[0])`. The SPS snapshot from the school system is the authoritative floor. Never remove this floor logic.
+- **Unified import handles appointments**: `parsePatientImportText()` in patients.js now detects PATIENT:/CHART:/DATE: blocks and creates appointments. The user pastes ONE combined text (SPS_DASHBOARD_UPDATE + APPOINTMENTS) into the patient import modal and everything syncs globally.
 
 ---
 
