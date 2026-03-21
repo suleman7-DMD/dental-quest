@@ -6355,278 +6355,417 @@
         }
 
         /* ============================================
-           PATIENTS TAB STYLES
+           PATIENTS TAB STYLES (Redesigned)
            ============================================ */
+
+        /* === LAYOUT === */
         #patientsMainLayout {
             display: flex;
             gap: 0;
             min-height: 70vh;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
-        /* Sidebar */
+        /* === SIDEBAR === */
         #patientsSidebar {
-            width: 240px;
-            min-width: 240px;
+            width: 260px;
+            min-width: 260px;
             background: #111827;
-            border-radius: 12px 0 0 12px;
             border: 1px solid #1e293b;
             border-right: 2px solid #1e293b;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-
-        .pts-sidebar-header {
-            padding: 12px;
+        .pts-sidebar-controls {
+            padding: 10px;
             border-bottom: 1px solid #1e293b;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            flex-shrink: 0;
         }
-
-        .pts-search-input {
+        .pt-sidebar-search {
             width: 100%;
             padding: 8px 10px;
             background: #0f172a;
             border: 1px solid #334155;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #e2e8f0;
             font-size: 0.85em;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            -webkit-appearance: none;
+            appearance: none;
         }
-
-        .pts-sidebar-actions {
+        .pt-sidebar-search:focus { border-color: #3b82f6; }
+        .pts-sidebar-btns {
             display: flex;
             gap: 6px;
         }
-
-        .pts-import-btn {
+        .pts-btn-import {
             flex: 1;
-            padding: 6px 10px;
-            background: #7c3aed;
-            border: none;
+            padding: 7px 10px;
+            background: rgba(124,58,237,0.15);
+            border: 1px solid rgba(124,58,237,0.3);
             border-radius: 6px;
-            color: white;
+            color: #a78bfa;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.78em;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: all 0.15s;
         }
-        .pts-import-btn:hover { background: #6d28d9; }
-
-        .pts-add-btn {
-            width: 34px;
-            padding: 6px;
-            background: #059669;
-            border: none;
+        .pts-btn-import:hover { background: rgba(124,58,237,0.25); }
+        .pts-btn-add {
+            flex: 1;
+            padding: 7px 10px;
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.3);
             border-radius: 6px;
-            color: white;
+            color: #6ee7b7;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 700;
-            transition: background 0.2s;
+            font-size: 0.78em;
+            font-weight: 600;
+            transition: all 0.15s;
         }
-        .pts-add-btn:hover { background: #047857; }
+        .pts-btn-add:hover { background: rgba(16,185,129,0.22); }
 
+        /* Sidebar list */
         .pts-sidebar-list {
             flex: 1;
             overflow-y: auto;
-            padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
         }
-
-        .pts-sidebar-item {
+        .pts-section-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px 4px;
+            font-size: 0.65em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            user-select: none;
+            margin-top: 4px;
+        }
+        .pts-section-header[onclick] { cursor: pointer; }
+        .pts-section-arrow { font-size: 0.85em; color: #475569; }
+        .pts-section-count {
+            margin-left: auto;
+            font-size: 0.9em;
+            color: #475569;
+            font-weight: 600;
+        }
+        .pts-sidebar-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             cursor: pointer;
-            color: #94a3b8;
-            font-size: 0.9em;
             border-left: 3px solid transparent;
-            transition: all 0.15s;
+            transition: all 0.12s;
             user-select: none;
         }
-        .pts-sidebar-item:hover {
-            background: rgba(255,255,255,0.04);
-            color: #e2e8f0;
-        }
-        .pts-sidebar-item.active {
-            background: rgba(59, 130, 246, 0.1);
+        .pts-sidebar-row:hover { background: rgba(255,255,255,0.04); }
+        .pts-sidebar-row.active {
+            background: rgba(59,130,246,0.1);
             border-left-color: #3b82f6;
-            color: #3b82f6;
-            font-weight: 600;
         }
-
-        .pts-reliability-dot {
+        .pts-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
         }
-        .pts-reliability-dot.green { background: #10b981; }
-        .pts-reliability-dot.yellow { background: #f59e0b; }
-        .pts-reliability-dot.red { background: #ef4444; }
-
-        .pts-sidebar-name {
+        .pts-row-info {
             flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .pts-row-name {
+            font-size: 0.82em;
+            color: #cbd5e1;
+            font-weight: 500;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
-        .pts-hv-badge {
-            font-size: 0.65em;
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-            padding: 1px 5px;
-            border-radius: 4px;
-            flex-shrink: 0;
+        .pts-sidebar-row.active .pts-row-name {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+        .pts-row-chart {
+            font-size: 0.68em;
+            color: #475569;
         }
 
-        /* Record View */
+        /* === RECORD VIEW === */
         .pts-record-view {
             flex: 1;
-            background: #151d2e;
-            border-radius: 0 12px 12px 0;
+            background: #0f172a;
             border: 1px solid #1e293b;
             border-left: none;
             padding: 20px 24px;
             overflow-y: auto;
             max-height: 85vh;
+            -webkit-overflow-scrolling: touch;
         }
-
         .pts-empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #94a3b8;
+            color: #64748b;
+            font-size: 0.9em;
         }
 
-        /* Requirement badges */
-        .pts-req-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+        /* Mobile back button — hidden on desktop */
+        .ptr-back-btn {
+            display: none;
+            padding: 8px 14px;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 8px;
+            color: #93c5fd;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
             margin-bottom: 12px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .pts-req-badge {
-            display: inline-flex;
+        /* Record header */
+        .ptr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .ptr-header-left { flex: 1; min-width: 0; }
+        .ptr-name {
+            font-size: 1.15em;
+            font-weight: 800;
+            color: #f1f5f9;
+            line-height: 1.2;
+        }
+        .ptr-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .ptr-chart { font-size: 0.78em; color: #64748b; font-weight: 600; }
+        .ptr-type {
+            font-size: 0.7em;
+            background: rgba(99,102,241,0.12);
+            color: #a5b4fc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ptr-rel-dots {
+            display: flex;
             align-items: center;
             gap: 4px;
-            padding: 3px 8px;
-            border-radius: 4px;
+        }
+        .ptr-rel-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0.2;
+            transition: opacity 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ptr-rel-dot:hover, .ptr-rel-dot.selected { opacity: 1; }
+        .ptr-rel-label {
+            font-size: 0.68em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 2px;
+        }
+        .ptr-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .ptr-edit-btn {
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #94a3b8;
             font-size: 0.75em;
             font-weight: 600;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.15s;
         }
+        .ptr-edit-btn.active {
+            background: rgba(59,130,246,0.2);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+        .ptr-action-btn {
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #64748b;
+            font-size: 0.72em;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ptr-action-btn:hover { background: rgba(255,255,255,0.08); }
+        .ptr-action-btn.danger { color: #ef4444; border-color: rgba(239,68,68,0.2); }
+        .ptr-action-btn.danger:hover { background: rgba(239,68,68,0.1); }
 
-        .pts-hv-banner {
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 8px;
-            padding: 8px 14px;
+        /* Requirements banner */
+        .ptr-req-banner {
             margin-bottom: 12px;
+        }
+        .ptr-hv-badge {
+            background: rgba(251,191,36,0.08);
+            border: 1px solid rgba(251,191,36,0.2);
+            border-radius: 6px;
+            padding: 4px 12px;
+            margin-bottom: 4px;
             color: #fbbf24;
             font-weight: 700;
-            font-size: 0.9em;
-            text-align: center;
+            font-size: 0.75em;
         }
-
-        /* Record fields — Google Docs style */
-        .pt-record-header {
+        .ptr-req-toggle {
             display: flex;
-            background: #4a4a4a;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            overflow: hidden;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 3px 0;
+            font-size: 0.78em;
+            color: #6366f1;
+            font-weight: 600;
         }
-        .pt-record-header-left {
-            flex: 2;
-            padding: 10px 16px;
-            color: white;
+        .ptr-req-arrow { font-size: 0.7em; color: #475569; }
+        .ptr-req-row {
+            font-size: 0.72em;
+            color: #94a3b8;
+            margin-bottom: 2px;
+        }
+        .ptr-req-row span:first-child {
             font-weight: 700;
-            font-size: 0.95em;
-        }
-        .pt-record-header-right {
-            flex: 1;
-            padding: 10px 16px;
-            color: white;
-            font-size: 0.95em;
-            border-left: 1px solid #666;
-        }
-
-        .pt-record-field {
-            padding: 10px 16px;
-            border-radius: 4px;
-            margin-bottom: 6px;
+            text-transform: uppercase;
             font-size: 0.9em;
-            line-height: 1.5;
         }
 
-        .pt-field-label {
+        /* Sections */
+        .ptr-section { margin-bottom: 8px; }
+        .ptr-section-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            margin-bottom: 5px;
+            user-select: none;
+        }
+        .ptr-section-arrow { font-size: 0.55em; color: #475569; }
+        .ptr-section-icon { font-size: 0.75em; }
+        .ptr-section-title {
+            font-size: 0.7em;
             font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
-        .pt-field-value {
-            outline: none;
+        /* Field view (read mode) — text fills full width */
+        .ptr-field-view {
+            margin-bottom: 4px;
+            background: #0b1120;
+            border: 1px solid #1a2435;
+            border-left: 3px solid;
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+        .ptr-field-label {
+            font-size: 0.62em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: block;
+            margin-bottom: 1px;
+        }
+        .ptr-field-text {
+            font-size: 0.84em;
+            color: #cbd5e1;
+            line-height: 1.45;
             white-space: pre-wrap;
             word-break: break-word;
-            min-width: 20px;
-            display: inline;
         }
-        .pt-field-value:hover {
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
-        }
-        .pt-field-value:focus {
-            background: rgba(255,255,255,0.12);
-            border-radius: 3px;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        .ptr-notes-view {
+            min-height: 40px;
+            font-size: 0.84em;
+            color: #cbd5e1;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        /* Imaging table */
-        .pt-imaging-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-        }
-        .pt-imaging-table td {
-            border: 1px solid #555;
-            padding: 8px 12px;
-        }
-        .pt-imaging-table td:first-child {
-            font-weight: 700;
-            width: 120px;
-            background: rgba(255,255,255,0.03);
-        }
-        .pt-imaging-table .pt-field-value {
-            display: block;
-            width: 100%;
-        }
-
-        /* Notes field — taller */
-        .pt-notes-field .pt-field-value {
-            display: block;
-            min-height: 120px;
-        }
-
-        /* Delete patient button */
-        .pts-delete-btn {
-            padding: 6px 12px;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        /* Field edit mode */
+        .ptr-field { margin-bottom: 4px; }
+        .ptr-field-edit {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-left: 3px solid;
             border-radius: 6px;
-            color: #f87171;
-            cursor: pointer;
-            font-size: 0.8em;
-            transition: all 0.2s;
+            padding: 6px 10px;
+            font-size: 0.84em;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            outline: none;
+            min-height: 22px;
+            line-height: 1.45;
+            cursor: text;
         }
-        .pts-delete-btn:hover {
-            background: rgba(239, 68, 68, 0.25);
+        .ptr-field-edit:focus {
+            border-color: #475569;
+        }
+        .ptr-notes-edit { min-height: 80px; }
+
+        /* Imaging grid */
+        .ptr-imaging-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+        .ptr-imaging-cell {
+            background: #0b1120;
+            border: 1px solid #1a2435;
+            border-radius: 5px;
+            padding: 5px 8px;
+        }
+        .ptr-imaging-label {
+            font-size: 0.6em;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .ptr-imaging-value { font-size: 0.8em; }
+        .ptr-imaging-edit {
+            font-size: 0.8em;
+            outline: none;
+            min-height: 14px;
+            white-space: pre-wrap;
+            cursor: text;
         }
 
-        /* Compact stat chips */
+        /* Stat chips (countdown radar) */
         .pts-stat-chip {
             display: inline-flex;
             align-items: baseline;
@@ -6635,42 +6774,55 @@
             padding: 2px 0;
         }
 
-        /* Sidebar width adjustment */
-
-        /* Mobile responsive */
+        /* === MOBILE: Full-screen list/record toggle === */
         @media (max-width: 768px) {
             #patientsMainLayout {
                 flex-direction: column;
+                min-height: auto;
             }
             #patientsSidebar {
                 width: 100%;
                 min-width: 100%;
-                border-radius: 12px 12px 0 0;
                 border-right: none;
-                border-bottom: 1px solid #1e293b;
-                max-height: 180px;
-            }
-            .pts-record-view {
-                border-radius: 0 0 12px 12px;
-                border-left: 1px solid #1e293b;
+                border-radius: 10px;
+                border: 1px solid #1e293b;
                 max-height: none;
-                padding: 14px 12px;
             }
-        }
-        @media (max-width: 480px) {
-            #patientsSidebar {
-                max-height: 150px;
-            }
-            .pts-stat-chip {
-                font-size: 0.72em;
-            }
+            .pts-sidebar-list { max-height: 55vh; }
             .pts-record-view {
-                padding: 10px 8px;
+                border-radius: 10px;
+                border: 1px solid #1e293b;
+                border-top: none;
+                padding: 14px 12px;
+                max-height: none;
+                display: none;
             }
-            .pts-search-input {
-                font-size: 0.78em;
-                padding: 5px 8px;
-            }
+            /* When a patient is selected on mobile: hide list, show record */
+            .pts-mobile-record-active #patientsSidebar { display: none; }
+            .pts-mobile-record-active .pts-record-view { display: block; }
+
+            .ptr-back-btn { display: block; }
+            .ptr-header { flex-direction: column; gap: 8px; }
+            .ptr-actions { width: 100%; }
+            .ptr-actions button { flex: 1; padding: 8px; font-size: 0.8em; }
+            .ptr-type { max-width: none; white-space: normal; }
+            .ptr-rel-dot { width: 18px; height: 18px; }
+            .ptr-imaging-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
+            .pts-sidebar-row { padding: 10px 12px; }
+            .pts-dot { width: 10px; height: 10px; }
+            .pts-row-name { font-size: 0.88em; }
+            .pts-row-chart { font-size: 0.72em; }
+            .pts-section-header { font-size: 0.7em; padding: 8px 12px 5px; }
+            .pt-sidebar-search { padding: 10px 12px; font-size: 16px; border-radius: 8px; }
+            .pts-btn-import, .pts-btn-add { padding: 9px 10px; font-size: 0.84em; }
+            .ptr-field-view { padding: 8px 10px; }
+            .ptr-field-text { font-size: 0.88em; }
+            .ptr-field-edit { padding: 8px 10px; font-size: 0.88em; }
+        }
+
+        @media (max-width: 380px) {
+            .pts-sidebar-controls { padding: 8px; }
+            .pts-stat-chip { font-size: 0.72em; }
         }
 
     </style>
@@ -6727,27 +6879,26 @@
         <!-- Countdown Radar -->
         <div id="patientsCountdownRadar"></div>
 
-        <!-- Two-panel layout -->
+        <!-- Two-panel layout (sidebar + record) -->
         <div id="patientsMainLayout">
-            <!-- Left: Patient sidebar list -->
+            <!-- Left: Patient sidebar list — fully rendered by renderPatientsSidebar() -->
             <div id="patientsSidebar">
-                <div class="pts-sidebar-header">
-                    <input type="text" id="ptSidebarSearch" placeholder="Search patients..." oninput="filterPatientsSidebar()" class="pts-search-input">
-                    <div class="pts-sidebar-actions">
-                        <button onclick="openPatientImportModal()" class="pts-import-btn" title="Import from Claude">📥 Import</button>
-                        <button onclick="addNewPatientRecord()" class="pts-add-btn" title="Add Patient">+</button>
+                <div class="pts-sidebar-controls">
+                    <input type="text" class="pt-sidebar-search" placeholder="Search patients..." oninput="renderPatientsSidebar()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <div class="pts-sidebar-btns">
+                        <button onclick="openPatientImportModal()" class="pts-btn-import">Import</button>
+                        <button onclick="addNewPatientRecord()" class="pts-btn-add">+ New</button>
                     </div>
                 </div>
-                <div id="ptSidebarList" class="pts-sidebar-list">
-                    <!-- Populated by renderPatientsSidebar() -->
+                <div class="pts-sidebar-list">
+                    <div style="padding:20px; text-align:center; color:#64748b; font-size:0.8em;">Loading patients...</div>
                 </div>
             </div>
 
             <!-- Right: Active patient record -->
             <div id="patientRecordView" class="pts-record-view">
                 <div class="pts-empty-state">
-                    <div style="font-size: 3em; margin-bottom: 10px;">🩺</div>
-                    <p>Select a patient from the sidebar to view their record.</p>
+                    <p>Select a patient to view their record</p>
                 </div>
             </div>
         </div>
@@ -9599,16 +9750,16 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260321e"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260321e"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260321f"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260321f"></script>
 </body>
 </html>
