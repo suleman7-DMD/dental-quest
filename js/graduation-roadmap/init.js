@@ -144,9 +144,14 @@ function renderDashboard() {
     html += '</div>';
     // Source breakdown
     var aptBreakdown = [];
-    if (smartApts.fromAppointments > 0) aptBreakdown.push(smartApts.fromAppointments + ' completed');
-    if (smartApts.fromPlannerSync > 0) aptBreakdown.push(smartApts.fromPlannerSync + ' via planner');
-    if (smartApts.fromPatientVisits > 0) aptBreakdown.push(smartApts.fromPatientVisits + ' patient visits');
+    if (smartApts.snapshotIsFloor) {
+        aptBreakdown.push(smartApts.fromSnapshot + ' per SPS dashboard');
+    } else {
+        if (smartApts.fromAppointments > 0) aptBreakdown.push(smartApts.fromAppointments + ' completed');
+        if (smartApts.fromPlannerSync > 0) aptBreakdown.push(smartApts.fromPlannerSync + ' via planner');
+        if (smartApts.fromPatientVisits > 0) aptBreakdown.push(smartApts.fromPatientVisits + ' patient visits');
+        if (smartApts.fromSnapshot > 0) aptBreakdown.push('SPS: ' + smartApts.fromSnapshot);
+    }
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
     // Pace projection
     if (aptPace) {
@@ -170,8 +175,13 @@ function renderDashboard() {
     html += '</div>';
     // Source breakdown
     var procBreakdown = [];
-    if (smartProcs.fromProcedureRecords > 0) procBreakdown.push(smartProcs.fromProcedureRecords + ' recorded');
-    if (smartProcs.fromCompetencyManual > 0) procBreakdown.push(smartProcs.fromCompetencyManual + ' from competencies');
+    if (smartProcs.snapshotIsFloor) {
+        procBreakdown.push(smartProcs.fromSnapshot + ' per SPS dashboard');
+    } else {
+        if (smartProcs.fromProcedureRecords > 0) procBreakdown.push(smartProcs.fromProcedureRecords + ' recorded');
+        if (smartProcs.fromCompetencyManual > 0) procBreakdown.push(smartProcs.fromCompetencyManual + ' from competencies');
+        if (smartProcs.fromSnapshot > 0) procBreakdown.push('SPS: ' + smartProcs.fromSnapshot);
+    }
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (procBreakdown.length > 0 ? procBreakdown.join(' + ') : 'No data yet') + '</div>';
     // Pace projection
     if (procPace) {

@@ -825,11 +825,25 @@ function getSmartAppointmentCount() {
         }
     });
 
+    var computedTotal = aptIds.size + extraVisits;
+
+    // Source 4: SPS Dashboard snapshot (authoritative ground truth from school system)
+    var snapshotCount = 0;
+    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
+    if (snapshots && snapshots.length > 0) {
+        snapshotCount = parseInt(snapshots[0].appointments?.attended) || 0;
+    }
+
+    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count
+    var total = Math.max(computedTotal, snapshotCount);
+
     return {
-        total: aptIds.size + extraVisits,
+        total: total,
         fromAppointments: completedApts.length,
         fromPlannerSync: Math.max(0, aptIds.size - completedApts.length),
-        fromPatientVisits: extraVisits
+        fromPatientVisits: extraVisits,
+        fromSnapshot: snapshotCount,
+        snapshotIsFloor: snapshotCount > computedTotal
     };
 }
 
@@ -859,11 +873,24 @@ function getSmartProcedureCount() {
         });
     }
 
-    // Total = formal procedures + manual competency adjustments (deduped)
+    var computedTotal = formalCount + competencyDerivedCount;
+
+    // Source 3: SPS Dashboard snapshot (authoritative ground truth from school system)
+    var snapshotCount = 0;
+    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
+    if (snapshots && snapshots.length > 0) {
+        snapshotCount = parseInt(snapshots[0].procedures?.totalCompleted) || 0;
+    }
+
+    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count
+    var total = Math.max(computedTotal, snapshotCount);
+
     return {
-        total: formalCount + competencyDerivedCount,
+        total: total,
         fromProcedureRecords: formalCount,
-        fromCompetencyManual: competencyDerivedCount
+        fromCompetencyManual: competencyDerivedCount,
+        fromSnapshot: snapshotCount,
+        snapshotIsFloor: snapshotCount > computedTotal
     };
 }
 

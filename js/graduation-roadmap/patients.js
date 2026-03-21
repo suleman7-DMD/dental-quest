@@ -1021,7 +1021,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null };
+    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [] };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1074,9 +1074,25 @@ function parsePatientImportText(text) {
         } else if (effectiveHeader === 'SPS_DASHBOARD_UPDATE') {
             var parsed5 = parseDashboardUpdate(bodyText);
             if (parsed5) result.dashboardUpdate = parsed5;
+        } else if (effectiveHeader === 'APPOINTMENTS') {
+            // APPOINTMENTS header detected — subsequent blocks will be appointment blocks
+            // This block itself might be empty (just the header), handled by pendingHeader above
+            // If body has PATIENT: data, parse it as an appointment
+            if (bodyText && bodyText.indexOf('PATIENT:') !== -1) {
+                var aptParsed = parseImportAppointmentBlock(bodyText);
+                if (aptParsed) result.appointments.push(aptParsed);
+            }
         } else {
-            // Auto-detect: patient record if has NAME: or CHART:
-            if (block.indexOf('NAME:') !== -1 || block.indexOf('CHART:') !== -1) {
+            // Auto-detect: appointment block if has PATIENT: and DATE: and PROCEDURE:
+            if (block.indexOf('PATIENT:') !== -1 && block.indexOf('DATE:') !== -1) {
+                var autoApt = parseImportAppointmentBlock(block);
+                if (autoApt) {
+                    result.appointments.push(autoApt);
+                    return; // Don't also parse as patient record
+                }
+            }
+            // Auto-detect: patient record if has NAME: or CHART: (but NOT PATIENT: which is appointments)
+            if ((block.indexOf('NAME:') !== -1 || block.indexOf('CHART:') !== -1) && block.indexOf('PATIENT:') === -1) {
                 var autoParsed = parsePatientRecord(block);
                 if (autoParsed && (autoParsed.name || autoParsed.chartNumber)) result.records.push(autoParsed);
             }
@@ -1282,6 +1298,63 @@ function parseRequirementsStatus(text) {
     return statuses;
 }
 
+// Parse a single appointment block from the unified import format
+// Handles: PATIENT: / CHART: / DATE: / TIME: / PROCEDURE: / CHAIR:
+function parseImportAppointmentBlock(text) {
+    var apt = {};
+    var lines = text.split('\n');
+    lines.forEach(function(line) {
+        var trimmed = line.trim();
+        if (!trimmed) return;
+        var colonIdx = trimmed.indexOf(':');
+        if (colonIdx === -1) return;
+        var key = trimmed.substring(0, colonIdx).trim().toUpperCase();
+        var val = trimmed.substring(colonIdx + 1).trim();
+        if (key === 'PATIENT') apt.patientName = val;
+        else if (key === 'CHART') apt.chartNumber = val;
+        else if (key === 'DATE') {
+            // Parse various date formats
+            if (typeof parseImportDate === 'function') {
+                apt.date = parseImportDate(val);
+            } else {
+                // Fallback: try to extract YYYY-MM-DD
+                var dateMatch = val.match(/(\d{4})-(\d{2})-(\d{2})/);
+                if (dateMatch) {
+                    apt.date = dateMatch[0];
+                } else {
+                    // Try US format MM/DD/YYYY
+                    var usMatch = val.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                    if (usMatch) {
+                        apt.date = usMatch[3] + '-' + usMatch[1].padStart(2, '0') + '-' + usMatch[2].padStart(2, '0');
+                    }
+                }
+            }
+        }
+        else if (key === 'TIME') {
+            // Parse time to HH:MM 24h format
+            if (typeof parseImportTime === 'function') {
+                apt.time = parseImportTime(val);
+            } else {
+                // Fallback: manual parse "8:30 AM" → "08:30"
+                var timeMatch = val.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+                if (timeMatch) {
+                    var h = parseInt(timeMatch[1]);
+                    var m = timeMatch[2];
+                    var ampm = (timeMatch[3] || '').toUpperCase();
+                    if (ampm === 'PM' && h < 12) h += 12;
+                    if (ampm === 'AM' && h === 12) h = 0;
+                    apt.time = String(h).padStart(2, '0') + ':' + m;
+                }
+            }
+        }
+        else if (key === 'PROCEDURE') apt.procedure = val;
+        else if (key === 'CHAIR') apt.chair = val;
+    });
+
+    if (!apt.patientName || !apt.date) return null;
+    return apt;
+}
+
 function previewPatientImport() {
     var textarea = document.getElementById('patientImportText');
     var preview = document.getElementById('patientImportPreview');
@@ -1345,6 +1418,28 @@ function previewPatientImport() {
             + '<div style="color:#a5b4fc; font-weight:600; font-size:0.9em;">REQUIREMENT STATUS UPDATES (' + parsed.reqStatuses.length + ')</div>';
         parsed.reqStatuses.forEach(function(rs) {
             html += '<div style="color:#94a3b8; font-size:0.8em;">' + escapeHtml(rs.reqId) + ': completed=' + (rs.completed || 0) + (rs.note ? ', note: ' + escapeHtml(rs.note) : '') + '</div>';
+        });
+        html += '</div>';
+    }
+
+    // Preview appointments
+    if (parsed.appointments.length > 0) {
+        hasContent = true;
+        var todayStr = getLocalDateString(new Date());
+        var pastCount = parsed.appointments.filter(function(a) { return a.date && a.date < todayStr; }).length;
+        var futureCount = parsed.appointments.length - pastCount;
+        html += '<div style="padding:10px; margin-bottom:6px; background:#052e16; border-radius:6px; border-left:3px solid #22c55e;">'
+            + '<div style="color:#4ade80; font-weight:600; font-size:0.9em;">APPOINTMENTS (' + parsed.appointments.length + ')</div>';
+        if (pastCount > 0) html += '<div style="color:#6ee7b7; font-size:0.8em;">' + pastCount + ' past (will auto-complete + create procedure records)</div>';
+        if (futureCount > 0) html += '<div style="color:#93c5fd; font-size:0.8em;">' + futureCount + ' upcoming (scheduled)</div>';
+        parsed.appointments.forEach(function(apt) {
+            var isPast = apt.date && apt.date < todayStr;
+            html += '<div style="color:#94a3b8; font-size:0.8em; padding:2px 0;">'
+                + (isPast ? '✅' : '📅') + ' ' + escapeHtml(apt.date || '?') + ' '
+                + escapeHtml(apt.time || '') + ' — '
+                + escapeHtml(apt.patientName || '?') + ' — '
+                + escapeHtml(apt.procedure || '')
+                + '</div>';
         });
         html += '</div>';
     }
@@ -1468,6 +1563,76 @@ function confirmPatientImport() {
         applyRequirementCheckoffs(completedItems);
     }
 
+    // Process appointments from unified import
+    var aptsCreated = 0;
+    if (parsed.appointments.length > 0) {
+        if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
+        if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+        if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
+        if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
+
+        var todayStr = getLocalDateString(new Date());
+
+        parsed.appointments.forEach(function(apt) {
+            if (!apt.patientName || !apt.date) return;
+
+            // Find or create patient in clinicalData.patients
+            var patientId = null;
+            var existingPatients = Object.entries(roadmapData.clinicalData.patients);
+            for (var i = 0; i < existingPatients.length; i++) {
+                var p = existingPatients[i][1];
+                if (apt.chartNumber && p.chartNumber === apt.chartNumber) { patientId = existingPatients[i][0]; break; }
+                if (p.name && p.name.toLowerCase() === apt.patientName.toLowerCase()) { patientId = existingPatients[i][0]; break; }
+            }
+            if (!patientId) {
+                patientId = 'patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                roadmapData.clinicalData.patients[patientId] = {
+                    id: patientId, name: apt.patientName, chartNumber: apt.chartNumber || '',
+                    status: 'active', asaClass: '', perioStatus: '', needsXrays: false,
+                    recallDue: null, medicalAlerts: '', outstandingTasks: [],
+                    createdAt: new Date().toISOString()
+                };
+            }
+
+            // Dedup: skip if same patient+date+time already exists
+            var isDupe = getValues(roadmapData.clinicalData.appointments).some(function(ex) {
+                return ex.patientId === patientId && ex.date === apt.date && ex.time === (apt.time || '09:00');
+            });
+            if (isDupe) return;
+
+            var isPast = apt.date < todayStr;
+            var appointmentId = generateId('appt');
+            var newApt = {
+                id: appointmentId, patientId: patientId,
+                date: apt.date, time: apt.time || '09:00', duration: 60,
+                procedures: apt.procedure || '', notes: apt.chair ? 'Chair: ' + apt.chair : '',
+                status: isPast ? 'completed' : 'scheduled', imported: true
+            };
+            if (isPast) {
+                newApt.completedAt = apt.date + 'T17:00:00.000Z';
+                var ptEntry = roadmapData.clinicalData.patients[patientId];
+                if (ptEntry && (!ptEntry.lastVisit || ptEntry.lastVisit < apt.date)) ptEntry.lastVisit = apt.date;
+            }
+            roadmapData.clinicalData.appointments[appointmentId] = newApt;
+            aptsCreated++;
+
+            // Auto-create procedure record for past appointments
+            if (isPast && apt.procedure && typeof recordProcedure === 'function') {
+                recordProcedure({
+                    patientId: patientId, patientName: apt.patientName || '',
+                    appointmentId: appointmentId, date: apt.date,
+                    procedureType: 'other', procedure: apt.procedure,
+                    notes: 'Auto-created from import', createdAt: new Date().toISOString()
+                });
+            }
+        });
+
+        // Sync to monthly planner
+        if (typeof syncClinicalToMonthlyPlanner === 'function') {
+            syncClinicalToMonthlyPlanner();
+        }
+    }
+
     // Save dashboard snapshot
     if (parsed.dashboardUpdate) {
         saveDashboardSnapshot(parsed.dashboardUpdate);
@@ -1491,9 +1656,18 @@ function confirmPatientImport() {
     }
     _suppressBlurSave = false;
 
+    // Re-render dashboard with updated data
+    if (typeof renderDashboard === 'function') {
+        try { renderDashboard(); } catch(e) {}
+    }
+    if (typeof initClinicalTab === 'function' && aptsCreated > 0) {
+        try { initClinicalTab(); } catch(e) {}
+    }
+
     var msg = '';
     if (created > 0) msg += created + ' patient(s) created. ';
     if (updated > 0) msg += updated + ' patient(s) updated. ';
+    if (aptsCreated > 0) msg += aptsCreated + ' appointment(s) imported. ';
     if (parsed.reqStatuses.length > 0 || completedItems.length > 0) msg += 'Requirements updated. ';
     if (parsed.dashboardUpdate) msg += 'Dashboard snapshot saved. ';
     showToast(msg || 'Import complete');
