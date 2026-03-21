@@ -463,7 +463,7 @@ function loadFromFirebase() {
 
             // Load medication inventory from cross-app shared path
             if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
-            // Load week-at-a-glance from d3Roadmap cross-app path
+            // Load week-at-a-glance from graduationRoadmap cross-app path
             if (typeof scWeekGlanceLoadFromFirebase === 'function') scWeekGlanceLoadFromFirebase();
         })
         .catch(error => {

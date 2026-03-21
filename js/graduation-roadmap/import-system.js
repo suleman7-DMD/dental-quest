@@ -242,7 +242,7 @@ function confirmLectureImport() {
     });
 
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closeLectureImportModal();
     initMonthlyPlanner();
@@ -456,7 +456,7 @@ function confirmClinicalImport() {
     syncClinicalToMonthlyPlanner();
 
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closeClinicalImportModal();
     initClinicalTab();

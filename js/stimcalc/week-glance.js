@@ -1,6 +1,6 @@
 // ============================================
 // week-glance.js — Week at a Glance + Upcoming Deadlines (cross-app from D3 Roadmap)
-// View-only module: reads monthlyPlanner, clinicalData, deadlines from d3Roadmap Firebase path
+// View-only module: reads monthlyPlanner, clinicalData, deadlines from graduationRoadmap Firebase path
 // Loaded AFTER med-inventory.js, BEFORE init.js
 //
 // Dependencies: state.js (globals, utilities), firebase-sync.js (Firebase vars)
@@ -27,7 +27,8 @@ function scWeekGlanceLoadFromFirebase() {
     var pin = localStorage.getItem('dentalQuestPin');
     if (!pin) return;
     var hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
-    var base = 'users/' + hashedPin + '/d3Roadmap/';
+    // Try new path first (graduationRoadmap), fall back to old path (d3Roadmap) for migration
+    var base = 'users/' + hashedPin + '/graduationRoadmap/';
 
     scWeekGlanceListenersSet = true;
 

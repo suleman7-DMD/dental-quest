@@ -40,14 +40,55 @@ const STATIC_DEADLINES = [
     { date: '2026-03-19', day: 'Thu', what: 'FINAL EXAM (4-5:30pm, L1101)', course: 'Pain Control 2', weight: '40%', type: 'EXAM', month: 'march' },
     { date: '2026-03-23', day: 'Mon', what: 'Systematic Review due (8am)', course: 'Critical Thinking', weight: '12%', type: 'Project', month: 'march' },
     { date: '2026-03-27', day: 'Fri', what: '❌ NO CLASS', course: 'Oral Med', weight: '—', type: 'No Class', month: 'march' },
+    // March 16 — Monday
+    { date: '2026-03-16', day: 'Mon', what: '12:45 PM — Assist D1s Bay 9J (6th floor) — alginate impressions', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-16', day: 'Mon', what: 'Denture try-in for Suzuki — carve post dam, fill rx form, collect images, email images, get QC, send to lab', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-16', day: 'Mon', what: 'Figure out Perio 2 implant lab session for Wed Mar 18 — need AM vs PM by tonight', course: 'Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-16', day: 'Mon', what: 'Pull up Annette Woods chart (Pt Sat Mar 21 8:30am) — figure out LOE, review tx plan, fill progress notes', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-16', day: 'Mon', what: 'Ortho pliers — confirm you have them for tomorrow wire bending lab', course: 'Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-16', day: 'Mon', what: 'All free time → Pain Control Final prep (exam Thu Mar 19)', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
+    // March 17 — Tuesday
+    { date: '2026-03-17', day: 'Tue', what: '12:30–3:30 PM — Carlos prophy appointment', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-17', day: 'Tue', what: '4:00–6:20 PM — SLC Wire Bending Lab (GRADED) — fabricate 2 space maintainers. Bring ortho pliers.', course: 'Orthodontics', weight: 'Graded', type: 'Lab', month: 'march' },
+    { date: '2026-03-17', day: 'Tue', what: 'By Wed: figure out Nabibi next patient appt — check chart, next tx step, submit SPS if needed', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-17', day: 'Tue', what: 'Free time → Pain Control Final prep', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
+    // March 18 — Wednesday
+    { date: '2026-03-18', day: 'Wed', what: '8:00–10:00 AM — Fixed Sims', course: 'Fixed Pros', weight: '—', type: 'Lab', month: 'march' },
+    { date: '2026-03-18', day: 'Wed', what: '10:00 AM–7:00 PM — Perio 2 Implant Placement Lab (confirm your session AM vs PM)', course: 'Perio 2', weight: '—', type: 'Lab', month: 'march' },
+    { date: '2026-03-18', day: 'Wed', what: 'Free time → Pain Control Final prep', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
+    // March 19 — Thursday
+    { date: '2026-03-19', day: 'Thu', what: '8:30–11:30 AM — Moe composite redo (patient appointment)', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    // March 20 — Friday
+    { date: '2026-03-20', day: 'Fri', what: 'Oral Medicine Quiz due by 1:00 PM — DO NOT FORGET', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Adderall Rx for externship — Can prescriber do telehealth to FL? FL-licensed provider? Pharmacy transfer?', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Renew license plate (due May 15) — check IL SOS website, may be doable online', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'Renew drivers license (due May 15) — check IL online renewal or if you need in-person trip', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
+    { date: '2026-03-20', day: 'Fri', what: 'NPI assignment — requires processing time per Reboucas. Start now, do not wait until Mar 30', course: 'Peds', weight: 'MANDATORY', type: 'Assignment', month: 'march' },
+    // March 21 — Saturday
+    { date: '2026-03-21', day: 'Sat', what: '8:30–11:30 AM — Annette Woods (LOE) — review chart, progress notes ready, know tx plan', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    { date: '2026-03-21', day: 'Sat', what: '12:30–3:30 PM — Tawana recall — full mouth probing, perio charting, prophylaxis', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
+    // March 23 — Monday
+    { date: '2026-03-23', day: 'Mon', what: 'Critical Thinking group PowerPoint — coordinate with Dimpy, Saif, Jiji on division of labor', course: 'Critical Thinking', weight: '—', type: 'Project', month: 'march' },
+    // March 25 — Wednesday
+    { date: '2026-03-25', day: 'Wed', what: '11:30 AM–12:15 PM — MANDATORY Group Practice Meeting (G170) — Dr. Maseli. Email in advance if cannot attend.', course: 'Group Practice', weight: 'MANDATORY', type: 'Mandatory', month: 'march' },
+    // March 30 — Monday (Peds study reminder)
+    { date: '2026-03-30', day: 'Mon', what: 'Pediatric Dentistry Exam — start studying after Pain Control is done', course: 'Peds', weight: '—', type: 'Study', month: 'march' },
+
     { date: '2026-03-30', day: 'Mon', what: 'EXAM 3 + Attendance component', course: 'Peds', weight: '7.5%', type: 'EXAM', month: 'march' },
     { date: '2026-03-30', day: 'Mon', what: 'NPI Exercise due (Google Form on BB)', course: 'Peds ⚠️', weight: 'MANDATORY', type: 'Assignment', month: 'march' },
 
     // April
     { date: '2026-04-01', day: 'Wed', what: 'Live Presentation (1-3:20pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
     { date: '2026-04-02', day: 'Thu', what: 'Quiz 9 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'april' },
+    // April 6 — Monday
+    { date: '2026-04-06', day: 'Mon', what: '11:30 AM–12:30 PM — MANDATORY Externship Rotation 1 Orientation (Zoom)', course: 'Externship', weight: 'MANDATORY', type: 'Mandatory', month: 'april' },
+    { date: '2026-04-06', day: 'Mon', what: '⚠️ CONFLICT: Oral Rad rotation all day — email Oral Rad director AND Amy Wapshare about Zoom overlap ASAP', course: 'Admin', weight: '—', type: 'Assignment', month: 'april' },
     { date: '2026-04-10', day: 'Fri', what: '❌ NO CLASS', course: 'Oral Med', weight: '—', type: 'No Class', month: 'april' },
+    // April 13 — Monday
+    { date: '2026-04-13', day: 'Mon', what: 'Critical Thinking presentation — PPT on THUMB DRIVE (no laptops/cloud). If called & nobody presents = 0 = FAIL', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
     { date: '2026-04-14', day: 'Tue', what: 'Live Presentation (1-3:20pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
+    // April 15 — Wednesday
+    { date: '2026-04-15', day: 'Wed', what: 'Critical Thinking presentation — PPT on THUMB DRIVE (no laptops/cloud). If called & nobody presents = 0 = FAIL', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
     { date: '2026-04-16', day: 'Thu', what: 'Quiz 10 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'april' },
     { date: '2026-04-16', day: 'Thu', what: 'Live Presentation (1-2:50pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
     { date: '2026-04-17', day: 'Fri', what: 'FINAL EXAM (4-5:50pm, L1101) — notecard allowed', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'april' },
@@ -315,7 +356,7 @@ function handleDateChange(inputEl) {
     }
 
     // Save immediately
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -388,7 +429,7 @@ function handleTextEdit(inputEl) {
     }
 
     // Save immediately
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -561,7 +602,7 @@ function submitNewDeadline() {
     roadmapData.customDeadlines[deadlineId] = newDeadline;
 
     // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -623,7 +664,7 @@ function toggleDeadlineDone(index) {
         syncDeadlineToGrades(deadline, false);
 
         // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         const saved = saveData();
         if (!saved) {
             showToast('Save blocked — try refreshing', 'error');
@@ -779,7 +820,7 @@ function submitDeadlineGrade(index) {
     document.getElementById('gradeInputModal').remove();
 
     // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -983,7 +1024,7 @@ function deleteDeadline(index) {
             }
 
             // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             const saved = saveData();
             if (!saved) {
                 showToast('Save blocked — try refreshing', 'error');

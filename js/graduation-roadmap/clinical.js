@@ -297,7 +297,7 @@ function savePatient() {
 
     roadmapData.clinicalData.patients[patientId] = patient;
 
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closePatientModal();
     renderPatientsList();
@@ -322,7 +322,7 @@ function deletePatient() {
             });
         }
 
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         closePatientModal();
         renderPatientsList();
@@ -543,7 +543,7 @@ function saveAppointment() {
     // CRITICAL: Sync to Monthly Planner
     syncClinicalToMonthlyPlanner();
 
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closeAppointmentModal();
     renderAppointmentsList();
@@ -581,7 +581,7 @@ function deleteAppointment() {
         // CRITICAL: Sync to Monthly Planner
         syncClinicalToMonthlyPlanner();
 
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         closeAppointmentModal();
 
@@ -1230,7 +1230,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
         }
     }
 
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
 
@@ -1277,7 +1277,7 @@ function adjustCompItem(catKey, itemId, delta) {
         }
     }
 
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
 
@@ -1291,7 +1291,7 @@ function updateCompNotes(catKey, notes) {
     const competencies = getCompetenciesData();
     if (competencies[catKey]) {
         competencies[catKey].notes = notes;
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
     }
 }
@@ -1321,7 +1321,7 @@ function resetCompetencies() {
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
         );
         expandedCompCategories.clear();
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         renderCompetencies();
         showToast('Competencies reset to defaults');
@@ -1479,7 +1479,7 @@ function saveCompItem() {
         showToast(`Updated: ${name}`);
     }
 
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
     closeCompItemModal();
@@ -1517,7 +1517,7 @@ function deleteCompItem(catKey, itemId) {
         const c = comp[catKey];
         if (c && c.sections[foundSectionId] && c.sections[foundSectionId].items[itemId]) {
             delete c.sections[foundSectionId].items[itemId];
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             saveData();
             renderCompetencies();
             showToast(`Deleted: ${itemText}`);

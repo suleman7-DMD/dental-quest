@@ -6557,7 +6557,7 @@
     <!-- Cross-App Navigation -->
     <nav class="cross-app-nav">
         <a href="index.html" class="nav-link">🦷 Quest</a>
-        <a href="d3-roadmap.html" class="nav-link">📚 Roadmap</a>
+        <a href="graduation-roadmap.html" class="nav-link">📚 Roadmap</a>
         <a href="stimulant-elimination-calculator.html" class="nav-link">💊 Sleep Calc</a>
         <a href="body-comp-tracker.html" class="nav-link active">🏋️ Body Comp</a>
         <a href="lecture-prompt-transformer.html" class="nav-link">📝 Lectures</a>
@@ -14453,7 +14453,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push('');
 
             // D3 Roadmap Data
-            log.push('FROM D3 ROADMAP (/d3Roadmap):');
+            log.push('FROM GRADUATION ROADMAP (/graduationRoadmap):');
             const academic = state.ecosystemContext?.academic || {};
             log.push(`  • Next exam: ${academic.nextExam?.name ?? 'NULL'}`);
             log.push(`  • Exam date: ${academic.nextExam?.date ?? 'NULL'}`);
@@ -14462,7 +14462,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             log.push('');
 
             // Schedule Data (from D3 Roadmap)
-            log.push('FROM D3 ROADMAP - SCHEDULE (/d3Roadmap/monthlyPlanner):');
+            log.push('FROM GRADUATION ROADMAP - SCHEDULE (/graduationRoadmap/monthlyPlanner):');
             const sched = state.ecosystemContext?.schedule || {};
             log.push(`  • Today's tasks: ${sched.todayTasks?.length ?? 0} items`);
             if (sched.todayTasks?.length > 0) {
@@ -17495,7 +17495,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
 
                 // 3. D3 ROADMAP EXAMS
-                const roadmapSnapshot = await database.ref(basePath + '/d3Roadmap/exams').once('value');
+                const roadmapSnapshot = await database.ref(basePath + '/graduationRoadmap/exams').once('value');
                 const examsData = roadmapSnapshot.val();
 
                 // FIX: D3 Roadmap stores exams as OBJECT with ID keys, not array
@@ -17662,7 +17662,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         async function loadTodaySchedule(basePath, now) {
             try {
                 // Load Monthly Planner data from D3 Roadmap
-                const plannerSnapshot = await database.ref(basePath + '/d3Roadmap/monthlyPlanner').once('value');
+                const plannerSnapshot = await database.ref(basePath + '/graduationRoadmap/monthlyPlanner').once('value');
                 const plannerData = plannerSnapshot.val();
 
                 if (!plannerData) {

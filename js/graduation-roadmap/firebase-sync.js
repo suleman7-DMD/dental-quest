@@ -8,7 +8,8 @@ let isFirebaseConnected = false;
 let connectionMonitorRef = null;
 
 // Backup system
-const BACKUP_STORAGE_KEY = 'd3RoadmapBackup';
+const BACKUP_STORAGE_KEY = 'graduationRoadmapBackup';
+const OLD_BACKUP_STORAGE_KEY = 'd3RoadmapBackup';  // For migration
 const MAX_BACKUPS = 3;
 
 // Conflict detection & local change tracking
@@ -427,7 +428,7 @@ function initFirebase() {
 function setupUserAuth(pin) {
     const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
     currentUser = { uid: hashedPin };
-    userPath = 'users/' + hashedPin + '/d3Roadmap';
+    userPath = 'users/' + hashedPin + '/' + FIREBASE_APP_NAME;
     firebaseSyncEnabled = true;
 
     // CRITICAL: Mark PIN as validated BEFORE any Firebase operations
@@ -633,7 +634,19 @@ function mergeRemoteState(data) {
 // @param finalize - if true, also set flags and call initUI (for standalone use)
 //                   if false, just load data (caller handles flags/initUI)
 function loadFromLocalStorage(finalize = true) {
-    const saved = localStorage.getItem('d3RoadmapData');
+    let saved = localStorage.getItem(STORAGE_KEY);
+
+    // ONE-TIME MIGRATION: If new key has no data, check old key
+    if (!saved) {
+        const oldSaved = localStorage.getItem(OLD_STORAGE_KEY);
+        if (oldSaved) {
+            console.log('[MIGRATION] Migrating localStorage from', OLD_STORAGE_KEY, 'to', STORAGE_KEY);
+            saved = oldSaved;
+            // Write to new key immediately
+            try { safeLocalStorageSet(STORAGE_KEY, oldSaved); } catch(e) {}
+        }
+    }
+
     if (saved) {
         try {
             const data = JSON.parse(saved);
@@ -747,66 +760,92 @@ function loadFromFirebase() {
         return;
     }
 
-    // One-time load first
+    // One-time load from new path first
     database.ref(userPath).once('value')
         .then(snapshot => {
-            const data = snapshot.val();
+            let data = snapshot.val();
+
             if (data) {
-                // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
-                loadFromLocalStorage(false);
-
-                // BUG 2 FIX: Compare timestamps — only merge Firebase if it's same-age or newer
-                const localLastSaved = roadmapData.lastSaved || 0;
-                const remoteLastSaved = data.lastSaved || 0;
-
-                if (localLastSaved > remoteLastSaved) {
-                    // Local is NEWER — keep local data, don't overwrite with stale Firebase
-                    console.log('[D3-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
-                    roadmapData._dataLoaded = true;
-                    migrateInvalidFirebaseKeys(roadmapData);
-                } else {
-                    // Firebase is same or newer — merge normally
-                    mergeRemoteState(data);
-                }
-
-                // Also save to localStorage as backup
-                safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
-                updateSyncStatus('connected', 'Synced');
+                // Data exists at new path — proceed normally
+                finishFirebaseLoad(data);
             } else {
-                // No Firebase data - check if we have local data
-                // Pass false to skip finalize - we handle flags/initUI below
-                loadFromLocalStorage(false);
-                updateSyncStatus('connected', 'Synced');
-            }
+                // ONE-TIME MIGRATION: No data at new path — check old path
+                const hashedPin = userPath.split('/')[1];
+                const oldPath = 'users/' + hashedPin + '/' + OLD_FIREBASE_APP_NAME;
+                console.log('[MIGRATION] No data at new path, checking old path:', oldPath);
 
-            // BUG 1 FIX: SET ALL FLAGS FIRST — before any rendering
-            // Any save triggered during initUI() was blocked because isInitialLoad was still true
-            hasLoadedFromCloud = true;
-            isInitialLoad = false;
-            roadmapData._dataLoaded = true;
-            lastSyncTimestamp = Date.now();
-
-            // THEN render (in try/catch so flags are ALWAYS set even if rendering crashes)
-            try {
-                initUI();
-            } catch (e) {
-                console.error('[D3-LOAD] initUI error after Firebase load:', e);
-            }
-
-            // Set up sync listeners (in try/catch to not block on errors)
-            try {
-                setupRealtimeSync();
-                setupMainAppTasksSync();
-            } catch (e) {
-                console.error('[D3-LOAD] Sync setup error:', e);
+                database.ref(oldPath).once('value')
+                    .then(oldSnapshot => {
+                        const oldData = oldSnapshot.val();
+                        if (oldData) {
+                            console.log('[MIGRATION] Found data at old Firebase path — migrating to', userPath);
+                            data = oldData;
+                            // Write migrated data to new path immediately
+                            database.ref(userPath).set(oldData)
+                                .then(() => console.log('[MIGRATION] Firebase migration complete'))
+                                .catch(e => console.error('[MIGRATION] Firebase write failed:', e));
+                        }
+                        finishFirebaseLoad(data);
+                    })
+                    .catch(e => {
+                        console.error('[MIGRATION] Old path read failed:', e);
+                        finishFirebaseLoad(null);
+                    });
+                return; // finishFirebaseLoad called asynchronously above
             }
         })
         .catch(error => {
             console.error('❌ Firebase load error:', error);
             updateSyncStatus('error', 'Load failed');
-            // loadFromLocalStorage() now sets all flags and calls initUI()
             loadFromLocalStorage();
         });
+}
+
+// Extracted from loadFromFirebase to avoid duplication with migration path
+function finishFirebaseLoad(data) {
+    if (data) {
+        // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
+        loadFromLocalStorage(false);
+
+        // BUG 2 FIX: Compare timestamps — only merge Firebase if it's same-age or newer
+        const localLastSaved = roadmapData.lastSaved || 0;
+        const remoteLastSaved = data.lastSaved || 0;
+
+        if (localLastSaved > remoteLastSaved) {
+            console.log('[GRAD-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
+            roadmapData._dataLoaded = true;
+            migrateInvalidFirebaseKeys(roadmapData);
+        } else {
+            mergeRemoteState(data);
+        }
+
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        updateSyncStatus('connected', 'Synced');
+    } else {
+        loadFromLocalStorage(false);
+        updateSyncStatus('connected', 'Synced');
+    }
+
+    // SET ALL FLAGS FIRST — before any rendering
+    hasLoadedFromCloud = true;
+    isInitialLoad = false;
+    roadmapData._dataLoaded = true;
+    lastSyncTimestamp = Date.now();
+
+    // THEN render (in try/catch so flags are ALWAYS set even if rendering crashes)
+    try {
+        initUI();
+    } catch (e) {
+        console.error('[GRAD-LOAD] initUI error after Firebase load:', e);
+    }
+
+    // Set up sync listeners (in try/catch to not block on errors)
+    try {
+        setupRealtimeSync();
+        setupMainAppTasksSync();
+    } catch (e) {
+        console.error('[GRAD-LOAD] Sync setup error:', e);
+    }
 }
 
 // ==================== REALTIME SYNC ====================
@@ -857,7 +896,7 @@ function setupRealtimeSync() {
 
             // Use consolidated merge function
             mergeRemoteState(data);
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
 
             // Re-render all tabs (initUI rebuilds deadlines[] from roadmapData)
             try {
@@ -894,7 +933,7 @@ function setupMainAppTasksSync() {
     }
 
     // Get the main app data path (same user, different app path)
-    const hashedPin = userPath.split('/')[1]; // Extract user_XXX from 'users/user_XXX/d3Roadmap'
+    const hashedPin = userPath.split('/')[1]; // Extract user_XXX from 'users/user_XXX/graduationRoadmap'
     const mainAppPath = 'users/' + hashedPin + '/appData/tasks';
 
     // Remove any existing listener
@@ -1124,7 +1163,7 @@ function forceCloudSync() {
 // FIXED: Use explicit merge pattern (matching other merge locations) instead of deepMerge
 function applyRemoteData(data) {
     mergeRemoteState(data);
-    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     initUI();
 }
 
@@ -1132,7 +1171,14 @@ function applyRemoteData(data) {
 
 function getCheckpointKey() {
     const pin = localStorage.getItem('dentalQuestPin') || 'default';
-    return `d3roadmap_checkpoints_${btoa(pin).replace(/[^a-zA-Z0-9]/g, '')}`;
+    // Check new key first, fall back to old key for migration
+    const newKey = `gradRoadmap_checkpoints_${btoa(pin).replace(/[^a-zA-Z0-9]/g, '')}`;
+    const oldKey = `d3roadmap_checkpoints_${btoa(pin).replace(/[^a-zA-Z0-9]/g, '')}`;
+    // One-time migration: if old key exists and new doesn't, copy over
+    if (!localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
+        try { localStorage.setItem(newKey, localStorage.getItem(oldKey)); } catch(e) {}
+    }
+    return newKey;
 }
 
 function getDataCountForCheckpoint(data) {
@@ -1337,7 +1383,7 @@ function restoreCheckpoint(index) {
             };
 
             migrateInvalidFirebaseKeys(roadmapData);
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             setLocalUpdateFlag();
             saveData();
             initUI();
@@ -1626,7 +1672,7 @@ function importAndRestoreDirectly() {
                     };
 
                     migrateInvalidFirebaseKeys(roadmapData);
-                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+                    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
                     setLocalUpdateFlag();
                     saveData();
 
@@ -1687,7 +1733,7 @@ function forceUploadToCloud() {
                     setLocalUpdateFlag();
 
                     await database.ref(userPath).set(cleanData);
-                    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+                    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
                     updateSyncStatus('connected', 'Force uploaded');
                     showToast('Force upload complete!');
                 } catch (err) {
@@ -1837,6 +1883,50 @@ function debugSaveState() {
     return guardValues;
 }
 
+// ==================== STRUCTURAL INTEGRITY VALIDATOR ====================
+// Circuit breaker: checks that all critical top-level fields exist before allowing save.
+// If a merge/restore accidentally dropped a field, this blocks the save instead of
+// persisting the truncated state and causing permanent data loss.
+function validateStateIntegrity(data) {
+    const errors = [];
+    // Check top-level structure
+    if (typeof data !== 'object' || data === null) {
+        errors.push('roadmapData is not an object');
+        return errors;
+    }
+    // Check critical nested structures exist (not necessarily populated — just not deleted)
+    if (typeof data.clinicalData !== 'object' || data.clinicalData === null) {
+        errors.push('clinicalData missing');
+    } else {
+        // clinicalData sub-fields must be objects (not undefined)
+        if (typeof data.clinicalData.patients !== 'object') errors.push('clinicalData.patients missing');
+        if (typeof data.clinicalData.appointments !== 'object') errors.push('clinicalData.appointments missing');
+        if (typeof data.clinicalData.completedProcedures !== 'object') errors.push('clinicalData.completedProcedures missing');
+        // patientRecords can be {} but must exist
+        if (data.clinicalData.patientRecords === undefined) errors.push('clinicalData.patientRecords missing');
+        // dashboardSnapshots must be array
+        if (!Array.isArray(data.clinicalData.dashboardSnapshots) && data.clinicalData.dashboardSnapshots !== undefined) {
+            // Not fatal if undefined (will default to []), but object would be corrupt
+            if (typeof data.clinicalData.dashboardSnapshots === 'object' && data.clinicalData.dashboardSnapshots !== null) {
+                errors.push('clinicalData.dashboardSnapshots is object, not array');
+            }
+        }
+    }
+    if (typeof data.monthlyPlanner !== 'object' || data.monthlyPlanner === null) {
+        errors.push('monthlyPlanner missing');
+    }
+    if (typeof data.graduationPrep !== 'object' || data.graduationPrep === null) {
+        errors.push('graduationPrep missing');
+    }
+    if (typeof data.clinicHeadlines !== 'object' || data.clinicHeadlines === null) {
+        errors.push('clinicHeadlines missing');
+    }
+    if (typeof data.grades !== 'object' || data.grades === null) {
+        errors.push('grades missing');
+    }
+    return errors;
+}
+
 // Save data with debounce - BULLETPROOF VERSION
 function saveData() {
     // Log all guard values for diagnostics
@@ -1875,8 +1965,15 @@ function saveData() {
         return false;
     }
 
+    // GUARD F: Structural integrity check — block save if critical fields were dropped
+    const integrityErrors = validateStateIntegrity(roadmapData);
+    if (integrityErrors.length > 0) {
+        console.error('[GRAD-SAVE] ⚠️ BLOCKED by Guard F: structural integrity check failed:', integrityErrors);
+        return false;
+    }
+
     // All guards passed — safe to save
-    console.log('[D3-SAVE] ✅ All guards passed. editedDeadlines:', getCount(roadmapData.editedDeadlines),
+    console.log('[GRAD-SAVE] ✅ All guards passed. editedDeadlines:', getCount(roadmapData.editedDeadlines),
         'customDeadlines:', getCount(roadmapData.customDeadlines),
         'completedDeadlines:', getCount(roadmapData.completedDeadlines),
         'deletedDeadlines:', getCount(roadmapData.deletedDeadlines));
@@ -1893,7 +1990,7 @@ function saveData() {
 
     // Always save to localStorage IMMEDIATELY
     try {
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     } catch (e) {
         console.error('localStorage save failed:', e);
     }
@@ -1979,7 +2076,7 @@ document.addEventListener('visibilitychange', function() {
         // Tab is being hidden - ensure data is saved immediately
         // GUARD: Only save if we have real data and passed initial load
         if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
-            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             if (firebaseSyncEnabled && database && userPath) {
                 // FIX: Set local update flag to prevent realtime listener from re-processing this write
                 setLocalUpdateFlag();
@@ -2025,6 +2122,6 @@ document.addEventListener('visibilitychange', function() {
 window.addEventListener('beforeunload', function() {
     // Only save if we have real data and passed initial load
     if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
-        safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     }
 });

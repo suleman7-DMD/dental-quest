@@ -57,8 +57,8 @@ const date = new Date(year, month - 1, day);
 | File | Purpose |
 |------|---------|
 | `index.html` + `js/dental-quest/*.js` (12 modules) | Main app: gamified task management, focus mode, financials, calendar, meds |
-| `d3-roadmap.html` + `js/d3-roadmap/*.js` (10 modules) | Academic tracker: grades, deadlines, clinical, planners, exam content |
-| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (11 modules) | Graduation tracker: mission control, deadlines, clinical, patients (19 pre-filled), competencies, schedule, academics, grad prep. Patient tracker imports from Claude webchat (5 formats). |
+| `d3-roadmap.html` (REDIRECT SHIM) | Redirects to graduation-roadmap.html with localStorage migration. Old `js/d3-roadmap/*.js` modules are dead code. |
+| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (11 modules) | Graduation tracker: mission control, deadlines, clinical, patients (19 pre-filled), competencies, schedule, academics, grad prep. Patient tracker imports from Claude webchat (5 formats). Own namespace: `graduationRoadmapData` / `graduationRoadmap`. |
 | `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian rhythm, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |
@@ -99,7 +99,8 @@ const firebaseConfig = {
 ```javascript
 const hashedPin = 'user_' + btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
 userPath = 'users/' + hashedPin + '/[appName]';
-// appName = 'appData' | 'stimulantCalculator' | 'd3Roadmap' | 'bodyCompTracker'
+// appName = 'appData' | 'stimulantCalculator' | 'graduationRoadmap' | 'bodyCompTracker'
+// NOTE: d3Roadmap is the OLD path (dead). graduation-roadmap.html uses 'graduationRoadmap' with one-time migration.
 ```
 
 ### Firebase Data Tree
@@ -118,14 +119,17 @@ users/user_[hashedPin]/
 │   │     modifiers{}, nicotine{}, workoutPlan{}, settings{}, history{}, sleepHistory{},
 │   │     projectedSleepTime, _version: 0, _dataLoaded }
 │   └── lastUpdated
-├── d3Roadmap/
+├── graduationRoadmap/          (graduation-roadmap.html — NEW path, migrated from d3Roadmap)
 │   ├── grades{}, editedDeadlines{}, customDeadlines{}, deletedDeadlines{}, completedDeadlines{}
 │   ├── examStudyProgress{}, exams{}, mandatoryItems{}, pedsLockedIn
 │   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{}, currentWeekSchedule{} }
 │   ├── upcomingDeadlines{} (cross-app: all upcoming deadlines for Stim Calc)
 │   ├── clinicalData{ patients{}, appointments{}, competencies{}, patientRecords{}, dashboardSnapshots[] }
+│   ├── graduationPrep{ externship{}, cdcaAdex{}, inbde{}, jobSearch{} }
+│   ├── clinicHeadlines{ appointments{}, procedures{} }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
 │   └── (Body Comp reads exams{} and monthlyPlanner{})
+├── d3Roadmap/                  (DEAD — old path, kept for migration fallback only)
 └── bodyCompTracker/
     └── state{ profile{}, settings{}, today{ date, meals{}, workouts{}, targets{}, mode, setupComplete... },
          frequentFoods{}, weighIns{}, bodyCompHistory{}, dailyLogs{}, refeedTracker{},
@@ -154,11 +158,11 @@ getCount(collection)  // Safe key count
 Stim Calc --> projectedSleepTime, meds, caffeine --> Body Comp ecosystemContext.stimulant
 Index.html --> medications (pill counts) --> Body Comp ecosystemContext.inventory
 Index.html --> medications (pill counts) --> Stim Calc inventory module (shared read/write)
-Index.html --> tasks (doToday flag) --> D3 Roadmap "Do Today" widget (realtime listener)
-D3 Roadmap --> exams, monthlyPlanner --> Body Comp ecosystemContext.academic + schedule
-D3 Roadmap --> monthlyPlanner/currentWeekSchedule --> Stim Calc "Week at a Glance" schedule (primary, pre-deduped)
-D3 Roadmap --> monthlyPlanner/customTasks, clinicalData/appointments --> Stim Calc "Week at a Glance" (fallback)
-D3 Roadmap --> upcomingDeadlines --> Stim Calc "Week at a Glance" Upcoming Deadlines (realtime, capped 15, Xd badges)
+Index.html --> tasks (doToday flag) --> Graduation Roadmap "Do Today" widget (realtime listener)
+Graduation Roadmap --> exams, monthlyPlanner --> Body Comp ecosystemContext.academic + schedule (via /graduationRoadmap/)
+Graduation Roadmap --> monthlyPlanner/currentWeekSchedule --> Stim Calc "Week at a Glance" schedule (via /graduationRoadmap/)
+Graduation Roadmap --> monthlyPlanner/customTasks, clinicalData/appointments --> Stim Calc "Week at a Glance" (fallback)
+Graduation Roadmap --> upcomingDeadlines --> Stim Calc "Week at a Glance" Upcoming Deadlines (realtime, capped 15, Xd badges)
 ```
 All cross-app reads are READ-ONLY. Lecture Prompt is standalone.
 

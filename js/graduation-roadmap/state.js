@@ -13,6 +13,13 @@ const firebaseConfig = {
     appId: "1:894381493570:web:857d7d8fe247ef985e4cdb"
 };
 
+// ==================== STORAGE KEYS ====================
+// CRITICAL: graduation-roadmap uses its OWN namespace, separate from d3-roadmap
+const STORAGE_KEY = 'graduationRoadmapData';
+const OLD_STORAGE_KEY = 'd3RoadmapData';  // For one-time migration only
+const FIREBASE_APP_NAME = 'graduationRoadmap';
+const OLD_FIREBASE_APP_NAME = 'd3Roadmap';  // For one-time migration only
+
 let firebaseInitialized = false;
 let database = null;
 let firebaseSyncEnabled = false;
@@ -313,13 +320,18 @@ function safeLocalStorageSet(key, value) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
             console.warn('localStorage quota exceeded, clearing backups...');
             try {
+                localStorage.removeItem(BACKUP_STORAGE_KEY);
+                // Also try removing old backup key
                 localStorage.removeItem('d3RoadmapBackup');
                 localStorage.setItem(key, value);
                 return true;
             } catch (e2) {
                 try {
                     const pinHash = localStorage.getItem('dentalQuestPin');
-                    if (pinHash) localStorage.removeItem('d3roadmap_checkpoints_' + pinHash);
+                    if (pinHash) {
+                        localStorage.removeItem('gradRoadmap_checkpoints_' + pinHash);
+                        localStorage.removeItem('d3roadmap_checkpoints_' + pinHash);
+                    }
                     localStorage.setItem(key, value);
                     return true;
                 } catch (e3) {
