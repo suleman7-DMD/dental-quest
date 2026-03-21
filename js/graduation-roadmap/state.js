@@ -61,7 +61,9 @@ let roadmapData = {
         notes: {},
         customTasks: {},
         overriddenStatic: {},
-        completedTasks: {}
+        completedTasks: {},
+        hiddenClinicTasks: {},
+        currentWeekSchedule: {}
     },
     // Clinical patient tracking
     clinicalData: {
@@ -133,7 +135,9 @@ function getDefaultRoadmapData() {
             notes: {},
             customTasks: {},
             overriddenStatic: {},
-            completedTasks: {}
+            completedTasks: {},
+            hiddenClinicTasks: {},
+            currentWeekSchedule: {}
         },
         clinicalData: {
             patients: {},
@@ -184,14 +188,20 @@ function isEmptyState(data) {
     const hasGrades = data.grades && Object.values(data.grades).some(course =>
         course && Object.keys(course).length > 0
     );
-    // FIX: Also check exams and editedDeadlines to prevent false "empty" detection
     const hasExams = getCount(data.exams) > 0;
     const hasEditedDeadlines = getCount(data.editedDeadlines) > 0;
+    // FIX: Check patientRecords, dashboardSnapshots, completedProcedures
+    // Without these, imported patient data could be treated as "empty" and saves blocked by Guard C
+    const hasPatientRecords = getCount(data.clinicalData?.patientRecords) > 0;
+    const hasDashboardSnapshots = Array.isArray(data.clinicalData?.dashboardSnapshots) && data.clinicalData.dashboardSnapshots.length > 0;
+    const hasCompletedProcedures = getCount(data.clinicalData?.completedProcedures) > 0;
+    const hasCompetencies = data.clinicalData?.competencies && Object.keys(data.clinicalData.competencies).length > 0;
 
     // Empty if NONE of these exist
     return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
-           !hasExamStudyProgress && !hasGrades && !hasExams && !hasEditedDeadlines;
+           !hasExamStudyProgress && !hasGrades && !hasExams && !hasEditedDeadlines &&
+           !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies;
 }
 
 function hasRealData(data) {

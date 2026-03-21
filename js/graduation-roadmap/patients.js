@@ -650,6 +650,7 @@ function addNewPatientRecord() {
         lastUpdated: new Date().toISOString()
     };
 
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     selectPatient(id);
     showToast('Patient added: ' + name);
@@ -664,6 +665,7 @@ function deletePatientRecord(id) {
         'Delete patient record for "' + (patient.name || id) + '"?\n\nThis cannot be undone.',
         function() {
             delete roadmapData.clinicalData.patientRecords[id];
+            safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
             saveData();
 
             // If we just deleted the active patient, select the first remaining one
@@ -698,6 +700,7 @@ function savePatientField(element) {
 
     records[patientId][field] = element.innerText;
     records[patientId].lastUpdated = new Date().toISOString();
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
 }
 
@@ -706,6 +709,7 @@ function setPatientReliability(patientId, reliability) {
     if (!records[patientId]) return;
     records[patientId].reliability = reliability;
     records[patientId].lastUpdated = new Date().toISOString();
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     renderPatientRecord(patientId);
     renderPatientsSidebar();
@@ -1402,6 +1406,8 @@ function confirmPatientImport() {
         saveDashboardSnapshot(parsed.dashboardUpdate);
     }
 
+    // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
 
     // Re-render with blur suppression to prevent stale onblur handlers from overwriting imported data
@@ -1480,6 +1486,7 @@ function applyRequirementCheckoffs(items) {
         try { renderCompetencies(); } catch (e) { /* ignore */ }
     }
 
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
 }
 
@@ -1515,6 +1522,7 @@ function saveDashboardSnapshot(snapshot) {
         roadmapData.clinicalData.dashboardSnapshots = snaps.slice(0, 20);
     }
 
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
 
     // Re-render

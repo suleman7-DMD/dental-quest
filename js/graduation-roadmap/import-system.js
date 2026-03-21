@@ -241,6 +241,8 @@ function confirmLectureImport() {
         imported++;
     });
 
+    // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     closeLectureImportModal();
     initMonthlyPlanner();
@@ -453,6 +455,8 @@ function confirmClinicalImport() {
     // CRITICAL: Sync to Monthly Planner
     syncClinicalToMonthlyPlanner();
 
+    // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
+    safeLocalStorageSet('d3RoadmapData', JSON.stringify(roadmapData));
     saveData();
     closeClinicalImportModal();
     initClinicalTab();
@@ -476,46 +480,65 @@ function confirmClinicalImport() {
 }
 
 // ========== CROSS-TAB SYNC: Clinical → Monthly Planner ==========
+// INCREMENTAL SYNC: Respects hiddenClinicTasks and userEdited flags.
+// Does NOT nuke-and-rebuild — only adds new, removes cancelled, skips user-edited.
 function syncClinicalToMonthlyPlanner() {
     if (!roadmapData.clinicalData?.appointments) return;
     if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
     if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
         roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');
     }
+    if (!roadmapData.monthlyPlanner.hiddenClinicTasks) {
+        roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+    }
 
     const appointments = roadmapData.clinicalData.appointments;
     const patients = roadmapData.clinicalData.patients || {};
+    const hiddenClinicTasks = roadmapData.monthlyPlanner.hiddenClinicTasks;
+    const customTasks = roadmapData.monthlyPlanner.customTasks;
 
-    // Remove all existing clinic tasks that were synced from Clinical tab
-    Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(id => {
-        if (roadmapData.monthlyPlanner.customTasks[id]?.clinicalAppointmentId) {
-            delete roadmapData.monthlyPlanner.customTasks[id];
+    // Build set of current appointment IDs for orphan detection
+    const currentAptIds = new Set(getValues(appointments).map(a => a.id));
+
+    // Remove orphaned clinic tasks (appointment was deleted) — but NOT user-edited ones
+    Object.keys(customTasks).forEach(id => {
+        const task = customTasks[id];
+        if (!task?.clinicalAppointmentId) return; // Not a clinic task
+        if (task.userEdited) return; // User edited — preserve
+        if (!currentAptIds.has(task.clinicalAppointmentId)) {
+            // Appointment no longer exists — remove orphan
+            delete customTasks[id];
         }
     });
 
-    // Add current appointments as Monthly Planner tasks
+    // Add/update clinic tasks from current appointments
     getValues(appointments).forEach(apt => {
         if (apt.status === 'cancelled') return; // Skip cancelled
+
+        // Skip if user explicitly hid this appointment from planner
+        if (hiddenClinicTasks[apt.id]) return;
+
+        const taskId = 'clinic_' + apt.id;
+
+        // Skip if user has edited this task
+        if (customTasks[taskId]?.userEdited) return;
 
         const patient = patients[apt.patientId] || {};
         const patientName = patient.name || 'Unknown Patient';
 
-        // Create task linked to this appointment
-        const taskId = 'clinic_' + apt.id;
-        const task = {
+        // Create/update task linked to this appointment
+        customTasks[taskId] = {
             id: taskId,
-            clinicalAppointmentId: apt.id, // Link back to clinical appointment
+            clinicalAppointmentId: apt.id,
             date: apt.date,
             item: `${patientName} - ${apt.procedures || 'Appointment'}`,
             time: apt.time || '09:00',
             endTime: calculateEndTime(apt.time || '09:00', apt.duration || 60),
             type: 'clinic',
             notes: apt.notes || '',
-            createdAt: new Date().toISOString(),
+            createdAt: customTasks[taskId]?.createdAt || new Date().toISOString(),
             syncedFromClinical: true
         };
-
-        roadmapData.monthlyPlanner.customTasks[taskId] = task;
     });
 
     // Extend MP_WEEKS if needed for dates beyond current range

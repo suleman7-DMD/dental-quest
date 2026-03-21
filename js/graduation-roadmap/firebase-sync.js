@@ -89,6 +89,34 @@ function deepMerge(target, source) {
     return result;
 }
 
+// ==================== DASHBOARD SNAPSHOTS MERGE ====================
+// Merges two dashboardSnapshots arrays, deduplicating by capturedAt date.
+// Keeps newest first, capped at 20. Prevents data loss from || fallback.
+function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
+    const local = Array.isArray(localSnaps) ? localSnaps : [];
+    const remote = Array.isArray(remoteSnaps) ? remoteSnaps : [];
+    if (local.length === 0) return remote.length > 0 ? remote : [];
+    if (remote.length === 0) return local;
+    // Deduplicate by capturedAt (or timestamp fallback)
+    const seen = new Set();
+    const merged = [];
+    [...remote, ...local].forEach(snap => {
+        if (!snap) return;
+        const key = snap.capturedAt || snap.timestamp || JSON.stringify(snap).slice(0, 80);
+        if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(snap);
+        }
+    });
+    // Sort newest first, cap at 20
+    merged.sort((a, b) => {
+        const ta = a.capturedAt || a.timestamp || '';
+        const tb = b.capturedAt || b.timestamp || '';
+        return tb > ta ? 1 : tb < ta ? -1 : 0;
+    });
+    return merged.slice(0, 20);
+}
+
 // ==================== FIX 7: CONNECTION MONITOR ====================
 
 function setupConnectionMonitor() {
@@ -528,7 +556,12 @@ function mergeRemoteState(data) {
             completedTasks: {
                 ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'),
                 ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
-            }
+            },
+            hiddenClinicTasks: {
+                ...(roadmapData.monthlyPlanner?.hiddenClinicTasks || {}),
+                ...(data.monthlyPlanner?.hiddenClinicTasks || {})
+            },
+            currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
         },
         clinicalData: {
             patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
@@ -545,7 +578,7 @@ function mergeRemoteState(data) {
                 data.clinicalData?.competencies
             ),
             patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
-            dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
+            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
         },
         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
         exams: {
@@ -634,7 +667,9 @@ function loadFromLocalStorage(finalize = true) {
                     notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
                     customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
                     overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
+                    hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
+                    currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
                 },
                 clinicalData: {
                     patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
@@ -642,7 +677,7 @@ function loadFromLocalStorage(finalize = true) {
                     completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                     patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
-                    dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
+                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(data.exams, 'exam'),
@@ -1271,7 +1306,9 @@ function restoreCheckpoint(index) {
                     notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
                     customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
                     overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed')
+                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed'),
+                    hiddenClinicTasks: cpData.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
+                    currentWeekSchedule: cpData.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
                 },
                 clinicalData: {
                     patients: cpData.clinicalData?.patients || {},
@@ -1279,10 +1316,20 @@ function restoreCheckpoint(index) {
                     completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies),
                     patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                    dashboardSnapshots: cpData.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
+                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots)
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(cpData.exams, 'exam'),
+                graduationPrep: cpData.graduationPrep ?? roadmapData.graduationPrep ?? {
+                    externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+                    cdcaAdex: { sessions: {}, notes: '' },
+                    inbde: { notes: '' },
+                    jobSearch: { notes: '' }
+                },
+                clinicHeadlines: cpData.clinicHeadlines ?? roadmapData.clinicHeadlines ?? {
+                    appointments: { completed: 0, target: 90 },
+                    procedures: { completed: 0, target: 116 }
+                },
                 lastSaved: cpData.lastSaved || Date.now(),
                 _version: Date.now(),
                 _lastModified: new Date().toISOString(),
@@ -1548,7 +1595,9 @@ function importAndRestoreDirectly() {
                             notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
                             customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
                             overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
+                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
+                            hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
+                            currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
                         },
                         clinicalData: {
                             patients: data.clinicalData?.patients || {},
@@ -1556,10 +1605,20 @@ function importAndRestoreDirectly() {
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                             competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                             patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                            dashboardSnapshots: data.clinicalData?.dashboardSnapshots || roadmapData.clinicalData?.dashboardSnapshots || []
+                            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),
+                        graduationPrep: data.graduationPrep ?? roadmapData.graduationPrep ?? {
+                            externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
+                            cdcaAdex: { sessions: {}, notes: '' },
+                            inbde: { notes: '' },
+                            jobSearch: { notes: '' }
+                        },
+                        clinicHeadlines: data.clinicHeadlines ?? roadmapData.clinicHeadlines ?? {
+                            appointments: { completed: 0, target: 90 },
+                            procedures: { completed: 0, target: 116 }
+                        },
                         lastSaved: data.lastSaved || Date.now(),
                         _version: Date.now(),
                         _lastModified: new Date().toISOString(),
