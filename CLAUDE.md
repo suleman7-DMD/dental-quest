@@ -50,6 +50,9 @@ const date = new Date(year, month - 1, day);
 - **Field-by-field reconstruction drops new fields**: All 4 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`) reconstruct `roadmapData` field-by-field. When adding ANY new field, it MUST be added to ALL 4 sites or it gets silently wiped on every sync/refresh/restore.
 - **`isEmptyState()` must check ALL collection fields**: When adding new collection fields to any app, also add them to `isEmptyState()` — otherwise Guard C silently blocks saves when ONLY those fields have data.
 - **Array merge with `||` loses data**: `data.arr || local.arr || []` — if remote has empty `[]` (truthy), local data is lost. Use dedicated merge functions for arrays (dedup + concat).
+- **Fallback timers fire during PIN prompt = data wipe**: DOMContentLoaded 3s/6s fallback timers must check `awaitingPinEntry` flag. Without it: fallback loads empty defaults → `saveData()` writes recent `lastSaved` → `finishFirebaseLoad()` thinks local is newer → skips Firebase merge → saves defaults to cloud wiping all data. Fixed Mar 21 2026: `awaitingPinEntry` flag gates both timers.
+- **Default grades make isEmptyState() return false**: Default `roadmapData` has hardcoded grades (oralmed quiz1:100, peds exam1:77, etc.). These pass Guard C, allowing default state to be saved. Never add real data values to `getDefaultRoadmapData()` — use empty objects.
+- **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]` on competency items. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts. Always use these functions, never manually edit `item.completed` for procedure-linked items.
 
 ---
 
@@ -179,6 +182,7 @@ if (!hasLoadedFromCloud) return false;
 if (isEmptyState(data)) return false;
 if (!data._dataLoaded) return false;
 // Guard F (graduation-roadmap only): validateStateIntegrity() — blocks save if critical fields missing
+// ALSO: awaitingPinEntry flag gates DOMContentLoaded 3s/6s fallback timers (graduation-roadmap only)
 ```
 Index.html: 5 guards behind `firebaseInitialized` check, uses `buildSaveData()` helper.
 Graduation-roadmap: 6 guards — adds `validateStateIntegrity()` (Guard F) checking 8 critical structures.

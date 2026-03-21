@@ -417,16 +417,31 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `calculateNeeded()` | grades.js | "What grade do I need" calculator |
 | `syncGradeToDeadline()` | grades.js | Sync grade to deadline tab |
 | `loadExamCourseContent()` | exam-content.js | Exam content study tracker |
-| `initClinicalTab()` | clinical.js | Initialize clinical tab |
-| `renderCompetencies()` | clinical.js | Competencies rendering |
+| `initClinicalTab()` | clinical.js | Initialize clinical tab (patients + appointments + procedures) |
+| `renderCompetencies()` | clinical.js | Competencies rendering with evidence drill-down |
 | `setCompItemStatus(cat, id, status)` | clinical.js | Update competency item status |
 | `adjustCompItem(cat, id, delta)` | clinical.js | Increment/decrement competency count |
-| `initDailyPlanner()` | daily-planner.js | Daily planner initialization |
-| `initMonthlyPlanner()` | monthly-planner.js | Monthly planner initialization |
-| `renderDashboard()` | init.js | Mission Control tab rendering (clinic requirements, deadlines, countdowns) |
+| `recordProcedure(data)` | clinical.js | Create procedure record with competency linking |
+| `deleteProcedure(procId)` | clinical.js | Delete procedure + unlink from competencies |
+| `completeAppointment(aptId)` | clinical.js | Completion cascade: deadline+planner+patient+procedure prompt |
+| `uncompleteAppointment(aptId)` | clinical.js | Reverse cascade |
+| `linkProcedureToCompetencies(proc)` | clinical.js | Add evidence entries to competency items |
+| `renderProceduresList()` | clinical.js | Procedures sub-tab list view |
+| `toggleAppointmentStatus(aptId, evt)` | clinical.js | Complete/uncomplete appointment toggle |
+| `getProceduresForPatient(patientId)` | clinical.js | Filter procedures by patient |
+| `getProceduresForCompetency(itemId)` | clinical.js | Filter procedures by competency item |
+| `initDailyPlanner()` | daily-planner.js | Daily planner initialization (+ auto-populate from appointments) |
+| `dpSyncAppointmentsToTimeline()` | daily-planner.js | Sync today's appointments to daily timeline |
+| `initMonthlyPlanner()` | monthly-planner.js | Monthly planner initialization (+ buildCurrentWeekSchedule) |
+| `buildCurrentWeekSchedule()` | monthly-planner.js | Pre-build weekly schedule for Stim Calc cross-app |
+| `mpHideClinicTask(taskId, aptId)` | monthly-planner.js | Hide clinic task from planner |
+| `mpUnhideClinicTask(aptId)` | monthly-planner.js | Restore hidden clinic task |
+| `renderDashboard()` | init.js | Mission Control tab (auto-derived counters, competency grid) |
 | `renderGraduationPrep()` | init.js | Graduation Prep tab rendering (externship, CDCA, INBDE, job search) |
-| `updateHeadlineCounter(type, val)` | init.js | Save clinic headline counter (appointments/procedures) |
+| `updateHeadlineTarget(type, val)` | init.js | Edit clinic headline target (completed is auto-derived) |
 | `updateGradPrep(cat, field, val)` | init.js | Save graduation prep field |
+| `findCompetencyItem(itemId)` | state.js | Find competency item across all categories |
+| `PROCEDURE_TYPES` | state.js | Maps competency category keys to display names |
 | `switchScheduleSubTab(subTabId)` | state.js | Toggle monthly/daily sub-tab in Schedule tab |
 | `toggleAcademicsSection(sectionId)` | state.js | Toggle accordion in D3 Academics tab |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
@@ -455,9 +470,17 @@ Competencies live at `roadmapData.clinicalData.competencies` and are initialized
 | `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
 | `externship` | Externship & SPS | Case presentation, community outreach, SPS log |
 
-**Each category has:** `{ name, icon, color, summary, notes, sections: [{ title, items: [{ id, text, required, completed }] }] }`
+**Each category has:** `{ name, icon, color, summary, notes, sections: [{ title, items: [{ id, text, required, completed, completionEntries[] }] }] }`
 
-**Key functions:** `getCompetenciesData()`, `calculateCategoryStats()`, `calculateOverallStats()`, `getWhatsNextItems()`, `renderCompetencies()`, `setCompItemStatus()`, `adjustCompItem()`
+**Competency items now have `completionEntries[]`** (evidence trail):
+```javascript
+completionEntries: [
+    { procedureId: 'proc_123', patientId: 'pt-456', patientName: 'Carmen M.', date: '2026-03-15', note: 'MOD Composite #30' }
+]
+```
+When procedures are linked via `recordProcedure()`, entries are auto-added. `item.completed` is synced from `completionEntries.length`. Deleting a procedure via `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts.
+
+**Key functions:** `getCompetenciesData()`, `calculateCategoryStats()`, `calculateOverallStats()`, `getWhatsNextItems()`, `renderCompetencies()`, `setCompItemStatus()`, `adjustCompItem()`, `recordProcedure()`, `linkProcedureToCompetencies()`, `unlinkProcedureFromCompetencies()`
 
 ---
 

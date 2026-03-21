@@ -113,6 +113,7 @@ Consult `references/bugs-and-debugging.md` for:
 10. **Never use raw `localStorage.setItem()`** — always use `safeLocalStorageSet()` to prevent QuotaExceededError UI freeze
 11. **Checkpoint limit is 5, backup limit is 3** — do not increase these (localStorage is ~5MB shared across all 4 apps)
 12. **Firebase `.set()` rejects `undefined`** — every field in save payloads must use `?? null` or `?? false`. One undefined field crashes ALL saves silently. For index.html, audit `buildSaveData()` in firebase-sync.js after adding any field.
+13. **Fallback timers MUST check `awaitingPinEntry`** — DOMContentLoaded 3s/6s fallback timers in graduation-roadmap must NOT fire while PIN prompt is showing. Otherwise: empty defaults get saved with recent `lastSaved` → `finishFirebaseLoad` thinks local is newer → skips Firebase merge → saves defaults to cloud wiping all data. Fixed Mar 21 2026.
 
 ## Guard System Overview
 
@@ -124,6 +125,7 @@ Consult `references/bugs-and-debugging.md` for:
 | Not empty | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` |
 | Data loaded | `_dataLoaded` | `roadmapData._dataLoaded` | `state._dataLoaded` | `state._dataLoaded` |
 | Structural integrity | — | `validateStateIntegrity()` (Guard F) | — | — |
+| PIN prompt gate | — | `awaitingPinEntry` (fallback timers) | — | — |
 
 Note: index.html uses inverted naming (`initialLoadComplete=true` means done) vs others (`isInitialLoad=false` means done).
 Note: graduation-roadmap has 6 guards. Guard F (`validateStateIntegrity()`) checks that `clinicalData`, `monthlyPlanner`, `graduationPrep`, `clinicHeadlines`, `grades` structures exist before allowing saves — blocks truncated state from being persisted.
