@@ -178,6 +178,7 @@ function getDefaultRoadmapData() {
 let isInitialLoad = true;      // Block ALL saves until data loaded
 let hasLoadedFromCloud = false; // Track if we've checked Firebase
 let pinValidated = false;       // Track if PIN has been validated (prevents race condition)
+let awaitingPinEntry = false;   // True while PIN prompt is showing — blocks fallback timers from firing
 
 // Check if state has real user data (not just defaults)
 function isEmptyState(data) {
@@ -487,6 +488,58 @@ function migrateDailyPlannerBlocks(dailyPlanner) {
     }
 
     return result;
+}
+
+// ==================== PROCEDURE TYPES ====================
+// Maps to competency category keys for auto-linking procedures → competencies
+const PROCEDURE_TYPES = {
+    fixed: 'Fixed Prosthodontics',
+    operative: 'Operative',
+    dentures: 'Complete Dentures',
+    rpd: 'RPDs',
+    srp: 'SRPs',
+    endo: 'Endodontics',
+    oralsurg: 'Oral Surgery',
+    peds: 'Pediatric Dentistry',
+    perio: 'Periodontology',
+    grouppractice: 'Group Practice',
+    txplanning: 'Treatment Planning',
+    geriatrics: 'Geriatric Dental Medicine',
+    externship: 'Externship & SPS',
+    other: 'Other'
+};
+
+// Find a competency item by ID across all categories/sections
+// Returns { item, catKey, section } or null
+function findCompetencyItem(itemId) {
+    const competencies = roadmapData.clinicalData?.competencies;
+    if (!competencies) return null;
+
+    for (const catKey in competencies) {
+        const cat = competencies[catKey];
+        for (const sec of getValues(cat.sections)) {
+            if (sec.items && sec.items[itemId]) {
+                return { item: sec.items[itemId], catKey, section: sec };
+            }
+        }
+    }
+    return null;
+}
+
+// Get all competency items for a given category key
+function getCompetencyItemsForCategory(catKey) {
+    const competencies = roadmapData.clinicalData?.competencies;
+    if (!competencies || !competencies[catKey]) return [];
+
+    const items = [];
+    getValues(competencies[catKey].sections).forEach(sec => {
+        getValues(sec.items).forEach(item => {
+            if (item.completed < item.required) {
+                items.push(item);
+            }
+        });
+    });
+    return items;
 }
 
 // ==================== DATE UTILITIES ====================

@@ -1394,11 +1394,17 @@ function confirmPatientImport() {
         applyRequirementCheckoffs(parsed.reqStatuses);
     }
 
-    // Handle completed-today from reqMatches
+    // Handle completed-today from reqMatches — pass patient context for procedure records
     var completedItems = [];
     parsed.reqMatches.forEach(function(rm) {
         rm.completedToday.forEach(function(ct) {
-            completedItems.push({ reqId: ct.reqId, completed: 1, note: ct.procedure || ct.description || '' });
+            completedItems.push({
+                reqId: ct.reqId,
+                completed: 1,
+                note: ct.procedure || ct.description || '',
+                patientName: ct.patientName || rm.patientName || '',
+                date: ct.date || getLocalDateString()
+            });
         });
     });
     if (completedItems.length > 0) {
@@ -1436,11 +1442,14 @@ function confirmPatientImport() {
     showToast(msg || 'Import complete');
 }
 
-function applyRequirementCheckoffs(items) {
+function applyRequirementCheckoffs(items, importContext) {
     if (!items || items.length === 0) return;
 
     var competencies = getCompetenciesData();
     if (!competencies) return;
+
+    // importContext may have { patientName, patientId, date } for procedure record creation
+    var ctx = importContext || {};
 
     items.forEach(function(item) {
         for (var catKey in competencies) {
@@ -1448,7 +1457,6 @@ function applyRequirementCheckoffs(items) {
             var sections = cat.sections;
             if (!sections) continue;
 
-            // Sections can be object or array
             var sectionList = getValues(sections);
             for (var s = 0; s < sectionList.length; s++) {
                 var sec = sectionList[s];
@@ -1469,16 +1477,42 @@ function applyRequirementCheckoffs(items) {
 
                         // Write back to the actual storage (handle object-based storage)
                         if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
-                            // Object-based: find the key matching this item's id
                             for (var key in sec.items) {
                                 if (sec.items[key] && sec.items[key].id === item.reqId) {
                                     sec.items[key].completed = itemList[i].completed;
                                     if (item.note) sec.items[key].note = item.note;
+
+                                    // CROSS-SYNC: Create procedure record with evidence trail
+                                    if (typeof recordProcedure === 'function') {
+                                        var procDate = ctx.date || item.date || getLocalDateString();
+                                        var patientName = ctx.patientName || item.patientName || '';
+                                        var patientId = ctx.patientId || item.patientId || null;
+
+                                        // Dedup: check if procedure already recorded for same req+date+patient
+                                        var procs = getValues(roadmapData.clinicalData?.completedProcedures);
+                                        var isDupe = procs.some(function(p) {
+                                            return p.competencyItemIds && p.competencyItemIds.includes(item.reqId)
+                                                && p.date === procDate
+                                                && p.patientName === patientName;
+                                        });
+
+                                        if (!isDupe && (patientName || item.note)) {
+                                            recordProcedure({
+                                                patientId: patientId,
+                                                patientName: patientName,
+                                                date: procDate,
+                                                procedureType: catKey,
+                                                procedure: item.note || sec.items[key].text || 'Imported procedure',
+                                                competencyItemIds: [item.reqId],
+                                                notes: 'Imported via requirement checkoff'
+                                            });
+                                        }
+                                    }
                                     break;
                                 }
                             }
                         }
-                        return; // Found and updated, move to next item
+                        return;
                     }
                 }
             }

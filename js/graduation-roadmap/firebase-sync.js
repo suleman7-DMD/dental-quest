@@ -414,6 +414,7 @@ function initFirebase() {
             setupUserAuth(savedPin);
         } else {
             clearTimeout(fallbackTimer);
+            awaitingPinEntry = true;  // CRITICAL: Block fallback timers while PIN prompt is showing
             setTimeout(() => promptForPin(), 500);
         }
     } catch (error) {
@@ -433,6 +434,7 @@ function setupUserAuth(pin) {
 
     // CRITICAL: Mark PIN as validated BEFORE any Firebase operations
     pinValidated = true;
+    awaitingPinEntry = false;  // PIN entered — allow fallback timers if Firebase hangs
 
     updateSyncStatus('syncing', 'Syncing...');
 
@@ -499,6 +501,7 @@ function promptForPin() {
     };
     skipBtn.onclick = () => {
         modal.remove();
+        awaitingPinEntry = false;  // PIN prompt dismissed
         firebaseSyncEnabled = false;
         updateSyncStatus('offline', 'Local only');
         loadFromLocalStorage();

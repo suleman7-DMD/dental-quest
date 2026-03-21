@@ -18,6 +18,7 @@ function switchClinicalSubtab(subtab, btn) {
 function initClinicalTab() {
     renderPatientsList();
     renderAppointmentsList();
+    renderProceduresList();
     updateClinicalStats();
 }
 
@@ -396,6 +397,13 @@ function renderAppointmentCard(apt, patients) {
                         status === 'cancelled' ? 'Cancelled' :
                         status === 'no_show' ? 'No Show' : status;
 
+    const safeAptId = apt.id.replace(/'/g, "\\'");
+    const completeBtn = status === 'completed'
+        ? '<button onclick="toggleAppointmentStatus(\'' + safeAptId + '\', event)" style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8em; font-weight:600;" title="Click to uncomplete">✓ Done</button>'
+        : (status === 'scheduled'
+            ? '<button onclick="toggleAppointmentStatus(\'' + safeAptId + '\', event)" style="background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#93c5fd; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8em; font-weight:600;" title="Mark as completed">Complete</button>'
+            : '');
+
     return `
         <div class="appointment-card" onclick="editAppointment('${apt.id}')">
             <div class="appointment-date">
@@ -409,7 +417,10 @@ function renderAppointmentCard(apt, patients) {
                 </div>
                 ${apt.procedures ? `<div style="margin-top: 5px; font-size: 0.9em; color: #f59e0b;">${escapeHtml(apt.procedures)}</div>` : ''}
             </div>
-            <span class="appointment-status ${status}">${statusLabel}</span>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                <span class="appointment-status ${status}">${statusLabel}</span>
+                ${completeBtn}
+            </div>
         </div>
     `;
 }
@@ -1153,6 +1164,20 @@ function renderCompetencies() {
                                             ${isCustom ? `<button class="comp-delete-btn" onclick="deleteCompItem('${key}', '${item.id}'); event.stopPropagation();" title="Delete">🗑️</button>` : ''}
                                         </div>
                                     </div>
+                                    ${(item.completionEntries && item.completionEntries.length > 0) ? `
+                                        <div style="margin: 4px 0 8px 20px; padding: 6px 10px; background:rgba(16,185,129,0.08); border-left:2px solid #10b981; border-radius:0 6px 6px 0; font-size:0.8em;">
+                                            <div style="color:#6ee7b7; font-weight:600; margin-bottom:4px;">Evidence (${item.completionEntries.length}):</div>
+                                            ${item.completionEntries.map(function(entry) {
+                                                var entryDate = entry.date ? parseLocalDate(entry.date) : null;
+                                                var dateStr = entryDate ? entryDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+                                                return '<div style="color:#94a3b8; padding:2px 0;">'
+                                                    + (entry.patientName ? escapeHtml(entry.patientName) : 'Unknown')
+                                                    + (dateStr ? ' · ' + dateStr : '')
+                                                    + (entry.note ? ' — ' + escapeHtml(entry.note.substring(0, 40)) : '')
+                                                    + '</div>';
+                                            }).join('')}
+                                        </div>
+                                    ` : ''}
                                 `;
                             }).join('')}
                             <button class="comp-add-req-btn" onclick="openAddCompItemModal('${key}', '${sec.id}'); event.stopPropagation();">
@@ -1523,4 +1548,472 @@ function deleteCompItem(catKey, itemId) {
             showToast(`Deleted: ${itemText}`);
         }
     }, null, 'Delete Item');
+}
+
+// ==================== PROCEDURE RECORDING SYSTEM ====================
+// Brings completedProcedures to life — records every procedure with patient, appointment, and competency links
+// All user-provided text is escaped via escapeHtml() before insertion into innerHTML
+
+function recordProcedure(data) {
+    const id = data.id || generateId('proc');
+    const procedure = {
+        id: id,
+        patientId: data.patientId ?? null,
+        patientName: data.patientName || '',
+        appointmentId: data.appointmentId ?? null,
+        date: data.date || getLocalDateString(),
+        procedureType: data.procedureType || 'other',
+        procedure: data.procedure || '',
+        toothNumbers: data.toothNumbers || '',
+        competencyItemIds: data.competencyItemIds || [],
+        grade: data.grade ?? null,
+        notes: data.notes || '',
+        faculty: data.faculty || '',
+        createdAt: data.createdAt || new Date().toISOString()
+    };
+
+    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
+    if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
+
+    roadmapData.clinicalData.completedProcedures[id] = procedure;
+
+    // Auto-link to competency items with evidence trail
+    if (procedure.competencyItemIds.length > 0) {
+        linkProcedureToCompetencies(procedure);
+    }
+
+    return procedure;
+}
+
+function linkProcedureToCompetencies(procedure) {
+    const competencies = getCompetenciesData();
+
+    procedure.competencyItemIds.forEach(function(itemId) {
+        const result = findCompetencyItem(itemId);
+        if (!result) return;
+
+        const item = result.item;
+
+        // Add completion entry (audit trail)
+        if (!item.completionEntries) item.completionEntries = [];
+
+        // Dedup by procedureId
+        if (!item.completionEntries.some(function(e) { return e.procedureId === procedure.id; })) {
+            item.completionEntries.push({
+                procedureId: procedure.id,
+                patientId: procedure.patientId,
+                patientName: procedure.patientName,
+                date: procedure.date,
+                note: procedure.notes || procedure.procedure
+            });
+        }
+
+        // Sync completed count from evidence entries
+        item.completed = Math.min(item.required, item.completionEntries.length);
+
+        // Auto-update status
+        if (item.completed >= item.required) {
+            item.status = 'completed';
+        } else if (item.completed > 0) {
+            item.status = 'in_progress';
+        }
+    });
+}
+
+function unlinkProcedureFromCompetencies(procedureId) {
+    const competencies = getCompetenciesData();
+
+    Object.values(competencies).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (!item.completionEntries) return;
+                const before = item.completionEntries.length;
+                item.completionEntries = item.completionEntries.filter(function(e) { return e.procedureId !== procedureId; });
+                if (item.completionEntries.length < before) {
+                    item.completed = Math.min(item.required, item.completionEntries.length);
+                    if (item.completed >= item.required) {
+                        item.status = 'completed';
+                    } else if (item.completed > 0) {
+                        item.status = 'in_progress';
+                    } else {
+                        item.status = 'pending';
+                    }
+                }
+            });
+        });
+    });
+}
+
+function deleteProcedure(procId) {
+    if (!roadmapData.clinicalData?.completedProcedures?.[procId]) return;
+
+    showCustomConfirm('Delete this procedure record? Competency counts will be adjusted.', function() {
+        unlinkProcedureFromCompetencies(procId);
+        delete roadmapData.clinicalData.completedProcedures[procId];
+
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        renderProceduresList();
+        renderCompetencies();
+        updateClinicalStats();
+        renderDashboard();
+        showToast('Procedure deleted');
+    }, null, 'Delete Procedure');
+}
+
+// ==================== APPOINTMENT COMPLETION CASCADE ====================
+// Single action triggers: procedure record prompt, competency update, planner done, deadline done, patient updated
+
+function completeAppointment(aptId) {
+    const apt = roadmapData.clinicalData?.appointments?.[aptId];
+    if (!apt) return;
+
+    if (apt.status === 'completed') {
+        openProcedureRecordingModal(aptId);
+        return;
+    }
+
+    apt.status = 'completed';
+    apt.completedAt = new Date().toISOString();
+
+    const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+
+    // Update patient lastVisit
+    if (patient) {
+        patient.lastVisit = apt.date;
+        patient.lastUpdated = new Date().toISOString();
+    }
+
+    // Mark linked deadline as done
+    markLinkedDeadlineDone(aptId);
+
+    // Mark planner task as done
+    markPlannerTaskDone(aptId);
+
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+
+    renderAppointmentsList();
+    updateClinicalStats();
+    renderDashboard();
+    if (typeof renderDeadlines === 'function') renderDeadlines();
+    if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+
+    // Open procedure recording modal for this appointment
+    openProcedureRecordingModal(aptId);
+}
+
+function uncompleteAppointment(aptId) {
+    const apt = roadmapData.clinicalData?.appointments?.[aptId];
+    if (!apt) return;
+
+    apt.status = 'scheduled';
+    delete apt.completedAt;
+
+    unmarkLinkedDeadlineDone(aptId);
+    unmarkPlannerTaskDone(aptId);
+
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+
+    renderAppointmentsList();
+    updateClinicalStats();
+    renderDashboard();
+    if (typeof renderDeadlines === 'function') renderDeadlines();
+    if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+
+    showToast('Appointment unmarked');
+}
+
+function markLinkedDeadlineDone(aptId) {
+    if (!roadmapData.customDeadlines) return;
+
+    Object.values(roadmapData.customDeadlines).forEach(function(dl) {
+        if (dl.clinicalAptId === aptId && !dl.done) {
+            dl.done = true;
+
+            var dlId = dl._originalStableId || getDeadlineId(dl);
+            if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
+            roadmapData.completedDeadlines[dlId] = {
+                done: true,
+                grade: null,
+                completedAt: new Date().toISOString()
+            };
+        }
+    });
+}
+
+function unmarkLinkedDeadlineDone(aptId) {
+    if (!roadmapData.customDeadlines) return;
+
+    Object.values(roadmapData.customDeadlines).forEach(function(dl) {
+        if (dl.clinicalAptId === aptId && dl.done) {
+            dl.done = false;
+
+            var dlId = dl._originalStableId || getDeadlineId(dl);
+            if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[dlId]) {
+                delete roadmapData.completedDeadlines[dlId];
+            }
+        }
+    });
+}
+
+function markPlannerTaskDone(aptId) {
+    var taskId = 'clinic_' + aptId;
+    if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = { completedTasks: {} };
+    if (!roadmapData.monthlyPlanner.completedTasks) roadmapData.monthlyPlanner.completedTasks = {};
+
+    var isCompleted = Object.values(roadmapData.monthlyPlanner.completedTasks).some(function(c) {
+        return c.value === taskId || c === taskId;
+    });
+    if (isCompleted) return;
+
+    var completedId = generateId('completed');
+    roadmapData.monthlyPlanner.completedTasks[completedId] = {
+        id: completedId,
+        value: taskId,
+        completedAt: Date.now()
+    };
+}
+
+function unmarkPlannerTaskDone(aptId) {
+    var taskId = 'clinic_' + aptId;
+    if (!roadmapData.monthlyPlanner?.completedTasks) return;
+
+    Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(function(id) {
+        var entry = roadmapData.monthlyPlanner.completedTasks[id];
+        if (entry?.value === taskId || entry === taskId) {
+            delete roadmapData.monthlyPlanner.completedTasks[id];
+        }
+    });
+}
+
+// ==================== PROCEDURE RECORDING MODAL ====================
+
+function openProcedureRecordingModal(aptId) {
+    var apt = roadmapData.clinicalData?.appointments?.[aptId];
+    if (!apt) return;
+
+    var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+    var patientName = patient?.name || 'Unknown Patient';
+
+    document.getElementById('procModalAptId').value = aptId;
+    document.getElementById('procModalPatientId').value = apt.patientId || '';
+    document.getElementById('procModalPatientName').textContent = patientName;
+    document.getElementById('procModalDate').value = apt.date || getLocalDateString();
+    document.getElementById('procModalProcedure').value = apt.procedures || '';
+    document.getElementById('procModalTeeth').value = '';
+    document.getElementById('procModalGrade').value = '';
+    document.getElementById('procModalFaculty').value = '';
+    document.getElementById('procModalNotes').value = apt.notes || '';
+
+    var typeSelect = document.getElementById('procModalType');
+    typeSelect.innerHTML = Object.entries(PROCEDURE_TYPES).map(function(entry) {
+        return '<option value="' + entry[0] + '">' + escapeHtml(entry[1]) + '</option>';
+    }).join('');
+
+    buildCompetencyChecklist(typeSelect.value);
+
+    document.getElementById('procedureRecordingModal').style.display = 'flex';
+}
+
+function openStandaloneProcedureModal() {
+    document.getElementById('procModalAptId').value = '';
+    document.getElementById('procModalPatientId').value = '';
+    document.getElementById('procModalPatientName').textContent = 'N/A (standalone)';
+    document.getElementById('procModalDate').value = getLocalDateString();
+    document.getElementById('procModalProcedure').value = '';
+    document.getElementById('procModalTeeth').value = '';
+    document.getElementById('procModalGrade').value = '';
+    document.getElementById('procModalFaculty').value = '';
+    document.getElementById('procModalNotes').value = '';
+
+    var typeSelect = document.getElementById('procModalType');
+    typeSelect.innerHTML = Object.entries(PROCEDURE_TYPES).map(function(entry) {
+        return '<option value="' + entry[0] + '">' + escapeHtml(entry[1]) + '</option>';
+    }).join('');
+
+    buildCompetencyChecklist(typeSelect.value);
+
+    document.getElementById('procedureRecordingModal').style.display = 'flex';
+}
+
+function closeProcedureRecordingModal() {
+    document.getElementById('procedureRecordingModal').style.display = 'none';
+}
+
+function buildCompetencyChecklist(categoryKey) {
+    var container = document.getElementById('procModalCompetencies');
+    var competencies = getCompetenciesData();
+    var cat = competencies[categoryKey];
+
+    if (!cat) {
+        container.innerHTML = '<p style="color:#94a3b8; font-size:0.85em;">Select a procedure type to see matching competency items.</p>';
+        return;
+    }
+
+    var html = '';
+    getValues(cat.sections).forEach(function(sec) {
+        getValues(sec.items).forEach(function(item) {
+            var remaining = item.required - item.completed;
+            if (remaining <= 0) return;
+
+            html += '<label style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(100,116,139,0.2); cursor:pointer;">'
+                + '<input type="checkbox" class="proc-comp-checkbox" value="' + escapeHtml(item.id) + '" style="width:18px; height:18px; accent-color:#10b981;">'
+                + '<span style="flex:1; color:#e2e8f0; font-size:0.9em;">' + escapeHtml(item.text) + '</span>'
+                + '<span style="color:' + (remaining <= 1 ? '#f59e0b' : '#94a3b8') + '; font-size:0.8em; white-space:nowrap;">' + item.completed + '/' + item.required + '</span>'
+                + '</label>';
+        });
+    });
+
+    if (!html) {
+        html = '<p style="color:#10b981; font-size:0.85em;">All items in this category are complete!</p>';
+    }
+
+    container.innerHTML = html;
+}
+
+function onProcTypeChange(value) {
+    buildCompetencyChecklist(value);
+}
+
+function saveProcedureRecord() {
+    var procedureText = document.getElementById('procModalProcedure').value.trim();
+    if (!procedureText) {
+        showToast('Procedure description is required', 'error');
+        return;
+    }
+
+    var aptId = document.getElementById('procModalAptId').value;
+    var patientId = document.getElementById('procModalPatientId').value;
+    var patient = roadmapData.clinicalData?.patients?.[patientId];
+
+    var competencyItemIds = [];
+    document.querySelectorAll('.proc-comp-checkbox:checked').forEach(function(cb) {
+        competencyItemIds.push(cb.value);
+    });
+
+    recordProcedure({
+        patientId: patientId || null,
+        patientName: patient?.name || document.getElementById('procModalPatientName').textContent || '',
+        appointmentId: aptId || null,
+        date: document.getElementById('procModalDate').value || getLocalDateString(),
+        procedureType: document.getElementById('procModalType').value || 'other',
+        procedure: procedureText,
+        toothNumbers: document.getElementById('procModalTeeth').value.trim(),
+        competencyItemIds: competencyItemIds,
+        grade: document.getElementById('procModalGrade').value.trim() || null,
+        notes: document.getElementById('procModalNotes').value.trim(),
+        faculty: document.getElementById('procModalFaculty').value.trim()
+    });
+
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+
+    closeProcedureRecordingModal();
+    renderProceduresList();
+    renderCompetencies();
+    updateClinicalStats();
+    renderDashboard();
+
+    var linkedMsg = competencyItemIds.length > 0
+        ? ' (' + competencyItemIds.length + ' competency item' + (competencyItemIds.length > 1 ? 's' : '') + ' linked)'
+        : '';
+    showToast('Procedure recorded!' + linkedMsg);
+}
+
+// ==================== PROCEDURES LIST (SUB-TAB) ====================
+// All user text escaped via escapeHtml() for safe innerHTML rendering
+
+function renderProceduresList() {
+    var container = document.getElementById('proceduresList');
+    if (!container) return;
+
+    var procedures = getValues(roadmapData.clinicalData?.completedProcedures);
+    var patients = roadmapData.clinicalData?.patients || {};
+
+    if (procedures.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="text-align:center; padding:40px; color:#94a3b8;">'
+            + '<div style="font-size:3em; margin-bottom:10px;">📋</div>'
+            + '<p>No procedures recorded yet. Complete an appointment or click "+ Record Procedure" to get started.</p>'
+            + '</div>';
+        return;
+    }
+
+    var sorted = procedures.sort(function(a, b) {
+        return (b.date || '').localeCompare(a.date || '');
+    });
+
+    var html = '';
+    sorted.forEach(function(proc) {
+        var typeName = PROCEDURE_TYPES[proc.procedureType] || proc.procedureType || 'Other';
+        var procDate = parseLocalDate(proc.date);
+        var dateStr = procDate ? procDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : proc.date;
+        var safeId = proc.id.replace(/'/g, "\\'");
+
+        var compHtml = '';
+        if (proc.competencyItemIds && proc.competencyItemIds.length > 0) {
+            compHtml = '<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">';
+            proc.competencyItemIds.forEach(function(itemId) {
+                var result = findCompetencyItem(itemId);
+                if (result) {
+                    var cat = roadmapData.clinicalData.competencies[result.catKey];
+                    compHtml += '<span style="background:' + (cat?.color || '#3b82f6') + '22; color:' + (cat?.color || '#3b82f6') + '; padding:2px 8px; border-radius:4px; font-size:0.75em;">'
+                        + escapeHtml(result.item.text.substring(0, 30)) + '</span>';
+                }
+            });
+            compHtml += '</div>';
+        }
+
+        html += '<div class="procedure-card" style="background:rgba(30,41,59,0.6); border:1px solid rgba(100,116,139,0.3); border-radius:10px; padding:14px; margin-bottom:10px;">'
+            + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">'
+            + '<div style="flex:1;">'
+            + '<div style="font-weight:600; color:#e2e8f0;">' + escapeHtml(proc.procedure) + '</div>'
+            + '<div style="font-size:0.85em; color:#94a3b8; margin-top:4px;">'
+            + (proc.patientName ? escapeHtml(proc.patientName) + ' · ' : '')
+            + escapeHtml(dateStr)
+            + (proc.toothNumbers ? ' · #' + escapeHtml(proc.toothNumbers) : '')
+            + '</div>'
+            + '<div style="font-size:0.8em; color:#64748b; margin-top:2px;">'
+            + '<span style="background:rgba(59,130,246,0.15); color:#93c5fd; padding:1px 6px; border-radius:3px;">' + escapeHtml(typeName) + '</span>'
+            + (proc.grade ? ' · Grade: ' + escapeHtml(proc.grade) : '')
+            + (proc.faculty ? ' · ' + escapeHtml(proc.faculty) : '')
+            + '</div>'
+            + compHtml
+            + '</div>'
+            + '<button onclick="deleteProcedure(\'' + safeId + '\')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1em; padding:4px;" title="Delete procedure record">x</button>'
+            + '</div>'
+            + '</div>';
+    });
+
+    container.innerHTML = html;
+}
+
+// ==================== APPOINTMENT STATUS TOGGLE ====================
+
+function toggleAppointmentStatus(aptId, event) {
+    if (event) event.stopPropagation();
+
+    var apt = roadmapData.clinicalData?.appointments?.[aptId];
+    if (!apt) return;
+
+    if (apt.status === 'completed') {
+        uncompleteAppointment(aptId);
+    } else {
+        completeAppointment(aptId);
+    }
+}
+
+// ==================== PROCEDURES FOR PATIENT/COMPETENCY ====================
+
+function getProceduresForPatient(patientId) {
+    return getValues(roadmapData.clinicalData?.completedProcedures).filter(function(p) {
+        return p.patientId === patientId;
+    });
+}
+
+function getProceduresForCompetency(competencyItemId) {
+    return getValues(roadmapData.clinicalData?.completedProcedures).filter(function(p) {
+        return p.competencyItemIds && p.competencyItemIds.includes(competencyItemId);
+    });
 }

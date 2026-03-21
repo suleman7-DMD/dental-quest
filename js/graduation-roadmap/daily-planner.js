@@ -31,6 +31,9 @@ function initDailyPlanner() {
         roadmapData.dailyPlanner.date = today;
     }
 
+    // Auto-populate today's clinical appointments as timeline blocks
+    dpSyncAppointmentsToTimeline();
+
     // Load UI
     dpPopulateDeadlineDropdown();
     dpRenderTimeline();
@@ -573,4 +576,78 @@ function saveDailyPlannerData() {
 
     // Trigger main save
     saveData();
+}
+
+// ==================== AUTO-POPULATE FROM CLINICAL APPOINTMENTS ====================
+// Syncs today's appointments as timeline blocks (incremental — won't duplicate)
+
+function dpSyncAppointmentsToTimeline() {
+    var today = getLocalDateString();
+    var appointments = getValues(roadmapData.clinicalData?.appointments);
+    var patients = roadmapData.clinicalData?.patients || {};
+
+    if (!roadmapData.dailyPlanner.blocks) roadmapData.dailyPlanner.blocks = {};
+
+    var existingBlocks = roadmapData.dailyPlanner.blocks;
+    var changed = false;
+
+    appointments.forEach(function(apt) {
+        if (apt.date !== today) return;
+        if (apt.status === 'cancelled') return;
+        if (!apt.time) return;
+
+        // Check if block already exists for this appointment (dedup)
+        var blockId = 'apt_block_' + apt.id;
+        if (existingBlocks[blockId]) {
+            // Already synced — check if user edited it
+            if (existingBlocks[blockId].userEdited) return;
+
+            // Update with latest appointment data (time/procedure changes)
+            var patient = patients[apt.patientId] || {};
+            existingBlocks[blockId].startTime = apt.time;
+            existingBlocks[blockId].duration = apt.duration || 180;
+            existingBlocks[blockId].task = (patient.name || 'Patient') + ' - ' + (apt.procedures || 'Clinic Apt');
+            changed = true;
+            return;
+        }
+
+        // Create new block
+        var patient = patients[apt.patientId] || {};
+        var patientName = patient.name || 'Patient';
+        var taskText = patientName + ' - ' + (apt.procedures || 'Clinic Apt');
+
+        // Add medical alerts context
+        if (patient.medicalAlerts) {
+            taskText += ' [' + patient.medicalAlerts + ']';
+        }
+
+        existingBlocks[blockId] = {
+            id: blockId,
+            startTime: apt.time,
+            duration: apt.duration || 180,
+            task: taskText,
+            done: apt.status === 'completed',
+            linkedAptId: apt.id,
+            source: 'clinical'
+        };
+        changed = true;
+    });
+
+    // Remove orphaned clinical blocks (appointment deleted or date changed)
+    Object.keys(existingBlocks).forEach(function(blockId) {
+        var block = existingBlocks[blockId];
+        if (!block || block.source !== 'clinical' || block.userEdited) return;
+
+        var aptId = block.linkedAptId;
+        if (!aptId) return;
+
+        var apt = roadmapData.clinicalData?.appointments?.[aptId];
+        // Remove if appointment is gone, cancelled, or moved to different day
+        if (!apt || apt.status === 'cancelled' || apt.date !== today) {
+            delete existingBlocks[blockId];
+            changed = true;
+        }
+    });
+
+    // Note: We don't save here — initDailyPlanner() calls saveData() later if needed
 }

@@ -13,15 +13,22 @@ function renderDashboard() {
     today.setHours(0, 0, 0, 0);
 
     // === Row 1: Clinic Requirements Card ===
-    // Load headline counters from saved data
+    // Auto-derive completed counts from real clinical data
     roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
+    const autoAptCount = getValues(roadmapData.clinicalData?.appointments).filter(function(a) { return a.status === 'completed'; }).length;
+    const autoProcCount = getCount(roadmapData.clinicalData?.completedProcedures);
+    // Sync auto-derived counts back to clinicHeadlines for cross-app consumers
+    if (!roadmapData.clinicHeadlines.appointments) roadmapData.clinicHeadlines.appointments = {};
+    if (!roadmapData.clinicHeadlines.procedures) roadmapData.clinicHeadlines.procedures = {};
+    roadmapData.clinicHeadlines.appointments.completed = autoAptCount;
+    roadmapData.clinicHeadlines.procedures.completed = autoProcCount;
     const clinicHeadlines = {
         appointments: {
-            completed: roadmapData.clinicHeadlines.appointments?.completed ?? 0,
+            completed: autoAptCount,
             target: roadmapData.clinicHeadlines.appointments?.target ?? 90
         },
         procedures: {
-            completed: roadmapData.clinicHeadlines.procedures?.completed ?? 0,
+            completed: autoProcCount,
             target: roadmapData.clinicHeadlines.procedures?.target ?? 116
         }
     };
@@ -114,13 +121,11 @@ function renderDashboard() {
     // Headline counters
     html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">';
 
-    // Appointments counter
+    // Appointments counter — auto-derived from completed appointments
     html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px;">';
     html += '<div style="font-size:0.85em; color:#93c5fd; margin-bottom:8px; font-weight:600;">Appointments</div>';
     html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
-    html += '<input type="number" id="headline-apt-completed" value="' + clinicHeadlines.appointments.completed + '" min="0" '
-        + 'onchange="updateHeadlineCounter(\'appointments\', this.value)" '
-        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '<span style="font-size:1.4em; font-weight:700; color:#e2e8f0;">' + clinicHeadlines.appointments.completed + '</span>';
     html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
     html += '<input type="number" id="headline-apt-target" value="' + clinicHeadlines.appointments.target + '" min="0" '
         + 'onchange="updateHeadlineTarget(\'appointments\', this.value)" '
@@ -129,15 +134,14 @@ function renderDashboard() {
     html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
     html += '<div style="background:#3b82f6; height:100%; width:' + aptPct + '%; transition:width 0.3s;"></div>';
     html += '</div>';
+    html += '<div style="font-size:0.7em; color:#64748b; margin-top:4px;">Auto-counted from completed appointments</div>';
     html += '</div>';
 
-    // Procedures counter
+    // Procedures counter — auto-derived from recorded procedures
     html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:14px;">';
     html += '<div style="font-size:0.85em; color:#6ee7b7; margin-bottom:8px; font-weight:600;">Procedures</div>';
     html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
-    html += '<input type="number" id="headline-proc-completed" value="' + clinicHeadlines.procedures.completed + '" min="0" '
-        + 'onchange="updateHeadlineCounter(\'procedures\', this.value)" '
-        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
+    html += '<span style="font-size:1.4em; font-weight:700; color:#e2e8f0;">' + clinicHeadlines.procedures.completed + '</span>';
     html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
     html += '<input type="number" id="headline-proc-target" value="' + clinicHeadlines.procedures.target + '" min="0" '
         + 'onchange="updateHeadlineTarget(\'procedures\', this.value)" '
@@ -146,6 +150,7 @@ function renderDashboard() {
     html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
     html += '<div style="background:#10b981; height:100%; width:' + procPct + '%; transition:width 0.3s;"></div>';
     html += '</div>';
+    html += '<div style="font-size:0.7em; color:#64748b; margin-top:4px;">Auto-counted from recorded procedures</div>';
     html += '</div>';
 
     html += '</div>'; // end headline counters grid
@@ -636,7 +641,14 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 
     // FALLBACK: If Firebase hangs after 3s, load from localStorage and set ALL sync flags
+    // CRITICAL FIX: Skip if user is still typing PIN — firing this with empty localStorage
+    // causes defaults to get a recent lastSaved timestamp, which makes finishFirebaseLoad()
+    // skip the Firebase merge (thinks local is newer), then saves defaults to Firebase wiping all data.
     setTimeout(() => {
+        if (awaitingPinEntry) {
+            console.log('[GRAD-FALLBACK] 3s: Skipping — PIN prompt still active');
+            return;
+        }
         const dateEl = document.getElementById('currentDateDisplay');
         if (dateEl && (dateEl.textContent === 'Loading...' || !dateEl.textContent)) {
             try { loadFromLocalStorage(false); } catch(e) { console.error('3s fallback localStorage load failed:', e); }
@@ -655,7 +667,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
 
     // UNCONDITIONAL FAILSAFE: If isInitialLoad is STILL true after 6s, force all flags
+    // Same fix: skip if user is still at the PIN prompt
     setTimeout(() => {
+        if (awaitingPinEntry) {
+            console.log('[GRAD-FALLBACK] 6s: Skipping — PIN prompt still active');
+            return;
+        }
         if (isInitialLoad) {
             console.error('6s failsafe: isInitialLoad still true, forcing flags');
             hasLoadedFromCloud = true;

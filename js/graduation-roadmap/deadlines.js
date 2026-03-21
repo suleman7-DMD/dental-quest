@@ -663,6 +663,19 @@ function toggleDeadlineDone(index) {
         // Update grades if this was synced
         syncDeadlineToGrades(deadline, false);
 
+        // CROSS-SYNC: If this deadline is linked to a clinical appointment, uncomplete it
+        if (deadline.clinicalAptId && typeof uncompleteAppointment === 'function') {
+            const apt = roadmapData.clinicalData?.appointments?.[deadline.clinicalAptId];
+            if (apt && apt.status === 'completed') {
+                apt.status = 'scheduled';
+                delete apt.completedAt;
+                // Also unmark the planner task
+                if (typeof unmarkPlannerTaskDone === 'function') {
+                    unmarkPlannerTaskDone(deadline.clinicalAptId);
+                }
+            }
+        }
+
         // FIX: Write to localStorage BEFORE saveData() so changes persist even if guards block
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         const saved = saveData();
@@ -673,6 +686,8 @@ function toggleDeadlineDone(index) {
         renderDeadlines();
         renderDashboard();
         loadCourseGrades();
+        if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
+        if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
 
         showToast('Marked incomplete');
     } else {
@@ -816,6 +831,27 @@ function submitDeadlineGrade(index) {
     // Sync to grades tab
     syncDeadlineToGrades(deadline, true, grade);
 
+    // CROSS-SYNC: If this deadline is linked to a clinical appointment, complete it
+    if (deadline.clinicalAptId) {
+        const apt = roadmapData.clinicalData?.appointments?.[deadline.clinicalAptId];
+        if (apt && apt.status !== 'completed') {
+            apt.status = 'completed';
+            apt.completedAt = new Date().toISOString();
+
+            // Update patient lastVisit
+            const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+            if (patient) {
+                patient.lastVisit = apt.date;
+                patient.lastUpdated = new Date().toISOString();
+            }
+
+            // Mark planner task done
+            if (typeof markPlannerTaskDone === 'function') {
+                markPlannerTaskDone(deadline.clinicalAptId);
+            }
+        }
+    }
+
     // Close modal
     document.getElementById('gradeInputModal').remove();
 
@@ -829,6 +865,8 @@ function submitDeadlineGrade(index) {
     renderDeadlines();
     renderDashboard();
     loadCourseGrades();
+    if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
+    if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
 
     showToast(grade !== null ? `✓ Completed with ${grade}%` : '✓ Completed');
 }

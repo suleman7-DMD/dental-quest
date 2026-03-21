@@ -182,6 +182,9 @@ function initMonthlyPlanner() {
     // Sync clinical appointments to Monthly Planner (runs before render)
     syncClinicalToMonthlyPlanner();
 
+    // Build currentWeekSchedule for cross-app consumption (Stim Calc)
+    buildCurrentWeekSchedule();
+
     // Extend weeks dynamically if we have tasks/appointments beyond Feb 22
     extendWeeksIfNeeded();
 
@@ -202,7 +205,34 @@ function mpToggleTaskComplete(taskId) {
     if (!isCompleted) {
         const completedId = generateId('completed');
         roadmapData.monthlyPlanner.completedTasks[completedId] = { id: completedId, value: taskIdStr, completedAt: Date.now() };
-        showToast('Task completed! 🎉');
+
+        // CROSS-SYNC: If this is a clinic task, mark the appointment as completed
+        if (taskIdStr.startsWith('clinic_')) {
+            const aptId = taskIdStr.replace('clinic_', '');
+            const apt = roadmapData.clinicalData?.appointments?.[aptId];
+            if (apt && apt.status !== 'completed') {
+                apt.status = 'completed';
+                apt.completedAt = new Date().toISOString();
+
+                // Update patient lastVisit
+                const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+                if (patient) {
+                    patient.lastVisit = apt.date;
+                    patient.lastUpdated = new Date().toISOString();
+                }
+
+                // Mark linked deadline as done
+                if (typeof markLinkedDeadlineDone === 'function') {
+                    markLinkedDeadlineDone(aptId);
+                }
+
+                showToast('Appointment completed! Record procedures in Clinical tab.');
+            } else {
+                showToast('Task completed!');
+            }
+        } else {
+            showToast('Task completed!');
+        }
     } else {
         // Find and remove the completed entry
         Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(id => {
@@ -211,9 +241,25 @@ function mpToggleTaskComplete(taskId) {
                 delete roadmapData.monthlyPlanner.completedTasks[id];
             }
         });
+
+        // CROSS-SYNC: If this is a clinic task, uncomplete the appointment
+        if (taskIdStr.startsWith('clinic_')) {
+            const aptId = taskIdStr.replace('clinic_', '');
+            const apt = roadmapData.clinicalData?.appointments?.[aptId];
+            if (apt && apt.status === 'completed') {
+                apt.status = 'scheduled';
+                delete apt.completedAt;
+
+                if (typeof unmarkLinkedDeadlineDone === 'function') {
+                    unmarkLinkedDeadlineDone(aptId);
+                }
+            }
+        }
+
         showToast('Task unmarked');
     }
 
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     mpRenderAllCalendars();
     mpUpdateStats();
@@ -559,6 +605,11 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
     // heightPx is based on duration; content may need more space
     const minHeight = Math.max(60, heightPx);
 
+    // Hide button for clinic-synced tasks
+    const hideBtn = (task.syncedFromClinical || task.clinicalAppointmentId)
+        ? `<button class="mp-cal-edit-btn" onclick="mpHideClinicTask('${taskId}', '${task.clinicalAppointmentId || ''}'); event.stopPropagation();" title="Hide from planner" style="font-size:0.7em;">👁️‍🗨️</button>`
+        : '';
+
     return `
         <div class="mp-cal-task ${typeClass} ${completedClass}"
              style="top: ${topPx}px; min-height: ${minHeight}px;"
@@ -568,6 +619,7 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
                     <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
                            onchange="mpToggleTaskComplete('${taskId}')" />
                 </label>
+                ${hideBtn}
                 <button class="mp-cal-edit-btn" onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false}); event.stopPropagation();" title="Edit">✏️</button>
             </div>
             <div class="mp-cal-task-name ${isCompleted ? 'mp-completed-text' : ''}">${escapeHtml(task.item)}</div>
@@ -1089,6 +1141,178 @@ function mpDeleteNote(noteId) {
         mpRenderNotes();
         showToast('Note deleted');
     }, null, 'Delete Note');
+}
+
+// ==================== CURRENT WEEK SCHEDULE BUILDER ====================
+// Builds a pre-compiled weekly schedule for cross-app consumption (Stim Calc "Week at a Glance")
+
+function buildCurrentWeekSchedule() {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Find current week boundaries (Monday-Sunday)
+    var dayOfWeek = today.getDay();
+    var mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    var monday = new Date(today);
+    monday.setDate(monday.getDate() + mondayOffset);
+    var sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+
+    var mondayStr = getLocalDateString(monday);
+    var sundayStr = getLocalDateString(sunday);
+
+    var schedule = {};
+    var seen = {}; // Dedup by date+time+item
+
+    // 1. Add static tasks for current week
+    MP_STATIC_TASKS.forEach(function(task) {
+        if (task.date >= mondayStr && task.date <= sundayStr) {
+            var key = task.date + '|' + (task.time || '') + '|' + task.item;
+            if (seen[key]) return;
+            seen[key] = true;
+
+            var id = 'static_' + task.date + '_' + task.item.substring(0, 15).replace(/[^a-zA-Z0-9]/g, '');
+            schedule[id] = {
+                id: id,
+                date: task.date,
+                time: task.time || '',
+                item: task.item,
+                type: task.type || 'academic',
+                notes: task.notes || '',
+                source: 'static'
+            };
+        }
+    });
+
+    // 2. Add custom tasks for current week
+    getValues(roadmapData.monthlyPlanner?.customTasks).forEach(function(task) {
+        if (!task.date || task.date < mondayStr || task.date > sundayStr) return;
+
+        var key = task.date + '|' + (task.time || '') + '|' + task.item;
+        if (seen[key]) return;
+        seen[key] = true;
+
+        schedule[task.id] = {
+            id: task.id,
+            date: task.date,
+            time: task.time || '',
+            endTime: task.endTime || '',
+            item: task.item,
+            type: task.type || 'other',
+            notes: task.notes || '',
+            source: task.syncedFromClinical ? 'clinical' : 'custom',
+            clinicalAppointmentId: task.clinicalAppointmentId || null
+        };
+    });
+
+    // 3. Add clinical appointments for current week (dedup with synced planner tasks)
+    getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
+        if (!apt.date || apt.date < mondayStr || apt.date > sundayStr) return;
+        if (apt.status === 'cancelled') return;
+
+        var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+        var patientName = patient?.name || 'Patient';
+        var itemText = patientName + ' - ' + (apt.procedures || 'Appointment');
+
+        var key = apt.date + '|' + (apt.time || '') + '|' + itemText;
+        if (seen[key]) return;
+        seen[key] = true;
+
+        var id = 'apt_' + apt.id;
+        schedule[id] = {
+            id: id,
+            date: apt.date,
+            time: apt.time || '',
+            endTime: apt.time ? calculateEndTime(apt.time, apt.duration || 180) : '',
+            item: itemText,
+            type: 'clinic',
+            notes: apt.notes || '',
+            source: 'clinical',
+            clinicalAppointmentId: apt.id,
+            status: apt.status
+        };
+    });
+
+    // Save to state
+    if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
+    roadmapData.monthlyPlanner.currentWeekSchedule = schedule;
+}
+
+// ==================== HIDE/UNHIDE CLINIC TASKS ====================
+
+function mpHideClinicTask(taskId, clinicalAppointmentId) {
+    showCustomConfirm('Hide this clinic task from the planner? The appointment will remain in the Clinical tab.', function() {
+        if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+
+        var aptId = clinicalAppointmentId || taskId.replace('clinic_', '');
+        roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = {
+            hiddenAt: new Date().toISOString(),
+            taskId: taskId
+        };
+
+        if (roadmapData.monthlyPlanner.customTasks && roadmapData.monthlyPlanner.customTasks[taskId]) {
+            delete roadmapData.monthlyPlanner.customTasks[taskId];
+        }
+
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        mpRenderAllCalendars();
+        mpUpdateStats();
+        showToast('Clinic task hidden from planner');
+    }, null, 'Hide Task');
+}
+
+function mpUnhideClinicTask(aptId) {
+    if (!roadmapData.monthlyPlanner?.hiddenClinicTasks?.[aptId]) return;
+    delete roadmapData.monthlyPlanner.hiddenClinicTasks[aptId];
+    syncClinicalToMonthlyPlanner();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    mpRenderAllCalendars();
+    mpUpdateStats();
+    showToast('Task restored to planner');
+}
+
+function mpToggleHiddenTasksView() {
+    var container = document.getElementById('mpHiddenTasksList');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        var hidden = roadmapData.monthlyPlanner?.hiddenClinicTasks || {};
+        var appointments = roadmapData.clinicalData?.appointments || {};
+        var patients = roadmapData.clinicalData?.patients || {};
+        var keys = Object.keys(hidden);
+
+        if (keys.length === 0) {
+            container.textContent = 'No hidden tasks.';
+            container.style.cssText = 'color:#94a3b8; font-size:0.85em; padding:8px; display:block;';
+        } else {
+            // Build hidden tasks list — all text escaped via escapeHtml()
+            var html = '';
+            keys.forEach(function(aptId) {
+                var apt = appointments[aptId];
+                var aptName = apt ? (patients[apt.patientId]?.name || 'Patient') + ' - ' + (apt.procedures || 'Apt') : 'Deleted appointment';
+                var safeId = aptId.replace(/'/g, "\\'");
+                html += '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(100,116,139,0.2);">'
+                    + '<span style="flex:1; color:#94a3b8; font-size:0.85em;">' + escapeHtml(aptName) + '</span>'
+                    + '<button onclick="mpUnhideClinicTask(\'' + safeId + '\')" style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:0.8em;">Unhide</button>'
+                    + '</div>';
+            });
+            container.innerHTML = html;
+        }
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function calculateEndTime(startTime, durationMinutes) {
+    if (!startTime) return '';
+    var parts = startTime.split(':').map(Number);
+    var totalMinutes = parts[0] * 60 + parts[1] + durationMinutes;
+    var hours = Math.floor(totalMinutes / 60) % 24;
+    var mins = totalMinutes % 60;
+    return String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
 }
 
 // Keyboard shortcuts
