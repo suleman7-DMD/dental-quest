@@ -436,14 +436,23 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `buildCurrentWeekSchedule()` | monthly-planner.js | Pre-build weekly schedule for Stim Calc cross-app |
 | `mpHideClinicTask(taskId, aptId)` | monthly-planner.js | Hide clinic task from planner |
 | `mpUnhideClinicTask(aptId)` | monthly-planner.js | Restore hidden clinic task |
-| `renderDashboard()` | init.js | Mission Control tab (auto-derived counters, competency grid) |
+| `renderDashboard()` | init.js | Mission Control tab (smart counters, readiness score, alerts, pace projections) |
 | `renderGraduationPrep()` | init.js | Graduation Prep tab rendering (externship, CDCA, INBDE, job search) |
-| `updateHeadlineTarget(type, val)` | init.js | Edit clinic headline target (completed is auto-derived) |
+| `updateHeadlineTarget(type, val)` | init.js | Edit clinic headline target (completed is smart-derived) |
 | `updateGradPrep(cat, field, val)` | init.js | Save graduation prep field |
 | `findCompetencyItem(itemId)` | state.js | Find competency item across all categories |
 | `PROCEDURE_TYPES` | state.js | Maps competency category keys to display names |
 | `switchScheduleSubTab(subTabId)` | state.js | Toggle monthly/daily sub-tab in Schedule tab |
 | `toggleAcademicsSection(sectionId)` | state.js | Toggle accordion in D3 Academics tab |
+| `getSmartAppointmentCount()` | state.js | Multi-source appointment aggregation (appointments + planner + patient visits) |
+| `getSmartProcedureCount()` | state.js | Multi-source procedure aggregation (records + competency manual adjustments) |
+| `calculateGraduationReadiness()` | state.js | Weighted readiness % across 14 competency categories |
+| `getCompetencyGaps()` | state.js | Items at 0% progress or behind pace for graduation |
+| `calculatePaceProjection(count, target)` | state.js | "At current pace, hit target by [date]" |
+| `navigateToEntity(type, id)` | state.js | Cross-tab deep linking (patient, appointment, procedure, competency, deadline) |
+| `backfillClinicalData()` | clinical.js | One-click backfill: auto-complete past apts, create proc records, evidence entries, link patients |
+| `autoSuggestClinicalDeadlines()` | deadlines.js | Generate soft deadline suggestions from competency gaps before externship |
+| `dpRenderClinicDayBanner()` | daily-planner.js | Clinic day banner with patient list, completion tracking, post-clinic summary |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
 | `init()` | init.js | App entry point (calls initFirebase) |
 

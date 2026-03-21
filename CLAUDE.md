@@ -53,6 +53,10 @@ const date = new Date(year, month - 1, day);
 - **Fallback timers fire during PIN prompt = data wipe**: DOMContentLoaded 3s/6s fallback timers must check `awaitingPinEntry` flag. Without it: fallback loads empty defaults → `saveData()` writes recent `lastSaved` → `finishFirebaseLoad()` thinks local is newer → skips Firebase merge → saves defaults to cloud wiping all data. Fixed Mar 21 2026: `awaitingPinEntry` flag gates both timers.
 - **Default grades make isEmptyState() return false**: Default `roadmapData` has hardcoded grades (oralmed quiz1:100, peds exam1:77, etc.). These pass Guard C, allowing default state to be saved. Never add real data values to `getDefaultRoadmapData()` — use empty objects.
 - **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]` on competency items. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts. Always use these functions, never manually edit `item.completed` for procedure-linked items.
+- **Smart counting vs narrow counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (in state.js) which aggregate from ALL data sources. NEVER replace these with narrow `getValues(appointments).filter(completed)` — that was the original bug (showed 0/90 despite real data existing).
+- **Evidence trail on manual adjustments**: `adjustCompItem()` and `setCompItemStatus()` auto-create `completionEntries[]` for manual changes. Do NOT remove this — the smart procedure counter depends on deduping manual entries vs procedure-linked entries.
+- **Backfill creates checkpoint**: `backfillClinicalData()` calls `createCheckpoint('pre-backfill')` before mutations. Always preserve this safety net.
+- **Import auto-completes past appointments**: `confirmClinicalImport()` sets `status: 'completed'` for appointments with dates before today. Do NOT revert to always `'scheduled'`.
 
 ---
 
@@ -128,7 +132,7 @@ users/user_[hashedPin]/
 │   ├── examStudyProgress{}, exams{}, mandatoryItems{}, pedsLockedIn
 │   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{}, currentWeekSchedule{} }
 │   ├── upcomingDeadlines{} (cross-app: all upcoming deadlines for Stim Calc)
-│   ├── clinicalData{ patients{}, appointments{}, competencies{}, patientRecords{}, dashboardSnapshots[] }
+│   ├── clinicalData{ patients{}, appointments{}, completedProcedures{}, competencies{}, patientRecords{}, dashboardSnapshots[] }
 │   ├── graduationPrep{ externship{}, cdcaAdex{}, inbde{}, jobSearch{} }
 │   ├── clinicHeadlines{ appointments{}, procedures{} }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
