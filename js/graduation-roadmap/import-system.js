@@ -372,7 +372,7 @@ function confirmClinicalImport() {
 
     // Ensure clinicalData structure exists
     if (!roadmapData.clinicalData) {
-        roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
+        roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
     }
     if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
     if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};

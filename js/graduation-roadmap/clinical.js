@@ -292,7 +292,7 @@ function savePatient() {
         lastUpdated: new Date().toISOString()
     };
 
-    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
+    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
     if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
 
     roadmapData.clinicalData.patients[patientId] = patient;
@@ -501,7 +501,7 @@ function saveAppointment() {
         createdAt: new Date().toISOString()
     };
 
-    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {} };
+    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
     if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
 
     // Update or add
