@@ -438,7 +438,11 @@ function confirmClinicalImport() {
         if (!roadmapData.clinicalData.appointments || Array.isArray(roadmapData.clinicalData.appointments)) {
             roadmapData.clinicalData.appointments = migrateArrayToObject(roadmapData.clinicalData.appointments, 'appt');
         }
-        roadmapData.clinicalData.appointments[appointmentId] = {
+        // Auto-complete past appointments and set scheduled for future
+        var todayStr = getLocalDateString(new Date());
+        var isPast = apt.date && apt.date < todayStr;
+
+        var newApt = {
             id: appointmentId,
             patientId: patientId,
             date: apt.date,
@@ -446,10 +450,38 @@ function confirmClinicalImport() {
             duration: 60,
             procedures: apt.procedure || '',
             notes: apt.chair ? 'Chair: ' + apt.chair : '',
-            status: 'scheduled',
+            status: isPast ? 'completed' : 'scheduled',
             imported: true
         };
+
+        if (isPast) {
+            newApt.completedAt = apt.date + 'T17:00:00.000Z';
+            // Update patient lastVisit
+            var ptEntry = roadmapData.clinicalData.patients[patientId];
+            if (ptEntry && (!ptEntry.lastVisit || ptEntry.lastVisit < apt.date)) {
+                ptEntry.lastVisit = apt.date;
+            }
+        }
+
+        roadmapData.clinicalData.appointments[appointmentId] = newApt;
         appointmentsAdded++;
+
+        // Auto-create procedure record for completed past appointments
+        if (isPast && apt.procedure) {
+            if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
+            if (typeof recordProcedure === 'function') {
+                recordProcedure({
+                    patientId: patientId,
+                    patientName: apt.patientName || '',
+                    appointmentId: appointmentId,
+                    date: apt.date,
+                    procedureType: 'other',
+                    procedure: apt.procedure,
+                    notes: 'Auto-created from import',
+                    createdAt: new Date().toISOString()
+                });
+            }
+        }
     });
 
     // CRITICAL: Sync to Monthly Planner
@@ -461,21 +493,24 @@ function confirmClinicalImport() {
     closeClinicalImportModal();
     initClinicalTab();
 
-    // Refresh Monthly Planner if it's been initialized
+    // Refresh Monthly Planner and Dashboard
     if (typeof mpRenderAllCalendars === 'function') {
         mpRenderAllCalendars();
     }
+    if (typeof renderDashboard === 'function') {
+        renderDashboard();
+    }
 
     if (isRefreshMode) {
-        showToast(`🔄 Refreshed: ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
+        showToast('Refreshed: ' + appointmentsAdded + ' appointment(s), ' + patientsAdded + ' new patient(s)!');
     } else {
-        const totalParsed = parsedAppointments.length;
-        const skippedApts = totalParsed - appointmentsAdded;
-        if (skippedApts > 0) {
-            showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s) | ⚠️ ${skippedApts} duplicate(s) skipped`);
-        } else {
-            showToast(`✅ Imported ${appointmentsAdded} appointment(s), ${patientsAdded} new patient(s)!`);
-        }
+        var totalParsed = parsedAppointments.length;
+        var skippedApts = totalParsed - appointmentsAdded;
+        var pastCount = parsedAppointments.filter(function(a) { return a.date && a.date < todayStr; }).length;
+        var msg = 'Imported ' + appointmentsAdded + ' apt(s), ' + patientsAdded + ' patient(s)';
+        if (pastCount > 0) msg += ' | ' + pastCount + ' auto-completed';
+        if (skippedApts > 0) msg += ' | ' + skippedApts + ' dupes skipped';
+        showToast(msg);
     }
 }
 

@@ -775,3 +775,250 @@ function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm
     modal.querySelector('#cancelBtn').onclick = () => { modal.remove(); if (onCancel) onCancel(); };
     modal.querySelector('#confirmBtn').focus();
 }
+
+// ==================== SMART CLINICAL AGGREGATION ====================
+// Multi-source appointment count — aggregates from all data islands
+function getSmartAppointmentCount() {
+    const appointments = getValues(roadmapData.clinicalData?.appointments);
+    const patients = roadmapData.clinicalData?.patients || {};
+    const patientRecords = roadmapData.clinicalData?.patientRecords || {};
+    const completedTasks = roadmapData.monthlyPlanner?.completedTasks || {};
+
+    // Source 1: Appointments with status === 'completed'
+    const completedApts = appointments.filter(function(a) { return a.status === 'completed'; });
+    const aptIds = new Set(completedApts.map(function(a) { return a.id; }));
+
+    // Source 2: Clinic planner tasks marked complete (clinic_ prefix)
+    Object.keys(completedTasks).forEach(function(taskId) {
+        if (taskId.startsWith('clinic_')) {
+            var aptId = taskId.replace('clinic_', '');
+            aptIds.add(aptId);
+        }
+    });
+
+    // Source 3: Patient visit history (unique visits not already counted)
+    var visitKeys = new Set();
+    completedApts.forEach(function(a) {
+        if (a.patientId && a.date) visitKeys.add(a.patientId + '|' + a.date);
+    });
+
+    var extraVisits = 0;
+    // From clinical patients
+    Object.values(patients).forEach(function(p) {
+        if (p.lastVisit && p.id && !visitKeys.has(p.id + '|' + p.lastVisit)) {
+            extraVisits++;
+            visitKeys.add(p.id + '|' + p.lastVisit);
+        }
+    });
+
+    // From patient records (detailed records from Patients tab)
+    Object.values(patientRecords).forEach(function(pr) {
+        if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
+            // Avoid double-counting if patient already counted
+            var matchedByClinicalPatient = Object.values(patients).some(function(p) {
+                return (p.name === pr.name || p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
+            });
+            if (!matchedByClinicalPatient) {
+                extraVisits++;
+                visitKeys.add(pr.id + '|' + pr.lastVisit);
+            }
+        }
+    });
+
+    return {
+        total: aptIds.size + extraVisits,
+        fromAppointments: completedApts.length,
+        fromPlannerSync: Math.max(0, aptIds.size - completedApts.length),
+        fromPatientVisits: extraVisits
+    };
+}
+
+// Multi-source procedure count — aggregates from all data islands
+function getSmartProcedureCount() {
+    var procedures = getValues(roadmapData.clinicalData?.completedProcedures);
+    var competencies = roadmapData.clinicalData?.competencies;
+
+    // Source 1: Formal procedure records
+    var formalCount = procedures.length;
+
+    // Source 2: Competency items with completed > 0 (deduped against procedure-linked entries)
+    var competencyDerivedCount = 0;
+
+    if (competencies) {
+        Object.values(competencies).forEach(function(cat) {
+            getValues(cat.sections).forEach(function(sec) {
+                getValues(sec.items).forEach(function(item) {
+                    if (item.completed > 0) {
+                        var evidenceCount = (item.completionEntries || []).length;
+                        // Manual adjustments = completed count minus evidence-linked entries
+                        var manualCount = Math.max(0, item.completed - evidenceCount);
+                        competencyDerivedCount += manualCount;
+                    }
+                });
+            });
+        });
+    }
+
+    // Total = formal procedures + manual competency adjustments (deduped)
+    return {
+        total: formalCount + competencyDerivedCount,
+        fromProcedureRecords: formalCount,
+        fromCompetencyManual: competencyDerivedCount
+    };
+}
+
+// Calculate graduation readiness as weighted percentage across all 14 competency categories
+function calculateGraduationReadiness() {
+    var competencies = roadmapData.clinicalData?.competencies;
+    if (!competencies || typeof calculateCategoryStats !== 'function') return { percent: 0, details: {} };
+
+    var totalWeight = 0;
+    var completedWeight = 0;
+    var details = {};
+
+    Object.entries(competencies).forEach(function(entry) {
+        var key = entry[0];
+        var cat = entry[1];
+        var stats = calculateCategoryStats(cat);
+        var pct = stats.totalUnits > 0 ? stats.completedUnits / stats.totalUnits : 0;
+        var weight = stats.totalUnits; // Weight by number of requirements
+        totalWeight += weight;
+        completedWeight += pct * weight;
+        details[key] = {
+            name: cat.name,
+            icon: cat.icon ?? '',
+            color: cat.color ?? '#3b82f6',
+            percent: Math.round(pct * 100),
+            completed: stats.completedUnits,
+            total: stats.totalUnits,
+            status: pct >= 1 ? 'complete' : pct >= 0.5 ? 'on-track' : pct > 0 ? 'behind' : 'not-started'
+        };
+    });
+
+    return {
+        percent: totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0,
+        details: details
+    };
+}
+
+// Get competency gaps — items with 0 progress or behind pace
+function getCompetencyGaps() {
+    var competencies = roadmapData.clinicalData?.competencies;
+    if (!competencies) return { zeroProgress: [], behindPace: [], total: 0 };
+
+    var zeroProgress = [];
+    var behindPace = [];
+
+    // Calculate weeks remaining to graduation
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var graduation = new Date(2027, 4, 12); // May 12, 2027
+    var weeksRemaining = Math.max(1, Math.ceil((graduation - today) / (7 * 24 * 60 * 60 * 1000)));
+
+    Object.entries(competencies).forEach(function(entry) {
+        var catKey = entry[0];
+        var cat = entry[1];
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (item.completed >= item.required) return; // Done
+
+                var remaining = item.required - item.completed;
+
+                if (item.completed === 0) {
+                    zeroProgress.push({
+                        id: item.id,
+                        text: item.text,
+                        catKey: catKey,
+                        catName: cat.name,
+                        catColor: cat.color ?? '#3b82f6',
+                        required: item.required,
+                        remaining: remaining
+                    });
+                } else if (remaining > weeksRemaining * 0.5) {
+                    // Behind pace: need more than 0.5/week to finish
+                    behindPace.push({
+                        id: item.id,
+                        text: item.text,
+                        catKey: catKey,
+                        catName: cat.name,
+                        catColor: cat.color ?? '#3b82f6',
+                        completed: item.completed,
+                        required: item.required,
+                        remaining: remaining,
+                        paceNeeded: (remaining / weeksRemaining).toFixed(1) + '/wk'
+                    });
+                }
+            });
+        });
+    });
+
+    return { zeroProgress: zeroProgress, behindPace: behindPace, total: zeroProgress.length + behindPace.length };
+}
+
+// Calculate pace projection — "At current pace, hit target by [date]"
+function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
+    if (currentCount <= 0 || targetCount <= 0) return null;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var startDate = dataStartDate ? parseLocalDate(dataStartDate) : new Date(2025, 7, 1); // Aug 1, 2025 default D3 start
+
+    var daysSoFar = Math.max(1, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
+    var ratePerDay = currentCount / daysSoFar;
+
+    if (ratePerDay <= 0) return null;
+
+    var remaining = targetCount - currentCount;
+    if (remaining <= 0) return { projectedDate: 'Already met!', daysToTarget: 0, ratePerWeek: (ratePerDay * 7).toFixed(1) };
+
+    var daysToTarget = Math.ceil(remaining / ratePerDay);
+    var projectedDate = new Date(today);
+    projectedDate.setDate(projectedDate.getDate() + daysToTarget);
+
+    return {
+        projectedDate: projectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        daysToTarget: daysToTarget,
+        ratePerWeek: (ratePerDay * 7).toFixed(1)
+    };
+}
+
+// Navigate to a specific entity across tabs
+function navigateToEntity(type, id) {
+    switch (type) {
+        case 'patient':
+            switchTab('patients');
+            setTimeout(function() {
+                if (typeof selectPatient === 'function') selectPatient(id);
+            }, 100);
+            break;
+        case 'appointment':
+            switchTab('clinical');
+            setTimeout(function() {
+                var btn = document.querySelector('.clinical-subtab[onclick*="appointments"]');
+                if (btn) switchClinicalSubtab('appointments', btn);
+            }, 100);
+            break;
+        case 'procedure':
+            switchTab('clinical');
+            setTimeout(function() {
+                var btn = document.querySelector('.clinical-subtab[onclick*="procedures"]');
+                if (btn) switchClinicalSubtab('procedures', btn);
+            }, 100);
+            break;
+        case 'competency':
+            switchTab('competencies');
+            setTimeout(function() {
+                var result = findCompetencyItem(id);
+                if (result) {
+                    var body = document.getElementById('compBody-' + result.catKey);
+                    if (body && !body.classList.contains('expanded')) {
+                        toggleCompCategory(result.catKey);
+                    }
+                }
+            }, 100);
+            break;
+        case 'deadline':
+            switchTab('deadlines');
+            break;
+    }
+}

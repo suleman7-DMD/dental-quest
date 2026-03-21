@@ -1238,15 +1238,33 @@ function setCompItemStatus(catKey, itemId, newStatus) {
             if (currentStatus === newStatus) {
                 item.status = 'pending';
                 item.completed = 0;
+                // Clear manual evidence entries on reset
+                if (item.completionEntries) {
+                    item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
+                }
             } else {
                 item.status = newStatus;
                 // Set completed count based on status
                 if (newStatus === 'completed') {
                     item.completed = item.required;
+                    // Add evidence entries for manual completion
+                    if (!item.completionEntries) item.completionEntries = [];
+                    while (item.completionEntries.length < item.required) {
+                        item.completionEntries.push({
+                            procedureId: null,
+                            patientId: null,
+                            patientName: 'Manual entry',
+                            date: getLocalDateString(),
+                            note: 'Status set to completed'
+                        });
+                    }
                 } else if (newStatus === 'in_progress' && item.completed === 0) {
                     // Keep completed at 0 for in_progress but set status
                 } else if (newStatus === 'pending') {
                     item.completed = 0;
+                    if (item.completionEntries) {
+                        item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
+                    }
                 }
             }
 
@@ -1284,6 +1302,36 @@ function adjustCompItem(catKey, itemId, delta) {
 
             const newCompleted = Math.max(0, Math.min(item.required, item.completed + delta));
             item.completed = newCompleted;
+
+            // Evidence trail: create lightweight entry for manual adjustments
+            if (delta > 0 && newCompleted > 0) {
+                if (!item.completionEntries) item.completionEntries = [];
+                // Only add entry if manual adjustment (not already covered by procedure linking)
+                var manualCount = newCompleted - item.completionEntries.length;
+                if (manualCount > 0) {
+                    item.completionEntries.push({
+                        procedureId: null,
+                        patientId: null,
+                        patientName: 'Manual entry',
+                        date: getLocalDateString(),
+                        note: 'Manually adjusted +' + delta
+                    });
+                }
+            } else if (delta < 0 && item.completionEntries && item.completionEntries.length > newCompleted) {
+                // Remove excess manual entries (last ones first, prefer removing manual over procedure-linked)
+                while (item.completionEntries.length > newCompleted) {
+                    var lastIdx = -1;
+                    for (var ei = item.completionEntries.length - 1; ei >= 0; ei--) {
+                        if (!item.completionEntries[ei].procedureId) { lastIdx = ei; break; }
+                    }
+                    if (lastIdx >= 0) {
+                        item.completionEntries.splice(lastIdx, 1);
+                    } else {
+                        // All entries are procedure-linked, remove last one
+                        item.completionEntries.pop();
+                    }
+                }
+            }
 
             // Auto-update status based on completed count
             if (newCompleted >= item.required) {
@@ -1659,6 +1707,211 @@ function deleteProcedure(procId) {
         renderDashboard();
         showToast('Procedure deleted');
     }, null, 'Delete Procedure');
+}
+
+// ==================== DATA BACKFILL ENGINE ====================
+// One-time intelligent backfill: creates procedure records from competency data,
+// auto-completes past appointments, and links patient records to clinical data.
+// Called from Mission Control "Backfill Data" button or auto on first load.
+
+function backfillClinicalData() {
+    if (!roadmapData.clinicalData) return;
+
+    var backfillStats = { proceduresCreated: 0, appointmentsCompleted: 0, evidenceCreated: 0, patientsLinked: 0 };
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var todayStr = getLocalDateString(today);
+
+    // Create checkpoint before backfill
+    if (typeof createCheckpoint === 'function') {
+        createCheckpoint('pre-backfill');
+    }
+
+    // === Phase 1: Auto-complete past appointments ===
+    var appointments = roadmapData.clinicalData.appointments || {};
+    Object.values(appointments).forEach(function(apt) {
+        if (apt.status === 'scheduled' && apt.date && apt.date < todayStr) {
+            apt.status = 'completed';
+            apt.completedAt = apt.date + 'T17:00:00.000Z';
+            backfillStats.appointmentsCompleted++;
+
+            // Update patient lastVisit
+            if (apt.patientId) {
+                var patient = roadmapData.clinicalData.patients?.[apt.patientId];
+                if (patient) {
+                    if (!patient.lastVisit || patient.lastVisit < apt.date) {
+                        patient.lastVisit = apt.date;
+                    }
+                }
+            }
+
+            // Mark linked deadline as done
+            if (typeof markLinkedDeadlineDone === 'function') {
+                markLinkedDeadlineDone(apt.id);
+            }
+
+            // Mark planner task as done
+            if (typeof markPlannerTaskDone === 'function') {
+                markPlannerTaskDone(apt.id);
+            }
+        }
+    });
+
+    // === Phase 2: Create evidence entries for competency items with manual progress ===
+    var competencies = roadmapData.clinicalData.competencies;
+    if (competencies) {
+        Object.entries(competencies).forEach(function(entry) {
+            var catKey = entry[0];
+            var cat = entry[1];
+            getValues(cat.sections).forEach(function(sec) {
+                getValues(sec.items).forEach(function(item) {
+                    if (item.completed > 0) {
+                        if (!item.completionEntries) item.completionEntries = [];
+                        var deficit = item.completed - item.completionEntries.length;
+                        for (var i = 0; i < deficit; i++) {
+                            item.completionEntries.push({
+                                procedureId: null,
+                                patientId: null,
+                                patientName: 'Backfill entry',
+                                date: todayStr,
+                                note: 'Backfilled from existing progress (' + item.text + ')'
+                            });
+                            backfillStats.evidenceCreated++;
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    // === Phase 3: Create procedure records from completed appointments ===
+    if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
+    var existingProcAptIds = new Set();
+    Object.values(roadmapData.clinicalData.completedProcedures).forEach(function(p) {
+        if (p.appointmentId) existingProcAptIds.add(p.appointmentId);
+    });
+
+    Object.values(appointments).forEach(function(apt) {
+        if (apt.status === 'completed' && !existingProcAptIds.has(apt.id)) {
+            var procData = {
+                patientId: apt.patientId ?? null,
+                patientName: '',
+                appointmentId: apt.id,
+                date: apt.date || todayStr,
+                procedureType: 'other',
+                procedure: apt.procedures || apt.notes || 'Clinical appointment',
+                notes: 'Backfilled from appointment',
+                createdAt: apt.completedAt || new Date().toISOString()
+            };
+
+            // Get patient name
+            if (apt.patientId) {
+                var pt = roadmapData.clinicalData.patients?.[apt.patientId];
+                if (pt) procData.patientName = pt.name || '';
+            }
+
+            // Infer procedure type from appointment text
+            var aptText = ((apt.procedures || '') + ' ' + (apt.notes || '')).toLowerCase();
+            if (aptText.includes('crown') || aptText.includes('bridge') || aptText.includes('fpd') || aptText.includes('cerec')) {
+                procData.procedureType = 'fixed';
+            } else if (aptText.includes('composite') || aptText.includes('filling') || aptText.includes('restoration')) {
+                procData.procedureType = 'operative';
+            } else if (aptText.includes('denture')) {
+                procData.procedureType = 'dentures';
+            } else if (aptText.includes('rpd') || aptText.includes('partial')) {
+                procData.procedureType = 'rpd';
+            } else if (aptText.includes('srp') || aptText.includes('scaling') || aptText.includes('calculus')) {
+                procData.procedureType = 'srp';
+            } else if (aptText.includes('root canal') || aptText.includes('rct') || aptText.includes('endo')) {
+                procData.procedureType = 'endo';
+            } else if (aptText.includes('extract') || aptText.includes('surgery') || aptText.includes('surgical')) {
+                procData.procedureType = 'oralsurg';
+            } else if (aptText.includes('perio') || aptText.includes('graft') || aptText.includes('flap')) {
+                procData.procedureType = 'perio';
+            } else if (aptText.includes('pedo') || aptText.includes('pediatric') || aptText.includes('sealant')) {
+                procData.procedureType = 'peds';
+            }
+
+            recordProcedure(procData);
+            backfillStats.proceduresCreated++;
+        }
+    });
+
+    // === Phase 4: Link patient records to clinical patients ===
+    var patientRecords = roadmapData.clinicalData.patientRecords || {};
+    if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+    var existingNames = new Set();
+    Object.values(roadmapData.clinicalData.patients).forEach(function(p) {
+        if (p.name) existingNames.add(p.name.toLowerCase().trim());
+    });
+
+    Object.values(patientRecords).forEach(function(pr) {
+        if (!pr.name) return;
+        var nameLower = pr.name.toLowerCase().trim();
+        if (existingNames.has(nameLower)) return; // Already linked
+
+        // Create clinical patient from patient record
+        var patientId = pr.id || ('pt-' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
+        roadmapData.clinicalData.patients[patientId] = {
+            id: patientId,
+            name: pr.name,
+            chartNumber: pr.chartNumber || '',
+            asaClass: 'ASA I',
+            perioStatus: 'healthy',
+            status: 'active',
+            needsXrays: false,
+            xrayType: '',
+            recallDue: null,
+            medicalAlerts: pr.medicalHx || '',
+            notes: 'Linked from patient record',
+            outstandingTasks: [],
+            lastVisit: pr.lastVisit ?? null,
+            lastUpdated: new Date().toISOString()
+        };
+        existingNames.add(nameLower);
+        backfillStats.patientsLinked++;
+    });
+
+    // === Phase 5: Create procedure records from patient outstanding tasks marked completed ===
+    Object.values(roadmapData.clinicalData.patients).forEach(function(patient) {
+        if (!patient.outstandingTasks) return;
+        patient.outstandingTasks.forEach(function(task) {
+            if (task.status === 'completed' && task.procedure) {
+                // Check if we already have a procedure for this
+                var alreadyExists = Object.values(roadmapData.clinicalData.completedProcedures).some(function(p) {
+                    return p.patientId === patient.id && p.procedure === task.procedure;
+                });
+                if (!alreadyExists) {
+                    recordProcedure({
+                        patientId: patient.id,
+                        patientName: patient.name || '',
+                        date: patient.lastVisit || todayStr,
+                        procedureType: 'other',
+                        procedure: task.procedure,
+                        notes: 'Backfilled from patient tasks',
+                        createdAt: new Date().toISOString()
+                    });
+                    backfillStats.proceduresCreated++;
+                }
+            }
+        });
+    });
+
+    // Save everything
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+
+    // Re-render affected tabs
+    try { initClinicalTab(); } catch(e) {}
+    try { renderCompetencies(); } catch(e) {}
+    try { renderDashboard(); } catch(e) {}
+
+    showToast('Backfill complete: ' + backfillStats.appointmentsCompleted + ' apts, '
+        + backfillStats.proceduresCreated + ' procs, '
+        + backfillStats.evidenceCreated + ' evidence, '
+        + backfillStats.patientsLinked + ' patients linked');
+
+    return backfillStats;
 }
 
 // ==================== APPOINTMENT COMPLETION CASCADE ====================

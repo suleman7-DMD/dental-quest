@@ -1077,3 +1077,63 @@ function deleteDeadline(index) {
         'Delete Deadline'
     );
 }
+
+// ==================== CLINICAL DEADLINE SUGGESTIONS ====================
+// Auto-generate soft deadline suggestions based on competency gaps
+function autoSuggestClinicalDeadlines() {
+    var gaps = typeof getCompetencyGaps === 'function' ? getCompetencyGaps() : { zeroProgress: [], behindPace: [] };
+    if (gaps.zeroProgress.length === 0 && gaps.behindPace.length === 0) {
+        showToast('No competency gaps found — looking good!');
+        return;
+    }
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var externshipDate = new Date(2026, 4, 19); // May 19, 2026
+    var weeksToExternship = Math.max(1, Math.ceil((externshipDate - today) / (7 * 24 * 60 * 60 * 1000)));
+
+    // Generate soft deadlines for high-priority gaps
+    var created = 0;
+    var allGaps = gaps.behindPace.concat(gaps.zeroProgress.slice(0, 5)); // Top 5 zero-progress items
+
+    allGaps.forEach(function(gap) {
+        // Check if a deadline already exists for this competency item
+        var existing = deadlines.some(function(d) {
+            return d.what && d.what.includes(gap.text.substring(0, 20));
+        });
+        if (existing) return;
+
+        // Calculate suggested deadline: spread evenly across remaining weeks
+        var suggestedWeeks = Math.min(weeksToExternship, Math.ceil(gap.remaining / 0.5)); // 0.5/week minimum pace
+        var suggestedDate = new Date(today);
+        suggestedDate.setDate(suggestedDate.getDate() + suggestedWeeks * 7);
+        if (suggestedDate > externshipDate) suggestedDate = new Date(externshipDate);
+
+        var dateStr = getLocalDateString(suggestedDate);
+        var dayStr = suggestedDate.toLocaleString('en-US', { weekday: 'short' });
+
+        var id = generateId('clinical');
+        if (!roadmapData.customDeadlines) roadmapData.customDeadlines = {};
+        roadmapData.customDeadlines[id] = {
+            id: id,
+            date: dateStr,
+            day: dayStr,
+            what: 'Complete ' + gap.remaining + 'x ' + gap.text,
+            course: gap.catName || 'Clinical',
+            weight: gap.paceNeeded || '—',
+            type: 'Clinical',
+            custom: true,
+            clinicalSuggested: true
+        };
+        created++;
+    });
+
+    if (created > 0) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        initUI();
+        showToast(created + ' clinical deadline suggestion' + (created > 1 ? 's' : '') + ' created');
+    } else {
+        showToast('All gap items already have deadlines');
+    }
+}

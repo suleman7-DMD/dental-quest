@@ -920,19 +920,22 @@ function renderCountdownRadar() {
     var daysColor = daysRemaining <= 30 ? '#ef4444' : daysRemaining <= 60 ? '#f59e0b' : '#22c55e';
     var paceColor = paceNum >= 5 ? '#ef4444' : paceNum >= 3 ? '#f59e0b' : '#22c55e';
 
-    // Dashboard snapshot data
+    // Smart counting — uses aggregated counts from all data sources
+    var smartApts = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
+    var smartProcs = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
+    var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
+    var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
+
+    // Dashboard snapshot data for notes-at-risk (still from snapshots since it's import-specific)
     var snapshots = getDashboardSnapshots();
-    var aptsHtml = '', procsHtml = '', notesHtml = '';
+    var notesHtml = '';
     if (snapshots.length > 0) {
-        var s = snapshots[0];
-        var a = s.appointments || {};
-        var p = s.procedures || {};
-        var notesRisk = a.notesAtRisk || 0;
+        var notesRisk = snapshots[0].appointments?.notesAtRisk || 0;
         var nc = notesRisk >= 6 ? '#ef4444' : notesRisk >= 5 ? '#f59e0b' : '#64748b';
-        aptsHtml = '<div class="pts-stat-chip" title="Attended appointments toward 90"><span style="color:#3b82f6; font-weight:700;">' + (a.attended||0) + '</span><span style="color:#64748b;">/90 apts</span></div>';
-        procsHtml = '<div class="pts-stat-chip" title="Completed procedures toward 116"><span style="color:#a855f7; font-weight:700;">' + (p.totalCompleted||0) + '</span><span style="color:#64748b;">/116 procs</span></div>';
         notesHtml = '<div class="pts-stat-chip" title="Unclosed/blank notes (limit: 6)"><span style="color:' + nc + '; font-weight:700;">' + notesRisk + '</span><span style="color:#64748b;"> notes</span></div>';
     }
+    var aptsHtml = '<div class="pts-stat-chip" title="Attended appointments toward ' + aptTarget + '"><span style="color:#3b82f6; font-weight:700;">' + smartApts.total + '</span><span style="color:#64748b;">/' + aptTarget + ' apts</span></div>';
+    var procsHtml = '<div class="pts-stat-chip" title="Completed procedures toward ' + procTarget + '"><span style="color:#a855f7; font-weight:700;">' + smartProcs.total + '</span><span style="color:#64748b;">/' + procTarget + ' procs</span></div>';
 
     // Category progress grid — always visible, compact 3 columns
     var gridHtml = '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:3px 10px; margin-top:8px;">';

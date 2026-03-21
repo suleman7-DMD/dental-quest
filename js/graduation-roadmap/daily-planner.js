@@ -650,4 +650,59 @@ function dpSyncAppointmentsToTimeline() {
     });
 
     // Note: We don't save here — initDailyPlanner() calls saveData() later if needed
+
+    // Render clinic day banner if today has clinical appointments
+    dpRenderClinicDayBanner(appointments, patients, today);
+}
+
+// ==================== CLINIC DAY BANNER ====================
+// Shows a contextual banner when today has clinical appointments
+// All text is escaped via escapeHtml() before insertion
+function dpRenderClinicDayBanner(appointments, patients, today) {
+    var banner = document.getElementById('dpClinicDayBanner');
+    if (!banner) return;
+
+    var todayApts = appointments.filter(function(a) {
+        return a.date === today && a.status !== 'cancelled';
+    });
+
+    if (todayApts.length === 0) {
+        banner.textContent = '';
+        banner.style.display = 'none';
+        return;
+    }
+
+    var completedCount = todayApts.filter(function(a) { return a.status === 'completed'; }).length;
+    var totalProcedures = getCount(roadmapData.clinicalData?.completedProcedures);
+
+    // Build banner — all user text passed through escapeHtml()
+    var html = '<div style="background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.1)); border:1px solid rgba(59,130,246,0.3); border-radius:10px; padding:12px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">';
+    html += '<div style="font-size:0.95em; font-weight:600; color:#93c5fd;">Clinic Day — ' + todayApts.length + ' appointment' + (todayApts.length > 1 ? 's' : '') + '</div>';
+    html += '<div style="font-size:0.85em; color:' + (completedCount === todayApts.length ? '#10b981' : '#f59e0b') + '; font-weight:600;">'
+        + completedCount + '/' + todayApts.length + ' done</div>';
+    html += '</div>';
+
+    // Patient list — all names/procedures escaped
+    todayApts.forEach(function(apt) {
+        var pt = patients[apt.patientId] || {};
+        var statusColor = apt.status === 'completed' ? '#10b981' : '#f59e0b';
+        var statusText = apt.status === 'completed' ? 'Done' : escapeHtml(apt.time || 'Scheduled');
+        html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.85em;">';
+        html += '<span style="color:' + statusColor + '; width:60px; font-size:0.8em;">' + statusText + '</span>';
+        html += '<span style="color:#e2e8f0; flex:1;">' + escapeHtml(pt.name || 'Patient') + '</span>';
+        html += '<span style="color:#94a3b8; font-size:0.8em;">' + escapeHtml(apt.procedures || '') + '</span>';
+        html += '</div>';
+    });
+
+    // Post-clinic summary if all done
+    if (completedCount === todayApts.length && completedCount > 0) {
+        html += '<div style="margin-top:8px; padding:8px; background:rgba(16,185,129,0.1); border-radius:6px; text-align:center; font-size:0.85em; color:#6ee7b7;">';
+        html += 'All appointments complete! ' + totalProcedures + ' total procedures recorded.';
+        html += '</div>';
+    }
+
+    html += '</div>';
+    banner.innerHTML = html;
+    banner.style.display = 'block';
 }

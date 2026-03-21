@@ -13,22 +13,22 @@ function renderDashboard() {
     today.setHours(0, 0, 0, 0);
 
     // === Row 1: Clinic Requirements Card ===
-    // Auto-derive completed counts from real clinical data
+    // SMART COUNTING: Aggregate from ALL data sources (appointments, planner, patients, competencies)
     roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
-    const autoAptCount = getValues(roadmapData.clinicalData?.appointments).filter(function(a) { return a.status === 'completed'; }).length;
-    const autoProcCount = getCount(roadmapData.clinicalData?.completedProcedures);
-    // Sync auto-derived counts back to clinicHeadlines for cross-app consumers
+    var smartApts = getSmartAppointmentCount();
+    var smartProcs = getSmartProcedureCount();
+    // Sync smart counts back to clinicHeadlines for cross-app consumers
     if (!roadmapData.clinicHeadlines.appointments) roadmapData.clinicHeadlines.appointments = {};
     if (!roadmapData.clinicHeadlines.procedures) roadmapData.clinicHeadlines.procedures = {};
-    roadmapData.clinicHeadlines.appointments.completed = autoAptCount;
-    roadmapData.clinicHeadlines.procedures.completed = autoProcCount;
+    roadmapData.clinicHeadlines.appointments.completed = smartApts.total;
+    roadmapData.clinicHeadlines.procedures.completed = smartProcs.total;
     const clinicHeadlines = {
         appointments: {
-            completed: autoAptCount,
+            completed: smartApts.total,
             target: roadmapData.clinicHeadlines.appointments?.target ?? 90
         },
         procedures: {
-            completed: autoProcCount,
+            completed: smartProcs.total,
             target: roadmapData.clinicHeadlines.procedures?.target ?? 116
         }
     };
@@ -39,6 +39,14 @@ function renderDashboard() {
     const procPct = clinicHeadlines.procedures.target > 0
         ? Math.min(100, Math.round((clinicHeadlines.procedures.completed / clinicHeadlines.procedures.target) * 100))
         : 0;
+
+    // Graduation readiness
+    var readiness = calculateGraduationReadiness();
+    var gaps = getCompetencyGaps();
+
+    // Pace projections
+    var aptPace = calculatePaceProjection(smartApts.total, clinicHeadlines.appointments.target);
+    var procPace = calculatePaceProjection(smartProcs.total, clinicHeadlines.procedures.target);
 
     // Build competency category progress grid
     const competencies = getCompetenciesData();
@@ -121,7 +129,7 @@ function renderDashboard() {
     // Headline counters
     html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">';
 
-    // Appointments counter — auto-derived from completed appointments
+    // Appointments counter — smart aggregation from all sources
     html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px;">';
     html += '<div style="font-size:0.85em; color:#93c5fd; margin-bottom:8px; font-weight:600;">Appointments</div>';
     html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
@@ -134,10 +142,20 @@ function renderDashboard() {
     html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
     html += '<div style="background:#3b82f6; height:100%; width:' + aptPct + '%; transition:width 0.3s;"></div>';
     html += '</div>';
-    html += '<div style="font-size:0.7em; color:#64748b; margin-top:4px;">Auto-counted from completed appointments</div>';
+    // Source breakdown
+    var aptBreakdown = [];
+    if (smartApts.fromAppointments > 0) aptBreakdown.push(smartApts.fromAppointments + ' completed');
+    if (smartApts.fromPlannerSync > 0) aptBreakdown.push(smartApts.fromPlannerSync + ' via planner');
+    if (smartApts.fromPatientVisits > 0) aptBreakdown.push(smartApts.fromPatientVisits + ' patient visits');
+    html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
+    // Pace projection
+    if (aptPace) {
+        html += '<div style="font-size:0.65em; color:' + (aptPace.daysToTarget === 0 ? '#10b981' : '#93c5fd') + '; margin-top:2px;">'
+            + (aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate) + '</div>';
+    }
     html += '</div>';
 
-    // Procedures counter — auto-derived from recorded procedures
+    // Procedures counter — smart aggregation from all sources
     html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:14px;">';
     html += '<div style="font-size:0.85em; color:#6ee7b7; margin-bottom:8px; font-weight:600;">Procedures</div>';
     html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
@@ -150,10 +168,34 @@ function renderDashboard() {
     html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
     html += '<div style="background:#10b981; height:100%; width:' + procPct + '%; transition:width 0.3s;"></div>';
     html += '</div>';
-    html += '<div style="font-size:0.7em; color:#64748b; margin-top:4px;">Auto-counted from recorded procedures</div>';
+    // Source breakdown
+    var procBreakdown = [];
+    if (smartProcs.fromProcedureRecords > 0) procBreakdown.push(smartProcs.fromProcedureRecords + ' recorded');
+    if (smartProcs.fromCompetencyManual > 0) procBreakdown.push(smartProcs.fromCompetencyManual + ' from competencies');
+    html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (procBreakdown.length > 0 ? procBreakdown.join(' + ') : 'No data yet') + '</div>';
+    // Pace projection
+    if (procPace) {
+        html += '<div style="font-size:0.65em; color:' + (procPace.daysToTarget === 0 ? '#10b981' : '#6ee7b7') + '; margin-top:2px;">'
+            + (procPace.daysToTarget === 0 ? 'Target met!' : procPace.ratePerWeek + '/wk pace — target by ' + procPace.projectedDate) + '</div>';
+    }
     html += '</div>';
 
     html += '</div>'; // end headline counters grid
+
+    // === Graduation Readiness Score ===
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.25); border-radius:10px; padding:12px 16px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; gap:10px;">';
+    html += '<div style="font-size:1.6em; font-weight:800; color:' + (readiness.percent >= 50 ? '#a78bfa' : readiness.percent > 0 ? '#f59e0b' : '#ef4444') + ';">' + readiness.percent + '%</div>';
+    html += '<div><div style="font-size:0.9em; color:#e2e8f0; font-weight:600;">Graduation Readiness</div>';
+    html += '<div style="font-size:0.7em; color:#94a3b8;">Weighted across ' + Object.keys(readiness.details).length + ' competency categories</div></div>';
+    html += '</div>';
+    if (gaps.total > 0) {
+        html += '<div style="font-size:0.75em; color:#f59e0b; text-align:right;">';
+        if (gaps.zeroProgress.length > 0) html += gaps.zeroProgress.length + ' items at 0%<br>';
+        if (gaps.behindPace.length > 0) html += gaps.behindPace.length + ' behind pace';
+        html += '</div>';
+    }
+    html += '</div>';
 
     // Competency category grid
     html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px;">';
@@ -166,9 +208,11 @@ function renderDashboard() {
         + ' (' + overallStats.overallPercent + '%)'
         + '</div>';
 
-    // Open Clinical button
-    html += '<div style="text-align:center;">';
-    html += '<button onclick="switchTab(\'competencies\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;">Open Competencies →</button>';
+    // Quick action buttons
+    html += '<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;">';
+    html += '<button onclick="switchTab(\'competencies\')" style="background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.4); color:#a78bfa; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.85em; font-weight:600;">Competencies →</button>';
+    html += '<button onclick="switchTab(\'clinical\')" style="background:rgba(59,130,246,0.2); border:1px solid rgba(59,130,246,0.4); color:#93c5fd; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.85em; font-weight:600;">Clinical →</button>';
+    html += '<button onclick="backfillClinicalData()" style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); color:#fbbf24; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.85em; font-weight:600;">Backfill Data</button>';
     html += '</div>';
 
     // Patient tracker summary
@@ -186,6 +230,60 @@ function renderDashboard() {
     }
 
     html += '</div>'; // end clinic requirements card
+
+    // === ALERTS & ACTIONS ROW ===
+    var alertItems = [];
+    // Upcoming appointments this week
+    var thisWeekApts = getValues(roadmapData.clinicalData?.appointments).filter(function(a) {
+        if (a.status === 'cancelled' || a.status === 'completed') return false;
+        var aptDate = parseLocalDate(a.date);
+        var weekEnd = new Date(today);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return aptDate && aptDate >= today && aptDate <= weekEnd;
+    });
+    if (thisWeekApts.length > 0) {
+        alertItems.push({ type: 'info', icon: '📅', text: thisWeekApts.length + ' appointment' + (thisWeekApts.length > 1 ? 's' : '') + ' this week', action: 'switchTab(\'clinical\')' });
+    }
+    // Scheduled (uncompleted) past appointments
+    var pastScheduled = getValues(roadmapData.clinicalData?.appointments).filter(function(a) {
+        return a.status === 'scheduled' && a.date && a.date < getLocalDateString(today);
+    });
+    if (pastScheduled.length > 0) {
+        alertItems.push({ type: 'warning', icon: '⚠️', text: pastScheduled.length + ' past appointment' + (pastScheduled.length > 1 ? 's' : '') + ' need completion — click Backfill', action: 'backfillClinicalData()' });
+    }
+    // Recalls due
+    var recallsDue = Object.values(roadmapData.clinicalData?.patients || {}).filter(function(p) {
+        if (!p.recallDue || p.status !== 'active') return false;
+        var recallDate = parseLocalDate(p.recallDue);
+        var thirtyOut = new Date(today);
+        thirtyOut.setDate(thirtyOut.getDate() + 30);
+        return recallDate && recallDate <= thirtyOut;
+    });
+    if (recallsDue.length > 0) {
+        alertItems.push({ type: 'warning', icon: '🔔', text: recallsDue.length + ' patient recall' + (recallsDue.length > 1 ? 's' : '') + ' due within 30 days', action: 'switchTab(\'clinical\')' });
+    }
+    // Competency gaps
+    if (gaps.zeroProgress.length > 0) {
+        alertItems.push({ type: 'blocker', icon: '🚫', text: gaps.zeroProgress.length + ' competency item' + (gaps.zeroProgress.length > 1 ? 's' : '') + ' at 0% — need attention', action: 'switchTab(\'competencies\')' });
+    }
+    if (gaps.behindPace.length > 0) {
+        alertItems.push({ type: 'warning', icon: '📉', text: gaps.behindPace.length + ' item' + (gaps.behindPace.length > 1 ? 's' : '') + ' behind pace for graduation', action: 'switchTab(\'competencies\')' });
+    }
+
+    if (alertItems.length > 0) {
+        html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(239,68,68,0.2); border-radius:14px; padding:14px; margin-bottom:14px;">';
+        html += '<h3 style="color:#f87171; margin:0 0 10px 0; font-size:1em;">⚡ Alerts & Actions</h3>';
+        alertItems.forEach(function(alert) {
+            var borderColor = alert.type === 'blocker' ? 'rgba(239,68,68,0.4)' : alert.type === 'warning' ? 'rgba(245,158,11,0.4)' : 'rgba(59,130,246,0.4)';
+            var bgColor = alert.type === 'blocker' ? 'rgba(239,68,68,0.08)' : alert.type === 'warning' ? 'rgba(245,158,11,0.08)' : 'rgba(59,130,246,0.08)';
+            html += '<div onclick="' + alert.action + '" style="cursor:pointer; display:flex; align-items:center; gap:8px; padding:8px 10px; background:' + bgColor + '; border:1px solid ' + borderColor + '; border-radius:8px; margin-bottom:6px; font-size:0.85em; color:#e2e8f0;">';
+            html += '<span>' + alert.icon + '</span>';
+            html += '<span style="flex:1;">' + alert.text + '</span>';
+            html += '<span style="color:#64748b; font-size:0.8em;">→</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
 
     // === ROW 2: Do Today Widget ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
@@ -229,25 +327,34 @@ function renderDashboard() {
     html += '<h3 style="color:#fbbf24; margin:0 0 12px 0; font-size:1.1em;">🎯 Key Dates</h3>';
     html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;">';
 
-    // D3 End
+    // D3 End — with appointment context
+    var d3Remaining = clinicHeadlines.appointments.target - clinicHeadlines.appointments.completed;
     html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25); border-radius:10px; padding:12px; text-align:center;">';
     html += '<div style="font-size:1.8em; font-weight:800; color:#60a5fa;">' + daysTo(d3End) + '</div>';
     html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to D3 End</div>';
     html += '<div style="font-size:0.7em; color:#64748b;">May 13, 2026</div>';
+    if (d3Remaining > 0) {
+        html += '<div style="font-size:0.6em; color:#93c5fd; margin-top:4px;">' + d3Remaining + ' apts remaining</div>';
+    }
     html += '</div>';
 
-    // Externship Start
+    // Externship Start — with readiness context
     html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px; text-align:center;">';
     html += '<div style="font-size:1.8em; font-weight:800; color:#34d399;">' + daysTo(extStart) + '</div>';
     html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Externship</div>';
     html += '<div style="font-size:0.7em; color:#64748b;">May 19, 2026</div>';
+    html += '<div style="font-size:0.6em; color:#6ee7b7; margin-top:4px;">' + readiness.percent + '% ready</div>';
     html += '</div>';
 
-    // Graduation
+    // Graduation — with overall progress
+    var procRemaining = clinicHeadlines.procedures.target - clinicHeadlines.procedures.completed;
     html += '<div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px; text-align:center;">';
     html += '<div style="font-size:1.8em; font-weight:800; color:#fbbf24;">' + daysTo(graduation) + '</div>';
     html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Graduation</div>';
     html += '<div style="font-size:0.7em; color:#64748b;">May 12, 2027</div>';
+    if (procRemaining > 0) {
+        html += '<div style="font-size:0.6em; color:#fbbf24; margin-top:4px;">' + procRemaining + ' procs remaining</div>';
+    }
     html += '</div>';
 
     html += '</div>'; // end countdown grid
