@@ -5,7 +5,8 @@ description: |
   Use this skill when the user works on save functions, sync logic, realtime listeners, checkpoint code, force upload/pull, adding new data fields, fixing data wipe or persistence bugs, debugging blocked saves, cross-device sync, or PIN authentication. Trigger phrases: "firebase", "sync", "save", "load", "cloud", "realtime", "PIN", "auth", "checkpoint", "backup", "restore", "force upload", "force pull", "data wipe", "guards", "persistence", "cross-device", "offline", "saveData", "saveState", "loadFromFirebase", "isEmptyState", "sync flags", "debounce", "blocked save", "data loss", "cross-app", "ecosystem".
 globs:
   - "index.html"
-  - "d3-roadmap.html"
+  - "graduation-roadmap.html"
+  - "js/graduation-roadmap/*.js"
   - "stimulant-elimination-calculator.html"
   - "body-comp-tracker.html"
 ---
@@ -32,7 +33,7 @@ Consult `references/guard-system.md` for:
 |-----|----------|------|----------|--------|
 | index.html | `saveData()` | firebase-sync.js:218 | 200ms | 5 |
 | index.html | `saveDataImmediate()` | firebase-sync.js:376 | 0ms | 5 |
-| d3-roadmap | `saveData()` | 10992 | 0-300ms smart | 5 |
+| graduation-roadmap | `saveData()` | firebase-sync.js:1932 | 0-300ms smart | 6 (includes Guard F) |
 | stim-calc | `saveState()` | 10322 | 2000ms | 5 |
 | stim-calc | `saveStateImmediate()` | 10381 | 0ms | 5 |
 | body-comp | `saveState()` | 14942 | 2000ms | 5 |
@@ -115,15 +116,17 @@ Consult `references/bugs-and-debugging.md` for:
 
 ## Guard System Overview
 
-| Guard | index.html | d3-roadmap | stim-calc | body-comp |
-|-------|-----------|-----------|-----------|-----------|
+| Guard | index.html | graduation-roadmap | stim-calc | body-comp |
+|-------|-----------|-------------------|-----------|-----------|
 | PIN validated | `pinValidated` | `pinValidated` | `pinValidated` | `pinValidated` |
 | Initial load done | `initialLoadComplete` | `!isInitialLoad` | `!isInitialLoad` | `!isInitialLoad` |
 | Cloud loaded | `hasLoadedFromCloud` | `hasLoadedFromCloud` | `hasLoadedFromCloud` | `hasLoadedFromCloud` |
 | Not empty | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` | `isEmptyState()` |
 | Data loaded | `_dataLoaded` | `roadmapData._dataLoaded` | `state._dataLoaded` | `state._dataLoaded` |
+| Structural integrity | — | `validateStateIntegrity()` (Guard F) | — | — |
 
 Note: index.html uses inverted naming (`initialLoadComplete=true` means done) vs others (`isInitialLoad=false` means done).
+Note: graduation-roadmap has 6 guards. Guard F (`validateStateIntegrity()`) checks that `clinicalData`, `monthlyPlanner`, `graduationPrep`, `clinicHeadlines`, `grades` structures exist before allowing saves — blocks truncated state from being persisted.
 
 **CRITICAL PATTERN: Flags Before Rendering**
 In `loadDataFromFirebase()`, sync flags (`hasLoadedFromCloud`, `_dataLoaded`, `markInitialLoadComplete()`) MUST be set BEFORE rendering calls (`updateStats`, `renderTasks`, `initFocusMode`, etc.). Post-load rendering MUST be wrapped in try/catch. If a rendering error occurs before flags are set, ALL saves are permanently blocked. This was a critical post-split bug in index.html (fixed Feb 2026, commit `29ba742`).
@@ -133,7 +136,7 @@ In `loadDataFromFirebase()`, sync flags (`hasLoadedFromCloud`, `_dataLoaded`, `m
 1. **body-comp `skipPin()` missing guard flags** (line 16624) — does NOT set `pinValidated`, `hasLoadedFromCloud`, `isInitialLoad`, `state._dataLoaded`. Breaks offline mode.
 2. **body-comp `saveStateImmediate()` missing PIN guard** (line 14996) — has 4 guards but missing `!pinValidated`.
 3. **body-comp realtime merge missing `_dataLoaded`** (line ~15441) — after merge, `state._dataLoaded` may be unset.
-4. **d3-roadmap offline path implicit flags** (line 9504) — doesn't explicitly set guard flags when user cancels PIN.
+4. ~~**d3-roadmap offline path implicit flags**~~ — RESOLVED: d3-roadmap.html is now a redirect shim, `js/d3-roadmap/` deleted (Mar 21 2026).
 
 # Examples
 

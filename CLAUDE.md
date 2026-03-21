@@ -45,7 +45,8 @@ const date = new Date(year, month - 1, day);
 - **Nuke-and-rebuild sync**: NEVER delete all items then recreate from source on every render/init. Use incremental sync — track user edits (`userEdited: true`) and deletions (`hiddenClinicTasks`) so sync respects them.
 - **DeadlineId in onclick**: `getDeadlineId()` must strip `'"\\` from keys. Escape IDs in onclick: `onclick="fn('${safeId}')"` where `safeId = deadlineId.replace(/'/g, "\\'")`.
 - **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if the element already has a `style` attr. Browsers use the first and ignore the second. Merge into one style.
-- **Cross-app dedup**: Stim calc reads both `appointments` AND `customTasks` from d3Roadmap — clinic-synced tasks appear in BOTH. Dedup by `clinicalAppointmentId` and by `date|time|name`.
+- **Cross-app dedup**: Stim calc reads both `appointments` AND `customTasks` from graduationRoadmap — clinic-synced tasks appear in BOTH. Dedup by `clinicalAppointmentId` and by `date|time|name`.
+- **Shared storage namespace = data wipe**: NEVER let two apps share the same localStorage key or Firebase path. graduation-roadmap used to share `d3RoadmapData`/`d3Roadmap` with d3-roadmap — opening d3-roadmap from any nav link wiped all graduation-specific fields. Fixed Mar 21 2026: separate namespace `graduationRoadmapData`/`graduationRoadmap` with one-time migration.
 - **Field-by-field reconstruction drops new fields**: All 4 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`) reconstruct `roadmapData` field-by-field. When adding ANY new field, it MUST be added to ALL 4 sites or it gets silently wiped on every sync/refresh/restore.
 - **`isEmptyState()` must check ALL collection fields**: When adding new collection fields to any app, also add them to `isEmptyState()` — otherwise Guard C silently blocks saves when ONLY those fields have data.
 - **Array merge with `||` loses data**: `data.arr || local.arr || []` — if remote has empty `[]` (truthy), local data is lost. Use dedicated merge functions for arrays (dedup + concat).
@@ -57,7 +58,7 @@ const date = new Date(year, month - 1, day);
 | File | Purpose |
 |------|---------|
 | `index.html` + `js/dental-quest/*.js` (12 modules) | Main app: gamified task management, focus mode, financials, calendar, meds |
-| `d3-roadmap.html` (REDIRECT SHIM) | Redirects to graduation-roadmap.html with localStorage migration. Old `js/d3-roadmap/*.js` modules are dead code. |
+| `d3-roadmap.html` (REDIRECT SHIM) | Redirects to graduation-roadmap.html with localStorage migration. `js/d3-roadmap/` deleted (commit `6b64461`). |
 | `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (11 modules) | Graduation tracker: mission control, deadlines, clinical, patients (19 pre-filled), competencies, schedule, academics, grad prep. Patient tracker imports from Claude webchat (5 formats). Own namespace: `graduationRoadmapData` / `graduationRoadmap`. |
 | `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian rhythm, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
@@ -73,7 +74,7 @@ Each app has a dedicated skill file with full architecture, module maps, bootstr
 | Skill | Covers |
 |-------|--------|
 | `dental-quest-dev` | index.html: 12 JS modules, urgency system, command center, task fields, views, financials |
-| `d3-roadmap-dev` | d3-roadmap: 10 JS modules, deadlines, grades, clinical, planners, exam content |
+| `d3-roadmap-dev` | HISTORICAL: old d3-roadmap architecture (deleted Mar 21 2026). Use for migration debugging only. |
 | `stim-calc-dev` | stim-calc: 11 JS modules, pharmacokinetics, circadian, sleep prediction, warm theme |
 | `body-comp-dev` | body-comp: single file, key JS locations, mode system, ecosystem, analytics |
 | `sully-firebase-patterns` | Cross-app: save guards, sync flags, checkpoints, PIN auth, data flow |
@@ -177,8 +178,10 @@ if (isInitialLoad) return false;
 if (!hasLoadedFromCloud) return false;
 if (isEmptyState(data)) return false;
 if (!data._dataLoaded) return false;
+// Guard F (graduation-roadmap only): validateStateIntegrity() — blocks save if critical fields missing
 ```
 Index.html: 5 guards behind `firebaseInitialized` check, uses `buildSaveData()` helper.
+Graduation-roadmap: 6 guards — adds `validateStateIntegrity()` (Guard F) checking 8 critical structures.
 
 ### isEmptyState() Checks
 | App | Empty If Missing ALL Of |
