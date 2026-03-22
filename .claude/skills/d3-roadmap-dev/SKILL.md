@@ -161,6 +161,11 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** 3 interconnected bugs: (1) `_mpDeleteCurrentTaskConfirmed()` deleted clinic tasks from `customTasks` without adding to `hiddenClinicTasks`, so `syncClinicalToMonthlyPlanner()` recreated them on next init. (2) Import dedup only checked `patientId + date + time`, so mismatched patient IDs allowed duplicate appointments. (3) `syncClinicalToMonthlyPlanner()` ran on every `initMonthlyPlanner()` call (tab switch, page load) without checking if data actually changed.
 **Solution (commit `fa8ab07`):** (1) Clinic task deletion now adds to `hiddenClinicTasks` same as `mpHideClinicTask()`. (2) Both import functions have secondary dedup by `patientName + date + time`. (3) `clinicalDataDirty` flag gates sync — only runs when clinical data actually changed. `dedupAppointments()` utility runs on init to clean existing duplicates. `safeLocalStorageSet()` added to 5 missing monthly-planner CRUD functions.
 
+### Error: Patient import truncates multi-line fields (fixed Mar 22, 2026)
+**Cause:** TWO-SIDED: (1) `parsePatientRecord()` and `parsePatientUpdate()` required continuation lines to start with 2+ spaces (`/^\s{2,}/`). When text was copy-pasted from Claude webchat's markdown-rendered output, indentation was stripped → only first line of each field survived. (2) Claude webchat rendered export blocks as markdown, turning `---` into `<hr>` and stripping leading spaces before copy-paste.
+**Solution (commit `51a305a`):** (1) Parser now accepts any non-empty line not matching a known field key as continuation (no indentation required). (2) Webchat instructions updated to require triple-backtick code fences around export blocks. (3) REQUIREMENTS_MATCH now stores `canFulfill`, `priorityNotes`, `highValue` on patient records. (4) `computeRequirementMatches()` uses imported requirements (authoritative) with keyword fallback. (5) Patient detail view shows Priority Notes section.
+**Key lesson:** When text passes through markdown rendering before copy-paste, ALL formatting-dependent parsing is at risk. Code fences preserve raw text. Parser should never rely on whitespace that markdown may strip.
+
 ### Error: Deadline delete/edit buttons broken (fixed Mar 16, 2026)
 **Cause:** `getDeadlineId()` produced IDs containing `'` (apostrophe from deadline text like `can't`), which broke `onclick="fn('${deadlineId}')"` JS syntax. Also, collapsed completed rows had duplicate `style` attributes causing `display:none` to be ignored.
 **Solution (commit `e24d328`):** Strip `'"\\` from `getDeadlineId()` key generation. Escape `safeId` in onclick handlers. Merge display:none into the single `rowStyle` in `buildRow()`.
@@ -489,6 +494,10 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `toggleTodoStatus(todoId)` | state.js | Toggle item pending/completed + save |
 | `clearCompletedTodos()` | state.js | Delete all completed todos + save |
 | `getTodoSourceBadgeColor(source)` | state.js | Returns hex color for source badge |
+| `parsePatientRecord(text)` | patients.js | Parse PATIENT_RECORD block — continuation lines: any non-key line appends to current field (no 2-space indent required) |
+| `parsePatientUpdate(text)` | patients.js | Parse PATIENT_UPDATE block — same lenient continuation logic as parsePatientRecord |
+| `parseRequirementsMatch(text)` | patients.js | Parse REQUIREMENTS_MATCH block — now captures HIGH_VALUE, PRIORITY_NOTES, stores canFulfill on patient |
+| `computeRequirementMatches(patient)` | patients.js | Uses patient.importedRequirements[] (authoritative) with keyword fallback for pre-import patients |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
 | `init()` | init.js | App entry point (calls initFirebase) |
 
