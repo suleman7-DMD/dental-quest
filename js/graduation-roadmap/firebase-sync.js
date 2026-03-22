@@ -582,7 +582,13 @@ function mergeRemoteState(data) {
                 data.clinicalData?.competencies
             ),
             patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
-            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
+            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
+            missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) }
+        },
+        todoList: {
+            items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
+            _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
+            lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
         },
         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
         exams: {
@@ -696,7 +702,13 @@ function loadFromLocalStorage(finalize = true) {
                     completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                     patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
-                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
+                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
+                    missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) }
+                },
+                todoList: {
+                    items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
+                    _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
+                    lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(data.exams, 'exam'),
@@ -1371,7 +1383,13 @@ function restoreCheckpoint(index) {
                     completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies),
                     patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots)
+                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots),
+                    missingNotes: cpData.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {}
+                },
+                todoList: {
+                    items: { ...(roadmapData.todoList?.items || {}), ...(cpData.todoList?.items || {}) },
+                    _nextSeq: Math.max(cpData.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
+                    lastUpdated: cpData.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(cpData.exams, 'exam'),
@@ -1661,7 +1679,13 @@ function importAndRestoreDirectly() {
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                             competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                             patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots)
+                            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
+                            missingNotes: data.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {}
+                        },
+                        todoList: {
+                            items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
+                            _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
+                            lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),
@@ -1934,6 +1958,10 @@ function validateStateIntegrity(data) {
     }
     if (typeof data.grades !== 'object' || data.grades === null) {
         errors.push('grades missing');
+    }
+    // todoList must be object (not undefined) — can be empty
+    if (data.todoList !== undefined && (typeof data.todoList !== 'object' || data.todoList === null)) {
+        errors.push('todoList is not an object');
     }
     return errors;
 }

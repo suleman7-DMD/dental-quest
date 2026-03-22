@@ -1021,7 +1021,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [] };
+    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1045,6 +1045,8 @@ function parsePatientImportText(text) {
         else if (firstLine.indexOf('REQUIREMENTS_MATCH') !== -1) header = 'REQUIREMENTS_MATCH';
         else if (firstLine.indexOf('REQUIREMENTS_STATUS') !== -1) header = 'REQUIREMENTS_STATUS';
         else if (firstLine.indexOf('SPS_DASHBOARD_UPDATE') !== -1) header = 'SPS_DASHBOARD_UPDATE';
+        else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
+        else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
         else if (firstLine.indexOf('APPOINTMENTS') !== -1 && firstLine.indexOf('ATTENDED') === -1) header = 'APPOINTMENTS';
 
         // If this block is ONLY a header (no meaningful body content), save as pending for next block
@@ -1074,6 +1076,12 @@ function parsePatientImportText(text) {
         } else if (effectiveHeader === 'SPS_DASHBOARD_UPDATE') {
             var parsed5 = parseDashboardUpdate(bodyText);
             if (parsed5) result.dashboardUpdate = parsed5;
+        } else if (effectiveHeader === 'MISSING_NOTES') {
+            var parsedNotes = parseMissingNotesBlock(bodyText);
+            if (parsedNotes) result.missingNotes = parsedNotes;
+        } else if (effectiveHeader === 'TODO_LIST') {
+            var parsedTodo = parseTodoListBlock(bodyText);
+            if (parsedTodo) result.todoList = parsedTodo;
         } else if (effectiveHeader === 'APPOINTMENTS') {
             // APPOINTMENTS header detected — subsequent blocks will be appointment blocks
             // This block itself might be empty (just the header), handled by pendingHeader above
@@ -1298,6 +1306,97 @@ function parseRequirementsStatus(text) {
     return statuses;
 }
 
+// ==================== MISSING NOTES PARSER ====================
+// Parses MISSING_NOTES block: pipe-delimited rows with 7 fields
+// [id] | [date] | [patient name] | [chart #] | [faculty] | [session] | [location]
+function parseMissingNotesBlock(text) {
+    var result = { dateCaptured: null, totalMissing: 0, notes: [] };
+    var lines = text.split('\n');
+    var inNotes = false;
+
+    lines.forEach(function(line) {
+        line = line.trim();
+        if (!line) return;
+        var upper = line.toUpperCase();
+
+        if (upper.indexOf('DATE_CAPTURED:') !== -1) {
+            result.dateCaptured = line.substring(line.indexOf(':') + 1).trim();
+        } else if (upper.indexOf('TOTAL_MISSING:') !== -1) {
+            var val = line.substring(line.indexOf(':') + 1).trim();
+            result.totalMissing = parseInt(val) || 0;
+        } else if (upper.indexOf('NOTES:') === 0) {
+            inNotes = true;
+        } else if (inNotes && line.indexOf('|') !== -1) {
+            var parts = line.split('|').map(function(p) { return p.trim(); });
+            if (parts.length >= 7) {
+                result.notes.push({
+                    id: parts[0],
+                    date: parts[1],
+                    patientName: parts[2],
+                    chartNumber: parts[3],
+                    faculty: parts[4],
+                    session: parts[5],
+                    location: parts[6]
+                });
+            } else if (parts.length >= 5) {
+                // Flexible: at least id, date, patient, chart, faculty
+                result.notes.push({
+                    id: parts[0],
+                    date: parts[1],
+                    patientName: parts[2],
+                    chartNumber: parts[3],
+                    faculty: parts[4],
+                    session: parts[5] ?? '',
+                    location: parts[6] ?? ''
+                });
+            }
+        }
+    });
+
+    if (result.notes.length === 0) return null;
+    if (!result.totalMissing) result.totalMissing = result.notes.length;
+    return result;
+}
+
+// ==================== TODO LIST PARSER ====================
+// Parses TODO_LIST block: pipe-delimited rows with 5 fields
+// [id] | [description] | [source tag] | [date added] | [source detail]
+function parseTodoListBlock(text) {
+    var result = { dateExported: null, totalItems: 0, items: [] };
+    var lines = text.split('\n');
+    var inItems = false;
+
+    lines.forEach(function(line) {
+        line = line.trim();
+        if (!line) return;
+        var upper = line.toUpperCase();
+
+        if (upper.indexOf('DATE_EXPORTED:') !== -1) {
+            result.dateExported = line.substring(line.indexOf(':') + 1).trim();
+        } else if (upper.indexOf('TOTAL_ITEMS:') !== -1) {
+            var val = line.substring(line.indexOf(':') + 1).trim();
+            result.totalItems = parseInt(val) || 0;
+        } else if (upper.indexOf('ITEMS:') === 0) {
+            inItems = true;
+        } else if (inItems && line.indexOf('|') !== -1) {
+            var parts = line.split('|').map(function(p) { return p.trim(); });
+            if (parts.length >= 3) {
+                result.items.push({
+                    id: parts[0],
+                    description: parts[1],
+                    source: parts[2] ?? 'MANUAL',
+                    dateAdded: parts[3] ?? '',
+                    sourceDetail: parts[4] ?? ''
+                });
+            }
+        }
+    });
+
+    if (result.items.length === 0) return null;
+    if (!result.totalItems) result.totalItems = result.items.length;
+    return result;
+}
+
 // Parse a single appointment block from the unified import format
 // Handles: PATIENT: / CHART: / DATE: / TIME: / PROCEDURE: / CHAIR:
 function parseImportAppointmentBlock(text) {
@@ -1458,6 +1557,45 @@ function previewPatientImport() {
             + '<div style="color:#94a3b8; font-size:0.8em;">Roster: ' + (rost.ptsAssigned || '?') + ' pts assigned, ' + (rost.notSeen6Mo || 0) + ' not seen 6mo</div>'
             + '<div style="color:' + ((apts.notesAtRisk || 0) >= 6 ? '#f87171' : '#94a3b8') + '; font-size:0.8em;">Notes at risk: ' + (apts.notesAtRisk || 0) + ' (Unclosed: ' + (apts.unclosed || 0) + ', Blank: ' + (apts.blank || 0) + ')</div>'
             + '</div>';
+    }
+
+    // Preview missing notes
+    if (parsed.missingNotes) {
+        hasContent = true;
+        var mn = parsed.missingNotes;
+        var alertColor = mn.notes.length >= 6 ? '#ef4444' : (mn.notes.length >= 4 ? '#f59e0b' : '#22c55e');
+        var alertLabel = mn.notes.length >= 6 ? 'CRITICAL' : (mn.notes.length >= 4 ? 'WARNING' : 'OK');
+        html += '<div style="padding:10px; margin-bottom:6px; background:#1c1917; border-radius:6px; border-left:3px solid ' + alertColor + ';">'
+            + '<div style="color:' + alertColor + '; font-weight:600; font-size:0.9em;">MISSING PROGRESS NOTES (' + mn.notes.length + ') — ' + alertLabel + '</div>'
+            + '<div style="color:#94a3b8; font-size:0.8em; margin-top:2px;">Hard limit: 6 before write-up</div>';
+        // All user text is escaped via escapeHtml() for XSS safety
+        mn.notes.forEach(function(note) {
+            html += '<div style="color:#e2e8f0; font-size:0.8em; padding:2px 0;">'
+                + escapeHtml(note.date) + ' — <strong>' + escapeHtml(note.patientName) + '</strong>'
+                + ' (Chart: ' + escapeHtml(note.chartNumber) + ')'
+                + ' — Faculty: <span style="color:#fbbf24;">' + escapeHtml(note.faculty) + '</span>'
+                + ' [' + escapeHtml(note.session) + ' / ' + escapeHtml(note.location) + ']'
+                + '</div>';
+        });
+        html += '</div>';
+    }
+
+    // Preview todo list
+    if (parsed.todoList) {
+        hasContent = true;
+        var tl = parsed.todoList;
+        html += '<div style="padding:10px; margin-bottom:6px; background:#1e1b4b; border-radius:6px; border-left:3px solid #a78bfa;">'
+            + '<div style="color:#c4b5fd; font-weight:600; font-size:0.9em;">TO-DO LIST (' + tl.items.length + ' items)</div>';
+        // All user text is escaped via escapeHtml() for XSS safety
+        tl.items.forEach(function(item) {
+            var badgeColor = item.source === 'EMAIL' ? '#3b82f6' : item.source === 'CLINIC' ? '#10b981' : item.source === 'SYSTEM' ? '#f59e0b' : item.source === 'SCREENSHOT' ? '#8b5cf6' : '#6b7280';
+            html += '<div style="color:#e2e8f0; font-size:0.8em; padding:2px 0;">'
+                + '<span style="background:' + badgeColor + '; color:#fff; padding:1px 5px; border-radius:3px; font-size:0.75em;">' + escapeHtml(item.source) + '</span> '
+                + escapeHtml(item.description)
+                + (item.sourceDetail ? ' <span style="color:#94a3b8;">(' + escapeHtml(item.sourceDetail) + ')</span>' : '')
+                + '</div>';
+        });
+        html += '</div>';
     }
 
     if (!hasContent) {
@@ -1648,6 +1786,72 @@ function confirmPatientImport() {
         saveDashboardSnapshot(parsed.dashboardUpdate);
     }
 
+    // Import missing notes (merge with dedup by ID)
+    var notesImported = 0;
+    if (parsed.missingNotes && parsed.missingNotes.notes.length > 0) {
+        if (!roadmapData.clinicalData.missingNotes || Array.isArray(roadmapData.clinicalData.missingNotes)) {
+            roadmapData.clinicalData.missingNotes = {};
+        }
+        var existingNotes = roadmapData.clinicalData.missingNotes;
+        parsed.missingNotes.notes.forEach(function(note) {
+            var id = note.id;
+            if (!id) return;
+            // Dedup: if exists and pending, skip. If exists and completed, leave completed.
+            if (existingNotes[id]) return;
+            existingNotes[id] = {
+                id: id,
+                date: note.date ?? '',
+                patientName: note.patientName ?? '',
+                chartNumber: note.chartNumber ?? '',
+                faculty: note.faculty ?? '',
+                session: note.session ?? '',
+                location: note.location ?? '',
+                addedAt: new Date().toISOString(),
+                completedAt: null,
+                status: 'pending'
+            };
+            notesImported++;
+        });
+    }
+
+    // Import todo list items (merge with dedup by ID)
+    var todosImported = 0;
+    if (parsed.todoList && parsed.todoList.items.length > 0) {
+        if (!roadmapData.todoList) {
+            roadmapData.todoList = { items: {}, _nextSeq: 1, lastUpdated: null };
+        }
+        if (!roadmapData.todoList.items || Array.isArray(roadmapData.todoList.items)) {
+            roadmapData.todoList.items = {};
+        }
+        var existingTodos = roadmapData.todoList.items;
+        parsed.todoList.items.forEach(function(item) {
+            var id = item.id;
+            if (!id) return;
+            // Dedup: if exists and pending, skip. If exists and completed, leave completed.
+            if (existingTodos[id]) return;
+            existingTodos[id] = {
+                id: id,
+                description: item.description ?? '',
+                source: item.source ?? 'MANUAL',
+                dateAdded: item.dateAdded ?? getLocalDateString(new Date()),
+                sourceDetail: item.sourceDetail ?? '',
+                addedAt: new Date().toISOString(),
+                completedAt: null,
+                status: 'pending'
+            };
+            todosImported++;
+            // Track max seq number for manual adds
+            var match = id.match(/^todo-(\d+)/);
+            if (match) {
+                var seq = parseInt(match[1]);
+                if (seq >= (roadmapData.todoList._nextSeq ?? 1)) {
+                    roadmapData.todoList._nextSeq = seq + 1;
+                }
+            }
+        });
+        roadmapData.todoList.lastUpdated = new Date().toISOString();
+    }
+
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -1680,6 +1884,8 @@ function confirmPatientImport() {
     if (aptsCreated > 0) msg += aptsCreated + ' appointment(s) imported. ';
     if (parsed.reqStatuses.length > 0 || completedItems.length > 0) msg += 'Requirements updated. ';
     if (parsed.dashboardUpdate) msg += 'Dashboard snapshot saved. ';
+    if (notesImported > 0) msg += notesImported + ' missing note(s) imported. ';
+    if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
     showToast(msg || 'Import complete');
 }
 

@@ -295,7 +295,11 @@ function renderDashboard() {
         html += '</div>';
     }
 
-    // === ROW 2: Do Today Widget ===
+    // === ROW 2: ACTION ITEMS — Missing Notes + To-Do List ===
+    html += renderMissingNotesSection();
+    html += renderTodoListSection();
+
+    // === ROW 3: Do Today Widget ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
     html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">';
     html += '<h3 style="color:#fbbf24; margin:0; font-size:1.1em;">⚡ Do Today</h3>';
@@ -377,6 +381,186 @@ function renderDashboard() {
     renderDoTodayTasks();
 }
 
+
+// ==================== MISSING NOTES SECTION ====================
+function renderMissingNotesSection() {
+    var pending = getMissingNotesPending();
+    var completed = getMissingNotesCompleted();
+    var alertLevel = getMissingNotesAlertLevel(pending.length);
+    var borderColor = alertLevel === 'RED' ? 'rgba(239,68,68,0.5)' : alertLevel === 'YELLOW' ? 'rgba(245,158,11,0.5)' : 'rgba(16,185,129,0.3)';
+    var badgeBg = alertLevel === 'RED' ? '#dc2626' : alertLevel === 'YELLOW' ? '#d97706' : '#059669';
+    var badgeText = alertLevel === 'RED' ? '#fff' : alertLevel === 'YELLOW' ? '#fff' : '#fff';
+    var html = '';
+
+    // Alert banner for critical level
+    if (pending.length >= 6) {
+        html += '<div class="mn-alert-critical" style="background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(153,27,27,0.15)); border:1px solid rgba(239,68,68,0.5); border-radius:10px; padding:12px 16px; margin-bottom:12px; animation: urgentPulse 2s ease-in-out infinite;">';
+        html += '<div style="color:#f87171; font-weight:700; font-size:0.95em;">CRITICAL: ' + pending.length + ' unclosed notes — EXCEEDS 6 LIMIT. Close immediately.</div>';
+        html += '</div>';
+    } else if (pending.length >= 4) {
+        html += '<div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:10px 14px; margin-bottom:12px;">';
+        html += '<div style="color:#fbbf24; font-weight:600; font-size:0.9em;">WARNING: ' + pending.length + ' unclosed notes — approaching 6-note limit.</div>';
+        html += '</div>';
+    }
+
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid ' + borderColor + '; border-radius:14px; padding:16px; margin-bottom:14px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+    html += '<h3 style="color:#e2e8f0; margin:0; font-size:1.05em;">Missing Progress Notes</h3>';
+    html += '<span style="background:' + badgeBg + '; color:' + badgeText + '; font-weight:700; padding:2px 10px; border-radius:10px; font-size:0.85em;">' + pending.length + ' pending</span>';
+    html += '</div>';
+    html += '<div style="color:#94a3b8; font-size:0.75em; margin-bottom:10px;">Hard limit: 6 before write-up</div>';
+
+    // Capacity bar
+    var fillPct = Math.min(100, (pending.length / 6) * 100);
+    var barColor = alertLevel === 'RED' ? '#dc2626' : alertLevel === 'YELLOW' ? '#d97706' : '#10b981';
+    html += '<div style="background:rgba(100,116,139,0.2); border-radius:6px; height:8px; margin-bottom:12px; overflow:hidden;">';
+    html += '<div style="background:' + barColor + '; height:100%; width:' + fillPct + '%; border-radius:6px; transition:width 0.3s;"></div>';
+    html += '</div>';
+
+    if (pending.length === 0) {
+        html += '<div style="color:#6ee7b7; font-size:0.85em; padding:8px 0; text-align:center;">All notes closed. No pending items.</div>';
+    } else {
+        // Sort by date oldest first (most overdue at top)
+        pending.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+        pending.forEach(function(note) {
+            var safeId = note.id.replace(/'/g, "\\'");
+            html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px; background:rgba(15,23,42,0.5); border:1px solid rgba(100,116,139,0.15); border-radius:8px; margin-bottom:6px; font-size:0.85em;">';
+            html += '<input type="checkbox" onclick="toggleMissingNoteStatus(\'' + safeId + '\')" style="margin-top:3px; cursor:pointer; width:18px; height:18px; accent-color:' + barColor + ';">';
+            html += '<div style="flex:1; min-width:0;">';
+            html += '<div style="color:#e2e8f0; font-weight:600;">' + escapeHtml(note.patientName) + '</div>';
+            html += '<div style="color:#94a3b8; font-size:0.85em;">' + escapeHtml(note.date) + ' — Chart: ' + escapeHtml(note.chartNumber) + '</div>';
+            html += '<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:3px;">';
+            html += '<span style="background:rgba(251,191,36,0.15); color:#fbbf24; padding:1px 6px; border-radius:4px; font-size:0.8em;">Dr. ' + escapeHtml(note.faculty) + '</span>';
+            if (note.session) html += '<span style="background:rgba(100,116,139,0.15); color:#94a3b8; padding:1px 6px; border-radius:4px; font-size:0.8em;">' + escapeHtml(note.session) + '</span>';
+            if (note.location) html += '<span style="background:rgba(100,116,139,0.15); color:#94a3b8; padding:1px 6px; border-radius:4px; font-size:0.8em;">' + escapeHtml(note.location) + '</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        });
+    }
+
+    // Faculty cross-reference with upcoming appointments
+    var facultyMatches = getMissingNotesFacultyMatches();
+    if (facultyMatches.length > 0) {
+        html += '<div style="margin-top:10px; padding:8px 10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px;">';
+        html += '<div style="color:#93c5fd; font-size:0.8em; font-weight:600; margin-bottom:4px;">Faculty Match</div>';
+        facultyMatches.forEach(function(m) {
+            html += '<div style="color:#94a3b8; font-size:0.8em; padding:2px 0;">' + m.message + '</div>';
+        });
+        html += '</div>';
+    }
+
+    // Completed section
+    if (completed.length > 0) {
+        html += '<details style="margin-top:10px;">';
+        html += '<summary style="color:#64748b; font-size:0.8em; cursor:pointer; user-select:none;">Completed Notes (' + completed.length + ')</summary>';
+        html += '<div style="margin-top:6px;">';
+        completed.sort(function(a, b) { return (b.completedAt || '').localeCompare(a.completedAt || ''); });
+        completed.forEach(function(note) {
+            var safeId = note.id.replace(/'/g, "\\'");
+            html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; font-size:0.8em; color:#64748b; text-decoration:line-through;">';
+            html += '<input type="checkbox" checked onclick="toggleMissingNoteStatus(\'' + safeId + '\')" style="cursor:pointer; width:16px; height:16px; accent-color:#10b981;">';
+            html += '<span>' + escapeHtml(note.patientName) + ' — ' + escapeHtml(note.date) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '<button onclick="clearCompletedMissingNotes()" style="margin-top:6px; padding:4px 10px; font-size:0.75em; background:rgba(100,116,139,0.15); color:#94a3b8; border:1px solid rgba(100,116,139,0.2); border-radius:6px; cursor:pointer;">Clear completed</button>';
+        html += '</details>';
+    }
+
+    // Cross-reference with SPS dashboard
+    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
+    if (snapshots && snapshots.length > 0 && pending.length > 0) {
+        var notesAtRisk = snapshots[0]?.appointments?.notesAtRisk ?? 0;
+        if (notesAtRisk > 0 && notesAtRisk !== pending.length) {
+            html += '<div style="color:#94a3b8; font-size:0.7em; margin-top:8px; padding:4px 8px; background:rgba(100,116,139,0.08); border-radius:4px;">';
+            html += 'Dashboard shows ' + notesAtRisk + ' at-risk notes. Missing notes list shows ' + pending.length + '. Difference may be due to timing.';
+            html += '</div>';
+        }
+    }
+
+    html += '</div>'; // end card
+    return html;
+}
+
+// ==================== TODO LIST SECTION ====================
+function renderTodoListSection() {
+    var pending = getTodoPending();
+    var completed = getTodoCompleted();
+    var html = '';
+
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:16px; margin-bottom:14px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+    html += '<h3 style="color:#e2e8f0; margin:0; font-size:1.05em;">To-Do List</h3>';
+    html += '<span style="background:#7c3aed; color:#fff; font-weight:700; padding:2px 10px; border-radius:10px; font-size:0.85em;">' + pending.length + '</span>';
+    html += '</div>';
+
+    // Quick add input
+    html += '<div style="display:flex; gap:6px; margin-bottom:12px;">';
+    html += '<input id="todoQuickAdd" type="text" placeholder="Add a task..." '
+        + 'onkeydown="if(event.key===\'Enter\'){dashboardAddTodo();}" '
+        + 'style="flex:1; background:rgba(15,23,42,0.6); border:1px solid rgba(100,116,139,0.2); border-radius:8px; padding:8px 12px; color:#e2e8f0; font-size:0.85em; outline:none;">';
+    html += '<button onclick="dashboardAddTodo()" style="background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:0.85em; cursor:pointer; font-weight:600; white-space:nowrap;">+ Add</button>';
+    html += '</div>';
+
+    if (pending.length === 0) {
+        html += '<div style="color:#a78bfa; font-size:0.85em; padding:8px 0; text-align:center;">No pending tasks. Import from Claude or add above.</div>';
+    } else {
+        // Sort newest first
+        pending.sort(function(a, b) { return (b.addedAt || b.dateAdded || '').localeCompare(a.addedAt || a.dateAdded || ''); });
+        pending.forEach(function(item) {
+            var safeId = item.id.replace(/'/g, "\\'");
+            var badgeColor = getTodoSourceBadgeColor(item.source);
+            html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px; background:rgba(15,23,42,0.5); border:1px solid rgba(100,116,139,0.15); border-radius:8px; margin-bottom:6px; font-size:0.85em;">';
+            html += '<input type="checkbox" onclick="toggleTodoStatus(\'' + safeId + '\')" style="margin-top:3px; cursor:pointer; width:18px; height:18px; accent-color:#7c3aed;">';
+            html += '<div style="flex:1; min-width:0;">';
+            html += '<div style="color:#e2e8f0; font-weight:500;">' + escapeHtml(item.description) + '</div>';
+            html += '<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; align-items:center;">';
+            html += '<span style="background:' + badgeColor + '; color:#fff; padding:1px 6px; border-radius:4px; font-size:0.75em;">' + escapeHtml(item.source || 'MANUAL') + '</span>';
+            if (item.dateAdded) html += '<span style="color:#64748b; font-size:0.8em;">' + escapeHtml(item.dateAdded) + '</span>';
+            if (item.sourceDetail) html += '<span style="color:#94a3b8; font-size:0.8em;">— ' + escapeHtml(item.sourceDetail) + '</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        });
+    }
+
+    // Completed section
+    if (completed.length > 0) {
+        html += '<details style="margin-top:10px;">';
+        html += '<summary style="color:#64748b; font-size:0.8em; cursor:pointer; user-select:none;">Completed (' + completed.length + ')</summary>';
+        html += '<div style="margin-top:6px;">';
+        completed.sort(function(a, b) { return (b.completedAt || '').localeCompare(a.completedAt || ''); });
+        completed.forEach(function(item) {
+            var safeId = item.id.replace(/'/g, "\\'");
+            html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; font-size:0.8em; color:#64748b; text-decoration:line-through;">';
+            html += '<input type="checkbox" checked onclick="toggleTodoStatus(\'' + safeId + '\')" style="cursor:pointer; width:16px; height:16px; accent-color:#7c3aed;">';
+            html += '<span>' + escapeHtml(item.description) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '<button onclick="clearCompletedTodos()" style="margin-top:6px; padding:4px 10px; font-size:0.75em; background:rgba(100,116,139,0.15); color:#94a3b8; border:1px solid rgba(100,116,139,0.2); border-radius:6px; cursor:pointer;">Clear completed</button>';
+        html += '</details>';
+    }
+
+    html += '</div>'; // end card
+    return html;
+}
+
+// Dashboard quick-add todo handler
+function dashboardAddTodo() {
+    var input = document.getElementById('todoQuickAdd');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) {
+        showToast('Enter a task description', 'warning');
+        return;
+    }
+    addTodoItem(text, 'MANUAL', '');
+    input.value = '';
+    renderDashboard();
+    showToast('Added: ' + text, 'info');
+}
 
 // ==================== HEADLINE COUNTER HELPERS ====================
 function updateHeadlineCounter(type, value) {

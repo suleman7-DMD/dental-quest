@@ -79,7 +79,14 @@ let roadmapData = {
         completedProcedures: {}, // Object with ID keys for Firebase safety
         competencies: null,     // Graduation requirements - initialized from DEFAULT_COMPETENCIES
         patientRecords: {},     // Detailed patient records (Patients tab — Google Docs style)
-        dashboardSnapshots: []
+        dashboardSnapshots: [],
+        missingNotes: {}        // Missing progress notes tracker — keyed by note-{chart}-{dateNoHyphens}
+    },
+    // To-do list — flat checklist for clinic-related tasks from multiple sources
+    todoList: {
+        items: {},              // Object with ID keys: { "todo-0001-20260321": { id, description, source, ... } }
+        _nextSeq: 1,            // Sequential counter for manual adds
+        lastUpdated: null       // ISO timestamp of last import/change
     },
     // Exams array for cross-app integration (Body Comp Tracker pulls this)
     exams: {},  // Object with ID keys for Firebase safety
@@ -152,7 +159,13 @@ function getDefaultRoadmapData() {
             completedProcedures: {},
             competencies: null,
             patientRecords: {},
-            dashboardSnapshots: []
+            dashboardSnapshots: [],
+            missingNotes: {}
+        },
+        todoList: {
+            items: {},
+            _nextSeq: 1,
+            lastUpdated: null
         },
         exams: {},
         graduationPrep: {
@@ -205,12 +218,15 @@ function isEmptyState(data) {
     const hasDashboardSnapshots = Array.isArray(data.clinicalData?.dashboardSnapshots) && data.clinicalData.dashboardSnapshots.length > 0;
     const hasCompletedProcedures = getCount(data.clinicalData?.completedProcedures) > 0;
     const hasCompetencies = data.clinicalData?.competencies && Object.keys(data.clinicalData.competencies).length > 0;
+    const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
+    const hasTodoItems = getCount(data.todoList?.items) > 0;
 
     // Empty if NONE of these exist
     return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasExams && !hasEditedDeadlines &&
-           !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies;
+           !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
+           !hasMissingNotes && !hasTodoItems;
 }
 
 function hasRealData(data) {
@@ -1048,5 +1064,174 @@ function navigateToEntity(type, id) {
         case 'deadline':
             switchTab('deadlines');
             break;
+    }
+}
+
+// ==================== MISSING NOTES HELPERS ====================
+
+function getMissingNotesAlertLevel(pendingCount) {
+    if (pendingCount >= 6) return 'RED';
+    if (pendingCount >= 4) return 'YELLOW';
+    return 'GREEN';
+}
+
+function getMissingNotesPending() {
+    var notes = roadmapData.clinicalData?.missingNotes ?? {};
+    return getValues(notes).filter(function(n) { return n.status === 'pending'; });
+}
+
+function getMissingNotesCompleted() {
+    var notes = roadmapData.clinicalData?.missingNotes ?? {};
+    return getValues(notes).filter(function(n) { return n.status === 'completed'; });
+}
+
+function toggleMissingNoteStatus(noteId) {
+    var notes = roadmapData.clinicalData.missingNotes;
+    if (!notes || !notes[noteId]) return;
+    var note = notes[noteId];
+    if (note.status === 'pending') {
+        note.status = 'completed';
+        note.completedAt = new Date().toISOString();
+    } else {
+        note.status = 'pending';
+        note.completedAt = null;
+    }
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    renderDashboard();
+}
+
+function clearCompletedMissingNotes() {
+    var notes = roadmapData.clinicalData.missingNotes;
+    if (!notes) return;
+    var keys = Object.keys(notes);
+    var cleared = 0;
+    for (var i = 0; i < keys.length; i++) {
+        if (notes[keys[i]].status === 'completed') {
+            delete notes[keys[i]];
+            cleared++;
+        }
+    }
+    if (cleared > 0) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        renderDashboard();
+        showToast(cleared + ' completed note(s) cleared', 'info');
+    }
+}
+
+// Cross-reference missing notes faculty with upcoming appointments
+function getMissingNotesFacultyMatches() {
+    var pending = getMissingNotesPending();
+    if (pending.length === 0) return [];
+    var appointments = getValues(roadmapData.clinicalData?.appointments ?? {});
+    var today = getLocalDateString(new Date());
+    var upcoming = appointments.filter(function(a) {
+        return a.date >= today && a.status !== 'cancelled';
+    });
+    var matches = [];
+    for (var i = 0; i < pending.length; i++) {
+        var note = pending[i];
+        var facultyLower = (note.faculty ?? '').toLowerCase().trim();
+        if (!facultyLower) continue;
+        for (var j = 0; j < upcoming.length; j++) {
+            var apt = upcoming[j];
+            var aptText = ((apt.procedures ?? '') + ' ' + (apt.notes ?? '')).toLowerCase();
+            if (aptText.indexOf(facultyLower) !== -1 || (apt.faculty ?? '').toLowerCase().indexOf(facultyLower) !== -1) {
+                matches.push({
+                    note: note,
+                    appointment: apt,
+                    message: 'Dr. ' + escapeHtml(note.faculty) + ' is faculty on your ' + formatDate(apt.date) + ' appointment — get ' + escapeHtml(note.patientName) + ' note signed then.'
+                });
+            }
+        }
+    }
+    return matches;
+}
+
+// ==================== TODO LIST HELPERS ====================
+
+function getTodoPending() {
+    var items = roadmapData.todoList?.items ?? {};
+    return getValues(items).filter(function(t) { return t.status === 'pending'; });
+}
+
+function getTodoCompleted() {
+    var items = roadmapData.todoList?.items ?? {};
+    return getValues(items).filter(function(t) { return t.status === 'completed'; });
+}
+
+function addTodoItem(description, source, sourceDetail) {
+    if (!roadmapData.todoList) {
+        roadmapData.todoList = { items: {}, _nextSeq: 1, lastUpdated: null };
+    }
+    if (!roadmapData.todoList.items || Array.isArray(roadmapData.todoList.items)) {
+        roadmapData.todoList.items = {};
+    }
+    var seq = roadmapData.todoList._nextSeq ?? 1;
+    var today = getLocalDateString(new Date());
+    var dateCompact = today.replace(/-/g, '');
+    var id = 'todo-' + String(seq).padStart(4, '0') + '-' + dateCompact;
+    roadmapData.todoList.items[id] = {
+        id: id,
+        description: description,
+        source: source ?? 'MANUAL',
+        dateAdded: today,
+        sourceDetail: sourceDetail ?? '',
+        addedAt: new Date().toISOString(),
+        completedAt: null,
+        status: 'pending'
+    };
+    roadmapData.todoList._nextSeq = seq + 1;
+    roadmapData.todoList.lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    return id;
+}
+
+function toggleTodoStatus(todoId) {
+    var items = roadmapData.todoList?.items;
+    if (!items || !items[todoId]) return;
+    var item = items[todoId];
+    if (item.status === 'pending') {
+        item.status = 'completed';
+        item.completedAt = new Date().toISOString();
+    } else {
+        item.status = 'pending';
+        item.completedAt = null;
+    }
+    roadmapData.todoList.lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    renderDashboard();
+}
+
+function clearCompletedTodos() {
+    var items = roadmapData.todoList?.items;
+    if (!items) return;
+    var keys = Object.keys(items);
+    var cleared = 0;
+    for (var i = 0; i < keys.length; i++) {
+        if (items[keys[i]].status === 'completed') {
+            delete items[keys[i]];
+            cleared++;
+        }
+    }
+    if (cleared > 0) {
+        roadmapData.todoList.lastUpdated = new Date().toISOString();
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        renderDashboard();
+        showToast(cleared + ' completed task(s) cleared', 'info');
+    }
+}
+
+function getTodoSourceBadgeColor(source) {
+    switch (source) {
+        case 'EMAIL': return '#3b82f6';
+        case 'SCREENSHOT': return '#8b5cf6';
+        case 'CLINIC': return '#10b981';
+        case 'SYSTEM': return '#f59e0b';
+        default: return '#6b7280'; // MANUAL = gray
     }
 }
