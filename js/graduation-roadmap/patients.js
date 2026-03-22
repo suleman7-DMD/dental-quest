@@ -521,9 +521,9 @@ function renderPatientsSidebar() {
 
     // Build list with grouped sections
     var listHtml = '';
-    listHtml += sectionBlock('Active', '#22c55e', greenItems, false);
-    listHtml += sectionBlock('Needs Attention', '#eab308', yellowItems, false);
-    listHtml += sectionBlock('Inactive', '#ef4444', redItems, true);
+    listHtml += sectionBlock('ACTIVE', '#1a7f79', greenItems, false);
+    listHtml += sectionBlock('NEEDS ATTENTION', '#c86b4b', yellowItems, false);
+    listHtml += sectionBlock('INACTIVE', '#94a3af', redItems, true);
 
     if (allItems.length === 0 && searchTerm) {
         listHtml = '<div style="padding:20px; text-align:center; color:#64748b; font-size:0.8em;">No patients match search</div>';
@@ -618,29 +618,34 @@ function renderPatientRecord(patientId) {
             + '</div>';
     }
 
-    // Imaging grid
+    // Imaging — compact chips (read) or grid (edit). All text escaped via escapeHtml().
     function imgInline() {
         var fields = [
             { f: 'lastFMX', l: 'FMX' }, { f: 'lastBW', l: 'BW' },
             { f: 'lastCBCT', l: 'CBCT' }, { f: 'lastPANO', l: 'PANO' }
         ];
-        var html = '<div class="ptr-imaging-grid">';
-        fields.forEach(function(x) {
-            var val = patient[x.f] || '';
-            var displayVal = val || '\u2014';
-            var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1 || val.toLowerCase().indexOf('overdue') !== -1;
-            if (isEdit) {
+        if (isEdit) {
+            var html = '<div class="ptr-imaging-grid">';
+            fields.forEach(function(x) {
+                var val = patient[x.f] || '';
+                var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1 || val.toLowerCase().indexOf('overdue') !== -1;
                 html += '<div class="ptr-imaging-cell">'
                     + '<div class="ptr-imaging-label">' + escapeHtml(x.l) + '</div>'
                     + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(x.f) + '" onblur="savePatientField(this)" '
-                    + 'class="ptr-imaging-edit" style="color:' + (warn ? '#fbbf24' : '#e2e8f0') + ';">'
+                    + 'class="ptr-imaging-edit" style="color:' + (warn ? '#b45309' : '#17212b') + ';">'
                     + escapeHtml(val) + '</div></div>';
-            } else {
-                html += '<div class="ptr-imaging-cell">'
-                    + '<div class="ptr-imaging-label">' + escapeHtml(x.l) + '</div>'
-                    + '<div class="ptr-imaging-value" style="color:' + (warn ? '#fbbf24' : '#cbd5e1') + ';">' + escapeHtml(displayVal) + '</div>'
-                    + '</div>';
-            }
+            });
+            return html + '</div>';
+        }
+        // Read mode: compact chips
+        var html = '<div class="ptr-imaging-chips">';
+        fields.forEach(function(x) {
+            var val = patient[x.f] || '';
+            var displayVal = val || '\u2014';
+            html += '<div class="ptr-imaging-chip">'
+                + '<span class="ptr-imaging-chip-label">' + escapeHtml(x.l) + '</span>'
+                + '<span class="ptr-imaging-chip-value">' + escapeHtml(displayVal) + '</span>'
+                + '</div>';
         });
         return html + '</div>';
     }
@@ -689,16 +694,57 @@ function renderPatientRecord(patientId) {
         + 'onclick="document.querySelectorAll(\'[contenteditable=true]\').forEach(function(el){el.blur()}); patientEditMode=!patientEditMode; renderPatientRecord(\'' + safePatientId + '\')">'
         + (isEdit ? 'Done' : 'Edit') + '</button>';
 
+    // Summary card (light theme) — all user text escaped via escapeHtml()
+    var relBadgeClass = { green: 'ptr-summary-badge-active', yellow: 'ptr-summary-badge-yellow', red: 'ptr-summary-badge-red' };
+    var relBadgeText = { green: 'Active', yellow: 'Needs Attention', red: 'Inactive' };
+    var lastVisitShort = patient.lastVisit ? patient.lastVisit.split('|')[0].trim() : 'None';
+    var nextVisitShort = patient.nextVisit ? patient.nextVisit.split('\u2014')[0].trim() : 'None scheduled';
+    var nextPoeShort = patient.poeNext ? patient.poeNext.split('\u2014')[0].trim() : '\u2014';
+    var needsScheduling = !patient.nextVisit || patient.nextVisit.toLowerCase().indexOf('need') !== -1;
+
+    // Dedup requirement categories for badges
+    var reqCategories = {};
+    matches.forEach(function(m) { reqCategories[m.category] = true; });
+
+    var summaryCard = '<div class="ptr-summary-card">'
+        + '<div class="ptr-summary-left">'
+        +   '<div class="ptr-summary-name">' + escapeHtml(patient.name || 'Unnamed') + '</div>'
+        +   '<div class="ptr-summary-meta">'
+        +     '<span>#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
+        +     (patient.type ? '<span>\u00b7</span><span>' + escapeHtml(patient.type) + '</span>' : '')
+        +   '</div>'
+        +   '<div class="ptr-summary-badges">'
+        +     '<span class="ptr-summary-badge ' + (relBadgeClass[currentRel] || 'ptr-summary-badge-yellow') + '">' + escapeHtml(relBadgeText[currentRel] || 'Attention') + '</span>'
+        +     (patient.highValue || matches.length >= 3 ? '<span class="ptr-summary-badge ptr-summary-badge-hv">HIGH VALUE</span>' : '')
+        +   '</div>'
+        +   (Object.keys(reqCategories).length > 0 ? '<div class="ptr-summary-req-badges">' + Object.keys(reqCategories).map(function(cat) { return '<span class="ptr-summary-req-badge">' + escapeHtml(cat) + '</span>'; }).join('') + '</div>' : '')
+        + '</div>'
+        + '<div class="ptr-summary-right">'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Last Visit</div><div class="ptr-summary-kv-value">' + escapeHtml(lastVisitShort) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next Visit</div><div class="ptr-summary-kv-value"' + (needsScheduling ? ' style="color:#b45309;"' : '') + '>' + escapeHtml(nextVisitShort) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next POE</div><div class="ptr-summary-kv-value">' + escapeHtml(nextPoeShort) + '</div></div>'
+        + '</div>'
+        + '</div>';
+
+    // Priority notes card (repositioned to top, after summary) — escaped via escapeHtml()
+    var priorityHtml = '';
+    if (patient.priorityNotes) {
+        priorityHtml = '<div class="ptr-priority-card">'
+            + '<span class="ptr-field-label" style="color:#92400e;">Priority Notes</span>'
+            + '<div class="ptr-field-text" style="color:#78350f; font-weight:500;">' + escapeHtml(patient.priorityNotes) + '</div>'
+            + '</div>';
+    }
+
     // Build the record — all user text is escaped via escapeHtml()
     container.innerHTML = ''
         + backBtn
-        // Header
+        + summaryCard
+        + priorityHtml
+
+        // Compact header row: reliability dots + action buttons
         + '<div class="ptr-header">'
         +   '<div class="ptr-header-left">'
-        +     '<div class="ptr-name">' + escapeHtml(patient.name || 'Unnamed') + '</div>'
         +     '<div class="ptr-meta">'
-        +       '<span class="ptr-chart">#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
-        +       '<span class="ptr-type">' + escapeHtml(patient.type || 'Active') + '</span>'
         +       relHtml
         +     '</div>'
         +   '</div>'
@@ -712,7 +758,7 @@ function renderPatientRecord(patientId) {
         // Requirements
         + reqHtml
 
-        // Sections — stacked full-width, no grids that squeeze text
+        // Sections — stacked full-width, all section IDs preserved for collapsedSections
         + section('info', 'Patient Information', '\uD83C\uDFE5',
             fld('medicalHx', 'Medical History', '#ef4444')
             + fld('medications', 'Medications & Allergies', '#f87171'))
@@ -721,9 +767,13 @@ function renderPatientRecord(patientId) {
             fld('dentalHx', 'Dental History', '#10b981')
             + fld('txSummaryBU', 'Treatment at BU', '#34d399'))
 
-        + section('perio', 'Periodontal & Recall', '\uD83D\uDD14',
-            fld('poeLast', 'Last POE / Prophy', '#f59e0b')
-            + fld('poeNext', 'Next POE / Prophy', '#fbbf24'))
+        + section('perio', 'Periodontal & Recall', '\u26A0\uFE0F',
+            isEdit
+                ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
+                : '<div class="ptr-perio-row">'
+                  + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeLast || '\u2014') + '</div></div>'
+                  + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeNext || '\u2014') + '</div></div>'
+                  + '</div>')
 
         + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
             fld('txPlan', 'Treatment Plan', '#3b82f6')
@@ -737,15 +787,7 @@ function renderPatientRecord(patientId) {
                 ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
                   + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
                   + escapeHtml(patient.notes || '') + '</div>'
-                : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>')
-
-        // Priority notes from Claude analysis
-        + (patient.priorityNotes
-            ? section('priority', 'Priority Notes', '\u26A0\uFE0F',
-                '<div class="ptr-field-view" style="border-left-color:#f5920b40;">'
-                + '<div class="ptr-field-text" style="color:#fbbf24;">' + escapeHtml(patient.priorityNotes) + '</div>'
-                + '</div>')
-            : '');
+                : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
 }
 
 
@@ -1113,8 +1155,8 @@ function buildImportModalHtml() {
         +   '<button onclick="closePatientImportModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4em; cursor:pointer; padding:4px 8px;">&times;</button>'
         + '</div>'
         + '<textarea id="patientImportText" placeholder="Paste Claude output here...\n\nSupported formats:\n--- PATIENT_RECORD ---\nNAME: Last, First\nCHART: 1234567\n...\n\n--- PATIENT_UPDATE ---\nCHART: 1234567\nNOTES_APPEND: New note text\n...\n\n--- REQUIREMENTS_MATCH ---\nCAN_FULFILL: req-id | description | procedure\n...\n\n--- REQUIREMENTS_STATUS ---\nUPDATES: req-id | completed: 1 | note: text\n..." '
-        +   'style="flex:1; min-height:200px; padding:12px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; font-family:monospace; font-size:0.85em; resize:vertical; outline:none; margin-bottom:12px;"></textarea>'
-        + '<div style="display:flex; gap:8px; margin-bottom:12px;">'
+        +   'style="flex:1; min-height:200px; padding:12px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; font-family:monospace; font-size:0.85em; resize:vertical; max-height:200px; outline:none; margin-bottom:12px;"></textarea>'
+        + '<div style="display:flex; gap:8px; margin-bottom:12px; flex-shrink:0;">'
         +   '<button onclick="previewPatientImport()" style="flex:1; padding:10px; background:#1e40af; border:none; border-radius:8px; color:#93c5fd; font-weight:600; cursor:pointer;">Preview</button>'
         +   '<button id="patientImportBtn" onclick="confirmPatientImport()" disabled style="flex:1; padding:10px; background:#065f46; border:none; border-radius:8px; color:#6ee7b7; font-weight:600; cursor:pointer; opacity:0.5;">Import</button>'
         + '</div>'

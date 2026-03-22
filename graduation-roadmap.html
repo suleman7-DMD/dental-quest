@@ -66,22 +66,28 @@
             }
         }
 
-        /* Header */
+        /* Header — compact single-row bar */
         .header {
             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .header h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
+            font-size: 1.1em;
+            margin-bottom: 0;
+            white-space: nowrap;
         }
 
         .header p {
-            opacity: 0.9;
-            font-size: 1em;
+            opacity: 0.8;
+            font-size: 0.75em;
+            margin-left: 10px;
         }
 
         .back-btn {
@@ -6778,6 +6784,227 @@
             padding: 2px 0;
         }
 
+        /* ===== PATIENTS TAB LIGHT THEME (Swiss) ===== */
+        #tab-patients {
+            background: #f7f5ef;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        #tab-patients #patientsMainLayout {
+            overflow: visible;
+            border-radius: 0;
+        }
+        #tab-patients #patientsSidebar {
+            width: 200px;
+            min-width: 200px;
+            background: #fff;
+            border: none;
+            border-right: 1px solid rgba(23,33,43,0.08);
+            position: sticky;
+            top: 0;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+        #tab-patients .pts-sidebar-controls {
+            padding: 10px;
+            border-bottom: 1px solid rgba(23,33,43,0.06);
+        }
+        #tab-patients .pt-sidebar-search {
+            background: #faf9f6;
+            border: 1.5px solid rgba(23,33,43,0.15);
+            color: #17212b;
+            font-size: 0.82em;
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+        #tab-patients .pt-sidebar-search:focus { border-color: #1a7f79; }
+        #tab-patients .pts-btn-import,
+        #tab-patients .pts-btn-add {
+            background: #fff;
+            border: 1.5px solid rgba(23,33,43,0.15);
+            color: #17212b;
+            font-size: 0.75em;
+        }
+        #tab-patients .pts-btn-import:hover,
+        #tab-patients .pts-btn-add:hover { background: #f0ede5; }
+        #tab-patients .pts-section-header {
+            color: #62707c;
+            padding: 8px 10px 4px;
+            font-size: 0.62em;
+        }
+        #tab-patients .pts-sidebar-row { padding: 5px 10px; }
+        #tab-patients .pts-sidebar-row:hover { background: rgba(26,127,121,0.04); }
+        #tab-patients .pts-sidebar-row.active {
+            background: rgba(26,127,121,0.08);
+            border-left-color: #1a7f79;
+        }
+        #tab-patients .pts-row-name { color: #17212b; font-size: 0.8em; }
+        #tab-patients .pts-sidebar-row.active .pts-row-name { color: #17212b; font-weight: 700; }
+        #tab-patients .pts-row-chart { color: #94a3af; font-size: 0.65em; }
+        #tab-patients .pts-dot { width: 7px; height: 7px; }
+
+        /* Light record view — NO scroll trap */
+        #tab-patients .pts-record-view {
+            background: #f7f5ef;
+            border: none;
+            border-left: 1px solid rgba(23,33,43,0.06);
+            padding: 16px 20px 40px;
+            max-height: none;
+            overflow-y: visible;
+        }
+        #tab-patients .pts-empty-state { color: #94a3af; }
+
+        /* Summary card */
+        .ptr-summary-card {
+            background: #fff;
+            border: 1px solid rgba(23,33,43,0.1);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(23,33,43,0.04);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .ptr-summary-left { display: flex; flex-direction: column; gap: 4px; }
+        .ptr-summary-name { font-size: 1.2em; font-weight: 800; color: #17212b; }
+        .ptr-summary-meta { font-size: 0.78em; color: #62707c; display: flex; gap: 6px; flex-wrap: wrap; }
+        .ptr-summary-badges { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+        .ptr-summary-badge {
+            display: inline-flex; align-items: center;
+            padding: 2px 8px; font-size: 0.65em; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em; border-radius: 3px;
+        }
+        .ptr-summary-badge-active { background: rgba(26,127,121,0.12); color: #1a7f79; }
+        .ptr-summary-badge-yellow { background: rgba(216,163,87,0.18); color: #92600a; }
+        .ptr-summary-badge-red { background: rgba(239,68,68,0.12); color: #dc2626; }
+        .ptr-summary-badge-hv { background: rgba(200,107,75,0.12); color: #c86b4b; border: 1px solid rgba(200,107,75,0.3); }
+        .ptr-summary-req-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+        .ptr-summary-req-badge {
+            font-size: 0.6em; font-weight: 600; padding: 2px 6px;
+            border-radius: 3px; background: rgba(26,127,121,0.08); color: #1a7f79;
+            text-transform: uppercase;
+        }
+        .ptr-summary-right { display: flex; gap: 16px; flex-wrap: wrap; }
+        .ptr-summary-kv { text-align: right; }
+        .ptr-summary-kv-label { font-size: 0.58em; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3af; font-weight: 600; }
+        .ptr-summary-kv-value { font-size: 0.78em; font-weight: 600; color: #17212b; }
+
+        /* Light-theme actions */
+        #tab-patients .ptr-header { margin-bottom: 10px; }
+        #tab-patients .ptr-name { color: #17212b; }
+        #tab-patients .ptr-chart { color: #62707c; }
+        #tab-patients .ptr-type { background: rgba(26,127,121,0.08); color: #1a7f79; }
+        #tab-patients .ptr-rel-label { font-size: 0.65em; }
+        #tab-patients .ptr-edit-btn {
+            background: #fff; border: 1.5px solid rgba(23,33,43,0.15);
+            color: #17212b; font-size: 0.72em;
+        }
+        #tab-patients .ptr-edit-btn.active {
+            background: rgba(26,127,121,0.1); border-color: #1a7f79; color: #1a7f79;
+        }
+        #tab-patients .ptr-action-btn {
+            background: #fff; border: 1.5px solid rgba(23,33,43,0.15);
+            color: #62707c; font-size: 0.7em;
+        }
+        #tab-patients .ptr-action-btn:hover { background: #f0ede5; }
+        #tab-patients .ptr-action-btn.danger { color: #dc2626; border-color: rgba(220,38,38,0.2); }
+
+        /* Light-theme sections */
+        #tab-patients .ptr-section-header {
+            border-bottom: 1px solid rgba(23,33,43,0.06);
+            padding: 6px 0 4px;
+        }
+        #tab-patients .ptr-section-title { color: #62707c; font-size: 0.68em; }
+        #tab-patients .ptr-section-arrow { color: #94a3af; }
+
+        /* Light-theme fields */
+        #tab-patients .ptr-field-view {
+            background: #fff;
+            border: 1px solid rgba(23,33,43,0.08);
+            border-left: 3px solid;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+        }
+        #tab-patients .ptr-field-label { font-size: 0.62em; font-weight: 700; }
+        #tab-patients .ptr-field-text { font-size: 0.84em; color: #334155; line-height: 1.5; }
+        #tab-patients .ptr-notes-view { color: #334155; }
+        #tab-patients .ptr-field-edit {
+            background: #fff;
+            border: 1.5px solid rgba(23,33,43,0.15);
+            border-left: 3px solid;
+            color: #17212b;
+        }
+        #tab-patients .ptr-field-edit:focus { border-color: #1a7f79; }
+
+        /* Priority notes card */
+        .ptr-priority-card {
+            background: #fffbeb;
+            border: 1px solid rgba(217,119,6,0.2);
+            border-left: 4px solid #d97706;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .ptr-priority-card .ptr-field-label { color: #92400e; }
+        .ptr-priority-card .ptr-field-text { color: #78350f; font-weight: 500; }
+
+        /* Compact imaging chips */
+        .ptr-imaging-chips {
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .ptr-imaging-chip {
+            display: flex; align-items: baseline; gap: 6px;
+            background: #fff; border: 1px solid rgba(23,33,43,0.08);
+            border-radius: 6px; padding: 5px 10px;
+            flex: 1; min-width: 120px;
+        }
+        .ptr-imaging-chip-label {
+            font-size: 0.62em; font-weight: 700;
+            text-transform: uppercase; color: #7c3aed; letter-spacing: 0.05em;
+        }
+        .ptr-imaging-chip-value { font-size: 0.78em; color: #334155; }
+
+        /* Compact perio side-by-side */
+        .ptr-perio-row { display: flex; gap: 8px; }
+        .ptr-perio-item {
+            flex: 1; background: #fff;
+            border: 1px solid rgba(23,33,43,0.08);
+            border-left: 3px solid #f59e0b;
+            border-radius: 6px; padding: 6px 10px;
+        }
+        .ptr-perio-label {
+            font-size: 0.62em; font-weight: 700;
+            text-transform: uppercase; color: #b45309;
+            letter-spacing: 0.05em; margin-bottom: 1px;
+        }
+        .ptr-perio-value { font-size: 0.78em; color: #334155; line-height: 1.4; }
+
+        /* Light-theme imaging grid (edit mode) */
+        #tab-patients .ptr-imaging-cell {
+            background: #fff; border: 1px solid rgba(23,33,43,0.08);
+        }
+        #tab-patients .ptr-imaging-label { color: #7c3aed; }
+        #tab-patients .ptr-imaging-value { color: #334155; }
+
+        /* Light-theme mobile back button */
+        #tab-patients .ptr-back-btn {
+            background: rgba(26,127,121,0.08);
+            border: 1px solid rgba(26,127,121,0.2);
+            color: #1a7f79;
+        }
+
+        /* Light-theme requirements */
+        #tab-patients .ptr-hv-badge {
+            background: rgba(200,107,75,0.08);
+            border-color: rgba(200,107,75,0.2);
+            color: #c86b4b;
+        }
+        #tab-patients .ptr-req-toggle { color: #1a7f79; }
+        #tab-patients .ptr-req-row { color: #334155; }
+
         /* === MOBILE: Full-screen list/record toggle === */
         @media (max-width: 768px) {
             #patientsMainLayout {
@@ -6822,6 +7049,29 @@
             .ptr-field-view { padding: 8px 10px; }
             .ptr-field-text { font-size: 0.88em; }
             .ptr-field-edit { padding: 8px 10px; font-size: 0.88em; }
+
+            /* Light-theme mobile overrides */
+            #tab-patients #patientsSidebar {
+                width: 100%;
+                min-width: 100%;
+                position: static;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid rgba(23,33,43,0.08);
+                border-radius: 10px;
+                border: 1px solid rgba(23,33,43,0.1);
+            }
+            #tab-patients .pts-record-view {
+                padding: 12px;
+                border-radius: 0;
+                border-left: none;
+            }
+            .ptr-summary-card { flex-direction: column; gap: 10px; }
+            .ptr-summary-right { flex-direction: row; gap: 12px; }
+            .ptr-summary-kv { text-align: left; }
+            .ptr-perio-row { flex-direction: column; }
+            .ptr-imaging-chips { flex-direction: column; }
+            .ptr-imaging-chip { min-width: auto; }
         }
 
         @media (max-width: 380px) {
@@ -7325,19 +7575,20 @@
     </nav>
 
     <div class="header">
-        <h1>📚 Graduation Roadmap</h1>
-        <p>SULEMAN SHAIKH, DMD 2027</p>
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85em;">
-            <span id="syncIcon" style="font-size: 1.2em;">☁️</span>
-            <span id="syncText" style="color: #b0b8c4;">Connecting...</span>
-            <button onclick="forceCloudSync()" style="padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; color: white; font-size: 0.85em; cursor: pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync</button>
+        <div style="display:flex; align-items:center; gap:4px;">
+            <h1>📚 Graduation Roadmap</h1>
+            <p>SULEMAN SHAIKH, DMD 2027</p>
         </div>
-        <!-- Checkpoint Controls -->
-        <div class="checkpoint-controls" id="checkpoint-controls">
-            <button onclick="createCheckpoint()" class="checkpoint-btn create" title="Save a named checkpoint">💾 Checkpoint</button>
-            <button onclick="showCheckpointManager()" class="checkpoint-btn restore" title="View and restore checkpoints">📂 Restore</button>
-            <button onclick="forceUploadToCloud()" class="checkpoint-btn force-upload" title="Make this device's data the master">☁️⬆️ Force Upload</button>
-            <button onclick="forcePullFromCloud()" class="checkpoint-btn force-pull" title="Overwrite local with cloud data">☁️⬇️ Force Pull</button>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span id="syncIcon" style="font-size:1em;">☁️</span>
+            <span id="syncText" style="color:#ddd; font-size:0.75em;">Connecting...</span>
+            <button onclick="forceCloudSync()" style="padding:3px 10px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:10px; color:white; font-size:0.75em; cursor:pointer;" title="Force refresh from cloud" aria-label="Sync data with cloud">🔄 Sync</button>
+            <div class="checkpoint-controls" id="checkpoint-controls" style="display:flex; gap:4px;">
+                <button onclick="createCheckpoint()" class="checkpoint-btn create" title="Save a named checkpoint" style="font-size:0.7em; padding:3px 8px;">💾</button>
+                <button onclick="showCheckpointManager()" class="checkpoint-btn restore" title="View and restore checkpoints" style="font-size:0.7em; padding:3px 8px;">📂</button>
+                <button onclick="forceUploadToCloud()" class="checkpoint-btn force-upload" title="Force Upload" style="font-size:0.7em; padding:3px 8px;">⬆️</button>
+                <button onclick="forcePullFromCloud()" class="checkpoint-btn force-pull" title="Force Pull" style="font-size:0.7em; padding:3px 8px;">⬇️</button>
+            </div>
         </div>
     </div>
 
@@ -10252,7 +10503,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/grades.js?v=20260322c"></script>
     <script src="js/graduation-roadmap/exam-content.js?v=20260322c"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260322c"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260322d"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260322e"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260322c"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260322c"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260322c"></script>
