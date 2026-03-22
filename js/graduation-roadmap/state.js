@@ -44,12 +44,12 @@ let roadmapData = {
         periodiscussion: false
     },
     grades: {
-        oralmed: { quiz1: 100 }, // Quiz 1 done
+        oralmed: {},
         paincontrol: {},
-        critthink: { quiz1: 100 }, // Already done
-        peds: { exam1: 77, headstart: 100 },
-        perio: { midterm: null, writtenAssignment: 100 },
-        ortho: { midterm: null }
+        critthink: {},
+        peds: {},
+        perio: {},
+        ortho: {}
     },
     editedDeadlines: {},
     customDeadlines: {},  // Object with ID keys for Firebase safety
@@ -125,12 +125,12 @@ function getDefaultRoadmapData() {
             periodiscussion: false
         },
         grades: {
-            oralmed: { quiz1: 100 },
+            oralmed: {},
             paincontrol: {},
-            critthink: { quiz1: 100 },
-            peds: { exam1: 77, headstart: 100 },
-            perio: { midterm: null, writtenAssignment: 100 },
-            ortho: { midterm: null }
+            critthink: {},
+            peds: {},
+            perio: {},
+            ortho: {}
         },
         editedDeadlines: {},
         customDeadlines: {},
@@ -178,6 +178,21 @@ function getDefaultRoadmapData() {
             appointments: { completed: 0, target: 90 },
             procedures: { completed: 0, target: 116 }
         },
+        periodicReviews: {
+            pr2: {
+                reviewDate: null,
+                reviewPeriod: 'December 2025 — April 2026',
+                dashboardDiscrepancyNotes: '',
+                adminStatsOverrides: {},
+                completedProceduresHtml: '',
+                inProgressProcedures: {},
+                departmentNotes: {},
+                subjectiveReport: '',
+                patientNotes: {},
+                removedPatients: {},
+                lastEdited: null
+            }
+        },
         lastSaved: null,
         _version: 0,
         _lastModified: null,
@@ -192,6 +207,7 @@ let isInitialLoad = true;      // Block ALL saves until data loaded
 let hasLoadedFromCloud = false; // Track if we've checked Firebase
 let pinValidated = false;       // Track if PIN has been validated (prevents race condition)
 let awaitingPinEntry = false;   // True while PIN prompt is showing — blocks fallback timers from firing
+let awaitingFirebaseLoad = false; // True while loadFromFirebase() is in progress — blocks fallback timers from racing
 let clinicalDataDirty = true;   // True when clinical data changed — gates syncClinicalToMonthlyPlanner(). Starts true for first init.
 
 // Check if state has real user data (not just defaults)
@@ -210,23 +226,47 @@ function isEmptyState(data) {
     const hasGrades = data.grades && Object.values(data.grades).some(course =>
         course && Object.keys(course).length > 0
     );
-    const hasExams = getCount(data.exams) > 0;
+    // NOTE: hasExams intentionally NOT checked — exams are auto-generated from static list in initUI()
+    // Checking them would let default state pass Guard C when initUI auto-creates exam entries
     const hasEditedDeadlines = getCount(data.editedDeadlines) > 0;
     // FIX: Check patientRecords, dashboardSnapshots, completedProcedures
     // Without these, imported patient data could be treated as "empty" and saves blocked by Guard C
     const hasPatientRecords = getCount(data.clinicalData?.patientRecords) > 0;
     const hasDashboardSnapshots = Array.isArray(data.clinicalData?.dashboardSnapshots) && data.clinicalData.dashboardSnapshots.length > 0;
     const hasCompletedProcedures = getCount(data.clinicalData?.completedProcedures) > 0;
-    const hasCompetencies = data.clinicalData?.competencies && Object.keys(data.clinicalData.competencies).length > 0;
+    // hasCompetencies: Only count as real data if ANY item has completed > 0.
+    // Auto-initialized competencies from DEFAULT_COMPETENCIES all have completed: 0.
+    const hasCompetencies = (() => {
+        const comps = data.clinicalData?.competencies;
+        if (!comps || typeof comps !== 'object') return false;
+        for (const catKey of Object.keys(comps)) {
+            const cat = comps[catKey];
+            if (!cat?.sections) continue;
+            const sections = typeof cat.sections === 'object' ? Object.values(cat.sections) : [];
+            for (const section of sections) {
+                if (!section?.items) continue;
+                const items = typeof section.items === 'object' ? Object.values(section.items) : [];
+                for (const item of items) {
+                    if (item && item.completed > 0) return true;
+                }
+            }
+        }
+        return false;
+    })();
     const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
     const hasTodoItems = getCount(data.todoList?.items) > 0;
+    const hasPeriodicReview = data.periodicReviews?.pr2 && (
+        (data.periodicReviews.pr2.subjectiveReport ?? '') !== '' ||
+        Object.keys(data.periodicReviews.pr2.departmentNotes || {}).length > 0 ||
+        (data.periodicReviews.pr2.completedProceduresHtml ?? '') !== ''
+    );
 
     // Empty if NONE of these exist
     return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
-           !hasExamStudyProgress && !hasGrades && !hasExams && !hasEditedDeadlines &&
+           !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems;
+           !hasMissingNotes && !hasTodoItems && !hasPeriodicReview;
 }
 
 function hasRealData(data) {
@@ -650,6 +690,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'gradprep' && typeof renderGraduationPrep === 'function') renderGraduationPrep();
     if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
+    if (resolvedTabId === 'periodicreview' && typeof initPeriodicReview === 'function') initPeriodicReview();
     // schedule and remember tabs: sub-tabs / static content handle their own init
 
     // If navigating to exam content, open the exams accordion
@@ -729,6 +770,7 @@ function toggleMandatory(itemId) {
         item.classList.add('unchecked');
     }
 
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
 

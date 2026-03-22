@@ -35,6 +35,9 @@ let lastForceSync = 0;
 let lastSaveTime = 0;
 let pendingSaveToast = false;
 
+// Firebase load timeout
+let firebaseTimeoutTimer = null;
+
 // ==================== SYNC STATUS ====================
 
 function updateSyncStatus(status, text) {
@@ -380,7 +383,9 @@ function showSyncConflictModal(localData, remoteData, onResolve) {
 
 function initFirebase() {
     // FALLBACK: Ensure UI loads within 3 seconds no matter what
+    // CRITICAL: Skip if Firebase is mid-load (awaitingFirebaseLoad flag)
     const fallbackTimer = setTimeout(() => {
+        if (awaitingFirebaseLoad) return;
         if (!document.getElementById('currentDateDisplay').textContent ||
             document.getElementById('currentDateDisplay').textContent === 'Loading...') {
             loadFromLocalStorage();
@@ -628,6 +633,21 @@ function mergeRemoteState(data) {
             appointments: { completed: 0, target: 90 },
             procedures: { completed: 0, target: 116 }
         }),
+        periodicReviews: data.periodicReviews ? {
+            pr2: {
+                reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
+                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
+                adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
+                completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
+                inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
+                departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
+                subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
+                patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
+                removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
+                lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
+            }
+        } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
         lastSaved: data.lastSaved,
         _version: Math.max(data._version || 0, roadmapData._version || 0),
         _lastModified: data._lastModified || roadmapData._lastModified,
@@ -745,6 +765,21 @@ function loadFromLocalStorage(finalize = true) {
                     appointments: { completed: 0, target: 90 },
                     procedures: { completed: 0, target: 116 }
                 }),
+                periodicReviews: data.periodicReviews ? {
+                    pr2: {
+                        reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
+                        reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                        dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
+                        adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
+                        completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
+                        inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
+                        departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
+                        subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
+                        patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
+                        removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
+                        lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
+                    }
+                } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
                 lastSaved: data.lastSaved || roadmapData.lastSaved,
                 _version: data._version || roadmapData._version || 0,
                 _lastModified: data._lastModified || roadmapData._lastModified
@@ -780,6 +815,18 @@ function loadFromFirebase() {
         loadFromLocalStorage();
         return;
     }
+
+    // CRITICAL: Block fallback timers while Firebase is loading
+    awaitingFirebaseLoad = true;
+
+    // SAFETY VALVE: If Firebase doesn't respond within 15s, give up and load locally
+    firebaseTimeoutTimer = setTimeout(() => {
+        if (awaitingFirebaseLoad) {
+            console.error('[GRAD-LOAD] 15s timeout: Firebase never responded, falling back to localStorage');
+            awaitingFirebaseLoad = false;
+            loadFromLocalStorage();
+        }
+    }, 15000);
 
     // One-time load from new path first
     database.ref(userPath).once('value')
@@ -817,6 +864,8 @@ function loadFromFirebase() {
         })
         .catch(error => {
             console.error('❌ Firebase load error:', error);
+            awaitingFirebaseLoad = false;
+            if (firebaseTimeoutTimer) { clearTimeout(firebaseTimeoutTimer); firebaseTimeoutTimer = null; }
             updateSyncStatus('error', 'Load failed');
             loadFromLocalStorage();
         });
@@ -824,27 +873,50 @@ function loadFromFirebase() {
 
 // Extracted from loadFromFirebase to avoid duplication with migration path
 function finishFirebaseLoad(data) {
+    // CRITICAL: Clear Firebase load flag + cancel timeout timer
+    awaitingFirebaseLoad = false;
+    if (firebaseTimeoutTimer) { clearTimeout(firebaseTimeoutTimer); firebaseTimeoutTimer = null; }
+
+    let localWasNewer = false;
+
     if (data) {
-        // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
-        loadFromLocalStorage(false);
-
-        // BUG 2 FIX: Compare timestamps — only merge Firebase if it's same-age or newer
-        const localLastSaved = roadmapData.lastSaved || 0;
-        const remoteLastSaved = data.lastSaved || 0;
-
-        if (localLastSaved > remoteLastSaved) {
-            console.log('[GRAD-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
-            roadmapData._dataLoaded = true;
-            migrateInvalidFirebaseKeys(roadmapData);
+        // FIX: If Firebase data exists but is effectively empty (poisoned defaults),
+        // treat as no data — don't merge defaults over real local data
+        if (isEmptyState(data)) {
+            console.log('[GRAD-LOAD] Firebase data exists but isEmptyState=true — treating as no data');
+            loadFromLocalStorage(false);
+            updateSyncStatus('connected', 'Synced');
+            // If local has real data, push it to Firebase to replace the poisoned defaults
+            if (!isEmptyState(roadmapData)) {
+                localWasNewer = true;
+            }
         } else {
-            mergeRemoteState(data);
-        }
+            // CRITICAL FIX: Load localStorage FIRST so local-only changes are preserved
+            loadFromLocalStorage(false);
 
-        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-        updateSyncStatus('connected', 'Synced');
+            // BUG 2 FIX: Compare timestamps — only merge Firebase if it's same-age or newer
+            const localLastSaved = roadmapData.lastSaved || 0;
+            const remoteLastSaved = data.lastSaved || 0;
+
+            if (localLastSaved > remoteLastSaved) {
+                console.log('[GRAD-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
+                roadmapData._dataLoaded = true;
+                migrateInvalidFirebaseKeys(roadmapData);
+                localWasNewer = true;
+            } else {
+                mergeRemoteState(data);
+            }
+
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+            updateSyncStatus('connected', 'Synced');
+        }
     } else {
         loadFromLocalStorage(false);
         updateSyncStatus('connected', 'Synced');
+        // If local has real data but Firebase was empty, push to Firebase
+        if (!isEmptyState(roadmapData)) {
+            localWasNewer = true;
+        }
     }
 
     // SET ALL FLAGS FIRST — before any rendering
@@ -858,6 +930,17 @@ function finishFirebaseLoad(data) {
         initUI();
     } catch (e) {
         console.error('[GRAD-LOAD] initUI error after Firebase load:', e);
+    }
+
+    // FIX: If local data was newer than Firebase (or Firebase was empty/poisoned),
+    // push local data to cloud so other devices (incognito, new phone) get the latest
+    if (localWasNewer && !isEmptyState(roadmapData)) {
+        console.log('[GRAD-LOAD] Pushing local data to Firebase (local was newer or Firebase was empty)');
+        setTimeout(() => {
+            if (hasLoadedFromCloud && !isInitialLoad && roadmapData._dataLoaded) {
+                saveData();
+            }
+        }, 500);
     }
 
     // Set up sync listeners (in try/catch to not block on errors)
@@ -1403,6 +1486,21 @@ function restoreCheckpoint(index) {
                     appointments: { completed: 0, target: 90 },
                     procedures: { completed: 0, target: 116 }
                 },
+                periodicReviews: cpData.periodicReviews ? {
+                    pr2: {
+                        reviewDate: cpData.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
+                        reviewPeriod: cpData.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                        dashboardDiscrepancyNotes: cpData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
+                        adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(cpData.periodicReviews?.pr2?.adminStatsOverrides || {}) },
+                        completedProceduresHtml: cpData.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
+                        inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(cpData.periodicReviews?.pr2?.inProgressProcedures || {}) },
+                        departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(cpData.periodicReviews?.pr2?.departmentNotes || {}) },
+                        subjectiveReport: cpData.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
+                        patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(cpData.periodicReviews?.pr2?.patientNotes || {}) },
+                        removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(cpData.periodicReviews?.pr2?.removedPatients || {}) },
+                        lastEdited: cpData.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
+                    }
+                } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
                 lastSaved: cpData.lastSaved || Date.now(),
                 _version: Date.now(),
                 _lastModified: new Date().toISOString(),
@@ -1699,6 +1797,21 @@ function importAndRestoreDirectly() {
                             appointments: { completed: 0, target: 90 },
                             procedures: { completed: 0, target: 116 }
                         },
+                        periodicReviews: data.periodicReviews ? {
+                            pr2: {
+                                reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
+                                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                                dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
+                                adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
+                                completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
+                                inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
+                                departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
+                                subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
+                                patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
+                                removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
+                                lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
+                            }
+                        } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
                         lastSaved: data.lastSaved || Date.now(),
                         _version: Date.now(),
                         _lastModified: new Date().toISOString(),
@@ -2113,8 +2226,9 @@ function saveData() {
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
         // Tab is being hidden - ensure data is saved immediately
-        // GUARD: Only save if we have real data and passed initial load
-        if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
+        // GUARD: Full guard suite — must match saveData() guards to prevent saving defaults
+        if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
+            && pinValidated && validateStateIntegrity(roadmapData).length === 0) {
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             if (firebaseSyncEnabled && database && userPath) {
                 // FIX: Set local update flag to prevent realtime listener from re-processing this write
@@ -2159,8 +2273,9 @@ document.addEventListener('visibilitychange', function() {
 
 // Save on page unload to prevent data loss during debounce window - WITH GUARDS
 window.addEventListener('beforeunload', function() {
-    // Only save if we have real data and passed initial load
-    if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)) {
+    // GUARD: Full guard suite — must match saveData() guards to prevent saving defaults
+    if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
+        && pinValidated && validateStateIntegrity(roadmapData).length === 0) {
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     }
 });
