@@ -62,6 +62,9 @@ const date = new Date(year, month - 1, day);
 - **Import auto-completes past appointments**: `confirmClinicalImport()` AND `confirmPatientImport()` both set `status: 'completed'` for appointments with dates before today. Do NOT revert to always `'scheduled'`.
 - **SPS dashboard is ground truth**: `getSmartAppointmentCount()` and `getSmartProcedureCount()` use `MAX(computed, dashboardSnapshots[0])`. The SPS snapshot from the school system is the authoritative floor. Never remove this floor logic.
 - **Unified import handles appointments**: `parsePatientImportText()` in patients.js now detects PATIENT:/CHART:/DATE: blocks and creates appointments. The user pastes ONE combined text (SPS_DASHBOARD_UPDATE + APPOINTMENTS) into the patient import modal and everything syncs globally.
+- **Missing Notes tracker**: `MISSING_NOTES` block type parsed by `parseMissingNotesBlock()` in patients.js. 7 pipe-delimited fields: id|date|patient|chart|faculty|session|location. Dedup by ID. Dashboard shows capacity bar (6 limit), faculty cross-reference with upcoming appointments. `missingNotes{}` stored under `clinicalData`.
+- **To-Do list system**: `TODO_LIST` block type parsed by `parseTodoListBlock()` in patients.js. 5 pipe-delimited fields: id|description|source|dateAdded|sourceDetail. Sources: MANUAL/EMAIL/SCREENSHOT/CLINIC/SYSTEM. Dedup by ID. Dashboard has inline quick-add. `todoList{ items{}, _nextSeq, lastUpdated }` stored at top level.
+- **8 import block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, REQUIREMENTS_STATUS, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST — all parseable in one atomic paste.
 
 ---
 
@@ -137,7 +140,8 @@ users/user_[hashedPin]/
 │   ├── examStudyProgress{}, exams{}, mandatoryItems{}, pedsLockedIn
 │   ├── monthlyPlanner{ notes{}, customTasks{}, overriddenStatic{}, completedTasks{}, hiddenClinicTasks{}, currentWeekSchedule{} }
 │   ├── upcomingDeadlines{} (cross-app: all upcoming deadlines for Stim Calc)
-│   ├── clinicalData{ patients{}, appointments{}, completedProcedures{}, competencies{}, patientRecords{}, dashboardSnapshots[] }
+│   ├── clinicalData{ patients{}, appointments{}, completedProcedures{}, competencies{}, patientRecords{}, dashboardSnapshots[], missingNotes{} }
+│   ├── todoList{ items{}, _nextSeq, lastUpdated }
 │   ├── graduationPrep{ externship{}, cdcaAdex{}, inbde{}, jobSearch{} }
 │   ├── clinicHeadlines{ appointments{}, procedures{} }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
@@ -200,7 +204,7 @@ Graduation-roadmap: 6 guards — adds `validateStateIntegrity()` (Guard F) check
 | App | Empty If Missing ALL Of |
 |-----|------------------------|
 | index.html | tasks, calendarNotes, calendarEvents, notebook.pages, stats.totalXPGained, focusModeData, commandCenterData |
-| d3-roadmap | customDeadlines, customTasks, appointments, blocks, notes, patients, completedDeadlines, examStudyProgress, grades, exams, editedDeadlines, patientRecords, dashboardSnapshots, completedProcedures, competencies |
+| d3-roadmap | customDeadlines, customTasks, appointments, blocks, notes, patients, completedDeadlines, examStudyProgress, grades, exams, editedDeadlines, patientRecords, dashboardSnapshots, completedProcedures, competencies, missingNotes, todoList.items |
 | stim-calc | medications, caffeine, history, sleepHistory, allNighterMode, _dataLoaded |
 | body-comp | weighIns, today.meals, today.workouts, dailyLogs, bodyCompHistory, today.setupComplete |
 

@@ -293,7 +293,13 @@ let roadmapData = {
         patients: {},                       // Patient records keyed by ID
         appointments: {},                   // Appointment records keyed by ID
         completedProcedures: {},            // Completed procedure records
-        competencies: null                  // Initialized from DEFAULT_COMPETENCIES
+        competencies: null,                 // Initialized from DEFAULT_COMPETENCIES
+        missingNotes: {}                    // Missing progress notes — keyed by note-{chart}-{dateNoHyphens}
+    },
+    todoList: {                             // To-do list — flat checklist from multiple sources
+        items: {},                          // Keyed by todo-{NNNN}-{dateNoHyphens}
+        _nextSeq: 1,                        // Sequential counter for manual adds
+        lastUpdated: null                   // ISO timestamp
     },
     exams: {},                              // For cross-app integration (Body Comp reads this)
     graduationPrep: {                       // Graduation Prep tab data
@@ -459,7 +465,24 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `backfillClinicalData()` | clinical.js | One-click backfill: auto-complete past apts, create proc records, evidence entries, link patients |
 | `autoSuggestClinicalDeadlines()` | deadlines.js | Generate soft deadline suggestions from competency gaps before externship |
 | `dpRenderClinicDayBanner()` | daily-planner.js | Clinic day banner with patient list, completion tracking, post-clinic summary |
+| `parseMissingNotesBlock(text)` | patients.js | Parse MISSING_NOTES block (7 pipe-delimited fields per note) |
+| `parseTodoListBlock(text)` | patients.js | Parse TODO_LIST block (5 pipe-delimited fields per item) |
 | `parseImportAppointmentBlock(text)` | patients.js | Parse PATIENT:/CHART:/DATE:/TIME:/PROCEDURE: appointment block from unified import |
+| `renderMissingNotesSection()` | init.js | Dashboard section: capacity bar, checkable list, faculty cross-ref, alert banner |
+| `renderTodoListSection()` | init.js | Dashboard section: inline quick-add, checkable list with source badges |
+| `dashboardAddTodo()` | init.js | Quick-add handler from dashboard input |
+| `getMissingNotesAlertLevel(count)` | state.js | Returns 'GREEN'/'YELLOW'/'RED' based on pending count |
+| `getMissingNotesPending()` | state.js | Returns array of pending missing notes |
+| `getMissingNotesCompleted()` | state.js | Returns array of completed missing notes |
+| `toggleMissingNoteStatus(noteId)` | state.js | Toggle note pending/completed + save |
+| `clearCompletedMissingNotes()` | state.js | Delete all completed notes + save |
+| `getMissingNotesFacultyMatches()` | state.js | Cross-ref faculty with upcoming appointments |
+| `getTodoPending()` | state.js | Returns array of pending to-do items |
+| `getTodoCompleted()` | state.js | Returns array of completed to-do items |
+| `addTodoItem(desc, source, detail)` | state.js | Create new to-do item with auto-ID + save |
+| `toggleTodoStatus(todoId)` | state.js | Toggle item pending/completed + save |
+| `clearCompletedTodos()` | state.js | Delete all completed todos + save |
+| `getTodoSourceBadgeColor(source)` | state.js | Returns hex color for source badge |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
 | `init()` | init.js | App entry point (calls initFirebase) |
 
