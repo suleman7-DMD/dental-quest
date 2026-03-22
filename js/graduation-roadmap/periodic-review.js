@@ -578,7 +578,296 @@ function prSaveInProgressRow(rowId) {
 
 
 // ============================================
-// PLACEHOLDER SECTIONS (6-12)
+// SECTION 6: DEPARTMENT REQUIREMENTS AUDIT
+// ============================================
+
+var PR_DEPT_CONFIG = [
+    { key: 'fixed', label: 'Fixed Prosthodontics', color: '#3b82f6' },
+    { key: 'operative', label: 'Operative', color: '#10b981' },
+    { key: 'dentures', label: 'Complete Dentures', color: '#8b5cf6' },
+    { key: 'rpd', label: 'RPDs', color: '#f59e0b' },
+    { key: 'srp', label: 'SRPs', color: '#ef4444' },
+    { key: 'endo', label: 'Endodontics', color: '#06b6d4' }
+];
+
+function renderPRDepartmentAudit(pr2, competencies) {
+    var html = '<div class="pr-section" id="pr-section-6">';
+    html += '<div class="pr-section-number">06</div>';
+    html += '<div class="pr-section-title">Department Requirements Audit</div>';
+
+    for (var d = 0; d < PR_DEPT_CONFIG.length; d++) {
+        var cfg = PR_DEPT_CONFIG[d];
+        var cat = competencies[cfg.key];
+        if (!cat) continue;
+
+        var catName = cat.name ?? cfg.label;
+        var catIcon = cat.icon ?? '';
+        var pr1Dept = PR1_BASELINE.departments[cfg.key] ?? {};
+
+        // Count items from sections
+        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        var totalCompleted = 0;
+        var totalInProgress = 0;
+        var totalPlanned = 0;
+
+        for (var s = 0; s < sectionsList.length; s++) {
+            var itemsList = Array.isArray(sectionsList[s].items) ? sectionsList[s].items : Object.values(sectionsList[s].items || {});
+            for (var i = 0; i < itemsList.length; i++) {
+                var item = itemsList[i];
+                var comp = item.completed ?? 0;
+                var req = item.required ?? 0;
+                if (comp >= req && req > 0) {
+                    totalCompleted++;
+                } else if (comp > 0) {
+                    totalInProgress++;
+                } else if ((item.status ?? '') === 'planned') {
+                    totalPlanned++;
+                }
+            }
+        }
+
+        var pr1C = pr1Dept.completed ?? 0;
+        var pr1IP = pr1Dept.inProgress ?? 0;
+        var pr1P = pr1Dept.planned ?? 0;
+
+        html += '<div class="pr-panel pr-dept-' + escapeHtml(cfg.key) + '" style="border-left:4px solid ' + cfg.color + '; margin-bottom:20px;">';
+
+        // Department header
+        html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
+        html += '<span style="font-size:1.2rem;">' + catIcon + '</span>';
+        html += '<span style="font-weight:700; font-size:1rem; color:#17212b;">' + escapeHtml(catName) + '</span>';
+        html += '</div>';
+
+        // Summary row
+        html += '<div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:16px; font-size:0.82rem; color:#62707c;">';
+        html += '<span>Completed: <strong style="color:#17212b;">' + totalCompleted + '</strong> <span style="font-size:0.75rem;">(PR1: ' + pr1C + ', ' + renderDelta(pr1C, totalCompleted) + ')</span></span>';
+        html += '<span>In-Progress: <strong style="color:#17212b;">' + totalInProgress + '</strong> <span style="font-size:0.75rem;">(PR1: ' + pr1IP + ', ' + renderDelta(pr1IP, totalInProgress) + ')</span></span>';
+        html += '<span>Planned: <strong style="color:#17212b;">' + totalPlanned + '</strong> <span style="font-size:0.75rem;">(PR1: ' + pr1P + ', ' + renderDelta(pr1P, totalPlanned) + ')</span></span>';
+        html += '</div>';
+
+        // Requirements checklist grouped by section
+        for (var s2 = 0; s2 < sectionsList.length; s2++) {
+            var sec = sectionsList[s2];
+            html += '<div style="margin-bottom:12px;">';
+            html += '<div style="font-weight:600; font-size:0.82rem; color:#62707c; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">' + escapeHtml(sec.title ?? '') + '</div>';
+            var items2 = Array.isArray(sec.items) ? sec.items : Object.values(sec.items || {});
+            for (var j = 0; j < items2.length; j++) {
+                var it = items2[j];
+                var itComp = it.completed ?? 0;
+                var itReq = it.required ?? 0;
+                var isDone = itComp >= itReq && itReq > 0;
+                html += '<div class="pr-req-item" style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.85rem;">';
+                html += '<span class="pr-req-check" style="flex-shrink:0; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px; font-size:0.75rem;';
+                if (isDone) {
+                    html += ' background:#10b981; color:#fff;">&#10003;';
+                } else {
+                    html += ' border:1.5px solid #d0d0d0; color:transparent;">&#10003;';
+                }
+                html += '</span>';
+                html += '<span style="flex:1; color:#17212b;">' + escapeHtml(it.text ?? '') + '</span>';
+                html += '<span class="pr-req-count pr-mono" style="flex-shrink:0; font-size:0.82rem; color:' + (isDone ? '#10b981' : '#62707c') + ';">' + itComp + '/' + itReq + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        // Notes textarea
+        var safeKey = cfg.key.replace(/'/g, "\\'");
+        var noteVal = (pr2.departmentNotes ?? {})[cfg.key] ?? '';
+        html += '<div style="margin-top:12px;">';
+        html += '<div class="pr-panel-title">Notes</div>';
+        html += '<textarea class="pr-textarea pr-dept-notes" data-dept-key="' + escapeHtml(cfg.key) + '" rows="2" placeholder="Notes for ' + escapeHtml(catName) + '...">';
+        html += escapeHtml(noteVal);
+        html += '</textarea>';
+        html += '</div>';
+
+        html += '</div>'; // .pr-panel
+    }
+
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+
+// ============================================
+// SECTION 7: SUMMARY "NEEDED" TABLE
+// ============================================
+
+function renderPRNeededTable(competencies) {
+    var html = '<div class="pr-section" id="pr-section-7">';
+    html += '<div class="pr-section-number">07</div>';
+    html += '<div class="pr-section-title">Summary: Needed Procedures</div>';
+    html += '<div class="pr-panel">';
+
+    html += '<div style="overflow-x:auto;">';
+    html += '<table class="pr-table">';
+    html += '<thead><tr>';
+    html += '<th>Category</th>';
+    html += '<th class="pr-mono" style="text-align:center;">Required</th>';
+    html += '<th class="pr-mono" style="text-align:center;">Completed</th>';
+    html += '<th class="pr-mono" style="text-align:center;">Remaining</th>';
+    html += '<th style="text-align:center;">Status</th>';
+    html += '</tr></thead>';
+
+    html += '<tbody>';
+    var grandRequired = 0;
+    var grandCompleted = 0;
+
+    for (var d = 0; d < PR_DEPT_CONFIG.length; d++) {
+        var cfg = PR_DEPT_CONFIG[d];
+        var cat = competencies[cfg.key];
+        if (!cat) continue;
+
+        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        var totalRequired = 0;
+        var totalCompleted = 0;
+
+        for (var s = 0; s < sectionsList.length; s++) {
+            var itemsList = Array.isArray(sectionsList[s].items) ? sectionsList[s].items : Object.values(sectionsList[s].items || {});
+            for (var i = 0; i < itemsList.length; i++) {
+                totalRequired += itemsList[i].required ?? 0;
+                totalCompleted += itemsList[i].completed ?? 0;
+            }
+        }
+
+        var remaining = Math.max(0, totalRequired - totalCompleted);
+        grandRequired += totalRequired;
+        grandCompleted += totalCompleted;
+
+        // Status badge
+        var badgeClass, badgeText;
+        if (totalCompleted >= totalRequired && totalRequired > 0) {
+            badgeClass = 'pr-badge-ontrack';
+            badgeText = 'On Track';
+        } else if (totalCompleted > 0) {
+            badgeClass = 'pr-badge-behind';
+            badgeText = 'Behind';
+        } else {
+            badgeClass = 'pr-badge-notstarted';
+            badgeText = 'Not Started';
+        }
+
+        html += '<tr>';
+        html += '<td style="font-weight:600;">';
+        html += '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + cfg.color + '; margin-right:8px;"></span>';
+        html += escapeHtml(cfg.label);
+        html += '</td>';
+        html += '<td class="pr-mono" style="text-align:center;">' + totalRequired + '</td>';
+        html += '<td class="pr-mono" style="text-align:center;">' + totalCompleted + '</td>';
+        html += '<td class="pr-mono" style="text-align:center; font-weight:600; color:' + (remaining > 0 ? '#e74c3c' : '#10b981') + ';">' + remaining + '</td>';
+        html += '<td style="text-align:center;"><span class="' + badgeClass + '">' + badgeText + '</span></td>';
+        html += '</tr>';
+    }
+
+    // Grand total row
+    var grandRemaining = Math.max(0, grandRequired - grandCompleted);
+    html += '<tr style="border-top:2px solid #17212b; font-weight:700;">';
+    html += '<td>Total</td>';
+    html += '<td class="pr-mono" style="text-align:center;">' + grandRequired + '</td>';
+    html += '<td class="pr-mono" style="text-align:center;">' + grandCompleted + '</td>';
+    html += '<td class="pr-mono" style="text-align:center; color:' + (grandRemaining > 0 ? '#e74c3c' : '#10b981') + ';">' + grandRemaining + '</td>';
+    html += '<td></td>';
+    html += '</tr>';
+
+    html += '</tbody></table>';
+    html += '</div>';
+
+    html += '</div>'; // .pr-panel
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+
+// ============================================
+// SECTION 8: OTHER REQUIREMENTS CHECKLIST
+// ============================================
+
+var PR_OTHER_CONFIG = [
+    { key: 'oralsurg', label: 'Oral Surgery', color: '#ec4899' },
+    { key: 'peds', label: 'Pediatric Dentistry', color: '#84cc16' },
+    { key: 'perio', label: 'Periodontology', color: '#f472b6' },
+    { key: 'grouppractice', label: 'Group Practice (GD 640 & GD 642)', color: '#0ea5e9' },
+    { key: 'txplanning', label: 'Treatment Planning (RS 545)', color: '#6366f1' },
+    { key: 'geriatrics', label: 'Geriatric Dental Medicine', color: '#8b5cf6' },
+    { key: 'externship', label: 'Externship & SPS', color: '#059669' }
+];
+
+function renderPROtherRequirements(pr2, competencies) {
+    var html = '<div class="pr-section" id="pr-section-8">';
+    html += '<div class="pr-section-number">08</div>';
+    html += '<div class="pr-section-title">Other Requirements Checklist</div>';
+
+    for (var d = 0; d < PR_OTHER_CONFIG.length; d++) {
+        var cfg = PR_OTHER_CONFIG[d];
+        var cat = competencies[cfg.key];
+        if (!cat) continue;
+
+        var catName = cat.name ?? cfg.label;
+        var catIcon = cat.icon ?? '';
+
+        html += '<div class="pr-panel" style="border-left:4px solid ' + cfg.color + '; margin-bottom:20px;">';
+
+        // Section header
+        html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
+        html += '<span style="font-size:1.2rem;">' + catIcon + '</span>';
+        html += '<span style="font-weight:700; font-size:1rem; color:#17212b;">' + escapeHtml(catName) + '</span>';
+        html += '</div>';
+
+        // Items grouped by section title
+        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        for (var s = 0; s < sectionsList.length; s++) {
+            var sec = sectionsList[s];
+            if (sec.title) {
+                html += '<div style="font-weight:600; font-size:0.82rem; color:#62707c; margin-bottom:6px; margin-top:10px; text-transform:uppercase; letter-spacing:0.04em;">' + escapeHtml(sec.title) + '</div>';
+            }
+            var itemsList = Array.isArray(sec.items) ? sec.items : Object.values(sec.items || {});
+            for (var i = 0; i < itemsList.length; i++) {
+                var it = itemsList[i];
+                var comp = it.completed ?? 0;
+                var req = it.required ?? 0;
+                var isDone = comp >= req && req > 0;
+                var isPartial = comp > 0 && comp < req;
+
+                var highlightClass = '';
+                if (isDone) {
+                    highlightClass = ' pr-highlight-green';
+                } else if (isPartial) {
+                    highlightClass = ' pr-highlight-yellow';
+                }
+
+                html += '<div class="pr-req-item' + highlightClass + '" style="display:flex; align-items:center; gap:8px; padding:5px 8px; font-size:0.85rem; border-radius:4px; margin-bottom:2px;">';
+                html += '<span class="pr-req-check" style="flex-shrink:0; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px; font-size:0.75rem;';
+                if (isDone) {
+                    html += ' background:#10b981; color:#fff;">&#10003;';
+                } else {
+                    html += ' border:1.5px solid #d0d0d0; color:transparent;">&#10003;';
+                }
+                html += '</span>';
+                html += '<span style="flex:1; color:#17212b;">' + escapeHtml(it.text ?? '') + '</span>';
+                html += '<span class="pr-req-count pr-mono" style="flex-shrink:0; font-size:0.82rem; color:' + (isDone ? '#10b981' : '#62707c') + ';">' + comp + '/' + req + '</span>';
+                html += '</div>';
+            }
+        }
+
+        // Notes textarea
+        var noteVal = (pr2.departmentNotes ?? {})[cfg.key] ?? '';
+        html += '<div style="margin-top:12px;">';
+        html += '<div class="pr-panel-title">Notes</div>';
+        html += '<textarea class="pr-textarea pr-dept-notes" data-dept-key="' + escapeHtml(cfg.key) + '" rows="2" placeholder="Notes for ' + escapeHtml(catName) + '...">';
+        html += escapeHtml(noteVal);
+        html += '</textarea>';
+        html += '</div>';
+
+        html += '</div>'; // .pr-panel
+    }
+
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+
+// ============================================
+// PLACEHOLDER SECTIONS (9-12)
 // ============================================
 
 function renderPRPlaceholder(num, title) {
@@ -623,10 +912,17 @@ function initPeriodicReview() {
     // Section 5: In-Progress Procedures (editable table)
     html += renderPRInProgressProcedures(pr2);
 
-    // Sections 6-12: Placeholders
-    html += renderPRPlaceholder(6, 'Department Audit');
-    html += renderPRPlaceholder(7, 'Needed Procedures');
-    html += renderPRPlaceholder(8, 'Other Requirements');
+    // Section 6: Department Requirements Audit
+    const competencies = getCompetenciesData();
+    html += renderPRDepartmentAudit(pr2, competencies);
+
+    // Section 7: Summary "Needed" Table
+    html += renderPRNeededTable(competencies);
+
+    // Section 8: Other Requirements Checklist
+    html += renderPROtherRequirements(pr2, competencies);
+
+    // Sections 9-12: Placeholders
     html += renderPRPlaceholder(9, 'Subjective Report');
     html += renderPRPlaceholder(10, 'Patient Roster');
     html += renderPRPlaceholder(11, 'Patient Writeups');
@@ -712,6 +1008,27 @@ function attachPREventListeners() {
                 }
             }, 500);
         });
+    }
+
+    // --- Department notes auto-save (sections 6 + 8) ---
+    var deptTextareas = document.querySelectorAll('.pr-dept-notes');
+    for (var dt = 0; dt < deptTextareas.length; dt++) {
+        (function(textarea) {
+            var deptTimer = null;
+            textarea.addEventListener('input', function() {
+                clearTimeout(deptTimer);
+                deptTimer = setTimeout(function() {
+                    var deptKey = textarea.getAttribute('data-dept-key');
+                    if (!deptKey) return;
+                    var pr2 = getPR2Data();
+                    if (!pr2.departmentNotes) pr2.departmentNotes = {};
+                    pr2.departmentNotes[deptKey] = textarea.value;
+                    pr2.lastEdited = new Date().toISOString();
+                    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                    saveData();
+                }, 800);
+            });
+        })(deptTextareas[dt]);
     }
 
     // --- In-progress procedures: delegate events ---
