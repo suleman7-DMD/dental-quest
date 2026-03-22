@@ -639,3 +639,8 @@ If you see ANY of these in code you're writing:
 - Mutating `roadmapData` inside `renderDashboard()` or any render function — use local variables for computed values; state writes belong in save/CRUD paths only.
 - Using substring `indexOf()` for faculty name matching — use word-boundary regex (`\b`) or exact field matching to prevent false positives from short names.
 - `restoreBackup()` using raw `roadmapData = backup.data` — must use field-by-field reconstruction matching `restoreCheckpoint()` pattern to preserve newer fields.
+- Deleting an appointment without cascading to procedure records — `deleteAppointment()` must unlink+delete procedures with matching `appointmentId`, add to `hiddenClinicTasks`, set `clinicalDataDirty = true`.
+- Missing `clinicalDataDirty = true` before `saveData()` in clinical CRUD — 9 functions need it: `savePatient`, `saveAppointment`, `deleteAppointment`, `completeAppointment`, `uncompleteAppointment`, `deleteProcedure`, `backfillClinicalData`, `saveProcedureRecord`, `confirmPatientImport`.
+- Using `{ ...local, ...cloud }` category spread in `mergeCompetencies()` — destroys local `completionEntries`. Use deep item-level merge (union entries by procedureId, max completed, derive status).
+- `mergeRemoteCollectionsIntoLocal` not deep-merging patientRecords fields — `addMissing()` fills new-key patients but existing patients need field-level merge for `importedRequirements`, `priorityNotes`, `highValue`, `allergies`, `txCompletedByMe`, `recallHistory`, `activeStatus`.
+- Case-sensitive patient name dedup in `getSmartAppointmentCount()` — must use `toLowerCase().trim()` for name comparison in Source 3 visit dedup.
