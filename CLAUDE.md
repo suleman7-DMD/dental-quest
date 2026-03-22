@@ -83,7 +83,7 @@ const date = new Date(year, month - 1, day);
 |------|---------|
 | `index.html` + `js/dental-quest/*.js` (12 modules) | Main app: gamified task management, focus mode, financials, calendar, meds |
 | `d3-roadmap.html` (REDIRECT SHIM) | Redirects to graduation-roadmap.html with localStorage migration. `js/d3-roadmap/` deleted (commit `6b64461`). |
-| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (11 modules) | Graduation tracker: mission control, deadlines, clinical, patients (19 pre-filled), competencies, schedule, academics, grad prep. Patient tracker imports from Claude webchat (5 formats). Own namespace: `graduationRoadmapData` / `graduationRoadmap`. |
+| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (12 modules) | Graduation tracker: mission control, deadlines, clinical, patients (19 pre-filled), competencies, schedule, academics, grad prep, **periodic review**. Patient tracker imports from Claude webchat (8 formats). Own namespace: `graduationRoadmapData` / `graduationRoadmap`. |
 | `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian rhythm, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |
@@ -153,6 +153,7 @@ users/user_[hashedPin]/
 │   ├── todoList{ items{}, _nextSeq, lastUpdated }
 │   ├── graduationPrep{ externship{}, cdcaAdex{}, inbde{}, jobSearch{} }
 │   ├── clinicHeadlines{ appointments{}, procedures{} }
+│   ├── periodicReviews{ pr2{ reviewDate, reviewPeriod, dashboardDiscrepancyNotes, adminStatsOverrides{}, completedProceduresHtml, inProgressProcedures{}, departmentNotes{}, subjectiveReport, patientNotes{}, removedPatients{}, lastEdited } }
 │   ├── dailyPlanner{}, lastSaved, _version: 0, _dataLoaded
 │   └── (Body Comp reads exams{} and monthlyPlanner{})
 ├── d3Roadmap/                  (DEAD — old path, kept for migration fallback only)

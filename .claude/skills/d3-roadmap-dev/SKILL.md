@@ -258,10 +258,10 @@ syncDeadlineToGrades(deadline, isComplete, grade);
 
 **Firebase path:** `users/user_{hashedPin}/d3Roadmap`
 
-**10 Modules (load order):**
-state.js (614) -> firebase-sync.js (1,760) -> deadlines.js (804) -> grades.js (384) -> exam-content.js (1,327) -> clinical.js (1,451) -> import-system.js (543) -> daily-planner.js (573) -> monthly-planner.js (1,142) -> init.js (537)
+**12 Modules (load order):**
+state.js (680) -> firebase-sync.js (2,200) -> deadlines.js (804) -> grades.js (384) -> exam-content.js (1,327) -> clinical.js (1,451) -> patients.js (2,160) -> import-system.js (543) -> daily-planner.js (573) -> monthly-planner.js (1,142) -> periodic-review.js (1,962) -> init.js (537)
 
-**7 Tabs (redesigned Mar 12, 2026):**
+**8 Tabs (7 original + PR Review added Mar 22, 2026):**
 | Tab | ID | Key Function | Module |
 |-----|----|-------------|--------|
 | Mission Control | `missioncontrol` | `renderDashboard()` | init.js |
@@ -270,6 +270,7 @@ state.js (614) -> firebase-sync.js (1,760) -> deadlines.js (804) -> grades.js (3
 | Schedule | `schedule` | Sub-tabs: Monthly + Daily | monthly-planner.js, daily-planner.js |
 | D3 Academics | `academics` | Accordion: Grades, Exams, Mandatory, Courses, Classmates | grades.js, exam-content.js |
 | Graduation Prep | `gradprep` | `renderGraduationPrep()` | init.js |
+| PR Review | `periodicreview` | `initPeriodicReview()` | periodic-review.js |
 | Remember | `remember` | Static HTML | — |
 
 **Old tab IDs map to new:** dashboard→missioncontrol, grades→academics, examcontent→academics, mandatory→academics, courses→academics, classmates→academics, dailyplanner→schedule, monthlyplanner→schedule (backward compat in switchTab)
@@ -482,6 +483,21 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `renderMissingNotesSection()` | init.js | Dashboard section: capacity bar, checkable list, faculty cross-ref, alert banner |
 | `renderTodoListSection()` | init.js | Dashboard section: inline quick-add, checkable list with source badges |
 | `dashboardAddTodo()` | init.js | Quick-add handler from dashboard input |
+| `initPeriodicReview()` | periodic-review.js | PR Review tab entry point — renders all 12 sections |
+| `renderPRHeader(pr2)` | periodic-review.js | Section 1: title, review date, period |
+| `renderPRDashboardSummary(pr2, snap)` | periodic-review.js | Section 2: SPS dashboard comparison table (10 categories) |
+| `renderPRAdminStats(pr2, snap)` | periodic-review.js | Section 3: admin stats comparison (9 metrics) |
+| `renderPRCompletedProcedures(pr2)` | periodic-review.js | Section 4: paste-in procedure table |
+| `renderPRInProgressProcedures(pr2)` | periodic-review.js | Section 5: editable in-progress table |
+| `renderPRDepartmentAudit(pr2, comp)` | periodic-review.js | Section 6: 6 dept cards with requirements checklists |
+| `renderPRNeededTable(comp)` | periodic-review.js | Section 7: auto-computed needed summary |
+| `renderPROtherRequirements(pr2, comp)` | periodic-review.js | Section 8: 7 non-procedural dept checklists |
+| `renderPRSubjectiveReport(pr2)` | periodic-review.js | Section 9: rich text editor + PR1 reference + talking points |
+| `renderPRPatientRoster(pr2, patients)` | periodic-review.js | Section 10: patient table with reliability dots + NEW badges |
+| `renderPRPatientWriteups(pr2, patients)` | periodic-review.js | Section 11: collapsible patient cards with inline editing |
+| `exportPRToPDF()` | periodic-review.js | Section 12: lazy-load html2pdf.js, generate PDF with footer |
+| `getPR2Data()` | periodic-review.js | Safe accessor for roadmapData.periodicReviews.pr2 |
+| `savePR2Field(field, value)` | periodic-review.js | Save pr2 field + localStorage + Firebase |
 | `getMissingNotesAlertLevel(count)` | state.js | Returns 'GREEN'/'YELLOW'/'RED' based on pending count |
 | `getMissingNotesPending()` | state.js | Returns array of pending missing notes |
 | `getMissingNotesCompleted()` | state.js | Returns array of completed missing notes |
