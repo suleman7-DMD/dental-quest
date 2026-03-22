@@ -170,6 +170,11 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** `getDeadlineId()` produced IDs containing `'` (apostrophe from deadline text like `can't`), which broke `onclick="fn('${deadlineId}')"` JS syntax. Also, collapsed completed rows had duplicate `style` attributes causing `display:none` to be ignored.
 **Solution (commit `e24d328`):** Strip `'"\\` from `getDeadlineId()` key generation. Escape `safeId` in onclick handlers. Merge display:none into the single `rowStyle` in `buildRow()`.
 
+### Error: PR Review tab — 12-bug audit (fixed Mar 22, 2026)
+**Cause:** 12 bugs found via systematic audit: (1) `getInProgressProcedures()` saveData() in render path. (2) `periodicReviews` missing from `mergeRemoteCollectionsIntoLocal()`. (3) `isEmptyState()` only checked 3/9 PR2 fields. (4) Attended row used inflated smart count. (5) Roster missed `clinicalData.patients`. (6) Clinical Brief absent from writeups. (7) Skeleton records lacked name/chartNumber. (8) 4 import parser fields missing. (9-10) Double-fire on date/admin editors. (11) Escape overridden by blur. (12) Dead code.
+**Solution (commit `c5d4578`):** Extracted `ensureInProgressDefaults()` with guarded save. Full PR2 merge in `mergeRemoteCollectionsIntoLocal()`. `hasPeriodicReview` checks all 9 fields. SPS snapshot preferred. Both patient stores merged. Clinical Brief panel added. `committed` guard flags on inline editors.
+**Key lesson:** Render paths must NEVER call `saveData()`. `mergeRemoteCollectionsIntoLocal()` must cover ALL top-level state objects. `isEmptyState()` must check ALL user-editable fields.
+
 ---
 
 ## PERFORMANCE NOTES
@@ -503,6 +508,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `exportPRToPDF()` | periodic-review.js | Section 12: lazy-load html2pdf.js, generate PDF with footer |
 | `getPR2Data()` | periodic-review.js | Safe accessor for roadmapData.periodicReviews.pr2 |
 | `savePR2Field(field, value)` | periodic-review.js | Save pr2 field + localStorage + Firebase |
+| `ensureInProgressDefaults(pr2)` | periodic-review.js | Pre-populate in-progress defaults (returns true if populated, caller saves with guards) |
 | `getMissingNotesAlertLevel(count)` | state.js | Returns 'GREEN'/'YELLOW'/'RED' based on pending count |
 | `getMissingNotesPending()` | state.js | Returns array of pending missing notes |
 | `getMissingNotesCompleted()` | state.js | Returns array of completed missing notes |
@@ -611,3 +617,7 @@ If you see ANY of these in code you're writing:
 - Adding real data values to `getDefaultRoadmapData()` grades (e.g., `oralmed: { quiz1: 100 }`) — makes `isEmptyState()` return false for defaults, bypassing Guard C
 - Checking auto-generated data in `isEmptyState()` — `exams` (from static list) and `competencies` (auto-initialized from DEFAULT_COMPETENCIES) must NOT count as real user data
 - `initUI()` auto-save triggers (`setTimeout(() => saveData())`) without `hasLoadedFromCloud && !awaitingFirebaseLoad` guards — can save defaults to Firebase during race
+- Calling `saveData()` inside a render function (e.g., `getInProgressProcedures()` pre-populating defaults) — render functions fire before sync guards may be set; extract side-effects to the caller with guards
+- Adding user-editable fields to `periodicReviews.pr2` without adding them to `hasPeriodicReview` check in `isEmptyState()` — Guard C blocks Firebase saves when only those fields have data
+- Inline editors using `change` + `blur` without a `committed` guard flag — both events fire on normal interaction, causing double saves/renders; Escape must also set the flag
+- `parsePatientRecord()` fieldMap missing keys that `renderPRPatientWriteups()` displays — imported patients show "Click to edit" for those fields forever
