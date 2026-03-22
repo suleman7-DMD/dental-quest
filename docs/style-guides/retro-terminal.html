@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETRO TERMINAL // Phosphor CRT Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           RETRO TERMINAL DESIGN SYSTEM
+           ============================================
+           Green phosphor CRT aesthetic.
+           Scanlines, glow, and digital nostalgia.
+           The hum of old monitors at midnight.
+           ============================================ */
+
+        :root {
+            /* PHOSPHOR GREENS */
+            --phosphor-bright: #00ff00;
+            --phosphor-mid: #33ff33;
+            --phosphor-dim: #00cc00;
+            --phosphor-dark: #009900;
+            --phosphor-faded: #006600;
+            --phosphor-ghost: #003300;
+
+            /* SCREEN BLACKS */
+            --crt-black: #000a00;
+            --crt-deep: #001100;
+            --crt-surface: #001a00;
+            --crt-elevated: #002200;
+
+            /* AMBER VARIANT (for accents) */
+            --amber-bright: #ffb000;
+            --amber-mid: #cc8800;
+            --amber-dim: #996600;
+
+            /* STATUS COLORS */
+            --status-error: #ff3333;
+            --status-warning: #ffcc00;
+            --status-success: #00ff00;
+            --status-info: #00ccff;
+
+            /* TYPOGRAPHY */
+            --font-display: 'VT323', monospace;
+            --font-primary: 'IBM Plex Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* SPACING SCALE */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --space-3xl: 64px;
+
+            /* GLOW EFFECTS */
+            --glow-soft: 0 0 5px var(--phosphor-bright), 0 0 10px var(--phosphor-dim);
+            --glow-medium: 0 0 10px var(--phosphor-bright), 0 0 20px var(--phosphor-dim), 0 0 30px var(--phosphor-dark);
+            --glow-intense: 0 0 10px var(--phosphor-bright), 0 0 20px var(--phosphor-mid), 0 0 40px var(--phosphor-dim), 0 0 80px var(--phosphor-dark);
+
+            /* BORDER RADIUS */
+            --radius-none: 0;
+            --radius-sm: 2px;
+            --radius-md: 4px;
+
+            /* TRANSITIONS */
+            --transition-fast: 0.1s ease;
+            --transition-normal: 0.2s ease;
+            --transition-slow: 0.4s ease;
+        }
+
+        /* GLOBAL RESET & BASE */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background: var(--crt-black);
+            color: var(--phosphor-mid);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* CRT SCREEN EFFECTS - SCANLINES */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.3) 2px,
+                    rgba(0, 0, 0, 0.3) 4px
+                );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Screen curvature vignette */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at center,
+                transparent 0%,
+                transparent 60%,
+                rgba(0, 10, 0, 0.4) 80%,
+                rgba(0, 10, 0, 0.8) 100%
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* FLICKER ANIMATION */
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.8; }
+            94% { opacity: 1; }
+            97% { opacity: 0.9; }
+            98% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: var(--glow-soft); }
+            50% { text-shadow: var(--glow-medium); }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* MAIN CONTAINER */
+        .terminal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+            position: relative;
+            animation: flicker 10s infinite;
+        }
+
+        /* TERMINAL HEADER */
+        .terminal-header {
+            border: 2px solid var(--phosphor-dark);
+            background: var(--crt-deep);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+            position: relative;
+        }
+
+        .terminal-header::before {
+            content: '[ SYSTEM ONLINE ]';
+            position: absolute;
+            top: var(--space-sm);
+            right: var(--space-md);
+            font-family: var(--font-display);
+            font-size: 14px;
+            color: var(--phosphor-dim);
+            animation: blink 1s infinite;
+        }
+
+        .terminal-title {
+            font-family: var(--font-display);
+            font-size: 48px;
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-intense);
+            letter-spacing: 4px;
+            margin-bottom: var(--space-sm);
+        }
+
+        .terminal-subtitle {
+            font-family: var(--font-code);
+            font-size: 14px;
+            color: var(--phosphor-dim);
+            letter-spacing: 2px;
+        }
+
+        .terminal-subtitle::before {
+            content: '> ';
+            color: var(--phosphor-bright);
+        }
+
+        /* SECTION STYLING */
+        .section {
+            margin-bottom: var(--space-3xl);
+            border: 1px solid var(--phosphor-ghost);
+            background: var(--crt-deep);
+            padding: var(--space-xl);
+            position: relative;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--phosphor-dim), transparent);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px dashed var(--phosphor-ghost);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-soft);
+            letter-spacing: 3px;
+        }
+
+        .section-title::before {
+            content: '// ';
+            color: var(--phosphor-dark);
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: var(--phosphor-faded);
+            font-style: italic;
+        }
+
+        /* PROMPT STYLE */
+        .prompt {
+            font-family: var(--font-code);
+            color: var(--phosphor-dim);
+            margin-bottom: var(--space-md);
+        }
+
+        .prompt::before {
+            content: 'user@terminal:~$ ';
+            color: var(--phosphor-bright);
+        }
+
+        /* CURSOR */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--phosphor-bright);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+            box-shadow: var(--glow-soft);
+        }
+
+        /* ============================================
+           TYPOGRAPHY
+           ============================================ */
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-soft);
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: var(--space-lg);
+            text-shadow: var(--glow-medium);
+        }
+
+        h2 {
+            font-size: 36px;
+            margin-bottom: var(--space-md);
+        }
+
+        h3 {
+            font-size: 28px;
+            margin-bottom: var(--space-md);
+            color: var(--phosphor-mid);
+        }
+
+        h4 {
+            font-size: 24px;
+            margin-bottom: var(--space-sm);
+            color: var(--phosphor-mid);
+        }
+
+        h5 {
+            font-size: 20px;
+            margin-bottom: var(--space-sm);
+            color: var(--phosphor-dim);
+        }
+
+        h6 {
+            font-size: 16px;
+            margin-bottom: var(--space-sm);
+            color: var(--phosphor-dim);
+            text-transform: uppercase;
+        }
+
+        p {
+            font-family: var(--font-primary);
+            font-size: 16px;
+            color: var(--phosphor-mid);
+            margin-bottom: var(--space-md);
+            line-height: 1.8;
+        }
+
+        .text-large {
+            font-size: 20px;
+        }
+
+        .text-small {
+            font-size: 14px;
+        }
+
+        .text-bright {
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-soft);
+        }
+
+        .text-dim {
+            color: var(--phosphor-faded);
+        }
+
+        a {
+            color: var(--phosphor-bright);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--phosphor-dim);
+            transition: var(--transition-fast);
+        }
+
+        a:hover {
+            text-shadow: var(--glow-soft);
+            border-bottom-style: solid;
+        }
+
+        code {
+            font-family: var(--font-code);
+            background: var(--crt-surface);
+            padding: 2px 6px;
+            border: 1px solid var(--phosphor-ghost);
+            color: var(--phosphor-bright);
+        }
+
+        pre {
+            font-family: var(--font-code);
+            background: var(--crt-black);
+            border: 1px solid var(--phosphor-dark);
+            padding: var(--space-md);
+            overflow-x: auto;
+            margin-bottom: var(--space-md);
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .typography-grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .type-sample {
+            padding: var(--space-md);
+            border-left: 2px solid var(--phosphor-dark);
+        }
+
+        .type-label {
+            font-family: var(--font-code);
+            font-size: 12px;
+            color: var(--phosphor-faded);
+            margin-bottom: var(--space-xs);
+            text-transform: uppercase;
+        }
+
+        /* ============================================
+           COLORS
+           ============================================ */
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .color-swatch {
+            background: var(--crt-surface);
+            border: 1px solid var(--phosphor-ghost);
+            overflow: hidden;
+        }
+
+        .color-preview {
+            height: 80px;
+            position: relative;
+        }
+
+        .color-preview.glow {
+            box-shadow: inset 0 0 30px currentColor;
+        }
+
+        .color-info {
+            padding: var(--space-sm);
+            border-top: 1px solid var(--phosphor-ghost);
+        }
+
+        .color-name {
+            font-family: var(--font-display);
+            font-size: 16px;
+            color: var(--phosphor-bright);
+            margin-bottom: var(--space-xs);
+        }
+
+        .color-value {
+            font-family: var(--font-code);
+            font-size: 12px;
+            color: var(--phosphor-dim);
+        }
+
+        .color-group {
+            margin-bottom: var(--space-xl);
+        }
+
+        .color-group-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            color: var(--phosphor-mid);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px dashed var(--phosphor-ghost);
+        }
+
+        .color-group-title::before {
+            content: '> ';
+            color: var(--phosphor-bright);
+        }
+
+        /* ============================================
+           BUTTONS
+           ============================================ */
+
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 18px;
+            padding: var(--space-sm) var(--space-lg);
+            border: 2px solid var(--phosphor-bright);
+            background: transparent;
+            color: var(--phosphor-bright);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            transition: var(--transition-fast);
+            text-shadow: var(--glow-soft);
+        }
+
+        .btn::before {
+            content: '[ ';
+        }
+
+        .btn::after {
+            content: ' ]';
+        }
+
+        .btn:hover {
+            background: var(--phosphor-bright);
+            color: var(--crt-black);
+            text-shadow: none;
+            box-shadow: var(--glow-medium);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            border-color: var(--phosphor-ghost);
+            color: var(--phosphor-ghost);
+            cursor: not-allowed;
+            text-shadow: none;
+        }
+
+        .btn:disabled:hover {
+            background: transparent;
+            color: var(--phosphor-ghost);
+            box-shadow: none;
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            background: var(--phosphor-bright);
+            color: var(--crt-black);
+            text-shadow: none;
+            box-shadow: var(--glow-soft);
+        }
+
+        .btn-primary:hover {
+            box-shadow: var(--glow-intense);
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            border-color: var(--phosphor-dim);
+            color: var(--phosphor-dim);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--phosphor-bright);
+            background: var(--phosphor-dim);
+            color: var(--crt-black);
+        }
+
+        /* Ghost Button */
+        .btn-ghost {
+            border-color: var(--phosphor-ghost);
+            color: var(--phosphor-faded);
+            text-shadow: none;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--phosphor-dim);
+            background: var(--crt-surface);
+            color: var(--phosphor-mid);
+        }
+
+        /* Danger Button */
+        .btn-danger {
+            border-color: var(--status-error);
+            color: var(--status-error);
+        }
+
+        .btn-danger:hover {
+            background: var(--status-error);
+            color: var(--crt-black);
+            box-shadow: 0 0 10px var(--status-error), 0 0 20px var(--status-error);
+        }
+
+        /* Amber Button */
+        .btn-amber {
+            border-color: var(--amber-bright);
+            color: var(--amber-bright);
+        }
+
+        .btn-amber:hover {
+            background: var(--amber-bright);
+            color: var(--crt-black);
+            box-shadow: 0 0 10px var(--amber-bright), 0 0 20px var(--amber-mid);
+        }
+
+        /* Button Sizes */
+        .btn-sm {
+            font-size: 14px;
+            padding: var(--space-xs) var(--space-md);
+        }
+
+        .btn-lg {
+            font-size: 24px;
+            padding: var(--space-md) var(--space-xl);
+        }
+
+        /* ============================================
+           CARDS
+           ============================================ */
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .card {
+            background: var(--crt-surface);
+            border: 1px solid var(--phosphor-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--phosphor-ghost), var(--phosphor-dim), var(--phosphor-ghost));
+        }
+
+        .card-header {
+            padding: var(--space-md);
+            border-bottom: 1px dashed var(--phosphor-ghost);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-soft);
+        }
+
+        .card-title::before {
+            content: '> ';
+            color: var(--phosphor-dim);
+        }
+
+        .card-status {
+            font-family: var(--font-code);
+            font-size: 12px;
+            padding: 2px 8px;
+            background: var(--crt-deep);
+            border: 1px solid var(--phosphor-ghost);
+            color: var(--phosphor-dim);
+        }
+
+        .card-status.active {
+            border-color: var(--phosphor-bright);
+            color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .card-body {
+            padding: var(--space-md);
+        }
+
+        .card-body p {
+            color: var(--phosphor-dim);
+            font-size: 14px;
+        }
+
+        .card-footer {
+            padding: var(--space-md);
+            border-top: 1px dashed var(--phosphor-ghost);
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        /* Matrix Card */
+        .card-matrix {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-matrix::after {
+            content: '01001101 01000001 01010100 01010010 01001001 01011000';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-family: var(--font-code);
+            font-size: 10px;
+            color: var(--phosphor-ghost);
+            padding: var(--space-xs);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Terminal Card */
+        .card-terminal {
+            font-family: var(--font-code);
+        }
+
+        .card-terminal .card-header {
+            background: var(--crt-deep);
+        }
+
+        .card-terminal .card-header::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--phosphor-bright);
+            margin-right: var(--space-sm);
+            box-shadow: var(--glow-soft);
+            animation: blink 2s infinite;
+        }
+
+        /* Highlighted Card */
+        .card-highlight {
+            border-color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .card-highlight::before {
+            background: var(--phosphor-bright);
+        }
+
+        /* ============================================
+           FORM ELEMENTS
+           ============================================ */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 16px;
+            color: var(--phosphor-mid);
+            margin-bottom: var(--space-sm);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-label::before {
+            content: '> ';
+            color: var(--phosphor-bright);
+        }
+
+        /* Text Inputs */
+        .form-input {
+            width: 100%;
+            font-family: var(--font-code);
+            font-size: 16px;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--crt-black);
+            border: 1px solid var(--phosphor-dark);
+            color: var(--phosphor-bright);
+            caret-color: var(--phosphor-bright);
+            transition: var(--transition-fast);
+        }
+
+        .form-input::placeholder {
+            color: var(--phosphor-ghost);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-input:disabled {
+            background: var(--crt-surface);
+            color: var(--phosphor-ghost);
+            cursor: not-allowed;
+        }
+
+        /* Textarea */
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Select */
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ff00' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        /* Checkbox */
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            cursor: pointer;
+            font-family: var(--font-code);
+            color: var(--phosphor-mid);
+        }
+
+        .form-checkbox input {
+            display: none;
+        }
+
+        .checkbox-mark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--phosphor-dark);
+            background: var(--crt-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            color: var(--phosphor-bright);
+            transition: var(--transition-fast);
+        }
+
+        .form-checkbox input:checked + .checkbox-mark {
+            border-color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-checkbox input:checked + .checkbox-mark::after {
+            content: 'X';
+            text-shadow: var(--glow-soft);
+        }
+
+        .form-checkbox:hover .checkbox-mark {
+            border-color: var(--phosphor-dim);
+        }
+
+        /* Radio */
+        .form-radio {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            cursor: pointer;
+            font-family: var(--font-code);
+            color: var(--phosphor-mid);
+        }
+
+        .form-radio input {
+            display: none;
+        }
+
+        .radio-mark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--phosphor-dark);
+            border-radius: 50%;
+            background: var(--crt-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-fast);
+        }
+
+        .form-radio input:checked + .radio-mark {
+            border-color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-radio input:checked + .radio-mark::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--phosphor-bright);
+            border-radius: 50%;
+            box-shadow: var(--glow-soft);
+        }
+
+        /* Toggle Switch */
+        .form-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            cursor: pointer;
+            font-family: var(--font-code);
+            color: var(--phosphor-mid);
+        }
+
+        .form-toggle input {
+            display: none;
+        }
+
+        .toggle-track {
+            width: 50px;
+            height: 24px;
+            background: var(--crt-black);
+            border: 2px solid var(--phosphor-dark);
+            position: relative;
+            transition: var(--transition-fast);
+        }
+
+        .toggle-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--phosphor-dark);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: var(--transition-fast);
+        }
+
+        .form-toggle input:checked + .toggle-track {
+            border-color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-toggle input:checked + .toggle-track .toggle-thumb {
+            background: var(--phosphor-bright);
+            left: 28px;
+            box-shadow: var(--glow-soft);
+        }
+
+        /* Range Slider */
+        .form-range {
+            width: 100%;
+            height: 4px;
+            background: var(--crt-black);
+            border: 1px solid var(--phosphor-dark);
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--phosphor-bright);
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-range::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--phosphor-bright);
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--glow-soft);
+        }
+
+        .form-range:focus {
+            outline: none;
+        }
+
+        .form-range:focus::-webkit-slider-thumb {
+            box-shadow: var(--glow-medium);
+        }
+
+        /* Form Helper Text */
+        .form-help {
+            font-size: 12px;
+            color: var(--phosphor-faded);
+            margin-top: var(--space-xs);
+        }
+
+        .form-error {
+            color: var(--status-error);
+            border-color: var(--status-error);
+        }
+
+        .form-error .form-input {
+            border-color: var(--status-error);
+        }
+
+        /* ============================================
+           TABLES
+           ============================================ */
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--phosphor-dark);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-code);
+            font-size: 14px;
+        }
+
+        .table th,
+        .table td {
+            padding: var(--space-sm) var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--phosphor-ghost);
+        }
+
+        .table th {
+            font-family: var(--font-display);
+            font-size: 16px;
+            color: var(--phosphor-bright);
+            background: var(--crt-deep);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--phosphor-dark);
+        }
+
+        .table td {
+            color: var(--phosphor-mid);
+        }
+
+        .table tr:hover td {
+            background: var(--crt-surface);
+            color: var(--phosphor-bright);
+        }
+
+        .table-striped tr:nth-child(even) td {
+            background: var(--crt-surface);
+        }
+
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid var(--phosphor-ghost);
+        }
+
+        /* Table Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+        }
+
+        .status-dot.offline {
+            background: var(--status-error);
+            box-shadow: 0 0 5px var(--status-error);
+            animation: none;
+        }
+
+        .status-dot.warning {
+            background: var(--status-warning);
+            box-shadow: 0 0 5px var(--status-warning);
+        }
+
+        /* ============================================
+           ALERTS & NOTIFICATIONS
+           ============================================ */
+
+        .alert-grid {
+            display: grid;
+            gap: var(--space-md);
+        }
+
+        .alert {
+            padding: var(--space-md);
+            border: 1px solid var(--phosphor-dark);
+            background: var(--crt-surface);
+            font-family: var(--font-code);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+        }
+
+        .alert::before {
+            font-family: var(--font-display);
+            font-size: 14px;
+            padding: 2px 8px;
+            background: var(--crt-deep);
+            border: 1px solid currentColor;
+            white-space: nowrap;
+        }
+
+        .alert-message {
+            flex: 1;
+            color: var(--phosphor-mid);
+        }
+
+        .alert-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: var(--space-xs);
+        }
+
+        /* Alert Types */
+        .alert-info {
+            border-color: var(--status-info);
+        }
+
+        .alert-info::before {
+            content: 'INFO';
+            color: var(--status-info);
+        }
+
+        .alert-info .alert-title {
+            color: var(--status-info);
+        }
+
+        .alert-success {
+            border-color: var(--phosphor-bright);
+        }
+
+        .alert-success::before {
+            content: 'SUCCESS';
+            color: var(--phosphor-bright);
+        }
+
+        .alert-success .alert-title {
+            color: var(--phosphor-bright);
+            text-shadow: var(--glow-soft);
+        }
+
+        .alert-warning {
+            border-color: var(--status-warning);
+        }
+
+        .alert-warning::before {
+            content: 'WARNING';
+            color: var(--status-warning);
+        }
+
+        .alert-warning .alert-title {
+            color: var(--status-warning);
+        }
+
+        .alert-error {
+            border-color: var(--status-error);
+        }
+
+        .alert-error::before {
+            content: 'ERROR';
+            color: var(--status-error);
+        }
+
+        .alert-error .alert-title {
+            color: var(--status-error);
+        }
+
+        /* System Message Style */
+        .alert-system {
+            background: var(--crt-black);
+            border: 2px solid var(--phosphor-bright);
+            font-family: var(--font-display);
+            text-align: center;
+            animation: glow-pulse 2s infinite;
+        }
+
+        .alert-system::before {
+            content: none;
+        }
+
+        .alert-system .alert-message {
+            color: var(--phosphor-bright);
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: var(--space-xl);
+            right: var(--space-xl);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--crt-deep);
+            border: 1px solid var(--phosphor-bright);
+            font-family: var(--font-code);
+            color: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+            z-index: 1001;
+        }
+
+        .toast::before {
+            content: '> ';
+        }
+
+        /* ============================================
+           PROGRESS & LOADING
+           ============================================ */
+
+        .progress-container {
+            margin-bottom: var(--space-lg);
+        }
+
+        .progress-label {
+            font-family: var(--font-code);
+            font-size: 14px;
+            color: var(--phosphor-dim);
+            margin-bottom: var(--space-xs);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: var(--crt-black);
+            border: 1px solid var(--phosphor-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--phosphor-bright);
+            box-shadow: var(--glow-soft);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(90deg, var(--phosphor-bright), var(--phosphor-mid));
+        }
+
+        /* ASCII Progress */
+        .progress-ascii {
+            font-family: var(--font-code);
+            color: var(--phosphor-bright);
+            letter-spacing: 2px;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: var(--font-code);
+            color: var(--phosphor-mid);
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--phosphor-ghost);
+            border-top-color: var(--phosphor-bright);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+
+        .mt-sm { margin-top: var(--space-sm); }
+        .mt-md { margin-top: var(--space-md); }
+        .mt-lg { margin-top: var(--space-lg); }
+        .mt-xl { margin-top: var(--space-xl); }
+
+        .mb-sm { margin-bottom: var(--space-sm); }
+        .mb-md { margin-bottom: var(--space-md); }
+        .mb-lg { margin-bottom: var(--space-lg); }
+        .mb-xl { margin-bottom: var(--space-xl); }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-sm { gap: var(--space-sm); }
+        .gap-md { gap: var(--space-md); }
+
+        /* Boot Sequence Animation */
+        .boot-text {
+            font-family: var(--font-code);
+            color: var(--phosphor-dim);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .boot-text .highlight {
+            color: var(--phosphor-bright);
+        }
+
+        /* Decorative Elements */
+        .divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--phosphor-dark), transparent);
+            margin: var(--space-xl) 0;
+        }
+
+        .divider-dashed {
+            border: none;
+            height: 0;
+            border-top: 1px dashed var(--phosphor-ghost);
+            margin: var(--space-lg) 0;
+        }
+
+        .matrix-bg {
+            position: relative;
+        }
+
+        .matrix-bg::before {
+            content: '101010101010101010101010101010';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            font-family: var(--font-code);
+            font-size: 10px;
+            color: var(--phosphor-ghost);
+            opacity: 0.3;
+            overflow: hidden;
+            word-break: break-all;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <!-- HEADER -->
+        <header class="terminal-header">
+            <h1 class="terminal-title">RETRO TERMINAL</h1>
+            <p class="terminal-subtitle">Phosphor CRT Design System v1.0</p>
+        </header>
+
+        <!-- TYPOGRAPHY SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">TYPOGRAPHY</h2>
+                <span class="section-description">Font rendering on phosphor display</span>
+            </div>
+
+            <div class="prompt">Initializing font subsystem...<span class="cursor"></span></div>
+
+            <div class="typography-grid">
+                <div class="type-sample">
+                    <div class="type-label">H1 / VT323 48px</div>
+                    <h1>SYSTEM ONLINE</h1>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">H2 / VT323 36px</div>
+                    <h2>ACCESS GRANTED</h2>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">H3 / VT323 28px</div>
+                    <h3>Terminal Ready</h3>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">H4 / VT323 24px</div>
+                    <h4>Command Prompt Active</h4>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">H5 / VT323 20px</div>
+                    <h5>Subprocess Initialized</h5>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">H6 / VT323 16px</div>
+                    <h6>DIAGNOSTIC MODE</h6>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">Body / IBM Plex Mono 16px</div>
+                    <p>The phosphor glow of old CRT monitors casts an eerie green light across the terminal. Each character burns into the screen, leaving ghost images of commands long executed. The hum of the monitor fills the silence between keystrokes.</p>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">Code / Fira Code 16px</div>
+                    <pre><code>function accessMainframe() {
+    const connection = await establish();
+    return connection.status === 'ONLINE';
+}</code></pre>
+                </div>
+
+                <div class="type-sample">
+                    <div class="type-label">Links & Inline Elements</div>
+                    <p>Access the <a href="#">main database</a> or view <code>system.config</code> for more options. <span class="text-bright">Highlighted text</span> stands out while <span class="text-dim">dimmed text</span> fades into the background.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLORS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">COLORS</h2>
+                <span class="section-description">Phosphor palette configuration</span>
+            </div>
+
+            <div class="prompt">Loading color profiles...<span class="cursor"></span></div>
+
+            <div class="color-group">
+                <h3 class="color-group-title">PHOSPHOR GREENS</h3>
+                <div class="color-grid">
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--phosphor-bright); color: var(--phosphor-bright);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Bright</div>
+                            <div class="color-value">#00ff00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--phosphor-mid); color: var(--phosphor-mid);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Mid</div>
+                            <div class="color-value">#33ff33</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--phosphor-dim);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Dim</div>
+                            <div class="color-value">#00cc00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--phosphor-dark);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Dark</div>
+                            <div class="color-value">#009900</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--phosphor-faded);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Faded</div>
+                            <div class="color-value">#006600</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--phosphor-ghost);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Phosphor Ghost</div>
+                            <div class="color-value">#003300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <h3 class="color-group-title">SCREEN BLACKS</h3>
+                <div class="color-grid">
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--crt-black); border: 1px solid var(--phosphor-ghost);"></div>
+                        <div class="color-info">
+                            <div class="color-name">CRT Black</div>
+                            <div class="color-value">#000a00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--crt-deep);"></div>
+                        <div class="color-info">
+                            <div class="color-name">CRT Deep</div>
+                            <div class="color-value">#001100</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--crt-surface);"></div>
+                        <div class="color-info">
+                            <div class="color-name">CRT Surface</div>
+                            <div class="color-value">#001a00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--crt-elevated);"></div>
+                        <div class="color-info">
+                            <div class="color-name">CRT Elevated</div>
+                            <div class="color-value">#002200</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <h3 class="color-group-title">AMBER VARIANT</h3>
+                <div class="color-grid">
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--amber-bright); color: var(--amber-bright);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Amber Bright</div>
+                            <div class="color-value">#ffb000</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--amber-mid);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Amber Mid</div>
+                            <div class="color-value">#cc8800</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--amber-dim);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Amber Dim</div>
+                            <div class="color-value">#996600</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <h3 class="color-group-title">STATUS COLORS</h3>
+                <div class="color-grid">
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--status-success); color: var(--status-success);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Success</div>
+                            <div class="color-value">#00ff00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--status-warning); color: var(--status-warning);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Warning</div>
+                            <div class="color-value">#ffcc00</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--status-error); color: var(--status-error);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Error</div>
+                            <div class="color-value">#ff3333</div>
+                        </div>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview glow" style="background: var(--status-info); color: var(--status-info);"></div>
+                        <div class="color-info">
+                            <div class="color-name">Info</div>
+                            <div class="color-value">#00ccff</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BUTTONS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">BUTTONS</h2>
+                <span class="section-description">Interactive command elements</span>
+            </div>
+
+            <div class="prompt">Rendering button matrix...<span class="cursor"></span></div>
+
+            <h4 class="mb-md">Standard Buttons</h4>
+            <div class="button-grid">
+                <button class="btn btn-primary">EXECUTE</button>
+                <button class="btn">RUN</button>
+                <button class="btn btn-secondary">STANDBY</button>
+                <button class="btn btn-ghost">CANCEL</button>
+            </div>
+
+            <h4 class="mb-md">Status Buttons</h4>
+            <div class="button-grid">
+                <button class="btn btn-danger">ABORT</button>
+                <button class="btn btn-amber">CAUTION</button>
+                <button class="btn" disabled>OFFLINE</button>
+            </div>
+
+            <h4 class="mb-md">Button Sizes</h4>
+            <div class="button-grid">
+                <button class="btn btn-sm">SMALL</button>
+                <button class="btn">DEFAULT</button>
+                <button class="btn btn-lg">LARGE</button>
+            </div>
+        </section>
+
+        <!-- CARDS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">CARDS</h2>
+                <span class="section-description">Data display containers</span>
+            </div>
+
+            <div class="prompt">Assembling card components...<span class="cursor"></span></div>
+
+            <div class="card-grid">
+                <div class="card card-terminal">
+                    <div class="card-header">
+                        <span class="card-title">SYSTEM STATUS</span>
+                        <span class="card-status active">ONLINE</span>
+                    </div>
+                    <div class="card-body">
+                        <p>All systems operational. CPU utilization at 23%. Memory allocation stable. No critical errors detected in the last 24 hours.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm">DETAILS</button>
+                        <button class="btn btn-sm btn-ghost">LOGS</button>
+                    </div>
+                </div>
+
+                <div class="card card-matrix">
+                    <div class="card-header">
+                        <span class="card-title">DATA STREAM</span>
+                        <span class="card-status">ACTIVE</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Incoming data packets processed: 1,247,893. Transfer rate: 2.4 MB/s. Buffer status: nominal. Encryption: AES-256.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-secondary">MONITOR</button>
+                    </div>
+                </div>
+
+                <div class="card card-highlight">
+                    <div class="card-header">
+                        <span class="card-title">PRIORITY ALERT</span>
+                        <span class="card-status active">URGENT</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Security scan complete. 3 anomalies detected in sector 7G. Immediate review recommended. Authentication tokens refreshed.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-primary">INVESTIGATE</button>
+                        <button class="btn btn-sm btn-danger">QUARANTINE</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FORM ELEMENTS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">FORM ELEMENTS</h2>
+                <span class="section-description">User input interfaces</span>
+            </div>
+
+            <div class="prompt">Initializing input handlers...<span class="cursor"></span></div>
+
+            <div class="form-grid">
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">USERNAME</label>
+                        <input type="text" class="form-input" placeholder="Enter username...">
+                        <div class="form-help">Alphanumeric characters only</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">PASSWORD</label>
+                        <input type="password" class="form-input" placeholder="Enter password...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ACCESS LEVEL</label>
+                        <select class="form-input form-select">
+                            <option>GUEST</option>
+                            <option>USER</option>
+                            <option>ADMIN</option>
+                            <option>ROOT</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">COMMAND INPUT</label>
+                        <textarea class="form-input form-textarea" placeholder="Enter commands..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">DISABLED INPUT</label>
+                        <input type="text" class="form-input" value="LOCKED" disabled>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">CHECKBOXES</label>
+                        <div class="flex flex-wrap gap-md">
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked>
+                                <span class="checkbox-mark"></span>
+                                <span>Enable logging</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox">
+                                <span class="checkbox-mark"></span>
+                                <span>Auto-save</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked>
+                                <span class="checkbox-mark"></span>
+                                <span>Notifications</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">RADIO SELECTION</label>
+                        <div class="flex flex-wrap gap-md">
+                            <label class="form-radio">
+                                <input type="radio" name="mode" checked>
+                                <span class="radio-mark"></span>
+                                <span>Normal</span>
+                            </label>
+                            <label class="form-radio">
+                                <input type="radio" name="mode">
+                                <span class="radio-mark"></span>
+                                <span>Safe</span>
+                            </label>
+                            <label class="form-radio">
+                                <input type="radio" name="mode">
+                                <span class="radio-mark"></span>
+                                <span>Debug</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">TOGGLE SWITCHES</label>
+                        <div class="flex flex-wrap gap-md mt-sm">
+                            <label class="form-toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-track">
+                                    <span class="toggle-thumb"></span>
+                                </span>
+                                <span>Dark mode</span>
+                            </label>
+                            <label class="form-toggle">
+                                <input type="checkbox">
+                                <span class="toggle-track">
+                                    <span class="toggle-thumb"></span>
+                                </span>
+                                <span>Sound</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">POWER LEVEL</label>
+                        <input type="range" class="form-range" min="0" max="100" value="75">
+                    </div>
+
+                    <div class="form-group form-error">
+                        <label class="form-label">ERROR STATE</label>
+                        <input type="text" class="form-input" value="INVALID_INPUT">
+                        <div class="form-help" style="color: var(--status-error);">Error: Input validation failed</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABLES SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">TABLES</h2>
+                <span class="section-description">Structured data display</span>
+            </div>
+
+            <div class="prompt">Querying database records...<span class="cursor"></span></div>
+
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>PROCESS NAME</th>
+                            <th>CPU %</th>
+                            <th>MEMORY</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>001</td>
+                            <td>system_core</td>
+                            <td>12.4%</td>
+                            <td>256 MB</td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="status-dot online"></span>
+                                    RUNNING
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>002</td>
+                            <td>network_daemon</td>
+                            <td>3.2%</td>
+                            <td>64 MB</td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="status-dot online"></span>
+                                    RUNNING
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>003</td>
+                            <td>security_scan</td>
+                            <td>45.8%</td>
+                            <td>512 MB</td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="status-dot warning"></span>
+                                    HIGH LOAD
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>004</td>
+                            <td>backup_service</td>
+                            <td>0.0%</td>
+                            <td>32 MB</td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="status-dot offline"></span>
+                                    STOPPED
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>005</td>
+                            <td>log_monitor</td>
+                            <td>1.7%</td>
+                            <td>48 MB</td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="status-dot online"></span>
+                                    RUNNING
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ALERTS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">ALERTS</h2>
+                <span class="section-description">System notifications</span>
+            </div>
+
+            <div class="prompt">Displaying system messages...<span class="cursor"></span></div>
+
+            <div class="alert-grid">
+                <div class="alert alert-success">
+                    <div class="alert-message">
+                        <div class="alert-title">CONNECTION ESTABLISHED</div>
+                        <p>Secure link to mainframe confirmed. All protocols verified. Session ID: 7F3A2B.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <div class="alert-message">
+                        <div class="alert-title">SYSTEM UPDATE AVAILABLE</div>
+                        <p>Version 2.4.1 ready for installation. Estimated downtime: 15 minutes. Schedule update during off-peak hours.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-message">
+                        <div class="alert-title">MEMORY THRESHOLD REACHED</div>
+                        <p>System memory usage at 85%. Consider terminating non-essential processes or increasing allocation.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-error">
+                    <div class="alert-message">
+                        <div class="alert-title">AUTHENTICATION FAILURE</div>
+                        <p>Multiple failed login attempts detected from IP 192.168.1.47. Account temporarily locked. Review security logs.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-system">
+                    <div class="alert-message">
+                        >>> SYSTEM REBOOT SCHEDULED IN 00:30:00 <<<
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROGRESS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">PROGRESS</h2>
+                <span class="section-description">Loading and status indicators</span>
+            </div>
+
+            <div class="prompt">Monitoring transfer progress...<span class="cursor"></span></div>
+
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>DOWNLOADING: system_update.bin</span>
+                    <span>73%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 73%;"></div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>SCANNING: /var/log/*</span>
+                    <span>45%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 45%;"></div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>BACKUP: database.sql</span>
+                    <span>100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="mt-lg mb-lg">
+                <div class="progress-ascii">
+                    [##########..........] 50% - Processing...
+                </div>
+            </div>
+
+            <div class="flex gap-md items-center">
+                <span class="loading">
+                    <span class="loading-spinner"></span>
+                    Loading modules...
+                </span>
+            </div>
+        </section>
+
+        <!-- BOOT SEQUENCE -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">BOOT SEQUENCE</h2>
+                <span class="section-description">System initialization log</span>
+            </div>
+
+            <div class="boot-text">
+                <p><span class="highlight">[OK]</span> Initializing kernel...</p>
+                <p><span class="highlight">[OK]</span> Loading device drivers...</p>
+                <p><span class="highlight">[OK]</span> Mounting file systems...</p>
+                <p><span class="highlight">[OK]</span> Starting network services...</p>
+                <p><span class="highlight">[OK]</span> Loading security modules...</p>
+                <p><span class="highlight">[OK]</span> Starting user interface...</p>
+                <p><span class="highlight">[OK]</span> System ready.</p>
+                <p>&nbsp;</p>
+                <p class="text-bright">RETRO TERMINAL v1.0 - Phosphor CRT Design System</p>
+                <p>Copyright (c) 2024 - All Rights Reserved</p>
+                <p>&nbsp;</p>
+                <p>Type 'help' for available commands.<span class="cursor"></span></p>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="section" style="text-align: center; padding: var(--space-lg);">
+            <div class="boot-text">
+                <p class="text-bright">/// END OF TRANSMISSION ///</p>
+                <p>Session terminated. Connection closed.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Demo (static for display) -->
+    <div class="toast" style="display: none;">
+        Command executed successfully
+    </div>
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>

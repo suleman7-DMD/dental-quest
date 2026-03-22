@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUTALIST WEB -- A Design System That Doesn't Care</title>
+    <style>
+        /* ============================================
+           BRUTALIST WEB DESIGN SYSTEM
+           ============================================
+           No polish. No refinement. Raw HTML energy.
+           Function over form. Structure exposed.
+           Like looking at a building's skeleton.
+           ============================================ */
+
+        :root {
+            /* PRIMARY: Black and White only */
+            --black: #000000;
+            --white: #FFFFFF;
+
+            /* HARSH ACCENTS: Used sparingly, aggressively */
+            --brutal-red: #FF0000;
+            --brutal-blue: #0000FF;
+            --brutal-yellow: #FFFF00;
+            --brutal-green: #00FF00;
+            --brutal-magenta: #FF00FF;
+            --brutal-cyan: #00FFFF;
+
+            /* GRAYS: Web-safe, system-level */
+            --gray-light: #C0C0C0;
+            --gray-medium: #808080;
+            --gray-dark: #404040;
+
+            /* SYSTEM FONTS: No fancy imports */
+            --font-serif: 'Times New Roman', Times, Georgia, serif;
+            --font-sans: Arial, Helvetica, sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+
+            /* BORDERS: Always visible, always harsh */
+            --border-thin: 1px solid var(--black);
+            --border-thick: 2px solid var(--black);
+            --border-brutal: 3px solid var(--black);
+            --border-dotted: 2px dotted var(--black);
+            --border-dashed: 2px dashed var(--black);
+
+            /* SPACING: Arbitrary, dense */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+        }
+
+        /* RESET: Minimal, deliberate */
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: auto; /* no smooth scrolling, raw jumps */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            line-height: 1.4;
+            color: var(--black);
+            background: var(--white);
+            /* NO anti-aliasing preference - let the browser do what it wants */
+        }
+
+        /* ============================================
+           LAYOUT: Exposed Grid Structure
+           ============================================ */
+
+        .page-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            border-left: var(--border-brutal);
+            border-right: var(--border-brutal);
+            min-height: 100vh;
+        }
+
+        .container {
+            padding: var(--space-md);
+            border-bottom: var(--border-thin);
+        }
+
+        .grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .grid-row {
+            display: table-row;
+        }
+
+        .grid-cell {
+            display: table-cell;
+            padding: var(--space-sm);
+            border: var(--border-thin);
+            vertical-align: top;
+        }
+
+        /* Alternative flexbox grid - visible structure */
+        .flex-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border: var(--border-thin);
+        }
+
+        .flex-cell {
+            flex: 1 1 200px;
+            padding: var(--space-md);
+            border: var(--border-thin);
+            min-width: 0;
+        }
+
+        .flex-cell-half {
+            flex: 0 0 50%;
+            padding: var(--space-md);
+            border: var(--border-thin);
+        }
+
+        .flex-cell-third {
+            flex: 0 0 33.333%;
+            padding: var(--space-md);
+            border: var(--border-thin);
+        }
+
+        .flex-cell-quarter {
+            flex: 0 0 25%;
+            padding: var(--space-md);
+            border: var(--border-thin);
+        }
+
+        @media (max-width: 600px) {
+            .flex-cell-half,
+            .flex-cell-third,
+            .flex-cell-quarter {
+                flex: 0 0 100%;
+            }
+        }
+
+        /* ============================================
+           HEADER: Raw and Aggressive
+           ============================================ */
+
+        .site-header {
+            background: var(--black);
+            color: var(--white);
+            padding: var(--space-xl);
+            border-bottom: 4px solid var(--brutal-red);
+        }
+
+        .site-header h1 {
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0 0 var(--space-sm) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .site-header .tagline {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            font-style: italic;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .site-header .version {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            margin-top: var(--space-md);
+            padding: var(--space-xs) var(--space-sm);
+            background: var(--brutal-yellow);
+            color: var(--black);
+            display: inline-block;
+        }
+
+        /* ============================================
+           NAVIGATION: Exposed Links
+           ============================================ */
+
+        .nav-bar {
+            background: var(--gray-light);
+            padding: var(--space-sm);
+            border-bottom: var(--border-thick);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+        }
+
+        .nav-bar a {
+            color: var(--black);
+            text-decoration: underline;
+            margin-right: var(--space-md);
+            display: inline-block;
+        }
+
+        .nav-bar a:hover {
+            background: var(--black);
+            color: var(--white);
+            text-decoration: none;
+            padding: 0 var(--space-xs);
+        }
+
+        .nav-bar a:visited {
+            color: var(--brutal-magenta);
+        }
+
+        /* ============================================
+           SECTION: Visible Structure
+           ============================================ */
+
+        .section {
+            padding: var(--space-xl) var(--space-md);
+            border-bottom: var(--border-brutal);
+        }
+
+        .section:nth-child(even) {
+            background: repeating-linear-gradient(
+                0deg,
+                var(--white),
+                var(--white) 20px,
+                #f8f8f8 20px,
+                #f8f8f8 21px
+            );
+        }
+
+        .section-header {
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-sm);
+            border-bottom: var(--border-dashed);
+        }
+
+        .section-number {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--brutal-red);
+            display: block;
+            margin-bottom: var(--space-xs);
+        }
+
+        .section-title {
+            font-family: var(--font-sans);
+            font-size: 1.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0 0 var(--space-sm) 0;
+            letter-spacing: 0.05em;
+        }
+
+        .section-description {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            margin: 0;
+            max-width: none; /* let text run long */
+        }
+
+        /* ============================================
+           TYPOGRAPHY: System Fonts, Raw Rendering
+           ============================================ */
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-sans);
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0 0 var(--space-sm) 0;
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+        h5 { font-size: 1rem; text-transform: uppercase; }
+        h6 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        p {
+            margin: 0 0 var(--space-md) 0;
+        }
+
+        .text-serif { font-family: var(--font-serif); }
+        .text-sans { font-family: var(--font-sans); }
+        .text-mono { font-family: var(--font-mono); }
+
+        .text-huge {
+            font-size: 4rem;
+            line-height: 1;
+            font-weight: 700;
+        }
+
+        .text-large {
+            font-size: 1.5rem;
+        }
+
+        .text-small {
+            font-size: 0.875rem;
+        }
+
+        .text-tiny {
+            font-size: 0.75rem;
+        }
+
+        .text-uppercase {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .text-underline {
+            text-decoration: underline;
+        }
+
+        .text-strike {
+            text-decoration: line-through;
+        }
+
+        blockquote {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            font-style: italic;
+            margin: var(--space-md) 0;
+            padding: var(--space-md);
+            border-left: 4px solid var(--black);
+            background: var(--gray-light);
+        }
+
+        pre, code {
+            font-family: var(--font-mono);
+            background: var(--black);
+            color: var(--brutal-green);
+            padding: var(--space-xs);
+        }
+
+        pre {
+            padding: var(--space-md);
+            overflow-x: auto;
+            border: var(--border-thick);
+            margin: var(--space-md) 0;
+        }
+
+        code {
+            font-size: 0.875em;
+        }
+
+        /* ============================================
+           LINKS: Obvious, Obnoxious
+           ============================================ */
+
+        a {
+            color: var(--brutal-blue);
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: var(--brutal-magenta);
+        }
+
+        a:hover {
+            color: var(--white);
+            background: var(--brutal-blue);
+            text-decoration: none;
+        }
+
+        a:active {
+            color: var(--brutal-red);
+            background: var(--brutal-yellow);
+        }
+
+        /* ============================================
+           01. COLORS: Harsh Web-Safe Palette
+           ============================================ */
+
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border: var(--border-thick);
+        }
+
+        .color-swatch {
+            flex: 0 0 25%;
+            aspect-ratio: 1;
+            padding: var(--space-sm);
+            border: var(--border-thin);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .color-swatch-name {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .color-swatch-value {
+            opacity: 0.8;
+        }
+
+        .color-swatch-large {
+            flex: 0 0 50%;
+        }
+
+        @media (max-width: 600px) {
+            .color-swatch {
+                flex: 0 0 50%;
+            }
+            .color-swatch-large {
+                flex: 0 0 100%;
+            }
+        }
+
+        /* ============================================
+           02. TYPOGRAPHY SPECIMENS
+           ============================================ */
+
+        .type-specimen {
+            border: var(--border-thin);
+            margin-bottom: var(--space-md);
+        }
+
+        .type-specimen-header {
+            background: var(--gray-light);
+            padding: var(--space-sm);
+            border-bottom: var(--border-thin);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .type-specimen-body {
+            padding: var(--space-md);
+        }
+
+        .type-specimen-meta {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            color: var(--gray-medium);
+            margin-top: var(--space-xs);
+        }
+
+        /* ============================================
+           03. SPACING: Visible Scale
+           ============================================ */
+
+        .spacing-demo {
+            border: var(--border-thin);
+        }
+
+        .spacing-row {
+            display: flex;
+            align-items: center;
+            border-bottom: var(--border-thin);
+            padding: var(--space-sm);
+        }
+
+        .spacing-row:last-child {
+            border-bottom: none;
+        }
+
+        .spacing-label {
+            width: 80px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .spacing-bar {
+            height: 24px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--black),
+                var(--black) 2px,
+                var(--white) 2px,
+                var(--white) 4px
+            );
+            border: var(--border-thin);
+        }
+
+        .spacing-value {
+            margin-left: var(--space-sm);
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            color: var(--gray-medium);
+        }
+
+        /* ============================================
+           04. BUTTONS: Raw, Functional
+           ============================================ */
+
+        .btn {
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: var(--space-sm) var(--space-md);
+            border: var(--border-thick);
+            background: var(--white);
+            color: var(--black);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn:hover {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .btn:active {
+            background: var(--brutal-red);
+            border-color: var(--brutal-red);
+            color: var(--white);
+        }
+
+        .btn-primary {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .btn-danger {
+            background: var(--brutal-red);
+            border-color: var(--brutal-red);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: var(--white);
+            color: var(--brutal-red);
+            border-color: var(--brutal-red);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-style: dashed;
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-light);
+            border-style: solid;
+        }
+
+        .btn-small {
+            font-size: 0.75rem;
+            padding: var(--space-xs) var(--space-sm);
+        }
+
+        .btn-large {
+            font-size: 1.25rem;
+            padding: var(--space-md) var(--space-xl);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0;
+        }
+
+        .button-group .btn {
+            border-right-width: 0;
+        }
+
+        .button-group .btn:last-child {
+            border-right-width: 2px;
+        }
+
+        .button-row {
+            margin-bottom: var(--space-md);
+        }
+
+        .button-row .btn {
+            margin-right: var(--space-sm);
+            margin-bottom: var(--space-sm);
+        }
+
+        /* ============================================
+           05. FORMS: Functional, Exposed
+           ============================================ */
+
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+            background: var(--black);
+            color: var(--white);
+            padding: var(--space-xs) var(--space-sm);
+            display: inline-block;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            padding: var(--space-sm);
+            border: var(--border-thick);
+            background: var(--white);
+            color: var(--black);
+            width: 100%;
+            display: block;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: 3px solid var(--brutal-blue);
+            outline-offset: 0;
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 40px;
+        }
+
+        .form-checkbox,
+        .form-radio {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: var(--font-serif);
+            margin-bottom: var(--space-sm);
+            cursor: pointer;
+        }
+
+        .form-checkbox input,
+        .form-radio input {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--gray-medium);
+            margin-top: var(--space-xs);
+        }
+
+        .form-error {
+            color: var(--brutal-red);
+            background: var(--brutal-yellow);
+            padding: var(--space-xs) var(--space-sm);
+        }
+
+        fieldset {
+            border: var(--border-thick);
+            padding: var(--space-md);
+            margin: 0 0 var(--space-md) 0;
+        }
+
+        legend {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0 var(--space-sm);
+            background: var(--white);
+        }
+
+        /* ============================================
+           06. CARDS: Boxed Content
+           ============================================ */
+
+        .card {
+            border: var(--border-brutal);
+            margin-bottom: var(--space-md);
+        }
+
+        .card-header {
+            background: var(--black);
+            color: var(--white);
+            padding: var(--space-sm) var(--space-md);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-body {
+            padding: var(--space-md);
+        }
+
+        .card-footer {
+            background: var(--gray-light);
+            padding: var(--space-sm) var(--space-md);
+            border-top: var(--border-thin);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .card-bordered {
+            border: var(--border-dotted);
+        }
+
+        .card-outlined {
+            border: var(--border-dashed);
+            background: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 10px,
+                rgba(0,0,0,0.03) 10px,
+                rgba(0,0,0,0.03) 20px
+            );
+        }
+
+        .card-inverted {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .card-inverted .card-header {
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .card-inverted .card-footer {
+            background: var(--gray-dark);
+            color: var(--white);
+            border-color: var(--gray-dark);
+        }
+
+        .card-highlight {
+            border-color: var(--brutal-red);
+            border-width: 4px;
+        }
+
+        .card-highlight .card-header {
+            background: var(--brutal-red);
+        }
+
+        /* ============================================
+           07. DATA TABLE: Dense Information
+           ============================================ */
+
+        .table-wrapper {
+            overflow-x: auto;
+            border: var(--border-thick);
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: var(--space-sm);
+            border: var(--border-thin);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .data-table th {
+            background: var(--black);
+            color: var(--white);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: var(--gray-light);
+        }
+
+        .data-table tr:hover td {
+            background: var(--brutal-yellow);
+        }
+
+        .data-table td.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-table tfoot {
+            background: var(--gray-light);
+            font-weight: 700;
+        }
+
+        .data-table tfoot td {
+            border-top: var(--border-thick);
+        }
+
+        /* Dense variant */
+        .data-table-dense th,
+        .data-table-dense td {
+            padding: var(--space-xs);
+            font-size: 0.75rem;
+        }
+
+        /* Striped variant */
+        .data-table-striped tr:nth-child(odd) {
+            background: repeating-linear-gradient(
+                90deg,
+                var(--white),
+                var(--white) 2px,
+                #f0f0f0 2px,
+                #f0f0f0 4px
+            );
+        }
+
+        /* ============================================
+           08. BADGES: Status Indicators
+           ============================================ */
+
+        .badge {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: var(--space-xs) var(--space-sm);
+            border: var(--border-thin);
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .badge-default {
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .badge-black {
+            background: var(--black);
+            color: var(--white);
+            border-color: var(--black);
+        }
+
+        .badge-red {
+            background: var(--brutal-red);
+            color: var(--white);
+            border-color: var(--brutal-red);
+        }
+
+        .badge-blue {
+            background: var(--brutal-blue);
+            color: var(--white);
+            border-color: var(--brutal-blue);
+        }
+
+        .badge-yellow {
+            background: var(--brutal-yellow);
+            color: var(--black);
+            border-color: var(--black);
+        }
+
+        .badge-green {
+            background: var(--brutal-green);
+            color: var(--black);
+            border-color: var(--black);
+        }
+
+        .badge-outline {
+            background: transparent;
+            border-style: dashed;
+        }
+
+        .badge-large {
+            font-size: 0.75rem;
+            padding: var(--space-sm) var(--space-md);
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+
+        /* ============================================
+           09. DESIGN PRINCIPLES
+           ============================================ */
+
+        .principle {
+            border: var(--border-thick);
+            margin-bottom: var(--space-md);
+        }
+
+        .principle-number {
+            background: var(--black);
+            color: var(--brutal-red);
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            font-weight: 700;
+            padding: var(--space-md);
+            text-align: center;
+        }
+
+        .principle-content {
+            padding: var(--space-md);
+        }
+
+        .principle-title {
+            font-family: var(--font-sans);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: var(--space-sm);
+        }
+
+        .principle-text {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* ============================================
+           UTILITIES: Raw Helpers
+           ============================================ */
+
+        .u-border { border: var(--border-thin) !important; }
+        .u-border-thick { border: var(--border-thick) !important; }
+        .u-border-dashed { border: var(--border-dashed) !important; }
+        .u-border-dotted { border: var(--border-dotted) !important; }
+        .u-border-none { border: none !important; }
+
+        .u-bg-black { background: var(--black) !important; color: var(--white) !important; }
+        .u-bg-white { background: var(--white) !important; color: var(--black) !important; }
+        .u-bg-gray { background: var(--gray-light) !important; }
+        .u-bg-red { background: var(--brutal-red) !important; color: var(--white) !important; }
+        .u-bg-blue { background: var(--brutal-blue) !important; color: var(--white) !important; }
+        .u-bg-yellow { background: var(--brutal-yellow) !important; color: var(--black) !important; }
+
+        .u-text-center { text-align: center !important; }
+        .u-text-right { text-align: right !important; }
+        .u-text-left { text-align: left !important; }
+
+        .u-margin-0 { margin: 0 !important; }
+        .u-padding-0 { padding: 0 !important; }
+        .u-margin-bottom { margin-bottom: var(--space-md) !important; }
+        .u-margin-top { margin-top: var(--space-md) !important; }
+
+        .u-hidden { display: none !important; }
+        .u-visible { display: block !important; }
+
+        .u-full-width { width: 100% !important; }
+
+        /* HORIZONTAL RULE: Visible separator */
+        hr {
+            border: none;
+            height: 4px;
+            background: var(--black);
+            margin: var(--space-lg) 0;
+        }
+
+        hr.dotted {
+            background: none;
+            border-top: var(--border-dotted);
+            height: 0;
+        }
+
+        hr.dashed {
+            background: none;
+            border-top: var(--border-dashed);
+            height: 0;
+        }
+
+        /* LISTS: Dense, structured */
+        ul, ol {
+            margin: 0 0 var(--space-md) 0;
+            padding-left: var(--space-lg);
+        }
+
+        li {
+            margin-bottom: var(--space-xs);
+        }
+
+        ul.list-none {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.list-square {
+            list-style-type: square;
+        }
+
+        /* ============================================
+           FOOTER: End of Document
+           ============================================ */
+
+        .site-footer {
+            background: var(--black);
+            color: var(--white);
+            padding: var(--space-xl);
+            font-family: var(--font-mono);
+            text-align: center;
+        }
+
+        .site-footer p {
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .site-footer a {
+            color: var(--brutal-yellow);
+        }
+
+        .site-footer a:hover {
+            color: var(--black);
+            background: var(--brutal-yellow);
+        }
+
+        /* ============================================
+           SPECIAL ELEMENTS: Brutalist Flourishes
+           ============================================ */
+
+        .warning-box {
+            background: var(--brutal-yellow);
+            border: 4px solid var(--black);
+            padding: var(--space-md);
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .warning-box::before {
+            content: "WARNING: ";
+            color: var(--brutal-red);
+        }
+
+        .info-box {
+            background: var(--brutal-cyan);
+            border: var(--border-thick);
+            padding: var(--space-md);
+            font-family: var(--font-mono);
+        }
+
+        .error-box {
+            background: var(--brutal-red);
+            color: var(--white);
+            border: 4px solid var(--black);
+            padding: var(--space-md);
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .ascii-art {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.1;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        /* Grid overlay helper - for dev */
+        .show-grid {
+            background-image:
+                linear-gradient(to right, rgba(255,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,0,0,0.1) 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+
+        /* Counter element */
+        .counter {
+            font-family: var(--font-mono);
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--brutal-red);
+        }
+
+        /* Marquee-like scroll indicator */
+        .scroll-notice {
+            background: var(--black);
+            color: var(--brutal-yellow);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: var(--space-xs);
+            text-align: center;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- ============================================
+             HEADER
+             ============================================ -->
+        <header class="site-header">
+            <h1>BRUTALIST WEB</h1>
+            <p class="tagline">"Form follows function - that has been misunderstood. Form and function should be one."</p>
+            <span class="version">v1.0 | SYSTEM FONTS ONLY | NO DEPENDENCIES</span>
+        </header>
+
+        <!-- ============================================
+             NAVIGATION
+             ============================================ -->
+        <nav class="nav-bar">
+            <a href="#colors">01.COLORS</a>
+            <a href="#typography">02.TYPE</a>
+            <a href="#spacing">03.SPACE</a>
+            <a href="#buttons">04.BUTTONS</a>
+            <a href="#forms">05.FORMS</a>
+            <a href="#cards">06.CARDS</a>
+            <a href="#tables">07.TABLES</a>
+            <a href="#badges">08.BADGES</a>
+            <a href="#principles">09.PRINCIPLES</a>
+        </nav>
+
+        <div class="scroll-notice">*** SCROLL TO EXPLORE *** RAW HTML *** NO FRAMEWORK *** FUNCTION &gt; FORM ***</div>
+
+        <!-- ============================================
+             INTRODUCTION
+             ============================================ -->
+        <section class="section">
+            <div class="warning-box">
+                This design system intentionally rejects modern web design conventions. It embraces the raw, unpolished aesthetic of early web pages, system defaults, and architectural brutalism. Beauty is found in honesty, not decoration.
+            </div>
+
+            <div style="margin-top: var(--space-lg);">
+                <p class="text-mono text-small">
+                    BRUTALIST WEB DESIGN is a philosophy, not just an aesthetic. It demands that every element serve a purpose. It exposes structure rather than hiding it. It uses system resources (fonts, colors, borders) without shame. It loads fast. It works everywhere. It doesn't pretend to be something it's not.
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================
+             01. COLORS
+             ============================================ -->
+        <section class="section" id="colors">
+            <div class="section-header">
+                <span class="section-number">01</span>
+                <h2 class="section-title">Colors</h2>
+                <p class="section-description">
+                    Black. White. Web-safe accent colors. No gradients. No subtle shades. Each color is used with intention, never for decoration. The palette is deliberately limited and harsh.
+                </p>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">PRIMARY PALETTE</h3>
+            <div class="color-palette" style="margin-bottom: var(--space-lg);">
+                <div class="color-swatch color-swatch-large" style="background: var(--black); color: var(--white);">
+                    <span class="color-swatch-name">Black</span>
+                    <span class="color-swatch-value">#000000</span>
+                </div>
+                <div class="color-swatch color-swatch-large" style="background: var(--white); color: var(--black); border: 2px solid var(--black);">
+                    <span class="color-swatch-name">White</span>
+                    <span class="color-swatch-value">#FFFFFF</span>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">GRAYS (SYSTEM)</h3>
+            <div class="color-palette" style="margin-bottom: var(--space-lg);">
+                <div class="color-swatch" style="background: #C0C0C0; color: var(--black);">
+                    <span class="color-swatch-name">Silver</span>
+                    <span class="color-swatch-value">#C0C0C0</span>
+                </div>
+                <div class="color-swatch" style="background: #808080; color: var(--white);">
+                    <span class="color-swatch-name">Gray</span>
+                    <span class="color-swatch-value">#808080</span>
+                </div>
+                <div class="color-swatch" style="background: #404040; color: var(--white);">
+                    <span class="color-swatch-name">Dark Gray</span>
+                    <span class="color-swatch-value">#404040</span>
+                </div>
+                <div class="color-swatch" style="background: #f0f0f0; color: var(--black); border: 1px solid var(--black);">
+                    <span class="color-swatch-name">Off-White</span>
+                    <span class="color-swatch-value">#F0F0F0</span>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">ACCENT COLORS (USE SPARINGLY)</h3>
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--brutal-red); color: var(--white);">
+                    <span class="color-swatch-name">Red</span>
+                    <span class="color-swatch-value">#FF0000</span>
+                </div>
+                <div class="color-swatch" style="background: var(--brutal-blue); color: var(--white);">
+                    <span class="color-swatch-name">Blue</span>
+                    <span class="color-swatch-value">#0000FF</span>
+                </div>
+                <div class="color-swatch" style="background: var(--brutal-yellow); color: var(--black);">
+                    <span class="color-swatch-name">Yellow</span>
+                    <span class="color-swatch-value">#FFFF00</span>
+                </div>
+                <div class="color-swatch" style="background: var(--brutal-green); color: var(--black);">
+                    <span class="color-swatch-name">Green</span>
+                    <span class="color-swatch-value">#00FF00</span>
+                </div>
+                <div class="color-swatch" style="background: var(--brutal-cyan); color: var(--black);">
+                    <span class="color-swatch-name">Cyan</span>
+                    <span class="color-swatch-value">#00FFFF</span>
+                </div>
+                <div class="color-swatch" style="background: var(--brutal-magenta); color: var(--white);">
+                    <span class="color-swatch-name">Magenta</span>
+                    <span class="color-swatch-value">#FF00FF</span>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: var(--space-lg);">
+                <strong>NOTE:</strong> These are web-safe colors. They will render identically on all systems. No color profiles needed. No brand consistency issues. Pure, raw, reliable color.
+            </div>
+        </section>
+
+        <!-- ============================================
+             02. TYPOGRAPHY
+             ============================================ -->
+        <section class="section" id="typography">
+            <div class="section-header">
+                <span class="section-number">02</span>
+                <h2 class="section-title">Typography</h2>
+                <p class="section-description">
+                    System fonts only. Times New Roman for body text (the most read font in human history). Arial for headings (universal, unremarkable). Courier for code (honest about its purpose). No font loading. No FOUT. No dependencies.
+                </p>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">FONT STACKS</h3>
+
+            <div class="type-specimen">
+                <div class="type-specimen-header">SERIF: Times New Roman, Times, Georgia, serif</div>
+                <div class="type-specimen-body">
+                    <p class="text-serif text-huge" style="margin-bottom: var(--space-sm);">Aa Bb Cc</p>
+                    <p class="text-serif">The quick brown fox jumps over the lazy dog. Typography exists to honor content. The first obligation of typography is legibility; the second is that it should honor, not degrade, the content.</p>
+                    <p class="type-specimen-meta">DEFAULT BODY TEXT | 16px | line-height: 1.4</p>
+                </div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-specimen-header">SANS-SERIF: Arial, Helvetica, sans-serif</div>
+                <div class="type-specimen-body">
+                    <p class="text-sans text-huge" style="margin-bottom: var(--space-sm);">Aa Bb Cc</p>
+                    <p class="text-sans">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. Headings and UI elements use sans-serif for their functional clarity. No character, just pure utility.</p>
+                    <p class="type-specimen-meta">HEADINGS & UI | VARIABLE SIZES | font-weight: 700</p>
+                </div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-specimen-header">MONOSPACE: Courier New, Courier, monospace</div>
+                <div class="type-specimen-body">
+                    <p class="text-mono text-huge" style="margin-bottom: var(--space-sm);">Aa Bb Cc</p>
+                    <p class="text-mono">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. 0123456789. Code, data, technical content. Every character gets equal width. Honest. Predictable. Machine-like.</p>
+                    <p class="type-specimen-meta">CODE & DATA | TABULAR CONTENT | letter-spacing: 0</p>
+                </div>
+            </div>
+
+            <hr class="dashed">
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">TYPE SCALE</h3>
+
+            <div class="grid">
+                <div class="grid-row">
+                    <div class="grid-cell" style="width: 150px;">
+                        <span class="text-mono text-tiny">DISPLAY</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">4rem / 64px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <span class="text-sans text-huge">Brutalism</span>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">H1</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">2.5rem / 40px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <h1 style="margin: 0;">Heading One</h1>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">H2</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">2rem / 32px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <h2 style="margin: 0;">Heading Two</h2>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">H3</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">1.5rem / 24px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <h3 style="margin: 0;">Heading Three</h3>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">BODY</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">1rem / 16px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <p style="margin: 0;">Body text in Times New Roman. The default. The classic.</p>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">SMALL</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">0.875rem / 14px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <p class="text-small" style="margin: 0;">Small text for captions and metadata.</p>
+                    </div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell">
+                        <span class="text-mono text-tiny">TINY</span><br>
+                        <span class="text-mono text-tiny" style="color: var(--gray-medium);">0.75rem / 12px</span>
+                    </div>
+                    <div class="grid-cell">
+                        <p class="text-tiny" style="margin: 0;">Tiny text for fine print and legal. Still readable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="dashed">
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">SPECIAL TREATMENTS</h3>
+
+            <div class="flex-grid">
+                <div class="flex-cell">
+                    <p class="text-uppercase text-mono text-small"><strong>UPPERCASE</strong></p>
+                    <p class="text-tiny">For labels, badges, and emphasis. Use letter-spacing: 0.1em</p>
+                </div>
+                <div class="flex-cell">
+                    <p class="text-underline"><strong>Underlined Text</strong></p>
+                    <p class="text-tiny">Reserved for links. Classic web convention.</p>
+                </div>
+                <div class="flex-cell">
+                    <p class="text-strike"><strong>Strikethrough</strong></p>
+                    <p class="text-tiny">For deleted or outdated content.</p>
+                </div>
+                <div class="flex-cell">
+                    <p><strong><em>Bold Italic</em></strong></p>
+                    <p class="text-tiny">For extreme emphasis. Use rarely.</p>
+                </div>
+            </div>
+
+            <blockquote style="margin-top: var(--space-lg);">
+                "Good design is honest. It does not make a product more innovative, powerful or valuable than it really is. It does not attempt to manipulate the consumer with promises that cannot be kept."
+                <br><span class="text-small">- Dieter Rams</span>
+            </blockquote>
+        </section>
+
+        <!-- ============================================
+             03. SPACING
+             ============================================ -->
+        <section class="section" id="spacing">
+            <div class="section-header">
+                <span class="section-number">03</span>
+                <h2 class="section-title">Spacing</h2>
+                <p class="section-description">
+                    A simple 4px base unit. Dense but not cramped. Spacing is exposed, not hidden. You can see where things are, how they relate. No magic numbers, just multiplication.
+                </p>
+            </div>
+
+            <div class="spacing-demo">
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-xs</span>
+                    <div class="spacing-bar" style="width: 4px;"></div>
+                    <span class="spacing-value">4px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-sm</span>
+                    <div class="spacing-bar" style="width: 8px;"></div>
+                    <span class="spacing-value">8px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-md</span>
+                    <div class="spacing-bar" style="width: 16px;"></div>
+                    <span class="spacing-value">16px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-lg</span>
+                    <div class="spacing-bar" style="width: 24px;"></div>
+                    <span class="spacing-value">24px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-xl</span>
+                    <div class="spacing-bar" style="width: 32px;"></div>
+                    <span class="spacing-value">32px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-xxl</span>
+                    <div class="spacing-bar" style="width: 48px;"></div>
+                    <span class="spacing-value">48px</span>
+                </div>
+            </div>
+
+            <hr class="dotted">
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">SPACING IN CONTEXT</h3>
+
+            <div class="flex-grid" style="margin-top: var(--space-md);">
+                <div class="flex-cell" style="padding: 4px; background: var(--brutal-yellow);">
+                    <div style="background: var(--white); padding: var(--space-sm); border: var(--border-thin);">
+                        4px padding<br>
+                        <span class="text-mono text-tiny">xs</span>
+                    </div>
+                </div>
+                <div class="flex-cell" style="padding: 8px; background: var(--brutal-yellow);">
+                    <div style="background: var(--white); padding: var(--space-sm); border: var(--border-thin);">
+                        8px padding<br>
+                        <span class="text-mono text-tiny">sm</span>
+                    </div>
+                </div>
+                <div class="flex-cell" style="padding: 16px; background: var(--brutal-yellow);">
+                    <div style="background: var(--white); padding: var(--space-sm); border: var(--border-thin);">
+                        16px padding<br>
+                        <span class="text-mono text-tiny">md</span>
+                    </div>
+                </div>
+                <div class="flex-cell" style="padding: 24px; background: var(--brutal-yellow);">
+                    <div style="background: var(--white); padding: var(--space-sm); border: var(--border-thin);">
+                        24px padding<br>
+                        <span class="text-mono text-tiny">lg</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             04. BUTTONS
+             ============================================ -->
+        <section class="section" id="buttons">
+            <div class="section-header">
+                <span class="section-number">04</span>
+                <h2 class="section-title">Buttons</h2>
+                <p class="section-description">
+                    Rectangular. No rounded corners - those hide the true shape. Thick borders. Obvious hover states. You know exactly what you're clicking. Buttons look like buttons.
+                </p>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">BUTTON VARIANTS</h3>
+
+            <div class="button-row">
+                <button class="btn">DEFAULT</button>
+                <button class="btn btn-primary">PRIMARY</button>
+                <button class="btn btn-danger">DANGER</button>
+                <button class="btn btn-outline">OUTLINE</button>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">BUTTON SIZES</h3>
+
+            <div class="button-row">
+                <button class="btn btn-small">SMALL</button>
+                <button class="btn">MEDIUM</button>
+                <button class="btn btn-large">LARGE</button>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">BUTTON GROUP</h3>
+
+            <div class="button-group" style="margin-bottom: var(--space-md);">
+                <button class="btn">LEFT</button>
+                <button class="btn">CENTER</button>
+                <button class="btn">RIGHT</button>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">BLOCK BUTTON</h3>
+
+            <button class="btn btn-primary btn-block">FULL WIDTH BUTTON</button>
+
+            <div style="margin-top: var(--space-lg); padding: var(--space-md); border: var(--border-dashed); background: var(--gray-light);">
+                <p class="text-mono text-small" style="margin: 0;">
+                    <strong>STATES:</strong> Hover inverts colors. Active adds red flash. Focus uses browser default. No custom focus rings - accessibility defaults work.
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================
+             05. FORMS
+             ============================================ -->
+        <section class="section" id="forms">
+            <div class="section-header">
+                <span class="section-number">05</span>
+                <h2 class="section-title">Forms</h2>
+                <p class="section-description">
+                    Forms collect data. Labels are visible. Inputs have thick borders. Focus states are obvious (blue outline). Monospace fonts for data entry - every character aligned.
+                </p>
+            </div>
+
+            <div class="flex-grid">
+                <div class="flex-cell-half">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" placeholder="Enter your name">
+                        <span class="form-hint">Required field</span>
+                    </div>
+                </div>
+                <div class="flex-cell-half">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" placeholder="you@example.com">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                <select class="form-select">
+                    <option value="">-- Select an option --</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="complaint">Complaint</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea class="form-textarea" placeholder="Type your message here. Be direct. Be clear."></textarea>
+            </div>
+
+            <fieldset>
+                <legend>PREFERENCES</legend>
+
+                <label class="form-checkbox">
+                    <input type="checkbox" checked>
+                    <span>I accept the terms and conditions</span>
+                </label>
+
+                <label class="form-checkbox">
+                    <input type="checkbox">
+                    <span>Subscribe to newsletter</span>
+                </label>
+
+                <label class="form-checkbox">
+                    <input type="checkbox">
+                    <span>Enable notifications</span>
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>CONTACT METHOD</legend>
+
+                <label class="form-radio">
+                    <input type="radio" name="contact" value="email" checked>
+                    <span>Email</span>
+                </label>
+
+                <label class="form-radio">
+                    <input type="radio" name="contact" value="phone">
+                    <span>Phone</span>
+                </label>
+
+                <label class="form-radio">
+                    <input type="radio" name="contact" value="mail">
+                    <span>Physical Mail</span>
+                </label>
+            </fieldset>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" placeholder="Enter password">
+                <span class="form-hint form-error">Error: Password must be at least 8 characters</span>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-primary">SUBMIT</button>
+                <button class="btn">RESET</button>
+            </div>
+        </section>
+
+        <!-- ============================================
+             06. CARDS
+             ============================================ -->
+        <section class="section" id="cards">
+            <div class="section-header">
+                <span class="section-number">06</span>
+                <h2 class="section-title">Cards</h2>
+                <p class="section-description">
+                    Content containers. Visible borders. Headers, bodies, footers - all clearly separated. No shadows (shadows lie about depth). No rounded corners (that's decoration).
+                </p>
+            </div>
+
+            <div class="flex-grid">
+                <div class="flex-cell-third">
+                    <div class="card">
+                        <div class="card-header">DEFAULT CARD</div>
+                        <div class="card-body">
+                            <p>This is a standard card with a black header bar. Content goes here. Keep it dense.</p>
+                        </div>
+                        <div class="card-footer">FOOTER: 2024-01-15</div>
+                    </div>
+                </div>
+                <div class="flex-cell-third">
+                    <div class="card card-bordered">
+                        <div class="card-header">DOTTED BORDER</div>
+                        <div class="card-body">
+                            <p>A softer card variant using dotted borders. Still visible, still honest.</p>
+                        </div>
+                        <div class="card-footer">FOOTER: READ MORE</div>
+                    </div>
+                </div>
+                <div class="flex-cell-third">
+                    <div class="card card-outlined">
+                        <div class="card-header">DASHED + PATTERN</div>
+                        <div class="card-body">
+                            <p>Dashed border with subtle diagonal pattern background. For secondary content.</p>
+                        </div>
+                        <div class="card-footer">FOOTER: OPTIONAL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grid" style="margin-top: var(--space-md);">
+                <div class="flex-cell-half">
+                    <div class="card card-inverted">
+                        <div class="card-header">INVERTED CARD</div>
+                        <div class="card-body">
+                            <p>Black background, white text. For high-impact content that needs attention. Use sparingly.</p>
+                            <p class="text-mono text-small">CODE: #000000 background</p>
+                        </div>
+                        <div class="card-footer">INVERTED FOOTER</div>
+                    </div>
+                </div>
+                <div class="flex-cell-half">
+                    <div class="card card-highlight">
+                        <div class="card-header">HIGHLIGHTED CARD</div>
+                        <div class="card-body">
+                            <p>Red border and header. For warnings, important notices, or featured content.</p>
+                            <span class="badge badge-red">IMPORTANT</span>
+                        </div>
+                        <div class="card-footer">ACTION REQUIRED</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin: var(--space-lg) 0 var(--space-sm) 0;">NUMBERED CARDS</h3>
+
+            <div class="flex-grid">
+                <div class="flex-cell-third">
+                    <div class="card">
+                        <div class="card-body" style="text-align: center;">
+                            <div class="counter">01</div>
+                            <h4 style="margin: var(--space-sm) 0;">Structure</h4>
+                            <p class="text-small" style="margin: 0;">Expose the grid. Show the bones.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-cell-third">
+                    <div class="card">
+                        <div class="card-body" style="text-align: center;">
+                            <div class="counter">02</div>
+                            <h4 style="margin: var(--space-sm) 0;">Function</h4>
+                            <p class="text-small" style="margin: 0;">Every element serves a purpose.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-cell-third">
+                    <div class="card">
+                        <div class="card-body" style="text-align: center;">
+                            <div class="counter">03</div>
+                            <h4 style="margin: var(--space-sm) 0;">Honesty</h4>
+                            <p class="text-small" style="margin: 0;">No decoration. No pretense.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             07. DATA TABLE
+             ============================================ -->
+        <section class="section" id="tables">
+            <div class="section-header">
+                <span class="section-number">07</span>
+                <h2 class="section-title">Data Table</h2>
+                <p class="section-description">
+                    Tables are for data. Dense rows, clear headers, visible borders on every cell. Monospace font for numbers. Yellow highlight on hover. No CSS tricks - just HTML tables.
+                </p>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">STANDARD TABLE</h3>
+
+            <div class="table-wrapper" style="margin-bottom: var(--space-lg);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>COMPONENT</th>
+                            <th>STATUS</th>
+                            <th>VERSION</th>
+                            <th class="num">SIZE (KB)</th>
+                            <th class="num">DOWNLOADS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>001</td>
+                            <td>Button</td>
+                            <td><span class="badge badge-green">ACTIVE</span></td>
+                            <td>1.0.0</td>
+                            <td class="num">2.4</td>
+                            <td class="num">14,523</td>
+                        </tr>
+                        <tr>
+                            <td>002</td>
+                            <td>Input Field</td>
+                            <td><span class="badge badge-green">ACTIVE</span></td>
+                            <td>1.0.0</td>
+                            <td class="num">1.8</td>
+                            <td class="num">12,891</td>
+                        </tr>
+                        <tr>
+                            <td>003</td>
+                            <td>Card</td>
+                            <td><span class="badge badge-yellow">BETA</span></td>
+                            <td>0.9.2</td>
+                            <td class="num">3.1</td>
+                            <td class="num">8,234</td>
+                        </tr>
+                        <tr>
+                            <td>004</td>
+                            <td>Modal</td>
+                            <td><span class="badge badge-red">DEPRECATED</span></td>
+                            <td>0.5.0</td>
+                            <td class="num">4.7</td>
+                            <td class="num">3,102</td>
+                        </tr>
+                        <tr>
+                            <td>005</td>
+                            <td>Data Table</td>
+                            <td><span class="badge badge-black">NEW</span></td>
+                            <td>1.0.0</td>
+                            <td class="num">5.2</td>
+                            <td class="num">567</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4">TOTAL</td>
+                            <td class="num">17.2</td>
+                            <td class="num">39,317</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">DENSE TABLE</h3>
+
+            <div class="table-wrapper">
+                <table class="data-table data-table-dense">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>EVENT</th>
+                            <th>LOCATION</th>
+                            <th>ATTENDEES</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024-01-15</td>
+                            <td>System Maintenance</td>
+                            <td>Server Room A</td>
+                            <td>3</td>
+                            <td>COMPLETED</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-16</td>
+                            <td>Code Review</td>
+                            <td>Conference Room B</td>
+                            <td>5</td>
+                            <td>SCHEDULED</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-17</td>
+                            <td>Deploy v2.0</td>
+                            <td>Remote</td>
+                            <td>2</td>
+                            <td>PENDING</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-18</td>
+                            <td>Client Meeting</td>
+                            <td>Office HQ</td>
+                            <td>8</td>
+                            <td>CONFIRMED</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-19</td>
+                            <td>Training Session</td>
+                            <td>Training Room</td>
+                            <td>12</td>
+                            <td>SCHEDULED</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-20</td>
+                            <td>Weekend Backup</td>
+                            <td>Automated</td>
+                            <td>0</td>
+                            <td>RECURRING</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================
+             08. BADGES
+             ============================================ -->
+        <section class="section" id="badges">
+            <div class="section-header">
+                <span class="section-number">08</span>
+                <h2 class="section-title">Badges</h2>
+                <p class="section-description">
+                    Status indicators. Small, uppercase, high contrast. Each color has meaning: green = good, red = bad, yellow = warning, blue = info, black = neutral. No ambiguity.
+                </p>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">SOLID BADGES</h3>
+
+            <div class="badge-row" style="margin-bottom: var(--space-lg);">
+                <span class="badge badge-default">DEFAULT</span>
+                <span class="badge badge-black">BLACK</span>
+                <span class="badge badge-red">RED / ERROR</span>
+                <span class="badge badge-blue">BLUE / INFO</span>
+                <span class="badge badge-yellow">YELLOW / WARN</span>
+                <span class="badge badge-green">GREEN / OK</span>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">OUTLINE BADGES</h3>
+
+            <div class="badge-row" style="margin-bottom: var(--space-lg);">
+                <span class="badge badge-outline">OUTLINE</span>
+                <span class="badge badge-outline" style="color: var(--brutal-red); border-color: var(--brutal-red);">OUTLINE RED</span>
+                <span class="badge badge-outline" style="color: var(--brutal-blue); border-color: var(--brutal-blue);">OUTLINE BLUE</span>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">LARGE BADGES</h3>
+
+            <div class="badge-row" style="margin-bottom: var(--space-lg);">
+                <span class="badge badge-large badge-black">FEATURED</span>
+                <span class="badge badge-large badge-red">CRITICAL</span>
+                <span class="badge badge-large badge-green">APPROVED</span>
+            </div>
+
+            <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">BADGES IN CONTEXT</h3>
+
+            <div style="border: var(--border-thin); padding: var(--space-md); margin-bottom: var(--space-md);">
+                <p style="margin: 0;">
+                    <strong>System Status:</strong>
+                    <span class="badge badge-green">OPERATIONAL</span>
+                    <span class="badge badge-black">v2.4.1</span>
+                    <span class="badge badge-yellow">3 WARNINGS</span>
+                </p>
+            </div>
+
+            <div style="border: var(--border-thin); padding: var(--space-md);">
+                <h4 style="margin-bottom: var(--space-sm);">
+                    Product Title
+                    <span class="badge badge-red">SALE</span>
+                    <span class="badge badge-black">NEW</span>
+                </h4>
+                <p class="text-small" style="margin: 0;">
+                    Tags:
+                    <span class="badge badge-outline">electronics</span>
+                    <span class="badge badge-outline">audio</span>
+                    <span class="badge badge-outline">professional</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================
+             09. DESIGN PRINCIPLES
+             ============================================ -->
+        <section class="section" id="principles">
+            <div class="section-header">
+                <span class="section-number">09</span>
+                <h2 class="section-title">Design Principles</h2>
+                <p class="section-description">
+                    These are not guidelines. They are convictions. Brutalist web design is a reaction against the sameness of modern web design - the rounded corners, the subtle shadows, the whitespace-as-luxury. This is different.
+                </p>
+            </div>
+
+            <div class="flex-grid">
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">01</div>
+                        <div class="principle-content">
+                            <p class="principle-title">Raw Honesty</p>
+                            <p class="principle-text">
+                                Show the structure. Don't hide borders, grids, or edges. Let users see how the page is built. HTML is not something to be ashamed of - it's the foundation of the web.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">02</div>
+                        <div class="principle-content">
+                            <p class="principle-title">Function First</p>
+                            <p class="principle-text">
+                                Every element must serve a purpose. If something is decorative, remove it. Buttons should look like buttons. Links should look like links. Forms should work.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grid">
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">03</div>
+                        <div class="principle-content">
+                            <p class="principle-title">System Defaults</p>
+                            <p class="principle-text">
+                                Use system fonts. Use web-safe colors. Don't fight the browser - work with it. Every dependency is a liability. The less you load, the faster it runs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">04</div>
+                        <div class="principle-content">
+                            <p class="principle-title">Dense Content</p>
+                            <p class="principle-text">
+                                Whitespace is not always a virtue. Information density can be a feature. Craigslist works. Wikipedia works. Content-first, not canvas-first.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grid">
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">05</div>
+                        <div class="principle-content">
+                            <p class="principle-title">High Contrast</p>
+                            <p class="principle-text">
+                                Black on white. White on black. No subtle grays for body text. Accessibility is built-in when contrast is maximized. Harsh colors demand attention.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-cell-half">
+                    <div class="principle">
+                        <div class="principle-number">06</div>
+                        <div class="principle-content">
+                            <p class="principle-title">Intentional Ugliness</p>
+                            <p class="principle-text">
+                                Beauty is not the goal. Effectiveness is. Sometimes the most effective design is one that looks "wrong" by conventional standards. Question every aesthetic assumption.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="margin: var(--space-xl) 0;">
+
+            <div class="error-box">
+                THIS IS NOT CHAOS. This is deliberate rejection of unnecessary polish. Every border, every font choice, every color is intentional. Brutalism in architecture meant exposing concrete and structure. Brutalism on the web means exposing HTML and CSS.
+            </div>
+
+            <div style="margin-top: var(--space-lg);">
+                <h3 style="font-family: var(--font-mono); margin-bottom: var(--space-sm);">INSPIRATION</h3>
+                <ul class="list-square">
+                    <li><a href="https://brutalistwebsites.com">brutalistwebsites.com</a> - Curated collection of brutalist web design</li>
+                    <li><a href="https://craigslist.org">Craigslist</a> - Function over form since 1995</li>
+                    <li><a href="https://en.wikipedia.org/wiki/Brutalist_architecture">Brutalist Architecture</a> - The original movement</li>
+                    <li>Early web pages (1995-2000) - Before CSS was "designed"</li>
+                    <li><a href="https://motherfuckingwebsite.com">motherfuckingwebsite.com</a> - The manifesto</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--black); color: var(--white);">
+                <pre class="ascii-art" style="background: transparent; color: var(--brutal-green); padding: 0; border: none; margin: 0;">
+ ____  ____  _   _ _____  _    _     ___ ____ _____
+| __ )|  _ \| | | |_   _|/ \  | |   |_ _/ ___|_   _|
+|  _ \| |_) | | | | | | / _ \ | |    | |\___ \ | |
+| |_) |  _ <| |_| | | |/ ___ \| |___ | | ___) || |
+|____/|_| \_\\___/  |_/_/   \_\_____|___|____/ |_|
+
+ __        _______ ____
+ \ \      / / ____| __ )
+  \ \ /\ / /|  _| |  _ \
+   \ V  V / | |___| |_) |
+    \_/\_/  |_____|____/
+                </pre>
+            </div>
+        </section>
+
+        <!-- ============================================
+             FOOTER
+             ============================================ -->
+        <footer class="site-footer">
+            <p>BRUTALIST WEB DESIGN SYSTEM</p>
+            <p style="margin-top: var(--space-sm);">
+                NO FRAMEWORKS. NO DEPENDENCIES. NO APOLOGIES.
+            </p>
+            <p style="margin-top: var(--space-md); font-size: 0.75rem;">
+                <a href="#">[TOP]</a> |
+                <a href="#">[SOURCE]</a> |
+                <a href="#">[LICENSE: PUBLIC DOMAIN]</a>
+            </p>
+            <p style="margin-top: var(--space-md); font-size: 0.625rem; opacity: 0.6;">
+                This file is self-contained HTML. View source to see everything.
+            </p>
+        </footer>
+    </div>
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>

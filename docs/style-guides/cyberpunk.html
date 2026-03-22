@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERPUNK_2087 // Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================================================================
+           CYBERPUNK_2087 DESIGN SYSTEM
+           High-tech dystopia meets digital noir
+           Rain-soaked neon streets in your browser
+        ================================================================ */
+
+        /* --- DESIGN TOKENS / CSS VARIABLES --- */
+        :root {
+            /* NEON PALETTE - The colors of the megacity */
+            --neon-pink: #ff2a6d;
+            --neon-pink-glow: rgba(255, 42, 109, 0.7);
+            --neon-cyan: #05d9e8;
+            --neon-cyan-glow: rgba(5, 217, 232, 0.7);
+            --neon-green: #39ff14;
+            --neon-green-glow: rgba(57, 255, 20, 0.6);
+            --neon-yellow: #f9f002;
+            --neon-yellow-glow: rgba(249, 240, 2, 0.6);
+            --neon-purple: #d300c5;
+            --neon-purple-glow: rgba(211, 0, 197, 0.6);
+            --neon-orange: #ff6b35;
+            --neon-orange-glow: rgba(255, 107, 53, 0.6);
+
+            /* DARK BACKGROUNDS - The void beneath the neon */
+            --bg-void: #0a0a0f;
+            --bg-deep: #0d0d14;
+            --bg-primary: #12121a;
+            --bg-secondary: #1a1a25;
+            --bg-elevated: #222230;
+            --bg-surface: #2a2a3a;
+
+            /* TEXT COLORS */
+            --text-primary: #e0e0e8;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --text-glitch: var(--neon-pink);
+
+            /* BORDERS & ACCENTS */
+            --border-dim: rgba(5, 217, 232, 0.15);
+            --border-glow: rgba(5, 217, 232, 0.4);
+            --border-active: var(--neon-cyan);
+
+            /* GRADIENTS */
+            --gradient-cyberpunk: linear-gradient(135deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan));
+            --gradient-danger: linear-gradient(135deg, var(--neon-pink), var(--neon-orange));
+            --gradient-holographic: linear-gradient(135deg,
+                rgba(5, 217, 232, 0.3),
+                rgba(255, 42, 109, 0.3),
+                rgba(57, 255, 20, 0.3),
+                rgba(211, 0, 197, 0.3)
+            );
+
+            /* TYPOGRAPHY */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+
+            /* SPACING SCALE (4px base unit) */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --space-8: 64px;
+            --space-9: 96px;
+            --space-10: 128px;
+
+            /* EFFECTS */
+            --glow-cyan: 0 0 10px var(--neon-cyan-glow), 0 0 30px var(--neon-cyan-glow);
+            --glow-pink: 0 0 10px var(--neon-pink-glow), 0 0 30px var(--neon-pink-glow);
+            --glow-green: 0 0 10px var(--neon-green-glow), 0 0 30px var(--neon-green-glow);
+            --glow-yellow: 0 0 10px var(--neon-yellow-glow), 0 0 30px var(--neon-yellow-glow);
+
+            /* TRANSITIONS */
+            --transition-fast: 0.1s ease;
+            --transition-base: 0.25s ease;
+            --transition-slow: 0.5s ease;
+
+            /* BORDER RADIUS - Sharp angular cuts */
+            --radius-sm: 2px;
+            --radius-md: 4px;
+            --radius-lg: 8px;
+            --clip-corner: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            --clip-corner-sm: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        /* --- KEYFRAME ANIMATIONS --- */
+
+        /* Glitch text distortion */
+        @keyframes glitch {
+            0%, 100% {
+                text-shadow:
+                    -2px 0 var(--neon-cyan),
+                    2px 0 var(--neon-pink);
+                transform: translate(0);
+            }
+            10% {
+                text-shadow:
+                    2px 0 var(--neon-cyan),
+                    -2px 0 var(--neon-pink);
+                transform: translate(-2px, 1px);
+            }
+            20% {
+                text-shadow:
+                    -3px 0 var(--neon-pink),
+                    3px 0 var(--neon-cyan);
+                transform: translate(2px, -1px);
+            }
+            30% {
+                text-shadow:
+                    0 -2px var(--neon-green),
+                    0 2px var(--neon-purple);
+                transform: translate(0, 2px);
+            }
+            40% {
+                text-shadow:
+                    -2px 0 var(--neon-cyan),
+                    2px 0 var(--neon-pink);
+                transform: translate(-1px, -1px);
+            }
+            50% {
+                text-shadow:
+                    2px 2px var(--neon-pink),
+                    -2px -2px var(--neon-cyan);
+                transform: translate(1px, 0);
+            }
+        }
+
+        /* Subtle glitch flicker */
+        @keyframes glitch-flicker {
+            0%, 100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.8; transform: translateX(-2px); }
+            94% { opacity: 1; transform: translateX(0); }
+            95% { opacity: 0.9; }
+            96% { opacity: 1; transform: translateX(1px); }
+            97% { opacity: 0.95; transform: translateX(0); }
+        }
+
+        /* Neon pulse animation */
+        @keyframes neon-pulse {
+            0%, 100% {
+                box-shadow: 0 0 5px var(--neon-cyan-glow), 0 0 15px var(--neon-cyan-glow);
+            }
+            50% {
+                box-shadow: 0 0 10px var(--neon-cyan-glow), 0 0 30px var(--neon-cyan-glow), 0 0 50px var(--neon-cyan-glow);
+            }
+        }
+
+        /* Scanline sweep */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Data stream flow */
+        @keyframes data-stream {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 200px; }
+        }
+
+        /* Holographic shimmer */
+        @keyframes holographic {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Corruption effect */
+        @keyframes corrupt {
+            0%, 100% { clip-path: inset(0 0 0 0); }
+            5% { clip-path: inset(10% 0 85% 0); }
+            10% { clip-path: inset(40% 0 50% 0); }
+            15% { clip-path: inset(80% 0 5% 0); }
+            20% { clip-path: inset(0 0 0 0); }
+        }
+
+        /* Rain drop effect */
+        @keyframes rain-drop {
+            0% { transform: translateY(-100px); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* Typing cursor blink */
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Loading bar scan */
+        @keyframes loading-scan {
+            0% { left: -30%; }
+            100% { left: 100%; }
+        }
+
+        /* Circuit trace */
+        @keyframes circuit-trace {
+            0% { stroke-dashoffset: 1000; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        /* Border glow pulse */
+        @keyframes border-pulse {
+            0%, 100% { border-color: var(--neon-cyan); }
+            25% { border-color: var(--neon-pink); }
+            50% { border-color: var(--neon-purple); }
+            75% { border-color: var(--neon-green); }
+        }
+
+        /* --- BASE RESET & GLOBAL STYLES --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-void);
+            min-height: 100vh;
+            overflow-x: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- ATMOSPHERIC EFFECTS LAYER --- */
+
+        /* Scanlines overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Vignette and color wash */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(255, 42, 109, 0.08), transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(5, 217, 232, 0.08), transparent 50%),
+                radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* Rain effect container */
+        .rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .rain-drop {
+            position: absolute;
+            width: 1px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, var(--neon-cyan), transparent);
+            animation: rain-drop 1s linear infinite;
+            opacity: 0.3;
+        }
+
+        /* Digital noise texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 9997;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-6);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- HEADER / HERO SECTION --- */
+        .header {
+            padding: var(--space-9) 0;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(135deg, rgba(255, 42, 109, 0.05) 0%, transparent 50%),
+                linear-gradient(225deg, rgba(5, 217, 232, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Decorative circuit lines */
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--neon-cyan),
+                var(--neon-pink),
+                var(--neon-cyan),
+                transparent
+            );
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: var(--space-6);
+            flex-wrap: wrap;
+        }
+
+        .header-title-group {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .header-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .header-label::before {
+            content: '//';
+            color: var(--neon-pink);
+        }
+
+        .header-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            line-height: 1;
+            background: var(--gradient-cyberpunk);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: holographic 8s ease infinite;
+            margin-bottom: var(--space-3);
+        }
+
+        .header-title.glitch-text {
+            animation: holographic 8s ease infinite, glitch 4s steps(1) infinite;
+            animation-delay: 0s, 2s;
+        }
+
+        .header-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        .header-meta {
+            text-align: right;
+        }
+
+        .header-meta p {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: var(--space-1);
+        }
+
+        .header-meta .highlight {
+            color: var(--neon-pink);
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            box-shadow: var(--glow-green);
+            animation: neon-pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--neon-pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        .status-dot.warning {
+            background: var(--neon-yellow);
+            box-shadow: var(--glow-yellow);
+        }
+
+        /* --- SECTION STYLES --- */
+        .section {
+            padding: var(--space-9) 0;
+            border-bottom: 1px solid var(--border-dim);
+            position: relative;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 1px;
+            background: var(--neon-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .section-header {
+            margin-bottom: var(--space-7);
+        }
+
+        .section-number {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--neon-pink);
+            font-weight: 400;
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .section-number::before {
+            content: '';
+            width: 30px;
+            height: 1px;
+            background: var(--neon-pink);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-primary);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 60ch;
+            line-height: 1.7;
+        }
+
+        /* --- GRID SYSTEM --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--space-5);
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-3 { grid-column: span 3; }
+
+        @media (max-width: 768px) {
+            .col-8, .col-6, .col-4, .col-3 {
+                grid-column: span 12;
+            }
+        }
+
+        /* --- COLOR PALETTE --- */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .color-swatch {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-dim);
+            overflow: hidden;
+            transition: all var(--transition-base);
+            position: relative;
+            clip-path: var(--clip-corner);
+        }
+
+        .color-swatch::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--swatch-color, var(--neon-cyan));
+            box-shadow: 0 0 10px var(--swatch-color, var(--neon-cyan));
+        }
+
+        .color-swatch:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--border-glow);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .color-preview {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-preview::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            background-size: 200% 200%;
+            animation: holographic 3s ease infinite;
+        }
+
+        .color-info {
+            padding: var(--space-4);
+            background: var(--bg-primary);
+        }
+
+        .color-name {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: var(--space-1);
+        }
+
+        .color-value {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .type-scale {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .type-specimen {
+            padding: var(--space-5);
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--neon-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+            transition: all var(--transition-base);
+        }
+
+        .type-specimen:hover {
+            border-color: var(--neon-pink);
+            background: var(--bg-elevated);
+        }
+
+        .type-sample {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .type-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .type-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .type-specs {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--neon-cyan);
+        }
+
+        .font-display { font-family: var(--font-display); }
+        .font-body { font-family: var(--font-body); }
+        .font-mono { font-family: var(--font-mono); }
+
+        .text-5xl { font-size: 3.5rem; line-height: 1; }
+        .text-4xl { font-size: 2.5rem; line-height: 1.1; }
+        .text-3xl { font-size: 2rem; line-height: 1.2; }
+        .text-2xl { font-size: 1.5rem; line-height: 1.3; }
+        .text-xl { font-size: 1.25rem; line-height: 1.4; }
+        .text-lg { font-size: 1.125rem; line-height: 1.5; }
+        .text-base { font-size: 1rem; line-height: 1.6; }
+        .text-sm { font-size: 0.875rem; line-height: 1.5; }
+        .text-xs { font-size: 0.75rem; line-height: 1.4; }
+
+        /* --- SPACING SCALE --- */
+        .spacing-demo {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .spacing-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .spacing-label {
+            width: 100px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .spacing-bar {
+            height: 24px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            position: relative;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+        }
+
+        .spacing-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: loading-scan 2s linear infinite;
+        }
+
+        .spacing-value {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--neon-cyan);
+            width: 50px;
+        }
+
+        /* --- BUTTONS --- */
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: var(--space-3) var(--space-5);
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-fast);
+            clip-path: var(--clip-corner-sm);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            transition: left var(--transition-fast);
+            z-index: -1;
+        }
+
+        .btn:hover {
+            color: var(--bg-void);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--neon-cyan);
+            color: var(--bg-void);
+        }
+
+        .btn-primary::before {
+            background: var(--bg-void);
+        }
+
+        .btn-primary:hover {
+            color: var(--neon-cyan);
+        }
+
+        .btn-danger {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .btn-danger::before {
+            background: var(--neon-pink);
+        }
+
+        .btn-danger:hover {
+            box-shadow: var(--glow-pink);
+        }
+
+        .btn-warning {
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+        }
+
+        .btn-warning::before {
+            background: var(--neon-yellow);
+        }
+
+        .btn-warning:hover {
+            box-shadow: var(--glow-yellow);
+        }
+
+        .btn-success {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .btn-success::before {
+            background: var(--neon-green);
+        }
+
+        .btn-success:hover {
+            box-shadow: var(--glow-green);
+        }
+
+        .btn-sm {
+            font-size: 0.7rem;
+            padding: var(--space-2) var(--space-3);
+        }
+
+        .btn-lg {
+            font-size: 0.9rem;
+            padding: var(--space-4) var(--space-7);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover::before {
+            left: -100%;
+        }
+
+        /* Glitch button effect */
+        .btn-glitch {
+            animation: glitch-flicker 4s steps(1) infinite;
+        }
+
+        .btn-glitch:hover {
+            animation: glitch 0.3s steps(1) infinite;
+        }
+
+        /* --- FORMS / INPUTS --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .input-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .input-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-2);
+        }
+
+        .input-label .required {
+            color: var(--neon-pink);
+            margin-left: var(--space-1);
+        }
+
+        .input-field {
+            width: 100%;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            outline: none;
+            clip-path: var(--clip-corner-sm);
+        }
+
+        .input-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: var(--glow-cyan), inset 0 0 30px rgba(5, 217, 232, 0.05);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-field.error {
+            border-color: var(--neon-pink);
+        }
+
+        .input-field.error:focus {
+            box-shadow: var(--glow-pink);
+        }
+
+        textarea.input-field {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .input-hint {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+        }
+
+        .input-error {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--neon-pink);
+            margin-top: var(--space-1);
+        }
+
+        /* Custom select wrapper */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: var(--space-4);
+            top: 50%;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid var(--neon-cyan);
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        select.input-field {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        /* --- CARDS --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-dim);
+            padding: var(--space-6);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-base);
+            clip-path: var(--clip-corner);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-cyberpunk);
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, transparent 50%, rgba(5, 217, 232, 0.1) 50%);
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-glow);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), var(--glow-cyan);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-4);
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: var(--space-3);
+            color: var(--text-primary);
+        }
+
+        .card-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: var(--space-4);
+        }
+
+        .card-footer {
+            display: flex;
+            gap: var(--space-3);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border-dim);
+        }
+
+        /* Card variants */
+        .card-highlight {
+            border-color: var(--neon-pink);
+        }
+
+        .card-highlight::before {
+            background: var(--gradient-danger);
+        }
+
+        .card-highlight:hover {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), var(--glow-pink);
+        }
+
+        /* Data stream card */
+        .card-data-stream {
+            position: relative;
+        }
+
+        .card-data-stream::after {
+            content: '01001100 01001111 01000001 01000100';
+            position: absolute;
+            bottom: var(--space-4);
+            right: var(--space-4);
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            opacity: 0.3;
+            letter-spacing: 1px;
+        }
+
+        /* --- DATA TABLE --- */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-secondary);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: var(--space-4);
+            text-align: left;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .data-table th {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            background: var(--bg-primary);
+        }
+
+        .data-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-elevated);
+        }
+
+        .data-table td {
+            font-family: var(--font-body);
+        }
+
+        .table-id {
+            font-family: var(--font-mono);
+            color: var(--neon-cyan);
+        }
+
+        /* --- BADGES --- */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .badge {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: var(--space-1) var(--space-3);
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .badge-filled {
+            background: var(--neon-cyan);
+            color: var(--bg-void);
+        }
+
+        .badge-pink {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .badge-pink.badge-filled {
+            background: var(--neon-pink);
+            color: var(--bg-void);
+        }
+
+        .badge-green {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .badge-green.badge-filled {
+            background: var(--neon-green);
+            color: var(--bg-void);
+        }
+
+        .badge-yellow {
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+        }
+
+        .badge-yellow.badge-filled {
+            background: var(--neon-yellow);
+            color: var(--bg-void);
+        }
+
+        .badge-purple {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+        }
+
+        .badge-purple.badge-filled {
+            background: var(--neon-purple);
+            color: var(--text-primary);
+        }
+
+        .badge-pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            animation: neon-pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Holographic badge */
+        .badge-holographic {
+            background: var(--gradient-holographic);
+            background-size: 300% 300%;
+            animation: holographic 4s ease infinite;
+            border: none;
+            color: var(--text-primary);
+        }
+
+        /* --- DESIGN PRINCIPLES --- */
+        .principle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .principle-item {
+            padding: var(--space-5);
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--neon-pink);
+            transition: all var(--transition-base);
+        }
+
+        .principle-item:hover {
+            border-color: var(--neon-cyan);
+            transform: translateX(8px);
+        }
+
+        .principle-number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-pink);
+            line-height: 1;
+            margin-bottom: var(--space-3);
+            text-shadow: var(--glow-pink);
+        }
+
+        .principle-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-3);
+        }
+
+        .principle-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* --- SPECIAL EFFECTS SHOWCASE --- */
+        .effects-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-5);
+            margin-top: var(--space-6);
+        }
+
+        .effect-demo {
+            padding: var(--space-5);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-dim);
+            text-align: center;
+        }
+
+        .effect-preview {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-4);
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .effect-name {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .effect-glitch {
+            animation: glitch 2s steps(1) infinite;
+            color: var(--text-primary);
+        }
+
+        .effect-neon-pulse {
+            color: var(--neon-cyan);
+            text-shadow: var(--glow-cyan);
+            animation: neon-pulse 2s ease-in-out infinite;
+        }
+
+        .effect-holographic {
+            background: var(--gradient-cyberpunk);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: holographic 4s ease infinite;
+        }
+
+        .effect-corrupt {
+            color: var(--neon-pink);
+            animation: corrupt 3s steps(1) infinite;
+        }
+
+        .effect-flicker {
+            color: var(--neon-green);
+            animation: glitch-flicker 2s steps(1) infinite;
+        }
+
+        /* --- DECORATIVE ELEMENTS --- */
+        .cyber-divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin: var(--space-7) 0;
+        }
+
+        .cyber-divider-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+        }
+
+        .cyber-divider-icon {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            transform: rotate(45deg);
+        }
+
+        .cyber-divider-icon span {
+            transform: rotate(-45deg);
+        }
+
+        /* Data stream decoration */
+        .data-decoration {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            opacity: 0.4;
+            letter-spacing: 2px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            padding: var(--space-8) 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-pink), transparent);
+        }
+
+        .footer-text {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: var(--space-2);
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .footer-brand span {
+            color: var(--neon-cyan);
+        }
+
+        /* --- TERMINAL COMPONENT --- */
+        .terminal {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            font-family: var(--font-mono);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: var(--bg-primary);
+            padding: var(--space-2) var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+        }
+
+        .terminal-dot:nth-child(1) { background: var(--neon-pink); }
+        .terminal-dot:nth-child(2) { background: var(--neon-yellow); }
+        .terminal-dot:nth-child(3) { background: var(--neon-green); }
+
+        .terminal-title {
+            margin-left: var(--space-3);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .terminal-body {
+            padding: var(--space-4);
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .terminal-line {
+            margin-bottom: var(--space-2);
+        }
+
+        .terminal-prompt {
+            color: var(--neon-cyan);
+        }
+
+        .terminal-command {
+            color: var(--text-primary);
+        }
+
+        .terminal-output {
+            color: var(--text-secondary);
+            padding-left: var(--space-4);
+        }
+
+        .terminal-success {
+            color: var(--neon-green);
+        }
+
+        .terminal-error {
+            color: var(--neon-pink);
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--neon-cyan);
+            animation: cursor-blink 1s steps(1) infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+
+        /* --- PROGRESS / LOADING --- */
+        .progress-container {
+            margin-bottom: var(--space-4);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan));
+            position: relative;
+            transition: width var(--transition-slow);
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: loading-scan 1.5s linear infinite;
+        }
+
+        /* --- ALERTS --- */
+        .alert {
+            padding: var(--space-4);
+            border: 1px solid var(--border-dim);
+            background: var(--bg-secondary);
+            margin-bottom: var(--space-4);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--neon-cyan);
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: var(--space-1);
+        }
+
+        .alert-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-success::before { background: var(--neon-green); }
+        .alert-warning::before { background: var(--neon-yellow); }
+        .alert-danger::before { background: var(--neon-pink); }
+        .alert-info::before { background: var(--neon-cyan); }
+
+        /* --- UTILITY CLASSES --- */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-4 { margin-top: var(--space-4); }
+        .mt-6 { margin-top: var(--space-6); }
+        .mb-0 { margin-bottom: 0; }
+        .mb-4 { margin-bottom: var(--space-4); }
+
+        .text-pink { color: var(--neon-pink); }
+        .text-cyan { color: var(--neon-cyan); }
+        .text-green { color: var(--neon-green); }
+        .text-yellow { color: var(--neon-yellow); }
+        .text-purple { color: var(--neon-purple); }
+
+        .glow-pink { text-shadow: var(--glow-pink); }
+        .glow-cyan { text-shadow: var(--glow-cyan); }
+        .glow-green { text-shadow: var(--glow-green); }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--space-4);
+            }
+
+            .header {
+                padding: var(--space-7) 0;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-meta {
+                text-align: left;
+            }
+
+            .section {
+                padding: var(--space-7) 0;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Atmospheric rain effect -->
+    <div class="rain-container" id="rainContainer"></div>
+
+    <!-- Digital noise overlay -->
+    <div class="noise-overlay"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-title-group">
+                    <p class="header-label">Design System v2.087</p>
+                    <h1 class="header-title glitch-text">CYBERPUNK</h1>
+                    <p class="header-subtitle">High-tech dystopia meets digital noir aesthetic</p>
+                    <div class="status-indicator mt-4">
+                        <span class="status-dot"></span>
+                        <span>System Online</span>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <p>Night City Framework</p>
+                    <p>Build: <span class="highlight">2087.12.25</span></p>
+                    <p>Protocol: <span class="highlight">NEON-7</span></p>
+                </div>
+            </div>
+        </header>
+
+        <!-- 01. COLORS -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">01</p>
+                <h2 class="section-title">Color Palette</h2>
+                <p class="section-description">The neon spectrum of the megacity. Vibrant, dangerous, electric. These colors cut through the permanent night like holographic advertisements.</p>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// NEON ACCENTS</h3>
+            <div class="color-grid mb-4">
+                <div class="color-swatch" style="--swatch-color: var(--neon-pink);">
+                    <div class="color-preview" style="background: var(--neon-pink); color: #0a0a0f;">HOT PINK</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Pink</div>
+                        <div class="color-value">#FF2A6D</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-cyan);">
+                    <div class="color-preview" style="background: var(--neon-cyan); color: #0a0a0f;">ELECTRIC CYAN</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Cyan</div>
+                        <div class="color-value">#05D9E8</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-green);">
+                    <div class="color-preview" style="background: var(--neon-green); color: #0a0a0f;">TOXIC GREEN</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Green</div>
+                        <div class="color-value">#39FF14</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-yellow);">
+                    <div class="color-preview" style="background: var(--neon-yellow); color: #0a0a0f;">WARNING YELLOW</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Yellow</div>
+                        <div class="color-value">#F9F002</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-purple);">
+                    <div class="color-preview" style="background: var(--neon-purple); color: #e0e0e8;">SYNTH PURPLE</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Purple</div>
+                        <div class="color-value">#D300C5</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-orange);">
+                    <div class="color-preview" style="background: var(--neon-orange); color: #0a0a0f;">HAZARD ORANGE</div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Orange</div>
+                        <div class="color-value">#FF6B35</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4 mt-6">// DARK SURFACES</h3>
+            <div class="color-grid">
+                <div class="color-swatch" style="--swatch-color: var(--neon-cyan);">
+                    <div class="color-preview" style="background: var(--bg-void); color: var(--neon-cyan); border: 1px solid var(--border-dim);">VOID</div>
+                    <div class="color-info">
+                        <div class="color-name">Background Void</div>
+                        <div class="color-value">#0A0A0F</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-cyan);">
+                    <div class="color-preview" style="background: var(--bg-primary); color: var(--neon-cyan); border: 1px solid var(--border-dim);">PRIMARY</div>
+                    <div class="color-info">
+                        <div class="color-name">Background Primary</div>
+                        <div class="color-value">#12121A</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-cyan);">
+                    <div class="color-preview" style="background: var(--bg-secondary); color: var(--neon-cyan); border: 1px solid var(--border-dim);">SECONDARY</div>
+                    <div class="color-info">
+                        <div class="color-name">Background Secondary</div>
+                        <div class="color-value">#1A1A25</div>
+                    </div>
+                </div>
+                <div class="color-swatch" style="--swatch-color: var(--neon-cyan);">
+                    <div class="color-preview" style="background: var(--bg-elevated); color: var(--neon-cyan); border: 1px solid var(--border-dim);">ELEVATED</div>
+                    <div class="color-info">
+                        <div class="color-name">Background Elevated</div>
+                        <div class="color-value">#222230</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02. TYPOGRAPHY -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">02</p>
+                <h2 class="section-title">Typography</h2>
+                <p class="section-description">Three fonts define the cyberpunk aesthetic. Orbitron for bold statements, Rajdhani for readable body text, and Share Tech Mono for data and code.</p>
+            </div>
+
+            <div class="type-scale">
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-display text-5xl text-pink glow-pink">DISPLAY</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Orbitron Black</div>
+                        <div class="type-specs">56px / 900</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-display text-4xl">SYSTEM OVERRIDE</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Orbitron Bold</div>
+                        <div class="type-specs">40px / 700</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-display text-3xl">NEURAL INTERFACE</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Orbitron Semibold</div>
+                        <div class="type-specs">32px / 600</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-display text-2xl">Section Heading</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Orbitron Medium</div>
+                        <div class="type-specs">24px / 500</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-body text-xl">The megacity never sleeps. Neon lights flicker through acid rain.</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Rajdhani Medium</div>
+                        <div class="type-specs">20px / 500</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-body text-base">Body text for readable content. Rajdhani provides excellent legibility while maintaining the tech aesthetic. The quick brown fox jumps over the lazy dog.</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Rajdhani Regular</div>
+                        <div class="type-specs">16px / 400</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-mono text-sm text-cyan">SYSTEM_LOG: 0x7F3A9BC2 // DATA_STREAM_ACTIVE</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Share Tech Mono</div>
+                        <div class="type-specs">14px / 400</div>
+                    </div>
+                </div>
+
+                <div class="type-specimen">
+                    <div class="type-sample">
+                        <div class="font-mono text-xs text-muted">TIMESTAMP: 2087.12.25_23:59:59 // NODE_ID: NC-7734 // STATUS: ACTIVE</div>
+                    </div>
+                    <div class="type-meta">
+                        <div class="type-label">Share Tech Mono Small</div>
+                        <div class="type-specs">12px / 400</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03. SPACING -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">03</p>
+                <h2 class="section-title">Spacing Scale</h2>
+                <p class="section-description">A 4px base unit creates rhythm across the interface. Consistent spacing prevents visual chaos in information-dense environments.</p>
+            </div>
+
+            <div class="spacing-demo">
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-1</span>
+                    <div class="spacing-bar" style="width: 16px;"></div>
+                    <span class="spacing-value">4px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-2</span>
+                    <div class="spacing-bar" style="width: 32px;"></div>
+                    <span class="spacing-value">8px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-3</span>
+                    <div class="spacing-bar" style="width: 48px;"></div>
+                    <span class="spacing-value">12px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-4</span>
+                    <div class="spacing-bar" style="width: 64px;"></div>
+                    <span class="spacing-value">16px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-5</span>
+                    <div class="spacing-bar" style="width: 96px;"></div>
+                    <span class="spacing-value">24px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-6</span>
+                    <div class="spacing-bar" style="width: 128px;"></div>
+                    <span class="spacing-value">32px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-7</span>
+                    <div class="spacing-bar" style="width: 192px;"></div>
+                    <span class="spacing-value">48px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-8</span>
+                    <div class="spacing-bar" style="width: 256px;"></div>
+                    <span class="spacing-value">64px</span>
+                </div>
+                <div class="spacing-row">
+                    <span class="spacing-label">--space-9</span>
+                    <div class="spacing-bar" style="width: 320px;"></div>
+                    <span class="spacing-value">96px</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04. BUTTONS -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">04</p>
+                <h2 class="section-title">Buttons</h2>
+                <p class="section-description">Angular, aggressive interaction elements. Clipped corners suggest high-tech machinery. Glow effects indicate active states.</p>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// VARIANTS</h3>
+            <div class="button-row">
+                <button class="btn">Default</button>
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-danger">Danger</button>
+                <button class="btn btn-warning">Warning</button>
+                <button class="btn btn-success">Success</button>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// SIZES</h3>
+            <div class="button-row">
+                <button class="btn btn-sm">Small</button>
+                <button class="btn">Default</button>
+                <button class="btn btn-lg">Large</button>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// STATES</h3>
+            <div class="button-row">
+                <button class="btn btn-glitch">Glitch Effect</button>
+                <button class="btn" disabled>Disabled</button>
+                <button class="btn btn-primary" disabled>Disabled Primary</button>
+            </div>
+        </section>
+
+        <!-- 05. FORMS -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">05</p>
+                <h2 class="section-title">Forms</h2>
+                <p class="section-description">Data input interfaces for the neural network. Clean, functional, with neon focus states that guide user attention.</p>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label class="input-label">User ID<span class="required">*</span></label>
+                    <input type="text" class="input-field" placeholder="Enter identification code...">
+                    <div class="input-hint">// Alphanumeric, 8-16 characters</div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Neural Link Key</label>
+                    <input type="password" class="input-field" value="secretpassword">
+                    <div class="input-hint">// Encrypted biometric hash</div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Access Level</label>
+                    <div class="select-wrapper">
+                        <select class="input-field">
+                            <option>Select clearance level...</option>
+                            <option>LEVEL 1 - Street</option>
+                            <option>LEVEL 2 - Corporate</option>
+                            <option>LEVEL 3 - Executive</option>
+                            <option>LEVEL 4 - Black Ops</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Error State</label>
+                    <input type="text" class="input-field error" value="INVALID_CREDENTIALS">
+                    <div class="input-error">// ERROR: Authentication protocol failed</div>
+                </div>
+
+                <div class="input-group" style="grid-column: span 2;">
+                    <label class="input-label">Message Buffer</label>
+                    <textarea class="input-field" placeholder="Enter transmission data..."></textarea>
+                    <div class="input-hint">// Max 2048 characters</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06. CARDS -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">06</p>
+                <h2 class="section-title">Cards</h2>
+                <p class="section-description">Information containers with clipped corners and gradient accents. Each card is a window into the data stream.</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon text-cyan">&#9651;</div>
+                    <h3 class="card-title">Neural Interface</h3>
+                    <p class="card-content">Standard card component for displaying grouped information. Gradient top border draws attention to key content.</p>
+                    <div class="card-footer">
+                        <button class="btn btn-sm">Access</button>
+                        <button class="btn btn-sm btn-danger">Terminate</button>
+                    </div>
+                </div>
+
+                <div class="card card-highlight">
+                    <div class="card-icon text-pink">&#9888;</div>
+                    <h3 class="card-title">Priority Alert</h3>
+                    <p class="card-content">Highlighted variant for critical information. Pink border signals importance or danger.</p>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-danger">Acknowledge</button>
+                    </div>
+                </div>
+
+                <div class="card card-data-stream">
+                    <div class="card-icon text-green">&#8645;</div>
+                    <h3 class="card-title">Data Stream</h3>
+                    <p class="card-content">
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span class="text-muted">TRANSFER_RATE</span>
+                                <span class="text-cyan">78%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 78%;"></div>
+                            </div>
+                        </div>
+                        Active data transfer monitoring with real-time progress indication.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07. DATA TABLE -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">07</p>
+                <h2 class="section-title">Data Table</h2>
+                <p class="section-description">Structured data display for network monitoring and system logs. Dense information, clearly organized.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Node ID</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Uptime</th>
+                            <th>Load</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="table-id">NC-7734</td>
+                            <td><span class="badge badge-green badge-filled"><span class="badge-pulse-dot"></span>Online</span></td>
+                            <td>Sector 7G</td>
+                            <td>47d 12h</td>
+                            <td>23%</td>
+                            <td><button class="btn btn-sm">Manage</button></td>
+                        </tr>
+                        <tr>
+                            <td class="table-id">NC-2891</td>
+                            <td><span class="badge badge-green badge-filled"><span class="badge-pulse-dot"></span>Online</span></td>
+                            <td>Downtown</td>
+                            <td>12d 08h</td>
+                            <td>67%</td>
+                            <td><button class="btn btn-sm">Manage</button></td>
+                        </tr>
+                        <tr>
+                            <td class="table-id">NC-4455</td>
+                            <td><span class="badge badge-yellow badge-filled">Degraded</span></td>
+                            <td>Industrial</td>
+                            <td>2d 19h</td>
+                            <td>89%</td>
+                            <td><button class="btn btn-sm btn-warning">Inspect</button></td>
+                        </tr>
+                        <tr>
+                            <td class="table-id">NC-9012</td>
+                            <td><span class="badge badge-pink badge-filled">Offline</span></td>
+                            <td>Badlands</td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><button class="btn btn-sm btn-danger">Restart</button></td>
+                        </tr>
+                        <tr>
+                            <td class="table-id">NC-1337</td>
+                            <td><span class="badge badge-purple badge-filled">Encrypted</span></td>
+                            <td>Unknown</td>
+                            <td>???</td>
+                            <td>???</td>
+                            <td><button class="btn btn-sm">Decrypt</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 08. BADGES -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">08</p>
+                <h2 class="section-title">Badges</h2>
+                <p class="section-description">Status indicators and labels. Monospace typography reinforces the technical aesthetic.</p>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// OUTLINE</h3>
+            <div class="badge-row">
+                <span class="badge">Default</span>
+                <span class="badge badge-pink">Critical</span>
+                <span class="badge badge-green">Active</span>
+                <span class="badge badge-yellow">Warning</span>
+                <span class="badge badge-purple">Encrypted</span>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// FILLED</h3>
+            <div class="badge-row">
+                <span class="badge badge-filled">Online</span>
+                <span class="badge badge-pink badge-filled">Offline</span>
+                <span class="badge badge-green badge-filled">Verified</span>
+                <span class="badge badge-yellow badge-filled">Pending</span>
+                <span class="badge badge-purple badge-filled">Classified</span>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// WITH PULSE INDICATOR</h3>
+            <div class="badge-row">
+                <span class="badge badge-filled"><span class="badge-pulse-dot"></span>Live</span>
+                <span class="badge badge-green badge-filled"><span class="badge-pulse-dot"></span>Streaming</span>
+                <span class="badge badge-pink badge-filled"><span class="badge-pulse-dot"></span>Recording</span>
+            </div>
+
+            <h3 class="font-mono text-sm text-muted mb-4">// SPECIAL</h3>
+            <div class="badge-row">
+                <span class="badge badge-holographic">Holographic</span>
+            </div>
+        </section>
+
+        <!-- DECORATIVE DIVIDER -->
+        <div class="cyber-divider">
+            <div class="cyber-divider-line"></div>
+            <div class="cyber-divider-icon"><span>//</span></div>
+            <div class="cyber-divider-line"></div>
+        </div>
+
+        <!-- 09. DESIGN PRINCIPLES -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">09</p>
+                <h2 class="section-title">Design Principles</h2>
+                <p class="section-description">The philosophy behind the neon-lit dystopia.</p>
+            </div>
+
+            <div class="principle-grid">
+                <div class="principle-item">
+                    <div class="principle-number">01</div>
+                    <h3 class="principle-title">High-Tech, Low-Life</h3>
+                    <p class="principle-text">Advanced technology exists alongside urban decay. Interfaces should feel powerful yet gritty, sophisticated yet accessible to the street.</p>
+                </div>
+
+                <div class="principle-item">
+                    <div class="principle-number">02</div>
+                    <h3 class="principle-title">Neon Against Void</h3>
+                    <p class="principle-text">Vibrant colors cut through darkness like holographic signs in acid rain. Use color sparingly but boldly for maximum impact.</p>
+                </div>
+
+                <div class="principle-item">
+                    <div class="principle-number">03</div>
+                    <h3 class="principle-title">Angular Aggression</h3>
+                    <p class="principle-text">Sharp corners and clipped edges suggest danger and precision. Nothing is soft or rounded in the megacity.</p>
+                </div>
+
+                <div class="principle-item">
+                    <div class="principle-number">04</div>
+                    <h3 class="principle-title">Data is Everything</h3>
+                    <p class="principle-text">Information density matters. Show system status, metrics, and feedback. Users should feel connected to the machine.</p>
+                </div>
+
+                <div class="principle-item">
+                    <div class="principle-number">05</div>
+                    <h3 class="principle-title">Embrace Imperfection</h3>
+                    <p class="principle-text">Glitches, noise, and corruption add authenticity. Perfect systems dont exist in a world of hackers and corporate warfare.</p>
+                </div>
+
+                <div class="principle-item">
+                    <div class="principle-number">06</div>
+                    <h3 class="principle-title">Function Over Form</h3>
+                    <p class="principle-text">Every element serves a purpose. Decoration is minimal but meaningful. The interface is a tool, not art for arts sake.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- EFFECTS SHOWCASE -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">FX</p>
+                <h2 class="section-title">Animation Effects</h2>
+                <p class="section-description">CSS animations bring the interface to life with glitches, pulses, and digital corruption.</p>
+            </div>
+
+            <div class="effects-showcase">
+                <div class="effect-demo">
+                    <div class="effect-preview effect-glitch">GLITCH</div>
+                    <div class="effect-name">Text Glitch</div>
+                </div>
+                <div class="effect-demo">
+                    <div class="effect-preview effect-neon-pulse">PULSE</div>
+                    <div class="effect-name">Neon Pulse</div>
+                </div>
+                <div class="effect-demo">
+                    <div class="effect-preview effect-holographic">HOLO</div>
+                    <div class="effect-name">Holographic</div>
+                </div>
+                <div class="effect-demo">
+                    <div class="effect-preview effect-corrupt">CORRUPT</div>
+                    <div class="effect-name">Corruption</div>
+                </div>
+                <div class="effect-demo">
+                    <div class="effect-preview effect-flicker">FLICKER</div>
+                    <div class="effect-name">Flicker</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TERMINAL EXAMPLE -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">SYS</p>
+                <h2 class="section-title">Terminal Interface</h2>
+                <p class="section-description">Command-line aesthetic for system interactions and data display.</p>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <span class="terminal-dot"></span>
+                    <span class="terminal-dot"></span>
+                    <span class="terminal-dot"></span>
+                    <span class="terminal-title">NETRUNNER://TERMINAL_v2.087</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">root@nightcity:~$</span>
+                        <span class="terminal-command"> design --init cyberpunk</span>
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        Initializing CYBERPUNK_2087 protocol...
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        Loading neon palette... <span class="terminal-success">OK</span>
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        Loading typography system... <span class="terminal-success">OK</span>
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        Initializing glitch effects... <span class="terminal-success">OK</span>
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        Activating rain simulation... <span class="terminal-success">OK</span>
+                    </div>
+                    <div class="terminal-line terminal-output terminal-error">
+                        WARNING: Reality distortion detected in sector 7G
+                    </div>
+                    <div class="terminal-line terminal-output">
+                        ================================================
+                    </div>
+                    <div class="terminal-line terminal-output terminal-success">
+                        SYSTEM ONLINE. Welcome to Night City, choom.
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">root@nightcity:~$</span>
+                        <span class="terminal-cursor"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ALERTS -->
+        <section class="section">
+            <div class="section-header">
+                <p class="section-number">ALT</p>
+                <h2 class="section-title">Alert Messages</h2>
+                <p class="section-description">System notifications for various states and conditions.</p>
+            </div>
+
+            <div class="alert alert-success">
+                <div class="alert-icon">&#10004;</div>
+                <div class="alert-content">
+                    <div class="alert-title">Connection Established</div>
+                    <div class="alert-message">Neural link synchronized. All systems nominal.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <div class="alert-icon">&#8505;</div>
+                <div class="alert-content">
+                    <div class="alert-title">System Notice</div>
+                    <div class="alert-message">Scheduled maintenance: 0200-0400 UTC. Prepare for service interruption.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <div class="alert-icon">&#9888;</div>
+                <div class="alert-content">
+                    <div class="alert-title">Resource Warning</div>
+                    <div class="alert-message">Memory allocation exceeding 80% threshold. Consider purging temp buffers.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-danger">
+                <div class="alert-icon">&#10006;</div>
+                <div class="alert-content">
+                    <div class="alert-title">Critical Error</div>
+                    <div class="alert-message">ICE breach detected. Initiating emergency protocols. Disconnect recommended.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATA DECORATION -->
+        <div class="data-decoration text-center mt-6">
+            01001110 01000101 01001111 01001110 00100000 01000100 01010010 01000101 01000001 01001101 01010011
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <p class="footer-text">CYBERPUNK_2087 DESIGN SYSTEM // PROTOCOL: NEON-7</p>
+            <p class="footer-brand"><span>//</span> NIGHT CITY <span>//</span></p>
+            <p class="font-mono text-xs text-muted mt-4">The future is now. The future is neon.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Rain effect generator
+        function createRain() {
+            const container = document.getElementById('rainContainer');
+            const rainDropCount = 50;
+
+            for (let i = 0; i < rainDropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDelay = Math.random() * 2 + 's';
+                drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                drop.style.height = (Math.random() * 20 + 10) + 'px';
+                container.appendChild(drop);
+            }
+        }
+
+        // Initialize rain on load
+        createRain();
+
+        // Random glitch effect on elements with .glitch-text class
+        function randomGlitch() {
+            const glitchElements = document.querySelectorAll('.glitch-text');
+            glitchElements.forEach(el => {
+                if (Math.random() > 0.7) {
+                    el.style.animation = 'glitch 0.2s steps(1)';
+                    setTimeout(() => {
+                        el.style.animation = 'holographic 8s ease infinite, glitch 4s steps(1) infinite';
+                    }, 200);
+                }
+            });
+            setTimeout(randomGlitch, Math.random() * 5000 + 3000);
+        }
+
+        randomGlitch();
+
+        // Add data stream effect to console
+        console.log('%c CYBERPUNK_2087 DESIGN SYSTEM ',
+            'background: linear-gradient(90deg, #ff2a6d, #05d9e8); color: #0a0a0f; font-size: 20px; font-weight: bold; padding: 10px 20px;');
+        console.log('%c Welcome to Night City, choom. ',
+            'color: #05d9e8; font-size: 14px;');
+    </script>
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nordic Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;1,6..12,400&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Typography */
+            --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-serif: 'Playfair Display', Georgia, serif;
+
+            /* Spacing Scale */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --space-8: 64px;
+            --space-9: 96px;
+            --space-10: 128px;
+
+            /* Core Colors - Soft, Natural Palette */
+            --snow: #FAFBFC;
+            --frost: #F5F7F8;
+            --cloud: #EEF1F3;
+            --mist: #E2E7EB;
+            --stone: #C8D1D9;
+            --slate: #8A99A6;
+            --charcoal: #4A5568;
+            --night: #2D3748;
+            --deep-night: #1A202C;
+
+            /* Warm Wood Tones */
+            --birch: #F5E6D3;
+            --pine: #E8D5B7;
+            --oak: #D4B896;
+            --walnut: #B8956E;
+            --teak: #8B6914;
+
+            /* Accent Colors - Nature Inspired */
+            --terracotta: #C67B5C;
+            --terracotta-light: #E8A98A;
+            --forest: #5B7B6D;
+            --forest-light: #8FAF9F;
+            --mustard: #D4A843;
+            --mustard-light: #E8C977;
+            --fjord: #7B9AAB;
+            --fjord-light: #A8C5D4;
+            --berry: #9B6B7D;
+
+            /* Semantic Colors */
+            --text-primary: var(--deep-night);
+            --text-secondary: var(--charcoal);
+            --text-muted: var(--slate);
+            --text-light: var(--snow);
+            --bg-primary: var(--snow);
+            --bg-warm: var(--frost);
+            --bg-card: #FFFFFF;
+            --border-color: var(--mist);
+            --border-soft: var(--cloud);
+            --accent: var(--terracotta);
+            --accent-secondary: var(--forest);
+
+            /* Effects */
+            --shadow-soft: 0 2px 8px rgba(45, 55, 72, 0.06);
+            --shadow-medium: 0 4px 16px rgba(45, 55, 72, 0.08);
+            --shadow-warm: 0 4px 20px rgba(198, 123, 92, 0.12);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.25s ease;
+            --transition-slow: 0.4s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Wood Grain Texture Background */
+        .wood-texture {
+            background-image:
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(139, 105, 20, 0.02) 2px,
+                    rgba(139, 105, 20, 0.02) 4px
+                ),
+                linear-gradient(
+                    180deg,
+                    var(--birch) 0%,
+                    var(--pine) 50%,
+                    var(--birch) 100%
+                );
+        }
+
+        /* Grid System */
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--space-6);
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-3 { grid-column: span 3; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 var(--space-5);
+            }
+            .grid {
+                gap: var(--space-5);
+            }
+            .col-8, .col-6, .col-4, .col-3 {
+                grid-column: span 12;
+            }
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-sans);
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            margin-bottom: var(--space-6);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: var(--space-5);
+        }
+
+        h3 {
+            font-size: 1.375rem;
+            margin-bottom: var(--space-4);
+        }
+
+        h4 {
+            font-size: 1.125rem;
+            margin-bottom: var(--space-3);
+        }
+
+        p {
+            margin-bottom: var(--space-4);
+            max-width: 60ch;
+            color: var(--text-secondary);
+        }
+
+        .lead {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .small {
+            font-size: 0.875rem;
+        }
+
+        .overline {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .serif {
+            font-family: var(--font-serif);
+        }
+
+        /* Header */
+        .header {
+            padding: var(--space-9) 0 var(--space-8);
+            background: linear-gradient(180deg, var(--frost) 0%, var(--bg-primary) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--terracotta), var(--mustard), var(--forest));
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: var(--space-6);
+        }
+
+        .header h1 {
+            margin-bottom: var(--space-2);
+        }
+
+        .header-tagline {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-bottom: 0;
+        }
+
+        .header-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--birch);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-bottom: var(--space-3);
+        }
+
+        .header-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--walnut);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-meta {
+                text-align: left;
+            }
+            .header-icon {
+                margin-left: 0;
+            }
+        }
+
+        /* Section */
+        .section {
+            padding: var(--space-9) 0;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section-header {
+            margin-bottom: var(--space-7);
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--birch);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--walnut);
+            margin-bottom: var(--space-4);
+        }
+
+        /* Color Blocks */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .color-block {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            transition: all var(--transition-base);
+        }
+
+        .color-block:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .color-swatch {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: flex-end;
+            padding: var(--space-3);
+        }
+
+        .color-info {
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-card);
+        }
+
+        .color-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: var(--space-1);
+        }
+
+        .color-value {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .color-group {
+            margin-bottom: var(--space-7);
+        }
+
+        .color-group-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .color-group-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-soft);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
+            font-family: var(--font-sans);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-soft), inset 0 0 0 1px var(--border-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium), inset 0 0 0 1px var(--border-color);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--terracotta);
+            color: var(--text-light);
+            box-shadow: var(--shadow-warm);
+        }
+
+        .btn-primary:hover {
+            background: #B86D4E;
+            box-shadow: 0 6px 24px rgba(198, 123, 92, 0.25);
+        }
+
+        .btn-secondary {
+            background: var(--forest);
+            color: var(--text-light);
+            box-shadow: 0 4px 16px rgba(91, 123, 109, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: #4D6B5F;
+            box-shadow: 0 6px 24px rgba(91, 123, 109, 0.25);
+        }
+
+        .btn-warm {
+            background: var(--mustard);
+            color: var(--deep-night);
+            box-shadow: 0 4px 16px rgba(212, 168, 67, 0.2);
+        }
+
+        .btn-warm:hover {
+            background: #C49A3D;
+            box-shadow: 0 6px 24px rgba(212, 168, 67, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--terracotta);
+            color: var(--terracotta);
+            box-shadow: none;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            box-shadow: none;
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            background: var(--frost);
+            color: var(--text-primary);
+            box-shadow: none;
+        }
+
+        .btn-sm {
+            padding: var(--space-2) var(--space-4);
+            font-size: 0.8125rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-lg {
+            padding: var(--space-4) var(--space-7);
+            font-size: 1rem;
+            border-radius: var(--radius-lg);
+        }
+
+        .button-row {
+            display: flex;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-5);
+        }
+
+        /* Input */
+        .input-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .input-hint {
+            display: block;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .input-field:hover {
+            border-color: var(--stone);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--terracotta);
+            box-shadow: 0 0 0 4px rgba(198, 123, 92, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea.input-field {
+            resize: vertical;
+            min-height: 140px;
+            line-height: 1.6;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon .input-field {
+            padding-left: var(--space-8);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Select */
+        .select-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238A99A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right var(--space-4) center;
+            padding-right: var(--space-8);
+        }
+
+        /* Checkbox & Radio */
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            cursor: pointer;
+        }
+
+        .checkbox-input,
+        .radio-input {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            appearance: none;
+            flex-shrink: 0;
+        }
+
+        .checkbox-input {
+            border-radius: var(--radius-sm);
+        }
+
+        .radio-input {
+            border-radius: 50%;
+        }
+
+        .checkbox-input:checked,
+        .radio-input:checked {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+        }
+
+        .checkbox-input:checked {
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='10' viewBox='0 0 12 10' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5L4.5 8.5L11 1.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .radio-input:checked {
+            background-image: url("data:image/svg+xml,%3Ccircle cx='5' cy='5' r='3' fill='white' xmlns='http://www.w3.org/2000/svg'/%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .checkbox-label,
+        .radio-label {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            cursor: pointer;
+        }
+
+        .toggle-input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--mist);
+            border-radius: 14px;
+            transition: all var(--transition-fast);
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .toggle-input:checked + .toggle-slider {
+            background: var(--terracotta);
+        }
+
+        .toggle-input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-soft);
+            transition: all var(--transition-base);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        .card-cozy {
+            background: linear-gradient(135deg, var(--frost) 0%, var(--bg-card) 100%);
+            border: none;
+        }
+
+        .card-warm {
+            background: linear-gradient(135deg, var(--birch) 0%, #FDF8F3 100%);
+            border: 1px solid var(--pine);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--frost);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .card-icon svg {
+            width: 28px;
+            height: 28px;
+            color: var(--terracotta);
+        }
+
+        .card h3 {
+            margin-bottom: var(--space-3);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+        }
+
+        .card-footer {
+            margin-top: var(--space-5);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border-soft);
+        }
+
+        /* Feature Card */
+        .feature-card {
+            display: flex;
+            gap: var(--space-5);
+            padding: var(--space-5);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-soft);
+            transition: all var(--transition-base);
+        }
+
+        .feature-card:hover {
+            border-color: var(--terracotta-light);
+            box-shadow: var(--shadow-warm);
+        }
+
+        .feature-number {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--terracotta);
+            line-height: 1;
+        }
+
+        .feature-content h4 {
+            margin-bottom: var(--space-2);
+        }
+
+        .feature-content p {
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+        }
+
+        /* Table */
+        .table-wrapper {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-soft);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: var(--space-4) var(--space-5);
+        }
+
+        .table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            background: var(--frost);
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .table td {
+            border-bottom: 1px solid var(--border-soft);
+            color: var(--text-secondary);
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr:hover td {
+            background: var(--frost);
+        }
+
+        .table-primary {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--space-1) var(--space-3);
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            background: var(--frost);
+            color: var(--text-secondary);
+        }
+
+        .badge-terracotta {
+            background: rgba(198, 123, 92, 0.15);
+            color: var(--terracotta);
+        }
+
+        .badge-forest {
+            background: rgba(91, 123, 109, 0.15);
+            color: var(--forest);
+        }
+
+        .badge-mustard {
+            background: rgba(212, 168, 67, 0.15);
+            color: #9A7B2E;
+        }
+
+        .badge-fjord {
+            background: rgba(123, 154, 171, 0.15);
+            color: #5A7A8A;
+        }
+
+        .badge-solid {
+            background: var(--terracotta);
+            color: var(--text-light);
+        }
+
+        .badge-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .badge-row {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            margin-right: var(--space-2);
+        }
+
+        /* Spacing Demo */
+        .spacing-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+            margin-bottom: var(--space-3);
+            padding: var(--space-3) 0;
+        }
+
+        .spacing-label {
+            width: 80px;
+            font-size: 0.875rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-secondary);
+        }
+
+        .spacing-bar {
+            height: 24px;
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-light) 100%);
+            border-radius: var(--radius-sm);
+        }
+
+        .spacing-value {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            width: 50px;
+        }
+
+        /* Type Scale */
+        .type-row {
+            display: flex;
+            align-items: baseline;
+            padding: var(--space-5) 0;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .type-row:last-child {
+            border-bottom: none;
+        }
+
+        .type-meta {
+            width: 180px;
+            flex-shrink: 0;
+        }
+
+        .type-size {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .type-specs {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .type-sample {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        /* Principles */
+        .principle-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            border: 1px solid var(--border-soft);
+            height: 100%;
+        }
+
+        .principle-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .principle-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .principle-icon.terracotta {
+            background: rgba(198, 123, 92, 0.1);
+            color: var(--terracotta);
+        }
+
+        .principle-icon.forest {
+            background: rgba(91, 123, 109, 0.1);
+            color: var(--forest);
+        }
+
+        .principle-icon.mustard {
+            background: rgba(212, 168, 67, 0.1);
+            color: var(--mustard);
+        }
+
+        .principle-icon.fjord {
+            background: rgba(123, 154, 171, 0.1);
+            color: var(--fjord);
+        }
+
+        /* Hygge Banner */
+        .hygge-banner {
+            background: linear-gradient(135deg, var(--birch) 0%, var(--pine) 50%, var(--birch) 100%);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hygge-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(139, 105, 20, 0.03) 3px,
+                    rgba(139, 105, 20, 0.03) 6px
+                );
+            pointer-events: none;
+        }
+
+        .hygge-banner h3 {
+            font-family: var(--font-serif);
+            font-size: 1.75rem;
+            margin-bottom: var(--space-3);
+            color: var(--deep-night);
+        }
+
+        .hygge-banner p {
+            max-width: 50ch;
+            margin: 0 auto;
+            color: var(--charcoal);
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border-soft);
+            margin: var(--space-7) 0;
+        }
+
+        .divider-decorative {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin: var(--space-7) 0;
+        }
+
+        .divider-decorative::before,
+        .divider-decorative::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-soft);
+        }
+
+        .divider-decorative span {
+            color: var(--terracotta);
+        }
+
+        /* Alert / Notice */
+        .notice {
+            display: flex;
+            gap: var(--space-4);
+            padding: var(--space-4) var(--space-5);
+            background: var(--frost);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--terracotta);
+        }
+
+        .notice-icon {
+            flex-shrink: 0;
+            color: var(--terracotta);
+        }
+
+        .notice-content p {
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--space-8) 0;
+            background: var(--frost);
+            text-align: center;
+            margin-top: var(--space-9);
+        }
+
+        .footer-brand {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .footer p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin: 0 auto;
+        }
+
+        /* Utilities */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mb-0 { margin-bottom: 0; }
+        .mb-4 { margin-bottom: var(--space-4); }
+        .mb-6 { margin-bottom: var(--space-6); }
+        .mt-4 { margin-top: var(--space-4); }
+        .mt-6 { margin-top: var(--space-6); }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Selection */
+        ::selection {
+            background: var(--terracotta-light);
+            color: var(--deep-night);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--frost);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--stone);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--slate);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div>
+                    <p class="overline" style="margin-bottom: var(--space-3);">Design System</p>
+                    <h1>Nordic</h1>
+                    <p class="header-tagline">Cozy minimalism inspired by Scandinavian design</p>
+                </div>
+                <div class="header-meta">
+                    <div class="header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </div>
+                    <p class="small" style="color: var(--text-muted); margin-bottom: 0;">
+                        Warmth in simplicity.<br>
+                        Function with comfort.<br>
+                        Hygge in every detail.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Colors -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">01</div>
+                <h2>Colors</h2>
+                <p class="lead">A soft, natural palette inspired by Nordic landscapes. Light foundations with warm wood tones and nature-derived accents create an inviting, comfortable atmosphere.</p>
+            </div>
+
+            <div class="color-group">
+                <div class="color-group-title">Foundation Colors</div>
+                <div class="color-grid">
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--snow);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Snow</span>
+                            <span class="color-value">#FAFBFC</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--frost);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Frost</span>
+                            <span class="color-value">#F5F7F8</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--cloud);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Cloud</span>
+                            <span class="color-value">#EEF1F3</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--mist);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Mist</span>
+                            <span class="color-value">#E2E7EB</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--stone);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Stone</span>
+                            <span class="color-value">#C8D1D9</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <div class="color-group-title">Wood Tones</div>
+                <div class="color-grid">
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--birch);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Birch</span>
+                            <span class="color-value">#F5E6D3</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--pine);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Pine</span>
+                            <span class="color-value">#E8D5B7</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--oak);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Oak</span>
+                            <span class="color-value">#D4B896</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--walnut);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Walnut</span>
+                            <span class="color-value">#B8956E</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--teak); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Teak</span>
+                            <span class="color-value">#8B6914</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <div class="color-group-title">Accent Colors</div>
+                <div class="color-grid">
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--terracotta); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Terracotta</span>
+                            <span class="color-value">#C67B5C</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--forest); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Forest</span>
+                            <span class="color-value">#5B7B6D</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--mustard);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Mustard</span>
+                            <span class="color-value">#D4A843</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--fjord); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Fjord</span>
+                            <span class="color-value">#7B9AAB</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--berry); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Berry</span>
+                            <span class="color-value">#9B6B7D</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-group" style="margin-bottom: 0;">
+                <div class="color-group-title">Text & Neutrals</div>
+                <div class="color-grid">
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--slate); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Slate</span>
+                            <span class="color-value">#8A99A6</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--charcoal); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Charcoal</span>
+                            <span class="color-value">#4A5568</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--night); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Night</span>
+                            <span class="color-value">#2D3748</span>
+                        </div>
+                    </div>
+                    <div class="color-block">
+                        <div class="color-swatch" style="background: var(--deep-night); color: var(--text-light);"></div>
+                        <div class="color-info">
+                            <span class="color-name">Deep Night</span>
+                            <span class="color-value">#1A202C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">02</div>
+                <h2>Typography</h2>
+                <p class="lead">Nunito Sans brings warmth and readability for body text, while Playfair Display adds an elegant, refined touch for headings. Together they balance comfort with sophistication.</p>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Display</p>
+                    <p class="type-specs">64px / Playfair</p>
+                </div>
+                <div class="type-sample" style="font-family: var(--font-serif); font-size: 4rem; font-weight: 500; line-height: 1.1;">Hygge</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Heading 1</p>
+                    <p class="type-specs">40px / Playfair</p>
+                </div>
+                <div class="type-sample" style="font-family: var(--font-serif); font-size: 2.5rem; font-weight: 500; line-height: 1.2;">Cozy Living</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Heading 2</p>
+                    <p class="type-specs">32px / Semibold</p>
+                </div>
+                <div class="type-sample" style="font-size: 2rem; font-weight: 600; line-height: 1.3;">Simple Comfort</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Heading 3</p>
+                    <p class="type-specs">22px / Semibold</p>
+                </div>
+                <div class="type-sample" style="font-size: 1.375rem; font-weight: 600;">Natural Materials</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Body Large</p>
+                    <p class="type-specs">18px / Light</p>
+                </div>
+                <div class="type-sample" style="font-size: 1.125rem; font-weight: 300; line-height: 1.7;">The Danish concept of hygge embraces coziness, contentment, and well-being through simple pleasures.</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Body</p>
+                    <p class="type-specs">16px / Regular</p>
+                </div>
+                <div class="type-sample">Scandinavian design emphasizes minimalism, functionality, and the beauty of natural materials. Clean lines meet warm textures.</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Small</p>
+                    <p class="type-specs">14px / Regular</p>
+                </div>
+                <div class="type-sample" style="font-size: 0.875rem;">Secondary information and captions use a smaller, comfortable size.</div>
+            </div>
+
+            <div class="type-row">
+                <div class="type-meta">
+                    <p class="type-size">Overline</p>
+                    <p class="type-specs">12px / Semibold</p>
+                </div>
+                <div class="type-sample overline">Category Label</div>
+            </div>
+        </section>
+
+        <!-- Spacing -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">03</div>
+                <h2>Spacing</h2>
+                <p class="lead">Generous, breathing whitespace is central to Nordic design. Our spacing scale builds from a 4px base, creating rhythm and visual calm throughout the interface.</p>
+            </div>
+
+            <div class="spacing-row">
+                <span class="spacing-label">4px</span>
+                <div class="spacing-bar" style="width: 16px;"></div>
+                <span class="spacing-value">space-1</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">8px</span>
+                <div class="spacing-bar" style="width: 32px;"></div>
+                <span class="spacing-value">space-2</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">12px</span>
+                <div class="spacing-bar" style="width: 48px;"></div>
+                <span class="spacing-value">space-3</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">16px</span>
+                <div class="spacing-bar" style="width: 64px;"></div>
+                <span class="spacing-value">space-4</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">24px</span>
+                <div class="spacing-bar" style="width: 96px;"></div>
+                <span class="spacing-value">space-5</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">32px</span>
+                <div class="spacing-bar" style="width: 128px;"></div>
+                <span class="spacing-value">space-6</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">48px</span>
+                <div class="spacing-bar" style="width: 192px;"></div>
+                <span class="spacing-value">space-7</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">64px</span>
+                <div class="spacing-bar" style="width: 256px;"></div>
+                <span class="spacing-value">space-8</span>
+            </div>
+            <div class="spacing-row">
+                <span class="spacing-label">96px</span>
+                <div class="spacing-bar" style="width: 320px;"></div>
+                <span class="spacing-value">space-9</span>
+            </div>
+
+            <div class="notice mt-6">
+                <div class="notice-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </div>
+                <div class="notice-content">
+                    <p>Whitespace is not empty space. It provides visual breathing room that makes content feel calm and approachable, a key principle of Scandinavian design philosophy.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buttons -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">04</div>
+                <h2>Buttons</h2>
+                <p class="lead">Soft, rounded buttons with subtle shadows create an inviting, tactile feel. Warm accent colors draw attention without overwhelming the calm aesthetic.</p>
+            </div>
+
+            <h4 class="mb-4">Variants</h4>
+            <div class="button-row">
+                <button class="btn">Default</button>
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-warm">Warm</button>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h4 class="mb-4">Sizes</h4>
+            <div class="button-row">
+                <button class="btn btn-sm btn-primary">Small Button</button>
+                <button class="btn btn-primary">Medium Button</button>
+                <button class="btn btn-lg btn-primary">Large Button</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h4 class="mb-4">With Icons</h4>
+            <div class="button-row">
+                <button class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Home
+                </button>
+                <button class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Message
+                </button>
+                <button class="btn">
+                    Settings
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Forms -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">05</div>
+                <h2>Forms</h2>
+                <p class="lead">Form elements feature soft borders and rounded corners. Warm focus states provide gentle feedback, making forms feel welcoming rather than clinical.</p>
+            </div>
+
+            <div class="grid">
+                <div class="col-6">
+                    <div class="input-group">
+                        <label class="input-label">Full Name</label>
+                        <input type="text" class="input-field" placeholder="Enter your name">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" class="input-field" placeholder="you@example.com">
+                        <span class="input-hint">We will never share your email</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group">
+                        <label class="input-label">Country</label>
+                        <select class="input-field select-field">
+                            <option value="">Select a country</option>
+                            <option value="dk">Denmark</option>
+                            <option value="no">Norway</option>
+                            <option value="se">Sweden</option>
+                            <option value="fi">Finland</option>
+                            <option value="is">Iceland</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group">
+                        <label class="input-label">Search</label>
+                        <div class="input-with-icon">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" class="input-field" placeholder="Search...">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="input-group">
+                        <label class="input-label">Message</label>
+                        <textarea class="input-field" placeholder="Share your thoughts..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid">
+                <div class="col-4">
+                    <h4 class="mb-4">Checkboxes</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" class="checkbox-input" checked>
+                            <span class="checkbox-label">Cozy lighting</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" class="checkbox-input">
+                            <span class="checkbox-label">Natural materials</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" class="checkbox-input" checked>
+                            <span class="checkbox-label">Warm textiles</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <h4 class="mb-4">Radio Buttons</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="style" class="radio-input" checked>
+                            <span class="radio-label">Minimalist</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="style" class="radio-input">
+                            <span class="radio-label">Traditional</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="style" class="radio-input">
+                            <span class="radio-label">Modern</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <h4 class="mb-4">Toggle Switch</h4>
+                    <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+                        <label class="toggle">
+                            <input type="checkbox" class="toggle-input" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size: 0.9375rem; color: var(--text-secondary);">Dark mode</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                        <label class="toggle">
+                            <input type="checkbox" class="toggle-input">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size: 0.9375rem; color: var(--text-secondary);">Notifications</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">06</div>
+                <h2>Cards</h2>
+                <p class="lead">Cards use soft shadows and rounded corners to create depth without harshness. Warm gradients and wood-inspired backgrounds add coziness to content containers.</p>
+            </div>
+
+            <div class="grid mb-6">
+                <div class="col-4">
+                    <div class="card">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Comfort First</h3>
+                        <p>Design that prioritizes how spaces and interfaces make people feel at ease.</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card card-cozy">
+                        <div class="card-icon" style="background: rgba(198, 123, 92, 0.1);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        </div>
+                        <h3>Warm Light</h3>
+                        <p>Soft, ambient lighting creates the foundation of a cozy atmosphere in any space.</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card card-warm">
+                        <div class="card-icon" style="background: rgba(139, 105, 20, 0.1);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--walnut);">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <h3>Natural Layers</h3>
+                        <p>Textures and materials from nature bring warmth and authenticity to design.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-decorative">
+                <span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </span>
+            </div>
+
+            <h4 class="mb-4">Feature Cards</h4>
+            <div class="grid">
+                <div class="col-6">
+                    <div class="feature-card">
+                        <div class="feature-number">01</div>
+                        <div class="feature-content">
+                            <h4>Functional Beauty</h4>
+                            <p>Every element serves a purpose while maintaining aesthetic appeal. Form and function work in harmony.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="feature-card">
+                        <div class="feature-number">02</div>
+                        <div class="feature-content">
+                            <h4>Mindful Simplicity</h4>
+                            <p>Reduce complexity to essentials. What remains is thoughtful, intentional, and meaningful.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <div class="hygge-banner">
+                    <h3>Embrace Hygge</h3>
+                    <p>Create moments of coziness and contentment through thoughtful design that nurtures well-being and connection.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Table -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">07</div>
+                <h2>Data Table</h2>
+                <p class="lead">Tables present information clearly with subtle row highlights and comfortable spacing. Headers use soft backgrounds to delineate without harsh contrast.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Status</th>
+                            <th>Category</th>
+                            <th class="text-right">Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="table-primary">Button</td>
+                            <td><span class="badge badge-forest"><span class="badge-dot"></span>Ready</span></td>
+                            <td>Interactive</td>
+                            <td class="text-right">1.2.0</td>
+                        </tr>
+                        <tr>
+                            <td class="table-primary">Card</td>
+                            <td><span class="badge badge-forest"><span class="badge-dot"></span>Ready</span></td>
+                            <td>Layout</td>
+                            <td class="text-right">1.1.0</td>
+                        </tr>
+                        <tr>
+                            <td class="table-primary">Input</td>
+                            <td><span class="badge badge-forest"><span class="badge-dot"></span>Ready</span></td>
+                            <td>Form</td>
+                            <td class="text-right">1.0.0</td>
+                        </tr>
+                        <tr>
+                            <td class="table-primary">Modal</td>
+                            <td><span class="badge badge-mustard"><span class="badge-dot"></span>Beta</span></td>
+                            <td>Overlay</td>
+                            <td class="text-right">0.9.0</td>
+                        </tr>
+                        <tr>
+                            <td class="table-primary">Toast</td>
+                            <td><span class="badge badge-terracotta"><span class="badge-dot"></span>In Progress</span></td>
+                            <td>Feedback</td>
+                            <td class="text-right">0.5.0</td>
+                        </tr>
+                        <tr>
+                            <td class="table-primary">Tooltip</td>
+                            <td><span class="badge badge-outline">Planned</span></td>
+                            <td>Overlay</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Badges -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">08</div>
+                <h2>Badges</h2>
+                <p class="lead">Small status indicators with soft backgrounds and rounded edges. Each color variant corresponds to a semantic meaning while maintaining visual harmony.</p>
+            </div>
+
+            <h4 class="mb-4">Color Variants</h4>
+            <div class="badge-row mb-6">
+                <span class="badge">Default</span>
+                <span class="badge badge-terracotta">Terracotta</span>
+                <span class="badge badge-forest">Forest</span>
+                <span class="badge badge-mustard">Mustard</span>
+                <span class="badge badge-fjord">Fjord</span>
+            </div>
+
+            <h4 class="mb-4">Styles</h4>
+            <div class="badge-row mb-6">
+                <span class="badge badge-solid">Solid</span>
+                <span class="badge badge-terracotta">Soft</span>
+                <span class="badge badge-outline">Outline</span>
+            </div>
+
+            <h4 class="mb-4">With Indicators</h4>
+            <div class="badge-row">
+                <span class="badge badge-forest"><span class="badge-dot"></span>Active</span>
+                <span class="badge badge-terracotta"><span class="badge-dot"></span>Pending</span>
+                <span class="badge badge-mustard"><span class="badge-dot"></span>Warning</span>
+                <span class="badge"><span class="badge-dot"></span>Inactive</span>
+            </div>
+        </section>
+
+        <!-- Principles -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">09</div>
+                <h2>Design Principles</h2>
+                <p class="lead">The guiding philosophy behind Nordic design. These principles ensure every decision contributes to an experience that feels warm, inviting, and thoughtfully crafted.</p>
+            </div>
+
+            <div class="grid">
+                <div class="col-6">
+                    <div class="principle-card">
+                        <div class="principle-icon terracotta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </div>
+                        <h3>Hygge</h3>
+                        <p>Create a feeling of coziness, comfort, and contentment. Design should nurture well-being and evoke warmth, making users feel at home in digital spaces.</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="principle-card">
+                        <div class="principle-icon forest">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                <polyline points="2 17 12 22 22 17"></polyline>
+                                <polyline points="2 12 12 17 22 12"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Lagom</h3>
+                        <p>The Swedish concept of "just enough." Not too much, not too little. Strike a balance that feels effortless and avoids both excess and scarcity in design elements.</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="principle-card">
+                        <div class="principle-icon mustard">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </div>
+                        <h3>Natural Connection</h3>
+                        <p>Draw inspiration from Nordic landscapes and materials. Use colors, textures, and forms that echo nature, bringing the outdoors in and fostering a sense of organic authenticity.</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="principle-card">
+                        <div class="principle-icon fjord">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                        </div>
+                        <h3>Functional Clarity</h3>
+                        <p>Every element should serve a clear purpose. Embrace minimalism not as an aesthetic choice, but as a commitment to removing barriers between users and their goals.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <div class="notice">
+                    <div class="notice-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="notice-content">
+                        <p><strong>Remember:</strong> Nordic design is not about cold minimalism. It is about creating spaces that feel lived-in and loved, where simplicity serves comfort rather than austerity.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-brand">Nordic Design System</p>
+            <p>Warmth in simplicity. Comfort in clarity.</p>
+        </footer>
+    </div>
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>

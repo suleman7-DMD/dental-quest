@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Academia Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-heading: 'EB Garamond', Georgia, serif;
+            --font-body: 'Source Serif 4', Georgia, serif;
+
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --space-8: 64px;
+            --space-9: 96px;
+
+            --parchment: #f4f1e8;
+            --parchment-dark: #e8e4d9;
+            --sepia: #704214;
+            --sepia-light: #8b5a2b;
+            --brown-deep: #3d2914;
+            --brown-dark: #2a1a0a;
+            --burgundy: #722f37;
+            --burgundy-dark: #4a1c23;
+            --forest: #2d4a3e;
+            --forest-dark: #1a2f26;
+            --gold-antique: #b8860b;
+            --gold-muted: #9a7b4f;
+            --cream: #faf7f0;
+            --ink: #1c1612;
+            --ink-faded: #3d352e;
+
+            --text-primary: var(--parchment);
+            --text-secondary: rgba(244, 241, 232, 0.75);
+            --text-muted: rgba(244, 241, 232, 0.5);
+            --bg-primary: var(--brown-dark);
+            --bg-secondary: var(--brown-deep);
+            --accent: var(--gold-antique);
+
+            --border-ornate: 2px solid var(--gold-muted);
+            --shadow-warm: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(184, 134, 11, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 17px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Parchment Texture Background */
+        .texture-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.04;
+            background-image:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Vignette Effect */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(26, 16, 10, 0.4) 100%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: var(--space-8) var(--space-6);
+        }
+
+        /* Ornate Divider */
+        .ornate-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-4);
+            margin: var(--space-7) 0;
+            color: var(--gold-muted);
+        }
+
+        .ornate-divider::before,
+        .ornate-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-muted), transparent);
+        }
+
+        .ornate-divider span {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            letter-spacing: 0.3em;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: var(--space-9) var(--space-6);
+            margin-bottom: var(--space-8);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, var(--gold-muted));
+        }
+
+        .header-flourish {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--gold-muted);
+            letter-spacing: 0.5em;
+            margin-bottom: var(--space-5);
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 7vw, 4.5rem);
+            font-weight: 400;
+            font-style: italic;
+            letter-spacing: 0.08em;
+            color: var(--parchment);
+            margin-bottom: var(--space-4);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-subtitle {
+            font-family: var(--font-heading);
+            font-size: 1.125rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            letter-spacing: 0.1em;
+            max-width: 500px;
+            margin: 0 auto var(--space-6);
+        }
+
+        .header-quote {
+            font-family: var(--font-display);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-style: italic;
+            letter-spacing: 0.05em;
+        }
+
+        /* Book Page Frame */
+        .page-frame {
+            position: relative;
+            background: linear-gradient(135deg, rgba(61, 41, 20, 0.6) 0%, rgba(42, 26, 10, 0.8) 100%);
+            border: 1px solid var(--gold-muted);
+            padding: var(--space-7);
+            margin-bottom: var(--space-8);
+            box-shadow:
+                inset 0 0 60px rgba(0, 0, 0, 0.3),
+                var(--shadow-warm);
+        }
+
+        .page-frame::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid rgba(154, 123, 79, 0.3);
+            pointer-events: none;
+        }
+
+        /* Corner Ornaments */
+        .corner-ornament {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            color: var(--gold-muted);
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+        }
+
+        .corner-ornament.top-left { top: 12px; left: 12px; }
+        .corner-ornament.top-right { top: 12px; right: 12px; }
+        .corner-ornament.bottom-left { bottom: 12px; left: 12px; }
+        .corner-ornament.bottom-right { bottom: 12px; right: 12px; }
+
+        /* Section */
+        .section {
+            margin-bottom: var(--space-9);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-7);
+        }
+
+        .section-numeral {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--gold-muted);
+            opacity: 0.6;
+            margin-bottom: var(--space-2);
+            letter-spacing: 0.2em;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 400;
+            font-style: italic;
+            letter-spacing: 0.1em;
+            color: var(--parchment);
+            margin-bottom: var(--space-3);
+        }
+
+        .section-subtitle {
+            font-family: var(--font-heading);
+            font-size: 0.875rem;
+            font-style: italic;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+        }
+
+        .flourish-line {
+            width: 120px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-muted), transparent);
+            margin: var(--space-4) auto 0;
+        }
+
+        /* Color Palette */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .color-swatch {
+            text-align: center;
+        }
+
+        .color-preview {
+            width: 100%;
+            height: 80px;
+            margin-bottom: var(--space-3);
+            border: 1px solid rgba(154, 123, 79, 0.4);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-name {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-style: italic;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-1);
+            color: var(--parchment);
+        }
+
+        .color-value {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* Typography */
+        .type-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        .type-specimen {
+            padding: var(--space-5) 0;
+            border-bottom: 1px solid rgba(154, 123, 79, 0.2);
+        }
+
+        .type-specimen:last-child {
+            border-bottom: none;
+        }
+
+        .type-label {
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--gold-muted);
+            margin-bottom: var(--space-3);
+        }
+
+        .type-display {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 400;
+            font-style: italic;
+            letter-spacing: 0.05em;
+            color: var(--parchment);
+        }
+
+        .type-heading {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .type-subheading {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 500;
+            font-style: italic;
+            letter-spacing: 0.05em;
+        }
+
+        .type-body-sample {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.8;
+            max-width: 60ch;
+            color: var(--text-secondary);
+        }
+
+        /* Drop Cap */
+        .dropcap {
+            position: relative;
+        }
+
+        .dropcap::first-letter {
+            float: left;
+            font-family: var(--font-display);
+            font-size: 5rem;
+            line-height: 0.75;
+            padding-right: var(--space-3);
+            padding-top: var(--space-2);
+            color: var(--burgundy);
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Blockquote */
+        blockquote {
+            font-family: var(--font-display);
+            font-size: 1.375rem;
+            font-style: italic;
+            line-height: 1.6;
+            padding: var(--space-6);
+            margin: var(--space-6) 0;
+            border-left: 3px solid var(--burgundy);
+            background: rgba(114, 47, 55, 0.08);
+            color: var(--text-secondary);
+        }
+
+        blockquote cite {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-style: normal;
+            letter-spacing: 0.1em;
+            margin-top: var(--space-4);
+            color: var(--text-muted);
+        }
+
+        /* Spacing */
+        .spacing-demo {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .spacing-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+        }
+
+        .spacing-label {
+            width: 70px;
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--gold-muted);
+            text-align: right;
+        }
+
+        .spacing-bar {
+            height: 16px;
+            background: linear-gradient(90deg, var(--burgundy-dark), var(--burgundy), var(--sepia-light));
+            border: 1px solid rgba(154, 123, 79, 0.3);
+        }
+
+        /* Buttons */
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-5);
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 0.9375rem;
+            font-style: italic;
+            letter-spacing: 0.1em;
+            padding: var(--space-3) var(--space-6);
+            border: 1px solid var(--gold-muted);
+            background: transparent;
+            color: var(--parchment);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--burgundy-dark);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .btn:hover {
+            border-color: var(--burgundy);
+            color: var(--cream);
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn-primary {
+            background: var(--burgundy-dark);
+            border-color: var(--burgundy);
+        }
+
+        .btn-primary::before {
+            background: var(--burgundy);
+        }
+
+        .btn-secondary {
+            background: var(--forest-dark);
+            border-color: var(--forest);
+        }
+
+        .btn-secondary::before {
+            background: var(--forest);
+        }
+
+        .btn-ghost {
+            border-color: rgba(154, 123, 79, 0.4);
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--gold-muted);
+            color: var(--parchment);
+        }
+
+        .btn-ghost::before {
+            background: rgba(154, 123, 79, 0.15);
+        }
+
+        /* Form Elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .input-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .input-label {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 0.8125rem;
+            font-style: italic;
+            letter-spacing: 0.1em;
+            color: var(--gold-muted);
+            margin-bottom: var(--space-2);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            background: rgba(42, 26, 10, 0.6);
+            border: 1px solid rgba(154, 123, 79, 0.4);
+            color: var(--parchment);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--gold-muted);
+            box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        textarea.input-field {
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        select.input-field {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239a7b4f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right var(--space-4) center;
+            padding-right: var(--space-7);
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(61, 41, 20, 0.5) 0%, rgba(42, 26, 10, 0.7) 100%);
+            border: 1px solid rgba(154, 123, 79, 0.3);
+            padding: var(--space-6);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--burgundy-dark), var(--burgundy), var(--gold-muted));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            border-color: var(--gold-muted);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+            color: var(--gold-muted);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.375rem;
+            font-style: italic;
+            letter-spacing: 0.05em;
+            color: var(--parchment);
+            margin-bottom: var(--space-3);
+        }
+
+        .card-content {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .card-footer {
+            margin-top: var(--space-5);
+            padding-top: var(--space-4);
+            border-top: 1px solid rgba(154, 123, 79, 0.2);
+            font-family: var(--font-display);
+            font-size: 0.8125rem;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        /* Badges */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-4);
+        }
+
+        .badge {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-style: italic;
+            letter-spacing: 0.1em;
+            padding: var(--space-2) var(--space-4);
+            border: 1px solid rgba(154, 123, 79, 0.5);
+            color: var(--text-secondary);
+            background: transparent;
+        }
+
+        .badge-burgundy {
+            border-color: var(--burgundy);
+            color: var(--burgundy);
+            background: rgba(114, 47, 55, 0.1);
+        }
+
+        .badge-forest {
+            border-color: var(--forest);
+            color: var(--forest);
+            background: rgba(45, 74, 62, 0.15);
+        }
+
+        .badge-gold {
+            border-color: var(--gold-antique);
+            color: var(--gold-antique);
+            background: rgba(184, 134, 11, 0.1);
+        }
+
+        .badge-filled {
+            background: var(--burgundy-dark);
+            border-color: var(--burgundy);
+            color: var(--parchment);
+        }
+
+        /* Manuscript Styling */
+        .manuscript {
+            position: relative;
+            padding: var(--space-6);
+            background: linear-gradient(to right, rgba(61, 41, 20, 0.3) 0%, rgba(42, 26, 10, 0.5) 2%, rgba(42, 26, 10, 0.5) 98%, rgba(61, 41, 20, 0.3) 100%);
+            border-top: 1px solid rgba(154, 123, 79, 0.3);
+            border-bottom: 1px solid rgba(154, 123, 79, 0.3);
+            margin: var(--space-7) 0;
+        }
+
+        .manuscript::before {
+            content: '';
+            position: absolute;
+            left: 60px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(114, 47, 55, 0.3);
+        }
+
+        .manuscript p {
+            padding-left: var(--space-7);
+            margin-bottom: var(--space-4);
+        }
+
+        .manuscript p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: var(--space-8) var(--space-6);
+            margin-top: var(--space-8);
+            border-top: 1px solid rgba(154, 123, 79, 0.3);
+        }
+
+        .footer-emblem {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--gold-muted);
+            margin-bottom: var(--space-4);
+            letter-spacing: 0.3em;
+        }
+
+        .footer-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--parchment);
+            margin-bottom: var(--space-3);
+        }
+
+        .footer p {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-style: italic;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .footer-flourish {
+            margin-top: var(--space-6);
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--gold-muted);
+            letter-spacing: 0.5em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            html {
+                font-size: 16px;
+            }
+
+            .container {
+                padding: var(--space-6) var(--space-4);
+            }
+
+            .header {
+                padding: var(--space-7) var(--space-4);
+            }
+
+            .page-frame {
+                padding: var(--space-5);
+            }
+
+            .page-frame::before {
+                top: 4px;
+                left: 4px;
+                right: 4px;
+                bottom: 4px;
+            }
+
+            .corner-ornament {
+                display: none;
+            }
+
+            .type-display {
+                font-size: 2.5rem;
+            }
+
+            .button-grid {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .manuscript::before {
+                left: 30px;
+            }
+
+            .manuscript p {
+                padding-left: var(--space-5);
+            }
+
+            .dropcap::first-letter {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="texture-bg"></div>
+    <div class="vignette"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-flourish">* * *</div>
+            <h1>Dark Academia</h1>
+            <p class="header-subtitle">A Design System for Scholars and Dreamers</p>
+            <p class="header-quote">"The only true wisdom is in knowing you know nothing." - Socrates</p>
+        </header>
+
+        <div class="ornate-divider"><span>* * *</span></div>
+
+        <!-- Colors -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">I</div>
+                <h2 class="section-title">Colour Palette</h2>
+                <p class="section-subtitle">Hues of candlelit libraries and aged manuscripts</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="page-frame">
+                <span class="corner-ornament top-left">*</span>
+                <span class="corner-ornament top-right">*</span>
+                <span class="corner-ornament bottom-left">*</span>
+                <span class="corner-ornament bottom-right">*</span>
+
+                <div class="color-grid">
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--parchment);"></div>
+                        <p class="color-name">Parchment</p>
+                        <p class="color-value">#F4F1E8</p>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--sepia);"></div>
+                        <p class="color-name">Sepia</p>
+                        <p class="color-value">#704214</p>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--brown-deep);"></div>
+                        <p class="color-name">Umber</p>
+                        <p class="color-value">#3D2914</p>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--burgundy);"></div>
+                        <p class="color-name">Burgundy</p>
+                        <p class="color-value">#722F37</p>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--forest);"></div>
+                        <p class="color-name">Forest</p>
+                        <p class="color-value">#2D4A3E</p>
+                    </div>
+                    <div class="color-swatch">
+                        <div class="color-preview" style="background: var(--gold-antique);"></div>
+                        <p class="color-name">Antique Gold</p>
+                        <p class="color-value">#B8860B</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">II</div>
+                <h2 class="section-title">Typography</h2>
+                <p class="section-subtitle">Letters worthy of illuminated manuscripts</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="type-showcase">
+                <div class="type-specimen">
+                    <p class="type-label">Display / Cormorant Garamond Italic / 64px</p>
+                    <p class="type-display">Memento Mori</p>
+                </div>
+                <div class="type-specimen">
+                    <p class="type-label">Heading / EB Garamond / 40px</p>
+                    <p class="type-heading">The Secret History</p>
+                </div>
+                <div class="type-specimen">
+                    <p class="type-label">Subheading / Cormorant Garamond Italic / 24px</p>
+                    <p class="type-subheading">Knowledge is the Beginning of Wonder</p>
+                </div>
+                <div class="type-specimen">
+                    <p class="type-label">Body / Source Serif 4 / 17px</p>
+                    <p class="type-body-sample">In the dim corridors of ancient universities, where dust motes dance in shafts of amber light, there exists a profound reverence for the written word. Each leather-bound tome holds centuries of accumulated wisdom, waiting to be discovered by those who seek enlightenment.</p>
+                </div>
+            </div>
+
+            <div class="ornate-divider"><span>*</span></div>
+
+            <div class="manuscript">
+                <p class="dropcap">There is a particular quality to old libraries that cannot be replicated: the musty fragrance of aging paper, the soft creak of wooden floors beneath one's feet, the golden light filtering through tall windows. It is in these hallowed spaces that scholars have sought truth for centuries.</p>
+                <p>The pursuit of knowledge requires patience, dedication, and an unwavering commitment to understanding. Like the scholars of antiquity who copied manuscripts by candlelight, we must approach learning with reverence and humility.</p>
+            </div>
+
+            <blockquote>
+                "I have always imagined that Paradise will be a kind of library."
+                <cite>- Jorge Luis Borges</cite>
+            </blockquote>
+        </section>
+
+        <!-- Spacing -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">III</div>
+                <h2 class="section-title">Spacing</h2>
+                <p class="section-subtitle">Measured intervals for harmonious composition</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="spacing-demo">
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-1</span>
+                    <div class="spacing-bar" style="width: 16px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-2</span>
+                    <div class="spacing-bar" style="width: 32px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-3</span>
+                    <div class="spacing-bar" style="width: 48px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-4</span>
+                    <div class="spacing-bar" style="width: 64px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-5</span>
+                    <div class="spacing-bar" style="width: 96px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-6</span>
+                    <div class="spacing-bar" style="width: 128px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-7</span>
+                    <div class="spacing-bar" style="width: 192px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-8</span>
+                    <div class="spacing-bar" style="width: 256px;"></div>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-9</span>
+                    <div class="spacing-bar" style="width: 320px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="ornate-divider"><span>* * *</span></div>
+
+        <!-- Buttons -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">IV</div>
+                <h2 class="section-title">Buttons</h2>
+                <p class="section-subtitle">Actions befitting a scholar's interface</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="button-grid">
+                <button class="btn">Browse Archive</button>
+                <button class="btn btn-primary">Begin Reading</button>
+                <button class="btn btn-secondary">Explore Collection</button>
+                <button class="btn btn-ghost">View Catalogue</button>
+            </div>
+        </section>
+
+        <!-- Form Elements -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">V</div>
+                <h2 class="section-title">Form Elements</h2>
+                <p class="section-subtitle">Fields for correspondence and inquiry</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="page-frame">
+                <span class="corner-ornament top-left">*</span>
+                <span class="corner-ornament top-right">*</span>
+                <span class="corner-ornament bottom-left">*</span>
+                <span class="corner-ornament bottom-right">*</span>
+
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label class="input-label">Your Name</label>
+                        <input type="text" class="input-field" placeholder="Enter your full name...">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Correspondence Address</label>
+                        <input type="email" class="input-field" placeholder="your.email@university.edu">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label class="input-label">Subject of Study</label>
+                        <select class="input-field">
+                            <option>Select your discipline...</option>
+                            <option>Classical Literature</option>
+                            <option>Philosophy</option>
+                            <option>Art History</option>
+                            <option>Ancient Languages</option>
+                            <option>Theology</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Year of Study</label>
+                        <input type="text" class="input-field" placeholder="e.g., Third Year">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Your Letter</label>
+                    <textarea class="input-field" placeholder="Dear Professor, I write to you regarding matters of great scholarly importance..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">VI</div>
+                <h2 class="section-title">Cards</h2>
+                <p class="section-subtitle">Vessels for knowledge and narrative</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">*</div>
+                    <h3 class="card-title">The Library</h3>
+                    <p class="card-content">Towering shelves of leather-bound volumes, each spine a doorway to another world. The scent of aged paper mingles with wood polish and candlewax.</p>
+                    <p class="card-footer">Est. MDCCLXVIII</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">*</div>
+                    <h3 class="card-title">The Study</h3>
+                    <p class="card-content">A mahogany desk strewn with manuscripts, an inkwell catching the lamplight. Here, ideas take form in the quiet hours before dawn.</p>
+                    <p class="card-footer">Cogito, Ergo Sum</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">*</div>
+                    <h3 class="card-title">The Garden</h3>
+                    <p class="card-content">Stone paths wind between hedgerows and classical statuary. Scholars walk in contemplation, their footsteps echoing through centuries.</p>
+                    <p class="card-footer">Hortus Conclusus</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Badges -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-numeral">VII</div>
+                <h2 class="section-title">Badges</h2>
+                <p class="section-subtitle">Marks of distinction and classification</p>
+                <div class="flourish-line"></div>
+            </div>
+
+            <div class="badge-row">
+                <span class="badge">Manuscript</span>
+                <span class="badge badge-burgundy">First Edition</span>
+                <span class="badge badge-forest">Philosophy</span>
+                <span class="badge badge-gold">Rare</span>
+                <span class="badge badge-filled">Featured</span>
+            </div>
+        </section>
+
+        <div class="ornate-divider"><span>* * *</span></div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-emblem">* * *</div>
+            <p class="footer-title">Dark Academia</p>
+            <p>A design system inspired by candlelit libraries, ancient wisdom, and the eternal pursuit of knowledge</p>
+            <div class="footer-flourish">FINIS</div>
+        </footer>
+    </div>
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>

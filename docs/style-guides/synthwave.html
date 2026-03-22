@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHWAVE // Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Audiowide&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================================================================
+           SYNTHWAVE / OUTRUN DESIGN SYSTEM
+           1980s retrofuture driving aesthetic
+           Sunset horizons, chrome text, perspective grids, neon nights
+           ================================================================ */
+
+        /* --- DESIGN TOKENS --- */
+        :root {
+            /* SUNSET PALETTE - Warm to cool horizon gradient */
+            --sun-yellow: #ffe566;
+            --sun-orange: #ff6a00;
+            --hot-pink: #ff2975;
+            --magenta: #f222ff;
+            --violet: #8b2fc9;
+            --deep-blue: #0d0221;
+            --midnight: #150050;
+
+            /* NEON ACCENTS */
+            --neon-blue: #00d4ff;
+            --neon-pink: #ff1493;
+            --chrome-white: #e8e0ff;
+
+            /* BACKGROUND LAYERS */
+            --bg-void: #050012;
+            --bg-deep: #0d0221;
+            --bg-mid: #1a0533;
+            --bg-surface: #261247;
+            --bg-elevated: #331a5e;
+
+            /* TEXT */
+            --text-primary: #f0e6ff;
+            --text-secondary: #b8a5d4;
+            --text-muted: #6b5a8a;
+
+            /* CHROME GRADIENT - Metallic text effect */
+            --chrome-gradient: linear-gradient(
+                180deg,
+                #ffffff 0%,
+                #d4d4e8 15%,
+                #a8a0c0 30%,
+                #ffffff 50%,
+                #c8c0e0 65%,
+                #9890b0 80%,
+                #ffffff 100%
+            );
+
+            /* SUNSET GRADIENT */
+            --sunset-gradient: linear-gradient(
+                180deg,
+                var(--sun-yellow) 0%,
+                var(--sun-orange) 25%,
+                var(--hot-pink) 50%,
+                var(--magenta) 75%,
+                var(--deep-blue) 100%
+            );
+
+            /* TYPOGRAPHY */
+            --font-display: 'Orbitron', sans-serif;
+            --font-accent: 'Audiowide', sans-serif;
+            --font-body: 'Exo 2', sans-serif;
+
+            /* SPACING SCALE (4px base) */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --space-8: 64px;
+            --space-9: 96px;
+            --space-10: 128px;
+
+            /* EFFECTS */
+            --glow-pink: 0 0 10px rgba(255, 41, 117, 0.6), 0 0 40px rgba(255, 41, 117, 0.3);
+            --glow-blue: 0 0 10px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.3);
+            --glow-magenta: 0 0 10px rgba(242, 34, 255, 0.6), 0 0 40px rgba(242, 34, 255, 0.3);
+            --glow-orange: 0 0 10px rgba(255, 106, 0, 0.5), 0 0 40px rgba(255, 106, 0, 0.2);
+
+            /* TRANSITIONS */
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s ease;
+            --transition-slow: 0.6s ease;
+
+            /* BORDERS */
+            --border-dim: rgba(255, 41, 117, 0.15);
+            --border-glow: rgba(255, 41, 117, 0.4);
+        }
+
+        /* --- RESET --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.65;
+            color: var(--text-primary);
+            background: var(--bg-void);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- BACKGROUND: SUNSET SKY --- */
+        .sky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                180deg,
+                #0d0221 0%,
+                #150050 15%,
+                #3a0070 30%,
+                #8b2fc9 42%,
+                #f222ff 50%,
+                #ff2975 58%,
+                #ff6a00 68%,
+                #ffe566 78%,
+                #ffe566 80%,
+                #ff6a00 82%,
+                #0d0221 85%,
+                #050012 100%
+            );
+            z-index: -3;
+        }
+
+        /* --- BACKGROUND: SUN --- */
+        .horizon-sun {
+            position: fixed;
+            bottom: 22%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: linear-gradient(
+                180deg,
+                var(--sun-yellow) 0%,
+                var(--sun-orange) 35%,
+                var(--hot-pink) 65%,
+                var(--magenta) 100%
+            );
+            z-index: -2;
+            box-shadow:
+                0 0 80px rgba(255, 106, 0, 0.5),
+                0 0 160px rgba(255, 41, 117, 0.3);
+        }
+
+        /* Horizontal line slices through the sun (synthwave signature) */
+        .horizon-sun::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 10px,
+                var(--bg-void) 10px,
+                var(--bg-void) 14px
+            );
+            clip-path: polygon(0 45%, 100% 45%, 100% 100%, 0 100%);
+        }
+
+        /* Clipping the sun at the horizon */
+        .horizon-sun::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: -50%;
+            width: 200%;
+            height: 50%;
+            background: var(--bg-void);
+        }
+
+        /* --- BACKGROUND: PERSPECTIVE GRID ROAD --- */
+        .grid-road {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            background:
+                linear-gradient(90deg, rgba(255, 41, 117, 0.2) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(255, 41, 117, 0.2) 1px, transparent 1px);
+            background-size: 80px 40px;
+            transform: perspective(400px) rotateX(65deg);
+            transform-origin: bottom center;
+            z-index: -1;
+            animation: grid-drive 2s linear infinite;
+        }
+
+        @keyframes grid-drive {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 40px; }
+        }
+
+        /* Fade the grid at the horizon */
+        .grid-road::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(180deg, var(--bg-void) 0%, transparent 100%);
+        }
+
+        /* --- BACKGROUND: PALM TREE SILHOUETTES --- */
+        .palm-left, .palm-right {
+            position: fixed;
+            bottom: 18%;
+            width: 120px;
+            height: 200px;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .palm-left {
+            left: 5%;
+        }
+
+        .palm-right {
+            right: 5%;
+            transform: scaleX(-1);
+        }
+
+        /* Palm trunk */
+        .palm-left::before, .palm-right::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 8px;
+            height: 140px;
+            background: #0d0221;
+            transform: translateX(-50%) rotate(-5deg);
+            border-radius: 4px;
+        }
+
+        /* Palm fronds (simplified) */
+        .palm-left::after, .palm-right::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 80px;
+            background: radial-gradient(ellipse at 50% 100%, #0d0221 0%, #0d0221 45%, transparent 46%),
+                radial-gradient(ellipse at 20% 80%, #0d0221 0%, #0d0221 30%, transparent 31%),
+                radial-gradient(ellipse at 80% 80%, #0d0221 0%, #0d0221 30%, transparent 31%);
+        }
+
+        /* --- SCANLINE OVERLAY --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.08) 0px,
+                rgba(0, 0, 0, 0.08) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+        }
+
+        /* --- CONTAINER --- */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: var(--space-8) var(--space-5);
+        }
+
+        /* --- SECTION BASE --- */
+        .section {
+            margin-bottom: var(--space-9);
+            padding: var(--space-7);
+            background: rgba(13, 2, 33, 0.88);
+            border: 1px solid rgba(255, 41, 117, 0.25);
+            border-top: 3px solid var(--hot-pink);
+            position: relative;
+            backdrop-filter: blur(8px);
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--hot-pink), var(--magenta), var(--neon-blue));
+        }
+
+        .section::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            z-index: -1;
+            background: linear-gradient(180deg, rgba(255, 41, 117, 0.15) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid rgba(255, 41, 117, 0.2);
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-family: var(--font-accent);
+            font-size: 0.85rem;
+            color: var(--hot-pink);
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            margin-bottom: var(--space-4);
+        }
+
+        /* --- HEADER --- */
+        .header {
+            text-align: center;
+            padding: var(--space-10) 0 var(--space-9);
+            position: relative;
+        }
+
+        .header-eyebrow {
+            font-family: var(--font-accent);
+            font-size: 0.9rem;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.6em;
+            text-shadow: var(--glow-blue);
+            margin-bottom: var(--space-4);
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 10vw, 6.5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            margin-bottom: var(--space-5);
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 30px rgba(255, 41, 117, 0.4));
+        }
+
+        .header-tagline {
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header-line {
+            display: block;
+            width: 200px;
+            height: 2px;
+            margin: var(--space-6) auto 0;
+            background: linear-gradient(90deg, transparent, var(--hot-pink), var(--magenta), var(--neon-blue), transparent);
+        }
+
+        /* --- COLOR PALETTE --- */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .color-swatch {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+        }
+
+        .color-swatch:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .color-preview {
+            height: 90px;
+            position: relative;
+        }
+
+        .color-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+        }
+
+        .color-info {
+            padding: var(--space-3);
+        }
+
+        .color-name {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .color-hex {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .type-specimen {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+            border-left: 3px solid var(--magenta);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .type-label {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: var(--hot-pink);
+            margin-bottom: var(--space-3);
+        }
+
+        .type-h1 {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .type-h2 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-primary);
+        }
+
+        .type-h3 {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-primary);
+        }
+
+        .type-h4 {
+            font-family: var(--font-accent);
+            font-size: 1.35rem;
+            line-height: 1.3;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--neon-blue);
+        }
+
+        .type-h5 {
+            font-family: var(--font-accent);
+            font-size: 1.1rem;
+            line-height: 1.35;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--hot-pink);
+        }
+
+        .type-h6 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.4;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-secondary);
+        }
+
+        .type-body {
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 400;
+            line-height: 1.75;
+            color: var(--text-secondary);
+        }
+
+        .type-chrome-demo {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 8px rgba(255, 41, 117, 0.3));
+            line-height: 1.1;
+        }
+
+        /* --- SPACING SYSTEM --- */
+        .spacing-demo {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .spacing-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .spacing-label {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            width: 100px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .spacing-bar {
+            height: 20px;
+            background: linear-gradient(90deg, var(--hot-pink), var(--magenta), var(--neon-blue));
+            box-shadow: 0 0 15px rgba(255, 41, 117, 0.3);
+            position: relative;
+        }
+
+        .spacing-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent);
+        }
+
+        .spacing-value {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            width: 50px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* --- BUTTONS --- */
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+            align-items: center;
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all var(--transition-base);
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            text-decoration: none;
+        }
+
+        /* Primary: Hot pink with glow */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--hot-pink), var(--magenta));
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 41, 117, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(255, 41, 117, 0.5), 0 0 60px rgba(255, 41, 117, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Secondary: Outlined with neon border */
+        .btn-secondary {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: var(--glow-blue);
+            transform: translateY(-2px);
+        }
+
+        /* Ghost: Minimal, text-only feel */
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Accent: Sunset gradient */
+        .btn-accent {
+            background: linear-gradient(135deg, var(--sun-orange), var(--hot-pink));
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 106, 0, 0.3);
+        }
+
+        .btn-accent:hover {
+            box-shadow: 0 0 30px rgba(255, 106, 0, 0.5), 0 0 60px rgba(255, 106, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Chrome button */
+        .btn-chrome {
+            background: var(--chrome-gradient);
+            color: var(--bg-void);
+            font-weight: 800;
+        }
+
+        .btn-chrome:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            font-size: 0.7rem;
+            padding: var(--space-2) var(--space-4);
+        }
+
+        .btn-lg {
+            font-size: 0.9rem;
+            padding: var(--space-4) var(--space-8);
+        }
+
+        /* --- FORMS --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--neon-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 41, 117, 0.2);
+            border-bottom: 2px solid var(--hot-pink);
+            outline: none;
+            transition: all var(--transition-base);
+        }
+
+        .form-input:focus {
+            border-color: var(--neon-blue);
+            border-bottom-color: var(--neon-blue);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 41, 117, 0.2);
+            border-bottom: 2px solid var(--hot-pink);
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .form-select:focus {
+            border-color: var(--neon-blue);
+            border-bottom-color: var(--neon-blue);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: var(--space-4);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 41, 117, 0.2);
+            border-bottom: 2px solid var(--hot-pink);
+            outline: none;
+            resize: vertical;
+            transition: all var(--transition-base);
+        }
+
+        .form-textarea:focus {
+            border-color: var(--neon-blue);
+            border-bottom-color: var(--neon-blue);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: var(--space-2);
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            cursor: pointer;
+        }
+
+        .form-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--hot-pink);
+            cursor: pointer;
+        }
+
+        .form-checkbox-label {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- CARDS --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-5);
+        }
+
+        /* Card: Standard */
+        .card {
+            background: rgba(13, 2, 33, 0.9);
+            border: 1px solid rgba(255, 41, 117, 0.15);
+            padding: var(--space-6);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--hot-pink), var(--magenta));
+        }
+
+        .card:hover {
+            border-color: rgba(255, 41, 117, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(255, 41, 117, 0.15);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-primary);
+            margin-bottom: var(--space-3);
+        }
+
+        .card-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Card: Neon Border */
+        .card-neon {
+            border: 1px solid var(--neon-blue);
+            box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.05);
+        }
+
+        .card-neon::before {
+            background: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .card-neon:hover {
+            border-color: var(--neon-blue);
+            box-shadow:
+                0 0 20px rgba(0, 212, 255, 0.2),
+                inset 0 0 30px rgba(0, 212, 255, 0.05);
+        }
+
+        /* Card: Sunset Gradient */
+        .card-sunset {
+            background: linear-gradient(
+                180deg,
+                rgba(255, 106, 0, 0.08) 0%,
+                rgba(255, 41, 117, 0.08) 50%,
+                rgba(13, 2, 33, 0.95) 100%
+            );
+            border-color: rgba(255, 106, 0, 0.2);
+        }
+
+        .card-sunset::before {
+            background: linear-gradient(90deg, var(--sun-orange), var(--hot-pink), var(--magenta));
+        }
+
+        .card-sunset:hover {
+            box-shadow: 0 12px 40px rgba(255, 106, 0, 0.15);
+        }
+
+        /* Card: Chrome */
+        .card-chrome {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.03) 0%,
+                rgba(255, 255, 255, 0.08) 50%,
+                rgba(255, 255, 255, 0.03) 100%
+            );
+        }
+
+        .card-chrome::before {
+            background: var(--chrome-gradient);
+            height: 3px;
+        }
+
+        .card-chrome .card-title {
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-chrome:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 40px rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- DATA TABLE --- */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid rgba(255, 41, 117, 0.15);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table thead {
+            background: rgba(255, 41, 117, 0.08);
+        }
+
+        .data-table th {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--hot-pink);
+            padding: var(--space-4) var(--space-5);
+            text-align: left;
+            border-bottom: 2px solid var(--hot-pink);
+        }
+
+        .data-table td {
+            padding: var(--space-3) var(--space-5);
+            border-bottom: 1px solid rgba(255, 41, 117, 0.08);
+            color: var(--text-secondary);
+        }
+
+        .data-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255, 41, 117, 0.05);
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .data-table tbody tr:nth-child(even):hover {
+            background: rgba(255, 41, 117, 0.08);
+        }
+
+        .table-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: var(--space-2);
+        }
+
+        .table-status-active {
+            background: var(--neon-blue);
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+        }
+
+        .table-status-warning {
+            background: var(--sun-orange);
+            box-shadow: 0 0 8px rgba(255, 106, 0, 0.5);
+        }
+
+        .table-status-error {
+            background: var(--hot-pink);
+            box-shadow: 0 0 8px rgba(255, 41, 117, 0.5);
+        }
+
+        /* --- BADGES / TAGS --- */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .badge {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: var(--space-1) var(--space-3);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .badge-pink {
+            color: var(--hot-pink);
+            background: rgba(255, 41, 117, 0.1);
+            border: 1px solid rgba(255, 41, 117, 0.3);
+        }
+
+        .badge-blue {
+            color: var(--neon-blue);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .badge-orange {
+            color: var(--sun-orange);
+            background: rgba(255, 106, 0, 0.1);
+            border: 1px solid rgba(255, 106, 0, 0.3);
+        }
+
+        .badge-magenta {
+            color: var(--magenta);
+            background: rgba(242, 34, 255, 0.1);
+            border: 1px solid rgba(242, 34, 255, 0.3);
+        }
+
+        .badge-chrome {
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .badge-filled {
+            background: linear-gradient(135deg, var(--hot-pink), var(--magenta));
+            color: #ffffff;
+            border: none;
+        }
+
+        /* --- ALERTS --- */
+        .alert {
+            padding: var(--space-4) var(--space-5);
+            margin-bottom: var(--space-4);
+            border-left: 4px solid;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .alert-title {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: var(--space-2);
+        }
+
+        .alert-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .alert-info {
+            border-color: var(--neon-blue);
+            background: rgba(0, 212, 255, 0.06);
+        }
+
+        .alert-info .alert-title {
+            color: var(--neon-blue);
+        }
+
+        .alert-success {
+            border-color: var(--sun-yellow);
+            background: rgba(255, 229, 102, 0.06);
+        }
+
+        .alert-success .alert-title {
+            color: var(--sun-yellow);
+        }
+
+        .alert-warning {
+            border-color: var(--sun-orange);
+            background: rgba(255, 106, 0, 0.06);
+        }
+
+        .alert-warning .alert-title {
+            color: var(--sun-orange);
+        }
+
+        .alert-danger {
+            border-color: var(--hot-pink);
+            background: rgba(255, 41, 117, 0.06);
+        }
+
+        .alert-danger .alert-title {
+            color: var(--hot-pink);
+        }
+
+        /* --- DIVIDER --- */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--hot-pink), var(--magenta), var(--neon-blue), transparent);
+            margin: var(--space-7) 0;
+        }
+
+        .divider-sunset {
+            height: 3px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--sun-yellow),
+                var(--sun-orange),
+                var(--hot-pink),
+                var(--magenta),
+                var(--deep-blue),
+                transparent
+            );
+            margin: var(--space-7) 0;
+        }
+
+        /* --- DESIGN PRINCIPLES --- */
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .principle {
+            padding: var(--space-5);
+            border: 1px solid rgba(255, 41, 117, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .principle-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 900;
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        .principle-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--hot-pink);
+            margin-bottom: var(--space-3);
+        }
+
+        .principle-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            text-align: center;
+            padding: var(--space-9) 0 var(--space-8);
+            margin-top: var(--space-8);
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--sun-yellow),
+                var(--sun-orange),
+                var(--hot-pink),
+                var(--magenta),
+                var(--neon-blue),
+                transparent
+            );
+        }
+
+        .footer-logo {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: var(--chrome-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-4);
+        }
+
+        .footer-tagline {
+            font-family: var(--font-accent);
+            font-size: 0.85rem;
+            color: var(--hot-pink);
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            margin-bottom: var(--space-6);
+        }
+
+        .footer-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--space-5) var(--space-4);
+            }
+
+            .section {
+                padding: var(--space-5);
+            }
+
+            .header {
+                padding: var(--space-8) 0 var(--space-7);
+            }
+
+            .header h1 {
+                letter-spacing: 0.04em;
+            }
+
+            .type-h1 {
+                font-size: 2.2rem;
+            }
+
+            .type-h2 {
+                font-size: 1.8rem;
+            }
+
+            .type-chrome-demo {
+                font-size: 2rem;
+            }
+
+            .button-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            }
+
+            .horizon-sun {
+                width: 200px;
+                height: 200px;
+            }
+
+            .palm-left, .palm-right {
+                display: none;
+            }
+
+            .principles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .data-table {
+                font-size: 0.8rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: var(--space-2) var(--space-3);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background layers -->
+    <div class="sky"></div>
+    <div class="horizon-sun"></div>
+    <div class="grid-road"></div>
+    <div class="palm-left"></div>
+    <div class="palm-right"></div>
+    <div class="scanlines"></div>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <header class="header">
+            <p class="header-eyebrow">Design System</p>
+            <h1>Synthwave</h1>
+            <p class="header-tagline">Chrome horizons and neon highways stretching into an endless sunset</p>
+            <span class="header-line"></span>
+        </header>
+
+        <!-- COLOR PALETTE -->
+        <section class="section">
+            <h2 class="section-title">Color Palette</h2>
+            <p class="section-subtitle">Sunset Spectrum</p>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--sun-yellow);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Sun Yellow</div>
+                        <div class="color-hex">#ffe566</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--sun-orange);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Sun Orange</div>
+                        <div class="color-hex">#ff6a00</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--hot-pink);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Hot Pink</div>
+                        <div class="color-hex">#ff2975</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--magenta);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Magenta</div>
+                        <div class="color-hex">#f222ff</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--violet);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Violet</div>
+                        <div class="color-hex">#8b2fc9</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--neon-blue);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Neon Blue</div>
+                        <div class="color-hex">#00d4ff</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--deep-blue);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Deep Blue</div>
+                        <div class="color-hex">#0d0221</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: var(--chrome-white);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Chrome White</div>
+                        <div class="color-hex">#e8e0ff</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TYPOGRAPHY -->
+        <section class="section">
+            <h2 class="section-title">Typography</h2>
+
+            <div class="type-specimen">
+                <div class="type-label">Chrome Display / Orbitron 900</div>
+                <div class="type-chrome-demo">Night Drive</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H1 / Orbitron 900 / 3.5rem</div>
+                <div class="type-h1">Heading One</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H2 / Orbitron 700 / 2.5rem</div>
+                <div class="type-h2">Heading Two</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H3 / Orbitron 600 / 1.75rem</div>
+                <div class="type-h3">Heading Three</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H4 / Audiowide / 1.35rem</div>
+                <div class="type-h4">Heading Four</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H5 / Audiowide / 1.1rem</div>
+                <div class="type-h5">Heading Five</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">H6 / Orbitron 700 / 0.85rem</div>
+                <div class="type-h6">Heading Six</div>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-label">Body / Exo 2 / 1.05rem</div>
+                <div class="type-body">The highway stretches endlessly ahead, twin lines of light converging at the vanishing point where the sun bleeds into the horizon. Chrome and glass catch the last rays, painting everything in shades of molten gold and electric violet. The city recedes in the rearview mirror -- all neon spires and reflective towers -- as the engine hums its low, steady anthem into the gathering dusk.</div>
+            </div>
+        </section>
+
+        <!-- SPACING SYSTEM -->
+        <section class="section">
+            <h2 class="section-title">Spacing System</h2>
+            <p class="section-subtitle">4px Base Unit</p>
+            <div class="spacing-demo">
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-1</span>
+                    <div class="spacing-bar" style="width: 16px;"></div>
+                    <span class="spacing-value">4px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-2</span>
+                    <div class="spacing-bar" style="width: 32px;"></div>
+                    <span class="spacing-value">8px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-3</span>
+                    <div class="spacing-bar" style="width: 48px;"></div>
+                    <span class="spacing-value">12px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-4</span>
+                    <div class="spacing-bar" style="width: 64px;"></div>
+                    <span class="spacing-value">16px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-5</span>
+                    <div class="spacing-bar" style="width: 96px;"></div>
+                    <span class="spacing-value">24px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-6</span>
+                    <div class="spacing-bar" style="width: 128px;"></div>
+                    <span class="spacing-value">32px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-7</span>
+                    <div class="spacing-bar" style="width: 192px;"></div>
+                    <span class="spacing-value">48px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-8</span>
+                    <div class="spacing-bar" style="width: 256px;"></div>
+                    <span class="spacing-value">64px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-9</span>
+                    <div class="spacing-bar" style="width: 320px;"></div>
+                    <span class="spacing-value">96px</span>
+                </div>
+                <div class="spacing-item">
+                    <span class="spacing-label">--space-10</span>
+                    <div class="spacing-bar" style="width: 400px;"></div>
+                    <span class="spacing-value">128px</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- BUTTONS -->
+        <section class="section">
+            <h2 class="section-title">Buttons</h2>
+
+            <p class="section-subtitle">Standard Sizes</p>
+            <div class="button-row">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-accent">Accent</button>
+                <button class="btn btn-chrome">Chrome</button>
+            </div>
+
+            <p class="section-subtitle">Size Variants</p>
+            <div class="button-row">
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary">Default</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+            </div>
+
+            <p class="section-subtitle">With Icons</p>
+            <div class="button-row">
+                <button class="btn btn-primary">&#9654; Play</button>
+                <button class="btn btn-secondary">&#9881; Settings</button>
+                <button class="btn btn-accent">&#9889; Boost</button>
+            </div>
+        </section>
+
+        <!-- FORMS -->
+        <section class="section">
+            <h2 class="section-title">Forms</h2>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Driver Name</label>
+                    <input type="text" class="form-input" placeholder="Enter callsign...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vehicle Class</label>
+                    <select class="form-select">
+                        <option>Interceptor</option>
+                        <option>Cruiser</option>
+                        <option>Phantom</option>
+                        <option>Nightrunner</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Transmission Log</label>
+                <textarea class="form-textarea" placeholder="Incoming signal..."></textarea>
+                <p class="form-hint">Encrypted channel. Maximum 500 characters.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-checkbox-group">
+                    <input type="checkbox" class="form-checkbox" checked>
+                    <span class="form-checkbox-label">Enable turbo overdrive</span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-checkbox-group">
+                    <input type="checkbox" class="form-checkbox">
+                    <span class="form-checkbox-label">Broadcast on open frequency</span>
+                </label>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-primary">Transmit</button>
+                <button class="btn btn-ghost">Cancel</button>
+            </div>
+        </section>
+
+        <!-- CARDS -->
+        <section class="section">
+            <h2 class="section-title">Cards</h2>
+
+            <p class="section-subtitle">Standard Cards</p>
+            <div class="card-grid" style="margin-bottom: var(--space-7);">
+                <div class="card">
+                    <div class="card-icon">&#127749;</div>
+                    <div class="card-title">Sunset Boulevard</div>
+                    <p class="card-text">The horizon bleeds orange and pink as the sun drops below the skyline. Every surface catches fire, chrome and glass burning with reflected light.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127950;</div>
+                    <div class="card-title">Night Cruiser</div>
+                    <p class="card-text">Low and sleek, the machine cuts through the dark like a blade. Headlights carve twin paths into the void ahead, engine humming with restrained power.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127926;</div>
+                    <div class="card-title">FM Frequencies</div>
+                    <p class="card-text">The radio crackles with synthesizer arpeggios and pulsing basslines. Every station is a portal to a world that never was, a future that never came.</p>
+                </div>
+            </div>
+
+            <p class="section-subtitle">Variant: Neon Border</p>
+            <div class="card-grid" style="margin-bottom: var(--space-7);">
+                <div class="card card-neon">
+                    <div class="card-title">Grid Runner</div>
+                    <p class="card-text">The perspective grid stretches infinitely beneath your wheels. Each line pulses with electric blue, mapping the geometry of speed.</p>
+                </div>
+            </div>
+
+            <p class="section-subtitle">Variant: Sunset Gradient</p>
+            <div class="card-grid" style="margin-bottom: var(--space-7);">
+                <div class="card card-sunset">
+                    <div class="card-title">Golden Hour</div>
+                    <p class="card-text">That fleeting moment when the sky is on fire and the world looks like it was painted by a machine dreaming of paradise.</p>
+                </div>
+            </div>
+
+            <p class="section-subtitle">Variant: Chrome</p>
+            <div class="card-grid">
+                <div class="card card-chrome">
+                    <div class="card-title">Mirror Finish</div>
+                    <p class="card-text">Polished to perfection, every surface reflects the neon spectacle. Chrome is the material of the future -- cold, brilliant, unyielding.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATA TABLE -->
+        <section class="section">
+            <h2 class="section-title">Data Table</h2>
+            <p class="section-subtitle">Night Race Leaderboard</p>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Driver</th>
+                            <th>Vehicle</th>
+                            <th>Top Speed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>01</td>
+                            <td>Nighthawk</td>
+                            <td>Testarossa MK-VII</td>
+                            <td>342 km/h</td>
+                            <td><span class="table-status table-status-active"></span>Active</td>
+                        </tr>
+                        <tr>
+                            <td>02</td>
+                            <td>Chrome Viper</td>
+                            <td>Countach Spectra</td>
+                            <td>328 km/h</td>
+                            <td><span class="table-status table-status-active"></span>Active</td>
+                        </tr>
+                        <tr>
+                            <td>03</td>
+                            <td>Solar Flare</td>
+                            <td>Delorean Omega</td>
+                            <td>315 km/h</td>
+                            <td><span class="table-status table-status-warning"></span>Pit Stop</td>
+                        </tr>
+                        <tr>
+                            <td>04</td>
+                            <td>Phantom</td>
+                            <td>Diablo Neon</td>
+                            <td>309 km/h</td>
+                            <td><span class="table-status table-status-active"></span>Active</td>
+                        </tr>
+                        <tr>
+                            <td>05</td>
+                            <td>Voltage</td>
+                            <td>Corvette Pulse</td>
+                            <td>298 km/h</td>
+                            <td><span class="table-status table-status-error"></span>Retired</td>
+                        </tr>
+                        <tr>
+                            <td>06</td>
+                            <td>Dusk Runner</td>
+                            <td>Supra Horizon</td>
+                            <td>291 km/h</td>
+                            <td><span class="table-status table-status-active"></span>Active</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- BADGES / TAGS -->
+        <section class="section">
+            <h2 class="section-title">Badges &amp; Tags</h2>
+
+            <p class="section-subtitle">Outlined</p>
+            <div class="badge-row">
+                <span class="badge badge-pink">Turbo</span>
+                <span class="badge badge-blue">Electric</span>
+                <span class="badge badge-orange">Nitro</span>
+                <span class="badge badge-magenta">Overdrive</span>
+                <span class="badge badge-chrome">Chrome</span>
+            </div>
+
+            <p class="section-subtitle">Filled</p>
+            <div class="badge-row">
+                <span class="badge badge-filled">New</span>
+                <span class="badge badge-filled">Featured</span>
+                <span class="badge badge-filled">V2.0</span>
+            </div>
+        </section>
+
+        <!-- ALERTS -->
+        <section class="section">
+            <h2 class="section-title">Alerts</h2>
+
+            <div class="alert alert-info">
+                <div class="alert-title">System Online</div>
+                <p class="alert-text">All navigation systems are operational. Autopilot engaged on the coastal highway. Estimated arrival: sunset.</p>
+            </div>
+
+            <div class="alert alert-success">
+                <div class="alert-title">Mission Complete</div>
+                <p class="alert-text">Night run finished successfully. New personal best recorded. Replay saved to onboard memory.</p>
+            </div>
+
+            <div class="alert alert-warning">
+                <div class="alert-title">Caution Advised</div>
+                <p class="alert-text">Approaching restricted zone. Reduce speed and disable turbo boost. Radar activity detected ahead.</p>
+            </div>
+
+            <div class="alert alert-danger">
+                <div class="alert-title">Critical Warning</div>
+                <p class="alert-text">Engine temperature exceeding safe limits. Immediate cooldown recommended. Pull over at next neon station.</p>
+            </div>
+        </section>
+
+        <!-- DESIGN PRINCIPLES -->
+        <section class="section">
+            <h2 class="section-title">Design Principles</h2>
+
+            <div class="principles-grid">
+                <div class="principle">
+                    <div class="principle-number">01</div>
+                    <div class="principle-title">Dramatic Warmth</div>
+                    <p class="principle-text">Lead with the sunset palette. Every composition should feel like it is backlit by a horizon on fire -- warm oranges and pinks transitioning to cool violets and deep blues. The warmth is earnest, never ironic.</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-number">02</div>
+                    <div class="principle-title">Chrome Precision</div>
+                    <p class="principle-text">Metallic text and reflective surfaces convey the polished, high-performance feel of the aesthetic. Chrome is used for emphasis and hierarchy, catching light the way a sports car catches the eye.</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-number">03</div>
+                    <div class="principle-title">Vanishing Point</div>
+                    <p class="principle-text">Perspective and depth are essential. The grid road, the converging lines, the sense of speed and distance -- every layout should pull the eye toward a focal point on the horizon.</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-number">04</div>
+                    <div class="principle-title">Cinematic Scale</div>
+                    <p class="principle-text">Think movie poster, not UI mockup. Big type, bold gradients, generous whitespace. The synthwave aesthetic is about grandeur and atmosphere, not about cramming in content.</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-number">05</div>
+                    <div class="principle-title">Restrained Glow</div>
+                    <p class="principle-text">Neon effects are supporting actors, not the lead. Use glow sparingly to accent interactive elements and key focal points. Overuse dilutes the drama and strains the eye.</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-number">06</div>
+                    <div class="principle-title">Forward Motion</div>
+                    <p class="principle-text">The aesthetic is about movement -- driving, flying, racing toward something. Animations should be smooth and directional. Static compositions should still imply velocity and purpose.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider-sunset"></div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-logo">Synthwave</div>
+            <p class="footer-tagline">Endless Horizon</p>
+            <p class="footer-meta">A design system inspired by neon nights, chrome horizons, and the open road.</p>
+        </footer>
+
+    </div>
+
+<script defer src="../prompt-viewer.js"></script>
+</body>
+</html>
