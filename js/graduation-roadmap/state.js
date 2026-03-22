@@ -179,6 +179,7 @@ let isInitialLoad = true;      // Block ALL saves until data loaded
 let hasLoadedFromCloud = false; // Track if we've checked Firebase
 let pinValidated = false;       // Track if PIN has been validated (prevents race condition)
 let awaitingPinEntry = false;   // True while PIN prompt is showing — blocks fallback timers from firing
+let clinicalDataDirty = true;   // True when clinical data changed — gates syncClinicalToMonthlyPlanner(). Starts true for first init.
 
 // Check if state has real user data (not just defaults)
 function isEmptyState(data) {

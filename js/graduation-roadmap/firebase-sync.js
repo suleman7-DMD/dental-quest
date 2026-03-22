@@ -629,6 +629,9 @@ function mergeRemoteState(data) {
     };
 
     migrateInvalidFirebaseKeys(roadmapData);
+
+    // Mark clinical data as dirty so next initMonthlyPlanner() will re-sync
+    clinicalDataDirty = true;
 }
 
 // ==================== LOAD DATA ====================
@@ -746,6 +749,9 @@ function loadFromLocalStorage(finalize = true) {
 
     // Migrate any keys with Firebase-invalid characters (# / . $ [ ])
     migrateInvalidFirebaseKeys(roadmapData);
+
+    // Mark clinical data as dirty so first initMonthlyPlanner() will sync
+    clinicalDataDirty = true;
 
     // If finalize=true, we're the terminal loading function (no Firebase)
     // Set all flags and call initUI
@@ -1386,6 +1392,7 @@ function restoreCheckpoint(index) {
             };
 
             migrateInvalidFirebaseKeys(roadmapData);
+            clinicalDataDirty = true;
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             setLocalUpdateFlag();
             saveData();
@@ -1675,6 +1682,7 @@ function importAndRestoreDirectly() {
                     };
 
                     migrateInvalidFirebaseKeys(roadmapData);
+                    clinicalDataDirty = true;
                     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
                     setLocalUpdateFlag();
                     saveData();

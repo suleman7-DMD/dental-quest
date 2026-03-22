@@ -425,10 +425,20 @@ function confirmClinicalImport() {
 
         // Skip duplicates only in non-refresh mode
         if (!isRefreshMode) {
+            const aptTime = apt.time || '09:00';
+            const aptNameLower = (apt.patientName || '').toLowerCase().trim();
             const isDuplicateApt = getValues(roadmapData.clinicalData.appointments).some(existing => {
-                return existing.patientId === patientId &&
-                       existing.date === apt.date &&
-                       existing.time === (apt.time || '09:00');
+                // Primary: match by patientId + date + time
+                if (existing.patientId === patientId &&
+                    existing.date === apt.date &&
+                    existing.time === aptTime) return true;
+                // Secondary: match by patientName + date + time (catches mismatched patientIds)
+                const existingPatient = roadmapData.clinicalData.patients[existing.patientId];
+                if (existingPatient &&
+                    (existingPatient.name || '').toLowerCase().trim() === aptNameLower &&
+                    existing.date === apt.date &&
+                    existing.time === aptTime) return true;
+                return false;
             });
             if (isDuplicateApt) return;
         }
@@ -578,6 +588,9 @@ function syncClinicalToMonthlyPlanner() {
 
     // Extend MP_WEEKS if needed for dates beyond current range
     extendWeeksIfNeeded();
+
+    // Reset dirty flag — sync is up to date
+    clinicalDataDirty = false;
 }
 
 function calculateEndTime(startTime, durationMinutes) {
@@ -598,4 +611,66 @@ function timeToMinutes(timeStr) {
     const h = parseInt(parts[0]) || 0;
     const m = parseInt(parts[1]) || 0;
     return h * 60 + m;
+}
+
+// ==================== APPOINTMENT DEDUP ====================
+// Scans all appointments, groups by patientName+date+time, keeps earliest, removes duplicates.
+// Also cleans orphaned clinic_ tasks from customTasks.
+function dedupAppointments() {
+    if (!roadmapData.clinicalData?.appointments) return 0;
+
+    const appointments = roadmapData.clinicalData.appointments;
+    const patients = roadmapData.clinicalData.patients || {};
+    const allApts = getValues(appointments);
+
+    if (allApts.length === 0) return 0;
+
+    // Group by patientName (lowercased) + date + time
+    const groups = {};
+    allApts.forEach(apt => {
+        const patient = patients[apt.patientId];
+        const name = (patient?.name || '').toLowerCase().trim();
+        const key = name + '|' + (apt.date || '') + '|' + (apt.time || '09:00');
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(apt);
+    });
+
+    let removed = 0;
+    const removedAptIds = new Set();
+
+    Object.values(groups).forEach(group => {
+        if (group.length <= 1) return;
+        // Sort by createdAt or id (keep earliest)
+        group.sort((a, b) => {
+            if (a.createdAt && b.createdAt) return a.createdAt.localeCompare(b.createdAt);
+            return (a.id || '').localeCompare(b.id || '');
+        });
+        // Keep first, delete rest
+        for (let i = 1; i < group.length; i++) {
+            const dupeId = group[i].id;
+            if (dupeId && appointments[dupeId]) {
+                delete appointments[dupeId];
+                removedAptIds.add(dupeId);
+                removed++;
+            }
+        }
+    });
+
+    // Clean orphaned clinic_ tasks from customTasks
+    if (removed > 0 && roadmapData.monthlyPlanner?.customTasks) {
+        const customTasks = roadmapData.monthlyPlanner.customTasks;
+        Object.keys(customTasks).forEach(taskId => {
+            const task = customTasks[taskId];
+            if (!task?.clinicalAppointmentId) return;
+            if (removedAptIds.has(task.clinicalAppointmentId)) {
+                delete customTasks[taskId];
+            }
+        });
+    }
+
+    if (removed > 0) {
+        console.log('[DEDUP] Removed ' + removed + ' duplicate appointment(s)');
+    }
+
+    return removed;
 }

@@ -1216,7 +1216,7 @@ function parseRequirementsMatch(text) {
             var inlineVal2 = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             if (inlineVal2 && inlineVal2.indexOf('|') !== -1) {
                 var parts2 = inlineVal2.split('|').map(function(s) { return s.trim(); });
-                if (parts2[0]) result.completedToday.push({ reqId: parts2[0], description: parts2[1] || '', procedure: parts2[2] || '', date: parts2[3] || '' });
+                if (parts2[0]) result.completedToday.push({ reqId: parts2[0], description: parts2[1] || '', procedure: parts2[2] || '', date: parts2[3] || '', patientName: parts2[4] || '' });
             }
             return;
         }
@@ -1237,7 +1237,7 @@ function parseRequirementsMatch(text) {
             if (inSection === 'canFulfill') {
                 result.canFulfill.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '' });
             } else if (inSection === 'completedToday') {
-                result.completedToday.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '', date: parts3[3] || '' });
+                result.completedToday.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '', date: parts3[3] || '', patientName: parts3[4] || '' });
             }
         }
     });
@@ -1554,7 +1554,7 @@ function confirmPatientImport() {
                 reqId: ct.reqId,
                 completed: 1,
                 note: ct.procedure || ct.description || '',
-                patientName: ct.patientName || rm.patientName || '',
+                patientName: ct.patientName || rm.name || '',
                 date: ct.date || getLocalDateString()
             });
         });
@@ -1594,9 +1594,19 @@ function confirmPatientImport() {
                 };
             }
 
-            // Dedup: skip if same patient+date+time already exists
+            // Dedup: skip if same patient+date+time already exists (by ID or name)
+            var aptTime = apt.time || '09:00';
+            var aptNameLower = (apt.patientName || '').toLowerCase().trim();
             var isDupe = getValues(roadmapData.clinicalData.appointments).some(function(ex) {
-                return ex.patientId === patientId && ex.date === apt.date && ex.time === (apt.time || '09:00');
+                // Primary: match by patientId + date + time
+                if (ex.patientId === patientId && ex.date === apt.date && ex.time === aptTime) return true;
+                // Secondary: match by patientName + date + time (catches mismatched patientIds)
+                var exPatient = roadmapData.clinicalData.patients[ex.patientId];
+                if (exPatient &&
+                    (exPatient.name || '').toLowerCase().trim() === aptNameLower &&
+                    ex.date === apt.date &&
+                    ex.time === aptTime) return true;
+                return false;
             });
             if (isDupe) return;
 

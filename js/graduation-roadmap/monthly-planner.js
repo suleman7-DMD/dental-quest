@@ -179,8 +179,19 @@ function initMonthlyPlanner() {
         saveData();
     }
 
-    // Sync clinical appointments to Monthly Planner (runs before render)
-    syncClinicalToMonthlyPlanner();
+    // Clean up duplicate appointments before sync (idempotent, fast if no dupes)
+    if (typeof dedupAppointments === 'function') {
+        var deduped = dedupAppointments();
+        if (deduped > 0) {
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+            saveData();
+        }
+    }
+
+    // Sync clinical appointments to Monthly Planner — only when clinical data has changed
+    if (clinicalDataDirty) {
+        syncClinicalToMonthlyPlanner();
+    }
 
     // Build currentWeekSchedule for cross-app consumption (Stim Calc)
     buildCurrentWeekSchedule();
@@ -907,6 +918,7 @@ function mpSaveTask() {
     }
 
     // Save immediately and re-render
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     mpCloseTaskModal();
     mpRenderAllCalendars();
@@ -932,14 +944,27 @@ function _mpDeleteCurrentTaskConfirmed() {
             roadmapData.monthlyPlanner.overriddenStatic[overrideId] = { id: overrideId, value: mpCurrentTask.staticId };
         }
         showToast('Task removed');
+    } else if (mpCurrentTask.clinicalAppointmentId || (mpCurrentTask.id && mpCurrentTask.id.startsWith('clinic_'))) {
+        // Clinic-synced task: hide via hiddenClinicTasks so sync never recreates it
+        if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+        var aptId = mpCurrentTask.clinicalAppointmentId || mpCurrentTask.id.replace('clinic_', '');
+        roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = {
+            hiddenAt: new Date().toISOString(),
+            taskId: mpCurrentTask.id
+        };
+        if (roadmapData.monthlyPlanner?.customTasks?.[mpCurrentTask.id]) {
+            delete roadmapData.monthlyPlanner.customTasks[mpCurrentTask.id];
+        }
+        showToast('Clinic task hidden from planner');
     } else {
-        // Delete custom task
+        // Delete regular custom task
         if (roadmapData.monthlyPlanner?.customTasks?.[mpCurrentTask.id]) {
             delete roadmapData.monthlyPlanner.customTasks[mpCurrentTask.id];
             showToast('Task deleted');
         }
     }
 
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     mpCloseTaskModal();
     mpRenderAllCalendars();
@@ -1023,6 +1048,7 @@ function mpAddNote() {
     roadmapData.monthlyPlanner.notes[noteId] = note;
     input.value = '';
 
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     mpRenderNotes();
     showToast('Note added!');
@@ -1125,6 +1151,7 @@ function mpSaveNoteEdit(noteId) {
     }
 
     roadmapData.monthlyPlanner.notes[noteId].text = newText;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     mpRenderNotes();
     showToast('Note updated');
@@ -1137,6 +1164,7 @@ function mpDeleteNote(noteId) {
         if (!roadmapData.monthlyPlanner?.notes?.[noteId]) return;
 
         delete roadmapData.monthlyPlanner.notes[noteId];
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         mpRenderNotes();
         showToast('Note deleted');
