@@ -244,6 +244,9 @@ All line numbers verified against d3-roadmap.html (17,575 lines, Feb 14 2026).
 | `syncClinicalToMonthlyPlanner()` | ~15457 | Sync clinical to monthly |
 | `calculateEndTime(start, duration)` | ~15503 | Calculate end time |
 | `timeToMinutes(timeStr)` | ~15515 | Convert time to minutes |
+| `parseClinicalBrief(text)` | patients.js | Parse CLINICAL_BRIEF block — 10 KEY:value fields (CHART, NAME, DATE_GENERATED, SNAPSHOT, DIAGNOSES_AND_RISKS, TX_STATUS, TX_SEQUENCING, FLAGGED_CONCERNS, GRAD_VALUE, NEXT_VISIT_PLAN) with multi-line continuation |
+| `renderClinicalBrief(patient, patientId)` | patients.js | Render 7-section Clinical Brief HTML — SNAPSHOT always visible, accordion on mobile |
+| `migratePerioNoiseCleanup()` | patients.js | One-time perio noise cleanup migration — strips routine perio IDs from non-periodontitis patients |
 
 ## Initialization (~15524-15870)
 | Function | Line | Description |

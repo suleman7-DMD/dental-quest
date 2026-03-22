@@ -32,7 +32,15 @@ roadmapData.clinicalData = {
     status: 'active',          // active | inactive | completed
     notes: '',
     tasks: {},                 // Treatment plan items keyed by ID
-    createdAt: '2026-02-01T10:00:00Z'
+    createdAt: '2026-02-01T10:00:00Z',
+    importedRequirements: [],   // From REQUIREMENTS_MATCH canFulfill entries (authoritative)
+    priorityNotes: '',          // From REQUIREMENTS_MATCH block
+    highValue: false,           // From REQUIREMENTS_MATCH block
+    clinicalBrief: {                    // Structured prose from Claude webchat analysis (null if not imported)
+        dateGenerated, snapshot, diagnosesAndRisks, txStatus, txSequencing,
+        flaggedConcerns, gradValue, nextVisitPlan
+    },
+    briefHistory: [],                   // Max 3 prior briefs (pushed before overwrite)
 }
 ```
 
@@ -50,6 +58,8 @@ roadmapData.clinicalData = {
 | `renderPatientTasksInModal()` | ~13762 | Render tasks in edit modal |
 | `savePatient()` | ~13784 | Save patient to roadmapData + saveData() |
 | `deletePatient()` | ~13837 | Delete patient with confirmation |
+| `renderClinicalBrief(patient, patientId)` | patients.js | Render 7-section Clinical Brief HTML — SNAPSHOT always visible, accordion on mobile |
+| `parseClinicalBrief(text)` | patients.js | Parse CLINICAL_BRIEF block — 10 KEY:value fields with multi-line continuation |
 
 ## Appointments System
 

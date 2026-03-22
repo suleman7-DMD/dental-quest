@@ -277,7 +277,7 @@ state.js (680) -> firebase-sync.js (2,200) -> deadlines.js (804) -> grades.js (3
 
 **Clinical Sub-tabs:** Patients, Appointments, Procedures, Competencies (14 categories now)
 
-**Patients Tab (9th tab, added to main tab bar):** Swiss light theme (`#f7f5ef` background, white cards, teal `#1a7f79` accents). CSS uses `#tab-patients` specificity prefix to override dark base styles. Key rendering: `renderPatientsSidebar()` (200px sticky sidebar) and `renderPatientRecord()` (summary card + priority notes + collapsible sections). Section IDs: `info`, `clinical`, `perio`, `treatment`, `imaging`, `notes`, `priority`. Imaging uses compact chips (read) / grid (edit). Perio uses side-by-side cards (read) / fld() (edit). Mobile hides `#dashboardMetricsCard` and `#patientsCountdownRadar`.
+**Patients Tab (9th tab, added to main tab bar):** Swiss light theme (`#f7f5ef` background, white cards, teal `#1a7f79` accents). CSS uses `#tab-patients` specificity prefix to override dark base styles. Key rendering: `renderPatientsSidebar()` (200px sticky sidebar) and `renderPatientRecord()` (summary card + priority notes + collapsible sections). Section IDs: `info`, `clinical`, `perio`, `treatment`, `imaging`, `notes`, `priority`. Imaging uses compact chips (read) / grid (edit). Perio uses side-by-side cards (read) / fld() (edit). Mobile hides `#dashboardMetricsCard` and `#patientsCountdownRadar`. Patient detail has Brief/Record tabs — Clinical Brief tab is default when a brief exists (shows 7-section structured prose: Snapshot, Diagnoses & Risks, Treatment Status, Treatment Sequencing, Flagged Concerns, Graduation Value, Next Visit Plan). Record tab shows structured fields. `renderClinicalBrief()` renders brief content. `patientViewTab` global tracks active tab.
 
 ---
 
@@ -308,6 +308,9 @@ let roadmapData = {
         completedProcedures: {},            // Completed procedure records
         competencies: null,                 // Initialized from DEFAULT_COMPETENCIES
         missingNotes: {}                    // Missing progress notes — keyed by note-{chart}-{dateNoHyphens}
+        // NOTE: Patient records in patientRecords{} may also have:
+        //   clinicalBrief: { dateGenerated, snapshot, diagnosesAndRisks, txStatus, txSequencing, flaggedConcerns, gradValue, nextVisitPlan }
+        //   briefHistory: [] (max 3 prior briefs)
     },
     todoList: {                             // To-do list — flat checklist from multiple sources
         items: {},                          // Keyed by todo-{NNNN}-{dateNoHyphens}
@@ -512,6 +515,9 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `toggleTodoStatus(todoId)` | state.js | Toggle item pending/completed + save |
 | `clearCompletedTodos()` | state.js | Delete all completed todos + save |
 | `getTodoSourceBadgeColor(source)` | state.js | Returns hex color for source badge |
+| `parseClinicalBrief(text)` | patients.js | Parse CLINICAL_BRIEF block — 10 KEY:value fields with multi-line continuation, returns brief object keyed by chartNumber |
+| `renderClinicalBrief(patient, patientId)` | patients.js | Render 7-section Clinical Brief HTML — SNAPSHOT always visible, other 6 sections accordion on mobile, flat scroll desktop. Parses (1),(2) in flaggedConcerns to `<ol>` |
+| `migratePerioNoiseCleanup()` | patients.js | One-time migration: strips routine perio IDs from importedRequirements on non-periodontitis patients. Gated by `perioNoiseCleanupDone_v1` localStorage flag |
 | `parsePatientRecord(text)` | patients.js | Parse PATIENT_RECORD block — continuation lines: any non-key line appends to current field (no 2-space indent required) |
 | `parsePatientUpdate(text)` | patients.js | Parse PATIENT_UPDATE block — same lenient continuation logic as parsePatientRecord |
 | `parseRequirementsMatch(text)` | patients.js | Parse REQUIREMENTS_MATCH block — now captures HIGH_VALUE, PRIORITY_NOTES, stores canFulfill on patient |
@@ -594,7 +600,7 @@ If you see ANY of these in code you're writing:
 - Deploying JS changes without bumping `?v=` cache-busting params on `<script src>` tags
 - Editing custom deadline date/name/weight without updating `roadmapData.customDeadlines[deadline.id]` — `editedDeadlines` only applies to STATIC deadlines in initUI; custom deadlines load from `customDeadlines` which must ALSO be updated
 - Testing only with NEW custom deadlines instead of editing EXISTING ones — custom-vs-static code paths differ and bugs only surface with real user data
-- Adding a new field to `roadmapData` without updating ALL 4 merge/restore sites in firebase-sync.js — field gets silently wiped on every sync/refresh/restore/checkpoint
+- Adding a new field to `roadmapData` without updating ALL 4 merge/restore sites + mergeRemoteCollectionsIntoLocal in firebase-sync.js — field gets silently wiped on every sync/refresh/restore/checkpoint
 - Adding a new collection field without adding it to `isEmptyState()` in state.js — Guard C silently blocks saves when only that field has data
 - Using `data.arr || local.arr || []` for array fields instead of a proper merge function — empty `[]` is truthy and discards local data
 - `syncClinicalToMonthlyPlanner()` must use incremental sync, NOT nuke-and-rebuild — respect `hiddenClinicTasks` and `userEdited` flags

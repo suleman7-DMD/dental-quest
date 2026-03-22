@@ -55,6 +55,9 @@ let roadmapData = {
         completedProcedures: {},       // Procedure records
         competencies: null             // Initialized from DEFAULT_COMPETENCIES on first access
     },
+    // Patient records in patientRecords{} may include:
+    //   .clinicalBrief: { dateGenerated, snapshot, diagnosesAndRisks, txStatus, txSequencing, flaggedConcerns, gradValue, nextVisitPlan }
+    //   .briefHistory: [] (max 3 prior versions, pushed before overwrite)
 
     exams: {},                         // For Body Comp cross-app integration
 
@@ -158,6 +161,8 @@ users/user_{hashedPin}/d3Roadmap/
 ```
 
 ## isEmptyState() (~line 8526)
+
+Note: `clinicalBrief` and `briefHistory` are NOT checked in isEmptyState — they live on patient records, which are already covered via the `clinicalData.patients` check below.
 
 Returns true (empty) only if ALL of these are missing:
 - customDeadlines (count > 0)

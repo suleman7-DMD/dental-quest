@@ -78,6 +78,15 @@ function switchClinicalSubtab(subtab, btn) {
 }
 ```
 
+**Clinical Brief Tab (within Patient Detail):**
+- Brief/Record toggle tabs at top of patient detail view
+- Default: Brief tab when `clinicalBrief.snapshot` exists on patient, Record tab otherwise
+- `patientViewTab` global ('brief' or 'record') tracks current view
+- Brief: `renderClinicalBrief()` renders 7 sections (Snapshot always visible, 6 accordion on mobile)
+- Record: Original structured fields (info, clinical, perio, treatment, imaging, notes)
+- CSS: `.ptr-tabs`, `.ptr-tab`, `.ptr-brief-section`, `.ptr-brief-body`, `.ptr-brief-ol`
+- Sidebar: clipboard badge when patient has brief (`p.clinicalBrief && p.clinicalBrief.snapshot`)
+
 ## Dashboard (~line 11307)
 
 `renderDashboard()` builds:

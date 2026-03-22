@@ -233,3 +233,18 @@ Additional backup functions:
 4. Nested `{ state: {...} }` or `{ data: {...} }` wrapper
 5. `{ currentState: {...} }` wrapper
 6. App-specific wrapper (`{ roadmapData: {...} }`)
+
+### Import Block Types (9 total)
+The patient import system (`parsePatientImportText()` in patients.js) parses 9 block types in a single atomic paste:
+1. PATIENT_RECORD
+2. PATIENT_UPDATE
+3. REQUIREMENTS_MATCH
+4. REQUIREMENTS_STATUS
+5. SPS_DASHBOARD_UPDATE
+6. APPOINTMENTS
+7. MISSING_NOTES
+8. TODO_LIST
+9. CLINICAL_BRIEF
+
+### Merge Site Notes
+`mergeRemoteCollectionsIntoLocal()` has explicit `clinicalBrief` handling: newer `dateGenerated` wins, longer `briefHistory` wins.
