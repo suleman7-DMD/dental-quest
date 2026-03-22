@@ -277,6 +277,8 @@ state.js (680) -> firebase-sync.js (2,200) -> deadlines.js (804) -> grades.js (3
 
 **Clinical Sub-tabs:** Patients, Appointments, Procedures, Competencies (14 categories now)
 
+**Patients Tab (9th tab, added to main tab bar):** Swiss light theme (`#f7f5ef` background, white cards, teal `#1a7f79` accents). CSS uses `#tab-patients` specificity prefix to override dark base styles. Key rendering: `renderPatientsSidebar()` (200px sticky sidebar) and `renderPatientRecord()` (summary card + priority notes + collapsible sections). Section IDs: `info`, `clinical`, `perio`, `treatment`, `imaging`, `notes`, `priority`. Imaging uses compact chips (read) / grid (edit). Perio uses side-by-side cards (read) / fld() (edit). Mobile hides `#dashboardMetricsCard` and `#patientsCountdownRadar`.
+
 ---
 
 ## KEY STATE STRUCTURE
