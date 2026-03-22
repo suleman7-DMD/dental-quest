@@ -258,7 +258,13 @@ function isEmptyState(data) {
     const hasPeriodicReview = data.periodicReviews?.pr2 && (
         (data.periodicReviews.pr2.subjectiveReport ?? '') !== '' ||
         Object.keys(data.periodicReviews.pr2.departmentNotes || {}).length > 0 ||
-        (data.periodicReviews.pr2.completedProceduresHtml ?? '') !== ''
+        (data.periodicReviews.pr2.completedProceduresHtml ?? '') !== '' ||
+        Object.keys(data.periodicReviews.pr2.adminStatsOverrides || {}).length > 0 ||
+        data.periodicReviews.pr2.reviewDate != null ||
+        Object.keys(data.periodicReviews.pr2.removedPatients || {}).length > 0 ||
+        Object.keys(data.periodicReviews.pr2.inProgressProcedures || {}).length > 0 ||
+        Object.keys(data.periodicReviews.pr2.patientNotes || {}).length > 0 ||
+        (data.periodicReviews.pr2.dashboardDiscrepancyNotes ?? '') !== ''
     );
 
     // Empty if NONE of these exist

@@ -1347,12 +1347,16 @@ function parsePatientRecord(text) {
     var fieldMap = {
         'NAME': 'name', 'CHART': 'chartNumber', 'TYPE': 'type',
         'MEDICAL_HX': 'medicalHx', 'MEDICATIONS': 'medications',
+        'ALLERGIES': 'allergies',
         'DENTAL_HX': 'dentalHx', 'TX_SUMMARY_BU': 'txSummaryBU',
+        'TX_COMPLETED_BY_ME': 'txCompletedByMe',
         'POE_LAST': 'poeLast', 'POE_NEXT': 'poeNext',
         'TX_PLAN': 'txPlan', 'LAST_VISIT': 'lastVisit',
         'NEXT_VISIT': 'nextVisit', 'LAST_FMX': 'lastFMX',
         'LAST_BW': 'lastBW', 'LAST_CBCT': 'lastCBCT',
         'LAST_PANO': 'lastPANO', 'NOTES': 'notes',
+        'RECALL_HISTORY': 'recallHistory',
+        'ACTIVE_STATUS': 'activeStatus',
         'RELIABILITY': 'reliability'
     };
 
@@ -1385,12 +1389,16 @@ function parsePatientUpdate(text) {
     var fieldMap = {
         'NAME': 'name', 'CHART': 'chartNumber', 'TYPE': 'type',
         'MEDICAL_HX': 'medicalHx', 'MEDICATIONS': 'medications',
+        'ALLERGIES': 'allergies',
         'DENTAL_HX': 'dentalHx', 'TX_SUMMARY_BU': 'txSummaryBU',
+        'TX_COMPLETED_BY_ME': 'txCompletedByMe',
         'POE_LAST': 'poeLast', 'POE_NEXT': 'poeNext',
         'TX_PLAN': 'txPlan', 'LAST_VISIT': 'lastVisit',
         'NEXT_VISIT': 'nextVisit', 'LAST_FMX': 'lastFMX',
         'LAST_BW': 'lastBW', 'LAST_CBCT': 'lastCBCT',
         'LAST_PANO': 'lastPANO', 'NOTES': 'notes',
+        'RECALL_HISTORY': 'recallHistory',
+        'ACTIVE_STATUS': 'activeStatus',
         'RELIABILITY': 'reliability'
     };
 
@@ -1931,10 +1939,12 @@ function confirmPatientImport() {
             // Create new
             records[id] = {
                 id: id, name: '', chartNumber: chartNumber, type: '',
-                medicalHx: '', medications: '', dentalHx: '', txSummaryBU: '',
+                medicalHx: '', medications: '', allergies: '',
+                dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
                 poeLast: '', poeNext: '', txPlan: '',
                 lastVisit: '', nextVisit: '',
                 lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
+                recallHistory: '', activeStatus: 'Active',
                 notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
             };
             Object.keys(rec).forEach(function(key) {

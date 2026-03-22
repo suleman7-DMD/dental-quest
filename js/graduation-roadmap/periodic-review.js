@@ -295,13 +295,12 @@ function renderPRAdminStats(pr2, snapshot) {
         if (overrides[cfg.key] != null) {
             currentVal = parseInt(overrides[cfg.key]) || 0;
         } else if (cfg.key === 'attended') {
-            currentVal = smartApts.total ?? 0;
+            // Prefer SPS snapshot ground truth; fall back to smart count only if no snapshot
+            var snapshotAttended = parseInt(getSnapshotValue(snapshot, 'appointments.attended'));
+            currentVal = !isNaN(snapshotAttended) ? snapshotAttended : (smartApts?.total ?? 0);
         } else {
             currentVal = parseInt(getSnapshotValue(snapshot, cfg.snapshotPath)) || 0;
         }
-
-        // Escape the key for safe use in onclick attribute
-        const safeKey = cfg.key.replace(/'/g, "\\'");
 
         html += '<tr>';
         html += '<td style="font-weight:500;">' + escapeHtml(cfg.label) + '</td>';
@@ -431,9 +430,8 @@ var PR1_IN_PROGRESS_DEFAULTS = [
     { patientName: 'Jose Rosario', chartNo: '2467990', code: 'D5810', description: 'Interim complete upper denture', toothNo: 'MAXI', dateStarted: '09/19/2025', lastVisit: '11/08/2025' }
 ];
 
-function getInProgressProcedures(pr2) {
+function ensureInProgressDefaults(pr2) {
     if (!pr2.inProgressProcedures || typeof pr2.inProgressProcedures !== 'object' || Object.keys(pr2.inProgressProcedures).length === 0) {
-        // Pre-populate from PR1 defaults
         var defaults = {};
         for (var i = 0; i < PR1_IN_PROGRESS_DEFAULTS.length; i++) {
             var id = generateId('iproc');
@@ -446,9 +444,13 @@ function getInProgressProcedures(pr2) {
             defaults[id] = item;
         }
         pr2.inProgressProcedures = defaults;
-        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-        saveData();
+        return true; // defaults were populated — caller should save
     }
+    return false;
+}
+
+function getInProgressProcedures(pr2) {
+    ensureInProgressDefaults(pr2);
     return pr2.inProgressProcedures;
 }
 
@@ -630,7 +632,7 @@ function renderPRDepartmentAudit(pr2, competencies) {
         var pr1IP = pr1Dept.inProgress ?? 0;
         var pr1P = pr1Dept.planned ?? 0;
 
-        html += '<div class="pr-panel pr-dept-' + escapeHtml(cfg.key) + '" style="border-left:4px solid ' + cfg.color + '; margin-bottom:20px;">';
+        html += '<div class="pr-panel" style="border-left:4px solid ' + cfg.color + '; margin-bottom:20px;">';
 
         // Department header
         html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
@@ -672,7 +674,6 @@ function renderPRDepartmentAudit(pr2, competencies) {
         }
 
         // Notes textarea
-        var safeKey = cfg.key.replace(/'/g, "\\'");
         var noteVal = (pr2.departmentNotes ?? {})[cfg.key] ?? '';
         html += '<div style="margin-top:12px;">';
         html += '<div class="pr-panel-title">Notes</div>';
@@ -894,12 +895,15 @@ function renderPRSubjectiveReport(pr2) {
     html += '<div class="pr-panel-title" style="margin-bottom:10px;">Auto-Generated Talking Points</div>';
     html += '<ul style="margin:0; padding-left:20px;">';
 
-    // 1. Appointments
+    // 1. Appointments — prefer SPS snapshot; fall back to smart count
     var pr1Attended = PR1_BASELINE.adminStats.attended ?? 30;
     var currentAppts = 0;
-    if (typeof getSmartAppointmentCount === 'function') {
-        var apptResult = getSmartAppointmentCount();
-        currentAppts = (apptResult && apptResult.total) ?? 0;
+    var latestSnap = getLatestSnapshot();
+    var snapAttended = latestSnap ? parseInt(getSnapshotValue(latestSnap, 'appointments.attended')) : NaN;
+    if (!isNaN(snapAttended)) {
+        currentAppts = snapAttended;
+    } else if (typeof getSmartAppointmentCount === 'function') {
+        currentAppts = getSmartAppointmentCount()?.total ?? 0;
     }
     var apptDelta = currentAppts - pr1Attended;
     html += '<li>Appointments: ' + pr1Attended + ' &rarr; ' + currentAppts + ' (' + (apptDelta >= 0 ? '+' : '') + apptDelta + ')</li>';
@@ -908,8 +912,7 @@ function renderPRSubjectiveReport(pr2) {
     var pr1Procs = PR1_BASELINE.completedProceduresCount ?? 41;
     var currentProcs = 0;
     if (typeof getSmartProcedureCount === 'function') {
-        var procResult = getSmartProcedureCount();
-        currentProcs = (procResult && procResult.total) ?? 0;
+        currentProcs = getSmartProcedureCount()?.total ?? 0;
     }
     var procDelta = currentProcs - pr1Procs;
     html += '<li>Total completed procedures: ' + pr1Procs + ' &rarr; ' + currentProcs + ' (' + (procDelta >= 0 ? '+' : '') + procDelta + ')</li>';
@@ -1167,9 +1170,6 @@ function renderPRPatientRoster(pr2, patients) {
         var pt = active[r];
         var ptId = pt.id ?? '';
         var cn = pt.chartNumber ?? '';
-        var safeId = ptId.replace(/'/g, "\\'");
-        var safeCn = cn.replace(/'/g, "\\'");
-        var safeName = (pt.name ?? '').replace(/'/g, "\\'");
         var isNew = cn && !pr1Map[cn];
         var rel = (pt.reliability ?? '').toLowerCase();
         var dotClass = rel === 'green' ? 'pr-dot-green' : (rel === 'yellow' ? 'pr-dot-yellow' : (rel === 'red' ? 'pr-dot-red' : ''));
@@ -1310,7 +1310,6 @@ function renderPRPatientWriteups(pr2, patients) {
         var pt = active[c];
         var ptId = pt.id ?? '';
         var cn = pt.chartNumber ?? '';
-        var safeId = ptId.replace(/'/g, "\\'");
         var rel = (pt.reliability ?? '').toLowerCase();
         var dotClass = rel === 'green' ? 'pr-dot-green' : (rel === 'yellow' ? 'pr-dot-yellow' : (rel === 'red' ? 'pr-dot-red' : ''));
         var pr1Patient = pr1Map[cn] ?? null;
@@ -1335,6 +1334,35 @@ function renderPRPatientWriteups(pr2, patients) {
         // Card body — field rows
         html += '<div class="pr-card-body">';
 
+        // Clinical Brief panel — show curated summary when available
+        if (pt.clinicalBrief && pt.clinicalBrief.snapshot) {
+            var brief = pt.clinicalBrief;
+            html += '<div style="background:#f0faf9; border:1px solid #d1e8e5; border-radius:8px; padding:12px 16px; margin-bottom:16px;">';
+            html += '<div style="font-weight:700; font-size:0.82rem; color:#1a7f79; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Clinical Brief';
+            if (brief.dateGenerated) {
+                html += ' <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#62707c;">(' + escapeHtml(brief.dateGenerated) + ')</span>';
+            }
+            html += '</div>';
+            var briefSections = [
+                { key: 'snapshot', label: 'Snapshot' },
+                { key: 'diagnosesAndRisks', label: 'Diagnoses & Risks' },
+                { key: 'txStatus', label: 'Treatment Status' },
+                { key: 'txSequencing', label: 'Treatment Sequencing' },
+                { key: 'flaggedConcerns', label: 'Flagged Concerns' },
+                { key: 'gradValue', label: 'Graduation Value' },
+                { key: 'nextVisitPlan', label: 'Next Visit Plan' }
+            ];
+            for (var bs = 0; bs < briefSections.length; bs++) {
+                var bsVal = brief[briefSections[bs].key] ?? '';
+                if (!bsVal) continue;
+                html += '<div style="margin-bottom:8px;">';
+                html += '<div style="font-weight:600; font-size:0.78rem; color:#1a7f79; margin-bottom:2px;">' + escapeHtml(briefSections[bs].label) + '</div>';
+                html += '<div style="font-size:0.85rem; color:#17212b; line-height:1.5; white-space:pre-wrap;">' + escapeHtml(bsVal) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
         // Build field definitions
         var fields = [
             { label: 'Patient', key: 'type', value: pt.type ?? '' },
@@ -1353,15 +1381,8 @@ function renderPRPatientWriteups(pr2, patients) {
 
         for (var fi = 0; fi < fields.length; fi++) {
             var fld = fields[fi];
-            var changedClass = '';
 
-            // PR1 diff: reliability change indicator on the header dot already,
-            // but we also mark the specific field if applicable
-            if (fld.key === 'reliability' && relChanged) {
-                changedClass = ' pr-field-changed';
-            }
-
-            html += '<div class="pr-field-row' + changedClass + '">';
+            html += '<div class="pr-field-row">';
             html += '<div class="pr-field-label">' + escapeHtml(fld.label) + '</div>';
             html += '<div class="pr-field-value">';
 
@@ -1544,7 +1565,13 @@ function prSavePatientField(patientId, fieldName, value) {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     if (!roadmapData.clinicalData.patientRecords[patientId]) {
-        roadmapData.clinicalData.patientRecords[patientId] = { id: patientId };
+        // Copy core fields from clinicalData.patients if available (prevents blank roster rows)
+        var clinicalPt = roadmapData.clinicalData.patients?.[patientId] ?? {};
+        roadmapData.clinicalData.patientRecords[patientId] = {
+            id: patientId,
+            name: clinicalPt.name ?? '',
+            chartNumber: clinicalPt.chartNumber ?? ''
+        };
     }
     roadmapData.clinicalData.patientRecords[patientId][fieldName] = value;
     roadmapData.clinicalData.patientRecords[patientId].lastUpdated = new Date().toISOString();
@@ -1587,6 +1614,13 @@ function initPeriodicReview() {
     const pr2 = getPR2Data();
     const snapshot = getLatestSnapshot();
 
+    // Pre-populate in-progress defaults BEFORE render, with sync guards
+    var needsSave = ensureInProgressDefaults(pr2);
+    if (needsSave && hasLoadedFromCloud && !awaitingFirebaseLoad) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+    }
+
     // Build all sections as HTML string
     // NOTE: All user-entered text is escaped via escapeHtml() in each render function.
     // This pattern (build HTML string, set via innerHTML) is the standard approach
@@ -1622,7 +1656,25 @@ function initPeriodicReview() {
     html += renderPRSubjectiveReport(pr2);
 
     // Section 10: Patient Roster
-    var prPatients = getValues(roadmapData.clinicalData?.patientRecords ?? {});
+    // Merge patientRecords + clinicalData.patients (some patients exist in patients{} but not patientRecords{})
+    var prPatients = (function() {
+        var records = getValues(roadmapData.clinicalData?.patientRecords ?? {});
+        var clinicalPatients = getValues(roadmapData.clinicalData?.patients ?? {});
+        var seenCharts = {};
+        var seenIds = {};
+        for (var i = 0; i < records.length; i++) {
+            if (records[i].chartNumber) seenCharts[records[i].chartNumber] = true;
+            if (records[i].id) seenIds[records[i].id] = true;
+        }
+        // Add clinicalData.patients entries not already in patientRecords (by chartNumber or id)
+        for (var j = 0; j < clinicalPatients.length; j++) {
+            var cp = clinicalPatients[j];
+            if (cp.chartNumber && seenCharts[cp.chartNumber]) continue;
+            if (cp.id && seenIds[cp.id]) continue;
+            records.push(cp);
+        }
+        return records;
+    })();
     html += renderPRPatientRoster(pr2, prPatients);
 
     // Section 11: Patient Writeups
@@ -1659,16 +1711,17 @@ function attachPREventListeners() {
             dateEl.replaceWith(inp);
             inp.focus();
 
+            var dateCommitted = false;
             function commitDate() {
+                if (dateCommitted) return;
+                dateCommitted = true;
                 const val = inp.value || null;
                 savePR2Field('reviewDate', val);
-                // Re-render to reflect new date + period
                 initPeriodicReview();
             }
 
             inp.addEventListener('change', commitDate);
             inp.addEventListener('blur', function() {
-                // Small delay to allow change event to fire first
                 setTimeout(commitDate, 100);
             });
         });
@@ -1924,13 +1977,15 @@ function prEditAdminStat(cell) {
     inp.focus();
     inp.select();
 
+    var adminCommitted = false;
     function commitAdminStat() {
+        if (adminCommitted) return;
+        adminCommitted = true;
         const val = inp.value.trim();
         const pr2 = getPR2Data();
         if (!pr2.adminStatsOverrides) pr2.adminStatsOverrides = {};
 
         if (val === '') {
-            // Clear override — revert to auto-detected value
             delete pr2.adminStatsOverrides[key];
         } else {
             pr2.adminStatsOverrides[key] = parseInt(val) || 0;
@@ -1939,8 +1994,6 @@ function prEditAdminStat(cell) {
         pr2.lastEdited = new Date().toISOString();
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
-
-        // Re-render to show updated delta
         initPeriodicReview();
     }
 
@@ -1951,6 +2004,7 @@ function prEditAdminStat(cell) {
         }
         if (e.key === 'Escape') {
             e.preventDefault();
+            adminCommitted = true; // prevent blur from saving
             initPeriodicReview();
         }
     });
