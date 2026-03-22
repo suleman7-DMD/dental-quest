@@ -567,6 +567,7 @@ function updateHeadlineCounter(type, value) {
     roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
     roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
     roadmapData.clinicHeadlines[type].completed = parseInt(value) || 0;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
 
@@ -574,6 +575,7 @@ function updateHeadlineTarget(type, value) {
     roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
     roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
     roadmapData.clinicHeadlines[type].target = parseInt(value) || 0;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
 
@@ -650,6 +652,7 @@ function updateGradPrep(category, field, value) {
     roadmapData.graduationPrep = roadmapData.graduationPrep || {};
     roadmapData.graduationPrep[category] = roadmapData.graduationPrep[category] || {};
     roadmapData.graduationPrep[category][field] = value;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
 
@@ -696,7 +699,10 @@ function initUI() {
             roadmapData.exams[examId] = { ...e, id: examId };
         });
         // Save to Firebase so Body Comp Tracker can access exams
-        setTimeout(() => saveData(), 100);
+        // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
+        if (hasLoadedFromCloud && !awaitingFirebaseLoad) {
+            setTimeout(() => saveData(), 100);
+        }
     }
 
     try {
@@ -820,7 +826,8 @@ function initUI() {
         });
         const oldCount = getCount(roadmapData.upcomingDeadlines ?? {});
         roadmapData.upcomingDeadlines = upcomingObj;
-        if (oldCount === 0 && idx > 0) {
+        // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
+        if (oldCount === 0 && idx > 0 && hasLoadedFromCloud && !awaitingFirebaseLoad) {
             setTimeout(() => saveData(), 2000);
         }
     } catch(e) { console.error('Error syncing upcoming deadlines:', e); }
@@ -942,12 +949,13 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 
     // FALLBACK: If Firebase hangs after 3s, load from localStorage and set ALL sync flags
-    // CRITICAL FIX: Skip if user is still typing PIN — firing this with empty localStorage
-    // causes defaults to get a recent lastSaved timestamp, which makes finishFirebaseLoad()
-    // skip the Firebase merge (thinks local is newer), then saves defaults to Firebase wiping all data.
+    // CRITICAL FIX: Skip if user is still typing PIN OR Firebase is mid-load.
+    // Firing this with empty localStorage causes defaults to get a recent lastSaved timestamp,
+    // which makes finishFirebaseLoad() skip the Firebase merge (thinks local is newer),
+    // then saves defaults to Firebase wiping all data.
     setTimeout(() => {
-        if (awaitingPinEntry) {
-            console.log('[GRAD-FALLBACK] 3s: Skipping — PIN prompt still active');
+        if (awaitingPinEntry || awaitingFirebaseLoad) {
+            console.log('[GRAD-FALLBACK] 3s: Skipping — PIN prompt or Firebase load still active');
             return;
         }
         const dateEl = document.getElementById('currentDateDisplay');
@@ -968,10 +976,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
 
     // UNCONDITIONAL FAILSAFE: If isInitialLoad is STILL true after 6s, force all flags
-    // Same fix: skip if user is still at the PIN prompt
+    // Same fix: skip if user is still at PIN prompt OR Firebase is mid-load
     setTimeout(() => {
-        if (awaitingPinEntry) {
-            console.log('[GRAD-FALLBACK] 6s: Skipping — PIN prompt still active');
+        if (awaitingPinEntry || awaitingFirebaseLoad) {
+            console.log('[GRAD-FALLBACK] 6s: Skipping — PIN prompt or Firebase load still active');
             return;
         }
         if (isInitialLoad) {

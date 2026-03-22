@@ -176,6 +176,7 @@ function initMonthlyPlanner() {
     });
 
     if (needsSave) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
     }
 

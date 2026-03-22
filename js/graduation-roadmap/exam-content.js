@@ -1028,6 +1028,7 @@ function getExamProgress(examId, lectures, reviewContent) {
 function toggleLectureStudied(examId, lecNum, isReview) {
     const key = isReview ? `${examId}-review-lec${lecNum}` : `${examId}-lec${lecNum}`;
     roadmapData.examStudyProgress[key] = !roadmapData.examStudyProgress[key];
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     loadExamCourseContent();
 }
@@ -1037,6 +1038,7 @@ function markAllStudied(examId, lectures, isReview, markAs) {
         const key = isReview ? `${examId}-review-lec${lec.num}` : `${examId}-lec${lec.num}`;
         roadmapData.examStudyProgress[key] = markAs;
     });
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     loadExamCourseContent();
 }

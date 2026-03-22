@@ -575,6 +575,7 @@ function saveDailyPlannerData() {
     if (notesInput) roadmapData.dailyPlanner.notes = notesInput.value;
 
     // Trigger main save
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
 

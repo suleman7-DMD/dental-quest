@@ -121,6 +121,110 @@ function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
     return merged.slice(0, 20);
 }
 
+// ==================== MERGE REMOTE-ONLY INTO LOCAL ====================
+// When local is newer, we keep all local data but ADD entries from Firebase
+// that don't exist locally. This prevents losing data imported on another device.
+// Key difference from mergeRemoteState: local wins for all conflicts (same key = keep local).
+function mergeRemoteCollectionsIntoLocal(data) {
+    if (!data) return;
+
+    // Helper: add remote entries that don't exist locally (local wins for conflicts)
+    function addMissing(localObj, remoteObj) {
+        if (!remoteObj || typeof remoteObj !== 'object' || Array.isArray(remoteObj)) return;
+        if (!localObj || typeof localObj !== 'object') return;
+        Object.keys(remoteObj).forEach(key => {
+            if (!(key in localObj) && remoteObj[key] != null) {
+                localObj[key] = remoteObj[key];
+            }
+        });
+    }
+
+    // Clinical data collections
+    if (data.clinicalData) {
+        if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
+        if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+        if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
+        if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
+        if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
+        if (!roadmapData.clinicalData.missingNotes) roadmapData.clinicalData.missingNotes = {};
+        addMissing(roadmapData.clinicalData.patients, data.clinicalData.patients);
+        addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments);
+        addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures);
+        addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords);
+        addMissing(roadmapData.clinicalData.missingNotes, data.clinicalData.missingNotes);
+        // dashboardSnapshots: merge arrays
+        if (data.clinicalData.dashboardSnapshots) {
+            roadmapData.clinicalData.dashboardSnapshots = mergeDashboardSnapshots(
+                roadmapData.clinicalData.dashboardSnapshots, data.clinicalData.dashboardSnapshots
+            );
+        }
+        // competencies: fill in if local is null
+        if (!roadmapData.clinicalData.competencies && data.clinicalData.competencies) {
+            roadmapData.clinicalData.competencies = data.clinicalData.competencies;
+        }
+    }
+
+    // Monthly planner collections
+    if (data.monthlyPlanner) {
+        if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
+        if (!roadmapData.monthlyPlanner.notes) roadmapData.monthlyPlanner.notes = {};
+        if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = {};
+        if (!roadmapData.monthlyPlanner.completedTasks) roadmapData.monthlyPlanner.completedTasks = {};
+        if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+        addMissing(roadmapData.monthlyPlanner.notes, data.monthlyPlanner.notes);
+        addMissing(roadmapData.monthlyPlanner.customTasks, data.monthlyPlanner.customTasks);
+        addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
+        addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
+    }
+
+    // Top-level collections
+    if (!roadmapData.customDeadlines) roadmapData.customDeadlines = {};
+    if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
+    if (!roadmapData.editedDeadlines) roadmapData.editedDeadlines = {};
+    if (!roadmapData.deletedDeadlines) roadmapData.deletedDeadlines = {};
+    if (!roadmapData.examStudyProgress) roadmapData.examStudyProgress = {};
+    addMissing(roadmapData.customDeadlines, data.customDeadlines);
+    addMissing(roadmapData.completedDeadlines, data.completedDeadlines);
+    addMissing(roadmapData.editedDeadlines, data.editedDeadlines);
+    addMissing(roadmapData.deletedDeadlines, data.deletedDeadlines);
+    addMissing(roadmapData.examStudyProgress, data.examStudyProgress);
+
+    // Todo list
+    if (data.todoList?.items) {
+        if (!roadmapData.todoList) roadmapData.todoList = { items: {}, _nextSeq: 1, lastUpdated: null };
+        if (!roadmapData.todoList.items) roadmapData.todoList.items = {};
+        addMissing(roadmapData.todoList.items, data.todoList.items);
+        roadmapData.todoList._nextSeq = Math.max(roadmapData.todoList._nextSeq || 1, data.todoList._nextSeq || 1);
+    }
+
+    // Grades: deep merge (add remote course grades that don't exist locally)
+    if (data.grades) {
+        if (!roadmapData.grades) roadmapData.grades = {};
+        Object.keys(data.grades).forEach(courseId => {
+            if (!roadmapData.grades[courseId]) {
+                roadmapData.grades[courseId] = data.grades[courseId];
+            } else {
+                addMissing(roadmapData.grades[courseId], data.grades[courseId]);
+            }
+        });
+    }
+
+    // Graduation prep: fill in if missing
+    if (data.graduationPrep && !roadmapData.graduationPrep) {
+        roadmapData.graduationPrep = data.graduationPrep;
+    }
+
+    // Mandatory items: add any remote-only items
+    if (data.mandatoryItems) {
+        if (!roadmapData.mandatoryItems) roadmapData.mandatoryItems = {};
+        Object.keys(data.mandatoryItems).forEach(key => {
+            if (!(key in roadmapData.mandatoryItems)) {
+                roadmapData.mandatoryItems[key] = data.mandatoryItems[key];
+            }
+        });
+    }
+}
+
 // ==================== FIX 7: CONNECTION MONITOR ====================
 
 function setupConnectionMonitor() {
@@ -899,7 +1003,11 @@ function finishFirebaseLoad(data) {
             const remoteLastSaved = data.lastSaved || 0;
 
             if (localLastSaved > remoteLastSaved) {
-                console.log('[GRAD-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local');
+                console.log('[GRAD-LOAD] Local data is newer:', localLastSaved, '>', remoteLastSaved, '— keeping local, filling in remote-only entries');
+                // FIX: Don't just skip the merge — add remote-only collection entries
+                // This handles: Chrome imports notes/todos → saves to Firebase → DuckDuckGo has newer localStorage
+                // Without this, DuckDuckGo's data (missing notes/todos) overwrites Firebase
+                mergeRemoteCollectionsIntoLocal(data);
                 roadmapData._dataLoaded = true;
                 migrateInvalidFirebaseKeys(roadmapData);
                 localWasNewer = true;

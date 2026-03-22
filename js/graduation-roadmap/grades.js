@@ -187,6 +187,7 @@ function updateGrade(courseId, componentId, value) {
     // Sync back to deadlines - find matching deadline and update
     syncGradeToDeadline(courseId, componentId, grade);
 
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
@@ -280,6 +281,7 @@ function syncGradeToDeadline(courseId, componentId, grade) {
     });
 
     // CRITICAL FIX: Save the updated completion status
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     const saved = saveData();
     if (!saved) {
         showToast('Save blocked — try refreshing', 'error');
