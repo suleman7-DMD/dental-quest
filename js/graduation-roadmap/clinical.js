@@ -16,6 +16,7 @@ function switchClinicalSubtab(subtab, btn) {
 }
 
 function initClinicalTab() {
+    ensureCompetenciesInitialized();
     renderPatientsList();
     renderAppointmentsList();
     renderProceduresList();
@@ -33,6 +34,7 @@ function updateClinicalStats() {
 
     // Count this week's appointments
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const weekEnd = new Date(today);
     weekEnd.setDate(weekEnd.getDate() + 7);
     const weekApts = appointments.filter(apt => {
@@ -130,6 +132,7 @@ function renderPatientsList() {
             `;
         }
 
+        const safeId = patient.id.replace(/'/g, "\\'");
         return `
             <div class="patient-card ${needsAttention ? 'needs-attention' : ''}" data-patient-id="${patient.id}">
                 <div class="patient-card-header">
@@ -143,8 +146,8 @@ function renderPatientsList() {
                 ${patient.medicalAlerts ? `<div style="font-size: 0.85em; color: #ef4444; margin: 5px 0;">⚠️ ${escapeHtml(patient.medicalAlerts)}</div>` : ''}
                 ${tasksHtml}
                 <div class="patient-actions">
-                    <button class="patient-action-btn primary" onclick="openAddAppointmentModal('${patient.id}')">📅 Schedule Apt</button>
-                    <button class="patient-action-btn secondary" onclick="editPatient('${patient.id}')">✏️ Edit</button>
+                    <button class="patient-action-btn primary" onclick="openAddAppointmentModal('${safeId}')">📅 Schedule Apt</button>
+                    <button class="patient-action-btn secondary" onclick="editPatient('${safeId}')">✏️ Edit</button>
                 </div>
             </div>
         `;
@@ -277,7 +280,7 @@ function savePatient() {
     // Filter out empty tasks
     const tasks = currentPatientTasks.filter(t => t.procedure.trim());
 
-    const patient = {
+    const formFields = {
         id: patientId,
         name: name,
         chartNumber: document.getElementById('patientModalChart').value.trim(),
@@ -296,8 +299,12 @@ function savePatient() {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
     if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
 
-    roadmapData.clinicalData.patients[patientId] = patient;
+    // Merge form fields INTO existing patient to preserve imported data
+    // (lastVisit, importedRequirements, priorityNotes, highValue, clinicalBrief, briefHistory, allergies, etc.)
+    const existing = roadmapData.clinicalData.patients[patientId] || {};
+    roadmapData.clinicalData.patients[patientId] = { ...existing, ...formFields };
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closePatientModal();
@@ -314,20 +321,57 @@ function deletePatient() {
     showCustomConfirm('Are you sure you want to delete this patient? This cannot be undone.', function() {
         delete roadmapData.clinicalData.patients[patientId];
 
+        // Collect deleted appointment IDs for cleanup
+        var deletedAptIds = [];
+
         // Also remove any appointments for this patient
         if (roadmapData.clinicalData.appointments) {
             Object.keys(roadmapData.clinicalData.appointments).forEach(id => {
                 if (roadmapData.clinicalData.appointments[id]?.patientId === patientId) {
+                    deletedAptIds.push(id);
                     delete roadmapData.clinicalData.appointments[id];
                 }
             });
         }
+
+        // Clean up procedure records referencing this patient + unlink from competencies
+        if (roadmapData.clinicalData.completedProcedures) {
+            Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
+                var proc = roadmapData.clinicalData.completedProcedures[procId];
+                if (proc && proc.patientId === patientId) {
+                    unlinkProcedureFromCompetencies(procId);
+                    delete roadmapData.clinicalData.completedProcedures[procId];
+                }
+            });
+        }
+
+        // Remove clinic planner tasks for deleted appointments + hide them
+        if (roadmapData.monthlyPlanner) {
+            if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+            deletedAptIds.forEach(function(aptId) {
+                var taskId = 'clinic_' + aptId;
+                // Add to hidden so syncClinicalToMonthlyPlanner doesn't recreate them
+                roadmapData.monthlyPlanner.hiddenClinicTasks[taskId] = true;
+                // Remove from customTasks
+                if (roadmapData.monthlyPlanner.customTasks) {
+                    Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
+                        var ct = roadmapData.monthlyPlanner.customTasks[ctId];
+                        if (ct && ct.clinicalAppointmentId === aptId) {
+                            delete roadmapData.monthlyPlanner.customTasks[ctId];
+                        }
+                    });
+                }
+            });
+        }
+
+        clinicalDataDirty = true;
 
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         closePatientModal();
         renderPatientsList();
         renderAppointmentsList();
+        renderCompetencies();
         updateClinicalStats();
         renderDashboard();
         showToast('Patient deleted');
@@ -405,7 +449,7 @@ function renderAppointmentCard(apt, patients) {
             : '');
 
     return `
-        <div class="appointment-card" onclick="editAppointment('${apt.id}')">
+        <div class="appointment-card" onclick="editAppointment('${safeAptId}')">
             <div class="appointment-date">
                 <div class="appointment-date-day">${dayNum}</div>
                 <div class="appointment-date-month">${monthName}</div>
@@ -501,7 +545,7 @@ function saveAppointment() {
     const aptId = document.getElementById('appointmentModalId').value || 'apt-' + Date.now();
     const isNew = !document.getElementById('appointmentModalId').value;
 
-    const apt = {
+    const formFields = {
         id: aptId,
         patientId: patientId,
         date: date,
@@ -509,24 +553,25 @@ function saveAppointment() {
         duration: parseInt(document.getElementById('appointmentModalDuration').value) || 180,
         chair: document.getElementById('appointmentModalChair').value.trim(),
         procedures: document.getElementById('appointmentModalProcedures').value.trim(),
-        notes: document.getElementById('appointmentModalNotes').value.trim(),
-        status: 'scheduled',
-        createdAt: new Date().toISOString()
+        notes: document.getElementById('appointmentModalNotes').value.trim()
     };
 
     if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
     if (!roadmapData.clinicalData.appointments) roadmapData.clinicalData.appointments = {};
 
-    // Update or add
-    if (!roadmapData.clinicalData.appointments || Array.isArray(roadmapData.clinicalData.appointments)) {
+    // Migrate if needed
+    if (Array.isArray(roadmapData.clinicalData.appointments)) {
         roadmapData.clinicalData.appointments = migrateArrayToObject(roadmapData.clinicalData.appointments, 'appt');
     }
-    if (roadmapData.clinicalData.appointments[aptId]) {
-        apt.status = roadmapData.clinicalData.appointments[aptId].status; // Preserve status
-        roadmapData.clinicalData.appointments[aptId] = apt;
-    } else {
-        roadmapData.clinicalData.appointments[aptId] = apt;
-    }
+
+    // Merge form fields INTO existing appointment to preserve completedAt, clinicalAppointmentId, status, etc.
+    const existingApt = roadmapData.clinicalData.appointments[aptId] || {};
+    roadmapData.clinicalData.appointments[aptId] = {
+        ...existingApt,
+        ...formFields,
+        status: existingApt.status || 'scheduled',
+        createdAt: existingApt.createdAt || new Date().toISOString()
+    };
 
     // Create deadline if requested
     if (isNew && document.getElementById('appointmentModalCreateDeadline').checked) {
@@ -551,6 +596,8 @@ function saveAppointment() {
         };
     }
 
+    clinicalDataDirty = true;
+
     // CRITICAL: Sync to Monthly Planner
     syncClinicalToMonthlyPlanner();
 
@@ -568,6 +615,9 @@ function saveAppointment() {
         mpRenderAllCalendars();
     }
 
+    // Rebuild week schedule for Stim Calc cross-app visibility
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
     showToast('Appointment saved!');
 }
 
@@ -580,6 +630,23 @@ function deleteAppointment() {
             delete roadmapData.clinicalData.appointments[aptId];
         }
 
+        // Cascade: delete procedure records linked to this appointment + unlink from competencies
+        if (roadmapData.clinicalData.completedProcedures) {
+            Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
+                var proc = roadmapData.clinicalData.completedProcedures[procId];
+                if (proc && proc.appointmentId === aptId) {
+                    unlinkProcedureFromCompetencies(procId);
+                    delete roadmapData.clinicalData.completedProcedures[procId];
+                }
+            });
+        }
+
+        // Hide clinic planner tasks so sync doesn't recreate them
+        if (roadmapData.monthlyPlanner) {
+            if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+            roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
+        }
+
         // Also remove linked deadline if exists
         if (roadmapData.customDeadlines) {
             Object.keys(roadmapData.customDeadlines).forEach(id => {
@@ -588,6 +655,8 @@ function deleteAppointment() {
                 }
             });
         }
+
+        clinicalDataDirty = true;
 
         // CRITICAL: Sync to Monthly Planner
         syncClinicalToMonthlyPlanner();
@@ -604,6 +673,9 @@ function deleteAppointment() {
         updateClinicalStats();
         renderDeadlines();
         renderDashboard();
+        // Rebuild week schedule for Stim Calc cross-app visibility
+        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
         showToast('Appointment deleted');
     }, null, 'Delete Appointment');
 }
@@ -616,7 +688,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Fixed Prosthodontics',
         icon: '🦷',
         color: '#3b82f6',
-        summary: { completed: 0, inProgress: 0, planned: 2, required: 10, unit: 'units' },
         notes: '2 planned (unreliable). Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations.',
         sections: [
             { title: 'Fixed Formatives (to qualify for summatives)', items: [
@@ -646,21 +717,20 @@ const DEFAULT_COMPETENCIES = {
         name: 'Operative',
         icon: '🔧',
         color: '#10b981',
-        summary: { completed: 4, inProgress: 0, planned: 7, required: 8, unit: 'summatives' },
         notes: '20 formative surfaces completed. 4 summatives done (2x DO composite). NEED CLASS 5 formatives/summatives. Grade: 86% on first DO.',
         sections: [
             { title: 'Summative Requirements (8 total)', items: [
                 { id: 'op-class5-1', text: 'Class V Composite Summative #1', required: 1, completed: 0 },
                 { id: 'op-class5-2', text: 'Class V Composite Summative #2', required: 1, completed: 0 },
-                { id: 'op-multi-1', text: 'Multisurface #1 (DO composite)', required: 1, completed: 1, note: '86% grade' },
-                { id: 'op-multi-2', text: 'Multisurface #2 (DO composite)', required: 1, completed: 1, note: 'Awaiting grade' },
-                { id: 'op-multi-3', text: 'Multisurface #3', required: 1, completed: 1 },
-                { id: 'op-multi-4', text: 'Multisurface #4', required: 1, completed: 1 },
+                { id: 'op-multi-1', text: 'Multisurface #1 (DO composite)', required: 1, completed: 0, note: '86% grade' },
+                { id: 'op-multi-2', text: 'Multisurface #2 (DO composite)', required: 1, completed: 0, note: 'Awaiting grade' },
+                { id: 'op-multi-3', text: 'Multisurface #3', required: 1, completed: 0 },
+                { id: 'op-multi-4', text: 'Multisurface #4', required: 1, completed: 0 },
                 { id: 'op-multi-5', text: 'Multisurface #5', required: 1, completed: 0 },
                 { id: 'op-multi-6', text: 'Multisurface #6', required: 1, completed: 0 }
             ]},
             { title: 'Other Requirements', items: [
-                { id: 'op-formatives', text: 'Complete 20 formative surfaces', required: 20, completed: 20 },
+                { id: 'op-formatives', text: 'Complete 20 formative surfaces', required: 20, completed: 0 },
                 { id: 'op-approval', text: 'Approval from Dr. McManama', required: 1, completed: 0 },
                 { id: 'op-assignment', text: 'Operative assignment/survey (Blackboard)', required: 1, completed: 0 },
                 { id: 'op-license', text: 'Licensing Exam Prep (Dr. Robinson)', required: 1, completed: 0 }
@@ -671,7 +741,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Complete Dentures',
         icon: '🦴',
         color: '#8b5cf6',
-        summary: { completed: 0, inProgress: 2, planned: 2, required: 4, unit: 'arches' },
         notes: 'In-progress: 2 arches interim CU/CL. Planned: 2 arches definitive CU/CL.',
         sections: [
             { title: 'Complete Denture Formatives', items: [
@@ -702,7 +771,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'RPDs',
         icon: '🔩',
         color: '#f59e0b',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 1, unit: 'track' },
         notes: 'NEED RPDs - Must complete one track.',
         sections: [
             { title: 'Clinical Experience Tracks (choose one)', items: [
@@ -720,7 +788,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'SRPs',
         icon: '🩺',
         color: '#ef4444',
-        summary: { completed: 0, inProgress: 0, planned: 1, required: 4, unit: 'summatives' },
         notes: '1 planned (unreliable) UL 1-3 teeth.',
         sections: [
             { title: 'Periodontology Summatives', items: [
@@ -735,7 +802,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Endodontics',
         icon: '🔬',
         color: '#06b6d4',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 2, unit: 'RCTs' },
         notes: '0 completed, 0 planned.',
         sections: [
             { title: 'Requirements', items: [
@@ -753,14 +819,13 @@ const DEFAULT_COMPETENCIES = {
         name: 'Oral Surgery',
         icon: '🏥',
         color: '#ec4899',
-        summary: { completed: 4, inProgress: 0, planned: 0, required: 16, unit: 'items' },
         notes: '',
         sections: [
             { title: '3rd Year Requirements', items: [
-                { id: 'os-3rd-rotation', text: 'Participate in 3rd Year Oral Surgery Rotation', required: 1, completed: 1 },
-                { id: 'os-3rd-consult', text: 'Summative: Management of Patient having OS Consult', required: 1, completed: 1 },
-                { id: 'os-3rd-nerve', text: 'Summative: Administration of IA and Long Buccal Block', required: 1, completed: 1 },
-                { id: 'os-3rd-suture', text: 'Summative: Participation in Suturing Workshop', required: 1, completed: 1 }
+                { id: 'os-3rd-rotation', text: 'Participate in 3rd Year Oral Surgery Rotation', required: 1, completed: 0 },
+                { id: 'os-3rd-consult', text: 'Summative: Management of Patient having OS Consult', required: 1, completed: 0 },
+                { id: 'os-3rd-nerve', text: 'Summative: Administration of IA and Long Buccal Block', required: 1, completed: 0 },
+                { id: 'os-3rd-suture', text: 'Summative: Participation in Suturing Workshop', required: 1, completed: 0 }
             ]},
             { title: '4th Year Requirements', items: [
                 { id: 'os-4th-rotation', text: 'Complete 2-week scheduled rotation', required: 1, completed: 0 },
@@ -781,7 +846,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Pediatric Dentistry',
         icon: '👶',
         color: '#84cc16',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 7, unit: 'items' },
         notes: '',
         sections: [
             { title: 'Course & Rotations', items: [
@@ -800,31 +864,30 @@ const DEFAULT_COMPETENCIES = {
         name: 'Periodontology',
         icon: '🦠',
         color: '#f472b6',
-        summary: { completed: 12, inProgress: 1, planned: 0, required: 37, unit: 'items' },
         notes: '',
         sections: [
             { title: 'Surgical', items: [
                 { id: 'perio-surg-assist', text: '7 Surgical Assist (total 3rd/4th yr, max 1 implant uncovering)', required: 7, completed: 0 }
             ]},
             { title: '3rd Year Specific Summatives', items: [
-                { id: 'perio-3rd-ohi', text: 'Oral hygiene instructions (by Oct 1)', required: 1, completed: 1 },
-                { id: 'perio-3rd-prophy', text: 'Scaling and Prophy (by May 2026)', required: 1, completed: 1, note: '100% - Need SRP summative' },
+                { id: 'perio-3rd-ohi', text: 'Oral hygiene instructions (by Oct 1)', required: 1, completed: 0 },
+                { id: 'perio-3rd-prophy', text: 'Scaling and Prophy (by May 2026)', required: 1, completed: 0, note: '100% - Need SRP summative' },
                 { id: 'perio-3rd-reeval', text: 'Re-eval Gingivitis (by May 2026)', required: 1, completed: 0 }
             ]},
             { title: 'Total Formatives (3rd & 4th Year)', items: [
-                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 zoom, 1 in person)', required: 2, completed: 2 },
-                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 4 },
-                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 5 },
-                { id: 'perio-form-quad', text: '3 Quad (SRP)', required: 3, completed: 1, note: 'UL quadrant' },
+                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 zoom, 1 in person)', required: 2, completed: 0 },
+                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 0 },
+                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 0 },
+                { id: 'perio-form-quad', text: '3 Quad (SRP)', required: 3, completed: 0, note: 'UL quadrant' },
                 { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0 },
                 { id: 'perio-form-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0 },
                 { id: 'perio-form-impr', text: '3 Re-evaluate Impression', required: 3, completed: 0 },
-                { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 5 }
+                { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 0 }
             ]},
             { title: 'Total Summatives (3rd & 4th Year)', items: [
-                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 1 },
+                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0 },
                 { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0 },
-                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 1, note: '100% score' },
+                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, note: '100% score' },
                 { id: 'perio-sum-calc', text: '3 Calculus removal', required: 3, completed: 0 },
                 { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate (Gingivitis)', required: 2, completed: 0 },
                 { id: 'perio-sum-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0 },
@@ -838,18 +901,17 @@ const DEFAULT_COMPETENCIES = {
         name: 'Group Practice (GD 640 & GD 642)',
         icon: '👥',
         color: '#0ea5e9',
-        summary: { completed: 6, inProgress: 1, planned: 0, required: 9, unit: 'items' },
         notes: '',
         sections: [
             { title: '3rd Year (GD 640)', items: [
-                { id: 'gp-attend', text: 'Clinical Attendance (4 per week)', required: 1, completed: 1 },
-                { id: 'gp-form-review', text: '1 Formative Periodic Review', required: 1, completed: 1 },
+                { id: 'gp-attend', text: 'Clinical Attendance (4 per week)', required: 1, completed: 0 },
+                { id: 'gp-form-review', text: '1 Formative Periodic Review', required: 1, completed: 0 },
                 { id: 'gp-sum-review', text: '1 Summative Periodic Review', required: 1, completed: 0 },
-                { id: 'gp-form-analysis', text: '2 Formative Written Analyses', required: 2, completed: 1, note: '1 completed, 1 in progress' },
+                { id: 'gp-form-analysis', text: '2 Formative Written Analyses', required: 2, completed: 0, note: '1 completed, 1 in progress' },
                 { id: 'gp-sum-analysis', text: '1 Summative Written Analysis', required: 1, completed: 0 },
-                { id: 'gp-comm', text: 'Communication Workshop', required: 1, completed: 1 },
+                { id: 'gp-comm', text: 'Communication Workshop', required: 1, completed: 0 },
                 { id: 'gp-leader', text: 'Leadership Workshop', required: 1, completed: 0 },
-                { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 1 },
+                { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 0 },
                 { id: 'gp-pms-3rd', text: 'Practice Management Scenarios (1 formative + 4 summative, cumulative)', required: 1, completed: 0, note: '', status: 'pending' }
             ]},
             { title: '4th Year (GD 642) Summatives', items: [
@@ -872,7 +934,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Treatment Planning (RS 545)',
         icon: '📋',
         color: '#6366f1',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 7, unit: 'items' },
         notes: 'RS 545 Seminar presentation + Data Collection/Tx Planning Rotation',
         sections: [
             { title: 'Seminar Presentation (20% of grade)', items: [
@@ -891,7 +952,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Geriatric Dental Medicine',
         icon: '👴',
         color: '#8b5cf6',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 3, unit: 'items' },
         notes: 'DMD 27 must challenge didactic course Spring 2026, then complete rotation + assignment',
         sections: [
             { title: 'Requirements', items: [
@@ -905,7 +965,6 @@ const DEFAULT_COMPETENCIES = {
         name: 'Externship & SPS',
         icon: '🌴',
         color: '#059669',
-        summary: { completed: 0, inProgress: 0, planned: 0, required: 3, unit: 'items' },
         notes: 'Complete during 10-week externship rotation',
         sections: [
             { title: 'Externship Requirements', items: [
@@ -917,8 +976,8 @@ const DEFAULT_COMPETENCIES = {
     }
 };
 
-function getCompetenciesData() {
-    // Initialize if not exists
+// Initialize/migrate competencies — call from init paths only, NOT during render.
+function ensureCompetenciesInitialized() {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     if (!roadmapData.clinicalData.competencies) {
         // Initialize from defaults and migrate to object-based storage
@@ -937,7 +996,11 @@ function getCompetenciesData() {
             }
         }
     }
-    return roadmapData.clinicalData.competencies;
+}
+
+// Pure read-only accessor — no side effects during render.
+function getCompetenciesData() {
+    return roadmapData.clinicalData?.competencies || {};
 }
 
 // Get item status based on completed count and manual status override
@@ -1164,10 +1227,10 @@ function renderCompetencies() {
                                             ${isCustom ? `<button class="comp-delete-btn" onclick="deleteCompItem('${key}', '${item.id}'); event.stopPropagation();" title="Delete">🗑️</button>` : ''}
                                         </div>
                                     </div>
-                                    ${(item.completionEntries && item.completionEntries.length > 0) ? `
+                                    ${(getValues(item.completionEntries).length > 0) ? `
                                         <div style="margin: 4px 0 8px 20px; padding: 6px 10px; background:rgba(16,185,129,0.08); border-left:2px solid #10b981; border-radius:0 6px 6px 0; font-size:0.8em;">
-                                            <div style="color:#6ee7b7; font-weight:600; margin-bottom:4px;">Evidence (${item.completionEntries.length}):</div>
-                                            ${item.completionEntries.map(function(entry) {
+                                            <div style="color:#6ee7b7; font-weight:600; margin-bottom:4px;">Evidence (${getValues(item.completionEntries).length}):</div>
+                                            ${getValues(item.completionEntries).map(function(entry) {
                                                 var entryDate = entry.date ? parseLocalDate(entry.date) : null;
                                                 var dateStr = entryDate ? entryDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
                                                 return '<div style="color:#94a3b8; padding:2px 0;">'
@@ -1240,6 +1303,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
                 item.completed = 0;
                 // Clear manual evidence entries on reset
                 if (item.completionEntries) {
+                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                     item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
                 }
             } else {
@@ -1248,7 +1312,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
                 if (newStatus === 'completed') {
                     item.completed = item.required;
                     // Add evidence entries for manual completion
-                    if (!item.completionEntries) item.completionEntries = [];
+                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                     while (item.completionEntries.length < item.required) {
                         item.completionEntries.push({
                             procedureId: null,
@@ -1263,6 +1327,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
                 } else if (newStatus === 'pending') {
                     item.completed = 0;
                     if (item.completionEntries) {
+                        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                         item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
                     }
                 }
@@ -1305,7 +1370,7 @@ function adjustCompItem(catKey, itemId, delta) {
 
             // Evidence trail: create lightweight entry for manual adjustments
             if (delta > 0 && newCompleted > 0) {
-                if (!item.completionEntries) item.completionEntries = [];
+                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                 // Only add entry if manual adjustment (not already covered by procedure linking)
                 var manualCount = newCompleted - item.completionEntries.length;
                 if (manualCount > 0) {
@@ -1317,7 +1382,8 @@ function adjustCompItem(catKey, itemId, delta) {
                         note: 'Manually adjusted +' + delta
                     });
                 }
-            } else if (delta < 0 && item.completionEntries && item.completionEntries.length > newCompleted) {
+            } else if (delta < 0 && item.completionEntries) {
+                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                 // Remove excess manual entries (last ones first, prefer removing manual over procedure-linked)
                 while (item.completionEntries.length > newCompleted) {
                     var lastIdx = -1;
@@ -1643,7 +1709,7 @@ function linkProcedureToCompetencies(procedure) {
         const item = result.item;
 
         // Add completion entry (audit trail)
-        if (!item.completionEntries) item.completionEntries = [];
+        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
 
         // Dedup by procedureId
         if (!item.completionEntries.some(function(e) { return e.procedureId === procedure.id; })) {
@@ -1675,6 +1741,7 @@ function unlinkProcedureFromCompetencies(procedureId) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
                 if (!item.completionEntries) return;
+                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                 const before = item.completionEntries.length;
                 item.completionEntries = item.completionEntries.filter(function(e) { return e.procedureId !== procedureId; });
                 if (item.completionEntries.length < before) {
@@ -1699,6 +1766,7 @@ function deleteProcedure(procId) {
         unlinkProcedureFromCompetencies(procId);
         delete roadmapData.clinicalData.completedProcedures[procId];
 
+        clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         renderProceduresList();
@@ -1722,9 +1790,24 @@ function backfillClinicalData() {
     today.setHours(0, 0, 0, 0);
     var todayStr = getLocalDateString(today);
 
-    // Create checkpoint before backfill
+    // Create checkpoint before backfill (skip if one was created within last 60s)
     if (typeof createCheckpoint === 'function') {
-        createCheckpoint('pre-backfill');
+        var recentBackfillCheckpoint = false;
+        try {
+            var cpKey = typeof getCheckpointKey === 'function' ? getCheckpointKey() : null;
+            if (cpKey) {
+                var checkpoints = JSON.parse(localStorage.getItem(cpKey) || '[]');
+                if (checkpoints.length > 0) {
+                    var latest = checkpoints[checkpoints.length - 1];
+                    if (latest.name === 'pre-backfill' && (Date.now() - new Date(latest.timestamp).getTime()) < 60000) {
+                        recentBackfillCheckpoint = true;
+                    }
+                }
+            }
+        } catch(e) {}
+        if (!recentBackfillCheckpoint) {
+            createCheckpoint('pre-backfill');
+        }
     }
 
     // === Phase 1: Auto-complete past appointments ===
@@ -1766,7 +1849,7 @@ function backfillClinicalData() {
             getValues(cat.sections).forEach(function(sec) {
                 getValues(sec.items).forEach(function(item) {
                     if (item.completed > 0) {
-                        if (!item.completionEntries) item.completionEntries = [];
+                        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
                         var deficit = item.completed - item.completionEntries.length;
                         for (var i = 0; i < deficit; i++) {
                             item.completionEntries.push({
@@ -1898,6 +1981,7 @@ function backfillClinicalData() {
     });
 
     // Save everything
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
@@ -1943,6 +2027,7 @@ function completeAppointment(aptId) {
     // Mark planner task as done
     markPlannerTaskDone(aptId);
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
@@ -1951,6 +2036,13 @@ function completeAppointment(aptId) {
     renderDashboard();
     if (typeof renderDeadlines === 'function') renderDeadlines();
     if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
+
+    // Rebuild week schedule for Stim Calc cross-app visibility
+    if (typeof buildCurrentWeekSchedule === 'function') {
+        buildCurrentWeekSchedule();
+        saveData();
+    }
 
     // Open procedure recording modal for this appointment
     openProcedureRecordingModal(aptId);
@@ -1966,14 +2058,51 @@ function uncompleteAppointment(aptId) {
     unmarkLinkedDeadlineDone(aptId);
     unmarkPlannerTaskDone(aptId);
 
+    // Remove procedure records created during completion + unlink from competencies
+    if (roadmapData.clinicalData.completedProcedures) {
+        Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
+            var proc = roadmapData.clinicalData.completedProcedures[procId];
+            if (proc && proc.appointmentId === aptId) {
+                unlinkProcedureFromCompetencies(procId);
+                delete roadmapData.clinicalData.completedProcedures[procId];
+            }
+        });
+    }
+
+    clinicalDataDirty = true;
+
+    // Recalculate patient lastVisit from remaining completed appointments
+    if (apt.patientId) {
+        var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+        if (patient) {
+            var latestVisit = null;
+            getValues(roadmapData.clinicalData?.appointments).forEach(function(a) {
+                if (a.patientId === apt.patientId && a.status === 'completed' && a.id !== aptId) {
+                    if (!latestVisit || (a.date && a.date > latestVisit)) {
+                        latestVisit = a.date;
+                    }
+                }
+            });
+            patient.lastVisit = latestVisit;
+        }
+    }
+
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
     renderAppointmentsList();
+    renderProceduresList();
+    renderCompetencies();
     updateClinicalStats();
     renderDashboard();
     if (typeof renderDeadlines === 'function') renderDeadlines();
     if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+
+    // Rebuild week schedule for Stim Calc cross-app visibility
+    if (typeof buildCurrentWeekSchedule === 'function') {
+        buildCurrentWeekSchedule();
+        saveData();
+    }
 
     showToast('Appointment unmarked');
 }
@@ -1983,9 +2112,10 @@ function markLinkedDeadlineDone(aptId) {
 
     Object.values(roadmapData.customDeadlines).forEach(function(dl) {
         if (dl.clinicalAptId === aptId && !dl.done) {
+            // Compute stable ID BEFORE mutation (per CLAUDE.md)
+            var dlId = dl._originalStableId || getDeadlineId(dl);
             dl.done = true;
 
-            var dlId = dl._originalStableId || getDeadlineId(dl);
             if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
             roadmapData.completedDeadlines[dlId] = {
                 done: true,
@@ -2160,6 +2290,7 @@ function saveProcedureRecord() {
         faculty: document.getElementById('procModalFaculty').value.trim()
     });
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
@@ -2257,16 +2388,3 @@ function toggleAppointmentStatus(aptId, event) {
     }
 }
 
-// ==================== PROCEDURES FOR PATIENT/COMPETENCY ====================
-
-function getProceduresForPatient(patientId) {
-    return getValues(roadmapData.clinicalData?.completedProcedures).filter(function(p) {
-        return p.patientId === patientId;
-    });
-}
-
-function getProceduresForCompetency(competencyItemId) {
-    return getValues(roadmapData.clinicalData?.completedProcedures).filter(function(p) {
-        return p.competencyItemIds && p.competencyItemIds.includes(competencyItemId);
-    });
-}

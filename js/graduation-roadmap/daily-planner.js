@@ -650,7 +650,11 @@ function dpSyncAppointmentsToTimeline() {
         }
     });
 
-    // Note: We don't save here — initDailyPlanner() calls saveData() later if needed
+    // Persist block mutations so they survive tab switches and page reloads
+    if (changed && hasLoadedFromCloud && !awaitingFirebaseLoad) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+    }
 
     // Render clinic day banner if today has clinical appointments
     dpRenderClinicDayBanner(appointments, patients, today);

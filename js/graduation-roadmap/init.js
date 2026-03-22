@@ -14,22 +14,19 @@ function renderDashboard() {
 
     // === Row 1: Clinic Requirements Card ===
     // SMART COUNTING: Aggregate from ALL data sources (appointments, planner, patients, competencies)
-    roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
+    // NOTE: No state mutation in render — use local variables only. roadmapData.clinicHeadlines
+    // is read for persisted targets but never written to from this function.
+    var headlines = roadmapData.clinicHeadlines || {};
     var smartApts = getSmartAppointmentCount();
     var smartProcs = getSmartProcedureCount();
-    // Sync smart counts back to clinicHeadlines for cross-app consumers
-    if (!roadmapData.clinicHeadlines.appointments) roadmapData.clinicHeadlines.appointments = {};
-    if (!roadmapData.clinicHeadlines.procedures) roadmapData.clinicHeadlines.procedures = {};
-    roadmapData.clinicHeadlines.appointments.completed = smartApts.total;
-    roadmapData.clinicHeadlines.procedures.completed = smartProcs.total;
     const clinicHeadlines = {
         appointments: {
             completed: smartApts.total,
-            target: roadmapData.clinicHeadlines.appointments?.target ?? 90
+            target: headlines.appointments?.target ?? 90
         },
         procedures: {
             completed: smartProcs.total,
-            target: roadmapData.clinicHeadlines.procedures?.target ?? 116
+            target: headlines.procedures?.target ?? 116
         }
     };
 
@@ -61,7 +58,7 @@ function renderDashboard() {
             + '<div style="display:flex; align-items:center; gap:6px; justify-content:space-between;">'
             + '<span style="font-size:1.1em;">' + (cat.icon ?? '📌') + '</span>'
             + '<span style="flex:1; font-size:0.8em; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(cat.name) + '</span>'
-            + '<span style="font-size:0.75em; color:#94a3b8; white-space:nowrap;">' + stats.completed + '/' + stats.totalItems + '</span>'
+            + '<span style="font-size:0.75em; color:#94a3b8; white-space:nowrap;">' + stats.completedUnits + '/' + stats.totalUnits + '</span>'
             + '</div>'
             + '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:5px; overflow:hidden;">'
             + '<div style="background:' + (cat.color ?? '#3b82f6') + '; height:100%; width:' + pct + '%; transition:width 0.3s;"></div>'
@@ -108,6 +105,13 @@ function renderDashboard() {
         return days > 14 && days <= 30;
     }).sort(function(a, b) { return parseLocalDate(a.date) - parseLocalDate(b.date); });
 
+    // Unscheduled/TBD deadlines
+    const unscheduled = deadlines.filter(function(d) {
+        if (d.done) return false;
+        if (!d.date || d.tbd) return true;
+        return false;
+    });
+
     // === Row 4: Key Dates Countdown ===
     const d3End = new Date(2026, 4, 13);       // May 13, 2026
     const extStart = new Date(2026, 4, 19);    // May 19, 2026
@@ -153,10 +157,12 @@ function renderDashboard() {
         if (smartApts.fromSnapshot > 0) aptBreakdown.push('SPS: ' + smartApts.fromSnapshot);
     }
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
-    // Pace projection
+    // Pace projection — red if behind schedule (projected past D3 end)
     if (aptPace) {
-        html += '<div style="font-size:0.65em; color:' + (aptPace.daysToTarget === 0 ? '#10b981' : '#93c5fd') + '; margin-top:2px;">'
-            + (aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate) + '</div>';
+        var aptPaceColor = aptPace.daysToTarget === 0 ? '#10b981' : aptPace.behindSchedule ? '#f87171' : '#93c5fd';
+        var aptPaceText = aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate;
+        if (aptPace.behindSchedule && aptPace.daysToTarget > 0) aptPaceText += ' ⚠️';
+        html += '<div style="font-size:0.65em; color:' + aptPaceColor + '; margin-top:2px;">' + aptPaceText + '</div>';
     }
     html += '</div>';
 
@@ -183,10 +189,12 @@ function renderDashboard() {
         if (smartProcs.fromSnapshot > 0) procBreakdown.push('SPS: ' + smartProcs.fromSnapshot);
     }
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (procBreakdown.length > 0 ? procBreakdown.join(' + ') : 'No data yet') + '</div>';
-    // Pace projection
+    // Pace projection — red if behind schedule
     if (procPace) {
-        html += '<div style="font-size:0.65em; color:' + (procPace.daysToTarget === 0 ? '#10b981' : '#6ee7b7') + '; margin-top:2px;">'
-            + (procPace.daysToTarget === 0 ? 'Target met!' : procPace.ratePerWeek + '/wk pace — target by ' + procPace.projectedDate) + '</div>';
+        var procPaceColor = procPace.daysToTarget === 0 ? '#10b981' : procPace.behindSchedule ? '#f87171' : '#6ee7b7';
+        var procPaceText = procPace.daysToTarget === 0 ? 'Target met!' : procPace.ratePerWeek + '/wk pace — target by ' + procPace.projectedDate;
+        if (procPace.behindSchedule && procPace.daysToTarget > 0) procPaceText += ' ⚠️';
+        html += '<div style="font-size:0.65em; color:' + procPaceColor + '; margin-top:2px;">' + procPaceText + '</div>';
     }
     html += '</div>';
 
@@ -272,12 +280,14 @@ function renderDashboard() {
     if (recallsDue.length > 0) {
         alertItems.push({ type: 'warning', icon: '🔔', text: recallsDue.length + ' patient recall' + (recallsDue.length > 1 ? 's' : '') + ' due within 30 days', action: 'switchTab(\'clinical\')' });
     }
-    // Competency gaps
+    // Competency gaps — use navigateToEntity for deep linking to the first gap's category
     if (gaps.zeroProgress.length > 0) {
-        alertItems.push({ type: 'blocker', icon: '🚫', text: gaps.zeroProgress.length + ' competency item' + (gaps.zeroProgress.length > 1 ? 's' : '') + ' at 0% — need attention', action: 'switchTab(\'competencies\')' });
+        var firstZeroId = gaps.zeroProgress[0].id;
+        alertItems.push({ type: 'blocker', icon: '🚫', text: gaps.zeroProgress.length + ' competency item' + (gaps.zeroProgress.length > 1 ? 's' : '') + ' at 0% — need attention', action: 'navigateToEntity(\'competency\', \'' + escapeHtml(firstZeroId) + '\')' });
     }
     if (gaps.behindPace.length > 0) {
-        alertItems.push({ type: 'warning', icon: '📉', text: gaps.behindPace.length + ' item' + (gaps.behindPace.length > 1 ? 's' : '') + ' behind pace for graduation', action: 'switchTab(\'competencies\')' });
+        var firstBehindId = gaps.behindPace[0].id;
+        alertItems.push({ type: 'warning', icon: '📉', text: gaps.behindPace.length + ' item' + (gaps.behindPace.length > 1 ? 's' : '') + ' behind pace for graduation', action: 'navigateToEntity(\'competency\', \'' + escapeHtml(firstBehindId) + '\')' });
     }
 
     if (alertItems.length > 0) {
@@ -296,8 +306,8 @@ function renderDashboard() {
     }
 
     // === ROW 2: ACTION ITEMS — Missing Notes + To-Do List ===
-    html += renderMissingNotesSection();
-    html += renderTodoListSection();
+    html += '<div id="dashMissingNotesContainer">' + renderMissingNotesSection() + '</div>';
+    html += '<div id="dashTodoListContainer">' + renderTodoListSection() + '</div>';
 
     // === ROW 3: Do Today Widget ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
@@ -336,6 +346,17 @@ function renderDashboard() {
     html += '<div id="nextMonthDays">' + renderDeadlineItems(nextMonth, 'No deadlines in days 15-30!') + '</div>';
     html += '</div>';
 
+    // Unscheduled/TBD deadlines card
+    if (unscheduled.length > 0) {
+        html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:16px; margin-bottom:12px;">';
+        html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
+        html += '<h3 style="color:#a78bfa; margin:0; font-size:1.05em;">📌 Unscheduled</h3>';
+        html += '<span style="background:#7c3aed; color:#fff; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">' + unscheduled.length + '</span>';
+        html += '</div>';
+        html += renderDeadlineItems(unscheduled, 'No unscheduled items!');
+        html += '</div>';
+    }
+
     // === ROW 4: Key Dates Countdown ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
     html += '<h3 style="color:#fbbf24; margin:0 0 12px 0; font-size:1.1em;">🎯 Key Dates</h3>';
@@ -349,6 +370,8 @@ function renderDashboard() {
     html += '<div style="font-size:0.7em; color:#64748b;">May 13, 2026</div>';
     if (d3Remaining > 0) {
         html += '<div style="font-size:0.6em; color:#93c5fd; margin-top:4px;">' + d3Remaining + ' apts remaining</div>';
+    } else if (d3Remaining < 0) {
+        html += '<div style="font-size:0.6em; color:#10b981; margin-top:4px;">Target exceeded by ' + Math.abs(d3Remaining) + '!</div>';
     }
     html += '</div>';
 
@@ -368,6 +391,8 @@ function renderDashboard() {
     html += '<div style="font-size:0.7em; color:#64748b;">May 12, 2027</div>';
     if (procRemaining > 0) {
         html += '<div style="font-size:0.6em; color:#fbbf24; margin-top:4px;">' + procRemaining + ' procs remaining</div>';
+    } else if (procRemaining < 0) {
+        html += '<div style="font-size:0.6em; color:#10b981; margin-top:4px;">Target exceeded by ' + Math.abs(procRemaining) + '!</div>';
     }
     html += '</div>';
 
@@ -547,6 +572,20 @@ function renderTodoListSection() {
     return html;
 }
 
+// Targeted re-render for Missing Notes section (preserves scroll, focus, details state)
+function rerenderMissingNotesSection() {
+    var container = document.getElementById('dashMissingNotesContainer');
+    if (!container) return renderDashboard();
+    container.innerHTML = renderMissingNotesSection();
+}
+
+// Targeted re-render for Todo List section (preserves scroll, focus, details state)
+function rerenderTodoListSection() {
+    var container = document.getElementById('dashTodoListContainer');
+    if (!container) return renderDashboard();
+    container.innerHTML = renderTodoListSection();
+}
+
 // Dashboard quick-add todo handler
 function dashboardAddTodo() {
     var input = document.getElementById('todoQuickAdd');
@@ -558,25 +597,20 @@ function dashboardAddTodo() {
     }
     addTodoItem(text, 'MANUAL', '');
     input.value = '';
-    renderDashboard();
+    rerenderTodoListSection();
+    var newInput = document.getElementById('todoQuickAdd');
+    if (newInput) newInput.focus();
     showToast('Added: ' + text, 'info');
 }
 
 // ==================== HEADLINE COUNTER HELPERS ====================
-function updateHeadlineCounter(type, value) {
-    roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
-    roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
-    roadmapData.clinicHeadlines[type].completed = parseInt(value) || 0;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-}
-
 function updateHeadlineTarget(type, value) {
     roadmapData.clinicHeadlines = roadmapData.clinicHeadlines || {};
     roadmapData.clinicHeadlines[type] = roadmapData.clinicHeadlines[type] || {};
     roadmapData.clinicHeadlines[type].target = parseInt(value) || 0;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    renderDashboard();
 }
 
 // ==================== GRADUATION PREP TAB ====================
@@ -923,6 +957,9 @@ function initUI() {
             });
         }
     } catch(e) { console.error('Error syncing grades to deadlines:', e); }
+
+    // Ensure competencies are initialized before any render that reads them
+    try { ensureCompetenciesInitialized(); } catch(e) { console.error('ensureCompetenciesInitialized error:', e); }
 
     // ALWAYS try to render, even if above steps failed
     try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }

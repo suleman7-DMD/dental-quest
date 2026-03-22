@@ -175,6 +175,15 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Solution (commit `c5d4578`):** Extracted `ensureInProgressDefaults()` with guarded save. Full PR2 merge in `mergeRemoteCollectionsIntoLocal()`. `hasPeriodicReview` checks all 9 fields. SPS snapshot preferred. Both patient stores merged. Clinical Brief panel added. `committed` guard flags on inline editors.
 **Key lesson:** Render paths must NEVER call `saveData()`. `mergeRemoteCollectionsIntoLocal()` must cover ALL top-level state objects. `isEmptyState()` must check ALL user-editable fields.
 
+### Error: Mission Control dashboard — 22-bug audit (fixed Mar 22, 2026)
+**Cause:** Deep audit of Mission Control tab found 22 bugs across 4 categories:
+**Persistence (5):** (1) `clinicHeadlines` fill-only merge in `mergeRemoteCollectionsIntoLocal` — defaults always exist so `!roadmapData.clinicHeadlines` never fires, dropping remote custom targets. (2) Same bug for `graduationPrep` — externship/CDCA data from other devices lost. (3) `overriddenStatic` missing from `mergeRemoteCollectionsIntoLocal`. (4) `restoreBackup()` raw `roadmapData = backup.data` wipes newer fields. (5) `periodicReviews` missing from initial `roadmapData` declaration.
+**Smart counters (6):** (6) `clinic_` task IDs not validated against real appointments (phantom counts). (7) Patient visit dedup used OR instead of AND. (8) `getSmartProcedureCount()` deducted null-procedureId completionEntries (backfill undercount). (9) `getCompetencyGaps()` threshold too loose for single-requirement items. (10) Empty competency categories polluted readiness details. (11) Pace projection used hardcoded Aug 2025 start date.
+**Rendering (7):** (12) Full `innerHTML` rebuild destroyed `<details>` state, scroll, and input focus. (13) `renderDashboard()` mutated `roadmapData.clinicHeadlines` during render. (14) `getCompetenciesData()` had initialization side-effects during render. (15) Dead `updateHeadlineCounter()` function. (16) TBD deadlines silently vanished. (17) `dashboardAddTodo()` lost input focus. (18) `toggleMissingNoteStatus()`/`clearCompletedMissingNotes()` crashed without optional chaining.
+**Other (4):** (19) Faculty substring match false positives. (20) `backfillClinicalData()` created duplicate checkpoints. (21) SPS snapshot one-way ratchet (documented, by design). (22) `calculatePaceProjection` default start date too conservative.
+**Solution:** All 22 bugs fixed across state.js, firebase-sync.js, init.js, clinical.js. Key architectural changes: (1) Partial re-renders via `rerenderMissingNotesSection()`/`rerenderTodoListSection()`. (2) `getCompetenciesData()` split into read-only accessor + `ensureCompetenciesInitialized()`. (3) `mergeRemoteCollectionsIntoLocal` field-level merge for defaulted objects. (4) `restoreBackup()` full field-by-field reconstruction. (5) Dual threshold for behind-pace (rate-based + midpoint-based).
+**Key lessons:** (a) Objects in defaults need field-level merge, not fill-only guards. (b) Render functions must be pure — no state mutation, no initialization. (c) Section-specific re-renders preserve UX for frequent actions. (d) Smart counters must validate IDs against source data.
+
 ---
 
 ## PERFORMANCE NOTES
@@ -451,6 +460,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `calculateNeeded()` | grades.js | "What grade do I need" calculator |
 | `syncGradeToDeadline()` | grades.js | Sync grade to deadline tab |
 | `loadExamCourseContent()` | exam-content.js | Exam content study tracker |
+| `ensureCompetenciesInitialized()` | clinical.js | Init/migrate competencies from DEFAULT_COMPETENCIES (call from init paths only, NOT render) |
 | `initClinicalTab()` | clinical.js | Initialize clinical tab (patients + appointments + procedures) |
 | `renderCompetencies()` | clinical.js | Competencies rendering with evidence drill-down |
 | `setCompItemStatus(cat, id, status)` | clinical.js | Update competency item status |
@@ -471,6 +481,8 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `mpHideClinicTask(taskId, aptId)` | monthly-planner.js | Hide clinic task from planner |
 | `mpUnhideClinicTask(aptId)` | monthly-planner.js | Restore hidden clinic task |
 | `renderDashboard()` | init.js | Mission Control tab (smart counters, readiness score, alerts, pace projections) |
+| `rerenderMissingNotesSection()` | init.js | Partial re-render: missing notes only (preserves scroll/details state) |
+| `rerenderTodoListSection()` | init.js | Partial re-render: todo list only (preserves scroll/details state, refocuses input) |
 | `renderGraduationPrep()` | init.js | Graduation Prep tab rendering (externship, CDCA, INBDE, job search) |
 | `updateHeadlineTarget(type, val)` | init.js | Edit clinic headline target (completed is smart-derived) |
 | `updateGradPrep(cat, field, val)` | init.js | Save graduation prep field |
@@ -621,3 +633,9 @@ If you see ANY of these in code you're writing:
 - Adding user-editable fields to `periodicReviews.pr2` without adding them to `hasPeriodicReview` check in `isEmptyState()` — Guard C blocks Firebase saves when only those fields have data
 - Inline editors using `change` + `blur` without a `committed` guard flag — both events fire on normal interaction, causing double saves/renders; Escape must also set the flag
 - `parsePatientRecord()` fieldMap missing keys that `renderPRPatientWriteups()` displays — imported patients show "Click to edit" for those fields forever
+- Using `!roadmapData.X` as fill guard in `mergeRemoteCollectionsIntoLocal` when X has defaults — defaults always provide the object, so the guard never fires. Use field-level merge instead.
+- Calling `getCompetenciesData()` expecting initialization side-effects — it is now a pure read-only accessor. Call `ensureCompetenciesInitialized()` from init paths (initUI, initClinicalTab) instead.
+- Using full `renderDashboard()` for todo/note status toggles — use `rerenderTodoListSection()` or `rerenderMissingNotesSection()` to preserve scroll position, `<details>` open state, and input focus.
+- Mutating `roadmapData` inside `renderDashboard()` or any render function — use local variables for computed values; state writes belong in save/CRUD paths only.
+- Using substring `indexOf()` for faculty name matching — use word-boundary regex (`\b`) or exact field matching to prevent false positives from short names.
+- `restoreBackup()` using raw `roadmapData = backup.data` — must use field-by-field reconstruction matching `restoreCheckpoint()` pattern to preserve newer fields.
