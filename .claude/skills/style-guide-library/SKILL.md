@@ -28,6 +28,7 @@ Read directly from `docs/style-guides/`:
 | `glassmorphism.html` | Modern glass effect | Mixed | Modern dashboards, overlays, cards |
 | `brutalist-web.html` | Raw/bold | Light | Experimental, statement pieces |
 | `solarpunk.html` | Green/optimistic | Mixed | Sustainability, health, nature apps |
+| `atlas-console.html` | Teal grid console | Dark | Command centers, monitoring, HUDs |
 
 ## How to Use a Local Style Guide
 
