@@ -7066,12 +7066,51 @@
                 border-radius: 0;
                 border-left: none;
             }
-            .ptr-summary-card { flex-direction: column; gap: 10px; }
-            .ptr-summary-right { flex-direction: row; gap: 12px; }
+            /* Fix 1: Hide dark stats/competency bar on mobile patients — too much vertical space */
+            #tab-patients #dashboardMetricsCard { display: none; }
+            #tab-patients #patientsCountdownRadar { display: none; }
+
+            /* Fix 2: Tighter summary card */
+            .ptr-summary-card { flex-direction: column; gap: 8px; padding: 12px; }
+            .ptr-summary-name { font-size: 1.1em; }
+            .ptr-summary-meta { font-size: 0.72em; }
+            .ptr-summary-right {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 6px;
+                width: 100%;
+            }
             .ptr-summary-kv { text-align: left; }
+            .ptr-summary-kv-label { font-size: 0.55em; }
+            .ptr-summary-kv-value { font-size: 0.72em; }
+
+            /* Fix 3: Compact header on mobile */
+            .header {
+                padding: 6px 12px;
+                gap: 4px;
+            }
+            .header h1 { font-size: 0.95em; }
+            .header p { font-size: 0.65em; margin-left: 6px; }
+            .checkpoint-controls { gap: 2px !important; }
+            .checkpoint-controls button { padding: 2px 6px !important; font-size: 0.65em !important; }
+
+            /* Fix 4: Larger touch targets for mobile */
+            #tab-patients .ptr-rel-dot { width: 22px; height: 22px; }
+            #tab-patients .ptr-edit-btn { padding: 8px 14px; font-size: 0.8em; }
+            #tab-patients .ptr-action-btn { padding: 8px 12px; font-size: 0.78em; }
+            .ptr-priority-card { padding: 12px; }
             .ptr-perio-row { flex-direction: column; }
             .ptr-imaging-chips { flex-direction: column; }
-            .ptr-imaging-chip { min-width: auto; }
+            .ptr-imaging-chip { min-width: auto; padding: 8px 12px; }
+            .ptr-imaging-chip-label { font-size: 0.7em; }
+            .ptr-imaging-chip-value { font-size: 0.85em; }
+
+            /* Back button more prominent */
+            #tab-patients .ptr-back-btn {
+                padding: 10px 16px;
+                font-size: 0.88em;
+                border-radius: 10px;
+            }
         }
 
         @media (max-width: 380px) {
