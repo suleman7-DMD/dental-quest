@@ -333,7 +333,252 @@ function renderPRAdminStats(pr2, snapshot) {
 
 
 // ============================================
-// PLACEHOLDER SECTIONS (4-12)
+// SECTION 4: COMPLETED PROCEDURES (Paste-in)
+// ============================================
+
+function parseProcedureTable(text) {
+    if (!text || !text.trim()) return '';
+    var lines = text.trim().split('\n');
+    var rows = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        // Skip separator lines (all dashes/pipes/spaces)
+        if (/^[\s|\-:]+$/.test(line)) continue;
+        var cells;
+        if (line.indexOf('|') >= 0) {
+            // Pipe-delimited: split on | and trim each cell, strip leading/trailing empty cells
+            cells = line.split('|').map(function(c) { return c.trim(); });
+            // Remove empty first/last from leading/trailing pipes
+            if (cells.length > 0 && cells[0] === '') cells.shift();
+            if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+        } else {
+            // Tab-delimited
+            cells = line.split('\t').map(function(c) { return c.trim(); });
+        }
+        if (cells.length > 0) rows.push(cells);
+    }
+    if (rows.length === 0) return '';
+
+    var html = '<table class="pr-table">';
+    // First row as header
+    html += '<thead><tr>';
+    for (var h = 0; h < rows[0].length; h++) {
+        html += '<th>' + escapeHtml(rows[0][h]) + '</th>';
+    }
+    html += '</tr></thead>';
+    html += '<tbody>';
+    for (var r = 1; r < rows.length; r++) {
+        html += '<tr>';
+        for (var c = 0; c < rows[r].length; c++) {
+            html += '<td>' + escapeHtml(rows[r][c]) + '</td>';
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+}
+
+function renderPRCompletedProcedures(pr2) {
+    var savedText = pr2.completedProceduresHtml ?? '';
+
+    var html = '<div class="pr-section" id="pr-section-4">';
+    html += '<div class="pr-section-number">04</div>';
+    html += '<div class="pr-section-title">Completed Procedures</div>';
+    html += '<div class="pr-section-subtitle" style="font-size:0.8rem; color:#62707c; margin-top:-8px; margin-bottom:16px;">SPS Dashboard \u2192 All Completed Procedures</div>';
+    html += '<div class="pr-panel">';
+
+    // Textarea for pasting
+    html += '<div class="pr-panel-title">Paste Procedure Table</div>';
+    html += '<textarea id="pr-completed-procedures-textarea" class="pr-textarea" rows="8" placeholder="Paste pipe-delimited or tab-delimited procedure table from Claude...\n\nExample:\nNo. | Patient Name | Chart# | Date | Code | Description | Tooth#\n1 | Doe, Jane | 12345 | 01/15/2026 | D2391 | Composite | 19">';
+    html += escapeHtml(savedText);
+    html += '</textarea>';
+
+    // Preview area
+    html += '<div id="pr-completed-procedures-preview" style="margin-top:16px;">';
+    if (savedText) {
+        html += '<div class="pr-panel-title">Preview</div>';
+        html += '<div style="overflow-x:auto;">';
+        html += parseProcedureTable(savedText);
+        html += '</div>';
+    } else {
+        html += '<p style="color:#62707c; font-size:0.85rem;">Paste a procedure table above to see a preview.</p>';
+    }
+    html += '</div>';
+
+    html += '</div>'; // .pr-panel
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+
+// ============================================
+// SECTION 5: IN-PROGRESS PROCEDURES (Editable)
+// ============================================
+
+var IN_PROGRESS_COLUMNS = [
+    { key: 'patientName', label: 'Patient Name', width: '150px' },
+    { key: 'chartNo', label: 'Chart#', width: '100px' },
+    { key: 'code', label: 'Code', width: '80px' },
+    { key: 'description', label: 'Description', width: '180px' },
+    { key: 'toothNo', label: 'Tooth#', width: '80px' },
+    { key: 'dateStarted', label: 'Date Started', width: '110px' },
+    { key: 'lastVisit', label: 'Last Visit', width: '110px' }
+];
+
+var PR1_IN_PROGRESS_DEFAULTS = [
+    { patientName: 'Jose Rosario', chartNo: '2467990', code: 'D5811', description: 'Interim complete lower denture', toothNo: 'MANDI', dateStarted: '09/19/2025', lastVisit: '11/08/2025' },
+    { patientName: 'Jose Rosario', chartNo: '2467990', code: 'D5810', description: 'Interim complete upper denture', toothNo: 'MAXI', dateStarted: '09/19/2025', lastVisit: '11/08/2025' }
+];
+
+function getInProgressProcedures(pr2) {
+    if (!pr2.inProgressProcedures || typeof pr2.inProgressProcedures !== 'object' || Object.keys(pr2.inProgressProcedures).length === 0) {
+        // Pre-populate from PR1 defaults
+        var defaults = {};
+        for (var i = 0; i < PR1_IN_PROGRESS_DEFAULTS.length; i++) {
+            var id = generateId('iproc');
+            var item = {};
+            for (var k in PR1_IN_PROGRESS_DEFAULTS[i]) {
+                if (PR1_IN_PROGRESS_DEFAULTS[i].hasOwnProperty(k)) {
+                    item[k] = PR1_IN_PROGRESS_DEFAULTS[i][k];
+                }
+            }
+            defaults[id] = item;
+        }
+        pr2.inProgressProcedures = defaults;
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+    }
+    return pr2.inProgressProcedures;
+}
+
+function renderPRInProgressProcedures(pr2) {
+    var procs = getInProgressProcedures(pr2);
+    var keys = Object.keys(procs);
+
+    var html = '<div class="pr-section" id="pr-section-5">';
+    html += '<div class="pr-section-number">05</div>';
+    html += '<div class="pr-section-title">In-Progress Procedures</div>';
+    html += '<div class="pr-section-subtitle" style="font-size:0.8rem; color:#62707c; margin-top:-8px; margin-bottom:16px;">SPS Dashboard \u2192 All In-Progress Procedures</div>';
+    html += '<div class="pr-panel">';
+
+    html += '<div style="overflow-x:auto;">';
+    html += '<table class="pr-table" id="pr-inprogress-table">';
+    html += '<thead><tr>';
+    for (var c = 0; c < IN_PROGRESS_COLUMNS.length; c++) {
+        html += '<th>' + escapeHtml(IN_PROGRESS_COLUMNS[c].label) + '</th>';
+    }
+    html += '<th style="width:60px;"></th>'; // delete column
+    html += '</tr></thead>';
+
+    html += '<tbody>';
+    for (var i = 0; i < keys.length; i++) {
+        var rowId = keys[i];
+        var row = procs[rowId];
+        var safeRowId = rowId.replace(/'/g, "\\'");
+        html += '<tr data-row-id="' + escapeHtml(rowId) + '">';
+        for (var j = 0; j < IN_PROGRESS_COLUMNS.length; j++) {
+            var col = IN_PROGRESS_COLUMNS[j];
+            var val = row[col.key] ?? '';
+            html += '<td>';
+            html += '<input type="text" class="pr-input pr-inprogress-input" ';
+            html += 'data-row-id="' + escapeHtml(rowId) + '" ';
+            html += 'data-field="' + escapeHtml(col.key) + '" ';
+            html += 'value="' + escapeHtml(val) + '" ';
+            html += 'style="width:' + col.width + '; font-size:0.82rem;" ';
+            html += 'placeholder="' + escapeHtml(col.label) + '">';
+            html += '</td>';
+        }
+        html += '<td style="text-align:center;">';
+        html += '<button class="pr-btn-delete" data-delete-row="' + escapeHtml(rowId) + '" title="Delete row" ';
+        html += 'style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:1rem; padding:4px 8px;">';
+        html += '\u00d7';
+        html += '</button>';
+        html += '</td>';
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '</div>';
+
+    // Add row button
+    html += '<div style="margin-top:12px;">';
+    html += '<button id="pr-add-inprogress-row" style="background:#1a7f79; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:0.82rem;">';
+    html += '+ Add Row';
+    html += '</button>';
+    html += '</div>';
+
+    html += '</div>'; // .pr-panel
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+function prAddInProgressRow() {
+    var pr2 = getPR2Data();
+    var procs = getInProgressProcedures(pr2);
+    var newId = generateId('iproc');
+    procs[newId] = {
+        patientName: '',
+        chartNo: '',
+        code: '',
+        description: '',
+        toothNo: '',
+        dateStarted: '',
+        lastVisit: ''
+    };
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+
+    // Re-render just section 5
+    var sectionEl = document.getElementById('pr-section-5');
+    if (sectionEl) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = renderPRInProgressProcedures(pr2);
+        sectionEl.replaceWith(tmp.firstChild);
+        attachPRInProgressListeners();
+    }
+}
+
+function prDeleteInProgressRow(rowId) {
+    var pr2 = getPR2Data();
+    var procs = getInProgressProcedures(pr2);
+    if (procs[rowId]) {
+        delete procs[rowId];
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+    }
+
+    // Re-render just section 5
+    var sectionEl = document.getElementById('pr-section-5');
+    if (sectionEl) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = renderPRInProgressProcedures(pr2);
+        sectionEl.replaceWith(tmp.firstChild);
+        attachPRInProgressListeners();
+    }
+}
+
+function prSaveInProgressRow(rowId) {
+    var pr2 = getPR2Data();
+    var procs = getInProgressProcedures(pr2);
+    if (!procs[rowId]) return;
+
+    // Read values from DOM inputs for this row
+    var inputs = document.querySelectorAll('input[data-row-id="' + rowId + '"]');
+    for (var i = 0; i < inputs.length; i++) {
+        var field = inputs[i].getAttribute('data-field');
+        if (field) {
+            procs[rowId][field] = inputs[i].value;
+        }
+    }
+
+    pr2.lastEdited = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+}
+
+
+// ============================================
+// PLACEHOLDER SECTIONS (6-12)
 // ============================================
 
 function renderPRPlaceholder(num, title) {
@@ -372,9 +617,13 @@ function initPeriodicReview() {
     // Section 3: Administrative Statistics
     html += renderPRAdminStats(pr2, snapshot);
 
-    // Sections 4-12: Placeholders
-    html += renderPRPlaceholder(4, 'Completed Procedures');
-    html += renderPRPlaceholder(5, 'In-Progress Procedures');
+    // Section 4: Completed Procedures (paste-in table)
+    html += renderPRCompletedProcedures(pr2);
+
+    // Section 5: In-Progress Procedures (editable table)
+    html += renderPRInProgressProcedures(pr2);
+
+    // Sections 6-12: Placeholders
     html += renderPRPlaceholder(6, 'Department Audit');
     html += renderPRPlaceholder(7, 'Needed Procedures');
     html += renderPRPlaceholder(8, 'Other Requirements');
@@ -435,6 +684,64 @@ function attachPREventListeners() {
             discrepancyTimer = setTimeout(function() {
                 savePR2Field('dashboardDiscrepancyNotes', discrepancyEl.value);
             }, 800);
+        });
+    }
+
+    // --- Completed procedures textarea debounced save + preview ---
+    var cpTextarea = document.getElementById('pr-completed-procedures-textarea');
+    if (cpTextarea) {
+        var cpTimer = null;
+        cpTextarea.addEventListener('input', function() {
+            clearTimeout(cpTimer);
+            cpTimer = setTimeout(function() {
+                var text = cpTextarea.value;
+                savePR2Field('completedProceduresHtml', text);
+
+                // Update preview
+                var previewEl = document.getElementById('pr-completed-procedures-preview');
+                if (previewEl) {
+                    if (text && text.trim()) {
+                        var previewHtml = '<div class="pr-panel-title">Preview</div>';
+                        previewHtml += '<div style="overflow-x:auto;">';
+                        previewHtml += parseProcedureTable(text);
+                        previewHtml += '</div>';
+                        previewEl.innerHTML = previewHtml;
+                    } else {
+                        previewEl.innerHTML = '<p style="color:#62707c; font-size:0.85rem;">Paste a procedure table above to see a preview.</p>';
+                    }
+                }
+            }, 500);
+        });
+    }
+
+    // --- In-progress procedures: delegate events ---
+    attachPRInProgressListeners();
+}
+
+function attachPRInProgressListeners() {
+    // Add row button
+    var addBtn = document.getElementById('pr-add-inprogress-row');
+    if (addBtn) {
+        addBtn.addEventListener('click', prAddInProgressRow);
+    }
+
+    // Delete buttons (event delegation on table)
+    var table = document.getElementById('pr-inprogress-table');
+    if (table) {
+        table.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-delete-row]');
+            if (btn) {
+                var rowId = btn.getAttribute('data-delete-row');
+                if (rowId) prDeleteInProgressRow(rowId);
+            }
+        });
+
+        // Blur save on inputs
+        table.addEventListener('focusout', function(e) {
+            if (e.target && e.target.classList.contains('pr-inprogress-input')) {
+                var rowId = e.target.getAttribute('data-row-id');
+                if (rowId) prSaveInProgressRow(rowId);
+            }
         });
     }
 }
