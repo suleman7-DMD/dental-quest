@@ -1030,16 +1030,479 @@ function prExecCommand(cmd) {
 
 
 // ============================================
-// PLACEHOLDER SECTIONS (10-12)
+// PLACEHOLDER (section 12 only)
 // ============================================
 
 function renderPRPlaceholder(num, title) {
-    let html = '<div class="pr-section" id="pr-section-' + num + '">';
+    var html = '<div class="pr-section" id="pr-section-' + num + '">';
     html += '<div class="pr-section-number">' + String(num).padStart(2, '0') + '</div>';
     html += '<div class="pr-section-title">' + escapeHtml(title) + '</div>';
     html += '<div class="pr-panel"><p style="color:#62707c;">Coming soon...</p></div>';
     html += '</div>';
     return html;
+}
+
+
+// ============================================
+// SECTION 10: PATIENT ROSTER
+// ============================================
+
+function _getPR1ChartMap() {
+    var roster = PR1_BASELINE.patientRoster ?? [];
+    var map = {};
+    for (var i = 0; i < roster.length; i++) {
+        map[roster[i].chartNumber] = roster[i];
+    }
+    return map;
+}
+
+function renderPRPatientRoster(pr2, patients) {
+    var pr1Map = _getPR1ChartMap();
+    var removed = pr2.removedPatients ?? {};
+    var patientNotes = pr2.patientNotes ?? {};
+
+    // Filter out removed patients for the active roster
+    var active = [];
+    for (var i = 0; i < patients.length; i++) {
+        var cn = patients[i].chartNumber ?? '';
+        if (!removed[cn]) {
+            active.push(patients[i]);
+        }
+    }
+    // Sort alphabetically by name
+    active.sort(function(a, b) {
+        return (a.name ?? '').localeCompare(b.name ?? '');
+    });
+
+    var html = '<div class="pr-section" id="pr-section-10">';
+    html += '<div class="pr-section-number">10</div>';
+    html += '<div class="pr-section-title">Patient Roster</div>';
+    html += '<div class="pr-panel">';
+
+    // Active roster table
+    html += '<div style="overflow-x:auto;">';
+    html += '<table class="pr-table" id="pr-roster-table">';
+    html += '<thead><tr>';
+    html += '<th>#</th>';
+    html += '<th>Chart #</th>';
+    html += '<th>Patient Name</th>';
+    html += '<th style="text-align:center;">Reliability</th>';
+    html += '<th>Next Appointment</th>';
+    html += '<th>Status</th>';
+    html += '<th></th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    for (var r = 0; r < active.length; r++) {
+        var pt = active[r];
+        var ptId = pt.id ?? '';
+        var cn = pt.chartNumber ?? '';
+        var safeId = ptId.replace(/'/g, "\\'");
+        var safeCn = cn.replace(/'/g, "\\'");
+        var safeName = (pt.name ?? '').replace(/'/g, "\\'");
+        var isNew = cn && !pr1Map[cn];
+        var rel = (pt.reliability ?? '').toLowerCase();
+        var dotClass = rel === 'green' ? 'pr-dot-green' : (rel === 'yellow' ? 'pr-dot-yellow' : (rel === 'red' ? 'pr-dot-red' : ''));
+
+        // Next appointment: prefer pr2 override, fall back to patient record
+        var noteObj = patientNotes[ptId] ?? {};
+        var nextAppt = noteObj.nextAppointment ?? pt.nextVisit ?? '';
+
+        var status = pt.activeStatus ?? 'Active';
+
+        html += '<tr data-patient-id="' + escapeHtml(ptId) + '">';
+        html += '<td>' + (r + 1) + '</td>';
+        html += '<td class="pr-mono">' + escapeHtml(cn) + '</td>';
+        html += '<td>';
+        html += escapeHtml(pt.name ?? '');
+        if (isNew) {
+            html += ' <span class="pr-badge pr-badge-new">NEW</span>';
+        }
+        html += '</td>';
+        html += '<td style="text-align:center;">';
+        if (dotClass) {
+            html += '<span class="pr-dot ' + dotClass + '"></span>';
+        } else {
+            html += '<span style="color:#62707c; font-size:0.8rem;">' + escapeHtml(rel || '\u2014') + '</span>';
+        }
+        html += '</td>';
+        html += '<td>';
+        html += '<span class="pr-editable pr-roster-next-appt" data-patient-id="' + escapeHtml(ptId) + '" data-field="nextAppointment">';
+        html += escapeHtml(nextAppt || 'Click to set');
+        html += '</span>';
+        html += '</td>';
+        html += '<td>' + escapeHtml(status) + '</td>';
+        html += '<td>';
+        html += '<button class="pr-btn pr-btn-sm pr-btn-add-remove" data-chart="' + escapeHtml(cn) + '" data-name="' + escapeHtml(pt.name ?? '') + '" title="Add to remove list" style="font-size:0.75rem;">Remove</button>';
+        html += '</td>';
+        html += '</tr>';
+    }
+
+    html += '</tbody></table>';
+    html += '</div>';
+
+    // Summary
+    html += '<div style="margin-top:12px; font-size:0.82rem; color:#62707c;">';
+    html += 'Active patients: <strong>' + active.length + '</strong>';
+    var newCount = 0;
+    for (var nc = 0; nc < active.length; nc++) {
+        if (active[nc].chartNumber && !pr1Map[active[nc].chartNumber]) newCount++;
+    }
+    if (newCount > 0) {
+        html += ' &nbsp;|&nbsp; New since PR1: <strong>' + newCount + '</strong>';
+    }
+    html += '</div>';
+
+    // --- Removed patients section ---
+    var removedKeys = Object.keys(removed);
+    html += '<div style="margin-top:24px; border-top:1px solid rgba(23,33,43,0.1); padding-top:16px;">';
+    html += '<div class="pr-panel-title" style="margin-bottom:8px;">Patients to Remove</div>';
+
+    if (removedKeys.length === 0) {
+        html += '<p style="color:#62707c; font-size:0.85rem;">No patients marked for removal.</p>';
+    } else {
+        html += '<table class="pr-table" id="pr-removed-table">';
+        html += '<thead><tr><th>Chart #</th><th>Name</th><th>Reason</th><th></th></tr></thead>';
+        html += '<tbody>';
+        for (var rk = 0; rk < removedKeys.length; rk++) {
+            var rCn = removedKeys[rk];
+            var reason = removed[rCn] ?? '';
+            // Find patient name from full list
+            var rName = '';
+            for (var fn = 0; fn < patients.length; fn++) {
+                if (patients[fn].chartNumber === rCn) {
+                    rName = patients[fn].name ?? '';
+                    break;
+                }
+            }
+            // Also check PR1 baseline for the name
+            if (!rName && pr1Map[rCn]) {
+                rName = pr1Map[rCn].name ?? '';
+            }
+            var safeRCn = rCn.replace(/'/g, "\\'");
+            html += '<tr data-removed-chart="' + escapeHtml(rCn) + '">';
+            html += '<td class="pr-mono">' + escapeHtml(rCn) + '</td>';
+            html += '<td>' + escapeHtml(rName) + '</td>';
+            html += '<td>';
+            html += '<input type="text" class="pr-input pr-removed-reason" data-chart="' + escapeHtml(rCn) + '" value="' + escapeHtml(reason) + '" placeholder="Reason for removal" style="width:100%; font-size:0.85rem;">';
+            html += '</td>';
+            html += '<td>';
+            html += '<button class="pr-btn pr-btn-sm pr-btn-restore" data-chart="' + escapeHtml(rCn) + '" title="Restore patient" style="font-size:0.75rem;">Restore</button>';
+            html += '</td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+    }
+
+    html += '</div>'; // removed section
+
+    html += '</div>'; // .pr-panel
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+
+// ============================================
+// SECTION 11: PATIENT WRITEUPS
+// ============================================
+
+var _prAllCardsExpanded = false;
+
+function renderPRPatientWriteups(pr2, patients) {
+    var pr1Map = _getPR1ChartMap();
+    var removed = pr2.removedPatients ?? {};
+
+    // Filter out removed patients
+    var active = [];
+    for (var i = 0; i < patients.length; i++) {
+        var cn = patients[i].chartNumber ?? '';
+        if (!removed[cn]) {
+            active.push(patients[i]);
+        }
+    }
+    // Sort alphabetically
+    active.sort(function(a, b) {
+        return (a.name ?? '').localeCompare(b.name ?? '');
+    });
+
+    var html = '<div class="pr-section" id="pr-section-11">';
+    html += '<div class="pr-section-number">11</div>';
+    html += '<div class="pr-section-title">Patient Writeups</div>';
+    html += '<div class="pr-panel">';
+
+    // Expand/Collapse All toggle
+    html += '<div style="margin-bottom:12px; text-align:right;">';
+    html += '<button id="pr-toggle-all-patients" class="pr-btn pr-btn-sm" style="font-size:0.8rem;">Expand All</button>';
+    html += '</div>';
+
+    // Patient cards
+    for (var c = 0; c < active.length; c++) {
+        var pt = active[c];
+        var ptId = pt.id ?? '';
+        var cn = pt.chartNumber ?? '';
+        var safeId = ptId.replace(/'/g, "\\'");
+        var rel = (pt.reliability ?? '').toLowerCase();
+        var dotClass = rel === 'green' ? 'pr-dot-green' : (rel === 'yellow' ? 'pr-dot-yellow' : (rel === 'red' ? 'pr-dot-red' : ''));
+        var pr1Patient = pr1Map[cn] ?? null;
+        var relChanged = pr1Patient && pr1Patient.reliability !== rel;
+        var isNew = cn && !pr1Map[cn];
+
+        html += '<div class="pr-card" id="pr-patient-' + escapeHtml(ptId) + '" data-patient-id="' + escapeHtml(ptId) + '">';
+
+        // Card header
+        html += '<div class="pr-card-header" data-toggle-patient="' + escapeHtml(ptId) + '">';
+        html += '<span class="pr-card-chevron">\u25B6</span>';
+        if (dotClass) {
+            html += '<span class="pr-dot ' + dotClass + '"></span>';
+        }
+        html += '<strong>' + escapeHtml(cn) + '</strong> \u2014 ' + escapeHtml(pt.name ?? '');
+        if (isNew) {
+            html += ' <span class="pr-badge pr-badge-new">NEW</span>';
+        }
+        html += '<span style="margin-left:auto; color:#62707c; font-size:0.85rem;">' + escapeHtml(pt.activeStatus ?? 'Active') + '</span>';
+        html += '</div>';
+
+        // Card body — field rows
+        html += '<div class="pr-card-body">';
+
+        // Build field definitions
+        var fields = [
+            { label: 'Patient', key: 'type', value: pt.type ?? '' },
+            { label: 'PMH / RMH', key: 'medicalHx', value: pt.medicalHx ?? '' },
+            { label: 'Medications', key: 'medications', value: pt.medications ?? '' },
+            { label: 'Allergies', key: 'allergies', value: pt.allergies ?? '' },
+            { label: 'Tx Completed (Overall)', key: 'dentalHx', value: pt.dentalHx ?? '' },
+            { label: 'Tx Completed by Me', key: 'txCompletedByMe', value: pt.txCompletedByMe ?? '' },
+            { label: 'Radiographs', key: '_radiographs', value: _buildRadiographSummary(pt) },
+            { label: 'Tx Pending', key: 'txPlan', value: pt.txPlan ?? '' },
+            { label: 'Recall History', key: 'recallHistory', value: pt.recallHistory ?? '' },
+            { label: 'Next Visit (NV)', key: 'nextVisit', value: pt.nextVisit ?? '' },
+            { label: 'Status', key: 'activeStatus', value: pt.activeStatus ?? 'Active', isSelect: true },
+            { label: 'Notes', key: 'notes', value: pt.notes ?? '' }
+        ];
+
+        for (var fi = 0; fi < fields.length; fi++) {
+            var fld = fields[fi];
+            var changedClass = '';
+
+            // PR1 diff: reliability change indicator on the header dot already,
+            // but we also mark the specific field if applicable
+            if (fld.key === 'reliability' && relChanged) {
+                changedClass = ' pr-field-changed';
+            }
+
+            html += '<div class="pr-field-row' + changedClass + '">';
+            html += '<div class="pr-field-label">' + escapeHtml(fld.label) + '</div>';
+            html += '<div class="pr-field-value">';
+
+            if (fld.isSelect) {
+                // Status dropdown
+                var statusVal = fld.value;
+                html += '<select class="pr-input pr-patient-status-select" data-patient-id="' + escapeHtml(ptId) + '" data-field="activeStatus" style="font-size:0.85rem; padding:4px 8px;">';
+                html += '<option value="Active"' + (statusVal === 'Active' ? ' selected' : '') + '>Active</option>';
+                html += '<option value="Inactive"' + (statusVal === 'Inactive' ? ' selected' : '') + '>Inactive</option>';
+                html += '</select>';
+            } else if (fld.key === '_radiographs') {
+                // Radiographs are a computed summary — show as read-only text
+                html += '<span style="color:#17212b; font-size:0.88rem;">' + escapeHtml(fld.value || 'No radiograph data') + '</span>';
+            } else {
+                // Editable field
+                html += '<span class="pr-editable pr-patient-field" data-patient-id="' + escapeHtml(ptId) + '" data-field="' + escapeHtml(fld.key) + '">';
+                html += escapeHtml(fld.value || 'Click to edit');
+                html += '</span>';
+            }
+
+            html += '</div>'; // .pr-field-value
+            html += '</div>'; // .pr-field-row
+        }
+
+        html += '</div>'; // .pr-card-body
+        html += '</div>'; // .pr-card
+    }
+
+    if (active.length === 0) {
+        html += '<p style="color:#62707c; font-size:0.85rem;">No patient records found.</p>';
+    }
+
+    html += '</div>'; // .pr-panel
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+function _buildRadiographSummary(pt) {
+    var parts = [];
+    if (pt.lastFMX) parts.push('FMX: ' + pt.lastFMX);
+    if (pt.lastBW) parts.push('BW: ' + pt.lastBW);
+    if (pt.lastPANO) parts.push('PANO: ' + pt.lastPANO);
+    if (pt.lastCBCT) parts.push('CBCT: ' + pt.lastCBCT);
+    return parts.join(' | ');
+}
+
+
+// ============================================
+// PATIENT ROSTER + WRITEUP INTERACTION FUNCTIONS
+// ============================================
+
+function prTogglePatientCard(patientId) {
+    var card = document.getElementById('pr-patient-' + patientId);
+    if (card) {
+        card.classList.toggle('expanded');
+    }
+}
+
+function prToggleAllPatientCards() {
+    var cards = document.querySelectorAll('#pr-section-11 .pr-card');
+    var btn = document.getElementById('pr-toggle-all-patients');
+    _prAllCardsExpanded = !_prAllCardsExpanded;
+
+    for (var i = 0; i < cards.length; i++) {
+        if (_prAllCardsExpanded) {
+            cards[i].classList.add('expanded');
+        } else {
+            cards[i].classList.remove('expanded');
+        }
+    }
+
+    if (btn) {
+        btn.textContent = _prAllCardsExpanded ? 'Collapse All' : 'Expand All';
+    }
+}
+
+function prStartEditField(patientId, fieldName, element) {
+    // Prevent double-edit
+    if (element.querySelector('textarea') || element.querySelector('input')) return;
+
+    var currentText = '';
+    // Get current value from the patient record
+    var records = roadmapData.clinicalData?.patientRecords ?? {};
+    var pt = records[patientId];
+    if (pt) {
+        currentText = pt[fieldName] ?? '';
+    }
+
+    var isLongField = ['medicalHx', 'medications', 'dentalHx', 'txCompletedByMe', 'txPlan', 'notes', 'recallHistory'].indexOf(fieldName) >= 0;
+
+    if (isLongField) {
+        var textarea = document.createElement('textarea');
+        textarea.className = 'pr-textarea';
+        textarea.style.cssText = 'width:100%; min-height:60px; font-size:0.85rem; margin:0;';
+        textarea.value = currentText;
+        element.textContent = '';
+        element.appendChild(textarea);
+        textarea.focus();
+
+        textarea.addEventListener('blur', function() {
+            var val = textarea.value.trim();
+            prSavePatientField(patientId, fieldName, val);
+            element.textContent = val || 'Click to edit';
+        });
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                element.textContent = currentText || 'Click to edit';
+            }
+        });
+    } else {
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'pr-input';
+        input.style.cssText = 'width:100%; font-size:0.85rem;';
+        input.value = currentText;
+        element.textContent = '';
+        element.appendChild(input);
+        input.focus();
+
+        input.addEventListener('blur', function() {
+            var val = input.value.trim();
+            prSavePatientField(patientId, fieldName, val);
+            element.textContent = val || 'Click to edit';
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                element.textContent = currentText || 'Click to edit';
+            }
+        });
+    }
+}
+
+function prStartEditRosterNextAppt(element) {
+    if (element.querySelector('input')) return;
+
+    var patientId = element.getAttribute('data-patient-id');
+    var pr2 = getPR2Data();
+    var noteObj = pr2.patientNotes?.[patientId] ?? {};
+    var pt = (roadmapData.clinicalData?.patientRecords ?? {})[patientId];
+    var currentText = noteObj.nextAppointment ?? pt?.nextVisit ?? '';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'pr-input';
+    input.style.cssText = 'width:100%; font-size:0.85rem;';
+    input.value = currentText;
+    element.textContent = '';
+    element.appendChild(input);
+    input.focus();
+
+    input.addEventListener('blur', function() {
+        var val = input.value.trim();
+        if (!pr2.patientNotes) pr2.patientNotes = {};
+        if (!pr2.patientNotes[patientId]) pr2.patientNotes[patientId] = {};
+        pr2.patientNotes[patientId].nextAppointment = val;
+        pr2.lastEdited = new Date().toISOString();
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        element.textContent = val || 'Click to set';
+    });
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            element.textContent = currentText || 'Click to set';
+        }
+    });
+}
+
+function prSavePatientField(patientId, fieldName, value) {
+    if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
+    if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
+    if (!roadmapData.clinicalData.patientRecords[patientId]) {
+        roadmapData.clinicalData.patientRecords[patientId] = { id: patientId };
+    }
+    roadmapData.clinicalData.patientRecords[patientId][fieldName] = value;
+    roadmapData.clinicalData.patientRecords[patientId].lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+}
+
+function prAddToRemoveList(chartNumber, patientName) {
+    var pr2 = getPR2Data();
+    if (!pr2.removedPatients) pr2.removedPatients = {};
+    pr2.removedPatients[chartNumber] = '';
+    pr2.lastEdited = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    showToast('Patient ' + (patientName || chartNumber) + ' added to remove list');
+    initPeriodicReview();
+}
+
+function prRestoreFromRemoveList(chartNumber) {
+    var pr2 = getPR2Data();
+    if (pr2.removedPatients) {
+        delete pr2.removedPatients[chartNumber];
+    }
+    pr2.lastEdited = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    showToast('Patient restored');
+    initPeriodicReview();
 }
 
 
@@ -1088,9 +1551,14 @@ function initPeriodicReview() {
     // Section 9: Subjective Report
     html += renderPRSubjectiveReport(pr2);
 
-    // Sections 10-12: Placeholders
-    html += renderPRPlaceholder(10, 'Patient Roster');
-    html += renderPRPlaceholder(11, 'Patient Writeups');
+    // Section 10: Patient Roster
+    var prPatients = getValues(roadmapData.clinicalData?.patientRecords ?? {});
+    html += renderPRPatientRoster(pr2, prPatients);
+
+    // Section 11: Patient Writeups
+    html += renderPRPatientWriteups(pr2, prPatients);
+
+    // Section 12: Export (placeholder)
     html += renderPRPlaceholder(12, 'Export');
 
     html += '</div>'; // .pr-tab
@@ -1231,6 +1699,9 @@ function attachPREventListeners() {
 
     // --- In-progress procedures: delegate events ---
     attachPRInProgressListeners();
+
+    // --- Patient roster: delegated events ---
+    attachPRPatientListeners();
 }
 
 function attachPRInProgressListeners() {
@@ -1256,6 +1727,101 @@ function attachPRInProgressListeners() {
             if (e.target && e.target.classList.contains('pr-inprogress-input')) {
                 var rowId = e.target.getAttribute('data-row-id');
                 if (rowId) prSaveInProgressRow(rowId);
+            }
+        });
+    }
+}
+
+// --- Patient roster + writeup event wiring ---
+function attachPRPatientListeners() {
+    // Expand/Collapse All button
+    var toggleAllBtn = document.getElementById('pr-toggle-all-patients');
+    if (toggleAllBtn) {
+        toggleAllBtn.addEventListener('click', prToggleAllPatientCards);
+    }
+
+    // Delegated: patient card header toggle
+    var section11 = document.getElementById('pr-section-11');
+    if (section11) {
+        section11.addEventListener('click', function(e) {
+            var header = e.target.closest('[data-toggle-patient]');
+            if (header) {
+                var ptId = header.getAttribute('data-toggle-patient');
+                if (ptId) prTogglePatientCard(ptId);
+                return;
+            }
+
+            // Editable patient field click
+            var editable = e.target.closest('.pr-patient-field');
+            if (editable) {
+                var patientId = editable.getAttribute('data-patient-id');
+                var fieldName = editable.getAttribute('data-field');
+                if (patientId && fieldName) {
+                    prStartEditField(patientId, fieldName, editable);
+                }
+                return;
+            }
+        });
+
+        // Status dropdown change (delegated)
+        section11.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('pr-patient-status-select')) {
+                var patientId = e.target.getAttribute('data-patient-id');
+                var fieldName = e.target.getAttribute('data-field');
+                if (patientId && fieldName) {
+                    prSavePatientField(patientId, fieldName, e.target.value);
+                    // Update the card header status text
+                    var card = document.getElementById('pr-patient-' + patientId);
+                    if (card) {
+                        var headerStatus = card.querySelector('.pr-card-header span:last-child');
+                        if (headerStatus) headerStatus.textContent = e.target.value;
+                    }
+                }
+            }
+        });
+    }
+
+    // Delegated: roster table interactions
+    var section10 = document.getElementById('pr-section-10');
+    if (section10) {
+        section10.addEventListener('click', function(e) {
+            // Add to Remove button
+            var addRemoveBtn = e.target.closest('.pr-btn-add-remove');
+            if (addRemoveBtn) {
+                var chart = addRemoveBtn.getAttribute('data-chart');
+                var name = addRemoveBtn.getAttribute('data-name');
+                if (chart) prAddToRemoveList(chart, name);
+                return;
+            }
+
+            // Restore button
+            var restoreBtn = e.target.closest('.pr-btn-restore');
+            if (restoreBtn) {
+                var chart = restoreBtn.getAttribute('data-chart');
+                if (chart) prRestoreFromRemoveList(chart);
+                return;
+            }
+
+            // Next appointment editable click
+            var rosterEditable = e.target.closest('.pr-roster-next-appt');
+            if (rosterEditable) {
+                prStartEditRosterNextAppt(rosterEditable);
+                return;
+            }
+        });
+
+        // Removed patient reason field blur-save (delegated)
+        section10.addEventListener('focusout', function(e) {
+            if (e.target && e.target.classList.contains('pr-removed-reason')) {
+                var chart = e.target.getAttribute('data-chart');
+                if (chart) {
+                    var pr2 = getPR2Data();
+                    if (!pr2.removedPatients) pr2.removedPatients = {};
+                    pr2.removedPatients[chart] = e.target.value.trim();
+                    pr2.lastEdited = new Date().toISOString();
+                    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                    saveData();
+                }
             }
         });
     }
