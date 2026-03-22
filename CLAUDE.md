@@ -117,6 +117,8 @@ const date = new Date(year, month - 1, day);
 - **`adjustCompItem()` must call `renderDashboard()`**: Without this, Mission Control stats stay stale until tab switch after competency adjustments. Fixed Mar 22 2026.
 - **`backfillClinicalData()` running guard**: `_backfillInProgress` flag prevents concurrent/duplicate backfill runs. Whitespace-only patient names skipped in Phase 4 linking. Fixed Mar 22 2026.
 - **Contenteditable double-fire guard pattern**: All `contenteditable` fields in patients.js use `onfocus` to store original value, `onkeydown` for Escape revert + committed flag, `onblur` checks committed flag before saving via `savePatientField()`. Prevents double save on Escape+blur.
+- **`mergeCompetencies()` is item-level, not category-level**: state.js deep-merges at the item level: `completionEntries` are unioned (dedup by procedureId for linked, date+note for manual), `completed = Math.min(required, max(local, cloud, entries.length))`, status derived from count. NEVER use `{ ...local, ...cloud }` category spread — it destroys local evidence trails. Used by all 4 merge/restore sites + `mergeRemoteCollectionsIntoLocal()`.
+- **`applyRequirementCheckoffs` must cache intendedCompleted**: `recordProcedure()` → `linkProcedureToCompetencies()` unconditionally overwrites `item.completed = Math.min(required, completionEntries.length)`. When REQUIREMENTS_STATUS sets `completed: N` directly, cache the value BEFORE `recordProcedure()`, re-apply AFTER. Without this, explicit counts from SPS data get silently reduced to 1.
 
 ---
 
