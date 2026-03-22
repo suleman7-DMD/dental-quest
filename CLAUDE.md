@@ -30,7 +30,12 @@ const date = new Date(year, month - 1, day);
 - **StableId before mutation**: Compute `getDeadlineId(deadline)` BEFORE modifying fields. Use `deadline._originalStableId` for persistence keys.
 - **Custom deadline dual-store**: When editing custom deadlines, update BOTH `editedDeadlines` AND `customDeadlines[id]`. `initUI()` only applies `editedDeadlines` to STATIC deadlines.
 - **Flag ordering**: ALL sync flags MUST be set BEFORE `initUI()`. Wrap `initUI()` in try/catch.
-- **mergeRemoteState**: Compare `lastSaved` timestamps — if local is newer, SKIP merge.
+- **mergeRemoteState**: Compare `lastSaved` timestamps — if local is newer, call `mergeRemoteCollectionsIntoLocal(data)` (NOT skip entirely). This adds remote-only entries without overwriting local changes. Skipping entirely loses data imported on other devices (e.g., Chrome imports todos, DuckDuckGo has newer localStorage → skipping merge loses todos).
+- **`mergeRemoteCollectionsIntoLocal` pattern**: When local is newer, `addMissing(local, remote)` — only add keys from remote that don't exist in local. Local wins for conflicts. Covers ALL collection fields.
+- **Auto-push when local is newer**: `finishFirebaseLoad()` sets `localWasNewer=true` → deferred `saveData()` at 500ms pushes to Firebase so other devices get the latest. Also pushes when Firebase is empty/poisoned.
+- **Poisoned Firebase detection**: `finishFirebaseLoad()` checks `isEmptyState(data)` — if Firebase has data but it's effectively defaults (no real user collections), treat as no data. Prevents merging defaults over real local data.
+- **Auto-generated data must NOT pass Guard C**: `isEmptyState()` must NOT check `exams` (auto-generated from static list in initUI). `hasCompetencies` must check `completed > 0` (auto-initialized from DEFAULT_COMPETENCIES all have completed:0). Without this, defaults + auto-generated data pass Guard C and get saved to Firebase.
+- **initUI auto-save triggers need guards**: Both `setTimeout(() => saveData(), 100)` (exams sync) and `setTimeout(() => saveData(), 2000)` (upcomingDeadlines) in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad` — prevents saving defaults during race.
 - **CRUD localStorage safety**: ALL CRUD functions MUST call `safeLocalStorageSet()` BEFORE `saveData()`.
 - **Cache-busting**: After multi-file JS changes, add `?v=YYYYMMDD` to ALL `<script src>` tags.
 - **Shallow grades merge**: Use deep per-course IIFE merge, not `{ ...local, ...firebase }` spread.
@@ -53,7 +58,8 @@ const date = new Date(year, month - 1, day);
 - **Field-by-field reconstruction drops new fields**: All 4 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`) reconstruct `roadmapData` field-by-field. When adding ANY new field, it MUST be added to ALL 4 sites or it gets silently wiped on every sync/refresh/restore.
 - **`isEmptyState()` must check ALL collection fields**: When adding new collection fields to any app, also add them to `isEmptyState()` — otherwise Guard C silently blocks saves when ONLY those fields have data.
 - **Array merge with `||` loses data**: `data.arr || local.arr || []` — if remote has empty `[]` (truthy), local data is lost. Use dedicated merge functions for arrays (dedup + concat).
-- **Fallback timers fire during PIN prompt = data wipe**: DOMContentLoaded 3s/6s fallback timers must check `awaitingPinEntry` flag. Without it: fallback loads empty defaults → `saveData()` writes recent `lastSaved` → `finishFirebaseLoad()` thinks local is newer → skips Firebase merge → saves defaults to cloud wiping all data. Fixed Mar 21 2026: `awaitingPinEntry` flag gates both timers.
+- **Fallback timers fire during PIN prompt OR Firebase load = data wipe**: DOMContentLoaded 3s/6s fallback timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad` flags. After PIN entry, `awaitingPinEntry` clears but Firebase hasn't responded yet — timers fire, set all flags with defaults, `initUI()` auto-saves defaults with fresh timestamp, then `finishFirebaseLoad()` loads poisoned localStorage, skips merge ("local is newer"), keeps defaults. Fixed Mar 22 2026: `awaitingFirebaseLoad` flag (set in `loadFromFirebase()`, cleared in `finishFirebaseLoad()`) gates all 3 timers. 15s safety valve timeout prevents permanent hang.
+- **Default grades bypass Guard C**: Default `getDefaultRoadmapData()` must have EMPTY grade objects (`oralmed: {}`, not `oralmed: { quiz1: 100 }`). Non-empty defaults make `isEmptyState()` return false, allowing default state to pass Guard C and be saved to Firebase. Fixed Mar 22 2026.
 - **Default grades make isEmptyState() return false**: Default `roadmapData` has hardcoded grades (oralmed quiz1:100, peds exam1:77, etc.). These pass Guard C, allowing default state to be saved. Never add real data values to `getDefaultRoadmapData()` — use empty objects.
 - **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]` on competency items. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts. Always use these functions, never manually edit `item.completed` for procedure-linked items.
 - **Smart counting vs narrow counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (in state.js) which aggregate from ALL data sources. NEVER replace these with narrow `getValues(appointments).filter(completed)` — that was the original bug (showed 0/90 despite real data existing).
@@ -157,6 +163,8 @@ users/user_[hashedPin]/
 ### Sync Pattern (All 4 Apps)
 ```
 Load:  loadFromFirebase() → merge with defaults → initUI()
+       If local newer: mergeRemoteCollectionsIntoLocal(data) → initUI() → deferred saveData() pushes to Firebase
+       If Firebase empty/poisoned: loadFromLocalStorage() → push if real data exists
 Save:  saveData/saveState() → localStorage IMMEDIATELY → Firebase debounced (2s)
 Hide:  save immediately | Show: refresh from Firebase
 Status: green connected | syncing | red offline | warning error

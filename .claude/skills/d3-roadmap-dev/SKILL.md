@@ -144,6 +144,11 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** Default state has `_version: Date.now()` instead of `0`, causing empty local state to appear "newer" than cloud data.
 **Solution:** Verify `getDefaultRoadmapData()` in state.js has `_version: 0` and `_dataLoaded: false`. Check all 5 guards. Use `forcePullFromCloud()` to recover.
 
+### Error: Data shows on Chrome desktop but empty on other browsers/incognito (fixed Mar 22, 2026)
+**Cause:** 4 interconnected bugs: (1) Default grades (`oralmed: {quiz1:100}`) made `isEmptyState()` return false → Guard C let defaults be saved to Firebase. (2) `initUI()` auto-created exams/upcomingDeadlines and triggered `saveData()` without Firebase-load guards → saved defaults with fresh `lastSaved`. (3) `finishFirebaseLoad()` never pushed local to Firebase when local was newer → Firebase permanently stale. (4) When local was newer, merge was skipped ENTIRELY → remote-only entries (notes/todos imported on another browser) lost → `localWasNewer` push then wrote incomplete data to Firebase, wiping remote-only data.
+**Solution (commit `0edf0c0`):** (1) Empty default grades in both `roadmapData` and `getDefaultRoadmapData()`. (2) `isEmptyState()` no longer checks `exams` (auto-generated); `hasCompetencies` checks `completed > 0` (auto-initialized = 0). (3) Auto-save triggers guarded with `hasLoadedFromCloud && !awaitingFirebaseLoad`. (4) New `mergeRemoteCollectionsIntoLocal(data)` — when local is newer, adds remote-only entries without overwriting local (local wins for same-key conflicts). (5) `finishFirebaseLoad()` detects poisoned defaults via `isEmptyState(data)`, auto-pushes when local has real data. (6) 8 CRUD functions got missing `safeLocalStorageSet()`.
+**Key lesson:** Multi-browser = independent localStorage with different data subsets. "Newer timestamp" ≠ "more complete data". NEVER skip merge entirely — use additive `mergeRemoteCollectionsIntoLocal()` for the local-is-newer path.
+
 ### Error: Clinic task edits/deletions not persisting in Monthly Planner (fixed Mar 16, 2026)
 **Cause:** `syncClinicalToMonthlyPlanner()` deleted ALL clinic-synced tasks and recreated them from scratch on every `initMonthlyPlanner()` call (page load, tab switch, visibility change), wiping any user edits or deletions.
 **Solution (commit `e5124b8`):** Incremental sync: skip tasks with `userEdited: true`, skip appointments in `hiddenClinicTasks`, dedup by patient+date+time. When user deletes a clinic task, its `clinicalAppointmentId` is stored in `hiddenClinicTasks`. When user edits, `userEdited: true` is set. `hiddenClinicTasks` is in all 4 Firebase merge sites + defaults.
@@ -403,7 +408,8 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `escapeHtml(str)` | state.js | HTML escaping for user content |
 | `initFirebase()` | firebase-sync.js | Firebase initialization with 3s fallback |
 | `setupUserAuth(pin)` | firebase-sync.js | PIN hash + Firebase path setup |
-| `mergeRemoteState(data)` | firebase-sync.js | Consolidated merge (4 call sites) |
+| `mergeRemoteState(data)` | firebase-sync.js | Consolidated merge — remote wins for conflicts (used when remote is newer) |
+| `mergeRemoteCollectionsIntoLocal(data)` | firebase-sync.js | Additive merge — local wins for conflicts, adds remote-only entries (used when local is newer) |
 | `mergeDashboardSnapshots(local, remote)` | firebase-sync.js | Dedup+merge dashboardSnapshots arrays by capturedAt |
 | `loadFromLocalStorage(finalize)` | firebase-sync.js | Load from localStorage (finalize=true sets all flags) |
 | `loadFromFirebase()` | firebase-sync.js | Initial Firebase load |
@@ -568,3 +574,7 @@ If you see ANY of these in code you're writing:
 - Deleting a `clinic_*` task without adding appointment to `hiddenClinicTasks` — sync will recreate it
 - Import dedup by `patientId` only without secondary name-based check — mismatched IDs create duplicates
 - Calling `syncClinicalToMonthlyPlanner()` unconditionally in `initMonthlyPlanner()` without `clinicalDataDirty` gate
+- Skipping `mergeRemoteState()` entirely when local is newer — MUST use `mergeRemoteCollectionsIntoLocal()` instead to preserve remote-only entries from other browsers/devices
+- Adding real data values to `getDefaultRoadmapData()` grades (e.g., `oralmed: { quiz1: 100 }`) — makes `isEmptyState()` return false for defaults, bypassing Guard C
+- Checking auto-generated data in `isEmptyState()` — `exams` (from static list) and `competencies` (auto-initialized from DEFAULT_COMPETENCIES) must NOT count as real user data
+- `initUI()` auto-save triggers (`setTimeout(() => saveData())`) without `hasLoadedFromCloud && !awaitingFirebaseLoad` guards — can save defaults to Firebase during race
