@@ -450,12 +450,46 @@ function getPatientRecords() {
 }
 
 // Merge both patient stores: patientRecords (from imports) + clinicalData.patients (from clinical tab)
+// Dedup by chart number + name to prevent same patient showing twice with different IDs
 function getAllPatientRecords() {
     var records = getPatientRecords();
     var clinicalPatients = roadmapData.clinicalData?.patients || {};
     var merged = Object.assign({}, records);
+    // Build set of chart numbers already in merged (for dedup)
+    var existingCharts = {};
+    Object.keys(merged).forEach(function(id) {
+        var chart = (merged[id]?.chartNumber || '').trim();
+        if (chart) existingCharts[chart] = id;
+    });
     Object.keys(clinicalPatients).forEach(function(id) {
-        if (!merged[id]) merged[id] = clinicalPatients[id];
+        if (merged[id]) return; // Same ID already exists
+        var cp = clinicalPatients[id];
+        if (!cp) return;
+        var chart = (cp.chartNumber || '').trim();
+        if (chart && existingCharts[chart]) {
+            // Same chart number under different ID — fill-merge onto existing record
+            var existingId = existingCharts[chart];
+            var existing = merged[existingId];
+            Object.keys(cp).forEach(function(key) {
+                if (existing[key] == null && cp[key] != null) {
+                    existing[key] = cp[key];
+                }
+            });
+            return;
+        }
+        // Dedup by name (case-insensitive) for chartless patients
+        if (!chart) {
+            var cpName = (cp.name || '').toLowerCase().trim();
+            if (cpName) {
+                var nameMatch = false;
+                Object.keys(merged).forEach(function(mId) {
+                    if ((merged[mId]?.name || '').toLowerCase().trim() === cpName) nameMatch = true;
+                });
+                if (nameMatch) return;
+            }
+        }
+        merged[id] = cp;
+        if (chart) existingCharts[chart] = id;
     });
     return merged;
 }
@@ -647,7 +681,7 @@ function renderPatientRecord(patientId) {
     var container = document.getElementById('patientRecordView');
     if (!container) return;
 
-    var records = getPatientRecords();
+    var records = getAllPatientRecords();
     var patient = records[patientId];
     if (!patient) {
         container.innerHTML = '<div class="pts-empty-state"><p>Select a patient from the list</p></div>';
@@ -1021,7 +1055,7 @@ function savePatientField(element) {
     var field = element.getAttribute('data-field');
     if (!patientId || !field) return;
 
-    var records = getPatientRecords();
+    var records = getAllPatientRecords();
     if (!records[patientId]) return;
 
     records[patientId][field] = element.innerText;
@@ -1031,7 +1065,7 @@ function savePatientField(element) {
 }
 
 function setPatientReliability(patientId, reliability) {
-    var records = getPatientRecords();
+    var records = getAllPatientRecords();
     if (!records[patientId]) return;
     records[patientId].reliability = reliability;
     records[patientId].lastUpdated = new Date().toISOString();
