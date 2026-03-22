@@ -1030,16 +1030,86 @@ function prExecCommand(cmd) {
 
 
 // ============================================
-// PLACEHOLDER (section 12 only)
+// SECTION 12: EXPORT PDF
 // ============================================
 
-function renderPRPlaceholder(num, title) {
-    var html = '<div class="pr-section" id="pr-section-' + num + '">';
-    html += '<div class="pr-section-number">' + String(num).padStart(2, '0') + '</div>';
-    html += '<div class="pr-section-title">' + escapeHtml(title) + '</div>';
-    html += '<div class="pr-panel"><p style="color:#62707c;">Coming soon...</p></div>';
+function renderPRExportSection() {
+    var html = '<div class="pr-section" id="pr-section-12">';
+    html += '<div class="pr-section-number">12</div>';
+    html += '<div class="pr-section-title">Export</div>';
+    html += '<div class="pr-panel" style="text-align:center; padding:2rem;">';
+    html += '<button id="pr-export-pdf-btn" class="pr-btn pr-btn-primary pr-btn-export" style="font-size:1rem; padding:0.75rem 2rem;">';
+    html += 'Export PR Part 2 as PDF</button>';
+    html += '<p style="color:#62707c; margin-top:0.75rem; font-size:0.85rem;">Generates a clean PDF of this Periodic Review for submission.</p>';
+    html += '</div>';
     html += '</div>';
     return html;
+}
+
+function loadHtml2Pdf(callback) {
+    if (typeof html2pdf !== 'undefined') { callback(); return; }
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = callback;
+    script.onerror = function() { showToast('Failed to load PDF library'); };
+    document.head.appendChild(script);
+}
+
+function exportPRToPDF() {
+    var btn = document.getElementById('pr-export-pdf-btn');
+    var element = document.querySelector('.pr-tab');
+    if (!element) { showToast('Nothing to export'); return; }
+
+    // Loading state
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generating PDF...';
+    }
+
+    loadHtml2Pdf(function() {
+        // Add export mode class — CSS hides toolbars, edit hints, buttons, sets white bg
+        element.classList.add('pr-export-mode');
+
+        var dateStr = getLocalDateString(new Date());
+        var opt = {
+            margin: [15, 15, 20, 15],
+            filename: 'PR_Part_2_Suleman_Shaikh_' + dateStr + '.pdf',
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
+            var totalPages = pdf.internal.getNumberOfPages();
+            var pageWidth = pdf.internal.pageSize.getWidth();
+            var pageHeight = pdf.internal.pageSize.getHeight();
+            for (var i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setTextColor(120, 120, 120);
+                var footerText = 'Suleman Shaikh \u2014 DMD\u201927 \u2014 Periodic Review Part 2 \u2014 ' + dateStr;
+                pdf.text(footerText, pageWidth / 2, pageHeight - 8, { align: 'center' });
+                pdf.text('Page ' + i + ' of ' + totalPages, pageWidth - 15, pageHeight - 8, { align: 'right' });
+            }
+            pdf.save('PR_Part_2_Suleman_Shaikh_' + dateStr + '.pdf');
+        }).then(function() {
+            element.classList.remove('pr-export-mode');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Export PR Part 2 as PDF';
+            }
+            showToast('PDF exported successfully');
+        }).catch(function(err) {
+            element.classList.remove('pr-export-mode');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Export PR Part 2 as PDF';
+            }
+            showToast('PDF export failed: ' + (err.message ?? 'unknown error'));
+            console.error('PDF export error:', err);
+        });
+    });
 }
 
 
@@ -1558,8 +1628,8 @@ function initPeriodicReview() {
     // Section 11: Patient Writeups
     html += renderPRPatientWriteups(pr2, prPatients);
 
-    // Section 12: Export (placeholder)
-    html += renderPRPlaceholder(12, 'Export');
+    // Section 12: Export PDF
+    html += renderPRExportSection();
 
     html += '</div>'; // .pr-tab
 
@@ -1694,6 +1764,14 @@ function attachPREventListeners() {
             prSubjectiveTimer = setTimeout(function() {
                 savePR2Field('subjectiveReport', prSubjectiveEditor.innerHTML);
             }, 500);
+        });
+    }
+
+    // --- Export PDF button ---
+    var exportBtn = document.getElementById('pr-export-pdf-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            exportPRToPDF();
         });
     }
 
