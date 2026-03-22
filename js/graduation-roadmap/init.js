@@ -935,6 +935,11 @@ function initUI() {
     // Initialize Clinical tab if data exists
     try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }
     try { renderCompetencies(); } catch(e) { console.error('renderCompetencies error:', e); }
+
+    // One-time perio noise cleanup
+    if (typeof migratePerioNoiseCleanup === 'function') {
+        try { migratePerioNoiseCleanup(); } catch(e) { console.error('[PERIO-CLEANUP] Error:', e); }
+    }
 }
 
 function init() {

@@ -387,6 +387,7 @@ const DEFAULT_PATIENT_RECORDS = {
 
 let activePatientId = null;
 var patientEditMode = false;
+var patientViewTab = 'brief'; // 'brief' or 'record'
 var collapsedSections = {};
 var inactiveCollapsed = true; // Red/inactive patients collapsed by default
 
@@ -498,6 +499,7 @@ function renderPatientsSidebar() {
             + '<div class="pts-row-info">'
             +   '<span class="pts-row-name">' + escapeHtml(p.name || 'Unnamed') + '</span>'
             +   (chart ? '<span class="pts-row-chart">' + chart + '</span>' : '')
+            +   (p.clinicalBrief && p.clinicalBrief.snapshot ? '<span class="pts-brief-badge" title="Has clinical brief">\uD83D\uDCCB</span>' : '')
             + '</div>'
             + '</div>';
     }
@@ -568,6 +570,67 @@ function selectPatient(patientId) {
 function showMobilePatientList() {
     var layout = document.getElementById('patientsMainLayout');
     if (layout) layout.classList.remove('pts-mobile-record-active');
+}
+
+function renderClinicalBrief(patient, patientId) {
+    var brief = patient.clinicalBrief;
+    if (!brief) {
+        return '<div class="ptr-brief-empty">'
+            + '<div style="text-align:center; padding:30px 20px; color:#64748b;">'
+            + '<div style="font-size:1.3em; margin-bottom:8px;">No Clinical Brief</div>'
+            + '<div style="font-size:0.85em;">Re-export this patient from Claude to generate a brief.</div>'
+            + '</div></div>';
+    }
+
+    var isMobile = window.innerWidth <= 768;
+    var safePatientId = escapeHtml(patientId).replace(/'/g, "\\'");
+
+    function briefSection(key, title, icon, alwaysOpen) {
+        var val = brief[key];
+        if (!val) return '';
+        var rendered = escapeHtml(val);
+        if (key === 'flaggedConcerns') {
+            rendered = rendered.replace(/\((\d+)\)\s*/g, function(match, num, offset) {
+                return (offset > 0 ? '</li>' : '') + '<li>';
+            });
+            if (rendered.indexOf('<li>') !== -1) {
+                rendered = '<ol class="ptr-brief-ol">' + rendered + '</li></ol>';
+            }
+        }
+        rendered = rendered.replace(/\n/g, '<br>');
+
+        var sectionId = 'brief_' + key;
+        var isCollapsed = !alwaysOpen && isMobile && collapsedSections[sectionId];
+        var toggleJs = !alwaysOpen && isMobile
+            ? ' onclick="collapsedSections[\'' + sectionId + '\']=!collapsedSections[\'' + sectionId + '\']; renderPatientRecord(\'' + safePatientId + '\')"'
+            : '';
+
+        return '<div class="ptr-brief-section">'
+            + '<div class="ptr-brief-section-header"' + toggleJs + '>'
+            +   '<span class="ptr-brief-icon">' + icon + '</span>'
+            +   '<span class="ptr-brief-title">' + escapeHtml(title) + '</span>'
+            +   (!alwaysOpen && isMobile ? '<span class="ptr-brief-arrow">' + (isCollapsed ? '\u25B6' : '\u25BC') + '</span>' : '')
+            + '</div>'
+            + '<div class="ptr-brief-body"' + (isCollapsed ? ' style="display:none;"' : '') + '>' + rendered + '</div>'
+            + '</div>';
+    }
+
+    var dateStr = brief.dateGenerated ? 'Updated: ' + escapeHtml(brief.dateGenerated) : '';
+    var historyCount = Array.isArray(patient.briefHistory) ? patient.briefHistory.length : 0;
+
+    return '<div class="ptr-brief-container">'
+        + briefSection('snapshot', 'Snapshot', '\uD83D\uDCCB', true)
+        + briefSection('diagnosesAndRisks', 'Key Diagnoses & Risks', '\uD83D\uDD2C', false)
+        + briefSection('txStatus', 'Treatment Status', '\uD83D\uDCCA', false)
+        + briefSection('txSequencing', 'Treatment Sequencing', '\uD83D\uDCD0', false)
+        + briefSection('flaggedConcerns', 'Flagged Concerns', '\u26A0\uFE0F', false)
+        + briefSection('gradValue', 'Graduation Value', '\uD83C\uDFAF', false)
+        + briefSection('nextVisitPlan', 'Next Visit Plan', '\uD83D\uDCCB', false)
+        + '<div class="ptr-brief-footer">'
+        +   '<span>' + dateStr + '</span>'
+        +   (historyCount > 0 ? '<span class="ptr-brief-history-count">' + historyCount + ' prior version' + (historyCount > 1 ? 's' : '') + '</span>' : '')
+        + '</div>'
+        + '</div>';
 }
 
 function renderPatientRecord(patientId) {
@@ -735,18 +798,58 @@ function renderPatientRecord(patientId) {
             + '</div>';
     }
 
+    // Tab buttons (Brief / Record)
+    var hasBrief = !!(patient.clinicalBrief && patient.clinicalBrief.snapshot);
+    var effectiveTab = hasBrief ? patientViewTab : 'record';
+    var tabHtml = '<div class="ptr-tabs">'
+        + '<button class="ptr-tab' + (effectiveTab === 'brief' ? ' active' : '') + (hasBrief ? '' : ' disabled') + '" '
+        +   'onclick="patientViewTab=\'brief\'; renderPatientRecord(\'' + safePatientId + '\')"'
+        +   (hasBrief ? '' : ' disabled') + '>'
+        +   'Clinical Brief' + (hasBrief ? '' : ' (none)')
+        + '</button>'
+        + '<button class="ptr-tab' + (effectiveTab === 'record' ? ' active' : '') + '" '
+        +   'onclick="patientViewTab=\'record\'; renderPatientRecord(\'' + safePatientId + '\')">Record</button>'
+        + '</div>';
+
+    var contentHtml = '';
+    if (effectiveTab === 'brief') {
+        contentHtml = renderClinicalBrief(patient, patientId);
+    } else {
+        contentHtml = ''
+            + section('info', 'Patient Information', '\uD83C\uDFE5',
+                fld('medicalHx', 'Medical History', '#ef4444')
+                + fld('medications', 'Medications & Allergies', '#f87171'))
+            + section('clinical', 'Clinical History', '\uD83E\uDDB7',
+                fld('dentalHx', 'Dental History', '#10b981')
+                + fld('txSummaryBU', 'Treatment at BU', '#34d399'))
+            + section('perio', 'Periodontal & Recall', '\u26A0\uFE0F',
+                isEdit
+                    ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
+                    : '<div class="ptr-perio-row">'
+                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeLast || '\u2014') + '</div></div>'
+                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeNext || '\u2014') + '</div></div>'
+                      + '</div>')
+            + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
+                fld('txPlan', 'Treatment Plan', '#3b82f6')
+                + fld('lastVisit', 'Last Visit', '#60a5fa')
+                + fld('nextVisit', 'Next Visit', '#93c5fd'))
+            + section('imaging', 'Imaging', '\uD83D\uDCF7', imgInline())
+            + section('notes', 'Notes', '\uD83D\uDCDD',
+                isEdit
+                    ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
+                      + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
+                      + escapeHtml(patient.notes || '') + '</div>'
+                    : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
+    }
+
     // Build the record — all user text is escaped via escapeHtml()
     container.innerHTML = ''
         + backBtn
         + summaryCard
         + priorityHtml
-
-        // Compact header row: reliability dots + action buttons
         + '<div class="ptr-header">'
         +   '<div class="ptr-header-left">'
-        +     '<div class="ptr-meta">'
-        +       relHtml
-        +     '</div>'
+        +     '<div class="ptr-meta">' + relHtml + '</div>'
         +   '</div>'
         +   '<div class="ptr-actions">'
         +     editBtnHtml
@@ -754,40 +857,9 @@ function renderPatientRecord(patientId) {
         +     '<button class="ptr-action-btn danger" onclick="deletePatientRecord(\'' + safePatientId + '\')" title="Delete patient">Del</button>'
         +   '</div>'
         + '</div>'
-
-        // Requirements
+        + tabHtml
         + reqHtml
-
-        // Sections — stacked full-width, all section IDs preserved for collapsedSections
-        + section('info', 'Patient Information', '\uD83C\uDFE5',
-            fld('medicalHx', 'Medical History', '#ef4444')
-            + fld('medications', 'Medications & Allergies', '#f87171'))
-
-        + section('clinical', 'Clinical History', '\uD83E\uDDB7',
-            fld('dentalHx', 'Dental History', '#10b981')
-            + fld('txSummaryBU', 'Treatment at BU', '#34d399'))
-
-        + section('perio', 'Periodontal & Recall', '\u26A0\uFE0F',
-            isEdit
-                ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
-                : '<div class="ptr-perio-row">'
-                  + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeLast || '\u2014') + '</div></div>'
-                  + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeNext || '\u2014') + '</div></div>'
-                  + '</div>')
-
-        + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
-            fld('txPlan', 'Treatment Plan', '#3b82f6')
-            + fld('lastVisit', 'Last Visit', '#60a5fa')
-            + fld('nextVisit', 'Next Visit', '#93c5fd'))
-
-        + section('imaging', 'Imaging', '\uD83D\uDCF7', imgInline())
-
-        + section('notes', 'Notes', '\uD83D\uDCDD',
-            isEdit
-                ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
-                  + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
-                  + escapeHtml(patient.notes || '') + '</div>'
-                : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
+        + contentHtml;
 }
 
 
@@ -1172,7 +1244,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null };
+    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1198,6 +1270,7 @@ function parsePatientImportText(text) {
         else if (firstLine.indexOf('SPS_DASHBOARD_UPDATE') !== -1) header = 'SPS_DASHBOARD_UPDATE';
         else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
         else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
+        else if (firstLine.indexOf('CLINICAL_BRIEF') !== -1) header = 'CLINICAL_BRIEF';
         else if (firstLine.indexOf('APPOINTMENTS') !== -1 && firstLine.indexOf('ATTENDED') === -1) header = 'APPOINTMENTS';
 
         // If this block is ONLY a header (no meaningful body content), save as pending for next block
@@ -1233,6 +1306,9 @@ function parsePatientImportText(text) {
         } else if (effectiveHeader === 'TODO_LIST') {
             var parsedTodo = parseTodoListBlock(bodyText);
             if (parsedTodo) result.todoList = parsedTodo;
+        } else if (effectiveHeader === 'CLINICAL_BRIEF') {
+            var parsedBrief = parseClinicalBrief(bodyText);
+            if (parsedBrief && parsedBrief.chartNumber) result.clinicalBriefs.push(parsedBrief);
         } else if (effectiveHeader === 'APPOINTMENTS') {
             // APPOINTMENTS header detected — subsequent blocks will be appointment blocks
             // This block itself might be empty (just the header), handled by pendingHeader above
@@ -1566,6 +1642,36 @@ function parseTodoListBlock(text) {
     return result;
 }
 
+function parseClinicalBrief(text) {
+    if (!text || !text.trim()) return null;
+    var brief = {};
+    var fieldMap = {
+        'CHART': 'chartNumber', 'NAME': 'name', 'DATE_GENERATED': 'dateGenerated',
+        'SNAPSHOT': 'snapshot', 'DIAGNOSES_AND_RISKS': 'diagnosesAndRisks',
+        'TX_STATUS': 'txStatus', 'TX_SEQUENCING': 'txSequencing',
+        'FLAGGED_CONCERNS': 'flaggedConcerns', 'GRAD_VALUE': 'gradValue',
+        'NEXT_VISIT_PLAN': 'nextVisitPlan'
+    };
+    var lines = text.split('\n');
+    var currentKey = null;
+    lines.forEach(function(line) {
+        var matched = false;
+        var trimmedUpper = line.trimStart().toUpperCase();
+        Object.keys(fieldMap).forEach(function(key) {
+            if (trimmedUpper.indexOf(key + ':') === 0) {
+                currentKey = fieldMap[key];
+                var value = line.substring(line.indexOf(':') + 1).trim();
+                brief[currentKey] = value;
+                matched = true;
+            }
+        });
+        if (!matched && currentKey && line.trim()) {
+            brief[currentKey] = (brief[currentKey] || '') + '\n' + line.trim();
+        }
+    });
+    return brief.chartNumber ? brief : null;
+}
+
 // Parse a single appointment block from the unified import format
 // Handles: PATIENT: / CHART: / DATE: / TIME: / PROCEDURE: / CHAIR:
 function parseImportAppointmentBlock(text) {
@@ -1765,6 +1871,21 @@ function previewPatientImport() {
                 + '</div>';
         });
         html += '</div>';
+    }
+
+    // Preview clinical briefs
+    if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
+        hasContent = true;
+        parsed.clinicalBriefs.forEach(function(brief) {
+            html += '<div style="padding:8px; margin-bottom:6px; background:#052e16; border-radius:6px; border-left:3px solid #14b8a6;">'
+                + '<div style="color:#5eead4; font-weight:600; font-size:0.9em;">CLINICAL BRIEF: ' + escapeHtml(brief.name || 'Chart #' + (brief.chartNumber || '?')) + '</div>'
+                + '<div style="color:#94a3b8; font-size:0.8em; margin-top:4px;">Sections: '
+                + (brief.snapshot ? 'Snapshot ' : '') + (brief.diagnosesAndRisks ? 'Dx/Risks ' : '')
+                + (brief.txStatus ? 'Status ' : '') + (brief.txSequencing ? 'Sequencing ' : '')
+                + (brief.flaggedConcerns ? 'Concerns ' : '') + (brief.gradValue ? 'GradValue ' : '')
+                + (brief.nextVisitPlan ? 'NextVisit' : '') + '</div>'
+                + '</div>';
+        });
     }
 
     if (!hasContent) {
@@ -2039,6 +2160,40 @@ function confirmPatientImport() {
         roadmapData.todoList.lastUpdated = new Date().toISOString();
     }
 
+    // Import clinical briefs (overwrite per patient by chart number)
+    var briefsImported = 0;
+    if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
+        parsed.clinicalBriefs.forEach(function(brief) {
+            var chartNumber = (brief.chartNumber || '').trim();
+            var id = chartNumber ? 'pt_' + chartNumber : null;
+            if (!id || !records[id]) {
+                var briefNameLower = (brief.name || '').toLowerCase().trim();
+                Object.keys(records).forEach(function(rId) {
+                    if ((records[rId].name || '').toLowerCase().trim() === briefNameLower) id = rId;
+                });
+            }
+            if (id && records[id]) {
+                if (records[id].clinicalBrief && records[id].clinicalBrief.dateGenerated) {
+                    if (!Array.isArray(records[id].briefHistory)) records[id].briefHistory = [];
+                    records[id].briefHistory.unshift(JSON.parse(JSON.stringify(records[id].clinicalBrief)));
+                    if (records[id].briefHistory.length > 3) records[id].briefHistory = records[id].briefHistory.slice(0, 3);
+                }
+                records[id].clinicalBrief = {
+                    dateGenerated: brief.dateGenerated || getLocalDateString(new Date()),
+                    snapshot: brief.snapshot || '',
+                    diagnosesAndRisks: brief.diagnosesAndRisks || '',
+                    txStatus: brief.txStatus || '',
+                    txSequencing: brief.txSequencing || '',
+                    flaggedConcerns: brief.flaggedConcerns || '',
+                    gradValue: brief.gradValue || '',
+                    nextVisitPlan: brief.nextVisitPlan || ''
+                };
+                records[id].lastUpdated = new Date().toISOString();
+                briefsImported++;
+            }
+        });
+    }
+
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -2073,7 +2228,56 @@ function confirmPatientImport() {
     if (parsed.dashboardUpdate) msg += 'Dashboard snapshot saved. ';
     if (notesImported > 0) msg += notesImported + ' missing note(s) imported. ';
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
+    if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
     showToast(msg || 'Import complete');
+}
+
+function migratePerioNoiseCleanup() {
+    if (localStorage.getItem('perioNoiseCleanupDone_v1')) return;
+    var records = getPatientRecords();
+    if (!records || Object.keys(records).length === 0) return;
+
+    var alwaysStrip = [
+        'perio-form-prophy', 'perio-sum-prophy',
+        'perio-form-recall', 'perio-sum-recall',
+        'perio-form-reeval-ging', 'perio-sum-reeval-ging', 'perio-3rd-reeval',
+        'perio-form-ohi'
+    ];
+    var conditionalStrip = [
+        'perio-form-dx', 'perio-sum-dx',
+        'perio-form-impr', 'perio-sum-impr'
+    ];
+    var perioKeywords = /periodontitis|srp|scaling.and.root|calculus.removal/i;
+
+    var cleaned = 0;
+    Object.keys(records).forEach(function(id) {
+        var p = records[id];
+        if (!p || !Array.isArray(p.importedRequirements) || p.importedRequirements.length === 0) return;
+
+        var origLen = p.importedRequirements.length;
+        var hasPerio = perioKeywords.test(p.txPlan || '') || perioKeywords.test(p.medicalHx || '') || perioKeywords.test(p.notes || '');
+
+        p.importedRequirements = p.importedRequirements.filter(function(req) {
+            var reqId = (req.reqId || req).toString();
+            if (alwaysStrip.indexOf(reqId) !== -1) return false;
+            if (!hasPerio && conditionalStrip.indexOf(reqId) !== -1) return false;
+            return true;
+        });
+
+        if (p.importedRequirements.length !== origLen) {
+            cleaned++;
+            if (p.importedRequirements.length < 3) {
+                p.highValue = false;
+            }
+        }
+    });
+
+    if (cleaned > 0) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        console.log('[PERIO-CLEANUP] Stripped routine perio noise from ' + cleaned + ' patients');
+    }
+    localStorage.setItem('perioNoiseCleanupDone_v1', 'true');
 }
 
 function applyRequirementCheckoffs(items, importContext) {

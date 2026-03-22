@@ -151,6 +151,23 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments);
         addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures);
         addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords);
+        // Clinical briefs on patient records: newer dateGenerated wins
+        if (data.clinicalData.patientRecords) {
+            Object.keys(data.clinicalData.patientRecords).forEach(function(ptId) {
+                var local = roadmapData.clinicalData.patientRecords[ptId];
+                var remote = data.clinicalData.patientRecords[ptId];
+                if (local && remote && remote.clinicalBrief && remote.clinicalBrief.dateGenerated) {
+                    if (!local.clinicalBrief || (remote.clinicalBrief.dateGenerated > (local.clinicalBrief.dateGenerated || ''))) {
+                        local.clinicalBrief = remote.clinicalBrief;
+                    }
+                    if (remote.briefHistory && Array.isArray(remote.briefHistory)) {
+                        if (!local.briefHistory || remote.briefHistory.length > local.briefHistory.length) {
+                            local.briefHistory = remote.briefHistory;
+                        }
+                    }
+                }
+            });
+        }
         addMissing(roadmapData.clinicalData.missingNotes, data.clinicalData.missingNotes);
         // dashboardSnapshots: merge arrays
         if (data.clinicalData.dashboardSnapshots) {
