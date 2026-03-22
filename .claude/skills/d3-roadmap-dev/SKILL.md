@@ -152,6 +152,10 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** 10 interconnected bugs: (1) `hiddenClinicTasks` and `currentWeekSchedule` missing from monthlyPlanner in all 4 merge/restore sites + defaults, (2) `graduationPrep` and `clinicHeadlines` missing from `restoreCheckpoint()` and `importAndRestoreDirectly()`, (3) `dashboardSnapshots` used unsafe `||` merge that discarded local data when remote had empty `[]`, (4) `isEmptyState()` missing checks for `patientRecords`, `dashboardSnapshots`, `completedProcedures`, `competencies` — Guard C silently blocked saves when only these fields had data, (5) `syncClinicalToMonthlyPlanner()` used nuke-and-rebuild pattern wiping user edits, (6) all CRUD functions in patients.js and clinical.js missing `safeLocalStorageSet()` before `saveData()`, (7) both import functions missing localStorage persistence before saveData().
 **Solution (commit `6dbe396`):** Added missing fields to all 4 merge/restore sites + defaults. New `mergeDashboardSnapshots()` function deduplicates by `capturedAt`. Added `patientRecords`/`dashboardSnapshots`/`completedProcedures`/`competencies` to `isEmptyState()`. Replaced nuke-and-rebuild `syncClinicalToMonthlyPlanner()` with incremental sync respecting `hiddenClinicTasks` and `userEdited`. Added `safeLocalStorageSet()` before `saveData()` in all 17 CRUD functions across patients.js and clinical.js.
 
+### Error: Duplicate clinic tasks in Schedule tab weekly calendar (fixed Mar 21, 2026)
+**Cause:** 3 interconnected bugs: (1) `_mpDeleteCurrentTaskConfirmed()` deleted clinic tasks from `customTasks` without adding to `hiddenClinicTasks`, so `syncClinicalToMonthlyPlanner()` recreated them on next init. (2) Import dedup only checked `patientId + date + time`, so mismatched patient IDs allowed duplicate appointments. (3) `syncClinicalToMonthlyPlanner()` ran on every `initMonthlyPlanner()` call (tab switch, page load) without checking if data actually changed.
+**Solution (commit `fa8ab07`):** (1) Clinic task deletion now adds to `hiddenClinicTasks` same as `mpHideClinicTask()`. (2) Both import functions have secondary dedup by `patientName + date + time`. (3) `clinicalDataDirty` flag gates sync — only runs when clinical data actually changed. `dedupAppointments()` utility runs on init to clean existing duplicates. `safeLocalStorageSet()` added to 5 missing monthly-planner CRUD functions.
+
 ### Error: Deadline delete/edit buttons broken (fixed Mar 16, 2026)
 **Cause:** `getDeadlineId()` produced IDs containing `'` (apostrophe from deadline text like `can't`), which broke `onclick="fn('${deadlineId}')"` JS syntax. Also, collapsed completed rows had duplicate `style` attributes causing `display:none` to be ignored.
 **Solution (commit `e24d328`):** Strip `'"\\` from `getDeadlineId()` key generation. Escape `safeId` in onclick handlers. Merge display:none into the single `rowStyle` in `buildRow()`.
@@ -345,6 +349,7 @@ GUARD E: if (firebaseSyncEnabled && !pinValidated) return false; // PIN must be 
 let isInitialLoad = true;       // cleared in loadFromFirebase/loadFromLocalStorage (firebase-sync.js)
 let hasLoadedFromCloud = false;  // set true after Firebase load completes (firebase-sync.js)
 let pinValidated = false;        // set true in setupUserAuth() (firebase-sync.js)
+let clinicalDataDirty = true;   // gates syncClinicalToMonthlyPlanner() in initMonthlyPlanner(). Set true by data load/merge, false after sync.
 ```
 
 **Save flow:** mutate `roadmapData` -> `saveData()` -> localStorage IMMEDIATELY -> Firebase debounced (0-300ms) -> `setLocalUpdateFlag()` to prevent realtime echo -> retry on error
@@ -413,6 +418,7 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `deleteDeadline(index)` | deadlines.js | Delete a deadline |
 | `toggleCompletedDeadlines(month)` | deadlines.js | Toggle collapsed completed rows per month |
 | `syncClinicalToMonthlyPlanner()` | import-system.js | Incremental clinic→planner sync (respects hiddenClinicTasks, userEdited) |
+| `dedupAppointments()` | import-system.js | Scan/remove duplicate appointments by name+date+time, clean orphaned clinic tasks |
 | `loadCourseGrades()` | grades.js | Grade calculator rendering |
 | `calculateNeeded()` | grades.js | "What grade do I need" calculator |
 | `syncGradeToDeadline()` | grades.js | Sync grade to deadline tab |
@@ -536,3 +542,6 @@ If you see ANY of these in code you're writing:
 - Adding a new collection field without adding it to `isEmptyState()` in state.js — Guard C silently blocks saves when only that field has data
 - Using `data.arr || local.arr || []` for array fields instead of a proper merge function — empty `[]` is truthy and discards local data
 - `syncClinicalToMonthlyPlanner()` must use incremental sync, NOT nuke-and-rebuild — respect `hiddenClinicTasks` and `userEdited` flags
+- Deleting a `clinic_*` task without adding appointment to `hiddenClinicTasks` — sync will recreate it
+- Import dedup by `patientId` only without secondary name-based check — mismatched IDs create duplicates
+- Calling `syncClinicalToMonthlyPlanner()` unconditionally in `initMonthlyPlanner()` without `clinicalDataDirty` gate

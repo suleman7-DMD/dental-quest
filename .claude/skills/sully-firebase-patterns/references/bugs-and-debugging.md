@@ -173,7 +173,35 @@ function skipPin() {
 }
 ```
 
-### 11. Undefined Values in Firebase Save Payloads
+### 11. Deleting Clinic Task Without Adding to hiddenClinicTasks
+```javascript
+// WRONG — clinic task reappears after next syncClinicalToMonthlyPlanner()
+delete roadmapData.monthlyPlanner.customTasks[taskId];
+
+// CORRECT — also hide so incremental sync skips it
+if (task.clinicalAppointmentId || taskId.startsWith('clinic_')) {
+    roadmapData.monthlyPlanner.hiddenClinicTasks[task.clinicalAppointmentId || taskId] = true;
+}
+delete roadmapData.monthlyPlanner.customTasks[taskId];
+```
+
+### 12. Calling syncClinicalToMonthlyPlanner() on Every initMonthlyPlanner() Without Dirty Flag
+```javascript
+// WRONG — recreates deleted/hidden clinic tasks on every tab switch
+function initMonthlyPlanner() {
+    syncClinicalToMonthlyPlanner();
+    // ...
+}
+
+// CORRECT — only sync when data has actually changed
+function initMonthlyPlanner() {
+    if (clinicalDataDirty) syncClinicalToMonthlyPlanner();
+    // clinicalDataDirty set true by mergeRemoteState/loadFromLocalStorage/restoreCheckpoint/importAndRestoreDirectly
+    // clinicalDataDirty set false at end of syncClinicalToMonthlyPlanner()
+    // ...
+}
+```
+### 13. Undefined Values in Firebase Save Payloads
 ```javascript
 // WRONG — undefined crashes entire .set() call
 currentSession: {
