@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Graduation Roadmap | SULEMAN SHAIKH, DMD</title>
-    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <!-- Firebase SDK - Same as Dental Quest App -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -6825,6 +6829,489 @@
             .pts-stat-chip { font-size: 0.72em; }
         }
 
+        /* ==================== PERIODIC REVIEW TAB ==================== */
+
+        /* Tab container */
+        .pr-tab {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f7f5ef;
+            padding: 24px;
+            color: #17212b;
+            line-height: 1.5;
+        }
+
+        /* Section wrapper */
+        .pr-section {
+            margin-bottom: 32px;
+        }
+
+        .pr-section-number {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1a7f79;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+
+        .pr-section-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        /* Atlas Console panel cards */
+        .pr-panel {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid rgba(23, 33, 43, 0.12);
+            padding: 20px;
+            box-shadow: 0 18px 36px rgba(23, 33, 43, 0.08);
+            margin-bottom: 16px;
+        }
+
+        .pr-panel-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #62707c;
+            margin-bottom: 12px;
+        }
+
+        /* Swiss clean tables */
+        .pr-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .pr-table th,
+        .pr-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(23, 33, 43, 0.12);
+        }
+
+        .pr-table th {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #62707c;
+            background: #f4f6f0;
+        }
+
+        .pr-table tr:hover td {
+            background: rgba(26, 127, 121, 0.06);
+        }
+
+        /* Data values in mono */
+        .pr-mono {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Delta indicators */
+        .pr-delta-positive {
+            color: #1a7f79;
+            font-weight: 600;
+        }
+
+        .pr-delta-negative {
+            color: #c86b4b;
+            font-weight: 600;
+        }
+
+        .pr-delta-zero {
+            color: #62707c;
+        }
+
+        /* Status badges */
+        .pr-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid currentColor;
+        }
+
+        .pr-badge-ontrack { background: rgba(26, 127, 121, 0.12); color: #1a7f79; border-color: #1a7f79; }
+        .pr-badge-behind { background: rgba(216, 163, 87, 0.15); color: #b8862e; border-color: #d8a357; }
+        .pr-badge-critical { background: rgba(200, 107, 75, 0.12); color: #c86b4b; border-color: #c86b4b; }
+        .pr-badge-notstarted { background: rgba(98, 112, 124, 0.1); color: #62707c; border-color: #62707c; }
+        .pr-badge-new { background: rgba(26, 127, 121, 0.15); color: #1a7f79; border-color: #1a7f79; font-size: 0.65rem; margin-left: 8px; }
+
+        /* Buttons - Swiss rectangular */
+        .pr-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid #17212b;
+            background: transparent;
+            color: #17212b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .pr-btn:hover {
+            background: #17212b;
+            color: #ffffff;
+        }
+
+        .pr-btn-primary {
+            background: #1a7f79;
+            color: #ffffff;
+            border-color: #1a7f79;
+        }
+
+        .pr-btn-primary:hover {
+            background: #156b66;
+            border-color: #156b66;
+        }
+
+        .pr-btn-sm {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+        }
+
+        .pr-btn-danger {
+            border-color: #c86b4b;
+            color: #c86b4b;
+        }
+
+        .pr-btn-danger:hover {
+            background: #c86b4b;
+            color: #fff;
+        }
+
+        /* Swiss underline inputs */
+        .pr-input {
+            width: 100%;
+            padding: 8px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            border: none;
+            border-bottom: 2px solid #17212b;
+            background: transparent;
+            color: #17212b;
+            transition: border-color 0.15s;
+        }
+
+        .pr-input:focus {
+            outline: none;
+            border-color: #1a7f79;
+        }
+
+        /* Textareas */
+        .pr-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            border: 2px solid rgba(23, 33, 43, 0.2);
+            background: #ffffff;
+            color: #17212b;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .pr-textarea:focus {
+            outline: none;
+            border-color: #1a7f79;
+        }
+
+        .pr-textarea-lg {
+            min-height: 160px;
+        }
+
+        /* Rich text editor */
+        .pr-editor {
+            min-height: 200px;
+            padding: 16px;
+            border: 2px solid rgba(23, 33, 43, 0.2);
+            background: #ffffff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #17212b;
+        }
+
+        .pr-editor:focus {
+            outline: none;
+            border-color: #1a7f79;
+        }
+
+        .pr-editor:empty::before {
+            content: attr(data-placeholder);
+            color: #a3a3a3;
+        }
+
+        .pr-toolbar {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            border: 2px solid rgba(23, 33, 43, 0.2);
+            border-bottom: none;
+            background: #f4f6f0;
+        }
+
+        .pr-toolbar button {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(23, 33, 43, 0.15);
+            background: #ffffff;
+            cursor: pointer;
+            color: #17212b;
+        }
+
+        .pr-toolbar button:hover {
+            background: rgba(26, 127, 121, 0.12);
+        }
+
+        /* Collapsible patient cards */
+        .pr-card {
+            background: #ffffff;
+            border: 1px solid rgba(23, 33, 43, 0.12);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .pr-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .pr-card-header:hover {
+            background: rgba(26, 127, 121, 0.04);
+        }
+
+        .pr-card-body {
+            display: none;
+            padding: 0 16px 16px;
+            border-top: 1px solid rgba(23, 33, 43, 0.08);
+        }
+
+        .pr-card.expanded .pr-card-body {
+            display: block;
+        }
+
+        .pr-card-chevron {
+            transition: transform 0.2s;
+            font-size: 0.8rem;
+            color: #62707c;
+        }
+
+        .pr-card.expanded .pr-card-chevron {
+            transform: rotate(90deg);
+        }
+
+        /* Reliability dots */
+        .pr-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .pr-dot-green { background: #22c55e; }
+        .pr-dot-yellow { background: #eab308; }
+        .pr-dot-red { background: #ef4444; }
+
+        /* Requirement highlights */
+        .pr-highlight-green {
+            background: rgba(34, 197, 94, 0.15);
+            padding: 2px 6px;
+        }
+
+        .pr-highlight-yellow {
+            background: rgba(234, 179, 8, 0.15);
+            padding: 2px 6px;
+        }
+
+        /* Field changed indicator */
+        .pr-field-changed {
+            border-left: 3px solid #1a7f79;
+            padding-left: 8px;
+        }
+
+        /* Editable field hint */
+        .pr-editable {
+            cursor: text;
+            border-bottom: 1px dashed rgba(23, 33, 43, 0.2);
+            padding-bottom: 1px;
+        }
+
+        .pr-editable:hover {
+            border-bottom-color: #1a7f79;
+        }
+
+        .pr-edit-hint {
+            font-size: 0.7rem;
+            color: #a3a3a3;
+            font-style: italic;
+        }
+
+        /* Talking points */
+        .pr-talking-points {
+            background: rgba(26, 127, 121, 0.06);
+            border-left: 3px solid #1a7f79;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        .pr-talking-points li {
+            margin-bottom: 4px;
+            color: #2f3a45;
+        }
+
+        /* Reference panel (PR1 subjective) */
+        .pr-reference {
+            background: #f4f6f0;
+            border: 1px solid rgba(23, 33, 43, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: #2f3a45;
+            line-height: 1.6;
+        }
+
+        .pr-reference-collapsed {
+            display: none;
+        }
+
+        /* Department card colored left border */
+        .pr-dept-fixed { border-left: 4px solid #3b82f6; }
+        .pr-dept-operative { border-left: 4px solid #10b981; }
+        .pr-dept-dentures { border-left: 4px solid #8b5cf6; }
+        .pr-dept-rpd { border-left: 4px solid #f59e0b; }
+        .pr-dept-srp { border-left: 4px solid #ef4444; }
+        .pr-dept-endo { border-left: 4px solid #06b6d4; }
+        .pr-dept-oralsurg { border-left: 4px solid #ec4899; }
+        .pr-dept-peds { border-left: 4px solid #84cc16; }
+        .pr-dept-perio { border-left: 4px solid #f472b6; }
+        .pr-dept-grouppractice { border-left: 4px solid #0ea5e9; }
+        .pr-dept-txplanning { border-left: 4px solid #6366f1; }
+        .pr-dept-geriatrics { border-left: 4px solid #8b5cf6; }
+        .pr-dept-externship { border-left: 4px solid #059669; }
+
+        /* Requirement checklist items */
+        .pr-req-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(23, 33, 43, 0.06);
+            font-size: 0.88rem;
+        }
+
+        .pr-req-check {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            border: 2px solid rgba(23, 33, 43, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            margin-top: 2px;
+        }
+
+        .pr-req-check.done {
+            background: #1a7f79;
+            border-color: #1a7f79;
+            color: #fff;
+        }
+
+        .pr-req-count {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: #62707c;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* Patient writeup fields */
+        .pr-field-row {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(23, 33, 43, 0.06);
+            font-size: 0.9rem;
+        }
+
+        .pr-field-label {
+            font-weight: 600;
+            min-width: 140px;
+            flex-shrink: 0;
+            color: #2f3a45;
+        }
+
+        .pr-field-value {
+            flex: 1;
+            color: #17212b;
+        }
+
+        /* Header styling */
+        .pr-header-title {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(1.4rem, 2.5vw, 2rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+
+        .pr-header-subtitle {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #1a7f79;
+            font-weight: 600;
+        }
+
+        /* Export mode - hide interactive elements for PDF */
+        .pr-export-mode .pr-toolbar,
+        .pr-export-mode .pr-btn-add-row,
+        .pr-export-mode .pr-btn-delete-row,
+        .pr-export-mode .pr-btn-export,
+        .pr-export-mode .pr-btn-toggle,
+        .pr-export-mode .pr-edit-hint,
+        .pr-export-mode .pr-talking-points { display: none !important; }
+        .pr-export-mode { background: #fff !important; padding: 20px !important; }
+        .pr-export-mode .pr-section { page-break-inside: avoid; }
+        .pr-export-mode .pr-panel { box-shadow: none; border: 1px solid #ddd; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pr-tab { padding: 12px; }
+            .pr-panel { padding: 14px; }
+            .pr-field-row { flex-direction: column; gap: 2px; }
+            .pr-field-label { min-width: unset; }
+            .pr-table { font-size: 0.8rem; }
+            .pr-table th, .pr-table td { padding: 6px 8px; }
+        }
+
     </style>
 </head>
 <body>
@@ -6864,6 +7351,7 @@
         <button class="tab-btn" onclick="switchTab('schedule', event)">📅 Schedule</button>
         <button class="tab-btn" onclick="switchTab('academics', event)">📚 D3 Academics</button>
         <button class="tab-btn" onclick="switchTab('gradprep', event)">🎓 Grad Prep</button>
+        <button class="tab-btn" onclick="switchTab('periodicreview', event)">&#128221; PR Review</button>
         <button class="tab-btn" onclick="switchTab('remember', event)" style="background:#7c3aed;">🛡️ Remember</button>
     </div>
 
@@ -8335,6 +8823,11 @@
         <!-- Populated by renderGraduationPrep() in init.js -->
     </div>
 
+    <!-- ==================== PERIODIC REVIEW TAB ==================== -->
+    <div id="tab-periodicreview" class="tab-content">
+        <!-- Populated by initPeriodicReview() in periodic-review.js -->
+    </div>
+
     <!-- ==================== ALWAYS REMEMBER TAB ==================== -->
     <div id="tab-remember" class="tab-content">
 
@@ -9753,16 +10246,17 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260321j"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260321j"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/periodic-review.js?v=20260322b"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260322b"></script>
 </body>
 </html>
