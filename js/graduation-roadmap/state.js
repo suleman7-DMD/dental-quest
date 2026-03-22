@@ -582,7 +582,13 @@ function mergeCompetencies(localComp, cloudComp) {
                         }
                     });
                     li.completionEntries = le;
-                    li.completed = Math.max(li.completed, le.length);
+                    li.completed = Math.min(li.required || 999, Math.max(li.completed, le.length));
+                }
+                // Derive status from completed count after merge
+                if (li.completed >= (li.required || 999)) {
+                    li.status = 'completed';
+                } else if (li.completed > 0) {
+                    li.status = 'in_progress';
                 }
             });
             localSections[secKey].items = localItems;
@@ -952,7 +958,7 @@ function getSmartAppointmentCount() {
         if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
             // Avoid double-counting if patient already counted
             var matchedByClinicalPatient = Object.values(patients).some(function(p) {
-                return (p.name === pr.name && p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
+                return ((p.name || '').toLowerCase().trim() === (pr.name || '').toLowerCase().trim() && p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
             });
             if (!matchedByClinicalPatient) {
                 extraVisits++;
@@ -1164,7 +1170,7 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
         startDate = earliest || new Date(2025, 7, 1); // Fallback to Aug 1, 2025
     }
 
-    var daysSoFar = Math.max(1, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
+    var daysSoFar = Math.max(1, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
     var ratePerDay = currentCount / daysSoFar;
 
     if (ratePerDay <= 0) return null;

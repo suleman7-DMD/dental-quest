@@ -1299,20 +1299,19 @@ function setCompItemStatus(catKey, itemId, newStatus) {
             // Toggle: if clicking active status, go back to pending
             const currentStatus = getItemStatus(item);
             if (currentStatus === newStatus) {
-                item.status = 'pending';
-                item.completed = 0;
-                // Clear manual evidence entries on reset
-                if (item.completionEntries) {
-                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                    item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
-                }
+                // Clear manual evidence entries, keep procedure-linked
+                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
+                item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
+                // Resync completed from remaining procedure-linked entries
+                item.completed = Math.min(item.required, item.completionEntries.length);
+                item.status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in_progress' : 'pending';
             } else {
                 item.status = newStatus;
                 // Set completed count based on status
                 if (newStatus === 'completed') {
                     item.completed = item.required;
                     // Add evidence entries for manual completion
-                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
+                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
                     while (item.completionEntries.length < item.required) {
                         item.completionEntries.push({
                             procedureId: null,
@@ -1325,11 +1324,11 @@ function setCompItemStatus(catKey, itemId, newStatus) {
                 } else if (newStatus === 'in_progress' && item.completed === 0) {
                     // Keep completed at 0 for in_progress but set status
                 } else if (newStatus === 'pending') {
-                    item.completed = 0;
-                    if (item.completionEntries) {
-                        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                        item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
-                    }
+                    // Clear manual entries, keep procedure-linked, resync count
+                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
+                    item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
+                    item.completed = Math.min(item.required, item.completionEntries.length);
+                    item.status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in_progress' : 'pending';
                 }
             }
 
@@ -1419,6 +1418,7 @@ function adjustCompItem(catKey, itemId, delta) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
+    if (typeof renderDashboard === 'function') renderDashboard();
 
     // Show milestone toast if just completed
     if (!wasCompleted && isNowCompleted) {
@@ -1782,8 +1782,12 @@ function deleteProcedure(procId) {
 // auto-completes past appointments, and links patient records to clinical data.
 // Called from Mission Control "Backfill Data" button or auto on first load.
 
+var _backfillInProgress = false;
+
 function backfillClinicalData() {
     if (!roadmapData.clinicalData) return;
+    if (_backfillInProgress) { showToast('Backfill already in progress', 'error'); return; }
+    _backfillInProgress = true;
 
     var backfillStats = { proceduresCreated: 0, appointmentsCompleted: 0, evidenceCreated: 0, patientsLinked: 0 };
     var today = new Date();
@@ -1929,7 +1933,7 @@ function backfillClinicalData() {
     });
 
     Object.values(patientRecords).forEach(function(pr) {
-        if (!pr.name) return;
+        if (!pr.name || !pr.name.trim()) return;
         var nameLower = pr.name.toLowerCase().trim();
         if (existingNames.has(nameLower)) return; // Already linked
 
@@ -1995,6 +1999,7 @@ function backfillClinicalData() {
         + backfillStats.evidenceCreated + ' evidence, '
         + backfillStats.patientsLinked + ' patients linked');
 
+    _backfillInProgress = false;
     return backfillStats;
 }
 

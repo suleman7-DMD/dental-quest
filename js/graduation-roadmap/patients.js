@@ -449,11 +449,22 @@ function getPatientRecords() {
     return roadmapData.clinicalData.patientRecords;
 }
 
+// Merge both patient stores: patientRecords (from imports) + clinicalData.patients (from clinical tab)
+function getAllPatientRecords() {
+    var records = getPatientRecords();
+    var clinicalPatients = roadmapData.clinicalData?.patients || {};
+    var merged = Object.assign({}, records);
+    Object.keys(clinicalPatients).forEach(function(id) {
+        if (!merged[id]) merged[id] = clinicalPatients[id];
+    });
+    return merged;
+}
+
 function renderPatientsSidebar() {
     var container = document.getElementById('patientsSidebar');
     if (!container) return;
 
-    var records = getPatientRecords();
+    var records = getAllPatientRecords();
     // Read search from JS-rendered input, static HTML input, or dataset fallback
     var existingSearch = container.querySelector('.pt-sidebar-search');
     var staticSearch = document.getElementById('ptSidebarSearch');
@@ -653,7 +664,7 @@ function renderPatientRecord(patientId) {
         if (isEdit) {
             return '<div class="ptr-field">'
                 + '<div class="ptr-field-label" style="color:' + accentColor + ';">' + escapeHtml(label) + '</div>'
-                + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(fieldName) + '" onblur="savePatientField(this)" '
+                + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(fieldName) + '" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
                 + 'class="ptr-field-edit" style="border-left-color:' + accentColor + ';">'
                 + escapeHtml(val)
                 + '</div></div>';
@@ -693,7 +704,7 @@ function renderPatientRecord(patientId) {
                 var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1 || val.toLowerCase().indexOf('overdue') !== -1;
                 html += '<div class="ptr-imaging-cell">'
                     + '<div class="ptr-imaging-label">' + escapeHtml(x.l) + '</div>'
-                    + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(x.f) + '" onblur="savePatientField(this)" '
+                    + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(x.f) + '" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
                     + 'class="ptr-imaging-edit" style="color:' + (warn ? '#b45309' : '#17212b') + ';">'
                     + escapeHtml(val) + '</div></div>';
             });
@@ -817,10 +828,14 @@ function renderPatientRecord(patientId) {
         contentHtml = ''
             + section('info', 'Patient Information', '\uD83C\uDFE5',
                 fld('medicalHx', 'Medical History', '#ef4444')
-                + fld('medications', 'Medications & Allergies', '#f87171'))
+                + fld('medications', 'Medications & Allergies', '#f87171')
+                + fld('allergies', 'Allergies', '#dc2626'))
             + section('clinical', 'Clinical History', '\uD83E\uDDB7',
                 fld('dentalHx', 'Dental History', '#10b981')
-                + fld('txSummaryBU', 'Treatment at BU', '#34d399'))
+                + fld('txSummaryBU', 'Treatment at BU', '#34d399')
+                + fld('txCompletedByMe', 'TX Completed by Me', '#059669')
+                + fld('recallHistory', 'Recall History', '#6ee7b7')
+                + fld('activeStatus', 'Active Status', '#047857'))
             + section('perio', 'Periodontal & Recall', '\u26A0\uFE0F',
                 isEdit
                     ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
@@ -835,7 +850,7 @@ function renderPatientRecord(patientId) {
             + section('imaging', 'Imaging', '\uD83D\uDCF7', imgInline())
             + section('notes', 'Notes', '\uD83D\uDCDD',
                 isEdit
-                    ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
+                    ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
                       + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
                       + escapeHtml(patient.notes || '') + '</div>'
                     : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
@@ -923,6 +938,53 @@ function deletePatientRecord(id) {
         'Delete patient record for "' + (patient.name || id) + '"?\n\nThis cannot be undone.',
         function() {
             delete roadmapData.clinicalData.patientRecords[id];
+
+            // Cascade: also remove from clinicalData.patients
+            if (roadmapData.clinicalData.patients && roadmapData.clinicalData.patients[id]) {
+                delete roadmapData.clinicalData.patients[id];
+            }
+
+            // Cascade: delete appointments for this patient + hide planner tasks
+            var deletedAptIds = [];
+            if (roadmapData.clinicalData.appointments) {
+                Object.keys(roadmapData.clinicalData.appointments).forEach(function(aptId) {
+                    if (roadmapData.clinicalData.appointments[aptId]?.patientId === id) {
+                        deletedAptIds.push(aptId);
+                        delete roadmapData.clinicalData.appointments[aptId];
+                    }
+                });
+            }
+
+            // Cascade: delete procedure records + unlink from competencies
+            if (roadmapData.clinicalData.completedProcedures) {
+                Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
+                    var proc = roadmapData.clinicalData.completedProcedures[procId];
+                    if (proc && proc.patientId === id) {
+                        if (typeof unlinkProcedureFromCompetencies === 'function') {
+                            unlinkProcedureFromCompetencies(procId);
+                        }
+                        delete roadmapData.clinicalData.completedProcedures[procId];
+                    }
+                });
+            }
+
+            // Cascade: hide planner tasks for deleted appointments
+            if (roadmapData.monthlyPlanner && deletedAptIds.length > 0) {
+                if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+                deletedAptIds.forEach(function(aptId) {
+                    roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
+                    if (roadmapData.monthlyPlanner.customTasks) {
+                        Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
+                            var ct = roadmapData.monthlyPlanner.customTasks[ctId];
+                            if (ct && ct.clinicalAppointmentId === aptId) {
+                                delete roadmapData.monthlyPlanner.customTasks[ctId];
+                            }
+                        });
+                    }
+                });
+            }
+
+            clinicalDataDirty = true;
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             saveData();
 
@@ -940,6 +1002,10 @@ function deletePatientRecord(id) {
             } else {
                 renderPatientsSidebar();
             }
+            // Re-render affected tabs after cascade
+            if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) {}
+            if (typeof renderCompetencies === 'function') try { renderCompetencies(); } catch(e) {}
+            if (typeof renderAppointmentsList === 'function') try { renderAppointmentsList(); } catch(e) {}
             showToast('Patient deleted');
         }
     );
@@ -949,6 +1015,8 @@ var _suppressBlurSave = false; // Guard against stale blur during import re-rend
 
 function savePatientField(element) {
     if (_suppressBlurSave) return; // Skip saves triggered by DOM replacement during import
+    if (element.dataset.committed === 'true') return; // Prevent double-fire from Escape+blur
+    element.dataset.committed = 'true';
     var patientId = element.getAttribute('data-patient-id');
     var field = element.getAttribute('data-field');
     if (!patientId || !field) return;
@@ -1450,7 +1518,7 @@ function parseRequirementsMatch(text) {
             var inlineVal = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             if (inlineVal && inlineVal.indexOf('|') !== -1) {
                 var parts = inlineVal.split('|').map(function(s) { return s.trim(); });
-                if (parts[0]) result.canFulfill.push({ reqId: parts[0], description: parts[1] || '', procedure: parts[2] || '' });
+                if (parts[0]) result.canFulfill.push({ reqId: parts[0].toLowerCase().trim(), description: parts[1] || '', procedure: parts[2] || '' });
             }
             return;
         }
@@ -1459,7 +1527,7 @@ function parseRequirementsMatch(text) {
             var inlineVal2 = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             if (inlineVal2 && inlineVal2.indexOf('|') !== -1) {
                 var parts2 = inlineVal2.split('|').map(function(s) { return s.trim(); });
-                if (parts2[0]) result.completedToday.push({ reqId: parts2[0], description: parts2[1] || '', procedure: parts2[2] || '', date: parts2[3] || '', patientName: parts2[4] || '' });
+                if (parts2[0]) result.completedToday.push({ reqId: parts2[0].toLowerCase().trim(), description: parts2[1] || '', procedure: parts2[2] || '', date: parts2[3] || '', patientName: parts2[4] || '' });
             }
             return;
         }
@@ -1522,7 +1590,7 @@ function parseRequirementsStatus(text) {
             if (inlineVal && inlineVal.indexOf('|') !== -1) {
                 var parts = inlineVal.split('|').map(function(s) { return s.trim(); });
                 if (parts[0]) {
-                    var status = { reqId: parts[0] };
+                    var status = { reqId: parts[0].toLowerCase().trim() };
                     for (var i = 1; i < parts.length; i++) {
                         var kv = parts[i].split(':').map(function(s) { return s.trim(); });
                         if (kv[0] === 'completed') status.completed = parseInt(kv[1], 10) || 0;
@@ -1543,7 +1611,7 @@ function parseRequirementsStatus(text) {
         if (inUpdates && trimmed.indexOf('|') !== -1) {
             var parts2 = trimmed.split('|').map(function(s) { return s.trim(); });
             if (parts2[0]) {
-                var status2 = { reqId: parts2[0] };
+                var status2 = { reqId: parts2[0].toLowerCase().trim() };
                 for (var j = 1; j < parts2.length; j++) {
                     var kv2 = parts2[j].split(':').map(function(s) { return s.trim(); });
                     if (kv2[0] === 'completed') status2.completed = parseInt(kv2[1], 10) || 0;
@@ -1957,6 +2025,7 @@ function confirmPatientImport() {
     // Apply updates
     parsed.updates.forEach(function(upd) {
         var chartNumber = (upd.chartNumber || '').trim();
+        if (!chartNumber) { showToast('Update skipped: missing chart number', 'error'); return; }
         var id = 'pt_' + chartNumber;
         if (!records[id]) {
             showToast('Update skipped: patient #' + chartNumber + ' not found');
@@ -2204,6 +2273,7 @@ function confirmPatientImport() {
     }
 
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
@@ -2286,7 +2356,7 @@ function migratePerioNoiseCleanup() {
         saveData();
         console.log('[PERIO-CLEANUP] Stripped routine perio noise from ' + cleaned + ' patients');
     }
-    try { localStorage.setItem('perioNoiseCleanupDone_v1', 'true'); } catch(e) {}
+    try { safeLocalStorageSet('perioNoiseCleanupDone_v1', 'true'); } catch(e) {}
 }
 
 function applyRequirementCheckoffs(items, importContext) {
@@ -2311,7 +2381,7 @@ function applyRequirementCheckoffs(items, importContext) {
 
                 var itemList = getValues(sec.items);
                 for (var i = 0; i < itemList.length; i++) {
-                    if (itemList[i].id === item.reqId) {
+                    if ((itemList[i].id || '').toLowerCase() === (item.reqId || '').toLowerCase()) {
                         // Increment or set completed count
                         if (typeof item.completed === 'number') {
                             if (item.isDelta) {
@@ -2329,8 +2399,10 @@ function applyRequirementCheckoffs(items, importContext) {
                         // Write back to the actual storage (handle object-based storage)
                         if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
                             for (var key in sec.items) {
-                                if (sec.items[key] && sec.items[key].id === item.reqId) {
-                                    sec.items[key].completed = itemList[i].completed;
+                                if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (item.reqId || '').toLowerCase()) {
+                                    // Cache intended count — recordProcedure → linkProcedureToCompetencies overwrites item.completed
+                                    var intendedCompleted = itemList[i].completed;
+                                    sec.items[key].completed = intendedCompleted;
                                     if (item.note) sec.items[key].note = item.note;
 
                                     // CROSS-SYNC: Create procedure record with evidence trail
@@ -2357,6 +2429,8 @@ function applyRequirementCheckoffs(items, importContext) {
                                                 competencyItemIds: [item.reqId],
                                                 notes: 'Imported via requirement checkoff'
                                             });
+                                            // Re-apply intended count (linkProcedureToCompetencies overwrites to completionEntries.length)
+                                            sec.items[key].completed = intendedCompleted;
                                         }
                                     }
                                     break;
@@ -2403,8 +2477,14 @@ function saveDashboardSnapshot(snapshot) {
         snapshot.capturedAt = getLocalDateString(new Date());
     }
 
-    // Prepend (newest first)
-    snaps.unshift(snapshot);
+    // Dedup: replace existing snapshot with same capturedAt date
+    var dupeIdx = snaps.findIndex(function(s) { return s.capturedAt === snapshot.capturedAt; });
+    if (dupeIdx >= 0) {
+        snaps[dupeIdx] = snapshot;
+    } else {
+        // Prepend (newest first)
+        snaps.unshift(snapshot);
+    }
 
     // Trim to 20 max
     if (snaps.length > 20) {
