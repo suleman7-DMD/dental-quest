@@ -648,7 +648,7 @@ function renderPatientRecord(patientId) {
     // Requirements summary
     var reqHtml = '';
     if (matches.length > 0) {
-        var isHV = matches.length >= 3;
+        var isHV = patient.highValue || matches.length >= 3;
         var grouped = {};
         matches.forEach(function(m) { if (!grouped[m.category]) grouped[m.category] = []; grouped[m.category].push(m); });
         var expandId = 'reqExpand_' + patientId.replace(/[^a-zA-Z0-9]/g, '');
@@ -737,7 +737,15 @@ function renderPatientRecord(patientId) {
                 ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onblur="savePatientField(this)" '
                   + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
                   + escapeHtml(patient.notes || '') + '</div>'
-                : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
+                : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>')
+
+        // Priority notes from Claude analysis
+        + (patient.priorityNotes
+            ? section('priority', 'Priority Notes', '\u26A0\uFE0F',
+                '<div class="ptr-field-view" style="border-left-color:#f5920b40;">'
+                + '<div class="ptr-field-text" style="color:#fbbf24;">' + escapeHtml(patient.priorityNotes) + '</div>'
+                + '</div>')
+            : '');
 }
 
 
@@ -873,16 +881,41 @@ const REQUIREMENT_KEYWORDS = [
 function computeRequirementMatches(patient) {
     if (!patient) return [];
 
-    // Combine searchable text
+    var matches = [];
+    var seenReqs = {};
+
+    // Use imported requirements from Claude analysis if available (authoritative)
+    if (patient.importedRequirements && patient.importedRequirements.length > 0) {
+        patient.importedRequirements.forEach(function(ir) {
+            if (seenReqs[ir.reqId]) return;
+            if (isRequirementOutstanding(ir.reqId)) {
+                seenReqs[ir.reqId] = true;
+                var reqInfo = getRequirementInfo(ir.reqId);
+                // Determine category from reqId prefix
+                var catKey = ir.reqId.split('-')[0];
+                var catColor = '#818cf8';
+                REQUIREMENT_KEYWORDS.forEach(function(g) {
+                    if (g.reqs.indexOf(ir.reqId) !== -1) { catKey = g.category; catColor = g.color; }
+                });
+                matches.push({
+                    reqId: ir.reqId,
+                    reqLabel: reqInfo ? reqInfo.text : (ir.description || ir.reqId),
+                    category: catKey.charAt(0).toUpperCase() + catKey.slice(1),
+                    categoryColor: catColor,
+                    matchedOn: ir.procedure || 'imported'
+                });
+            }
+        });
+        return matches;
+    }
+
+    // Fallback: keyword-based matching from patient text fields
     var searchText = [
         patient.txPlan || '',
         patient.nextVisit || '',
         patient.txSummaryBU || '',
         patient.dentalHx || ''
     ].join(' ').toLowerCase();
-
-    var matches = [];
-    var seenReqs = {};
 
     REQUIREMENT_KEYWORDS.forEach(function(group) {
         var matched = false;
@@ -1211,17 +1244,18 @@ function parsePatientRecord(text) {
     lines.forEach(function(line) {
         // Check if line starts with a known key
         var matched = false;
+        var trimmedUpper = line.trimStart().toUpperCase();
         Object.keys(fieldMap).forEach(function(key) {
-            if (line.trimStart().toUpperCase().indexOf(key + ':') === 0) {
+            if (trimmedUpper.indexOf(key + ':') === 0) {
                 currentKey = fieldMap[key];
                 var value = line.substring(line.indexOf(':') + 1).trim();
                 record[currentKey] = value;
                 matched = true;
             }
         });
-        // Continuation line (starts with 2+ spaces and we have a current key)
-        if (!matched && currentKey && /^\s{2,}/.test(line)) {
-            record[currentKey] = (record[currentKey] || '') + '\n' + line.trim();
+        // Continuation line: any non-empty line that doesn't match a known key
+        if (!matched && currentKey && line.trim()) {
+            record[currentKey] = (record[currentKey] || '') + ' ' + line.trim();
         }
     });
 
@@ -1267,8 +1301,9 @@ function parsePatientUpdate(text) {
             }
         });
 
-        if (!matched && currentKey && /^\s{2,}/.test(line)) {
-            update[currentKey] = (update[currentKey] || '') + '\n' + line.trim();
+        // Continuation line: any non-empty line that doesn't match a known key
+        if (!matched && currentKey && line.trim()) {
+            update[currentKey] = (update[currentKey] || '') + ' ' + line.trim();
         }
     });
 
@@ -1276,9 +1311,9 @@ function parsePatientUpdate(text) {
 }
 
 function parseRequirementsMatch(text) {
-    var result = { canFulfill: [], completedToday: [], chartNumber: '', name: '' };
+    var result = { canFulfill: [], completedToday: [], chartNumber: '', name: '', highValue: false, priorityNotes: '' };
     var lines = text.split('\n');
-    var inSection = null; // 'canFulfill' or 'completedToday'
+    var inSection = null; // 'canFulfill', 'completedToday', or 'priorityNotes'
 
     lines.forEach(function(line) {
         var trimmed = line.trim();
@@ -1304,16 +1339,32 @@ function parseRequirementsMatch(text) {
             }
             return;
         }
+        // HIGH_VALUE and PRIORITY_NOTES — capture their values
+        if (upper.indexOf('HIGH_VALUE:') === 0) {
+            inSection = null;
+            var hvVal = trimmed.substring(trimmed.indexOf(':') + 1).trim().toLowerCase();
+            result.highValue = hvVal.indexOf('yes') === 0 || hvVal === 'true';
+            return;
+        }
+        if (upper.indexOf('PRIORITY_NOTES:') === 0) {
+            inSection = 'priorityNotes';
+            result.priorityNotes = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            return;
+        }
         // Other known headers exit the section
-        if (upper.indexOf('HIGH_VALUE:') === 0 || upper.indexOf('PRIORITY_NOTES:') === 0 ||
-            upper.indexOf('CHART:') === 0 || upper.indexOf('NAME:') === 0) {
+        if (upper.indexOf('CHART:') === 0 || upper.indexOf('NAME:') === 0) {
             inSection = null;
             if (upper.indexOf('CHART:') === 0) result.chartNumber = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             if (upper.indexOf('NAME:') === 0) result.name = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             return;
         }
 
-        // In a section: parse lines with | delimiter as entries
+        // In a section: parse based on section type
+        if (inSection === 'priorityNotes') {
+            // Continuation of priority notes — append
+            result.priorityNotes = (result.priorityNotes || '') + ' ' + trimmed;
+            return;
+        }
         if (inSection && trimmed.indexOf('|') !== -1) {
             if (trimmed.toLowerCase().indexOf('(none') === 0 || trimmed.toLowerCase().indexOf('none') === 0) return;
             var parts3 = trimmed.split('|').map(function(s) { return s.trim(); });
@@ -1753,6 +1804,24 @@ function confirmPatientImport() {
         });
         records[id].lastUpdated = new Date().toISOString();
         updated++;
+    });
+
+    // Store imported requirements, priorityNotes, highValue on patient records
+    parsed.reqMatches.forEach(function(rm) {
+        var chartNumber = (rm.chartNumber || '').trim();
+        var id = chartNumber ? 'pt_' + chartNumber : null;
+        // Also try matching by name if chart not found
+        if (!id || !records[id]) {
+            var rmNameLower = (rm.name || '').toLowerCase().trim();
+            Object.keys(records).forEach(function(rId) {
+                if ((records[rId].name || '').toLowerCase().trim() === rmNameLower) id = rId;
+            });
+        }
+        if (id && records[id]) {
+            if (rm.canFulfill.length > 0) records[id].importedRequirements = rm.canFulfill;
+            if (rm.priorityNotes) records[id].priorityNotes = rm.priorityNotes;
+            if (rm.highValue) records[id].highValue = true;
+        }
     });
 
     // Apply requirement statuses
