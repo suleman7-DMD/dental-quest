@@ -20,7 +20,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "today 1/6/2026 - defective existing restoration MO #18 remove restoration and place 2 surface MO composite (my 20th formative surface). Pt still needs to remake 12/13 implant crowns for open contact - no charge.\n\nTAKE PICTURES TODAY. TAKE IMPRESSION MODELS TODAY. GET GSF TO FIGURE IT OUT W YOU.\n\nTAKE A LOOK AT #14 AND #19 FOR CROWNS\u2026..",
         lastFMX: "11/17/2021", lastBW: "10/1/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Open contact noted #12/#13 via BWs on 10/1/25; crowns to be remade at no charge. Suleman must consult with Dr. Suzuki regarding remake before patient returns. Patient has history of lateness and cancellations; currently unscheduled.",
-        reliability: "yellow", lastUpdated: null
+        reliability: "yellow", lastUpdated: null,
+        allergies: 'NKA',
+        txCompletedByMe: '9/10/2025: retorqued implant #4. 10/1/2025: BW taken, noted open contact #12/#13.',
+        recallHistory: 'Last Recall: 2/5/2025. Frequency: 6-month. Next due: 8/5/2025 (OVERDUE).',
+        activeStatus: 'Active'
     },
     "pt_1647620": {
         id: "pt_1647620", name: "Gil, Anabely", chartNumber: "1647620",
@@ -36,7 +40,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "1/6/2026 4pm | Full mouth prophy and evaluate for crown | Suleman Shaikh",
         lastFMX: "11/7/2025", lastBW: "2/11/2025", lastCBCT: "11/7/2025", lastPANO: "4/15/2020 (Due for update)",
         notes: "Monitoring sensitivity post-SRP. Perio sequence in progress. Patient has LOE on 1/7/26 at 4pm for unknown reason (suspected sensitivity post-SRP). Prefers evening sessions. Emotional support dog documentation on file.",
-        reliability: "yellow", lastUpdated: null
+        reliability: "yellow", lastUpdated: null,
+        allergies: 'LATEX, amldipine, perflutren, pireoxicam, naproxen, tramadol',
+        txCompletedByMe: '10/22/2025 recall + prophy + OHI',
+        recallHistory: 'Last Recall: 10/22/2025. Frequency: 6-month. Next due: 4/22/2026.',
+        activeStatus: 'Active'
     },
     "pt_79118": {
         id: "pt_79118", name: "Williams, Kisha", chartNumber: "79118",
@@ -52,7 +60,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (Pending 2-surface comp and TMD consult)",
         lastFMX: "10/8/2025", lastBW: "10/8/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here (NEEDS PANO for Ortho/TMD)",
         notes: "Severe dental anxiety; assistant recommended for soothing. 8/21/25 prophy was completed by Suleman but requires Salud entry/billing update. Monitor BP. Alginate impressions taken for Dr. Maseli. Monitor #31 closely for failure or need for crown.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: 'Sulfur and risperidone',
+        txCompletedByMe: 'Prophy (on 8/21/2025), ortho consult.',
+        recallHistory: 'Last Recall: 8/21/2025 (prophy). Frequency: 3MRC. Next due: 2/21/2026.',
+        activeStatus: 'Inactive'
     },
     "pt_2467990": {
         id: "pt_2467990", name: "Rosario, Jose", chartNumber: "2467990",
@@ -68,7 +80,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (Pending arrival of lab try-in)",
         lastFMX: "1/9/2025", lastBW: "1/9/2025", lastCBCT: "need to find out and update here", lastPANO: "1/9/2025",
         notes: "Lab case sent to Oral Arts on 11/12/25 with record bases. Once try-in is received, schedule patient for tooth try-in visit. Following try-in, case will return to lab for final processing. Patient must confirm OS consult and schedule extraction date with OS for same-day insertion.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: 'No known allergies',
+        txCompletedByMe: 'Prophy + 6MRC (9/2/2025), tx planning presentation, preliminary alginate impressions, final impressions w/ border molding, intermaxillary records (last visit 11/8/2025).',
+        recallHistory: 'Last Recall: 9/2/2025.',
+        activeStatus: 'Active'
     },
     "pt_2568967": {
         id: "pt_2568967", name: "Nsereko, Nababi", chartNumber: "2568967",
@@ -84,7 +100,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "Initial prophy (Suleman Summative) + Alginate models for Written Analysis (WA) with Dr. Maseli | Suleman Shaikh",
         lastFMX: "12/8/2025", lastBW: "12/8/2025", lastCBCT: "need to find out and update here (Recommended for odontoma/osteitis eval)", lastPANO: "12/8/2025",
         notes: "OS to evaluate osteitis periapical #19 and suspected compound odontoma impacting eruption of #23. Patient aware #18 may need RCT/Crown and #8 restorability is questionable. Written Analysis (WA) requires Dr. Maseli appointment. Patient is currently deciding on continuing at BU due to cost concerns.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: 'Active'
     },
     "pt_2577113": {
         id: "pt_2577113", name: "Krima, Mohamed", chartNumber: "2577113",
@@ -100,7 +120,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "1/13/2026 8:30am | 2-surface composite #12 DO and TMD Analysis | Suleman Shaikh",
         lastFMX: "8/15/2025", lastBW: "8/15/2025", lastCBCT: "need to find out and update here", lastPANO: "No pano on file.",
         notes: "Faculty signature for 12/19/25 MOD #13 (Dr. Swati) is missing on flowsheet. Referral to Dr. Motro (TMJ Specialist) is required. TMD analysis to be completed after final restorations.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: 'Penicillin medications',
+        txCompletedByMe: 'T2 DC + prophy. 3 surface posterior composite (#4 OFD).',
+        recallHistory: 'Last Recall: 8/18/2025. Frequency: 6-month. Next due: 2/18/2026.',
+        activeStatus: 'Active'
     },
     "pt_1875522": {
         id: "pt_1875522", name: "Hector, Lebron", chartNumber: "1875522",
@@ -116,7 +140,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "1/5/2026 | 3MRC Recall, Prophy, POE, Restorative check, X-rays and OHRA and Full Perio Chart | Suleman Shaikh\n\nPt missed 1/5/2026 apt and his previous apt in november 2025 too. No call no show. It says on salud \"pt discharged?\" what is that about? Figure this guy out seems like dead end",
         lastFMX: "12/2024", lastBW: "12/2024 (NEEDS UPDATED BW: current images are very poor quality)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Patient missed 11/20/25. pt missed 1/5/2026 apt. 2 no call no shows. Suleman needs to assess 8ML/10DL and #29 crown preference during POE.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: 'Active'
     },
     "pt_1297657": {
         id: "pt_1297657", name: "Wright, Tawana", chartNumber: "1297657",
@@ -132,7 +160,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (Pending scheduling for #18 or #31)",
         lastFMX: "7/29/2024", lastBW: "9/3/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Patient takes Eliquis 5mg; ensure MD consult is current for any future surgical/invasive needs. Suleman needs to consult with GPL regarding #14; due to the extent of original amalgam decay, a crown may still be indicated. Ortho consult follows completion of #18 and #31.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: 'NKDA',
+        txCompletedByMe: 'Recall/prophy/OHI on 9/3/2025, #2 OL (2 surface) on 11/1/2025, #3 OL (2 surface) on 10/4/2025.',
+        recallHistory: 'Last Recall: 9/3/2025. Frequency: 6-month. Next due: 3/3/2026.',
+        activeStatus: 'Active'
     },
     "pt_2582208": {
         id: "pt_2582208", name: "Carvalho, Alison", chartNumber: "2582208",
@@ -148,7 +180,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "Initial Prophy (summative) + Restorative check/Tx Plan confirmation | Suleman Shaikh",
         lastFMX: "12/16/2025", lastBW: "12/16/2025", lastCBCT: "need to find out and update here", lastPANO: "12/16/2025",
         notes: "Suleman noted several caries on X-rays taken 12/16/25 that were not included in the original treatment plan by Dr. Haines. Next visit must include a restorative summative/check to update the treatment plan before proceeding. Monitor for potential endodontic needs.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: 'Active'
     },
     "pt_1987861": {
         id: "pt_1987861", name: "Perdomo, Cynthia", chartNumber: "1987861",
@@ -164,7 +200,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "3MRC Recall + POE + Prophy + Ortho check | Suleman Shaikh",
         lastFMX: "12/8/2025 (Updated)", lastBW: "12/8/2025 (Updated)", lastCBCT: "need to find out and update here", lastPANO: "6/4/2021 (Due for update)",
         notes: "Patient is a no-show risk; ensure confirmation for next visit. Verify if implant site is #19 or #29 (conflicting notes). Alginate models and WA needed to confirm restorative plan post-ortho. Monitor GERD/acid erosion.",
-        reliability: "yellow", lastUpdated: null
+        reliability: "yellow", lastUpdated: null,
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: 'Active'
     },
     "pt_1763380": {
         id: "pt_1763380", name: "Delossantos, Arthur", chartNumber: "1763380",
@@ -180,7 +220,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (Pt has not scheduled yet)",
         lastFMX: "6/8/2023", lastBW: "8/23/2024", lastCBCT: "-", lastPANO: "-",
         notes: "Missed apt on 3/29/2025. FMX and BW due.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'None',
+        txCompletedByMe: 'None',
+        recallHistory: 'Last Recall: 5/19/2025. Frequency: 6-month. Next due: 11/23/2025.',
+        activeStatus: 'Active'
     },
     "pt_2107896": {
         id: "pt_2107896", name: "Sbardella, Kristen", chartNumber: "2107896",
@@ -196,7 +240,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (Pending retrieval of retention rings)",
         lastFMX: "need to find out and update here (FMX + BW due)", lastBW: "need to find out and update here (FMX + BW due)", lastCBCT: "need to find out and update here", lastPANO: "2021 (Due for update)",
         notes: "Suleman needs to retrieve/order nylon retention rings before the next visit; they were not found on the 7th floor. Previous student (Ryann Shaddick) was contacted regarding their location. Suleman must explain the retrieval delay to the patient, as rings were already paid for. Monitor BP due to HTN.",
-        reliability: "green", lastUpdated: null
+        reliability: "green", lastUpdated: null,
+        allergies: 'None',
+        txCompletedByMe: 'Upper/Lower denture adjustment (9/17/2025).',
+        recallHistory: 'Last Recall: 9/17/2025. Frequency: Annual. Next due: 9/17/2026.',
+        activeStatus: 'Active'
     },
     "pt_2569813": {
         id: "pt_2569813", name: "Koshkarian, Kavitha", chartNumber: "2569813",
@@ -212,7 +260,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (recall overdue)",
         lastFMX: "5/8/2025", lastBW: "5/8/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Patient experiences sensitivity to cold air and water. No significant periodontal findings. Suleman needs to make recall appointment/prophy for pt. Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'No allergies',
+        txCompletedByMe: 'None (have not seen pt yet)',
+        recallHistory: 'Last Recall: approx. 6/3/2025. Frequency: 6-month. Next due: 12/3/2025.',
+        activeStatus: 'Active'
     },
     "pt_1186199": {
         id: "pt_1186199", name: "Laplante, Jonathan", chartNumber: "1186199",
@@ -228,7 +280,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "Recall + Prophy, OS Consult. Next Recall Due: 7/15/2025 (OVERDUE).",
         lastFMX: "5/3/2024 (BW due/FMX due)", lastBW: "5/3/2024 (BW due)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Sickle Cell Anemia - Consult w/ MD prior to major surgical procedures. Avoid long/stressful appointments. Assigned to Suleman for recall due 7/15/2025. Pt has not yet scheduled appointment. Last attempt by Suleman 8/19/2025. Front desk attempted 8/20/2025. Suleman must follow up on overdue recall + OS consult and potentially send HTC letter.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'NKDA',
+        txCompletedByMe: 'None',
+        recallHistory: 'Last Recall: 1/15/2025. Frequency: 6-month. Next due: 7/15/2025 (OVERDUE).',
+        activeStatus: 'Active'
     },
     "pt_966540": {
         id: "pt_966540", name: "Soivilien, Sandrine", chartNumber: "966540",
@@ -244,7 +300,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "6MRC + prophy. Next Recall Due: 11/01/2025 (OVERDUE).",
         lastFMX: "3/1/2022 (BW DUE DURING NEXT RECALL VISIT)", lastBW: "8/8/2024", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Precautions: Allergy to Iron Transfusion. PT WAS ASSIGNED TO SULEMAN FOR RECALL NOV. 2025. CALL PATIENT AND/OR SENT HTC LETTER. Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'Iron Transfusion',
+        txCompletedByMe: 'None (Pt has not scheduled apt).',
+        recallHistory: 'Last Recall: 05/01/2025. Frequency: 6-month. Next due: 11/01/2025 (OVERDUE).',
+        activeStatus: 'Active'
     },
     "pt_2225586": {
         id: "pt_2225586", name: "Lopes, Alirio", chartNumber: "2225586",
@@ -260,7 +320,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "Upper interim denture reline, recall (pending scheduling).",
         lastFMX: "Not Due", lastBW: "Not Due", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Precautions: Pacemaker (verify precautions for ultrasonic, electrosurg). COPD (avoid fully supine position). Per 8/15/2024 note, no definitive dentures are planned. Pt will come in as needed for relines/adjustments. Pt only uses denture for esthetics. Case evaluated by Dr. Escobar and Dr. Suzuki; patient and daughter agreed to no definitive denture process. Assigned to Suleman for recall, OCS, and potential denture adjustments. Pt was scheduled for reline 10/7/2025 but cancelled and did not follow up. Remove pt HTC.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'Nuts',
+        txCompletedByMe: 'Upper denture Reline (Hard reline on 8/15/2024).',
+        recallHistory: 'Last Recall: N/A Overdue.',
+        activeStatus: 'Active'
     },
     "pt_23042563": {
         id: "pt_23042563", name: "Mohamed, Karim", chartNumber: "23042563",
@@ -276,7 +340,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "need to find out and update here (OVERDUE)",
         lastFMX: "8/1/2024 (DUE)", lastBW: "8/1/2024 (DUE)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Suleman made phone call attempt on 8/20/2025 (no answer). Front desk made attempt 8/18/2025 (no answer). Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'No known allergies',
+        txCompletedByMe: 'None (pt has not rescheduled apt)',
+        recallHistory: 'Last Recall: 8/01/2024. Frequency: 4MRC. Next due: 12/01/2024 (OVERDUE).',
+        activeStatus: 'Active'
     },
     "pt_23048578": {
         id: "pt_23048578", name: "Penn, Aubrey", chartNumber: "23048578",
@@ -292,7 +360,11 @@ const DEFAULT_PATIENT_RECORDS = {
         nextVisit: "6MRC + prophy. Next Recall Due: Now (OVERDUE +1yr).",
         lastFMX: "12/2023 (FMX/BW DUE)", lastBW: "12/2023 (FMX/BW DUE)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
         notes: "Precautions: Controlled Hypertension and Type II Diabetes. Patient assigned for recalls only. Patient is hard-to-contact. Suleman attempted call 9/25/2025 (no response). Will call again re: intent to return / OS status (can offer OS consult). Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null
+        reliability: "red", lastUpdated: null,
+        allergies: 'None mentioned',
+        txCompletedByMe: 'None',
+        recallHistory: 'Last Recall: 9/16/2024. Next due: Now (OVERDUE +1yr).',
+        activeStatus: 'Active'
     },
     "pt_karima": {
         id: "pt_karima", name: "Karima M.", chartNumber: "",
@@ -302,7 +374,11 @@ const DEFAULT_PATIENT_RECORDS = {
         lastVisit: "", nextVisit: "",
         lastFMX: "", lastBW: "", lastCBCT: "", lastPANO: "",
         notes: "Needs full charting and data entry.",
-        reliability: "yellow", lastUpdated: null
+        reliability: "yellow", lastUpdated: null,
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: 'Active'
     }
 };
 
