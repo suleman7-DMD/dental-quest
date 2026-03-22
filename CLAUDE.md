@@ -110,6 +110,13 @@ const date = new Date(year, month - 1, day);
 - **Guard F must validate `periodicReviews`, `competencies`, `missingNotes`**: These 3 fields were missing from `validateStateIntegrity()`. Corrupted values now rejected. Fixed Mar 22 2026.
 - **`applyRequirementCheckoffs` isDelta pattern**: COMPLETED_TODAY items use `isDelta: true` to INCREMENT competency counts. REQUIREMENTS_STATUS items SET absolutely. Without `isDelta`, importing one completed procedure could DROP count from 3 to 1.
 - **Parser continuation lines use `\n`**: `parsePatientRecord()` and `parsePatientUpdate()` join continuation lines with `'\n'` (not `' '`). Matches `parseClinicalBrief` behavior. Preserves multi-line notes formatting.
+- **Patients sidebar must merge both stores**: `renderPatientsSidebar()` uses `getAllPatientRecords()` (patients.js) which merges `patientRecords` + `clinicalData.patients`. Patients created via Clinical tab only exist in `clinicalData.patients` — without merge they're invisible in the sidebar. Fixed Mar 22 2026.
+- **`deletePatientRecord()` must cascade like `deletePatient()`**: Deleting from Patients tab must also: delete from `clinicalData.patients`, delete appointments, delete procedure records + unlink competencies, hide planner tasks, set `clinicalDataDirty = true`. Fixed Mar 22 2026.
+- **Requirement ID matching is case-insensitive**: `applyRequirementCheckoffs()` compares `(id).toLowerCase() === (reqId).toLowerCase()`. Webchat may emit mixed-case IDs. `parseRequirementsMatch()` also lowercases reqId at parse time. Fixed Mar 22 2026.
+- **Dashboard snapshot dedup by capturedAt**: `saveDashboardSnapshot()` checks for existing snapshot with same `capturedAt` date — replaces it instead of duplicating. Prevents bloat from same-day re-imports. Fixed Mar 22 2026.
+- **`adjustCompItem()` must call `renderDashboard()`**: Without this, Mission Control stats stay stale until tab switch after competency adjustments. Fixed Mar 22 2026.
+- **`backfillClinicalData()` running guard**: `_backfillInProgress` flag prevents concurrent/duplicate backfill runs. Whitespace-only patient names skipped in Phase 4 linking. Fixed Mar 22 2026.
+- **Contenteditable double-fire guard pattern**: All `contenteditable` fields in patients.js use `onfocus` to store original value, `onkeydown` for Escape revert + committed flag, `onblur` checks committed flag before saving via `savePatientField()`. Prevents double save on Escape+blur.
 
 ---
 
