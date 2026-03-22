@@ -867,7 +867,170 @@ function renderPROtherRequirements(pr2, competencies) {
 
 
 // ============================================
-// PLACEHOLDER SECTIONS (9-12)
+// SECTION 9: SUBJECTIVE REPORT
+// ============================================
+
+function renderPRSubjectiveReport(pr2) {
+    var html = '<div class="pr-section" id="pr-section-9">';
+    html += '<div class="pr-section-number">09</div>';
+    html += '<div class="pr-section-title">Subjective Report</div>';
+
+    // --- Part 1: PR1 Reference Panel (collapsible) ---
+    html += '<div class="pr-panel" style="margin-bottom:16px;">';
+    html += '<button id="pr-toggle-pr1-ref" class="pr-btn" style="font-size:0.82rem; margin-bottom:8px;">Show PR Part 1 Reference</button>';
+    html += '<div id="pr-pr1-reference" class="pr-reference pr-reference-collapsed">';
+    var pr1Text = PR1_BASELINE.subjectiveReport ?? '';
+    var escapedText = escapeHtml(pr1Text);
+    // Split on double newlines for paragraphs, then replace remaining newlines with <br>
+    var paragraphs = escapedText.split('\n\n');
+    for (var p = 0; p < paragraphs.length; p++) {
+        html += '<p style="margin:0 0 12px 0; line-height:1.6;">' + paragraphs[p].replace(/\n/g, '<br>') + '</p>';
+    }
+    html += '</div>'; // .pr-reference
+    html += '</div>'; // .pr-panel
+
+    // --- Part 2: Auto-Generated Talking Points ---
+    html += '<div class="pr-panel pr-talking-points" style="margin-bottom:16px;">';
+    html += '<div class="pr-panel-title" style="margin-bottom:10px;">Auto-Generated Talking Points</div>';
+    html += '<ul style="margin:0; padding-left:20px;">';
+
+    // 1. Appointments
+    var pr1Attended = PR1_BASELINE.adminStats.attended ?? 30;
+    var currentAppts = 0;
+    if (typeof getSmartAppointmentCount === 'function') {
+        var apptResult = getSmartAppointmentCount();
+        currentAppts = (apptResult && apptResult.total) ?? 0;
+    }
+    var apptDelta = currentAppts - pr1Attended;
+    html += '<li>Appointments: ' + pr1Attended + ' &rarr; ' + currentAppts + ' (' + (apptDelta >= 0 ? '+' : '') + apptDelta + ')</li>';
+
+    // 2. Total completed procedures
+    var pr1Procs = PR1_BASELINE.completedProceduresCount ?? 41;
+    var currentProcs = 0;
+    if (typeof getSmartProcedureCount === 'function') {
+        var procResult = getSmartProcedureCount();
+        currentProcs = (procResult && procResult.total) ?? 0;
+    }
+    var procDelta = currentProcs - pr1Procs;
+    html += '<li>Total completed procedures: ' + pr1Procs + ' &rarr; ' + currentProcs + ' (' + (procDelta >= 0 ? '+' : '') + procDelta + ')</li>';
+
+    // 3. Patient roster comparison
+    var pr1Roster = PR1_BASELINE.patientRoster ?? [];
+    var pr1ChartNums = {};
+    for (var ri = 0; ri < pr1Roster.length; ri++) {
+        pr1ChartNums[pr1Roster[ri].chartNumber] = true;
+    }
+    var pr1Count = pr1Roster.length;
+    var currentRecords = (roadmapData.clinicalData && roadmapData.clinicalData.patientRecords) ? roadmapData.clinicalData.patientRecords : {};
+    var currentPatients = getValues(currentRecords);
+    var currentCount = currentPatients.length;
+    var newPatients = 0;
+    var currentChartNums = {};
+    for (var ci = 0; ci < currentPatients.length; ci++) {
+        var cn = currentPatients[ci].chartNumber;
+        if (cn) currentChartNums[cn] = true;
+        if (cn && !pr1ChartNums[cn]) {
+            newPatients++;
+        }
+    }
+    var removedPatients = 0;
+    for (var rk in pr1ChartNums) {
+        if (!currentChartNums[rk]) removedPatients++;
+    }
+    html += '<li>Patient roster: ' + pr1Count + ' &rarr; ' + currentCount + ' (' + newPatients + ' new, ' + removedPatients + ' removed)</li>';
+
+    // 4 & 5. Department progress comparison
+    var competencies = getCompetenciesData();
+    var deptKeys = ['fixed', 'operative', 'dentures', 'rpd', 'srp', 'endo'];
+    var deptLabels = { fixed: 'Fixed', operative: 'Operative', dentures: 'Dentures', rpd: 'RPD', srp: 'SRP', endo: 'Endo' };
+    var withProgress = [];
+    var noProgress = [];
+
+    for (var di = 0; di < deptKeys.length; di++) {
+        var dKey = deptKeys[di];
+        var cat = competencies[dKey];
+        var pr1Dept = (PR1_BASELINE.departments && PR1_BASELINE.departments[dKey]) ? PR1_BASELINE.departments[dKey] : {};
+        var pr1Completed = pr1Dept.completed ?? 0;
+
+        // Count current completed items in this category
+        var currentCompleted = 0;
+        if (cat && cat.sections) {
+            var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+            for (var si = 0; si < sectionsList.length; si++) {
+                var itemsList = Array.isArray(sectionsList[si].items) ? sectionsList[si].items : Object.values(sectionsList[si].items || {});
+                for (var ii = 0; ii < itemsList.length; ii++) {
+                    var item = itemsList[ii];
+                    var comp = item.completed ?? 0;
+                    var req = item.required ?? 0;
+                    if (comp >= req && req > 0) {
+                        currentCompleted++;
+                    }
+                }
+            }
+        }
+
+        if (currentCompleted > pr1Completed) {
+            withProgress.push(deptLabels[dKey]);
+        } else {
+            noProgress.push(deptLabels[dKey]);
+        }
+    }
+
+    html += '<li>Departments with progress since PR1: ' + (withProgress.length > 0 ? escapeHtml(withProgress.join(', ')) : '<em>none</em>') + '</li>';
+    html += '<li>Departments with no progress: ' + (noProgress.length > 0 ? escapeHtml(noProgress.join(', ')) : '<em>none</em>') + '</li>';
+
+    html += '</ul>';
+    html += '</div>'; // .pr-talking-points
+
+    // --- Part 3: Rich Text Editor ---
+    html += '<div class="pr-panel">';
+    html += '<div class="pr-panel-title" style="margin-bottom:10px;">Subjective Report</div>';
+
+    // Toolbar
+    html += '<div class="pr-toolbar">';
+    html += '<button data-cmd="bold" title="Bold"><strong>B</strong></button>';
+    html += '<button data-cmd="italic" title="Italic"><em>I</em></button>';
+    html += '<button data-cmd="underline" title="Underline"><u>U</u></button>';
+    html += '<button data-cmd="insertUnorderedList" title="Bullets">&#8226;</button>';
+    html += '<button data-cmd="insertOrderedList" title="Numbered List">1.</button>';
+    html += '</div>';
+
+    // Content-editable editor
+    // NOTE (XSS exception): subjectiveReport stores user-authored HTML from contentEditable.
+    // This is a single-user PIN-auth app — the user authors and consumes their own HTML.
+    // Do NOT escapeHtml on the stored content.
+    var savedContent = (pr2.subjectiveReport && typeof pr2.subjectiveReport === 'string') ? pr2.subjectiveReport : '';
+    html += '<div id="pr-subjective-editor" class="pr-editor" contenteditable="true" data-placeholder="Write your subjective report here...">';
+    html += savedContent;
+    html += '</div>';
+
+    html += '</div>'; // .pr-panel
+
+    html += '</div>'; // .pr-section
+    return html;
+}
+
+function prTogglePR1Reference() {
+    var panel = document.getElementById('pr-pr1-reference');
+    var btn = document.getElementById('pr-toggle-pr1-ref');
+    if (!panel || !btn) return;
+
+    if (panel.classList.contains('pr-reference-collapsed')) {
+        panel.classList.remove('pr-reference-collapsed');
+        btn.textContent = 'Hide PR Part 1 Reference';
+    } else {
+        panel.classList.add('pr-reference-collapsed');
+        btn.textContent = 'Show PR Part 1 Reference';
+    }
+}
+
+function prExecCommand(cmd) {
+    document.execCommand(cmd, false, null);
+}
+
+
+// ============================================
+// PLACEHOLDER SECTIONS (10-12)
 // ============================================
 
 function renderPRPlaceholder(num, title) {
@@ -922,8 +1085,10 @@ function initPeriodicReview() {
     // Section 8: Other Requirements Checklist
     html += renderPROtherRequirements(pr2, competencies);
 
-    // Sections 9-12: Placeholders
-    html += renderPRPlaceholder(9, 'Subjective Report');
+    // Section 9: Subjective Report
+    html += renderPRSubjectiveReport(pr2);
+
+    // Sections 10-12: Placeholders
     html += renderPRPlaceholder(10, 'Patient Roster');
     html += renderPRPlaceholder(11, 'Patient Writeups');
     html += renderPRPlaceholder(12, 'Export');
@@ -1029,6 +1194,39 @@ function attachPREventListeners() {
                 }, 800);
             });
         })(deptTextareas[dt]);
+    }
+
+    // --- PR1 Reference toggle ---
+    var pr1RefToggle = document.getElementById('pr-toggle-pr1-ref');
+    if (pr1RefToggle) {
+        pr1RefToggle.addEventListener('click', prTogglePR1Reference);
+    }
+
+    // --- Subjective report toolbar buttons ---
+    var toolbarBtns = document.querySelectorAll('.pr-toolbar button[data-cmd]');
+    for (var tb = 0; tb < toolbarBtns.length; tb++) {
+        (function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var cmd = btn.getAttribute('data-cmd');
+                if (cmd) prExecCommand(cmd);
+                // Refocus the editor after toolbar click
+                var editor = document.getElementById('pr-subjective-editor');
+                if (editor) editor.focus();
+            });
+        })(toolbarBtns[tb]);
+    }
+
+    // --- Subjective report editor debounced save ---
+    var prSubjectiveEditor = document.getElementById('pr-subjective-editor');
+    if (prSubjectiveEditor) {
+        var prSubjectiveTimer = null;
+        prSubjectiveEditor.addEventListener('input', function() {
+            clearTimeout(prSubjectiveTimer);
+            prSubjectiveTimer = setTimeout(function() {
+                savePR2Field('subjectiveReport', prSubjectiveEditor.innerHTML);
+            }, 500);
+        });
     }
 
     // --- In-progress procedures: delegate events ---
