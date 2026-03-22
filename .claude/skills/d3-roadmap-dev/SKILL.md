@@ -126,6 +126,10 @@ After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print(
 **Cause:** `getCompetenciesData()` in clinical.js re-initializes from `DEFAULT_COMPETENCIES` when `roadmapData.clinicalData.competencies` is null or corrupted.
 **Solution:** Read `getCompetenciesData()` in clinical.js and verify saved competency data structure matches expected shape. Check `migrateCompetencies()` in state.js for array-to-object migration.
 
+### Error: Competency shows 0 progress after toggling status (fixed Mar 22, 2026)
+**Cause:** `setCompItemStatus()` set `item.completed = 0` on toggle-to-pending but kept procedure-linked `completionEntries`. Count was out of sync with evidence — adjustments and procedure linking would then malfunction.
+**Solution (commit `5a52d38`):** After filtering entries to keep only procedure-linked, resync `item.completed = Math.min(required, entries.length)` and derive status from count. Both the toggle path (currentStatus === newStatus) and explicit pending path now resync.
+
 ### Error: Data not saving / changes lost
 **Cause (most common — fixed Mar 5, 2026):** 8 interconnected bugs: (1) flag ordering — `isInitialLoad = false` set AFTER `initUI()` blocked saves, (2) `mergeRemoteState()` overwrote newer local data with stale Firebase, (3) visibility handler merged without timestamp check, (4) `completedDeadlines` restore missed `_originalStableId` fallback, (5) `editedDeadlines` had stale `done:false`, (6) CRUD functions missing `safeLocalStorageSet()` before `saveData()`, (7) stale array index in delete callback, (8) `isLocalUpdate` timeout too short. All fixed in commit `21acdb0`.
 **If still broken after fix:** User's browser may be caching old JS. Check `?v=` params on script tags — bump version to force re-download. Call `debugSaveState()` in browser console to see all guard values.
