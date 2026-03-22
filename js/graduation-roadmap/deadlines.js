@@ -1,5 +1,26 @@
 // deadlines.js — STATIC_DEADLINES, deadline rendering, CRUD, grade sync
 
+// ==================== UPCOMING DEADLINES CROSS-APP SYNC ====================
+// Lightweight rebuild of roadmapData.upcomingDeadlines for Stim Calc visibility.
+// Called after every deadline mutation (add, edit date, toggle done, delete).
+function rebuildUpcomingDeadlines() {
+    if (!deadlines || !deadlines.length) return;
+    try {
+        var todayStr = getLocalDateString(new Date());
+        var upcomingObj = {};
+        var idx = 0;
+        deadlines.forEach(function(d) {
+            if (d.date < todayStr || d.done) return;
+            var key = 'dl_' + idx++;
+            upcomingObj[key] = {
+                date: d.date, day: d.day ?? '', what: d.what,
+                course: d.course ?? '', weight: d.weight ?? '—', type: d.type ?? 'Other'
+            };
+        });
+        roadmapData.upcomingDeadlines = upcomingObj;
+    } catch(e) { console.error('Error rebuilding upcoming deadlines:', e); }
+}
+
 // ==================== DEADLINES DATA ====================
 // STATIC_DEADLINES: Immutable source of truth for hardcoded deadlines
 // Custom deadlines are stored in roadmapData.customDeadlines
@@ -366,6 +387,7 @@ function handleDateChange(inputEl) {
     // Re-render
     renderDeadlines();
     renderDashboard();
+    rebuildUpcomingDeadlines();
 
     showToast('Date updated!');
 }
@@ -610,6 +632,7 @@ function submitNewDeadline() {
     }
     renderDeadlines();
     renderDashboard();
+    rebuildUpcomingDeadlines();
 
     // Close modal
     document.getElementById('addDeadlineModal').remove();
@@ -685,6 +708,7 @@ function toggleDeadlineDone(index) {
         }
         renderDeadlines();
         renderDashboard();
+        rebuildUpcomingDeadlines();
         loadCourseGrades();
         if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
         if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
@@ -864,6 +888,7 @@ function submitDeadlineGrade(index) {
     }
     renderDeadlines();
     renderDashboard();
+    rebuildUpcomingDeadlines();
     loadCourseGrades();
     if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
     if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
@@ -1070,6 +1095,7 @@ function deleteDeadline(index) {
             }
             renderDeadlines();
             renderDashboard();
+            rebuildUpcomingDeadlines();
 
             showToast('Deadline deleted');
         },

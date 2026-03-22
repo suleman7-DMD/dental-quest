@@ -921,6 +921,10 @@ function mpSaveTask() {
     // Save immediately and re-render
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+
+    // Rebuild week schedule for Stim Calc cross-app visibility
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
     mpCloseTaskModal();
     mpRenderAllCalendars();
     mpUpdateStats();
@@ -1285,6 +1289,10 @@ function mpHideClinicTask(taskId, clinicalAppointmentId) {
 
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
+
+        // Rebuild week schedule for Stim Calc cross-app visibility
+        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
         mpRenderAllCalendars();
         mpUpdateStats();
         showToast('Clinic task hidden from planner');
@@ -1297,6 +1305,10 @@ function mpUnhideClinicTask(aptId) {
     syncClinicalToMonthlyPlanner();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+
+    // Rebuild week schedule for Stim Calc cross-app visibility
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
     mpRenderAllCalendars();
     mpUpdateStats();
     showToast('Task restored to planner');

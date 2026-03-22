@@ -394,7 +394,6 @@ var inactiveCollapsed = true; // Red/inactive patients collapsed by default
 function initPatientsTab() {
     // Initialize default records if empty
     getPatientRecords();
-    try { renderDashboardMetrics(); } catch (e) { console.error('[Patients] renderDashboardMetrics error:', e); }
     try { renderCountdownRadar(); } catch (e) { console.error('[Patients] renderCountdownRadar error:', e); }
     renderPatientsSidebar();
     // Select first patient if none active
@@ -901,6 +900,10 @@ function addNewPatientRecord() {
         lastCBCT: '',
         lastPANO: '',
         notes: '',
+        allergies: '',
+        txCompletedByMe: '',
+        recallHistory: '',
+        activeStatus: '',
         reliability: 'yellow',
         lastUpdated: new Date().toISOString()
     };
@@ -1107,11 +1110,6 @@ function getRequirementInfo(reqId) {
     }
     return null;
 }
-
-function renderRequirementBadges(matches) {
-    return '';
-}
-
 
 // ==================== SECTION 5: COUNTDOWN RADAR ====================
 
@@ -1377,7 +1375,7 @@ function parsePatientRecord(text) {
         });
         // Continuation line: any non-empty line that doesn't match a known key
         if (!matched && currentKey && line.trim()) {
-            record[currentKey] = (record[currentKey] || '') + ' ' + line.trim();
+            record[currentKey] = (record[currentKey] || '') + '\n' + line.trim();
         }
     });
 
@@ -1429,7 +1427,7 @@ function parsePatientUpdate(text) {
 
         // Continuation line: any non-empty line that doesn't match a known key
         if (!matched && currentKey && line.trim()) {
-            update[currentKey] = (update[currentKey] || '') + ' ' + line.trim();
+            update[currentKey] = (update[currentKey] || '') + '\n' + line.trim();
         }
     });
 
@@ -1725,7 +1723,7 @@ function parseImportAppointmentBlock(text) {
                     var ampm = (timeMatch[3] || '').toUpperCase();
                     if (ampm === 'PM' && h < 12) h += 12;
                     if (ampm === 'AM' && h === 12) h = 0;
-                    apt.time = String(h).padStart(2, '0') + ':' + m;
+                    apt.time = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
                 }
             }
         }
@@ -2009,6 +2007,7 @@ function confirmPatientImport() {
             completedItems.push({
                 reqId: ct.reqId,
                 completed: 1,
+                isDelta: true,
                 note: ct.procedure || ct.description || '',
                 patientName: ct.patientName || rm.name || '',
                 date: ct.date || getLocalDateString()
@@ -2287,7 +2286,7 @@ function migratePerioNoiseCleanup() {
         saveData();
         console.log('[PERIO-CLEANUP] Stripped routine perio noise from ' + cleaned + ' patients');
     }
-    localStorage.setItem('perioNoiseCleanupDone_v1', 'true');
+    try { localStorage.setItem('perioNoiseCleanupDone_v1', 'true'); } catch(e) {}
 }
 
 function applyRequirementCheckoffs(items, importContext) {
@@ -2315,7 +2314,11 @@ function applyRequirementCheckoffs(items, importContext) {
                     if (itemList[i].id === item.reqId) {
                         // Increment or set completed count
                         if (typeof item.completed === 'number') {
-                            itemList[i].completed = item.completed;
+                            if (item.isDelta) {
+                                itemList[i].completed = (itemList[i].completed || 0) + item.completed;
+                            } else {
+                                itemList[i].completed = item.completed;
+                            }
                         } else {
                             itemList[i].completed = (itemList[i].completed || 0) + 1;
                         }
@@ -2397,7 +2400,7 @@ function saveDashboardSnapshot(snapshot) {
 
     // Add timestamp if not present
     if (!snapshot.capturedAt) {
-        snapshot.capturedAt = new Date().toISOString().split('T')[0];
+        snapshot.capturedAt = getLocalDateString(new Date());
     }
 
     // Prepend (newest first)
@@ -2412,9 +2415,6 @@ function saveDashboardSnapshot(snapshot) {
     saveData();
 
     // Re-render
-    if (typeof renderDashboardMetrics === 'function') {
-        try { renderDashboardMetrics(); } catch(e) { /* */ }
-    }
     if (typeof renderCountdownRadar === 'function') {
         try { renderCountdownRadar(); } catch(e) { /* */ }
     }
@@ -2659,9 +2659,4 @@ function parseDashboardUpdate(text) {
     }
 
     return snapshot;
-}
-
-function renderDashboardMetrics() {
-    var container = document.getElementById('dashboardMetricsCard');
-    if (container) container.innerHTML = '';
 }

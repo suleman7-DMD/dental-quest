@@ -102,6 +102,22 @@ let roadmapData = {
         appointments: { completed: 0, target: 90 },
         procedures: { completed: 0, target: 116 }
     },
+    // Periodic review data — must match getDefaultRoadmapData()
+    periodicReviews: {
+        pr2: {
+            reviewDate: null,
+            reviewPeriod: '',
+            dashboardDiscrepancyNotes: '',
+            adminStatsOverrides: {},
+            completedProceduresHtml: '',
+            inProgressProcedures: {},
+            departmentNotes: {},
+            subjectiveReport: '',
+            patientNotes: {},
+            removedPatients: {},
+            lastEdited: null
+        }
+    },
     lastSaved: null,
     // Version control for conflict detection
     // CRITICAL: _version MUST be 0 for default state so cloud ALWAYS wins on fresh device
@@ -181,7 +197,7 @@ function getDefaultRoadmapData() {
         periodicReviews: {
             pr2: {
                 reviewDate: null,
-                reviewPeriod: 'December 2025 — April 2026',
+                reviewPeriod: '',
                 dashboardDiscrepancyNotes: '',
                 adminStatsOverrides: {},
                 completedProceduresHtml: '',
@@ -255,6 +271,22 @@ function isEmptyState(data) {
     })();
     const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
     const hasTodoItems = getCount(data.todoList?.items) > 0;
+    // clinicHeadlines: only count as real data if user changed the target from default (90/116)
+    const hasClinicHeadlines = data.clinicHeadlines && (
+        (data.clinicHeadlines.appointments?.target != null && data.clinicHeadlines.appointments.target !== 90) ||
+        (data.clinicHeadlines.procedures?.target != null && data.clinicHeadlines.procedures.target !== 116)
+    );
+    var gradPrep = data.graduationPrep;
+    var hasGraduationPrep = gradPrep && (
+        (gradPrep.externship?.notes || '') !== '' ||
+        (gradPrep.externship?.logistics || '') !== '' ||
+        (gradPrep.externship?.startDate || '') !== '' ||
+        getCount(gradPrep.externship?.patients) > 0 ||
+        getCount(gradPrep.cdcaAdex?.sessions) > 0 ||
+        (gradPrep.cdcaAdex?.notes || '') !== '' ||
+        (gradPrep.inbde?.notes || '') !== '' ||
+        (gradPrep.jobSearch?.notes || '') !== ''
+    );
     const hasPeriodicReview = data.periodicReviews?.pr2 && (
         (data.periodicReviews.pr2.subjectiveReport ?? '') !== '' ||
         Object.keys(data.periodicReviews.pr2.departmentNotes || {}).length > 0 ||
@@ -272,7 +304,7 @@ function isEmptyState(data) {
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasPeriodicReview;
+           !hasMissingNotes && !hasTodoItems && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
 }
 
 function hasRealData(data) {
@@ -505,16 +537,59 @@ function migrateCompetencies(competencies) {
     return result;
 }
 
-// Merge competencies: cloud over local at category level
-// FIXES: empty cloud competencies ({}) no longer wipes local data
+// Merge competencies: deep item-level merge preserving completionEntries
+// Shape after migrate: { catKey: { sections: { secId: { items: { itemId: { completed, completionEntries[] } } } } } }
 function mergeCompetencies(localComp, cloudComp) {
-    const local = migrateCompetencies(localComp);
-    const cloud = migrateCompetencies(cloudComp);
+    var local = migrateCompetencies(localComp);
+    var cloud = migrateCompetencies(cloudComp);
     if (!local && !cloud) return null;
     if (!local) return cloud;
     if (!cloud || Object.keys(cloud).length === 0) return local;
-    // Deep merge: cloud categories override local, but local-only categories preserved
-    return { ...local, ...cloud };
+
+    var result = {};
+    Object.keys(local).forEach(function(k) { result[k] = local[k]; });
+
+    Object.keys(cloud).forEach(function(catKey) {
+        if (!result[catKey]) { result[catKey] = cloud[catKey]; return; }
+        var localCat = result[catKey];
+        var cloudCat = cloud[catKey];
+        if (cloudCat.notes && !localCat.notes) localCat.notes = cloudCat.notes;
+
+        var localSections = localCat.sections || {};
+        var cloudSections = cloudCat.sections || {};
+        Object.keys(cloudSections).forEach(function(secKey) {
+            if (!localSections[secKey]) { localSections[secKey] = cloudSections[secKey]; return; }
+            var localItems = localSections[secKey].items || {};
+            var cloudItems = cloudSections[secKey].items || {};
+            Object.keys(cloudItems).forEach(function(itemId) {
+                var ci = cloudItems[itemId];
+                if (!ci) return;
+                if (!localItems[itemId]) { localItems[itemId] = ci; return; }
+                var li = localItems[itemId];
+                li.completed = Math.max(li.completed || 0, ci.completed || 0);
+                // Union completionEntries by procedureId
+                var le = Array.isArray(li.completionEntries) ? li.completionEntries : [];
+                var ce = Array.isArray(ci.completionEntries) ? ci.completionEntries : [];
+                if (ce.length > 0) {
+                    var seen = {};
+                    le.forEach(function(e) { if (e.procedureId != null) seen[e.procedureId] = true; });
+                    ce.forEach(function(e) {
+                        if (e.procedureId != null) {
+                            if (!seen[e.procedureId]) { le.push(e); seen[e.procedureId] = true; }
+                        } else {
+                            var dup = le.some(function(x) { return x.procedureId == null && x.date === e.date && x.note === e.note; });
+                            if (!dup) le.push(e);
+                        }
+                    });
+                    li.completionEntries = le;
+                    li.completed = Math.max(li.completed, le.length);
+                }
+            });
+            localSections[secKey].items = localItems;
+        });
+        localCat.sections = localSections;
+    });
+    return result;
 }
 
 // Migrate dailyPlanner.blocks array to object
@@ -587,22 +662,6 @@ function findCompetencyItem(itemId) {
         }
     }
     return null;
-}
-
-// Get all competency items for a given category key
-function getCompetencyItemsForCategory(catKey) {
-    const competencies = roadmapData.clinicalData?.competencies;
-    if (!competencies || !competencies[catKey]) return [];
-
-    const items = [];
-    getValues(competencies[catKey].sections).forEach(sec => {
-        getValues(sec.items).forEach(item => {
-            if (item.completed < item.required) {
-                items.push(item);
-            }
-        });
-    });
-    return items;
 }
 
 // ==================== DATE UTILITIES ====================
@@ -804,13 +863,15 @@ function showToast(message, type) {
 
 // Custom Alert Modal (replaces blocking alert())
 function showCustomAlert(message, title = 'Notice', callback = null) {
+    var safeTitle = escapeHtml(title);
+    var safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
     const modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
     modal.innerHTML = `
         <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;">
-            <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-            <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+            <h3 style="color:#60a5fa;margin:0 0 16px 0;font-size:1.2em;">${safeTitle}</h3>
+            <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${safeMessage}</p>
             <button onclick="this.closest('.custom-modal-overlay').remove(); window._customAlertCallback && window._customAlertCallback();"
                 style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;font-size:1em;">OK</button>
         </div>
@@ -822,13 +883,15 @@ function showCustomAlert(message, title = 'Notice', callback = null) {
 
 // Custom Confirm Modal (replaces blocking confirm())
 function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
+    var safeTitle = escapeHtml(title);
+    var safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
     const modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
     modal.innerHTML = `
         <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:400px;width:90%;border:1px solid #334155;text-align:center;">
-            <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${title}</h3>
-            <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${message}</p>
+            <h3 style="color:#f59e0b;margin:0 0 16px 0;font-size:1.2em;">${safeTitle}</h3>
+            <p style="color:#e2e8f0;margin-bottom:20px;white-space:pre-wrap;">${safeMessage}</p>
             <div style="display:flex;gap:12px;justify-content:center;">
                 <button id="confirmBtn" style="flex:1;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Yes</button>
                 <button id="cancelBtn" style="flex:1;padding:12px;background:#64748b;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">No</button>
@@ -853,11 +916,19 @@ function getSmartAppointmentCount() {
     const completedApts = appointments.filter(function(a) { return a.status === 'completed'; });
     const aptIds = new Set(completedApts.map(function(a) { return a.id; }));
 
-    // Source 2: Clinic planner tasks marked complete (clinic_ prefix)
-    Object.keys(completedTasks).forEach(function(taskId) {
-        if (taskId.startsWith('clinic_')) {
+    // Source 2: clinic planner tasks marked complete
+    // Keys are random generated IDs (e.g., completed_abc123); the actual task ID
+    // (e.g., clinic_appt_xyz) is stored in the entry's value.
+    Object.values(completedTasks).forEach(function(entry) {
+        var taskId = typeof entry === 'string' ? entry : (entry?.value || entry?.id || '');
+        if (typeof taskId === 'string' && taskId.startsWith('clinic_')) {
             var aptId = taskId.replace('clinic_', '');
-            aptIds.add(aptId);
+            if (aptId && !aptIds.has(aptId)) {
+                // Validate against actual appointments
+                if (roadmapData.clinicalData?.appointments?.[aptId]) {
+                    aptIds.add(aptId);
+                }
+            }
         }
     });
 
@@ -881,7 +952,7 @@ function getSmartAppointmentCount() {
         if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
             // Avoid double-counting if patient already counted
             var matchedByClinicalPatient = Object.values(patients).some(function(p) {
-                return (p.name === pr.name || p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
+                return (p.name === pr.name && p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
             });
             if (!matchedByClinicalPatient) {
                 extraVisits++;
@@ -893,13 +964,15 @@ function getSmartAppointmentCount() {
     var computedTotal = aptIds.size + extraVisits;
 
     // Source 4: SPS Dashboard snapshot (authoritative ground truth from school system)
+    // snapshots[0] is the most recent — mergeDashboardSnapshots() sorts newest-first by capturedAt.
+    // If a snapshot needs correction, import a corrected SPS_DASHBOARD_UPDATE.
     var snapshotCount = 0;
     var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
     if (snapshots && snapshots.length > 0) {
         snapshotCount = parseInt(snapshots[0].appointments?.attended) || 0;
     }
 
-    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count
+    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count (MAX by design)
     var total = Math.max(computedTotal, snapshotCount);
 
     return {
@@ -928,9 +1001,11 @@ function getSmartProcedureCount() {
             getValues(cat.sections).forEach(function(sec) {
                 getValues(sec.items).forEach(function(item) {
                     if (item.completed > 0) {
-                        var evidenceCount = (item.completionEntries || []).length;
-                        // Manual adjustments = completed count minus evidence-linked entries
-                        var manualCount = Math.max(0, item.completed - evidenceCount);
+                        // Only count entries with a valid procedureId as evidence-linked.
+                        // Entries with procedureId: null are manual/backfill entries (not deductions).
+                        var linkedEvidenceCount = getValues(item.completionEntries).filter(function(e) { return e.procedureId != null; }).length;
+                        // Manual adjustments = completed count minus procedure-linked entries
+                        var manualCount = Math.max(0, item.completed - linkedEvidenceCount);
                         competencyDerivedCount += manualCount;
                     }
                 });
@@ -941,13 +1016,15 @@ function getSmartProcedureCount() {
     var computedTotal = formalCount + competencyDerivedCount;
 
     // Source 3: SPS Dashboard snapshot (authoritative ground truth from school system)
+    // snapshots[0] is the most recent — mergeDashboardSnapshots() sorts newest-first by capturedAt.
+    // If a snapshot needs correction, import a corrected SPS_DASHBOARD_UPDATE.
     var snapshotCount = 0;
     var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
     if (snapshots && snapshots.length > 0) {
         snapshotCount = parseInt(snapshots[0].procedures?.totalCompleted) || 0;
     }
 
-    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count
+    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count (MAX by design)
     var total = Math.max(computedTotal, snapshotCount);
 
     return {
@@ -959,23 +1036,20 @@ function getSmartProcedureCount() {
     };
 }
 
-// Calculate graduation readiness as weighted percentage across all 14 competency categories
+// Calculate graduation readiness as weighted percentage across all 14 competency categories.
+// Delegates overall percent to calculateOverallStats() to avoid duplicate computation.
 function calculateGraduationReadiness() {
     var competencies = roadmapData.clinicalData?.competencies;
     if (!competencies || typeof calculateCategoryStats !== 'function') return { percent: 0, details: {} };
 
-    var totalWeight = 0;
-    var completedWeight = 0;
     var details = {};
 
     Object.entries(competencies).forEach(function(entry) {
         var key = entry[0];
         var cat = entry[1];
         var stats = calculateCategoryStats(cat);
-        var pct = stats.totalUnits > 0 ? stats.completedUnits / stats.totalUnits : 0;
-        var weight = stats.totalUnits; // Weight by number of requirements
-        totalWeight += weight;
-        completedWeight += pct * weight;
+        if (stats.totalUnits === 0) return; // Skip empty categories — no requirements to track
+        var pct = stats.completedUnits / stats.totalUnits;
         details[key] = {
             name: cat.name,
             icon: cat.icon ?? '',
@@ -987,8 +1061,14 @@ function calculateGraduationReadiness() {
         };
     });
 
+    // Single source of truth for overall percent — calculateOverallStats computes the same weighted average
+    var overallPercent = 0;
+    if (typeof calculateOverallStats === 'function') {
+        overallPercent = calculateOverallStats(competencies).overallPercent;
+    }
+
     return {
-        percent: totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0,
+        percent: overallPercent,
         details: details
     };
 }
@@ -1001,11 +1081,13 @@ function getCompetencyGaps() {
     var zeroProgress = [];
     var behindPace = [];
 
-    // Calculate weeks remaining to graduation
+    // Calculate weeks remaining to graduation and total program weeks (hoisted outside loops)
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     var graduation = new Date(2027, 4, 12); // May 12, 2027
     var weeksRemaining = Math.max(1, Math.ceil((graduation - today) / (7 * 24 * 60 * 60 * 1000)));
+    var totalWeeks = Math.ceil((graduation - new Date(2025, 7, 1)) / (7 * 24 * 60 * 60 * 1000)); // D3 start Aug 1, 2025
+    var pastMidpoint = weeksRemaining < totalWeeks / 2;
 
     Object.entries(competencies).forEach(function(entry) {
         var catKey = entry[0];
@@ -1026,8 +1108,13 @@ function getCompetencyGaps() {
                         required: item.required,
                         remaining: remaining
                     });
-                } else if (remaining > weeksRemaining * 0.5) {
-                    // Behind pace: need more than 0.5/week to finish
+                } else {
+                    // Dual threshold for behind-pace detection:
+                    // 1) High-volume: needs > 0.5/week to finish
+                    // 2) Low-volume: < 50% done AND past midpoint of total time
+                    var lessThanHalfDone = item.completed < item.required * 0.5;
+                    var needsHighRate = remaining > weeksRemaining * 0.5;
+                    if (!needsHighRate && !(pastMidpoint && lessThanHalfDone)) return;
                     behindPace.push({
                         id: item.id,
                         text: item.text,
@@ -1053,7 +1140,29 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var startDate = dataStartDate ? parseLocalDate(dataStartDate) : new Date(2025, 7, 1); // Aug 1, 2025 default D3 start
+    var startDate;
+    if (dataStartDate) {
+        startDate = parseLocalDate(dataStartDate);
+    } else {
+        // Find earliest completed appointment or SPS snapshot as start date
+        var earliest = null;
+        var apts = getValues(roadmapData.clinicalData?.appointments);
+        apts.forEach(function(a) {
+            if (a.status === 'completed' && a.date) {
+                var d = parseLocalDate(a.date);
+                if (d && (!earliest || d < earliest)) earliest = d;
+            }
+        });
+        var snaps = roadmapData.clinicalData?.dashboardSnapshots;
+        if (snaps && snaps.length > 0) {
+            var snapDate = snaps[snaps.length - 1]?.capturedAt;
+            if (snapDate) {
+                var sd = parseLocalDate(snapDate);
+                if (sd && (!earliest || sd < earliest)) earliest = sd;
+            }
+        }
+        startDate = earliest || new Date(2025, 7, 1); // Fallback to Aug 1, 2025
+    }
 
     var daysSoFar = Math.max(1, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
     var ratePerDay = currentCount / daysSoFar;
@@ -1061,16 +1170,24 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
     if (ratePerDay <= 0) return null;
 
     var remaining = targetCount - currentCount;
-    if (remaining <= 0) return { projectedDate: 'Already met!', daysToTarget: 0, ratePerWeek: (ratePerDay * 7).toFixed(1) };
+    if (remaining <= 0) return { projectedDate: 'Already met!', daysToTarget: 0, ratePerWeek: (ratePerDay * 7).toFixed(1), behindSchedule: false };
 
     var daysToTarget = Math.ceil(remaining / ratePerDay);
     var projectedDate = new Date(today);
     projectedDate.setDate(projectedDate.getDate() + daysToTarget);
 
+    // Deadline awareness: flag if projected date exceeds key milestones
+    var d3End = new Date(2026, 4, 13);       // May 13, 2026 — D3 year ends
+    var graduation = new Date(2027, 4, 12);  // May 12, 2027 — graduation
+    var behindSchedule = projectedDate > d3End;
+    var pastGraduation = projectedDate > graduation;
+
     return {
         projectedDate: projectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         daysToTarget: daysToTarget,
-        ratePerWeek: (ratePerDay * 7).toFixed(1)
+        ratePerWeek: (ratePerDay * 7).toFixed(1),
+        behindSchedule: behindSchedule,
+        pastGraduation: pastGraduation
     };
 }
 
@@ -1134,8 +1251,9 @@ function getMissingNotesCompleted() {
 }
 
 function toggleMissingNoteStatus(noteId) {
+    if (!roadmapData.clinicalData?.missingNotes) return;
     var notes = roadmapData.clinicalData.missingNotes;
-    if (!notes || !notes[noteId]) return;
+    if (!notes[noteId]) return;
     var note = notes[noteId];
     if (note.status === 'pending') {
         note.status = 'completed';
@@ -1146,12 +1264,12 @@ function toggleMissingNoteStatus(noteId) {
     }
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    renderDashboard();
+    if (typeof rerenderMissingNotesSection === 'function') rerenderMissingNotesSection(); else renderDashboard();
 }
 
 function clearCompletedMissingNotes() {
+    if (!roadmapData.clinicalData?.missingNotes) return;
     var notes = roadmapData.clinicalData.missingNotes;
-    if (!notes) return;
     var keys = Object.keys(notes);
     var cleared = 0;
     for (var i = 0; i < keys.length; i++) {
@@ -1163,7 +1281,7 @@ function clearCompletedMissingNotes() {
     if (cleared > 0) {
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
-        renderDashboard();
+        if (typeof rerenderMissingNotesSection === 'function') rerenderMissingNotesSection(); else renderDashboard();
         showToast(cleared + ' completed note(s) cleared', 'info');
     }
 }
@@ -1184,8 +1302,19 @@ function getMissingNotesFacultyMatches() {
         if (!facultyLower) continue;
         for (var j = 0; j < upcoming.length; j++) {
             var apt = upcoming[j];
-            var aptText = ((apt.procedures ?? '') + ' ' + (apt.notes ?? '')).toLowerCase();
-            if (aptText.indexOf(facultyLower) !== -1 || (apt.faculty ?? '').toLowerCase().indexOf(facultyLower) !== -1) {
+            var aptFacultyField = (apt.faculty ?? '').toLowerCase().trim();
+            var matched = false;
+            if (facultyLower.length < 3) {
+                // Short names: only match against the faculty field (exact field match) to avoid noise
+                matched = aptFacultyField === facultyLower;
+            } else {
+                // Word-boundary match to prevent substring false positives (e.g., "Li" matching "scaling")
+                var escapedFaculty = facultyLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                var facultyRegex = new RegExp('\\b' + escapedFaculty + '\\b', 'i');
+                var aptText = ((apt.procedures ?? '') + ' ' + (apt.notes ?? '')).toLowerCase();
+                matched = facultyRegex.test(aptText) || facultyRegex.test(aptFacultyField);
+            }
+            if (matched) {
                 matches.push({
                     note: note,
                     appointment: apt,
@@ -1251,7 +1380,7 @@ function toggleTodoStatus(todoId) {
     roadmapData.todoList.lastUpdated = new Date().toISOString();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    renderDashboard();
+    if (typeof rerenderTodoListSection === 'function') rerenderTodoListSection(); else renderDashboard();
 }
 
 function clearCompletedTodos() {
@@ -1269,7 +1398,7 @@ function clearCompletedTodos() {
         roadmapData.todoList.lastUpdated = new Date().toISOString();
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
-        renderDashboard();
+        if (typeof rerenderTodoListSection === 'function') rerenderTodoListSection(); else renderDashboard();
         showToast(cleared + ' completed task(s) cleared', 'info');
     }
 }

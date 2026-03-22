@@ -97,14 +97,16 @@ function deepMerge(target, source) {
 // Merges two dashboardSnapshots arrays, deduplicating by capturedAt date.
 // Keeps newest first, capped at 20. Prevents data loss from || fallback.
 function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
-    const local = Array.isArray(localSnaps) ? localSnaps : [];
-    const remote = Array.isArray(remoteSnaps) ? remoteSnaps : [];
+    // Use ensureArray() instead of Array.isArray() — Firebase may convert arrays to objects with numeric keys
+    const local = ensureArray(localSnaps, []);
+    const remote = ensureArray(remoteSnaps, []);
     if (local.length === 0) return remote.length > 0 ? remote : [];
     if (remote.length === 0) return local;
     // Deduplicate by capturedAt (or timestamp fallback)
+    // Local-first iteration: local wins for same capturedAt (consistent with addMissing pattern)
     const seen = new Set();
     const merged = [];
-    [...remote, ...local].forEach(snap => {
+    [...local, ...remote].forEach(snap => {
         if (!snap) return;
         const key = snap.capturedAt || snap.timestamp || JSON.stringify(snap).slice(0, 80);
         if (!seen.has(key)) {
@@ -151,12 +153,14 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments);
         addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures);
         addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords);
-        // Clinical briefs on patient records: newer dateGenerated wins
+        // Patient records: field-level merge for existing patients (addMissing only fills new keys)
         if (data.clinicalData.patientRecords) {
             Object.keys(data.clinicalData.patientRecords).forEach(function(ptId) {
                 var local = roadmapData.clinicalData.patientRecords[ptId];
                 var remote = data.clinicalData.patientRecords[ptId];
-                if (local && remote && remote.clinicalBrief && remote.clinicalBrief.dateGenerated) {
+                if (!local || !remote) return;
+                // Clinical briefs: newer dateGenerated wins
+                if (remote.clinicalBrief && remote.clinicalBrief.dateGenerated) {
                     if (!local.clinicalBrief || (remote.clinicalBrief.dateGenerated > (local.clinicalBrief.dateGenerated || ''))) {
                         local.clinicalBrief = remote.clinicalBrief;
                     }
@@ -166,6 +170,14 @@ function mergeRemoteCollectionsIntoLocal(data) {
                         }
                     }
                 }
+                // Fill import-enriched fields from remote if local doesn't have them
+                if (!local.importedRequirements && remote.importedRequirements) local.importedRequirements = remote.importedRequirements;
+                if (!local.priorityNotes && remote.priorityNotes) local.priorityNotes = remote.priorityNotes;
+                if (local.highValue === undefined && remote.highValue !== undefined) local.highValue = remote.highValue;
+                if (!local.allergies && remote.allergies) local.allergies = remote.allergies;
+                if (!local.txCompletedByMe && remote.txCompletedByMe) local.txCompletedByMe = remote.txCompletedByMe;
+                if (!local.recallHistory && remote.recallHistory) local.recallHistory = remote.recallHistory;
+                if (!local.activeStatus && remote.activeStatus) local.activeStatus = remote.activeStatus;
             });
         }
         addMissing(roadmapData.clinicalData.missingNotes, data.clinicalData.missingNotes);
@@ -175,9 +187,11 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.clinicalData.dashboardSnapshots, data.clinicalData.dashboardSnapshots
             );
         }
-        // competencies: fill in if local is null
-        if (!roadmapData.clinicalData.competencies && data.clinicalData.competencies) {
-            roadmapData.clinicalData.competencies = data.clinicalData.competencies;
+        // competencies: deep item-level merge (preserves completionEntries from both devices)
+        if (data.clinicalData.competencies) {
+            roadmapData.clinicalData.competencies = mergeCompetencies(
+                roadmapData.clinicalData.competencies, data.clinicalData.competencies
+            );
         }
     }
 
@@ -188,10 +202,12 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.monthlyPlanner.customTasks) roadmapData.monthlyPlanner.customTasks = {};
         if (!roadmapData.monthlyPlanner.completedTasks) roadmapData.monthlyPlanner.completedTasks = {};
         if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+        if (!roadmapData.monthlyPlanner.overriddenStatic) roadmapData.monthlyPlanner.overriddenStatic = {};
         addMissing(roadmapData.monthlyPlanner.notes, data.monthlyPlanner.notes);
         addMissing(roadmapData.monthlyPlanner.customTasks, data.monthlyPlanner.customTasks);
         addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
         addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
+        addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
     }
 
     // Top-level collections
@@ -226,9 +242,39 @@ function mergeRemoteCollectionsIntoLocal(data) {
         });
     }
 
-    // Graduation prep: fill in if missing
-    if (data.graduationPrep && !roadmapData.graduationPrep) {
-        roadmapData.graduationPrep = data.graduationPrep;
+    // Graduation prep: field-level additive merge (defaults always exist, so fill-only never fires)
+    if (data.graduationPrep) {
+        if (!roadmapData.graduationPrep) roadmapData.graduationPrep = {};
+        ['externship', 'cdcaAdex', 'inbde', 'jobSearch'].forEach(section => {
+            if (!data.graduationPrep[section]) return;
+            if (!roadmapData.graduationPrep[section]) {
+                roadmapData.graduationPrep[section] = data.graduationPrep[section];
+                return;
+            }
+            var localSec = roadmapData.graduationPrep[section];
+            var remoteSec = data.graduationPrep[section];
+            // Fill empty scalar fields from remote
+            Object.keys(remoteSec).forEach(key => {
+                var remoteVal = remoteSec[key];
+                if (remoteVal == null) return;
+                if (typeof remoteVal === 'object' && !Array.isArray(remoteVal)) {
+                    // Sub-objects (e.g., externship.patients, cdcaAdex.sessions): use addMissing
+                    if (!localSec[key]) localSec[key] = {};
+                    addMissing(localSec[key], remoteVal);
+                } else {
+                    // Scalars: fill only if local is empty/null/undefined/''
+                    if (localSec[key] == null || localSec[key] === '') {
+                        localSec[key] = remoteVal;
+                    }
+                }
+            });
+        });
+        // Merge any other sub-fields beyond the known 4
+        Object.keys(data.graduationPrep).forEach(key => {
+            if (!['externship', 'cdcaAdex', 'inbde', 'jobSearch'].includes(key) && !(key in roadmapData.graduationPrep)) {
+                roadmapData.graduationPrep[key] = data.graduationPrep[key];
+            }
+        });
     }
 
     // Mandatory items: add any remote-only items
@@ -265,9 +311,33 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(localPr2.removedPatients, remotePr2.removedPatients);
     }
 
-    // Clinic headlines: fill in if missing
-    if (data.clinicHeadlines && !roadmapData.clinicHeadlines) {
-        roadmapData.clinicHeadlines = data.clinicHeadlines;
+    // Clinic headlines: field-level merge (defaults always exist, so fill-only never fires)
+    if (data.clinicHeadlines) {
+        if (!roadmapData.clinicHeadlines) roadmapData.clinicHeadlines = {};
+        // Merge appointments sub-object
+        if (data.clinicHeadlines.appointments) {
+            if (!roadmapData.clinicHeadlines.appointments) roadmapData.clinicHeadlines.appointments = { completed: 0, target: 90 };
+            // Merge target from remote if local still has the default value and remote differs
+            if (roadmapData.clinicHeadlines.appointments.target === 90 && data.clinicHeadlines.appointments.target != null && data.clinicHeadlines.appointments.target !== 90) {
+                roadmapData.clinicHeadlines.appointments.target = data.clinicHeadlines.appointments.target;
+            }
+            addMissing(roadmapData.clinicHeadlines.appointments, data.clinicHeadlines.appointments);
+        }
+        // Merge procedures sub-object
+        if (data.clinicHeadlines.procedures) {
+            if (!roadmapData.clinicHeadlines.procedures) roadmapData.clinicHeadlines.procedures = { completed: 0, target: 116 };
+            // Merge target from remote if local still has the default value and remote differs
+            if (roadmapData.clinicHeadlines.procedures.target === 116 && data.clinicHeadlines.procedures.target != null && data.clinicHeadlines.procedures.target !== 116) {
+                roadmapData.clinicHeadlines.procedures.target = data.clinicHeadlines.procedures.target;
+            }
+            addMissing(roadmapData.clinicHeadlines.procedures, data.clinicHeadlines.procedures);
+        }
+        // Merge any other sub-fields that might exist on remote but not locally
+        Object.keys(data.clinicHeadlines).forEach(key => {
+            if (key !== 'appointments' && key !== 'procedures' && !(key in roadmapData.clinicHeadlines)) {
+                roadmapData.clinicHeadlines[key] = data.clinicHeadlines[key];
+            }
+        });
     }
 }
 
@@ -364,8 +434,69 @@ function restoreBackup(backupId) {
     // Create a backup of current state before restoring
     createBackup('pre-restore');
 
-    // Restore the data
-    roadmapData = backup.data;
+    // Restore the data — field-by-field reconstruction so newer fields get defaults
+    // even if the backup predates them (mirrors restoreCheckpoint pattern)
+    const bData = backup.data;
+    const defaults = getDefaultRoadmapData();
+    roadmapData = {
+        pedsLockedIn: bData.pedsLockedIn !== undefined ? bData.pedsLockedIn : defaults.pedsLockedIn,
+        mandatoryItems: bData.mandatoryItems || defaults.mandatoryItems,
+        grades: bData.grades || defaults.grades,
+        editedDeadlines: bData.editedDeadlines || {},
+        completedDeadlines: bData.completedDeadlines || {},
+        customDeadlines: migrateArrayToObject(bData.customDeadlines, 'deadline'),
+        deletedDeadlines: migrateArrayToObject(bData.deletedDeadlines, 'deleted'),
+        examStudyProgress: bData.examStudyProgress || {},
+        monthlyPlanner: {
+            notes: migrateArrayToObject(bData.monthlyPlanner?.notes, 'note'),
+            customTasks: migrateArrayToObject(bData.monthlyPlanner?.customTasks, 'ctask'),
+            overriddenStatic: migrateArrayToObject(bData.monthlyPlanner?.overriddenStatic, 'override'),
+            completedTasks: migrateArrayToObject(bData.monthlyPlanner?.completedTasks, 'completed'),
+            hiddenClinicTasks: bData.monthlyPlanner?.hiddenClinicTasks ?? defaults.monthlyPlanner.hiddenClinicTasks,
+            currentWeekSchedule: bData.monthlyPlanner?.currentWeekSchedule ?? defaults.monthlyPlanner.currentWeekSchedule
+        },
+        clinicalData: {
+            patients: bData.clinicalData?.patients || {},
+            appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
+            completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
+            competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
+            patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
+            dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
+            missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes
+        },
+        todoList: {
+            items: bData.todoList?.items || {},
+            _nextSeq: bData.todoList?._nextSeq ?? 1,
+            lastUpdated: bData.todoList?.lastUpdated ?? null
+        },
+        dailyPlanner: migrateDailyPlannerBlocks(bData.dailyPlanner || defaults.dailyPlanner),
+        exams: migrateArrayToObject(bData.exams, 'exam'),
+        graduationPrep: bData.graduationPrep ?? defaults.graduationPrep,
+        clinicHeadlines: bData.clinicHeadlines ?? defaults.clinicHeadlines,
+        periodicReviews: bData.periodicReviews ? {
+            pr2: {
+                reviewDate: bData.periodicReviews?.pr2?.reviewDate ?? defaults.periodicReviews.pr2.reviewDate,
+                reviewPeriod: bData.periodicReviews?.pr2?.reviewPeriod ?? defaults.periodicReviews.pr2.reviewPeriod,
+                dashboardDiscrepancyNotes: bData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? defaults.periodicReviews.pr2.dashboardDiscrepancyNotes,
+                adminStatsOverrides: bData.periodicReviews?.pr2?.adminStatsOverrides || {},
+                completedProceduresHtml: bData.periodicReviews?.pr2?.completedProceduresHtml ?? defaults.periodicReviews.pr2.completedProceduresHtml,
+                inProgressProcedures: bData.periodicReviews?.pr2?.inProgressProcedures || {},
+                departmentNotes: bData.periodicReviews?.pr2?.departmentNotes || {},
+                subjectiveReport: bData.periodicReviews?.pr2?.subjectiveReport ?? defaults.periodicReviews.pr2.subjectiveReport,
+                patientNotes: bData.periodicReviews?.pr2?.patientNotes || {},
+                removedPatients: bData.periodicReviews?.pr2?.removedPatients || {},
+                lastEdited: bData.periodicReviews?.pr2?.lastEdited ?? defaults.periodicReviews.pr2.lastEdited
+            }
+        } : defaults.periodicReviews,
+        lastSaved: bData.lastSaved || Date.now(),
+        _version: (bData._version ?? 0) + 1,
+        _lastModified: new Date().toISOString(),
+        _dataLoaded: true
+    };
+
+    migrateInvalidFirebaseKeys(roadmapData);
+    clinicalDataDirty = true;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
 
     // Save to localStorage and Firebase
     saveData();
@@ -412,8 +543,69 @@ function importBackup(file) {
             // Create backup of current state
             createBackup('pre-import');
 
-            // Import the data
-            roadmapData = imported.data;
+            // Import the data — field-by-field reconstruction so newer fields get defaults
+            // even if the imported backup predates them (mirrors restoreBackup pattern)
+            const bData = imported.data;
+            const defaults = getDefaultRoadmapData();
+            roadmapData = {
+                pedsLockedIn: bData.pedsLockedIn !== undefined ? bData.pedsLockedIn : defaults.pedsLockedIn,
+                mandatoryItems: bData.mandatoryItems || defaults.mandatoryItems,
+                grades: bData.grades || defaults.grades,
+                editedDeadlines: bData.editedDeadlines || {},
+                completedDeadlines: bData.completedDeadlines || {},
+                customDeadlines: migrateArrayToObject(bData.customDeadlines, 'deadline'),
+                deletedDeadlines: migrateArrayToObject(bData.deletedDeadlines, 'deleted'),
+                examStudyProgress: bData.examStudyProgress || {},
+                monthlyPlanner: {
+                    notes: migrateArrayToObject(bData.monthlyPlanner?.notes, 'note'),
+                    customTasks: migrateArrayToObject(bData.monthlyPlanner?.customTasks, 'ctask'),
+                    overriddenStatic: migrateArrayToObject(bData.monthlyPlanner?.overriddenStatic, 'override'),
+                    completedTasks: migrateArrayToObject(bData.monthlyPlanner?.completedTasks, 'completed'),
+                    hiddenClinicTasks: bData.monthlyPlanner?.hiddenClinicTasks ?? defaults.monthlyPlanner.hiddenClinicTasks,
+                    currentWeekSchedule: bData.monthlyPlanner?.currentWeekSchedule ?? defaults.monthlyPlanner.currentWeekSchedule
+                },
+                clinicalData: {
+                    patients: bData.clinicalData?.patients || {},
+                    appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
+                    completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
+                    competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
+                    patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
+                    dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
+                    missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes
+                },
+                todoList: {
+                    items: bData.todoList?.items || {},
+                    _nextSeq: bData.todoList?._nextSeq ?? 1,
+                    lastUpdated: bData.todoList?.lastUpdated ?? null
+                },
+                dailyPlanner: migrateDailyPlannerBlocks(bData.dailyPlanner || defaults.dailyPlanner),
+                exams: migrateArrayToObject(bData.exams, 'exam'),
+                graduationPrep: bData.graduationPrep ?? defaults.graduationPrep,
+                clinicHeadlines: bData.clinicHeadlines ?? defaults.clinicHeadlines,
+                periodicReviews: bData.periodicReviews ? {
+                    pr2: {
+                        reviewDate: bData.periodicReviews?.pr2?.reviewDate ?? defaults.periodicReviews.pr2.reviewDate,
+                        reviewPeriod: bData.periodicReviews?.pr2?.reviewPeriod ?? defaults.periodicReviews.pr2.reviewPeriod,
+                        dashboardDiscrepancyNotes: bData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? defaults.periodicReviews.pr2.dashboardDiscrepancyNotes,
+                        adminStatsOverrides: bData.periodicReviews?.pr2?.adminStatsOverrides || {},
+                        completedProceduresHtml: bData.periodicReviews?.pr2?.completedProceduresHtml ?? defaults.periodicReviews.pr2.completedProceduresHtml,
+                        inProgressProcedures: bData.periodicReviews?.pr2?.inProgressProcedures || {},
+                        departmentNotes: bData.periodicReviews?.pr2?.departmentNotes || {},
+                        subjectiveReport: bData.periodicReviews?.pr2?.subjectiveReport ?? defaults.periodicReviews.pr2.subjectiveReport,
+                        patientNotes: bData.periodicReviews?.pr2?.patientNotes || {},
+                        removedPatients: bData.periodicReviews?.pr2?.removedPatients || {},
+                        lastEdited: bData.periodicReviews?.pr2?.lastEdited ?? defaults.periodicReviews.pr2.lastEdited
+                    }
+                } : defaults.periodicReviews,
+                lastSaved: bData.lastSaved || Date.now(),
+                _version: (bData._version ?? 0) + 1,
+                _lastModified: new Date().toISOString(),
+                _dataLoaded: true
+            };
+
+            migrateInvalidFirebaseKeys(roadmapData);
+            clinicalDataDirty = true;
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
 
             // Save and refresh
             saveData();
@@ -1211,6 +1403,7 @@ function setupMainAppTasksSync() {
         renderDoTodayTasks();
     }, error => {
         console.error('Main app tasks sync error:', error);
+        mainAppTasks = []; // Clear stale data so widget shows empty state, not old cached tasks
         updateDoTodaySyncStatus('error', 'Sync failed');
         renderDoTodayTasks();
     });
@@ -1656,7 +1849,7 @@ function restoreCheckpoint(index) {
                     }
                 } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
                 lastSaved: cpData.lastSaved || Date.now(),
-                _version: Date.now(),
+                _version: (cpData._version ?? 0) + 1,
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
@@ -1967,7 +2160,7 @@ function importAndRestoreDirectly() {
                             }
                         } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
                         lastSaved: data.lastSaved || Date.now(),
-                        _version: Date.now(),
+                        _version: (data._version ?? 0) + 1,
                         _lastModified: new Date().toISOString(),
                         _dataLoaded: true
                     };
@@ -2229,6 +2422,21 @@ function validateStateIntegrity(data) {
     // todoList must be object (not undefined) — can be empty
     if (data.todoList !== undefined && (typeof data.todoList !== 'object' || data.todoList === null)) {
         errors.push('todoList is not an object');
+    }
+    // periodicReviews can be undefined (defaults) or object — reject anything else
+    if (data.periodicReviews !== undefined && data.periodicReviews !== null && typeof data.periodicReviews !== 'object') {
+        console.error('[GUARD-F] periodicReviews is not an object');
+        errors.push('periodicReviews is not an object');
+    }
+    // clinicalData.missingNotes can be undefined (defaults) or object — reject anything else
+    if (data.clinicalData?.missingNotes !== undefined && data.clinicalData.missingNotes !== null && typeof data.clinicalData.missingNotes !== 'object') {
+        console.error('[GUARD-F] clinicalData.missingNotes is not an object');
+        errors.push('clinicalData.missingNotes is not an object');
+    }
+    // competencies can be null (default) or object — only reject if it's something else
+    if (data.clinicalData?.competencies !== undefined && data.clinicalData.competencies !== null && typeof data.clinicalData.competencies !== 'object') {
+        console.error('[GUARD-F] clinicalData.competencies is not an object');
+        errors.push('clinicalData.competencies is not an object');
     }
     return errors;
 }
