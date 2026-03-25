@@ -977,6 +977,11 @@ function initUI() {
     if (typeof migratePerioNoiseCleanup === 'function') {
         try { migratePerioNoiseCleanup(); } catch(e) { console.error('[PERIO-CLEANUP] Error:', e); }
     }
+
+    // One-time leading-zero chart number dedup
+    if (typeof migrateLeadingZeroDedup === 'function') {
+        try { migrateLeadingZeroDedup(); } catch(e) { console.error('[LEADING-ZERO-DEDUP] Error:', e); }
+    }
 }
 
 function init() {

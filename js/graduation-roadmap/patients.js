@@ -286,8 +286,8 @@ const DEFAULT_PATIENT_RECORDS = {
         recallHistory: 'Last Recall: 1/15/2025. Frequency: 6-month. Next due: 7/15/2025 (OVERDUE).',
         activeStatus: 'Active'
     },
-    "pt_966540": {
-        id: "pt_966540", name: "Soivilien, Sandrine", chartNumber: "966540",
+    "pt_0966540": {
+        id: "pt_0966540", name: "Soivilien, Sandrine", chartNumber: "0966540",
         type: "Active (33 y/o F)",
         medicalHx: "Iron deficiency Anemia. Allergies: Iron Transfusion.",
         medications: "Birth control.",
@@ -432,14 +432,23 @@ function getPatientRecords() {
         saveData();
     } else {
         // Merge: fill in any missing default patients without overwriting existing ones
+        // Use normalized chart matching to prevent re-injecting duplicates with different leading-zero IDs
         var defaults = DEFAULT_PATIENT_RECORDS;
         var existing = roadmapData.clinicalData.patientRecords;
         var added = false;
+        // Build normalized chart index of existing records
+        var existingNormCharts = {};
+        Object.keys(existing).forEach(function(eid) {
+            var c = normalizeChartNumber(existing[eid]?.chartNumber);
+            if (c) existingNormCharts[c] = eid;
+        });
         Object.keys(defaults).forEach(function(id) {
-            if (!existing[id]) {
-                existing[id] = JSON.parse(JSON.stringify(defaults[id]));
-                added = true;
-            }
+            // Skip if exact ID exists OR if a record with same normalized chart already exists
+            if (existing[id]) return;
+            var defChart = normalizeChartNumber(defaults[id]?.chartNumber);
+            if (defChart && existingNormCharts[defChart]) return;
+            existing[id] = JSON.parse(JSON.stringify(defaults[id]));
+            added = true;
         });
         if (added) {
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -1106,14 +1115,16 @@ function addNewPatientRecord() {
 
     var chartNumber = (chartInput || '').trim();
     var name = (nameInput || '').trim() || 'New Patient';
-    var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
 
     var records = getPatientRecords();
-    if (records[id]) {
+    // Check for existing patient by normalized chart (catches leading-zero variants)
+    var existingId = chartNumber ? findByNormalizedChart(records, chartNumber) : null;
+    if (existingId) {
         showToast('Patient with that chart number already exists', 'warning');
-        selectPatient(id);
+        selectPatient(existingId);
         return;
     }
+    var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
 
     records[id] = {
         id: id,
@@ -2612,6 +2623,71 @@ function migratePerioNoiseCleanup() {
         console.log('[PERIO-CLEANUP] Stripped routine perio noise from ' + cleaned + ' patients');
     }
     try { safeLocalStorageSet('perioNoiseCleanupDone_v1', 'true'); } catch(e) {}
+}
+
+// One-time migration: consolidate duplicate patient records caused by leading-zero chart mismatch
+// e.g. pt_966540 (chart 966540) + pt_0966540 (chart 0966540) → keep pt_0966540 only
+function migrateLeadingZeroDedup() {
+    if (localStorage.getItem('leadingZeroDedupDone_v1')) return;
+    var records = roadmapData?.clinicalData?.patientRecords;
+    if (!records || Object.keys(records).length === 0) return;
+
+    var normMap = {}; // normalized chart → { id, rawLen }
+    var toRemove = [];
+    var toMerge = []; // [fromId, toId]
+
+    Object.keys(records).forEach(function(id) {
+        var rec = records[id];
+        if (!rec) return;
+        var rawChart = (rec.chartNumber || '').trim();
+        var norm = normalizeChartNumber(rawChart);
+        if (!norm) return;
+
+        if (normMap[norm]) {
+            var existing = normMap[norm];
+            if (rawChart.length > existing.rawLen) {
+                // Current record has longer chart (leading zero) — keep it, merge+remove old
+                toMerge.push([existing.id, id]);
+                toRemove.push(existing.id);
+                normMap[norm] = { id: id, rawLen: rawChart.length };
+            } else {
+                // Existing has longer or equal chart — merge+remove current
+                toMerge.push([id, existing.id]);
+                toRemove.push(id);
+            }
+        } else {
+            normMap[norm] = { id: id, rawLen: rawChart.length };
+        }
+    });
+
+    if (toMerge.length > 0) {
+        // Merge fields from loser → winner (fill-only, don't overwrite)
+        toMerge.forEach(function(pair) {
+            var fromRec = records[pair[0]];
+            var toRec = records[pair[1]];
+            if (fromRec && toRec) {
+                Object.keys(fromRec).forEach(function(key) {
+                    if (toRec[key] == null && fromRec[key] != null) {
+                        toRec[key] = fromRec[key];
+                    }
+                });
+            }
+        });
+        // Remove losers
+        toRemove.forEach(function(id) {
+            delete records[id];
+        });
+        // Also clean clinicalData.patients duplicates
+        var clinPatients = roadmapData?.clinicalData?.patients || {};
+        toRemove.forEach(function(id) {
+            if (clinPatients[id]) delete clinPatients[id];
+        });
+
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        console.log('[LEADING-ZERO-DEDUP] Consolidated ' + toRemove.length + ' duplicate patient records: ' + toRemove.join(', '));
+    }
+    try { safeLocalStorageSet('leadingZeroDedupDone_v1', 'true'); } catch(e) {}
 }
 
 function applyRequirementCheckoffs(items, importContext) {
