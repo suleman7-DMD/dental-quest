@@ -458,6 +458,22 @@ function normalizeChartNumber(chart) {
     return stripped || '0'; // keep at least "0" for chart "0" or "000"
 }
 
+// Find existing patient ID by normalized chart number lookup
+// Returns the matching record's key, or null if not found
+function findByNormalizedChart(records, rawChart) {
+    if (!rawChart) return null;
+    var exactId = 'pt_' + rawChart;
+    if (records[exactId]) return exactId;
+    // Fallback: search by normalized chart
+    var norm = normalizeChartNumber(rawChart);
+    if (!norm) return null;
+    var ids = Object.keys(records);
+    for (var i = 0; i < ids.length; i++) {
+        if (normalizeChartNumber(records[ids[i]]?.chartNumber) === norm) return ids[i];
+    }
+    return null;
+}
+
 // Merge both patient stores: patientRecords (from imports) + clinicalData.patients (from clinical tab)
 // Dedup by normalized chart number + name to prevent same patient showing twice with different IDs
 function getAllPatientRecords() {
@@ -1924,7 +1940,7 @@ function previewPatientImport() {
         hasContent = true;
         parsed.records.forEach(function(rec) {
             var records = getPatientRecords();
-            var id = rec.chartNumber ? 'pt_' + rec.chartNumber : null;
+            var id = rec.chartNumber ? findByNormalizedChart(records, rec.chartNumber) : null;
             var isUpdate = id && records[id];
             var changedFields = Object.keys(rec).filter(function(k) { return k !== '_notesAppend' && rec[k]; });
 
@@ -2095,7 +2111,8 @@ function confirmPatientImport() {
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
         var chartNumber = (rec.chartNumber || '').trim();
-        var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
+        // Try exact ID first, then normalized chart fallback (079118 matches 79118)
+        var id = (chartNumber ? findByNormalizedChart(records, chartNumber) : null) || (chartNumber ? 'pt_' + chartNumber : generateId('pt'));
         lastImportedId = id;
 
         if (records[id]) {
@@ -2132,8 +2149,8 @@ function confirmPatientImport() {
     parsed.updates.forEach(function(upd) {
         var chartNumber = (upd.chartNumber || '').trim();
         if (!chartNumber) { showToast('Update skipped: missing chart number', 'error'); return; }
-        var id = 'pt_' + chartNumber;
-        if (!records[id]) {
+        var id = findByNormalizedChart(records, chartNumber);
+        if (!id || !records[id]) {
             showToast('Update skipped: patient #' + chartNumber + ' not found');
             return;
         }
@@ -2155,7 +2172,7 @@ function confirmPatientImport() {
     // Store imported requirements, priorityNotes, highValue on patient records
     parsed.reqMatches.forEach(function(rm) {
         var chartNumber = (rm.chartNumber || '').trim();
-        var id = chartNumber ? 'pt_' + chartNumber : null;
+        var id = chartNumber ? findByNormalizedChart(records, chartNumber) : null;
         // Also try matching by name if chart not found
         if (!id || !records[id]) {
             var rmNameLower = (rm.name || '').toLowerCase().trim();
@@ -2364,7 +2381,7 @@ function confirmPatientImport() {
     if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
         parsed.clinicalBriefs.forEach(function(brief) {
             var chartNumber = (brief.chartNumber || '').trim();
-            var id = chartNumber ? 'pt_' + chartNumber : null;
+            var id = chartNumber ? findByNormalizedChart(records, chartNumber) : null;
             if (!id || !records[id]) {
                 var briefNameLower = (brief.name || '').toLowerCase().trim();
                 Object.keys(records).forEach(function(rId) {
