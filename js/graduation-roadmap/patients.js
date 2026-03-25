@@ -729,16 +729,20 @@ function renderClinicalBrief(patient, patientId) {
     function briefSection(key, title, icon, alwaysOpen) {
         var val = brief[key];
         if (!val) return '';
-        var rendered = escapeHtml(val);
+        var rendered;
         if (key === 'flaggedConcerns') {
+            rendered = escapeHtml(val);
             rendered = rendered.replace(/\((\d+)\)\s*/g, function(match, num, offset) {
                 return (offset > 0 ? '</li>' : '') + '<li>';
             });
             if (rendered.indexOf('<li>') !== -1) {
                 rendered = '<ol class="ptr-brief-ol">' + rendered + '</li></ol>';
             }
+            rendered = rendered.replace(/\n/g, '<br>');
+            rendered = rendered.replace(/#(\d+)/g, '<span class="fc-tooth">#$1</span>');
+        } else {
+            rendered = formatClinicalDisplay(val);
         }
-        rendered = rendered.replace(/\n/g, '<br>');
 
         var sectionId = 'brief_' + key;
         var isCollapsed = !alwaysOpen && isMobile && collapsedSections[sectionId];
@@ -3072,6 +3076,70 @@ function parseDashboardUpdate(text) {
     return snapshot;
 }
 
+// ==================== CLINICAL DISPLAY FORMATTING ====================
+// Pure display formatter — zero content change, just visual structure.
+// Takes raw text, escapes it, adds line breaks + color highlights for readability.
+function formatClinicalDisplay(rawText) {
+    if (!rawText) return '';
+    var t = escapeHtml(rawText);
+    var hasSections = false;
+
+    // ── Phase headers → line break + teal ──
+    t = t.replace(/(Phase\s+\d+\s*:)/g, function(m) { hasSections = true; return '<br><b class="fc-teal">' + m + '</b>'; });
+    t = t.replace(/(Phase\s+I{1,3}V?\s*\([^)]*\)\s*:?)/g, function(m) { hasSections = true; return '<br><b class="fc-teal">' + m + '</b>'; });
+
+    // ── Priority headers → line break + color ──
+    t = t.replace(/(URGENT:)/g, function(m) { hasSections = true; return '<br><b class="fc-red">' + m + '</b>'; });
+    t = t.replace(/(SHORT-TERM:)/g, function(m) { hasSections = true; return '<br><b class="fc-blue">' + m + '</b>'; });
+    t = t.replace(/(MEDIUM-TERM:)/g, function(m) { hasSections = true; return '<br><b class="fc-purple">' + m + '</b>'; });
+    t = t.replace(/(LONG-TERM:)/g, function(m) { hasSections = true; return '<br><b class="fc-teal">' + m + '</b>'; });
+
+    // ── Other section starters ──
+    t = t.replace(/(Referral:)/g, function(m) { hasSections = true; return '<br><b class="fc-blue">' + m + '</b>'; });
+    t = t.replace(/(Maintenance:)/g, function(m) { hasSections = true; return '<br><b class="fc-teal">' + m + '</b>'; });
+    t = t.replace(/(Also:)/g, function(m) { hasSections = true; return '<br><b class="fc-gray">' + m + '</b>'; });
+    t = t.replace(/(Outstanding:)/g, function(m) { hasSections = true; return '<br><b class="fc-teal">' + m + '</b>'; });
+    t = t.replace(/(Future\s+needs[^:]*:)/gi, function(m) { hasSections = true; return '<br><b class="fc-blue">' + m + '</b>'; });
+
+    // ── Provider/verify headers ──
+    t = t.replace(/(VERIFY(?:\s+WITH\s+\w+)?\s*:)/g, function(m) { hasSections = true; return '<br><b class="fc-amber">' + m + '</b>'; });
+    t = t.replace(/(Suleman\s*\([^)]*\)\s*:)/g, function(m) { hasSections = true; return '<br><b class="fc-blue">' + m + '</b>'; });
+    t = t.replace(/(Post-doc\s*\([^)]*\)\s*:)/g, function(m) { hasSections = true; return '<br><b class="fc-purple">' + m + '</b>'; });
+
+    // ── Footer lines ──
+    t = t.replace(/(Removed from plan[^.]*\.)/g, '<br><span class="fc-dim">' + '$1' + '</span>');
+    t = t.replace(/((?:Estimated|Total)\s+(?:total\s+)?(?:remaining\s+)?(?:outstanding\s+)?(?:timeline|cost|est)[^.]*\.)/gi, '<br><b class="fc-green">' + '$1' + '</b>');
+
+    // ── Numbered items (1), (2) etc. after period ──
+    t = t.replace(/\.\s+\((\d{1,2})\)\s/g, '.<br><b class="fc-teal">($1)</b> ');
+
+    // ── Inline highlights (no line break) ──
+    t = t.replace(/(NEED TO ADD:)/g, '<b class="fc-red">' + '$1' + '</b>');
+    t = t.replace(/(NOTE(?:\s*\([^)]*\))?:)/g, '<b class="fc-purple">' + '$1' + '</b>');
+    t = t.replace(/(POTENTIALLY HIGH VALUE\b[^.]*)/g, '<b class="fc-hv">' + '$1' + '</b>');
+    t = t.replace(/(HIGH VALUE\b)/g, '<b class="fc-hv">' + '$1' + '</b>');
+
+    // ── Cost figures ──
+    t = t.replace(/(~?\$[\d,]+\+?)/g, '<b class="fc-green">' + '$1' + '</b>');
+
+    // ── Tooth numbers ──
+    t = t.replace(/#(\d+)/g, '<span class="fc-tooth">#$1</span>');
+
+    // ── Sentence breaks for text without section headers ──
+    if (!hasSections) {
+        t = t.replace(/\.\s+([A-Z])/g, '.<br>$1');
+    }
+
+    // ── Existing newlines ──
+    t = t.replace(/\n/g, '<br>');
+
+    // ── Cleanup ──
+    t = t.replace(/^(\s*<br>\s*)+/, '');
+    t = t.replace(/(<br>\s*){3,}/g, '<br>');
+
+    return t;
+}
+
 // ==================== MINI REVIEW TAB ====================
 
 function renderMiniReview() {
@@ -3142,19 +3210,19 @@ function renderMiniReview() {
         // Brief snapshot (if available)
         if (briefSnap) {
             html += '<div class="mr-section-label">Clinical Brief</div>';
-            html += '<div class="mr-brief-snap">' + escapeHtml(briefSnap) + '</div>';
+            html += '<div class="mr-brief-snap">' + formatClinicalDisplay(briefSnap) + '</div>';
         }
 
         // Tx completed
         if (txDone) {
             html += '<div class="mr-section-label">Completed by Me</div>';
-            html += '<div class="mr-text">' + escapeHtml(txDone) + '</div>';
+            html += '<div class="mr-text">' + formatClinicalDisplay(txDone) + '</div>';
         }
 
         // Tx plan
         if (txPlan) {
             html += '<div class="mr-section-label">Treatment Plan</div>';
-            html += '<div class="mr-text">' + escapeHtml(txPlan) + '</div>';
+            html += '<div class="mr-text">' + formatClinicalDisplay(txPlan) + '</div>';
         }
 
         // If nothing
