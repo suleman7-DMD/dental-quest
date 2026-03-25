@@ -463,15 +463,39 @@ function normalizeChartNumber(chart) {
 function getAllPatientRecords() {
     var records = getPatientRecords();
     var clinicalPatients = roadmapData.clinicalData?.patients || {};
-    var merged = Object.assign({}, records);
-    // Build set of NORMALIZED chart numbers already in merged (for dedup)
+    // Self-dedup within patientRecords: previous imports may have created
+    // pt_079118 while defaults filled pt_79118 — both in same store
+    var merged = {};
     var existingCharts = {};
-    // Also build name map for name-based fallback dedup
     var existingNames = {};
-    Object.keys(merged).forEach(function(id) {
-        var chart = normalizeChartNumber(merged[id]?.chartNumber);
+    Object.keys(records).forEach(function(id) {
+        var rec = records[id];
+        if (!rec) return;
+        var chart = normalizeChartNumber(rec.chartNumber);
+        var name = (rec.name || '').toLowerCase().trim();
+        // Check if a record with this normalized chart already exists
+        if (chart && existingCharts[chart]) {
+            // Fill-merge onto the earlier record (keep it, merge missing fields)
+            var keepId = existingCharts[chart];
+            Object.keys(rec).forEach(function(key) {
+                if (merged[keepId][key] == null && rec[key] != null) {
+                    merged[keepId][key] = rec[key];
+                }
+            });
+            return;
+        }
+        // Check if a record with this name already exists
+        if (name && existingNames[name]) {
+            var keepId = existingNames[name];
+            Object.keys(rec).forEach(function(key) {
+                if (merged[keepId][key] == null && rec[key] != null) {
+                    merged[keepId][key] = rec[key];
+                }
+            });
+            return;
+        }
+        merged[id] = rec;
         if (chart) existingCharts[chart] = id;
-        var name = (merged[id]?.name || '').toLowerCase().trim();
         if (name) existingNames[name] = id;
     });
     Object.keys(clinicalPatients).forEach(function(id) {
