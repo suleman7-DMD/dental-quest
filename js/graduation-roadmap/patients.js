@@ -765,6 +765,74 @@ function renderClinicalBrief(patient, patientId) {
         + '</div>';
 }
 
+// Cross-reference appointments to find a patient's next scheduled visit
+function getNextScheduledVisit(patient, patientId) {
+    var appointments = roadmapData.clinicalData?.appointments;
+    if (!appointments) return null;
+
+    var todayStr = getLocalDateString(new Date());
+    var patientChart = normalizeChartNumber(patient.chartNumber);
+    var patientName = (patient.name || '').toLowerCase().trim();
+    var clinicalPatients = roadmapData.clinicalData?.patients || {};
+
+    var futureApts = [];
+    var aptKeys = Object.keys(appointments);
+    for (var i = 0; i < aptKeys.length; i++) {
+        var apt = appointments[aptKeys[i]];
+        if (!apt || apt.status !== 'scheduled') continue;
+        if (!apt.date || apt.date < todayStr) continue;
+
+        var matched = false;
+        // Match by patientId directly
+        if (apt.patientId === patientId) matched = true;
+
+        // Match by chart number
+        if (!matched && patientChart) {
+            var aptPt = clinicalPatients[apt.patientId];
+            if (aptPt && normalizeChartNumber(aptPt.chartNumber) === patientChart) matched = true;
+        }
+
+        // Match by name (case-insensitive)
+        if (!matched && patientName) {
+            var aptPt2 = clinicalPatients[apt.patientId];
+            var aptName = (aptPt2?.name || '').toLowerCase().trim();
+            if (aptName && aptName === patientName) matched = true;
+        }
+
+        if (matched) futureApts.push(apt);
+    }
+
+    if (futureApts.length === 0) return null;
+
+    // Sort by date ascending, then time
+    futureApts.sort(function(a, b) {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        return (a.time || '') < (b.time || '') ? -1 : 1;
+    });
+
+    var next = futureApts[0];
+    var parts = next.date.split('-').map(Number);
+    var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var formatted = months[dateObj.getMonth()] + ' ' + dateObj.getDate();
+
+    if (next.time) {
+        var timeParts = next.time.split(':');
+        var h = parseInt(timeParts[0]);
+        var m = timeParts[1] || '00';
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        if (h > 12) h -= 12;
+        if (h === 0) h = 12;
+        formatted += ', ' + h + ':' + m + ' ' + ampm;
+    }
+
+    if (next.procedures) {
+        formatted += ' \u2014 ' + next.procedures;
+    }
+
+    return formatted;
+}
+
 function renderPatientRecord(patientId) {
     var container = document.getElementById('patientRecordView');
     if (!container) return;
@@ -893,9 +961,12 @@ function renderPatientRecord(patientId) {
     var relBadgeClass = { green: 'ptr-summary-badge-active', yellow: 'ptr-summary-badge-yellow', red: 'ptr-summary-badge-red' };
     var relBadgeText = { green: 'Active', yellow: 'Needs Attention', red: 'Inactive' };
     var lastVisitShort = patient.lastVisit ? patient.lastVisit.split('|')[0].trim() : 'None';
-    var nextVisitShort = patient.nextVisit ? patient.nextVisit.split('\u2014')[0].trim() : 'None scheduled';
+    // Auto-compute next visit from appointments unless manually overridden
+    var autoNextVisit = getNextScheduledVisit(patient, patientId);
+    var effectiveNextVisit = patient.nextVisitManual ? (patient.nextVisit || '') : (autoNextVisit || '');
+    var nextVisitShort = effectiveNextVisit ? effectiveNextVisit.split('\u2014')[0].trim() : 'No appointment scheduled';
     var nextPoeShort = patient.poeNext ? patient.poeNext.split('\u2014')[0].trim() : '\u2014';
-    var needsScheduling = !patient.nextVisit || patient.nextVisit.toLowerCase().indexOf('need') !== -1;
+    var needsScheduling = !effectiveNextVisit;
 
     // Dedup requirement categories for badges
     var reqCategories = {};
@@ -968,7 +1039,33 @@ function renderPatientRecord(patientId) {
             + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
                 fld('txPlan', 'Treatment Plan', '#3b82f6')
                 + fld('lastVisit', 'Last Visit', '#60a5fa')
-                + fld('nextVisit', 'Next Visit', '#93c5fd'))
+                + (function() {
+                    var nvAccent = '#93c5fd';
+                    var nvManual = patient.nextVisitManual;
+                    var nvAuto = autoNextVisit;
+                    var nvVal = nvManual ? (patient.nextVisit || '') : (nvAuto || '');
+                    var nvDisplay = nvVal || 'No appointment scheduled';
+                    var nvIsEmpty = !nvVal;
+                    if (isEdit) {
+                        return '<div class="ptr-field">'
+                            + '<div class="ptr-field-label" style="color:' + nvAccent + ';">Next Visit'
+                            + (nvManual ? ' <span style="font-size:0.7em;opacity:0.7;cursor:pointer;margin-left:6px;background:#e2e8f0;padding:1px 6px;border-radius:8px;" onclick="resetNextVisitToAuto(\'' + safePatientId + '\')" title="Clear manual override, revert to schedule">\u21BB auto</span>' : '')
+                            + '</div>'
+                            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="nextVisit" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
+                            + 'class="ptr-field-edit" style="border-left-color:' + nvAccent + ';' + (nvIsEmpty ? 'color:#b45309;' : '') + '">'
+                            + escapeHtml(nvDisplay)
+                            + '</div></div>';
+                    } else {
+                        if (nvIsEmpty) return '<div class="ptr-field-view" style="border-left-color:' + nvAccent + '40;">'
+                            + '<span class="ptr-field-label" style="color:' + nvAccent + ';">Next Visit</span>'
+                            + '<div class="ptr-field-text" style="color:#b45309;">No appointment scheduled</div></div>';
+                        return '<div class="ptr-field-view" style="border-left-color:' + nvAccent + '40;">'
+                            + '<span class="ptr-field-label" style="color:' + nvAccent + ';">Next Visit'
+                            + (!nvManual && nvAuto ? ' <span style="font-size:0.7em;opacity:0.6;background:#dbeafe;padding:1px 5px;border-radius:6px;margin-left:4px;">from schedule</span>' : '')
+                            + '</span>'
+                            + '<div class="ptr-field-text">' + escapeHtml(nvDisplay) + '</div></div>';
+                    }
+                })())
             + section('imaging', 'Imaging', '\uD83D\uDCF7', imgInline())
             + section('notes', 'Notes', '\uD83D\uDCDD',
                 isEdit
@@ -1032,6 +1129,7 @@ function addNewPatientRecord() {
         txPlan: '',
         lastVisit: '',
         nextVisit: '',
+        nextVisitManual: false,
         lastFMX: '',
         lastBW: '',
         lastCBCT: '',
@@ -1147,9 +1245,24 @@ function savePatientField(element) {
     if (!records[patientId]) return;
 
     records[patientId][field] = element.innerText;
+    // When manually editing nextVisit, flag it so auto-compute doesn't overwrite
+    if (field === 'nextVisit') {
+        records[patientId].nextVisitManual = true;
+    }
     records[patientId].lastUpdated = new Date().toISOString();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+}
+
+function resetNextVisitToAuto(patientId) {
+    var records = getAllPatientRecords();
+    if (!records[patientId]) return;
+    records[patientId].nextVisitManual = false;
+    records[patientId].nextVisit = '';
+    records[patientId].lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    renderPatientRecord(patientId);
 }
 
 function setPatientReliability(patientId, reliability) {
@@ -2131,7 +2244,7 @@ function confirmPatientImport() {
                 medicalHx: '', medications: '', allergies: '',
                 dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
                 poeLast: '', poeNext: '', txPlan: '',
-                lastVisit: '', nextVisit: '',
+                lastVisit: '', nextVisit: '', nextVisitManual: false,
                 lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
                 recallHistory: '', activeStatus: 'Active',
                 notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
