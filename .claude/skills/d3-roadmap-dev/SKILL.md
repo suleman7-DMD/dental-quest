@@ -289,7 +289,7 @@ syncDeadlineToGrades(deadline, isComplete, grade);
 **12 Modules (load order):**
 state.js (680) -> firebase-sync.js (2,200) -> deadlines.js (804) -> grades.js (384) -> exam-content.js (1,327) -> clinical.js (1,451) -> patients.js (2,160) -> import-system.js (543) -> daily-planner.js (573) -> monthly-planner.js (1,142) -> periodic-review.js (1,962) -> init.js (537)
 
-**8 Tabs (7 original + PR Review added Mar 22, 2026):**
+**9 Tabs (7 original + PR Review Mar 22, Mini Review Mar 25):**
 | Tab | ID | Key Function | Module |
 |-----|----|-------------|--------|
 | Mission Control | `missioncontrol` | `renderDashboard()` | init.js |
@@ -299,6 +299,7 @@ state.js (680) -> firebase-sync.js (2,200) -> deadlines.js (804) -> grades.js (3
 | D3 Academics | `academics` | Accordion: Grades, Exams, Mandatory, Courses, Classmates | grades.js, exam-content.js |
 | Graduation Prep | `gradprep` | `renderGraduationPrep()` | init.js |
 | PR Review | `periodicreview` | `initPeriodicReview()` | periodic-review.js |
+| Mini Review | `minireview` | `renderMiniReview()` | patients.js |
 | Remember | `remember` | Static HTML | — |
 
 **Old tab IDs map to new:** dashboard→missioncontrol, grades→academics, examcontent→academics, mandatory→academics, courses→academics, classmates→academics, dailyplanner→schedule, monthlyplanner→schedule (backward compat in switchTab)
@@ -558,7 +559,9 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `setPatientReliability(patientId, r)` | patients.js | Set reliability dot color — uses getAllPatientRecords() for merged lookup |
 | `selectPatient(patientId)` | patients.js | Set active patient, render sidebar + record, mobile layout toggle |
 | `parseClinicalBrief(text)` | patients.js | Parse CLINICAL_BRIEF block — 10 KEY:value fields with multi-line continuation, returns brief object keyed by chartNumber |
-| `renderClinicalBrief(patient, patientId)` | patients.js | Render 7-section Clinical Brief HTML — SNAPSHOT always visible, other 6 sections accordion on mobile, flat scroll desktop. Parses (1),(2) in flaggedConcerns to `<ol>` |
+| `renderClinicalBrief(patient, patientId)` | patients.js | Render 7-section Clinical Brief HTML — SNAPSHOT always visible, other 6 sections accordion on mobile, flat scroll desktop. Uses `formatClinicalDisplay()` for non-flaggedConcerns sections. Parses (1),(2) in flaggedConcerns to `<ol>` |
+| `formatClinicalDisplay(rawText)` | patients.js | Pure display formatter — escapes text, adds line breaks before Phase/URGENT/SHORT-TERM/MEDIUM-TERM/LONG-TERM headers, sentence breaks for non-sectioned text, color-codes tooth numbers/costs/keywords. CSS classes: `fc-teal`, `fc-red`, `fc-blue`, `fc-purple`, `fc-amber`, `fc-green`, `fc-hv`, `fc-tooth`, `fc-dim`. Used by renderMiniReview() and renderClinicalBrief(). Zero content change. |
+| `renderMiniReview()` | patients.js | Mini Review tab — read-only summary of all patients. Uses getAllPatientRecords() + getNextScheduledVisit(). Sorted by reliability then alpha. Shows: reliability dot, name, chart#, HIGH VALUE, last/next visit, clinical brief snapshot, tx completed, tx plan. No state mutation. |
 | `migratePerioNoiseCleanup()` | patients.js | One-time migration: strips routine perio IDs from importedRequirements on non-periodontitis patients. Gated by `perioNoiseCleanupDone_v1` localStorage flag |
 | `parsePatientRecord(text)` | patients.js | Parse PATIENT_RECORD block — continuation lines: any non-key line appends to current field (no 2-space indent required) |
 | `parsePatientUpdate(text)` | patients.js | Parse PATIENT_UPDATE block — same lenient continuation logic as parsePatientRecord |
