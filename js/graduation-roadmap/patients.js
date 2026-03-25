@@ -46,8 +46,8 @@ const DEFAULT_PATIENT_RECORDS = {
         recallHistory: 'Last Recall: 10/22/2025. Frequency: 6-month. Next due: 4/22/2026.',
         activeStatus: 'Active'
     },
-    "pt_79118": {
-        id: "pt_79118", name: "Williams, Kisha", chartNumber: "79118",
+    "pt_079118": {
+        id: "pt_079118", name: "Williams, Kisha", chartNumber: "079118",
         type: "(56 y/o F) - Severe dental anxiety and high BP",
         medicalHx: "Congenital heart murmur, COPD, PTSD, Herpes, s/p hysterectomy, s/p appendix/colon/gallbladder removal (2023). Precautions: Consult MD for pre-med, avoid supine position, monitor for anxiety/elevated BP.",
         medications: "omeprazole, dicyclomine, lovastatin, abilify, nifedipine. Allergies: Sulfur and Risperidone.",
@@ -472,26 +472,57 @@ function getAllPatientRecords() {
         var rec = records[id];
         if (!rec) return;
         var chart = normalizeChartNumber(rec.chartNumber);
+        var rawChart = (rec.chartNumber || '').trim();
         var name = (rec.name || '').toLowerCase().trim();
         // Check if a record with this normalized chart already exists
         if (chart && existingCharts[chart]) {
-            // Fill-merge onto the earlier record (keep it, merge missing fields)
             var keepId = existingCharts[chart];
-            Object.keys(rec).forEach(function(key) {
-                if (merged[keepId][key] == null && rec[key] != null) {
-                    merged[keepId][key] = rec[key];
-                }
-            });
+            var keepRaw = (merged[keepId].chartNumber || '').trim();
+            if (rawChart.length > keepRaw.length) {
+                // New record has longer chart — swap: promote it as primary
+                var old = merged[keepId];
+                delete merged[keepId];
+                merged[id] = rec;
+                // Fill-merge old fields onto new
+                Object.keys(old).forEach(function(key) {
+                    if (rec[key] == null && old[key] != null) {
+                        rec[key] = old[key];
+                    }
+                });
+                existingCharts[chart] = id;
+                if (name) existingNames[name] = id;
+            } else {
+                // Existing has better or equal chart — merge new fields onto it
+                Object.keys(rec).forEach(function(key) {
+                    if (merged[keepId][key] == null && rec[key] != null) {
+                        merged[keepId][key] = rec[key];
+                    }
+                });
+            }
             return;
         }
         // Check if a record with this name already exists
         if (name && existingNames[name]) {
             var keepId = existingNames[name];
-            Object.keys(rec).forEach(function(key) {
-                if (merged[keepId][key] == null && rec[key] != null) {
-                    merged[keepId][key] = rec[key];
-                }
-            });
+            var keepRaw = (merged[keepId].chartNumber || '').trim();
+            if (rawChart.length > keepRaw.length) {
+                var old = merged[keepId];
+                delete merged[keepId];
+                merged[id] = rec;
+                Object.keys(old).forEach(function(key) {
+                    if (rec[key] == null && old[key] != null) {
+                        rec[key] = old[key];
+                    }
+                });
+                if (chart) existingCharts[chart] = id;
+                existingNames[name] = id;
+            } else {
+                Object.keys(rec).forEach(function(key) {
+                    if (merged[keepId][key] == null && rec[key] != null) {
+                        merged[keepId][key] = rec[key];
+                    }
+                });
+            }
             return;
         }
         merged[id] = rec;
@@ -960,7 +991,7 @@ function addNewPatientRecord() {
     var nameInput = prompt('Enter patient name (Last, First):');
     if (nameInput === null) return; // cancelled
 
-    var chartNumber = normalizeChartNumber(chartInput);
+    var chartNumber = (chartInput || '').trim();
     var name = (nameInput || '').trim() || 'New Patient';
     var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
 
@@ -2063,7 +2094,7 @@ function confirmPatientImport() {
 
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
-        var chartNumber = normalizeChartNumber(rec.chartNumber);
+        var chartNumber = (rec.chartNumber || '').trim();
         var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
         lastImportedId = id;
 
@@ -2099,7 +2130,7 @@ function confirmPatientImport() {
 
     // Apply updates
     parsed.updates.forEach(function(upd) {
-        var chartNumber = normalizeChartNumber(upd.chartNumber);
+        var chartNumber = (upd.chartNumber || '').trim();
         if (!chartNumber) { showToast('Update skipped: missing chart number', 'error'); return; }
         var id = 'pt_' + chartNumber;
         if (!records[id]) {
@@ -2123,7 +2154,7 @@ function confirmPatientImport() {
 
     // Store imported requirements, priorityNotes, highValue on patient records
     parsed.reqMatches.forEach(function(rm) {
-        var chartNumber = normalizeChartNumber(rm.chartNumber);
+        var chartNumber = (rm.chartNumber || '').trim();
         var id = chartNumber ? 'pt_' + chartNumber : null;
         // Also try matching by name if chart not found
         if (!id || !records[id]) {
@@ -2332,7 +2363,7 @@ function confirmPatientImport() {
     var briefsImported = 0;
     if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
         parsed.clinicalBriefs.forEach(function(brief) {
-            var chartNumber = normalizeChartNumber(brief.chartNumber);
+            var chartNumber = (brief.chartNumber || '').trim();
             var id = chartNumber ? 'pt_' + chartNumber : null;
             if (!id || !records[id]) {
                 var briefNameLower = (brief.name || '').toLowerCase().trim();
