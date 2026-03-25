@@ -494,8 +494,12 @@ function confirmClinicalImport() {
         }
     });
 
-    // CRITICAL: Sync to Monthly Planner
+    // CRITICAL: Sync to Monthly Planner + rebuild weekly schedule for cross-app (Stim Calc)
+    clinicalDataDirty = true;
     syncClinicalToMonthlyPlanner();
+    if (typeof buildCurrentWeekSchedule === 'function') {
+        buildCurrentWeekSchedule();
+    }
 
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));

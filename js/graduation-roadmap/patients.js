@@ -3071,3 +3071,100 @@ function parseDashboardUpdate(text) {
 
     return snapshot;
 }
+
+// ==================== MINI REVIEW TAB ====================
+
+function renderMiniReview() {
+    var container = document.getElementById('tab-minireview');
+    if (!container) return;
+
+    var allPatients = getAllPatientRecords();
+    var ids = Object.keys(allPatients);
+
+    // Sort: green first, then yellow, then red; alphabetical within each group
+    var relOrder = { green: 0, yellow: 1, red: 2 };
+    ids.sort(function(a, b) {
+        var ra = relOrder[allPatients[a].reliability] ?? 1;
+        var rb = relOrder[allPatients[b].reliability] ?? 1;
+        if (ra !== rb) return ra - rb;
+        return (allPatients[a].name || '').localeCompare(allPatients[b].name || '');
+    });
+
+    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' patients</span></div>';
+    html += '<div class="mr-grid">';
+
+    for (var i = 0; i < ids.length; i++) {
+        var pid = ids[i];
+        var p = allPatients[pid];
+        var rel = p.reliability || 'yellow';
+
+        // Last visit
+        var lastVisitRaw = p.lastVisit || '';
+        var lastVisitShort = lastVisitRaw ? lastVisitRaw.split('|')[0].split('\u2014')[0].trim() : '';
+
+        // Next visit (auto from schedule or manual)
+        var autoNext = getNextScheduledVisit(p, pid);
+        var effectiveNext = p.nextVisitManual ? (p.nextVisit || '') : (autoNext || '');
+        var nextVisitShort = effectiveNext ? effectiveNext.split('|')[0].split('\u2014')[0].trim() : '';
+
+        // Tx plan and completed work
+        var txPlan = (p.txPlan || '').trim();
+        var txDone = (p.txCompletedByMe || '').trim();
+
+        // Clinical brief snapshot (most concise summary)
+        var briefSnap = '';
+        if (p.clinicalBrief && p.clinicalBrief.snapshot) {
+            briefSnap = p.clinicalBrief.snapshot.trim();
+        }
+
+        // High value
+        var isHV = p.highValue || false;
+        if (!isHV && p.importedRequirements && p.importedRequirements.length >= 3) isHV = true;
+
+        html += '<div class="mr-card">';
+        html += '<div class="mr-card-header">';
+        html += '<span class="mr-rel-dot mr-rel-' + escapeHtml(rel) + '"></span>';
+        html += '<span class="mr-name">' + escapeHtml(p.name || 'Unnamed') + '</span>';
+        if (isHV) html += '<span class="mr-hv">HIGH VALUE</span>';
+        html += '<span class="mr-chart">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>';
+        html += '</div>';
+
+        // Visit dates row
+        html += '<div class="mr-visits">';
+        html += '<div class="mr-visit-box"><div class="mr-visit-label">Last Visit</div>'
+            + '<div class="mr-visit-value' + (lastVisitShort ? '' : ' mr-none') + '">'
+            + escapeHtml(lastVisitShort || 'None recorded') + '</div></div>';
+        html += '<div class="mr-visit-box"><div class="mr-visit-label">Next Visit</div>'
+            + '<div class="mr-visit-value' + (nextVisitShort ? '' : ' mr-none') + '">'
+            + escapeHtml(nextVisitShort || 'Not scheduled') + '</div></div>';
+        html += '</div>';
+
+        // Brief snapshot (if available)
+        if (briefSnap) {
+            html += '<div class="mr-section-label">Clinical Brief</div>';
+            html += '<div class="mr-brief-snap">' + escapeHtml(briefSnap) + '</div>';
+        }
+
+        // Tx completed
+        if (txDone) {
+            html += '<div class="mr-section-label">Completed by Me</div>';
+            html += '<div class="mr-text">' + escapeHtml(txDone) + '</div>';
+        }
+
+        // Tx plan
+        if (txPlan) {
+            html += '<div class="mr-section-label">Treatment Plan</div>';
+            html += '<div class="mr-text">' + escapeHtml(txPlan) + '</div>';
+        }
+
+        // If nothing
+        if (!briefSnap && !txDone && !txPlan) {
+            html += '<div class="mr-text mr-empty">No treatment data recorded yet</div>';
+        }
+
+        html += '</div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}

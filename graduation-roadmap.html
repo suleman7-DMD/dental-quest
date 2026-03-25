@@ -7234,6 +7234,61 @@
             .pts-stat-chip { font-size: 0.72em; }
         }
 
+        /* ==================== MINI REVIEW TAB ==================== */
+        #tab-minireview {
+            background: #f7f5ef;
+            padding: 20px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: #17212b;
+        }
+        .mr-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e2e0d8;
+        }
+        .mr-header h2 { margin: 0; font-size: 1.3em; color: #17212b; font-weight: 700; }
+        .mr-header .mr-count { font-size: 0.85em; color: #62707c; }
+        .mr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 14px;
+        }
+        .mr-card {
+            background: #fff; border-radius: 10px; padding: 16px;
+            border: 1px solid #e2e0d8; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .mr-card-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+            padding-bottom: 8px; border-bottom: 1px solid #f0ede6;
+        }
+        .mr-rel-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        }
+        .mr-rel-green { background: #22c55e; }
+        .mr-rel-yellow { background: #f59e0b; }
+        .mr-rel-red { background: #ef4444; }
+        .mr-name { font-weight: 600; font-size: 0.95em; color: #17212b; }
+        .mr-chart { font-size: 0.78em; color: #62707c; margin-left: auto; }
+        .mr-hv { font-size: 0.65em; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+        .mr-visits {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+            margin-bottom: 8px;
+        }
+        .mr-visit-box {
+            background: #f8f7f3; border-radius: 6px; padding: 6px 10px;
+        }
+        .mr-visit-label { font-size: 0.68em; color: #62707c; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .mr-visit-value { font-size: 0.82em; color: #17212b; margin-top: 2px; }
+        .mr-visit-value.mr-none { color: #b45309; font-style: italic; }
+        .mr-section-label { font-size: 0.7em; color: #1a7f79; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin: 8px 0 3px; }
+        .mr-text { font-size: 0.8em; color: #334155; line-height: 1.45; white-space: pre-line; }
+        .mr-text.mr-empty { color: #94a3b8; font-style: italic; }
+        .mr-brief-snap { font-size: 0.8em; color: #334155; line-height: 1.45; background: #f0fdf4; border-left: 3px solid #22c55e; padding: 6px 10px; border-radius: 0 6px 6px 0; margin-top: 4px; white-space: pre-line; }
+        @media (max-width: 768px) {
+            #tab-minireview { padding: 12px; }
+            .mr-grid { grid-template-columns: 1fr; }
+            .mr-card { padding: 12px; }
+        }
+
         /* ==================== PERIODIC REVIEW TAB ==================== */
 
         /* Tab container */
@@ -7758,6 +7813,7 @@
         <button class="tab-btn" onclick="switchTab('academics', event)">📚 D3 Academics</button>
         <button class="tab-btn" onclick="switchTab('gradprep', event)">🎓 Grad Prep</button>
         <button class="tab-btn" onclick="switchTab('periodicreview', event)">&#128221; PR Review</button>
+        <button class="tab-btn" onclick="switchTab('minireview', event)">📋 Mini Review</button>
         <button class="tab-btn" onclick="switchTab('remember', event)" style="background:#7c3aed;">🛡️ Remember</button>
     </div>
 
@@ -9234,6 +9290,11 @@
         <!-- Populated by initPeriodicReview() in periodic-review.js -->
     </div>
 
+    <!-- ==================== MINI REVIEW TAB ==================== -->
+    <div id="tab-minireview" class="tab-content">
+        <!-- Populated by renderMiniReview() in patients.js -->
+    </div>
+
     <!-- ==================== ALWAYS REMEMBER TAB ==================== -->
     <div id="tab-remember" class="tab-content">
 
@@ -10652,13 +10713,13 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260322mc"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260325mr"></script>
     <script src="js/graduation-roadmap/firebase-sync.js?v=20260322mc"></script>
     <script src="js/graduation-roadmap/deadlines.js?v=20260322ct"></script>
     <script src="js/graduation-roadmap/grades.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/exam-content.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260322mc"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260325lz"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260325mr"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260322ct"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260325b"></script>
