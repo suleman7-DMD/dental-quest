@@ -762,6 +762,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
     if (resolvedTabId === 'periodicreview' && typeof initPeriodicReview === 'function') initPeriodicReview();
+    if (resolvedTabId === 'minireview' && typeof renderMiniReview === 'function') renderMiniReview();
     // schedule and remember tabs: sub-tabs / static content handle their own init
 
     // If navigating to exam content, open the exams accordion
