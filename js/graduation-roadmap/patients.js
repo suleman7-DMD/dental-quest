@@ -449,23 +449,37 @@ function getPatientRecords() {
     return roadmapData.clinicalData.patientRecords;
 }
 
+// Strip leading zeros from chart numbers for consistent matching
+// "079118" → "79118", "0001" → "1", "0" → "0"
+function normalizeChartNumber(chart) {
+    var trimmed = (chart || '').trim();
+    if (!trimmed) return '';
+    var stripped = trimmed.replace(/^0+/, '');
+    return stripped || '0'; // keep at least "0" for chart "0" or "000"
+}
+
 // Merge both patient stores: patientRecords (from imports) + clinicalData.patients (from clinical tab)
-// Dedup by chart number + name to prevent same patient showing twice with different IDs
+// Dedup by normalized chart number + name to prevent same patient showing twice with different IDs
 function getAllPatientRecords() {
     var records = getPatientRecords();
     var clinicalPatients = roadmapData.clinicalData?.patients || {};
     var merged = Object.assign({}, records);
-    // Build set of chart numbers already in merged (for dedup)
+    // Build set of NORMALIZED chart numbers already in merged (for dedup)
     var existingCharts = {};
+    // Also build name map for name-based fallback dedup
+    var existingNames = {};
     Object.keys(merged).forEach(function(id) {
-        var chart = (merged[id]?.chartNumber || '').trim();
+        var chart = normalizeChartNumber(merged[id]?.chartNumber);
         if (chart) existingCharts[chart] = id;
+        var name = (merged[id]?.name || '').toLowerCase().trim();
+        if (name) existingNames[name] = id;
     });
     Object.keys(clinicalPatients).forEach(function(id) {
         if (merged[id]) return; // Same ID already exists
         var cp = clinicalPatients[id];
         if (!cp) return;
-        var chart = (cp.chartNumber || '').trim();
+        var chart = normalizeChartNumber(cp.chartNumber);
+        // Dedup by normalized chart number
         if (chart && existingCharts[chart]) {
             // Same chart number under different ID — fill-merge onto existing record
             var existingId = existingCharts[chart];
@@ -477,19 +491,22 @@ function getAllPatientRecords() {
             });
             return;
         }
-        // Dedup by name (case-insensitive) for chartless patients
-        if (!chart) {
-            var cpName = (cp.name || '').toLowerCase().trim();
-            if (cpName) {
-                var nameMatch = false;
-                Object.keys(merged).forEach(function(mId) {
-                    if ((merged[mId]?.name || '').toLowerCase().trim() === cpName) nameMatch = true;
-                });
-                if (nameMatch) return;
-            }
+        // Dedup by name (case-insensitive) — fallback for ALL patients (not just chartless)
+        var cpName = (cp.name || '').toLowerCase().trim();
+        if (cpName && existingNames[cpName]) {
+            // Same name under different ID — fill-merge onto existing record
+            var existingId = existingNames[cpName];
+            var existing = merged[existingId];
+            Object.keys(cp).forEach(function(key) {
+                if (existing[key] == null && cp[key] != null) {
+                    existing[key] = cp[key];
+                }
+            });
+            return;
         }
         merged[id] = cp;
         if (chart) existingCharts[chart] = id;
+        if (cpName) existingNames[cpName] = id;
     });
     return merged;
 }
@@ -919,7 +936,7 @@ function addNewPatientRecord() {
     var nameInput = prompt('Enter patient name (Last, First):');
     if (nameInput === null) return; // cancelled
 
-    var chartNumber = (chartInput || '').trim();
+    var chartNumber = normalizeChartNumber(chartInput);
     var name = (nameInput || '').trim() || 'New Patient';
     var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
 
@@ -2022,7 +2039,7 @@ function confirmPatientImport() {
 
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
-        var chartNumber = (rec.chartNumber || '').trim();
+        var chartNumber = normalizeChartNumber(rec.chartNumber);
         var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
         lastImportedId = id;
 
@@ -2058,7 +2075,7 @@ function confirmPatientImport() {
 
     // Apply updates
     parsed.updates.forEach(function(upd) {
-        var chartNumber = (upd.chartNumber || '').trim();
+        var chartNumber = normalizeChartNumber(upd.chartNumber);
         if (!chartNumber) { showToast('Update skipped: missing chart number', 'error'); return; }
         var id = 'pt_' + chartNumber;
         if (!records[id]) {
@@ -2082,7 +2099,7 @@ function confirmPatientImport() {
 
     // Store imported requirements, priorityNotes, highValue on patient records
     parsed.reqMatches.forEach(function(rm) {
-        var chartNumber = (rm.chartNumber || '').trim();
+        var chartNumber = normalizeChartNumber(rm.chartNumber);
         var id = chartNumber ? 'pt_' + chartNumber : null;
         // Also try matching by name if chart not found
         if (!id || !records[id]) {
@@ -2134,13 +2151,25 @@ function confirmPatientImport() {
         parsed.appointments.forEach(function(apt) {
             if (!apt.patientName || !apt.date) return;
 
-            // Find or create patient in clinicalData.patients
+            // Find or create patient — search BOTH clinicalData.patients AND patientRecords
             var patientId = null;
+            var aptChartNorm = normalizeChartNumber(apt.chartNumber);
+            var aptNameLower = (apt.patientName || '').toLowerCase().trim();
+            // Search clinicalData.patients first
             var existingPatients = Object.entries(roadmapData.clinicalData.patients);
             for (var i = 0; i < existingPatients.length; i++) {
                 var p = existingPatients[i][1];
-                if (apt.chartNumber && p.chartNumber === apt.chartNumber) { patientId = existingPatients[i][0]; break; }
-                if (p.name && p.name.toLowerCase() === apt.patientName.toLowerCase()) { patientId = existingPatients[i][0]; break; }
+                if (aptChartNorm && normalizeChartNumber(p.chartNumber) === aptChartNorm) { patientId = existingPatients[i][0]; break; }
+                if (p.name && p.name.toLowerCase().trim() === aptNameLower) { patientId = existingPatients[i][0]; break; }
+            }
+            // Also search patientRecords (pre-filled defaults + imported patients)
+            if (!patientId) {
+                var prEntries = Object.entries(roadmapData.clinicalData.patientRecords || {});
+                for (var j = 0; j < prEntries.length; j++) {
+                    var pr = prEntries[j][1];
+                    if (aptChartNorm && normalizeChartNumber(pr.chartNumber) === aptChartNorm) { patientId = prEntries[j][0]; break; }
+                    if (pr.name && pr.name.toLowerCase().trim() === aptNameLower) { patientId = prEntries[j][0]; break; }
+                }
             }
             if (!patientId) {
                 patientId = 'patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -2279,7 +2308,7 @@ function confirmPatientImport() {
     var briefsImported = 0;
     if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
         parsed.clinicalBriefs.forEach(function(brief) {
-            var chartNumber = (brief.chartNumber || '').trim();
+            var chartNumber = normalizeChartNumber(brief.chartNumber);
             var id = chartNumber ? 'pt_' + chartNumber : null;
             if (!id || !records[id]) {
                 var briefNameLower = (brief.name || '').toLowerCase().trim();
