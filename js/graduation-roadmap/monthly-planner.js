@@ -273,6 +273,7 @@ function mpToggleTaskComplete(taskId) {
 
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
     mpRenderAllCalendars();
     mpUpdateStats();
 }
@@ -281,11 +282,27 @@ function mpRenderAllCalendars() {
     const container = document.getElementById('mpCalendarContainer');
     if (!container) return;
 
+    // Clear existing content (no user input involved - safe static rebuild)
     container.innerHTML = '';
 
     MP_WEEKS.forEach(week => {
         const weekEl = mpCreateWeekSection(week);
         container.appendChild(weekEl);
+    });
+
+    // Auto-scroll calendar to today's column on mobile
+    mpScrollCalendarToToday();
+}
+
+function mpScrollCalendarToToday() {
+    if (window.innerWidth > 480) return;
+    requestAnimationFrame(() => {
+        document.querySelectorAll('.mp-calendar-wrapper').forEach(wrapper => {
+            const todayHeader = wrapper.querySelector('.mp-cal-day-header.today');
+            if (!todayHeader) return;
+            // Scroll so today's column is near the left edge (after time column)
+            wrapper.scrollLeft = Math.max(0, todayHeader.offsetLeft - 50);
+        });
     });
 }
 
@@ -463,7 +480,10 @@ function mpCreateCalendarGrid(week) {
     // Day columns with tasks
     days.forEach((day, dayIndex) => {
         const isPast = day.date < today;
-        const dayClass = isPast ? 'mp-cal-day-column past' : 'mp-cal-day-column';
+        const isToday = day.date === today;
+        let dayClass = 'mp-cal-day-column';
+        if (isPast) dayClass += ' past';
+        if (isToday) dayClass += ' today';
 
         html += `<div class="${dayClass}" data-date="${day.date}">`;
 
@@ -971,6 +991,7 @@ function _mpDeleteCurrentTaskConfirmed() {
 
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
     mpCloseTaskModal();
     mpRenderAllCalendars();
     mpUpdateStats();

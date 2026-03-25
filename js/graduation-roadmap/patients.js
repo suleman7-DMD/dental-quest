@@ -2195,9 +2195,12 @@ function confirmPatientImport() {
             }
         });
 
-        // Sync to monthly planner
+        // Sync to monthly planner + rebuild weekly schedule for cross-app
         if (typeof syncClinicalToMonthlyPlanner === 'function') {
             syncClinicalToMonthlyPlanner();
+        }
+        if (typeof buildCurrentWeekSchedule === 'function') {
+            buildCurrentWeekSchedule();
         }
     }
 
@@ -2331,6 +2334,10 @@ function confirmPatientImport() {
     }
     if (typeof initClinicalTab === 'function' && aptsCreated > 0) {
         try { initClinicalTab(); } catch(e) {}
+    }
+    // Refresh Monthly Planner calendars so Schedule tab shows new appointments
+    if (aptsCreated > 0 && typeof mpRenderAllCalendars === 'function') {
+        try { mpRenderAllCalendars(); } catch(e) {}
     }
 
     var msg = '';

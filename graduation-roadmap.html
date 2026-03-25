@@ -6040,16 +6040,103 @@
                 font-size: 0.85em;
             }
 
-            /* ---- MONTHLY PLANNER ---- */
+            /* ---- MONTHLY PLANNER (iPhone Calendar Overhaul) ---- */
             .mp-calendar-wrapper {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-                margin: 0 -10px;
-                padding: 0 10px;
+                margin: 0 -12px;
+                padding: 0;
+                scroll-behavior: smooth;
             }
             .mp-calendar-wrapper > * {
-                min-width: 600px;
+                min-width: unset;
             }
+            /* Fixed-width columns: 36px time + 7 × 110px = 806px total */
+            .mp-cal-header-row,
+            .mp-cal-grid {
+                grid-template-columns: 36px repeat(7, 110px);
+                min-width: unset;
+            }
+            .mp-cal-corner {
+                min-width: 36px;
+            }
+            /* Clip task blocks to their day column */
+            .mp-cal-day-column {
+                overflow: hidden;
+                border-right: 2px solid #334155;
+            }
+            /* Alternating column backgrounds for visual separation */
+            .mp-cal-day-column:nth-child(odd) {
+                background: rgba(30, 41, 59, 0.35);
+            }
+            /* Today column highlight */
+            .mp-cal-day-column.today {
+                background: rgba(59, 130, 246, 0.08);
+            }
+            .mp-cal-day-header.today {
+                background: rgba(59, 130, 246, 0.3);
+                border-bottom: 3px solid #3b82f6;
+            }
+            .mp-cal-day-header {
+                padding: 8px 4px;
+            }
+            .mp-cal-day-name {
+                font-size: 0.72em;
+                letter-spacing: 0.5px;
+            }
+            .mp-cal-day-date {
+                font-size: 1.15em;
+            }
+            .mp-cal-time-label {
+                font-size: 0.6em;
+                padding: 2px 3px;
+            }
+            /* Compact task blocks */
+            .mp-cal-task {
+                font-size: 10px;
+                padding: 4px 5px;
+                border-left-width: 3px;
+                overflow: hidden;
+                border-radius: 3px;
+            }
+            .mp-cal-task-name {
+                font-size: 10px;
+                font-weight: 600;
+                line-height: 1.2;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                margin-bottom: 2px;
+                margin-top: 0;
+            }
+            .mp-cal-task-time {
+                font-size: 9px;
+                opacity: 0.9;
+            }
+            .mp-cal-task-location {
+                font-size: 8px;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .mp-cal-task-notes {
+                display: none;
+            }
+            .mp-cal-task-header {
+                margin-bottom: 0;
+                gap: 2px;
+            }
+            .mp-cal-edit-btn {
+                font-size: 8px;
+                padding: 1px 3px;
+            }
+            .mp-cal-checkbox {
+                width: 13px;
+                height: 13px;
+            }
+            /* Other planner mobile styles */
             .mp-sidebar {
                 grid-template-columns: 1fr;
                 gap: 8px;
@@ -6061,20 +6148,14 @@
                 padding: 4px 2px;
                 min-height: 60px;
             }
-            .mp-cal-checkbox {
-                width: 14px;
-                height: 14px;
-            }
             .mp-day-tasks {
                 font-size: 0.7em;
             }
-            /* Monthly planner grid */
             .mp-grid,
             .monthly-planner-grid {
                 grid-template-columns: 1fr;
                 gap: 8px;
             }
-            /* Monthly planner modal */
             .mp-modal-overlay {
                 padding: 10px;
             }
@@ -6284,8 +6365,9 @@
                 font-size: 0.68em;
             }
 
-            .mp-calendar-wrapper > * {
-                min-width: 550px;
+            .mp-cal-header-row,
+            .mp-cal-grid {
+                grid-template-columns: 36px repeat(7, 100px);
             }
 
             .header h1 {
@@ -10571,7 +10653,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/patients.js?v=20260322dd"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260322ct"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260322ct"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260325"></script>
     <script src="js/graduation-roadmap/periodic-review.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/init.js?v=20260322mc"></script>
 </body>
