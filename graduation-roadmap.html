@@ -3105,10 +3105,10 @@
                 margin-top: 0 !important;
             }
 
-            /* Scale calendar to fit mobile viewport - no scrolling needed */
+            /* Calendar scales with viewport — no fixed min-width */
             .mp-cal-header-row,
             .mp-cal-grid {
-                min-width: 650px;
+                min-width: unset;
             }
 
             .mp-cal-grid {
@@ -6040,30 +6040,29 @@
                 font-size: 0.85em;
             }
 
-            /* ---- MONTHLY PLANNER (iPhone Calendar Overhaul) ---- */
+            /* ---- MONTHLY PLANNER (iPhone Calendar — Full 7-Day View) ---- */
             .mp-calendar-wrapper {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                margin: 0 -12px;
+                overflow: hidden;
+                margin: 0 -4px;
                 padding: 0;
-                scroll-behavior: smooth;
             }
             .mp-calendar-wrapper > * {
                 min-width: unset;
             }
-            /* Fixed-width columns: 36px time + 7 × 110px = 806px total */
+            /* Fluid columns: 22px time gutter + 7 equal day columns = fits viewport */
             .mp-cal-header-row,
             .mp-cal-grid {
-                grid-template-columns: 36px repeat(7, 110px);
+                grid-template-columns: 22px repeat(7, 1fr);
                 min-width: unset;
             }
             .mp-cal-corner {
-                min-width: 36px;
+                min-width: 22px;
+                padding: 2px;
             }
             /* Clip task blocks to their day column */
             .mp-cal-day-column {
                 overflow: hidden;
-                border-right: 2px solid #334155;
+                border-right: 1px solid #334155;
             }
             /* Alternating column backgrounds for visual separation */
             .mp-cal-day-column:nth-child(odd) {
@@ -6071,51 +6070,59 @@
             }
             /* Today column highlight */
             .mp-cal-day-column.today {
-                background: rgba(59, 130, 246, 0.08);
+                background: rgba(59, 130, 246, 0.12);
             }
             .mp-cal-day-header.today {
-                background: rgba(59, 130, 246, 0.3);
-                border-bottom: 3px solid #3b82f6;
+                background: rgba(59, 130, 246, 0.35);
+                border-bottom: 2px solid #3b82f6;
             }
             .mp-cal-day-header {
-                padding: 8px 4px;
+                padding: 4px 1px;
             }
             .mp-cal-day-name {
-                font-size: 0.72em;
-                letter-spacing: 0.5px;
+                font-size: 0.55em;
+                letter-spacing: 0;
+                font-weight: 700;
             }
             .mp-cal-day-date {
-                font-size: 1.15em;
+                font-size: 0.9em;
+            }
+            .mp-cal-time-column {
+                border-right: 1px solid #334155;
             }
             .mp-cal-time-label {
-                font-size: 0.6em;
-                padding: 2px 3px;
+                font-size: 0.5em;
+                padding: 0 2px;
+                line-height: 1;
             }
-            /* Compact task blocks */
+            /* Ultra-compact task blocks — tap to edit */
             .mp-cal-task {
-                font-size: 10px;
-                padding: 4px 5px;
-                border-left-width: 3px;
+                font-size: 7px;
+                padding: 2px 2px 2px 3px;
+                border-left-width: 2px;
                 overflow: hidden;
-                border-radius: 3px;
+                border-radius: 2px;
+                left: 1px;
+                right: 1px;
+                cursor: pointer;
             }
             .mp-cal-task-name {
-                font-size: 10px;
-                font-weight: 600;
-                line-height: 1.2;
+                font-size: 7.5px;
+                font-weight: 700;
+                line-height: 1.15;
                 display: -webkit-box;
                 -webkit-line-clamp: 3;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
-                margin-bottom: 2px;
+                margin-bottom: 1px;
                 margin-top: 0;
             }
             .mp-cal-task-time {
-                font-size: 9px;
+                font-size: 6.5px;
                 opacity: 0.9;
             }
             .mp-cal-task-location {
-                font-size: 8px;
+                font-size: 6px;
                 display: -webkit-box;
                 -webkit-line-clamp: 1;
                 -webkit-box-orient: vertical;
@@ -6124,17 +6131,18 @@
             .mp-cal-task-notes {
                 display: none;
             }
+            /* Hide edit/hide buttons on mobile — tap task block to edit */
             .mp-cal-task-header {
-                margin-bottom: 0;
-                gap: 2px;
+                position: static;
+                float: right;
+                margin: 0 0 1px 2px;
             }
             .mp-cal-edit-btn {
-                font-size: 8px;
-                padding: 1px 3px;
+                display: none;
             }
             .mp-cal-checkbox {
-                width: 13px;
-                height: 13px;
+                width: 11px;
+                height: 11px;
             }
             /* Other planner mobile styles */
             .mp-sidebar {
@@ -6367,7 +6375,7 @@
 
             .mp-cal-header-row,
             .mp-cal-grid {
-                grid-template-columns: 36px repeat(7, 100px);
+                grid-template-columns: 28px repeat(7, 1fr);
             }
 
             .header h1 {
@@ -10653,7 +10661,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/patients.js?v=20260322dd"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260322ct"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260325"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260325b"></script>
     <script src="js/graduation-roadmap/periodic-review.js?v=20260322pr"></script>
     <script src="js/graduation-roadmap/init.js?v=20260322mc"></script>
 </body>

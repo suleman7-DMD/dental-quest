@@ -416,6 +416,15 @@ function mpGetDaysOut(startDate) {
     return `${diff} days out`;
 }
 
+// Responsive hour heights — smaller on mobile to fit 7-day view
+function mpGetHourHeights() {
+    const isMobile = window.innerWidth <= 480;
+    return {
+        withTask: isMobile ? 50 : 80,
+        empty: isMobile ? 22 : 40
+    };
+}
+
 function mpCreateCalendarGrid(week) {
     const days = mpGetWeekDays(week.start, week.end);
     const today = getLocalDateString();
@@ -441,9 +450,10 @@ function mpCreateCalendarGrid(week) {
     const rangeStart = timedTasks.length > 0 ? Math.max(6, minHour - 1) : 6;
     const rangeEnd = timedTasks.length > 0 ? Math.min(23, maxHour + 1) : 21;
 
-    // Pixel heights for Google Calendar-style layout
-    const hourHeightWithTask = 80;  // Hours with tasks - room for full content
-    const hourHeightEmpty = 40;     // Empty hours - still needs visibility
+    // Pixel heights for Google Calendar-style layout (responsive)
+    const heights = mpGetHourHeights();
+    const hourHeightWithTask = heights.withTask;
+    const hourHeightEmpty = heights.empty;
 
     let html = '<div class="mp-calendar-wrapper">';
 
@@ -578,9 +588,10 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
     const completedTasks = getValues(roadmapData.monthlyPlanner?.completedTasks);
     const isCompleted = completedTasks.some(c => (c.value || c) === String(taskId));
 
-    // Heights matching mpCreateCalendarGrid
-    const heightWithTask = 80;
-    const heightEmpty = 40;
+    // Heights matching mpCreateCalendarGrid (responsive)
+    const heights = mpGetHourHeights();
+    const heightWithTask = heights.withTask;
+    const heightEmpty = heights.empty;
 
     // Calculate position and height
     const startHour = parseInt(task.time.split(':')[0]);
@@ -635,7 +646,8 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
 
     // Use min-height so background extends to cover all content
     // heightPx is based on duration; content may need more space
-    const minHeight = Math.max(60, heightPx);
+    const isMobile = window.innerWidth <= 480;
+    const minHeight = Math.max(isMobile ? 36 : 60, heightPx);
 
     // Hide button for clinic-synced tasks
     const hideBtn = (task.syncedFromClinical || task.clinicalAppointmentId)
@@ -645,7 +657,8 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
     return `
         <div class="mp-cal-task ${typeClass} ${completedClass}"
              style="top: ${topPx}px; min-height: ${minHeight}px;"
-             data-task-id="${taskId}">
+             data-task-id="${taskId}"
+             onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false})">
             <div class="mp-cal-task-header">
                 <label onclick="event.stopPropagation();">
                     <input type="checkbox" class="mp-cal-checkbox" ${isCompleted ? 'checked' : ''}
