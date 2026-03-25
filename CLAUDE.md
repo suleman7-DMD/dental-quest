@@ -127,6 +127,11 @@ const date = new Date(year, month - 1, day);
 - **`calculatePaceProjection` uses Math.floor for elapsed days**: `daysSoFar` must use `Math.floor` (not `Math.ceil`) for accurate rate calculation. `Math.ceil` inflates elapsed days by 1, reducing computed pace and shifting projected completion date forward.
 - **PATIENT_UPDATE must validate chart number**: `confirmPatientImport()` PATIENT_UPDATE path must reject empty chart numbers with error toast. Without this, empty chart creates ID `'pt_'` which overwrites other chartless patients.
 - **Smart counter name dedup is case-insensitive**: `getSmartAppointmentCount()` Source 3 compares patient names using `toLowerCase().trim()`. Without this, "Silva, Maria" and "silva, maria" double-count. Fixed Mar 22 2026.
+- **DEFAULT_PATIENT_RECORDS chart numbers must match canonical leading-zero form**: `pt_966540` with chart `966540` caused duplicate because imports created `pt_0966540` with chart `0966540`. Fixed Mar 25 2026: default changed to `pt_0966540`/`0966540`.
+- **`getPatientRecords()` fill-merge must use normalized chart matching**: Exact ID check (`!existing[id]`) misses leading-zero variants. Fixed Mar 25 2026: builds `existingNormCharts` index and checks `normalizeChartNumber()` before adding defaults.
+- **`periodic-review.js` PR1_BASELINE chart numbers must include leading zeros**: `966540` and `79118` should be `0966540` and `079118`. Without leading zeros, PR roster matching creates phantom entries. Fixed Mar 25 2026.
+- **`migrateLeadingZeroDedup()` one-time migration**: Consolidates duplicate patient records caused by leading-zero chart mismatch. Keeps the record with the longer chart number (with leading zero), fill-merges fields from the shorter one, deletes from both `patientRecords` and `clinicalData.patients`. Gated by `leadingZeroDedupDone_v1` localStorage flag. Added Mar 25 2026.
+- **`addNewPatientRecord()` must use `findByNormalizedChart()` for dedup**: Exact ID match `records['pt_' + chart]` misses existing records with different leading-zero variants. Fixed Mar 25 2026.
 
 ---
 
