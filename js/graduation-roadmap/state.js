@@ -1288,6 +1288,28 @@ function navigateToEntity(type, id) {
     }
 }
 
+// ==================== CIS v2: CENTRALIZED PROPAGATION ====================
+
+function propagateClinicalChanges({ appointments = false, procedures = false, competencies = false, patients = false, dashboard = true, calendars = true, source = '' } = {}) {
+    clinicalDataDirty = true;
+    if (appointments) {
+        if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
+        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+        if (typeof rebuildUpcomingDeadlines === 'function') rebuildUpcomingDeadlines();
+    }
+    if (procedures || competencies) {
+        if (typeof renderCompetencies === 'function') renderCompetencies();
+    }
+    if (patients) {
+        if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
+        if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
+        if (typeof renderActiveRoster === 'function') renderActiveRoster();
+    }
+    if (dashboard && typeof renderDashboard === 'function') renderDashboard();
+    if (calendars && typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+    // NOTE: Does NOT call saveData(). Caller controls save timing.
+}
+
 // ==================== MISSING NOTES HELPERS ====================
 
 function getMissingNotesAlertLevel(pendingCount) {
