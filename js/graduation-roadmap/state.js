@@ -246,7 +246,8 @@ function isEmptyState(data) {
     const hasAppointments = getCount(data.clinicalData?.appointments) > 0;
     const hasBlocks = getCount(data.dailyPlanner?.blocks) > 0;
     const hasNotes = getCount(data.monthlyPlanner?.notes) > 0;
-    const hasPatients = getCount(data.clinicalData?.patients) > 0;
+    // CIS v2: Check unified patientRecords for user-modified entries (not just existence from defaults)
+    const hasPatients = getValues(data.clinicalData?.patientRecords).some(function(p) { return p.lastUpdated; });
     const hasCompletedDeadlines = getCount(data.completedDeadlines) > 0;
     const hasExamStudyProgress = getCount(data.examStudyProgress) > 0;
     const hasGrades = data.grades && Object.values(data.grades).some(course =>
@@ -281,6 +282,7 @@ function isEmptyState(data) {
     })();
     const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
     const hasTodoItems = getCount(data.todoList?.items) > 0;
+    const hasReviewQueue = Array.isArray(data.clinicalData?.autoLinkReviewQueue) && data.clinicalData.autoLinkReviewQueue.length > 0;
     // clinicHeadlines: only count as real data if user changed the target from default (90/116)
     const hasClinicHeadlines = data.clinicHeadlines && (
         (data.clinicHeadlines.appointments?.target != null && data.clinicHeadlines.appointments.target !== 90) ||
@@ -314,7 +316,7 @@ function isEmptyState(data) {
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
+           !hasMissingNotes && !hasTodoItems && !hasReviewQueue && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
 }
 
 function hasRealData(data) {
