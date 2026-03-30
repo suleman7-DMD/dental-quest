@@ -1871,8 +1871,30 @@ function backfillClinicalData() {
 // ==================== APPOINTMENT COMPLETION CASCADE ====================
 // Single action triggers: procedure record prompt, competency update, planner done, deadline done, patient updated
 
+// CIS v2: inferProcedureType derives from KEYWORD_PATTERNS (single source of truth)
+function inferProcedureType(procedureText) {
+    var text = (procedureText || '').toLowerCase();
+    var categoryFromId = {
+        'fixed-': 'fixed', 'op-': 'operative', 'perio-': 'perio', 'endo-': 'endo',
+        'os-': 'oralsurg', 'cd-': 'dentures', 'rpd-': 'rpd', 'peds-': 'peds',
+        'srp-': 'srp', 'gp-': 'grouppractice', 'tx-': 'txplanning'
+    };
+    for (var i = 0; i < KEYWORD_PATTERNS.length; i++) {
+        var pattern = KEYWORD_PATTERNS[i];
+        var matched = pattern.keywords.some(function(kw) { return text.includes(kw); });
+        if (matched) {
+            var firstId = pattern.ids[0] || '';
+            var prefixes = Object.keys(categoryFromId);
+            for (var j = 0; j < prefixes.length; j++) {
+                if (firstId.startsWith(prefixes[j])) return categoryFromId[prefixes[j]];
+            }
+        }
+    }
+    return '';
+}
+
 function completeAppointment(aptId) {
-    const apt = roadmapData.clinicalData?.appointments?.[aptId];
+    var apt = roadmapData.clinicalData?.appointments?.[aptId];
     if (!apt) return;
 
     if (apt.status === 'completed') {
@@ -1880,41 +1902,50 @@ function completeAppointment(aptId) {
         return;
     }
 
+    // 1. Set completed status
     apt.status = 'completed';
     apt.completedAt = new Date().toISOString();
 
-    const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
-
-    // Update patient lastVisit
+    // 2. Update patient lastVisit (unified store)
+    var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
     if (patient) {
         patient.lastVisit = apt.date;
         patient.lastUpdated = new Date().toISOString();
     }
 
-    // Mark linked deadline as done
-    markLinkedDeadlineDone(aptId);
+    // 3. Auto-create procedure ONLY if appointment has procedure text (AUDIT #4)
+    var proc = null;
+    if (apt.procedures && apt.procedures.trim()) {
+        proc = typeof recordProcedure === 'function' ? recordProcedure({
+            patientId: apt.patientId,
+            patientName: patient?.name || apt.patientName || 'Unknown',
+            appointmentId: apt.id,
+            date: apt.date,
+            procedureType: inferProcedureType(apt.procedures),
+            procedure: apt.procedures,
+            competencyItemIds: [],
+            notes: 'Auto-created from appointment completion'
+        }) : null;
+        // 4. Smart auto-link fires on created procedure
+        if (proc && proc.id && typeof autoLinkProcedureToCompetencies === 'function') {
+            autoLinkProcedureToCompetencies(proc);
+        }
+    }
 
-    // Mark planner task as done
+    // 5. Mark deadline + planner done
+    markLinkedDeadlineDone(aptId);
     markPlannerTaskDone(aptId);
 
+    // 6. Centralized propagation
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-
+    propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, source: 'completeAppointment' });
     renderAppointmentsList();
     updateClinicalStats();
-    renderDashboard();
-    if (typeof renderDeadlines === 'function') renderDeadlines();
-    if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
     if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
 
-    // Rebuild week schedule for Stim Calc cross-app visibility
-    if (typeof buildCurrentWeekSchedule === 'function') {
-        buildCurrentWeekSchedule();
-        saveData();
-    }
-
-    // Open procedure recording modal for this appointment
+    // 7. Open procedure recording modal for refinement
     openProcedureRecordingModal(aptId);
 }
 
