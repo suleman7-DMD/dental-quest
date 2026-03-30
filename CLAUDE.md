@@ -2,9 +2,17 @@
 
 ## CRITICAL RULES
 
+### Development Philosophy (ALWAYS APPLY)
+- **Never assume constraints.** Do not pre-compromise features, scope, or ambition based on assumptions about the user's time, skill, or resources. The user has AI-augmented development velocity — what human estimates call "a month of work" completes in a day or less.
+- **No time estimates.** Never estimate how long something will take. All estimates are based on obsolete human velocity data. Just describe the work.
+- **Vision before scope.** When the user describes a new feature or enhancement, explore the ideal unconstrained version FIRST. Only scope down when the user explicitly asks. Never suggest "a simpler approach" unprompted.
+- **Match the user's ambition.** This codebase has 22k-line apps, 12-module architectures, cross-app Firebase sync with 6 guards, pharmacokinetic models, and clinical import systems with 9 block types. The user handles enterprise-grade complexity daily. Don't patronize with "start small" or "keep it simple."
+- **No hedging.** Never say "realistically," "given your constraints," "that's ambitious but," or "a good MVP would be." Present the full vision. The user is an adult who will scope for themselves.
+- **"Dream big" trigger.** When the user says "dream big" (or any vision-first trigger phrase) -> invoke the `vision-first` skill for the full unconstrained vision workflow before any planning or implementation.
+
 ### Never Rebuild Entire Files
 - Body-comp is ~22,444 lines. Use surgical `Edit` tool only. Read section first.
-- **Split apps** (index.html: 12 modules, d3-roadmap: 10 modules, stim-calc: 11 modules) — use surgical edits on individual JS module files.
+- **Split apps** (index.html: 12 modules, graduation-roadmap: 12 modules, stim-calc: 11 modules) — use surgical edits on individual JS module files. NOTE: `js/d3-roadmap/` was deleted; modules are in `js/graduation-roadmap/`.
 
 ### Date Parsing (COMMON BUG)
 ```javascript
@@ -13,129 +21,141 @@
 const [year, month, day] = '2026-02-02'.split('-').map(Number);
 const date = new Date(year, month - 1, day);
 ```
+- Never use `.toISOString().slice(0,10)` — use `getLocalDateString(date)`.
+- `calculatePaceProjection`: `daysSoFar` must use `Math.floor` (not `Math.ceil`).
 
-### Common Bugs
+---
+
+## COMMON BUG PATTERNS
+
+### JS Language Traps
 - **Empty array truthy**: `[] || defaults` → `[]`. Check `.length` not truthiness.
-- **`||` vs `??`**: `|| default` treats 0/false as falsy. Use `?? default` for numeric/boolean fields. Includes `done`/`grade` fields.
+- **`||` vs `??`**: `|| default` treats 0/false as falsy. Use `?? default` for numeric/boolean fields (includes `done`/`grade`).
 - **Circular calculations**: A computed value must never fall back to itself as input.
-- **Wrong field names**: Verify against `getDefaultState()` or `state.js` defaults (e.g., `goalWeight_lbs` not `goalWeight`, `dailyStreak` not `streak`).
-- **`_version: Date.now()`**: Causes data wipe. Must be 0 in defaults.
-- **`undefined` in Firebase `.set()`**: Firebase rejects `undefined` — use `?? null` or `?? false`. Crashes ALL saves silently.
-- **`doToday` only for eod**: Only `urgency === 'eod'` sets `doToday: true`. Never for 'soon'.
-- **UTC vs local dates**: Never use `.toISOString().slice(0,10)` — use `getLocalDateString(date)`.
-- **XP dual counters**: `toggleTask()` must use `awardCommandCenterXP()` for BOTH `stats.totalXPGained` AND `focusStats.totalXP`. Uncomplete subtracts tier-based XP (50/75/40/25) from ALL 3 counters.
-- **Task creation consistency**: ALL 4 creation sites MUST set triageTier/triageOrder/triageDate when urgency is eod/soon/week.
+- **Wrong field names**: Verify against `getDefaultState()` or `state.js` defaults (e.g., `goalWeight_lbs` not `goalWeight`).
 - **onclick string IDs**: `onclick="fn('${taskId}')"` not `onclick="fn(${taskId})"`.
 - **XSS in innerHTML**: ALL user text MUST use `escapeHtml()` in innerHTML.
-- **StableId before mutation**: Compute `getDeadlineId(deadline)` BEFORE modifying fields. Use `deadline._originalStableId` for persistence keys.
-- **Custom deadline dual-store**: When editing custom deadlines, update BOTH `editedDeadlines` AND `customDeadlines[id]`. `initUI()` only applies `editedDeadlines` to STATIC deadlines.
-- **Flag ordering**: ALL sync flags MUST be set BEFORE `initUI()`. Wrap `initUI()` in try/catch.
-- **mergeRemoteState**: Compare `lastSaved` timestamps — if local is newer, call `mergeRemoteCollectionsIntoLocal(data)` (NOT skip entirely). This adds remote-only entries without overwriting local changes. Skipping entirely loses data imported on other devices (e.g., Chrome imports todos, DuckDuckGo has newer localStorage → skipping merge loses todos).
-- **`mergeRemoteCollectionsIntoLocal` pattern**: When local is newer, `addMissing(local, remote)` — only add keys from remote that don't exist in local. Local wins for conflicts. Covers ALL collection fields.
-- **Auto-push when local is newer**: `finishFirebaseLoad()` sets `localWasNewer=true` → deferred `saveData()` at 500ms pushes to Firebase so other devices get the latest. Also pushes when Firebase is empty/poisoned.
-- **Poisoned Firebase detection**: `finishFirebaseLoad()` checks `isEmptyState(data)` — if Firebase has data but it's effectively defaults (no real user collections), treat as no data. Prevents merging defaults over real local data.
-- **Auto-generated data must NOT pass Guard C**: `isEmptyState()` must NOT check `exams` (auto-generated from static list in initUI). `hasCompetencies` must check `completed > 0` (auto-initialized from DEFAULT_COMPETENCIES all have completed:0). Without this, defaults + auto-generated data pass Guard C and get saved to Firebase.
-- **initUI auto-save triggers need guards**: Both `setTimeout(() => saveData(), 100)` (exams sync) and `setTimeout(() => saveData(), 2000)` (upcomingDeadlines) in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad` — prevents saving defaults during race.
+- **`completedTasks` object wrapper**: `getValues(completedTasks)` returns `[{id, value, completedAt}, ...]` not strings. NEVER use `.includes(String(taskId))`. Use `.some(function(c) { return (c.value || c) === String(taskId); })`.
+
+### Firebase Save Safety
+- **`undefined` kills saves**: Firebase rejects `undefined` in `.set()` — use `?? null` or `?? false`. `buildSaveData()` must use `?? null`/`?? false` for ALL optional fields. One `undefined` crashes ALL saves silently.
+- **`_version: Date.now()`**: Causes data wipe. Must be 0 in defaults.
 - **CRUD localStorage safety**: ALL CRUD functions MUST call `safeLocalStorageSet()` BEFORE `saveData()`.
-- **Cache-busting**: After multi-file JS changes, add `?v=YYYYMMDD` to ALL `<script src>` tags.
-- **Shallow grades merge**: Use deep per-course IIFE merge, not `{ ...local, ...firebase }` spread.
-- **buildSaveData undefined**: Use `?? null`/`?? false` for ALL optional fields (e.g., currentSession). One undefined crashes all saves.
-- **Stats counters**: `stats.totalTasks` drifts — use live `getValues(tasks)` count.
-- **Double loadData()**: Causes race conditions. **Orphan function calls**: Verify function exists.
+- **No `saveData()` in render paths**: Render functions must NEVER call `saveData()`. Pre-populate defaults separately; save from caller with `hasLoadedFromCloud && !awaitingFirebaseLoad` guards.
+- **No state mutation in render paths**: `renderDashboard()` must NOT write back to `roadmapData`. Use local variables for computed values.
+- **`initUI` auto-save guards**: Both `setTimeout(() => saveData(), 100)` and `setTimeout(() => saveData(), 2000)` in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad`.
+- **Double `loadData()`**: Causes race conditions. Verify orphan function calls exist before calling.
 - **Failsafe timer**: Must set `hasLoadedFromCloud = true` + `markInitialLoadComplete()`.
-- **Flex full-width items need `flex-wrap`**: When mixing flex columns with full-width cards, the container MUST have `flex-wrap: wrap` and the full-width item needs `flex: 1 1 100%`. Without `flex-wrap`, all items squeeze into one row.
-- **Expensive renders in update loops**: Never put heavy canvas/analytics renders in `updateUI()`/`recalculate()` (runs every 5s). Call only on init + navigation events.
-- **Canvas tooltip stale closure**: Scrollable/resizable canvas containers must recompute `graphWidth`/`pointSpacing` inside `onmousemove`, not capture at setup time.
-- **Division by zero in graph spacing**: Always guard `pointSpacing = width / (data.length - 1)` with `if (data.length < 2) return`.
-- **Nuke-and-rebuild sync**: NEVER delete all items then recreate from source on every render/init. Use incremental sync — track user edits (`userEdited: true`) and deletions (`hiddenClinicTasks`) so sync respects them.
-- **Clinic task delete without hiding**: `_mpDeleteCurrentTaskConfirmed()` must check for `clinicalAppointmentId` or `clinic_` prefix — clinic tasks must be added to `hiddenClinicTasks` (not just deleted from `customTasks`), or `syncClinicalToMonthlyPlanner()` recreates them on next init. Fixed Mar 21 2026.
-- **Import dedup by patientId only**: Both `confirmClinicalImport()` and `confirmPatientImport()` must dedup by patient NAME + date + time as secondary check, not just `patientId` + date + time. If patient matching creates a new ID, the primary dedup fails silently. Fixed Mar 21 2026.
-- **syncClinicalToMonthlyPlanner on every tab switch**: Must be gated by `clinicalDataDirty` flag. Without it, hidden/deleted clinic tasks get recreated on every tab switch. Flag set true by mergeRemoteState/loadFromLocalStorage/restoreCheckpoint/importAndRestoreDirectly, set false at end of syncClinicalToMonthlyPlanner(). Fixed Mar 21 2026.
-- **DeadlineId in onclick**: `getDeadlineId()` must strip `'"\\` from keys. Escape IDs in onclick: `onclick="fn('${safeId}')"` where `safeId = deadlineId.replace(/'/g, "\\'")`.
-- **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if the element already has a `style` attr. Browsers use the first and ignore the second. Merge into one style.
-- **Cross-app dedup**: Stim calc reads both `appointments` AND `customTasks` from graduationRoadmap — clinic-synced tasks appear in BOTH. Dedup by `clinicalAppointmentId` and by `date|time|name`.
-- **Cross-app write exception**: `toggleMainAppTask()` in graduation-roadmap writes to `users/{pin}/appData/tasks/{id}/completed` (index.html's Firebase path). This is an intentional feature for "Do Today" task completion, NOT a bug. It is the ONLY cross-app write — all other cross-app reads are READ-ONLY. Targeted single-field write minimizes conflict risk. Self-heals via `.on('value')` listener.
-- **Shared storage namespace = data wipe**: NEVER let two apps share the same localStorage key or Firebase path. graduation-roadmap used to share `d3RoadmapData`/`d3Roadmap` with d3-roadmap — opening d3-roadmap from any nav link wiped all graduation-specific fields. Fixed Mar 21 2026: separate namespace `graduationRoadmapData`/`graduationRoadmap` with one-time migration.
-- **Field-by-field reconstruction drops new fields**: All 4 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`) reconstruct `roadmapData` field-by-field. When adding ANY new field, it MUST be added to ALL 4 sites or it gets silently wiped on every sync/refresh/restore.
-- **`isEmptyState()` must check ALL collection fields**: When adding new collection fields to any app, also add them to `isEmptyState()` — otherwise Guard C silently blocks saves when ONLY those fields have data.
-- **Array merge with `||` loses data**: `data.arr || local.arr || []` — if remote has empty `[]` (truthy), local data is lost. Use dedicated merge functions for arrays (dedup + concat).
-- **Fallback timers fire during PIN prompt OR Firebase load = data wipe**: DOMContentLoaded 3s/6s fallback timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad` flags. After PIN entry, `awaitingPinEntry` clears but Firebase hasn't responded yet — timers fire, set all flags with defaults, `initUI()` auto-saves defaults with fresh timestamp, then `finishFirebaseLoad()` loads poisoned localStorage, skips merge ("local is newer"), keeps defaults. Fixed Mar 22 2026: `awaitingFirebaseLoad` flag (set in `loadFromFirebase()`, cleared in `finishFirebaseLoad()`) gates all 3 timers. 15s safety valve timeout prevents permanent hang.
-- **Default grades bypass Guard C**: Default `getDefaultRoadmapData()` must have EMPTY grade objects (`oralmed: {}`, not `oralmed: { quiz1: 100 }`). Non-empty defaults make `isEmptyState()` return false, allowing default state to pass Guard C and be saved to Firebase. Fixed Mar 22 2026.
-- **Default grades make isEmptyState() return false**: Default `roadmapData` has hardcoded grades (oralmed quiz1:100, peds exam1:77, etc.). These pass Guard C, allowing default state to be saved. Never add real data values to `getDefaultRoadmapData()` — use empty objects.
-- **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]` on competency items. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts. Always use these functions, never manually edit `item.completed` for procedure-linked items.
-- **Smart counting vs narrow counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (in state.js) which aggregate from ALL data sources. NEVER replace these with narrow `getValues(appointments).filter(completed)` — that was the original bug (showed 0/90 despite real data existing).
-- **Evidence trail on manual adjustments**: `adjustCompItem()` and `setCompItemStatus()` auto-create `completionEntries[]` for manual changes. Do NOT remove this — the smart procedure counter depends on deduping manual entries vs procedure-linked entries.
-- **Backfill creates checkpoint**: `backfillClinicalData()` calls `createCheckpoint('pre-backfill')` before mutations. Always preserve this safety net.
-- **Import auto-completes past appointments**: `confirmClinicalImport()` AND `confirmPatientImport()` both set `status: 'completed'` for appointments with dates before today. Do NOT revert to always `'scheduled'`.
-- **SPS dashboard is ground truth**: `getSmartAppointmentCount()` and `getSmartProcedureCount()` use `MAX(computed, dashboardSnapshots[0])`. The SPS snapshot from the school system is the authoritative floor. Never remove this floor logic.
-- **Unified import handles appointments**: `parsePatientImportText()` in patients.js now detects PATIENT:/CHART:/DATE: blocks and creates appointments. The user pastes ONE combined text (SPS_DASHBOARD_UPDATE + APPOINTMENTS) into the patient import modal and everything syncs globally.
-- **Missing Notes tracker**: `MISSING_NOTES` block type parsed by `parseMissingNotesBlock()` in patients.js. 7 pipe-delimited fields: id|date|patient|chart|faculty|session|location. Dedup by ID. Dashboard shows capacity bar (6 limit), faculty cross-reference with upcoming appointments. `missingNotes{}` stored under `clinicalData`.
-- **To-Do list system**: `TODO_LIST` block type parsed by `parseTodoListBlock()` in patients.js. 5 pipe-delimited fields: id|description|source|dateAdded|sourceDetail. Sources: MANUAL/EMAIL/SCREENSHOT/CLINIC/SYSTEM. Dedup by ID. Dashboard has inline quick-add. `todoList{ items{}, _nextSeq, lastUpdated }` stored at top level.
-- **9 import block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, REQUIREMENTS_STATUS, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST, CLINICAL_BRIEF — all parseable in one atomic paste.
-- **Clinical Brief full-overwrite**: CLINICAL_BRIEF always overwrites entirely — never merge old fields into new. Push old to `briefHistory[]` (max 3) before overwriting. `clinicalBrief` and `briefHistory` live ON patient records (nested in `patientRecords[id]`), not as separate collections.
-- **Perio noise filter**: Routine perio IDs (prophy, recall, gingivitis re-eval, OHI) are EXCLUDED from requirement matching for non-periodontitis patients. Only SRP/calculus/surgical perio IDs appear for periodontitis patients. One-time migration `migratePerioNoiseCleanup()` strips existing noise (gated by `perioNoiseCleanupDone_v1` localStorage flag).
-- **Multi-line parser is lenient**: `parsePatientRecord()` and `parsePatientUpdate()` accept ANY non-empty line that doesn't start with a known field key as a continuation of the current field. 2+ space indentation is recommended but NOT required. Fixed Mar 22 2026 — old parser required `^\s{2,}` which silently dropped text when copy-pasted from markdown-rendered Claude webchat output.
-- **Imported requirements on patient**: REQUIREMENTS_MATCH `canFulfill` entries are stored as `patient.importedRequirements[]`. `computeRequirementMatches()` uses these (authoritative) instead of keyword fallback when available. Also stores `patient.priorityNotes` and `patient.highValue` from the REQUIREMENTS_MATCH block.
-- **Webchat exports MUST use code fences**: Claude webchat project instructions require all export blocks be wrapped in triple-backtick code fences. Without this, markdown rendering destroys `---` delimiters (renders as `<hr>`) and strips leading spaces, causing parser truncation. Webchat instructions backup: `docs/claude-webchat-project-instructions.md`.
-- **Patients tab light theme**: Uses `#tab-patients` CSS specificity prefix to override dark base styles without removing them. New classes: `.ptr-summary-card`, `.ptr-priority-card`, `.ptr-imaging-chips`, `.ptr-perio-row`. Section IDs (`'info'`, `'clinical'`, `'perio'`, `'treatment'`, `'imaging'`, `'notes'`, `'priority'`) must stay unchanged for `collapsedSections` state.
-- **Patients tab mobile**: `@media (max-width: 768px)` hides `#dashboardMetricsCard` and `#patientsCountdownRadar` on patients tab. Summary card uses 3-column grid for visit dates. Sidebar goes `position: static` on mobile. `overflow: visible` on `#patientsMainLayout` required for sticky sidebar on desktop.
-- **CSS-only tab theming pattern**: To theme a single tab differently, use `#tab-[name] .existing-class` specificity override. Additive — old dark styles remain as fallback for other contexts. Don't delete base styles.
-- **Mini Review tab**: Read-only tab (`#tab-minireview`) showing all patients summarized. `renderMiniReview()` in patients.js, called on tab switch. Uses `getAllPatientRecords()` + `getNextScheduledVisit()`. Sorted by reliability (green→yellow→red), then alphabetical. Shows: reliability dot, name, chart#, HIGH VALUE badge, last/next visit, clinical brief snapshot, tx completed by me, treatment plan. No state mutation, no saves.
-- **`formatClinicalDisplay()` shared formatter**: Pure display function in patients.js. Takes raw text, escapes it, adds line breaks before Phase/URGENT/SHORT-TERM/MEDIUM-TERM/LONG-TERM headers, sentence breaks for non-sectioned text, color-codes tooth numbers (`fc-tooth`), costs (`fc-green`), section headers (`fc-teal`/`fc-red`/`fc-blue`/`fc-purple`), HIGH VALUE (`fc-hv`). Used by both Mini Review tab and Patients tab Clinical Brief. Zero content change — pure visual formatting. CSS classes prefixed `fc-*`.
-- **No saveData() in render paths**: Render functions (called from `initPeriodicReview()`, `renderDashboard()`, etc.) must NEVER call `saveData()` — side-effects during render can fire before sync guards are set. Pre-populate defaults in a separate function, save from the caller with `hasLoadedFromCloud && !awaitingFirebaseLoad` guards.
-- **No state mutation in render paths**: `renderDashboard()` must NOT write back to `roadmapData` (e.g., `clinicHeadlines.completed = smartApts.total`). Use local variables for computed values. Mutation during render causes disk/memory divergence. Fixed Mar 22 2026.
-- **`getCompetenciesData()` is read-only**: Returns `roadmapData.clinicalData?.competencies || {}` with NO side-effects. Initialization/migration lives in `ensureCompetenciesInitialized()` — called from `initUI()` and `initClinicalTab()`, NEVER from render paths. Fixed Mar 22 2026.
-- **Partial re-renders for dashboard sections**: `rerenderMissingNotesSection()` and `rerenderTodoListSection()` (init.js) update ONLY their section's container div. Use these instead of full `renderDashboard()` for todo/note status changes — preserves scroll position, `<details>` open state, and input focus. Callers in state.js use `typeof` guard for backward compatibility.
-- **`mergeRemoteCollectionsIntoLocal` fill-only trap**: Objects that exist in defaults (clinicHeadlines, graduationPrep) need field-level merge, NOT fill-only `!roadmapData.X` guard (which never fires because defaults always provide the object). Fixed Mar 22 2026: clinicHeadlines targets merge when local has defaults (90/116), graduationPrep fills empty scalars + addMissing for sub-objects.
-- **`restoreBackup()` must use field-by-field reconstruction**: Same pattern as `restoreCheckpoint()` — merge backup.data with `getDefaultRoadmapData()` defaults so newer fields get defaults even if the backup predates them. Raw `roadmapData = backup.data` wipes fields added after backup date. Fixed Mar 22 2026.
-- **Smart counter validation**: `getSmartAppointmentCount()` must validate `clinic_` task IDs against actual `appointments` object before counting — phantom IDs inflate the count. Patient visit dedup uses AND (not OR) for name+chartNumber matching. Fixed Mar 22 2026.
-- **Procedure count dedup**: `getSmartProcedureCount()` only deducts `completionEntries` with a valid `procedureId` (not null). Entries with `procedureId: null` are manual/backfill entries that should count as manual adjustments, not deductions. Without this, interrupted backfills cause undercounting. Fixed Mar 22 2026.
-- **Faculty matching word boundaries**: `getMissingNotesFacultyMatches()` uses `\b` word-boundary regex for faculty names >= 3 chars; exact field match only for names < 3 chars. Prevents "Li" matching "scaling", "Kim" matching "smoking". Fixed Mar 22 2026.
-- **Backfill checkpoint dedup**: `backfillClinicalData()` checks if a `pre-backfill` checkpoint exists within 60s before creating another. Prevents repeated clicks from filling localStorage with identical checkpoints. Fixed Mar 22 2026.
-- **TBD deadlines on dashboard**: Deadlines with no date or `tbd: true` now show in a separate "Unscheduled" card on Mission Control instead of silently vanishing from all 3 deadline windows. Fixed Mar 22 2026.
-- **mergeRemoteCollectionsIntoLocal must cover ALL top-level objects**: When adding new top-level state objects (like `periodicReviews`, `clinicHeadlines`), they must be added to `mergeRemoteCollectionsIntoLocal()` in firebase-sync.js — not just the other 3 merge/restore sites. Without this, the local-is-newer sync path silently drops remote-only entries from other devices.
-- **isEmptyState() must check ALL user-editable fields**: `hasPeriodicReview` must check all 9 PR2 fields (not just subjectiveReport/departmentNotes/completedProceduresHtml). Missing checks cause Guard C to block Firebase saves when only those fields have data.
-- **SPS snapshot is ground truth for admin stats**: PR tab "Attended" row and talking points must use `snapshot.appointments.attended` (from SPS import), not `getSmartAppointmentCount().total` which aggregates from multiple sources and inflates the number.
-- **Double-fire guard on click-to-edit patterns**: When using `change` + `blur` event pairs on inline editors (date pickers, number inputs), always use a `committed` boolean guard flag to prevent the commit function from firing twice. Escape must also set the flag to prevent blur from saving the unwanted value.
-- **Import parser fieldMap must match PR writeup fields**: `parsePatientRecord()`/`parsePatientUpdate()` fieldMaps must include ALL fields displayed in `renderPRPatientWriteups()`. Missing: `ALLERGIES`, `TX_COMPLETED_BY_ME`, `RECALL_HISTORY`, `ACTIVE_STATUS` (fixed commit `c5d4578`).
-- **Skeleton patient records need core fields**: `prSavePatientField()` creates skeleton records — must copy `name` and `chartNumber` from `clinicalData.patients` to prevent blank roster rows.
-- **PR roster must merge both patient stores**: Sections 10/11 must merge `patientRecords` AND `clinicalData.patients` — some patients exist only in `patients{}` (from clinical tab) and not yet in `patientRecords{}` (from import).
-- **CRUD must merge, not replace**: `savePatient()` and `saveAppointment()` in clinical.js MUST spread existing record first (`{ ...existing, ...formFields }`) — full replacement wipes `clinicalBrief`, `importedRequirements`, `briefHistory`, `completedAt`, `clinicalAppointmentId`. Fixed Mar 22 2026.
-- **DEFAULT_COMPETENCIES must have `completed: 0`**: Non-zero defaults bypass Guard C (isEmptyState returns false for defaults). All 20 non-zero values zeroed in commit `bc68e4e`. Never add non-zero `completed` to DEFAULT_COMPETENCIES.
-- **deletePatient() must cascade**: Deleting a patient must also: (1) delete procedure records referencing patient, (2) unlink competency evidence entries, (3) remove clinic planner tasks, (4) add appointment IDs to `hiddenClinicTasks`, (5) set `clinicalDataDirty = true`. Fixed Mar 22 2026.
-- **`completionEntries` Firebase array safety**: Firebase can convert arrays to objects. ALL access to `item.completionEntries` MUST use `getValues()` for reads and `if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries)` before mutations (`.push()`, `.splice()`, `.filter()` assignment). 11 sites fixed in commit `bc68e4e`.
-- **`buildCurrentWeekSchedule()` propagation**: Must be called after ANY appointment CRUD (save, delete, complete, uncomplete) and planner task changes (save, hide, unhide). Stim Calc reads `currentWeekSchedule` via Firebase — stale data means wrong "Week at a Glance".
-- **`rebuildUpcomingDeadlines()` propagation**: Must be called after ANY deadline mutation (add, edit date, complete, delete). Lives in deadlines.js. Stim Calc reads `upcomingDeadlines` via Firebase.
-- **`uncompleteAppointment()` must clean up**: Must remove procedure records created during completion (`appointmentId === aptId`), unlink competency evidence, and recalculate patient `lastVisit` from remaining completed appointments.
-- **`importBackup()` must use field-by-field reconstruction**: Same pattern as `restoreBackup()` — merge imported data with `getDefaultRoadmapData()` defaults. Raw `roadmapData = imported.data` wipes fields added after backup date. Fixed Mar 22 2026.
-- **`isEmptyState()` must check `graduationPrep`**: Data in externship/CDCA/INBDE/jobSearch fields alone must not be treated as empty. `hasGraduationPrep` check added in commit `bc68e4e`.
-- **Guard F must validate `periodicReviews`, `competencies`, `missingNotes`**: These 3 fields were missing from `validateStateIntegrity()`. Corrupted values now rejected. Fixed Mar 22 2026.
-- **`applyRequirementCheckoffs` isDelta pattern**: COMPLETED_TODAY items use `isDelta: true` to INCREMENT competency counts. REQUIREMENTS_STATUS items SET absolutely. Without `isDelta`, importing one completed procedure could DROP count from 3 to 1.
-- **Parser continuation lines use `\n`**: `parsePatientRecord()` and `parsePatientUpdate()` join continuation lines with `'\n'` (not `' '`). Matches `parseClinicalBrief` behavior. Preserves multi-line notes formatting.
-- **Patients sidebar must merge both stores**: `renderPatientsSidebar()` uses `getAllPatientRecords()` (patients.js) which merges `patientRecords` + `clinicalData.patients`. Patients created via Clinical tab only exist in `clinicalData.patients` — without merge they're invisible in the sidebar. Fixed Mar 22 2026.
-- **`getAllPatientRecords()` dedup by chart number + name**: Merge deduplicates by chart number first (case-exact), then by name (case-insensitive) for chartless patients. When a `clinicalData.patients` entry matches an existing `patientRecords` entry by chart number, fields are fill-merged (missing fields copied, existing fields preserved). Prevents duplicate sidebar rows from different ID schemes (`pt_` vs `pt-` vs `patient_`). `renderPatientRecord()`, `savePatientField()`, and `setPatientReliability()` all use `getAllPatientRecords()` (not `getPatientRecords()`) so clinical-only patients render and edit correctly. Data-layer consolidation deferred — read-side dedup is sufficient. Fixed Mar 22 2026.
-- **`deletePatientRecord()` must cascade like `deletePatient()`**: Deleting from Patients tab must also: delete from `clinicalData.patients`, delete appointments, delete procedure records + unlink competencies, hide planner tasks, set `clinicalDataDirty = true`. Fixed Mar 22 2026.
-- **Requirement ID matching is case-insensitive**: `applyRequirementCheckoffs()` compares `(id).toLowerCase() === (reqId).toLowerCase()`. Webchat may emit mixed-case IDs. `parseRequirementsMatch()` also lowercases reqId at parse time. Fixed Mar 22 2026.
-- **Dashboard snapshot dedup by capturedAt**: `saveDashboardSnapshot()` checks for existing snapshot with same `capturedAt` date — replaces it instead of duplicating. Prevents bloat from same-day re-imports. Fixed Mar 22 2026.
-- **`adjustCompItem()` must call `renderDashboard()`**: Without this, Mission Control stats stay stale until tab switch after competency adjustments. Fixed Mar 22 2026.
-- **`backfillClinicalData()` running guard**: `_backfillInProgress` flag prevents concurrent/duplicate backfill runs. Whitespace-only patient names skipped in Phase 4 linking. Fixed Mar 22 2026.
-- **Contenteditable double-fire guard pattern**: All `contenteditable` fields in patients.js use `onfocus` to store original value, `onkeydown` for Escape revert + committed flag, `onblur` checks committed flag before saving via `savePatientField()`. Prevents double save on Escape+blur.
-- **`mergeCompetencies()` is item-level, not category-level**: state.js deep-merges at the item level: `completionEntries` are unioned (dedup by procedureId for linked, date+note for manual), `completed = Math.min(required, max(local, cloud, entries.length))`, status derived from count. NEVER use `{ ...local, ...cloud }` category spread — it destroys local evidence trails. Used by all 4 merge/restore sites + `mergeRemoteCollectionsIntoLocal()`.
-- **`applyRequirementCheckoffs` must cache intendedCompleted**: `recordProcedure()` → `linkProcedureToCompetencies()` unconditionally overwrites `item.completed = Math.min(required, completionEntries.length)`. When REQUIREMENTS_STATUS sets `completed: N` directly, cache the value BEFORE `recordProcedure()`, re-apply AFTER. Without this, explicit counts from SPS data get silently reduced to 1.
-- **`deleteAppointment()` must cascade to procedures + hidden tasks**: Deleting an appointment must: (1) unlink + delete procedure records with matching `appointmentId`, (2) add `clinic_` task to `hiddenClinicTasks`, (3) set `clinicalDataDirty = true`. Without cascade, orphaned procedures inflate smart counters permanently. Fixed Mar 22 2026.
-- **`clinicalDataDirty = true` before ALL clinical CRUD saveData()**: 10 functions must set this flag before save: `savePatient`, `saveAppointment`, `deleteAppointment`, `completeAppointment`, `uncompleteAppointment`, `deleteProcedure`, `backfillClinicalData`, `saveProcedureRecord`, `confirmPatientImport`, `confirmClinicalImport`. Without it, switching to Schedule tab skips `syncClinicalToMonthlyPlanner()` — new appointments don't get clinic tasks. Fixed Mar 22 2026.
-- **Dual import paths must mirror propagation**: Both `confirmClinicalImport()` (import-system.js) and `confirmPatientImport()` (patients.js) create appointments. Both MUST call `syncClinicalToMonthlyPlanner()` + `buildCurrentWeekSchedule()` + `mpRenderAllCalendars()` after import. Missing any call causes Schedule tab or Stim Calc cross-app to show stale data. Fixed Mar 25 2026.
-- **Import modal destructive defaults**: NEVER set `checked` on destructive-mode checkboxes (like Refresh Mode) in import modals. Default must be the safe/merge path. Users who want destructive replace can opt in.
-- **`mergeRemoteCollectionsIntoLocal` must deep-merge patientRecords fields**: After `addMissing()` fills new-key patient records, existing patients need field-level merge for: `importedRequirements`, `priorityNotes`, `highValue`, `allergies`, `txCompletedByMe`, `recallHistory`, `activeStatus`. Without this, fields added on one device are lost when syncing to a device that already has the patient. Fixed Mar 22 2026.
-- **`setCompItemStatus` toggle must resync completed from entries**: When toggling to pending, procedure-linked `completionEntries` are kept but `item.completed` was hard-set to 0 — out of sync with remaining entries. Fix: after filtering entries to keep only procedure-linked, resync `item.completed = Math.min(required, entries.length)` and derive status from count. Prevents phantom 0-progress state when procedures are linked.
-- **`calculatePaceProjection` uses Math.floor for elapsed days**: `daysSoFar` must use `Math.floor` (not `Math.ceil`) for accurate rate calculation. `Math.ceil` inflates elapsed days by 1, reducing computed pace and shifting projected completion date forward.
-- **PATIENT_UPDATE must validate chart number**: `confirmPatientImport()` PATIENT_UPDATE path must reject empty chart numbers with error toast. Without this, empty chart creates ID `'pt_'` which overwrites other chartless patients.
-- **Smart counter name dedup is case-insensitive**: `getSmartAppointmentCount()` Source 3 compares patient names using `toLowerCase().trim()`. Without this, "Silva, Maria" and "silva, maria" double-count. Fixed Mar 22 2026.
-- **DEFAULT_PATIENT_RECORDS chart numbers must match canonical leading-zero form**: `pt_966540` with chart `966540` caused duplicate because imports created `pt_0966540` with chart `0966540`. Fixed Mar 25 2026: default changed to `pt_0966540`/`0966540`.
-- **`getPatientRecords()` fill-merge must use normalized chart matching**: Exact ID check (`!existing[id]`) misses leading-zero variants. Fixed Mar 25 2026: builds `existingNormCharts` index and checks `normalizeChartNumber()` before adding defaults.
-- **`periodic-review.js` PR1_BASELINE chart numbers must include leading zeros**: `966540` and `79118` should be `0966540` and `079118`. Without leading zeros, PR roster matching creates phantom entries. Fixed Mar 25 2026.
-- **`migrateLeadingZeroDedup()` one-time migration**: Consolidates duplicate patient records caused by leading-zero chart mismatch. Keeps the record with the longer chart number (with leading zero), fill-merges fields from the shorter one, deletes from both `patientRecords` and `clinicalData.patients`. Gated by `leadingZeroDedupDone_v1` localStorage flag. Added Mar 25 2026.
-- **`addNewPatientRecord()` must use `findByNormalizedChart()` for dedup**: Exact ID match `records['pt_' + chart]` misses existing records with different leading-zero variants. Fixed Mar 25 2026.
+- **`clinicalDataDirty = true` before ALL clinical CRUD**: 28 functions must set this. Original 10: `savePatient`, `saveAppointment`, `deleteAppointment`, `completeAppointment`, `uncompleteAppointment`, `deleteProcedure`, `backfillClinicalData`, `saveProcedureRecord`, `confirmPatientImport`, `confirmClinicalImport`. Plus 18 more: `savePatientField`, `setPatientReliability`, `addNewPatientRecord`, `deletePatientRecord`, `recordProcedure`, `adjustCompItem`, `setCompItemStatus`, `deleteCompItem`, `saveCompItem`, `acceptReviewSuggestion`, `rejectReviewSuggestion`, `dismissReviewItem`, `removeEvidenceEntry`, `undoRemoveEvidence`, `updateCompNotes`, `saveCompItemNote`, `resetCompetencies`, `prSavePatientField`.
+- **Fallback timers = data wipe**: DOMContentLoaded 3s/6s fallback timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad` flags. 15s safety valve prevents permanent hang.
+- **Guard F**: `validateStateIntegrity()` must validate `periodicReviews`, `competencies`, `missingNotes`.
+- **`completionEntries` array safety**: Firebase can convert arrays to objects. ALL access MUST use `getValues()` for reads and convert to array before mutations (`.push()`, `.splice()`, `.filter()` assignment).
+
+### Sync & Merge Rules
+- **`mergeRemoteState`**: Compare `lastSaved` timestamps — if local is newer, call `mergeRemoteCollectionsIntoLocal(data)` (NOT skip entirely). Adds remote-only entries without overwriting local.
+- **`mergeRemoteState` deep merge**: `patientRecords` must use per-patient field-level IIFE merge (local wins for existing patients, remote fills gaps). NEVER flat spread `{ ...local, ...remote }`. Same applies to `todoList.items` (local wins on conflict), `graduationPrep` (fall back to local before defaults), `clinicHeadlines` (fall back to local before defaults).
+- **`mergeRemoteCollectionsIntoLocal`**: (1) Pattern: `addMissing(local, remote)` — local wins for conflicts. (2) Must cover ALL top-level objects (add new ones like `periodicReviews`, `clinicHeadlines`). (3) Fill-only trap: defaults-provided objects (clinicHeadlines, graduationPrep) need field-level merge, not `!roadmapData.X` guard. (4) Must deep-merge patientRecords fields: `importedRequirements`, `priorityNotes`, `highValue`, `allergies`, `txCompletedByMe`, `recallHistory`, `activeStatus`.
+- **Auto-push when local is newer**: `finishFirebaseLoad()` sets `localWasNewer=true` → deferred `saveData()` at 500ms. Also pushes when Firebase is empty/poisoned.
+- **Poisoned Firebase detection**: `isEmptyState(data)` check — if Firebase has data but it's effectively defaults, treat as no data.
+- **Flag ordering**: ALL sync flags MUST be set BEFORE `initUI()`. Wrap `initUI()` in try/catch.
+- **Field-by-field reconstruction**: ALL 6 merge/restore sites (`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`, `restoreBackup`, `importBackup`) reconstruct state with `getDefaultRoadmapData()` defaults. New fields MUST be added to ALL sites.
+- **`mergeCompetencies()` is item-level**: Deep-merges `completionEntries` (dedup by procedureId for linked, date+note for manual). `completed = Math.min(required, max(local, cloud, entries.length))`. NEVER use `{ ...local, ...cloud }` category spread.
+- **Shallow grades merge**: Use deep per-course IIFE merge, not `{ ...local, ...firebase }` spread.
+- **Array merge with `||`**: `data.arr || local.arr || []` — empty `[]` is truthy, loses local data. Use dedicated merge functions.
+- **Shared storage namespace**: NEVER let two apps share the same localStorage key or Firebase path.
+
+### Guard C / isEmptyState
+`isEmptyState()` prevents saving empty/default data to Firebase. Rules:
+- Must check ALL user-editable collection fields. When adding new collections, add to `isEmptyState()`.
+- Defaults MUST be empty: `completed: 0` in DEFAULT_COMPETENCIES, empty grade objects (`oralmed: {}`), no hardcoded values in `getDefaultRoadmapData()`.
+- Auto-generated data must NOT trigger: don't check `exams` (auto-generated in initUI), check `completed > 0` for competencies.
+- Must check: `graduationPrep`, all 9 PR2 fields, `todoList.items`, `missingNotes`, and all fields in the isEmptyState table (Sync Protection section).
+
+### Patient Data Integrity
+- **CIS v2 patient store**: `clinicalData.patients` is DEPRECATED (emptied by `migrateToUnifiedPatientStore()`). ALL patient lookups, renders, and edits MUST use `clinicalData.patientRecords` or `getAllPatientRecords()`. The `patients` key is kept only for merge/migration/schema compatibility. NEVER read from it in render or CRUD paths.
+- **`getAllPatientRecords()` dedup**: Merges `patientRecords` + `clinicalData.patients`. Dedup by chart number (case-exact), then name (case-insensitive). Fill-merge matching entries. Always use this (not `getPatientRecords()`) for rendering, editing, sidebar, and PR roster (sections 10/11).
+- **Cascade deletes**:
+
+| Function | Must Also Do |
+|----------|-------------|
+| `deletePatient()` | Delete procedures, unlink competencies, remove planner tasks, add to `hiddenClinicTasks`, set `clinicalDataDirty` |
+| `deletePatientRecord()` | Same as above + delete from `clinicalData.patients` |
+| `deleteAppointment()` | Unlink+delete procedures with matching `appointmentId`, add `clinic_` task to `hiddenClinicTasks`, set `clinicalDataDirty` |
+
+- **CRUD must merge, not replace**: `savePatient()` and `saveAppointment()` MUST spread existing record (`{ ...existing, ...formFields }`). Full replacement wipes `clinicalBrief`, `importedRequirements`, `briefHistory`, `completedAt`, etc.
+- **Chart number normalization**: Use leading-zero canonical form everywhere. `addNewPatientRecord()` uses `findByNormalizedChart()`. `getPatientRecords()` uses `normalizeChartNumber()`. PR1_BASELINE must include leading zeros. `migrateLeadingZeroDedup()` one-time migration gated by `leadingZeroDedupDone_v1`.
+- **Skeleton patient records**: `prSavePatientField()` must copy `name` and `chartNumber` from `clinicalData.patients`.
+- **PATIENT_UPDATE must validate chart number**: Reject empty chart numbers (prevents `'pt_'` overwrite).
+- **Smart counter name dedup**: Case-insensitive `toLowerCase().trim()` comparison.
+
+### Clinical Import System
+- **9 block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, REQUIREMENTS_STATUS, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST, CLINICAL_BRIEF — all parseable in one atomic paste.
+- **Import dedup**: Dedup by patient NAME + date + time as secondary check, not just `patientId`.
+- **Clinical Brief**: Full-overwrite always. Push old to `briefHistory[]` (max 3). Lives ON patient records (`patientRecords[id]`).
+- **Multi-line parser**: Lenient — accepts ANY non-empty line as field continuation. Joins with `'\n'`.
+- **Imported requirements**: Stored as `patient.importedRequirements[]`. `computeRequirementMatches()` uses these over keyword fallback. Also stores `priorityNotes` and `highValue`.
+- **Webchat code fences**: Triple-backtick fences required or markdown destroys `---` delimiters. Backup: `docs/claude-webchat-project-instructions.md`.
+- **Import auto-completes**: Both `confirmClinicalImport()` and `confirmPatientImport()` set `status: 'completed'` for past dates.
+- **Dual import propagation**: Both import paths MUST call `syncClinicalToMonthlyPlanner()` + `buildCurrentWeekSchedule()` + `mpRenderAllCalendars()`.
+- **Import modal defaults**: NEVER set `checked` on destructive-mode checkboxes. Default = safe/merge.
+- **Requirement ID matching**: Case-insensitive at both `applyRequirementCheckoffs()` and parse time.
+- **`applyRequirementCheckoffs`**: COMPLETED_TODAY uses `isDelta: true` to INCREMENT. REQUIREMENTS_STATUS SETs absolutely. Must cache `intendedCompleted` BEFORE `recordProcedure()`, re-apply AFTER.
+- **Import parser fieldMap**: Must include ALL fields displayed in `renderPRPatientWriteups()`.
+- **Perio noise filter**: Routine perio IDs excluded for non-periodontitis patients. `migratePerioNoiseCleanup()` one-time migration.
+- **Missing Notes**: `MISSING_NOTES` block, 7 pipe-delimited fields, dedup by ID, 6-limit capacity bar. Stored in `clinicalData.missingNotes{}`.
+- **To-Do list**: `TODO_LIST` block, 5 pipe-delimited fields. Sources: MANUAL/EMAIL/SCREENSHOT/CLINIC/SYSTEM. Stored in `todoList{ items{}, _nextSeq, lastUpdated }`.
+- **Dashboard snapshot dedup**: Same `capturedAt` date replaces instead of duplicating.
+
+### Competencies & Procedures
+- **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]`. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()`. Never manually edit `item.completed`.
+- **Smart counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (state.js). NEVER replace with narrow `getValues().filter()`. Validate `clinic_` task IDs against actual `appointments`. Patient visit dedup uses AND for name+chartNumber.
+- **Evidence trail**: `adjustCompItem()` and `setCompItemStatus()` auto-create `completionEntries[]`. Required for smart counter dedup.
+- **SPS dashboard is ground truth**: Smart counters use `MAX(computed, dashboardSnapshots[0])`. PR tab "Attended" row uses `snapshot.appointments.attended` (not smart counter total).
+- **`getCompetenciesData()` is read-only**: Initialization in `ensureCompetenciesInitialized()`, called from `initUI()` and `initClinicalTab()` only.
+- **`setCompItemStatus` toggle**: After filtering entries to keep procedure-linked, resync `item.completed = Math.min(required, entries.length)`.
+- **Procedure count dedup**: Only deducts entries with valid `procedureId` (not null). Null = manual/backfill.
+- **`adjustCompItem()`**: Must call `renderDashboard()` after changes.
+
+### Task & Schedule System
+- **`doToday` only for eod**: Only `urgency === 'eod'` sets `doToday: true`.
+- **XP dual counters**: `toggleTask()` must update BOTH `stats.totalXPGained` AND `focusStats.totalXP`. Uncomplete subtracts tier-based XP (50/75/40/25) from ALL 3 counters.
+- **Task creation consistency**: ALL 4 creation sites MUST set triageTier/triageOrder/triageDate when urgency is eod/soon/week.
+- **StableId before mutation**: Compute `getDeadlineId(deadline)` BEFORE modifying fields. Use `deadline._originalStableId`.
+- **Custom deadline dual-store**: Update BOTH `editedDeadlines` AND `customDeadlines[id]`.
+- **DeadlineId in onclick**: `getDeadlineId()` must strip `'"\\`. Escape: `onclick="fn('${safeId}')"`.
+- **Nuke-and-rebuild sync**: NEVER delete all + recreate. Use incremental sync with `userEdited` and `hiddenClinicTasks`.
+- **Clinic task delete**: `_mpDeleteCurrentTaskConfirmed()` must add clinic tasks to `hiddenClinicTasks`, or `syncClinicalToMonthlyPlanner()` recreates them.
+- **`syncClinicalToMonthlyPlanner` gating**: Must be gated by `clinicalDataDirty` flag. Flag set true by mergeRemote/load/restore/import, false at end of sync.
+- **TBD deadlines**: Show in separate "Unscheduled" card on Mission Control.
+- **Cross-app dedup**: Stim calc dedup by `clinicalAppointmentId` and `date|time|name`.
+- **Cross-app write exception**: `toggleMainAppTask()` writes to index.html's Firebase path. Intentional ONLY cross-app write. Self-heals via `.on('value')` listener.
+
+### Propagation Requirements
+
+| After | Must Call |
+|-------|----------|
+| Appointment CRUD (save/delete/complete/uncomplete) | `buildCurrentWeekSchedule()`, `syncClinicalToMonthlyPlanner()` |
+| Planner task changes (save/hide/unhide) | `buildCurrentWeekSchedule()` |
+| Deadline mutation (add/edit/complete/delete) | `rebuildUpcomingDeadlines()` |
+| `uncompleteAppointment()` | Remove procedure records, unlink competency evidence, recalc patient `lastVisit` |
+| `backfillClinicalData()` | `createCheckpoint('pre-backfill')` before mutations (dedup within 60s). `_backfillInProgress` guard. |
+| Competency adjustment | `renderDashboard()` |
+
+### UI & Rendering
+- **Flex full-width + flex-wrap**: Container needs `flex-wrap: wrap`, full-width item needs `flex: 1 1 100%`.
+- **Expensive renders**: Never in `updateUI()`/`recalculate()` (runs every 5s). Only on init + navigation.
+- **Canvas tooltip**: Recompute `graphWidth`/`pointSpacing` inside `onmousemove`, not at setup time.
+- **Division by zero**: Guard `pointSpacing = width / (data.length - 1)` with `if (data.length < 2) return`.
+- **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if element already has `style`. Merge into one.
+- **CSS-only tab theming**: `#tab-[name] .existing-class` specificity override. Additive — don't delete base styles.
+- **Patients tab**: Light theme via `#tab-patients` prefix. Section IDs unchanged for `collapsedSections`. Mobile: `@media (max-width: 768px)` hides metrics cards, sidebar `position: static`, `overflow: visible` on `#patientsMainLayout`.
+- **Mini Review tab**: Read-only `#tab-minireview`. `renderMiniReview()` in patients.js. Sorted by reliability. No state mutation, no saves.
+- **`formatClinicalDisplay()`**: Pure display function. CSS classes prefixed `fc-*`. Zero content change.
+- **Partial re-renders**: `rerenderMissingNotesSection()` and `rerenderTodoListSection()` for targeted updates instead of full `renderDashboard()`.
+- **Double-fire guard**: Both click-to-edit (`change`+`blur`) and contenteditable fields need `committed` boolean flag. Escape must set flag to prevent blur from saving.
+- **Cache-busting**: After multi-file JS changes, add `?v=YYYYMMDD` to ALL `<script src>` tags.
+- **Stats counters**: `stats.totalTasks` drifts — use live `getValues(tasks)` count.
+- **Faculty matching**: `\b` word-boundary regex for names >= 3 chars; exact match for < 3 chars.
 
 ---
 
@@ -294,6 +314,16 @@ Import accepts 6 flexible formats.
 - **D3 dental student** at BU Goldman, graduating May 2027. ADHD: Adderall XR 50mg max (30mg+20mg).
 - **Physical**: 5'8.5", 190 lbs, goal 170 by June 1 2026, ~27% body fat.
 - **Key dates**: Perio 2 Final Mar 11, PC2 Final Mar 19, Peds Exam 3 Mar 30, May 14 loan disbursement.
+
+---
+
+## COMPREHENSIVE AUDIT METHODOLOGY
+For "debug everything" requests, use this proven 4-phase approach:
+- **Phase 1**: 6 parallel audit agents by domain: patients, clinical/competencies, import/parsers, firebase-sync, dashboard/tabs/rendering, HTML/CSS. Each reads EVERY line and reports bugs without making changes.
+- **Phase 2**: Consolidate findings, deduplicate (same bug found by multiple agents), categorize by file.
+- **Phase 3**: 5 parallel fix agents organized BY FILE (prevents edit conflicts): firebase-sync.js, clinical.js+state.js, patients.js, periodic-review.js+monthly-planner.js+init.js+import-system.js, deadlines.js+grades.js+exam-content.js+HTML.
+- **Phase 4**: QA agent verifies all fixes (syntax, brace balance, spot-check critical changes, scan for regressions). Then sweep for stale `clinicalData.patients` references.
+- **Last audit**: Mar 30 2026, commit `38a2a2d`. 110 bugs found, 73 fixed. Key categories: CIS v2 patient store (9), clinicalDataDirty (18), sync merge (5), propagation (7), rendering (15).
 
 ---
 

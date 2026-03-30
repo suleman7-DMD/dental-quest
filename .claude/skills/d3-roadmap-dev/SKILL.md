@@ -5,15 +5,15 @@ description: |
   Use this skill when the user asks to modify, fix, or add features to d3-roadmap.html. Trigger phrases: "d3 roadmap", "graduation roadmap", "d3-roadmap.html", "roadmap app", "deadlines", "clinical tracking", "competencies", "dental school", "academic tracker", "grade calculator", "monthly planner", "daily planner", "exam content", "mandatory items", "checkpoint", "course grades", "roadmap", "grades", "GPA", "courses", "classes", "school", "academic", "clinic", "patients", "appointments", "exams", "studying", "schedule", "planner", "tabs", "dashboard", "mission control", "clinic requirements", "graduation prep", "CDCA", "ADEX", "INBDE", "externship", "competency", "formative", "summative", "do today", "always remember".
   Do NOT use this skill for dental quest index.html, body-comp-tracker.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
 globs:
-  - "d3-roadmap.html"
-  - "js/d3-roadmap/*.js"
+  - "graduation-roadmap.html"
+  - "js/graduation-roadmap/*.js"
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
 metadata:
   author: Sully
-  version: 4.0.0
-  file: d3-roadmap.html + js/d3-roadmap/*.js (10 modules)
-  lines: ~9290 HTML + ~9600 JS
-  last-verified: 2026-03-12
+  version: 5.0.0
+  file: graduation-roadmap.html + js/graduation-roadmap/*.js (12 modules)
+  lines: ~10825 HTML + ~12700 JS
+  last-verified: 2026-03-30
 ---
 
 # D3 Roadmap Development Patterns
@@ -44,6 +44,9 @@ Success criteria: saveData() returns true, data persists across refresh, all 5 g
 
 ## INSTRUCTIONS
 
+### Step 0: Check if this is a vision-first request
+If the user says "dream big" or is describing an ambitious new feature, redesign, or reimagining (not a bug fix, debug, or small tweak), invoke the `vision-first` skill FIRST. That skill handles unconstrained vision exploration and alignment before any planning or implementation begins. Return here for surgical edits only after the vision is locked and a plan exists.
+
 ### Step 1: Identify what area of the app is involved
 Read the APP OVERVIEW below. Determine which subsystem is relevant:
 - Grade calculations? -> See [references/grades-and-deadlines.md](references/grades-and-deadlines.md)
@@ -55,7 +58,7 @@ Read the APP OVERVIEW below. Determine which subsystem is relevant:
 
 ### Step 2: Find the right module and function
 Use the MODULE MAP table below or [references/function-index.md](references/function-index.md) for the full list.
-The app is split into 10 JS modules in `js/d3-roadmap/`. Use Grep across the directory to find functions.
+The app is split into 12 JS modules in `js/graduation-roadmap/`. Use Grep across the directory to find functions.
 
 ### Step 3: Read the code before changing it
 Read the target function and 50 lines of surrounding context in the relevant module file before editing. Never write blind.
@@ -73,7 +76,7 @@ Every state mutation must flow through: mutate `roadmapData` -> `saveData()` -> 
 If you touched Firebase code, verify all 5 guards are still present in `saveData()` in firebase-sync.js.
 
 ### Step 6: Validate brace balance
-After large edits: `python3 -c "c=open('js/d3-roadmap/MODULE.js').read(); print('{:', c.count('{'), '}:', c.count('}'))"`
+After large edits: `python3 -c "c=open('js/graduation-roadmap/MODULE.js').read(); print('{:', c.count('{'), '}:', c.count('}'))"`
 
 ---
 
@@ -277,8 +280,8 @@ syncDeadlineToGrades(deadline, isComplete, grade);
 
 ## APP OVERVIEW
 
-**Files:** `d3-roadmap.html` (8,394 lines, CSS + HTML only) + `js/d3-roadmap/*.js` (10 modules, 9,135 lines)
-**URL:** https://suleman7-dmd.github.io/dental-quest/d3-roadmap.html
+**Files:** `graduation-roadmap.html` (~10,825 lines, CSS + HTML only) + `js/graduation-roadmap/*.js` (12 modules, ~12,700 lines)
+**URL:** https://suleman7-dmd.github.io/dental-quest/graduation-roadmap.html (d3-roadmap.html is a redirect shim)
 
 **Purpose:** Track academic requirements, deadlines, clinical competencies, and scheduling for D3 dental school year.
 
