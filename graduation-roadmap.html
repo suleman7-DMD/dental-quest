@@ -3965,6 +3965,47 @@
             text-transform: uppercase;
         }
 
+        /* CIS v2: Competencies Tab Enhancements */
+        #compMilestoneDashboard { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+        .comp-milestone-ring { flex:1; min-width:140px; background:#1e293b; border-radius:12px; padding:16px; text-align:center; border:1px solid rgba(255,255,255,0.06); }
+        .comp-milestone-ring svg { width:80px; height:80px; }
+        .comp-milestone-ring .comp-ring-label { font-size:0.8em; color:#94a3b8; margin-top:6px; }
+        .comp-milestone-ring .comp-ring-value { font-size:1.2em; font-weight:700; color:#e2e8f0; }
+        #compD3Deadlines { margin-bottom:16px; }
+        .comp-d3-card { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:8px; margin:0 8px 8px 0; font-size:0.85em; }
+        .comp-d3-card.overdue { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); }
+        .comp-d3-card.soon { background:rgba(245,158,11,0.08); border-color:rgba(245,158,11,0.2); }
+        .comp-d3-card.ok { background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2); }
+        #compWhatsNext { margin-bottom:16px; }
+        .comp-whatsnext-card { display:flex; align-items:center; gap:12px; padding:10px 14px; background:#1e293b; border-radius:8px; border:1px solid rgba(255,255,255,0.06); margin-bottom:8px; }
+        .comp-whatsnext-card .comp-wn-progress { flex-shrink:0; width:60px; height:6px; background:#334155; border-radius:3px; overflow:hidden; }
+        .comp-whatsnext-card .comp-wn-bar { height:100%; border-radius:3px; }
+        #compReviewQueue:not(:empty) { padding:10px 14px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.2); border-radius:8px; margin-bottom:16px; color:#a5b4fc; font-size:0.9em; cursor:pointer; }
+        #compSearchBar { margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        #compSearchBar input { flex:1; min-width:200px; padding:8px 12px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0; font-size:0.9em; }
+        .comp-filter-chip { padding:4px 10px; border-radius:12px; font-size:0.8em; cursor:pointer; border:1px solid #334155; background:#1e293b; color:#94a3b8; }
+        .comp-filter-chip.active { background:#3b82f6; color:white; border-color:#3b82f6; }
+        .comp-unlock-chain { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(255,255,255,0.02); border-radius:6px; margin-bottom:8px; font-size:0.85em; }
+        .comp-unlock-arrow { color:#64748b; }
+        .comp-evidence-card { display:flex; gap:8px; align-items:flex-start; padding:6px 10px; background:rgba(255,255,255,0.02); border-radius:6px; margin:4px 0; font-size:0.82em; border-left:3px solid #334155; }
+        .comp-evidence-card.type-procedure { border-left-color:#3b82f6; }
+        .comp-evidence-card.type-manual { border-left-color:#64748b; }
+        .comp-evidence-card.type-import { border-left-color:#a855f7; }
+        .comp-evidence-card.type-backfill { border-left-color:#f59e0b; }
+        .comp-evidence-card.type-autolinked { border-left-color:#14b8a6; }
+        .comp-patient-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.15); border-radius:4px; font-size:0.82em; color:#86efac; cursor:pointer; }
+        .comp-rules-details { margin:8px 0; }
+        .comp-rules-details summary { color:#f87171; font-size:0.85em; cursor:pointer; }
+        .comp-rules-details .comp-rule-item { padding:4px 8px; margin:4px 0; background:rgba(239,68,68,0.05); border-left:2px solid rgba(239,68,68,0.3); font-size:0.82em; color:#fca5a5; }
+        .comp-pace-badge { font-size:0.8em; padding:2px 8px; border-radius:4px; }
+        .comp-pace-green { background:rgba(34,197,94,0.1); color:#86efac; }
+        .comp-pace-yellow { background:rgba(245,158,11,0.1); color:#fcd34d; }
+        .comp-pace-red { background:rgba(239,68,68,0.1); color:#fca5a5; }
+        @media (max-width: 768px) {
+            #compMilestoneDashboard { flex-direction:column; }
+            .comp-milestone-ring { min-width:unset; }
+        }
+
         .comp-category {
             background: #1e293b;
             border: 1px solid #334155;
@@ -9278,18 +9319,37 @@
 
     <!-- ==================== COMPETENCIES TAB ==================== -->
     <div id="tab-competencies" class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <!-- CIS v2: Competencies Tab — promoted to top-level with milestone dashboard, D3 deadlines, auto-link -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <div>
-                <h3 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.3em;">🎓 Graduation Requirements</h3>
+                <h3 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.3em;">Graduation Requirements</h3>
                 <p style="color: #94a3b8; margin: 0; font-size: 0.85em;">Track all clinical competencies required for graduation</p>
             </div>
-            <button onclick="resetCompetencies()" style="padding: 8px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; cursor: pointer; font-size: 0.85em; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'">🔄 Reset All</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <div id="compViewToggle"></div>
+                <button onclick="resetCompetencies()" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: #f87171; cursor: pointer; font-size: 0.8em;">Reset All</button>
+            </div>
         </div>
 
-        <!-- Overall Progress Dashboard - Rendered by JS -->
+        <!-- Search + Filter Bar -->
+        <div id="compSearchBar"></div>
+
+        <!-- Milestone Dashboard (3 progress rings + overall readiness) -->
+        <div id="compMilestoneDashboard"></div>
+
+        <!-- D3 Deadline Alert Bar -->
+        <div id="compD3Deadlines"></div>
+
+        <!-- What's Next Panel -->
+        <div id="compWhatsNext"></div>
+
+        <!-- Review Queue Banner -->
+        <div id="compReviewQueue"></div>
+
+        <!-- Overall Progress Summary -->
         <div id="overallProgressSummary"></div>
 
-        <!-- Requirements List - Rendered by JS -->
+        <!-- Category Accordion (13 categories) -->
         <div id="competenciesContainer"></div>
     </div>
 
