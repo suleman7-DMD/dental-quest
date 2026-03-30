@@ -372,11 +372,11 @@ function saveAppointment() {
     }
 
     clinicalDataDirty = true;
+    // Propagate FIRST (mutates state), then save
+    propagateClinicalChanges({ appointments: true, source: 'saveAppointment' });
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closeAppointmentModal();
-    // CIS v2: Centralized propagation
-    propagateClinicalChanges({ appointments: true, source: 'saveAppointment' });
     renderAppointmentsList();
     updateClinicalStats();
     if (typeof renderDeadlines === 'function') renderDeadlines();
@@ -1829,11 +1829,11 @@ function completeAppointment(aptId) {
     markLinkedDeadlineDone(aptId);
     markPlannerTaskDone(aptId);
 
-    // 6. Centralized propagation
+    // 6. Propagate FIRST (mutates state via syncClinicalToMonthlyPlanner + buildCurrentWeekSchedule), then save
     clinicalDataDirty = true;
+    propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, source: 'completeAppointment' });
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, source: 'completeAppointment' });
     renderAppointmentsList();
     updateClinicalStats();
     if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
