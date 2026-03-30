@@ -1370,6 +1370,7 @@ function renderPRPatientWriteups(pr2, patients) {
             { label: 'Medications', key: 'medications', value: pt.medications ?? '' },
             { label: 'Allergies', key: 'allergies', value: pt.allergies ?? '' },
             { label: 'Tx Completed (Overall)', key: 'dentalHx', value: pt.dentalHx ?? '' },
+            { label: 'Treatment at BU', key: 'txSummaryBU', value: pt.txSummaryBU ?? '' },
             { label: 'Tx Completed by Me', key: 'txCompletedByMe', value: pt.txCompletedByMe ?? '' },
             { label: 'Radiographs', key: '_radiographs', value: _buildRadiographSummary(pt) },
             { label: 'Tx Pending', key: 'txPlan', value: pt.txPlan ?? '' },
@@ -1471,7 +1472,7 @@ function prStartEditField(patientId, fieldName, element) {
         currentText = pt[fieldName] ?? '';
     }
 
-    var isLongField = ['medicalHx', 'medications', 'dentalHx', 'txCompletedByMe', 'txPlan', 'notes', 'recallHistory'].indexOf(fieldName) >= 0;
+    var isLongField = ['medicalHx', 'medications', 'dentalHx', 'txSummaryBU', 'txCompletedByMe', 'txPlan', 'notes', 'recallHistory'].indexOf(fieldName) >= 0;
 
     if (isLongField) {
         var textarea = document.createElement('textarea');
