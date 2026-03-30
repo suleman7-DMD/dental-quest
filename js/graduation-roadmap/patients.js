@@ -2385,29 +2385,21 @@ function confirmUnifiedImport() {
         parsed.appointments.forEach(function(apt) {
             if (!apt.patientName || !apt.date) return;
 
-            // Find or create patient — search BOTH clinicalData.patients AND patientRecords
+            // CIS v2: Find or create patient in unified patientRecords store
             var patientId = null;
             var aptChartNorm = normalizeChartNumber(apt.chartNumber);
             var aptNameLower = (apt.patientName || '').toLowerCase().trim();
-            // Search clinicalData.patients first
-            var existingPatients = Object.entries(roadmapData.clinicalData.patients);
-            for (var i = 0; i < existingPatients.length; i++) {
-                var p = existingPatients[i][1];
-                if (aptChartNorm && normalizeChartNumber(p.chartNumber) === aptChartNorm) { patientId = existingPatients[i][0]; break; }
-                if (p.name && p.name.toLowerCase().trim() === aptNameLower) { patientId = existingPatients[i][0]; break; }
-            }
-            // Also search patientRecords (pre-filled defaults + imported patients)
-            if (!patientId) {
-                var prEntries = Object.entries(roadmapData.clinicalData.patientRecords || {});
-                for (var j = 0; j < prEntries.length; j++) {
-                    var pr = prEntries[j][1];
-                    if (aptChartNorm && normalizeChartNumber(pr.chartNumber) === aptChartNorm) { patientId = prEntries[j][0]; break; }
-                    if (pr.name && pr.name.toLowerCase().trim() === aptNameLower) { patientId = prEntries[j][0]; break; }
-                }
+            // Search patientRecords (unified store)
+            var prEntries = Object.entries(roadmapData.clinicalData.patientRecords || {});
+            for (var j = 0; j < prEntries.length; j++) {
+                var pr = prEntries[j][1];
+                if (aptChartNorm && normalizeChartNumber(pr.chartNumber) === aptChartNorm) { patientId = prEntries[j][0]; break; }
+                if (pr.name && pr.name.toLowerCase().trim() === aptNameLower) { patientId = prEntries[j][0]; break; }
             }
             if (!patientId) {
-                patientId = 'patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                roadmapData.clinicalData.patients[patientId] = {
+                patientId = apt.chartNumber ? ('pt_' + apt.chartNumber) : ('patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+                if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
+                roadmapData.clinicalData.patientRecords[patientId] = {
                     id: patientId, name: apt.patientName, chartNumber: apt.chartNumber || '',
                     status: 'active', asaClass: '', perioStatus: '', needsXrays: false,
                     recallDue: null, medicalAlerts: '', outstandingTasks: [],
@@ -2422,7 +2414,7 @@ function confirmUnifiedImport() {
                 // Primary: match by patientId + date + time
                 if (ex.patientId === patientId && ex.date === apt.date && ex.time === aptTime) return true;
                 // Secondary: match by patientName + date + time (catches mismatched patientIds)
-                var exPatient = roadmapData.clinicalData.patients[ex.patientId];
+                var exPatient = (roadmapData.clinicalData.patientRecords || {})[ex.patientId];
                 if (exPatient &&
                     (exPatient.name || '').toLowerCase().trim() === aptNameLower &&
                     ex.date === apt.date &&
@@ -2441,7 +2433,7 @@ function confirmUnifiedImport() {
             };
             if (isPast) {
                 newApt.completedAt = apt.date + 'T17:00:00.000Z';
-                var ptEntry = roadmapData.clinicalData.patients[patientId];
+                var ptEntry = (roadmapData.clinicalData.patientRecords || {})[patientId];
                 if (ptEntry && (!ptEntry.lastVisit || ptEntry.lastVisit < apt.date)) ptEntry.lastVisit = apt.date;
             }
             roadmapData.clinicalData.appointments[appointmentId] = newApt;
