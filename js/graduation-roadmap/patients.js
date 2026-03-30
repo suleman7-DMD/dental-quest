@@ -2260,7 +2260,7 @@ function previewPatientImport() {
     window._patientImportParsed = parsed;
 }
 
-function confirmPatientImport() {
+function confirmUnifiedImport() {
     var parsed = window._patientImportParsed;
     if (!parsed) return;
 
@@ -2447,14 +2447,19 @@ function confirmPatientImport() {
             roadmapData.clinicalData.appointments[appointmentId] = newApt;
             aptsCreated++;
 
-            // Auto-create procedure record for past appointments
-            if (isPast && apt.procedure && typeof recordProcedure === 'function') {
-                recordProcedure({
+            // Auto-create procedure record for past appointments + auto-link
+            if (isPast && apt.procedure && apt.procedure.trim() && typeof recordProcedure === 'function') {
+                var proc = recordProcedure({
                     patientId: patientId, patientName: apt.patientName || '',
                     appointmentId: appointmentId, date: apt.date,
-                    procedureType: 'other', procedure: apt.procedure,
+                    procedureType: typeof inferProcedureType === 'function' ? inferProcedureType(apt.procedure) : 'other',
+                    procedure: apt.procedure,
+                    competencyItemIds: [],
                     notes: 'Auto-created from import', createdAt: new Date().toISOString()
                 });
+                if (proc && proc.id && typeof autoLinkProcedureToCompetencies === 'function') {
+                    autoLinkProcedureToCompetencies(proc);
+                }
             }
         });
 
@@ -2591,16 +2596,12 @@ function confirmPatientImport() {
     }
     _suppressBlurSave = false;
 
-    // Re-render dashboard with updated data
-    if (typeof renderDashboard === 'function') {
-        try { renderDashboard(); } catch(e) {}
+    // CIS v2: Centralized propagation replaces ad-hoc render calls
+    if (typeof propagateClinicalChanges === 'function') {
+        propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, patients: true, source: 'confirmUnifiedImport' });
     }
     if (typeof initClinicalTab === 'function' && aptsCreated > 0) {
         try { initClinicalTab(); } catch(e) {}
-    }
-    // Refresh Monthly Planner calendars so Schedule tab shows new appointments
-    if (aptsCreated > 0 && typeof mpRenderAllCalendars === 'function') {
-        try { mpRenderAllCalendars(); } catch(e) {}
     }
 
     var msg = '';
@@ -2614,6 +2615,8 @@ function confirmPatientImport() {
     if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
     showToast(msg || 'Import complete');
 }
+// Backward-compat alias for any HTML onclick references
+var confirmPatientImport = confirmUnifiedImport;
 
 function migratePerioNoiseCleanup() {
     if (localStorage.getItem('perioNoiseCleanupDone_v1')) return;
