@@ -1310,6 +1310,130 @@ function propagateClinicalChanges({ appointments = false, procedures = false, co
     // NOTE: Does NOT call saveData(). Caller controls save timing.
 }
 
+// ==================== CIS v2: CASCADE FUNCTIONS ====================
+
+function recalculatePatientLastVisit(patientId) {
+    var apts = getValues(roadmapData.clinicalData.appointments)
+        .filter(function(a) { return a.patientId === patientId && a.status === 'completed'; });
+    var patient = roadmapData.clinicalData.patientRecords[patientId];
+    if (!patient) return;
+    if (apts.length === 0) {
+        patient.lastVisit = '';
+    } else {
+        apts.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+        patient.lastVisit = apts[0].date;
+    }
+}
+
+function cascadeDeleteProcedure(procId) {
+    if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(procId);
+    delete roadmapData.clinicalData.completedProcedures[procId];
+    propagateClinicalChanges({ procedures: true, competencies: true, source: 'cascadeDeleteProcedure' });
+}
+
+function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
+    var apt = roadmapData.clinicalData.appointments[aptId];
+    if (!apt) return;
+
+    // 1. Find + delete linked procedures
+    getValues(roadmapData.clinicalData.completedProcedures)
+        .filter(function(p) { return p.appointmentId === aptId; })
+        .forEach(function(p) {
+            if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
+            delete roadmapData.clinicalData.completedProcedures[p.id];
+        });
+
+    // 2. Clean planner state
+    if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
+    roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
+    delete roadmapData.monthlyPlanner.customTasks['clinic_' + aptId];
+    if (typeof unmarkPlannerTaskDone === 'function') unmarkPlannerTaskDone(aptId);
+
+    // 3. Clean linked custom deadlines (clinicalAptId backlink)
+    Object.keys(roadmapData.customDeadlines || {}).forEach(function(dlId) {
+        if (roadmapData.customDeadlines[dlId].clinicalAptId === aptId) {
+            if (roadmapData.completedDeadlines) delete roadmapData.completedDeadlines[dlId];
+            delete roadmapData.customDeadlines[dlId];
+        }
+    });
+
+    // 4. Delete appointment
+    delete roadmapData.clinicalData.appointments[aptId];
+
+    // 5. Recalculate patient lastVisit
+    if (apt.patientId) recalculatePatientLastVisit(apt.patientId);
+
+    // 6. Propagate (unless called from cascadeDeletePatient, which propagates once at end)
+    if (!skipPropagation) {
+        propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, source: 'cascadeDeleteAppointment' });
+    }
+}
+
+function cascadeDeletePatient(patientId) {
+    // 1. Find all appointments for patient
+    var apts = getValues(roadmapData.clinicalData.appointments)
+        .filter(function(a) { return a.patientId === patientId; });
+
+    // 2. Delegate each appointment to cascadeDeleteAppointment (skip propagation)
+    apts.forEach(function(apt) {
+        cascadeDeleteAppointment(apt.id, { skipPropagation: true });
+    });
+
+    // 3. Find orphaned procedures (by patientId, not linked to any appointment)
+    var orphanedProcs = getValues(roadmapData.clinicalData.completedProcedures)
+        .filter(function(p) { return p.patientId === patientId; });
+    orphanedProcs.forEach(function(p) {
+        if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
+        delete roadmapData.clinicalData.completedProcedures[p.id];
+    });
+
+    // 4. Delete patient record
+    delete roadmapData.clinicalData.patientRecords[patientId];
+
+    // 5. Remove from review queue
+    if (roadmapData.clinicalData.autoLinkReviewQueue) {
+        roadmapData.clinicalData.autoLinkReviewQueue =
+            roadmapData.clinicalData.autoLinkReviewQueue.filter(function(q) { return q.patientId !== patientId; });
+    }
+
+    // 6. Propagate ONCE at the end
+    propagateClinicalChanges({
+        appointments: true, procedures: true,
+        competencies: true, patients: true,
+        source: 'cascadeDeletePatient'
+    });
+}
+
+function cascadeUncompleteAppointment(aptId) {
+    var apt = roadmapData.clinicalData.appointments[aptId];
+    if (!apt) return;
+
+    // 1. Reset status
+    apt.status = 'scheduled';
+    delete apt.completedAt;
+
+    // 2. Find + cascade delete all procedures for this appointment
+    getValues(roadmapData.clinicalData.completedProcedures)
+        .filter(function(p) { return p.appointmentId === aptId; })
+        .forEach(function(p) {
+            if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
+            delete roadmapData.clinicalData.completedProcedures[p.id];
+        });
+
+    // 3. Unmark deadline + planner task
+    if (typeof unmarkLinkedDeadlineDone === 'function') unmarkLinkedDeadlineDone(aptId);
+    if (typeof unmarkPlannerTaskDone === 'function') unmarkPlannerTaskDone(aptId);
+
+    // 4. Recalculate patient lastVisit
+    if (apt.patientId) recalculatePatientLastVisit(apt.patientId);
+
+    // 5. Propagate
+    propagateClinicalChanges({
+        appointments: true, procedures: true, competencies: true,
+        source: 'cascadeUncompleteAppointment'
+    });
+}
+
 // ==================== MISSING NOTES HELPERS ====================
 
 function getMissingNotesAlertLevel(pendingCount) {
