@@ -9263,9 +9263,9 @@
                     <h3 style="color: #10b981; margin: 0;">📋 Active Roster</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <input type="text" id="patientSearchInput" placeholder="Search patients..." aria-label="Search patients"
-                               style="padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; width: 180px;"
-                               oninput="filterPatients()">
-                        <select id="patientFilterStatus" onchange="filterPatients()" aria-label="Filter patients by status" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0;">
+                               style="padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; width: 180px; display:none;"
+                               oninput="renderActiveRoster()">
+                        <select id="patientFilterStatus" onchange="renderActiveRoster()" aria-label="Filter patients by status" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; display:none;">
                             <option value="all">All Patients</option>
                             <option value="active">Active</option>
                             <option value="needsAttention">Needs Attention</option>

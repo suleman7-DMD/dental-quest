@@ -517,6 +517,10 @@ function restoreBackup(backupId) {
         _dataLoaded: true
     };
 
+    // Clear migration flags so migrations re-run against restored data
+    localStorage.removeItem('unifiedPatientStoreDone_v1');
+    localStorage.removeItem('competencyEnhancementsDone_v1');
+
     migrateInvalidFirebaseKeys(roadmapData);
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2210,6 +2214,10 @@ function importAndRestoreDirectly() {
                         _lastModified: new Date().toISOString(),
                         _dataLoaded: true
                     };
+
+                    // Clear migration flags so migrations re-run against restored data
+                    localStorage.removeItem('unifiedPatientStoreDone_v1');
+                    localStorage.removeItem('competencyEnhancementsDone_v1');
 
                     migrateInvalidFirebaseKeys(roadmapData);
                     clinicalDataDirty = true;
