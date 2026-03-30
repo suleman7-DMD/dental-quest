@@ -356,7 +356,7 @@ function getValues(obj) {
 // Sanitize a string to be safe as a Firebase RTDB key
 // Firebase prohibits: . # $ / [ ] in key names
 function sanitizeFirebaseKey(key) {
-    return key.replace(/[.#$/\[\]]/g, '');
+    return key.replace(/[.#$/\[\]'"\\]/g, '');
 }
 
 function getDeadlineId(deadline) {
@@ -580,8 +580,8 @@ function mergeCompetencies(localComp, cloudComp) {
                 var li = localItems[itemId];
                 li.completed = Math.max(li.completed || 0, ci.completed || 0);
                 // Union completionEntries by procedureId
-                var le = Array.isArray(li.completionEntries) ? li.completionEntries : [];
-                var ce = Array.isArray(ci.completionEntries) ? ci.completionEntries : [];
+                var le = getValues(li.completionEntries);
+                var ce = getValues(ci.completionEntries);
                 if (ce.length > 0) {
                     var seen = {};
                     le.forEach(function(e) { if (e.procedureId != null) seen[e.procedureId] = true; });
@@ -966,7 +966,6 @@ function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm
 // Multi-source appointment count — aggregates from all data islands
 function getSmartAppointmentCount() {
     const appointments = getValues(roadmapData.clinicalData?.appointments);
-    const patients = roadmapData.clinicalData?.patients || {};
     const patientRecords = roadmapData.clinicalData?.patientRecords || {};
     const completedTasks = roadmapData.monthlyPlanner?.completedTasks || {};
 
@@ -997,25 +996,11 @@ function getSmartAppointmentCount() {
     });
 
     var extraVisits = 0;
-    // From clinical patients
-    Object.values(patients).forEach(function(p) {
-        if (p.lastVisit && p.id && !visitKeys.has(p.id + '|' + p.lastVisit)) {
-            extraVisits++;
-            visitKeys.add(p.id + '|' + p.lastVisit);
-        }
-    });
-
-    // From patient records (detailed records from Patients tab)
+    // From patient records (canonical store after CIS v2 migration)
     Object.values(patientRecords).forEach(function(pr) {
         if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
-            // Avoid double-counting if patient already counted
-            var matchedByClinicalPatient = Object.values(patients).some(function(p) {
-                return ((p.name || '').toLowerCase().trim() === (pr.name || '').toLowerCase().trim() && (p.chartNumber || '').replace(/^0+/, '') === (pr.chartNumber || '').replace(/^0+/, '')) && p.lastVisit === pr.lastVisit;
-            });
-            if (!matchedByClinicalPatient) {
-                extraVisits++;
-                visitKeys.add(pr.id + '|' + pr.lastVisit);
-            }
+            extraVisits++;
+            visitKeys.add(pr.id + '|' + pr.lastVisit);
         }
     });
 
@@ -1052,10 +1037,15 @@ function getSmartProcedureCount() {
     var formalCount = procedures.length;
 
     // Source 2: Competency items with completed > 0 (deduped against procedure-linked entries)
+    // ONLY count categories that represent actual clinical procedures — NOT grouppractice, txplanning, geriatrics, externship, peds
     var competencyDerivedCount = 0;
+    var procedureCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
 
     if (competencies) {
-        Object.values(competencies).forEach(function(cat) {
+        Object.entries(competencies).forEach(function(entry) {
+            var catKey = entry[0];
+            var cat = entry[1];
+            if (!procedureCategories[catKey]) return; // Skip non-procedure categories
             getValues(cat.sections).forEach(function(sec) {
                 getValues(sec.items).forEach(function(item) {
                     if (item.completed > 0) {
@@ -1073,24 +1063,24 @@ function getSmartProcedureCount() {
 
     var computedTotal = formalCount + competencyDerivedCount;
 
-    // Source 3: SPS Dashboard snapshot (authoritative ground truth from school system)
+    // Source 3: SPS Dashboard snapshot (AUTHORITATIVE ground truth from school system)
     // snapshots[0] is the most recent — mergeDashboardSnapshots() sorts newest-first by capturedAt.
-    // If a snapshot needs correction, import a corrected SPS_DASHBOARD_UPDATE.
+    // When a snapshot exists, it IS the procedure count — it is authoritative, not a floor.
     var snapshotCount = 0;
     var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
     if (snapshots && snapshots.length > 0) {
         snapshotCount = parseInt(snapshots[0].procedures?.totalCompleted) || 0;
     }
 
-    // Use the HIGHER of computed vs snapshot — snapshot is the school's official count (MAX by design)
-    var total = Math.max(computedTotal, snapshotCount);
+    // SPS snapshot is AUTHORITATIVE when it exists — computed is fallback only
+    var total = snapshotCount > 0 ? snapshotCount : computedTotal;
 
     return {
         total: total,
         fromProcedureRecords: formalCount,
         fromCompetencyManual: competencyDerivedCount,
         fromSnapshot: snapshotCount,
-        snapshotIsFloor: snapshotCount > computedTotal
+        snapshotIsAuthoritative: snapshotCount > 0
     };
 }
 
@@ -1213,9 +1203,9 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
         });
         var snaps = roadmapData.clinicalData?.dashboardSnapshots;
         if (snaps && snaps.length > 0) {
-            var snapDate = snaps[0]?.capturedAt;
-            if (snapDate) {
-                var sd = parseLocalDate(snapDate);
+            var snapDateStr = (snaps[0]?.capturedAt || '').substring(0, 10);
+            if (snapDateStr) {
+                var sd = parseLocalDate(snapDateStr);
                 if (sd && (!earliest || sd < earliest)) earliest = sd;
             }
         }

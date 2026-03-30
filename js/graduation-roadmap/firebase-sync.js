@@ -759,7 +759,7 @@ function initFirebase() {
     // FALLBACK: Ensure UI loads within 3 seconds no matter what
     // CRITICAL: Skip if Firebase is mid-load (awaitingFirebaseLoad flag)
     const fallbackTimer = setTimeout(() => {
-        if (awaitingFirebaseLoad) return;
+        if (awaitingFirebaseLoad || awaitingPinEntry) return;
         if (!document.getElementById('currentDateDisplay').textContent ||
             document.getElementById('currentDateDisplay').textContent === 'Loading...') {
             loadFromLocalStorage();
@@ -905,10 +905,18 @@ function mergeRemoteState(data) {
                 ...Object.keys(data.grades || {})
             ]);
             allCourses.forEach(courseId => {
-                merged[courseId] = {
-                    ...(roadmapData.grades?.[courseId] || {}),
-                    ...(data.grades?.[courseId] || {})
-                };
+                merged[courseId] = (function() {
+                    var local = roadmapData.grades?.[courseId] || {};
+                    var remote = data.grades?.[courseId] || {};
+                    var result = { ...local };
+                    // Remote wins for actual values, but null/undefined in remote doesn't wipe local
+                    Object.keys(remote).forEach(function(key) {
+                        if (remote[key] !== null && remote[key] !== undefined) {
+                            result[key] = remote[key];
+                        }
+                    });
+                    return result;
+                })();
             });
             return merged;
         })(),
@@ -1139,7 +1147,20 @@ function loadFromLocalStorage(finalize = true) {
                     appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
-                    patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
+                    patientRecords: (function() {
+                        var defaults = roadmapData.clinicalData?.patientRecords || {};
+                        var stored = data.clinicalData?.patientRecords || {};
+                        var merged = {};
+                        // Start with stored data (localStorage is authoritative)
+                        Object.keys(stored).forEach(function(id) {
+                            merged[id] = { ...(defaults[id] || {}), ...stored[id] };
+                        });
+                        // Add any defaults that don't exist in stored
+                        Object.keys(defaults).forEach(function(id) {
+                            if (!merged[id]) merged[id] = defaults[id];
+                        });
+                        return merged;
+                    })(),
                     dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
                     missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
                     autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
@@ -1728,6 +1749,18 @@ function createCheckpoint(customName = null) {
     if (isEmptyState(roadmapData)) {
         showToast('Cannot create checkpoint - no data to save');
         return null;
+    }
+
+    // 60s dedup: skip if last checkpoint with same name was created < 60s ago
+    var existingCheckpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+    var dedupName = customName || 'Manual';
+    if (existingCheckpoints.length > 0) {
+        var last = existingCheckpoints[0];
+        var elapsed = Date.now() - (last.timestamp || 0);
+        if (elapsed < 60000 && last.name === dedupName) {
+            console.log('[CHECKPOINT] Skipping dedup — last checkpoint was ' + Math.round(elapsed/1000) + 's ago');
+            return null;
+        }
     }
 
     const timestamp = Date.now();
@@ -2729,6 +2762,7 @@ document.addEventListener('visibilitychange', function() {
                         if (data.lastSaved && data.lastSaved > (roadmapData.lastSaved || 0) + 1000) {
                             mergeRemoteState(data);
                             initUI();
+                            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
                         }
                     }
                 })

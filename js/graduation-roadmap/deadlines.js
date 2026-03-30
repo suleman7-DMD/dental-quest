@@ -461,6 +461,7 @@ function handleTextEdit(inputEl) {
     // Re-render
     renderDeadlines();
     renderDashboard();
+    rebuildUpcomingDeadlines();
 
     showToast(`${field} updated!`);
 }

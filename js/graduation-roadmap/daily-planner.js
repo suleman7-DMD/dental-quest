@@ -627,7 +627,7 @@ function dpSyncAppointmentsToTimeline() {
             startTime: apt.time,
             duration: apt.duration || 180,
             task: taskText,
-            done: apt.status === 'completed',
+            completed: apt.status === 'completed',
             linkedAptId: apt.id,
             source: 'clinical'
         };

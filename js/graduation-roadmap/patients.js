@@ -564,7 +564,6 @@ function getPatientRecords() {
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
         roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-        saveData();
     } else {
         // Merge: fill in any missing default patients without overwriting existing ones
         // Use normalized chart matching to prevent re-injecting duplicates with different leading-zero IDs
@@ -587,7 +586,6 @@ function getPatientRecords() {
         });
         if (added) {
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-            saveData();
         }
     }
     return roadmapData.clinicalData.patientRecords;
@@ -795,7 +793,7 @@ function renderClinicalBrief(patient, patientId) {
     }
 
     var dateStr = brief.dateGenerated ? 'Updated: ' + escapeHtml(brief.dateGenerated) : '';
-    var historyCount = Array.isArray(patient.briefHistory) ? patient.briefHistory.length : 0;
+    var historyCount = Array.isArray(patient.briefHistory) ? patient.briefHistory.length : (patient.briefHistory ? getValues(patient.briefHistory).length : 0);
 
     return '<div class="ptr-brief-container">'
         + briefSection('snapshot', 'Snapshot', '\uD83D\uDCCB', true)
@@ -1313,6 +1311,7 @@ function resetNextVisitToAuto(patientId) {
     records[patientId].nextVisitManual = false;
     records[patientId].nextVisit = '';
     records[patientId].lastUpdated = new Date().toISOString();
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderPatientRecord(patientId);
@@ -2050,17 +2049,25 @@ function parseClinicalBrief(text) {
 // Handles: PATIENT: / CHART: / DATE: / TIME: / PROCEDURE: / CHAIR:
 function parseImportAppointmentBlock(text) {
     var apt = {};
+    var currentField = null; // Track current field for multi-line continuation
     var lines = text.split('\n');
     lines.forEach(function(line) {
         var trimmed = line.trim();
         if (!trimmed) return;
         var colonIdx = trimmed.indexOf(':');
-        if (colonIdx === -1) return;
+        if (colonIdx === -1) {
+            // No colon — append to current field as continuation line
+            if (currentField && apt[currentField]) {
+                apt[currentField] = apt[currentField] + '\n' + trimmed;
+            }
+            return;
+        }
         var key = trimmed.substring(0, colonIdx).trim().toUpperCase();
         var val = trimmed.substring(colonIdx + 1).trim();
-        if (key === 'PATIENT') apt.patientName = val;
-        else if (key === 'CHART') apt.chartNumber = val;
+        if (key === 'PATIENT') { apt.patientName = val; currentField = 'patientName'; }
+        else if (key === 'CHART') { apt.chartNumber = val; currentField = 'chartNumber'; }
         else if (key === 'DATE') {
+            currentField = 'date';
             // Parse various date formats
             if (typeof parseImportDate === 'function') {
                 apt.date = parseImportDate(val);
@@ -2079,6 +2086,7 @@ function parseImportAppointmentBlock(text) {
             }
         }
         else if (key === 'TIME') {
+            currentField = 'time';
             // Parse time to HH:MM 24h format
             if (typeof parseImportTime === 'function') {
                 apt.time = parseImportTime(val);
@@ -2095,8 +2103,8 @@ function parseImportAppointmentBlock(text) {
                 }
             }
         }
-        else if (key === 'PROCEDURE') apt.procedure = val;
-        else if (key === 'CHAIR') apt.chair = val;
+        else if (key === 'PROCEDURE') { apt.procedure = val; currentField = 'procedure'; }
+        else if (key === 'CHAIR') { apt.chair = val; currentField = 'chair'; }
     });
 
     if (!apt.patientName || !apt.date) return null;
@@ -2427,7 +2435,7 @@ function confirmUnifiedImport() {
                     txPlan: '', notes: '',
                     lastVisit: '', nextVisit: '',
                     lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
-                    perioStatus: '', recallHistory: '', activeStatus: 'active',
+                    perioStatus: '', recallHistory: '', activeStatus: 'Active',
                     importedRequirements: [], priorityNotes: '', highValue: false,
                     createdAt: new Date().toISOString()
                 };
@@ -2574,9 +2582,11 @@ function confirmUnifiedImport() {
             }
             if (id && records[id]) {
                 if (records[id].clinicalBrief && records[id].clinicalBrief.dateGenerated) {
-                    if (!Array.isArray(records[id].briefHistory)) records[id].briefHistory = [];
-                    records[id].briefHistory.unshift(JSON.parse(JSON.stringify(records[id].clinicalBrief)));
-                    if (records[id].briefHistory.length > 3) records[id].briefHistory = records[id].briefHistory.slice(0, 3);
+                    // Firebase can convert arrays to objects — safely convert back
+                    var history = Array.isArray(records[id].briefHistory) ? records[id].briefHistory : (records[id].briefHistory ? getValues(records[id].briefHistory) : []);
+                    history.unshift(JSON.parse(JSON.stringify(records[id].clinicalBrief)));
+                    if (history.length > 3) history = history.slice(0, 3);
+                    records[id].briefHistory = history;
                 }
                 records[id].clinicalBrief = {
                     dateGenerated: brief.dateGenerated || getLocalDateString(new Date()),
@@ -2732,6 +2742,12 @@ function migrateLeadingZeroDedup() {
                 });
             }
         });
+        // Build ID remap table: loserId → winnerId
+        var idRemapTable = {};
+        toMerge.forEach(function(pair) {
+            idRemapTable[pair[0]] = pair[1];
+        });
+
         // Remove losers
         toRemove.forEach(function(id) {
             delete records[id];
@@ -2742,6 +2758,50 @@ function migrateLeadingZeroDedup() {
             if (clinPatients[id]) delete clinPatients[id];
         });
 
+        // Remap ALL foreign key references (matches migrateToUnifiedPatientStore pattern)
+        if (Object.keys(idRemapTable).length > 0) {
+            // Remap appointments[].patientId
+            Object.values(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
+                if (apt.patientId && idRemapTable[apt.patientId]) {
+                    apt.patientId = idRemapTable[apt.patientId];
+                }
+            });
+
+            // Remap completedProcedures[].patientId
+            Object.values(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
+                if (proc.patientId && idRemapTable[proc.patientId]) {
+                    proc.patientId = idRemapTable[proc.patientId];
+                }
+            });
+
+            // Remap competency completionEntries[].patientId across ALL categories/sections/items
+            var comp = roadmapData.clinicalData.competencies;
+            if (comp && typeof comp === 'object') {
+                Object.values(comp).forEach(function(cat) {
+                    (getValues(cat.sections) || []).forEach(function(sec) {
+                        var items = sec.items || {};
+                        Object.values(items).forEach(function(item) {
+                            getValues(item.completionEntries).forEach(function(entry) {
+                                if (entry.patientId && idRemapTable[entry.patientId]) {
+                                    entry.patientId = idRemapTable[entry.patientId];
+                                }
+                            });
+                        });
+                    });
+                });
+            }
+
+            // Remap monthlyPlanner.customTasks clinic task patient references
+            Object.values(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
+                if (task.patientId && idRemapTable[task.patientId]) {
+                    task.patientId = idRemapTable[task.patientId];
+                }
+            });
+
+            console.log('[LEADING-ZERO-DEDUP] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across FK collections');
+        }
+
+        clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         console.log('[LEADING-ZERO-DEDUP] Consolidated ' + toRemove.length + ' duplicate patient records: ' + toRemove.join(', '));
@@ -2795,16 +2855,19 @@ function applyRequirementCheckoffs(items, importContext) {
                                     sec.items[key].completed = intendedCompleted;
                                     if (item.note) sec.items[key].note = item.note;
 
-                                    // CROSS-SYNC: Create procedure record with evidence trail
-                                    if (typeof recordProcedure === 'function') {
+                                    // CROSS-SYNC: Create procedure record ONLY for delta/incremental imports (COMPLETED_TODAY).
+                                    // REQUIREMENTS_STATUS (absolute-set, !isDelta) should NOT create procedure records —
+                                    // it is a status sync, not a procedure event. Creating records inflates getSmartProcedureCount().
+                                    if (item.isDelta && typeof recordProcedure === 'function') {
                                         var procDate = ctx.date || item.date || getLocalDateString();
                                         var patientName = ctx.patientName || item.patientName || '';
                                         var patientId = ctx.patientId || item.patientId || null;
 
                                         // Dedup: check if procedure already recorded for same req+date+patient
                                         var procs = getValues(roadmapData.clinicalData?.completedProcedures);
+                                        var reqIdLower = (item.reqId || '').toLowerCase();
                                         var isDupe = procs.some(function(p) {
-                                            return p.competencyItemIds && p.competencyItemIds.includes(item.reqId)
+                                            return p.competencyItemIds && p.competencyItemIds.some(function(cid) { return (cid || '').toLowerCase() === reqIdLower; })
                                                 && p.date === procDate
                                                 && p.patientName === patientName;
                                         });
@@ -2846,12 +2909,20 @@ function applyRequirementCheckoffs(items, importContext) {
 // ==================== SPS DASHBOARD FUNCTIONS ====================
 
 function getDashboardSnapshots() {
-    return roadmapData.clinicalData.dashboardSnapshots || [];
+    // Firebase can convert arrays to objects — safely convert back
+    var raw = roadmapData.clinicalData.dashboardSnapshots;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    return getValues(raw);
 }
 
 function saveDashboardSnapshot(snapshot) {
-    if (!roadmapData.clinicalData.dashboardSnapshots) {
+    // Firebase can convert arrays to objects — ensure we have a real array
+    var raw = roadmapData.clinicalData.dashboardSnapshots;
+    if (!raw) {
         roadmapData.clinicalData.dashboardSnapshots = [];
+    } else if (!Array.isArray(raw)) {
+        roadmapData.clinicalData.dashboardSnapshots = getValues(raw);
     }
     var snaps = roadmapData.clinicalData.dashboardSnapshots;
 
@@ -3025,8 +3096,14 @@ function parseDashboardUpdate(text) {
                 case 'ATTENDED': snapshot.appointments.attended = pn(val); break;
                 case 'BOOKED': snapshot.appointments.booked = pn(val); break;
                 case 'PROJECTED': snapshot.appointments.projected = pn(val); break;
+                case 'APT_REMAINING':
+                    snapshot.appointments.remaining = pn(val);
+                    break;
+                case 'PROC_REMAINING':
+                    snapshot.procedures.remaining = pn(val);
+                    break;
                 case 'REMAINING':
-                    // Could be appointments or procedures — use context
+                    // Backward compat: first REMAINING goes to appointments, second to procedures
                     // If procedures section was started (TOTAL_COMPLETED seen), it's procedures
                     if (snapshot.procedures.totalCompleted > 0) {
                         snapshot.procedures.remaining = pn(val);
@@ -3221,9 +3298,12 @@ function renderMiniReview() {
         var p = allPatients[pid];
         var rel = p.reliability || 'yellow';
 
-        // Last visit
+        // Last visit — parse full details from LAST_VISIT field: "date | procedure | provider"
         var lastVisitRaw = p.lastVisit || '';
-        var lastVisitShort = lastVisitRaw ? lastVisitRaw.split('|')[0].split('\u2014')[0].trim() : '';
+        var lastVisitParts = lastVisitRaw.split('|').map(function(s) { return s.trim(); });
+        var lastVisitDate = lastVisitParts[0] || '';
+        var lastVisitProc = lastVisitParts[1] || '';
+        var lastVisitProvider = lastVisitParts[2] || '';
 
         // Next visit (auto from schedule or manual)
         var autoNext = getNextScheduledVisit(p, pid);
@@ -3252,11 +3332,21 @@ function renderMiniReview() {
         html += '<span class="mr-chart">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>';
         html += '</div>';
 
-        // Visit dates row
+        // Visit dates row — show full details for last visit
         html += '<div class="mr-visits">';
-        html += '<div class="mr-visit-box"><div class="mr-visit-label">Last Visit</div>'
-            + '<div class="mr-visit-value' + (lastVisitShort ? '' : ' mr-none') + '">'
-            + escapeHtml(lastVisitShort || 'None recorded') + '</div></div>';
+        html += '<div class="mr-visit-box"><div class="mr-visit-label">Last Visit</div>';
+        if (lastVisitDate) {
+            html += '<div class="mr-visit-value">' + escapeHtml(lastVisitDate) + '</div>';
+            if (lastVisitProc) {
+                html += '<div class="mr-visit-detail">' + escapeHtml(lastVisitProc) + '</div>';
+            }
+            if (lastVisitProvider) {
+                html += '<div class="mr-visit-provider">' + escapeHtml(lastVisitProvider) + '</div>';
+            }
+        } else {
+            html += '<div class="mr-visit-value mr-none">None recorded</div>';
+        }
+        html += '</div>';
         html += '<div class="mr-visit-box"><div class="mr-visit-label">Next Visit</div>'
             + '<div class="mr-visit-value' + (nextVisitShort ? '' : ' mr-none') + '">'
             + escapeHtml(nextVisitShort || 'Not scheduled') + '</div></div>';

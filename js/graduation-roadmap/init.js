@@ -735,6 +735,7 @@ function initUI() {
         // Save to Firebase so Body Comp Tracker can access exams
         // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
         if (hasLoadedFromCloud && !awaitingFirebaseLoad) {
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             setTimeout(() => saveData(), 100);
         }
     }
@@ -795,13 +796,13 @@ function initUI() {
                 if (deadlineIdx !== -1) {
                     // Apply the edit to the deadline
                     const deadline = deadlines[deadlineIdx];
-                    if (edited.date) deadline.date = edited.date;
-                    if (edited.day) deadline.day = edited.day;
-                    if (edited.what) deadline.what = edited.what;
-                    if (edited.course) deadline.course = edited.course;
-                    if (edited.weight) deadline.weight = edited.weight;
-                    if (edited.type) deadline.type = edited.type;
-                    if (edited.month) deadline.month = edited.month;
+                    if (edited.date !== undefined) deadline.date = edited.date;
+                    if (edited.day !== undefined) deadline.day = edited.day;
+                    if (edited.what !== undefined) deadline.what = edited.what;
+                    if (edited.course !== undefined) deadline.course = edited.course;
+                    if (edited.weight !== undefined) deadline.weight = edited.weight;
+                    if (edited.type !== undefined) deadline.type = edited.type;
+                    if (edited.month !== undefined) deadline.month = edited.month;
                     if (edited.done !== undefined) deadline.done = edited.done;
                     if (edited.grade !== undefined) deadline.grade = edited.grade;
                 }
@@ -862,6 +863,7 @@ function initUI() {
         roadmapData.upcomingDeadlines = upcomingObj;
         // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
         if (idx !== oldCount && hasLoadedFromCloud && !awaitingFirebaseLoad) {
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             setTimeout(() => saveData(), 2000);
         }
     } catch(e) { console.error('Error syncing upcoming deadlines:', e); }

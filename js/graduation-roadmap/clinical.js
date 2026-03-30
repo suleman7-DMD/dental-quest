@@ -217,7 +217,7 @@ function renderAppointmentCard(apt, patients) {
                         status === 'cancelled' ? 'Cancelled' :
                         status === 'no_show' ? 'No Show' : status;
 
-    const safeAptId = apt.id.replace(/'/g, "\\'");
+    const safeAptId = apt.id.replace(/['"\\]/g, '');
     const completeBtn = status === 'completed'
         ? '<button onclick="toggleAppointmentStatus(\'' + safeAptId + '\', event)" style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8em; font-weight:600;" title="Click to uncomplete">✓ Done</button>'
         : (status === 'scheduled'
@@ -233,7 +233,7 @@ function renderAppointmentCard(apt, patients) {
             <div class="appointment-info">
                 <h4>${escapeHtml(patient.name)}</h4>
                 <div class="appointment-details">
-                    ${dayName} ${timeDisplay} · ${durationHrs}h ${apt.chair ? '· Chair ' + apt.chair : ''}
+                    ${dayName} ${timeDisplay} · ${durationHrs}h ${apt.chair ? '· Chair ' + escapeHtml(apt.chair) : ''}
                 </div>
                 ${apt.procedures ? `<div style="margin-top: 5px; font-size: 0.9em; color: #f59e0b;">${escapeHtml(apt.procedures)}</div>` : ''}
             </div>
@@ -1225,10 +1225,11 @@ function removeEvidenceEntry(catKey, itemId, entryIndex) {
     });
     if (!foundItem) return;
 
-    if (!Array.isArray(foundItem.completionEntries)) foundItem.completionEntries = getValues(foundItem.completionEntries);
-    if (entryIndex < 0 || entryIndex >= foundItem.completionEntries.length) return;
+    var entries = getValues(foundItem.completionEntries);
+    if (entryIndex < 0 || entryIndex >= entries.length) return;
 
-    var removed = foundItem.completionEntries.splice(entryIndex, 1)[0];
+    var removed = entries[entryIndex];
+    foundItem.completionEntries = entries.filter(function(e, i) { return i !== entryIndex; });
     foundItem.completed = Math.min(foundItem.required, foundItem.completionEntries.length);
     if (foundItem.completed >= foundItem.required) {
         foundItem.status = 'completed';
@@ -2232,21 +2233,22 @@ function saveCompItem() {
         }
 
         const newItemId = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        const clampedCompleted = Math.max(0, Math.min(completed, required));
         const newItem = {
             id: newItemId,
             text: name,
             required: required,
-            completed: Math.max(0, Math.min(completed, required)), // FIXED: Clamp to 0-required range
+            completed: clampedCompleted,
             note: notes || null,
-            custom: true // Mark as custom so it can be deleted
+            custom: true, // Mark as custom so it can be deleted
+            completionEntries: [],
+            status: clampedCompleted >= required ? 'completed' : (clampedCompleted > 0 ? 'in_progress' : 'pending'),
+            d3Deadline: null,
+            unlockedBy: null,
+            unlockEmailTo: null,
+            isSummative: false,
+            rules: null
         };
-
-        // Set status based on completed count
-        if (newItem.completed >= newItem.required) {
-            newItem.status = 'completed';
-        } else if (newItem.completed > 0) {
-            newItem.status = 'in_progress';
-        }
 
         // Use object assignment instead of push
         section.items[newItemId] = newItem;
@@ -2982,7 +2984,7 @@ function renderProceduresList() {
         var typeName = PROCEDURE_TYPES[proc.procedureType] || proc.procedureType || 'Other';
         var procDate = parseLocalDate(proc.date);
         var dateStr = procDate ? procDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : proc.date;
-        var safeId = proc.id.replace(/'/g, "\\'");
+        var safeId = proc.id.replace(/['"\\]/g, '');
 
         var compHtml = '';
         if (proc.competencyItemIds && proc.competencyItemIds.length > 0) {
