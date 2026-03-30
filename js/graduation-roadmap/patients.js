@@ -1419,6 +1419,7 @@ function computeRequirementMatches(patient) {
 function isRequirementOutstanding(reqId) {
     var competencies = getCompetenciesData();
     if (!competencies) return false;
+    var reqLower = (reqId || '').toLowerCase().trim();
 
     for (var catKey in competencies) {
         var cat = competencies[catKey];
@@ -1429,7 +1430,7 @@ function isRequirementOutstanding(reqId) {
             if (!sec || !sec.items) continue;
             var items = getValues(sec.items);
             for (var i = 0; i < items.length; i++) {
-                if (items[i].id === reqId) {
+                if ((items[i].id || '').toLowerCase() === reqLower) {
                     return (items[i].completed || 0) < (items[i].required || 1);
                 }
             }
@@ -1441,6 +1442,7 @@ function isRequirementOutstanding(reqId) {
 function getRequirementInfo(reqId) {
     var competencies = getCompetenciesData();
     if (!competencies) return null;
+    var reqLower = (reqId || '').toLowerCase().trim();
 
     for (var catKey in competencies) {
         var cat = competencies[catKey];
@@ -1451,7 +1453,7 @@ function getRequirementInfo(reqId) {
             if (!sec || !sec.items) continue;
             var items = getValues(sec.items);
             for (var i = 0; i < items.length; i++) {
-                if (items[i].id === reqId) {
+                if ((items[i].id || '').toLowerCase() === reqLower) {
                     return items[i];
                 }
             }
@@ -1843,9 +1845,9 @@ function parseRequirementsMatch(text) {
             var parts3 = trimmed.split('|').map(function(s) { return s.trim(); });
             if (!parts3[0]) return;
             if (inSection === 'canFulfill') {
-                result.canFulfill.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '' });
+                result.canFulfill.push({ reqId: parts3[0].toLowerCase().trim(), description: parts3[1] || '', procedure: parts3[2] || '' });
             } else if (inSection === 'completedToday') {
-                result.completedToday.push({ reqId: parts3[0], description: parts3[1] || '', procedure: parts3[2] || '', date: parts3[3] || '', patientName: parts3[4] || '' });
+                result.completedToday.push({ reqId: parts3[0].toLowerCase().trim(), description: parts3[1] || '', procedure: parts3[2] || '', date: parts3[3] || '', patientName: parts3[4] || '' });
             }
         }
     });
