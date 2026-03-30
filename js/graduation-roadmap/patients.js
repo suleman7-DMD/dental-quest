@@ -2340,9 +2340,10 @@ function confirmPatientImport() {
             });
         }
         if (id && records[id]) {
-            if (rm.canFulfill.length > 0) records[id].importedRequirements = rm.canFulfill;
+            // CIS v2 fix: Always store metadata, even when canFulfill is empty
+            records[id].importedRequirements = rm.canFulfill || [];
             if (rm.priorityNotes) records[id].priorityNotes = rm.priorityNotes;
-            if (rm.highValue) records[id].highValue = true;
+            if (rm.highValue !== undefined) records[id].highValue = rm.highValue;
         }
     });
 
