@@ -256,6 +256,15 @@ Suleman's outstanding requirements below.
 | fixed-sim-fpd | 1 Simulation: 3-unit Prep and Temp of FPD |
 | fixed-case-pres | 1 Case Presentation (on 2 completed units) |
 
+**Clinical Experience:**
+
+| ID | Description |
+|---|---|
+| fixed-units | 10 Minimum clinical units (start to completion) |
+| fixed-fpd | 1 Must include 1 FPD |
+| fixed-implant | 1 Must include 1 Implant-Supported Crown |
+| fixed-cerec | 3 Must include minimum 3 CEREC restorations |
+
 ### OPERATIVE (operative):
 
 **Summatives (8 total):**
