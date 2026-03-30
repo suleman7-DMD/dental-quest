@@ -193,6 +193,16 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.clinicalData.competencies, data.clinicalData.competencies
             );
         }
+        // autoLinkReviewQueue: union by procedureId (local wins for same procedureId)
+        if (Array.isArray(data.clinicalData.autoLinkReviewQueue) && data.clinicalData.autoLinkReviewQueue.length > 0) {
+            if (!Array.isArray(roadmapData.clinicalData.autoLinkReviewQueue)) roadmapData.clinicalData.autoLinkReviewQueue = [];
+            var localProcIds = new Set(roadmapData.clinicalData.autoLinkReviewQueue.map(function(q) { return q.procedureId; }));
+            data.clinicalData.autoLinkReviewQueue.forEach(function(remoteQ) {
+                if (remoteQ.procedureId && !localProcIds.has(remoteQ.procedureId)) {
+                    roadmapData.clinicalData.autoLinkReviewQueue.push(remoteQ);
+                }
+            });
+        }
     }
 
     // Monthly planner collections
@@ -339,6 +349,17 @@ function mergeRemoteCollectionsIntoLocal(data) {
             }
         });
     }
+
+    // competencyUIState: remote wins (UI preference sync)
+    if (data.competencyUIState) {
+        if (!roadmapData.competencyUIState) roadmapData.competencyUIState = { expandedCategories: [], viewMode: 'department' };
+        if (Array.isArray(data.competencyUIState.expandedCategories) && data.competencyUIState.expandedCategories.length > 0) {
+            roadmapData.competencyUIState.expandedCategories = data.competencyUIState.expandedCategories;
+        }
+        if (data.competencyUIState.viewMode) {
+            roadmapData.competencyUIState.viewMode = data.competencyUIState.viewMode;
+        }
+    }
 }
 
 // ==================== FIX 7: CONNECTION MONITOR ====================
@@ -462,7 +483,8 @@ function restoreBackup(backupId) {
             competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
             patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
             dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
-            missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes
+            missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
+            autoLinkReviewQueue: Array.isArray(bData.clinicalData?.autoLinkReviewQueue) ? bData.clinicalData.autoLinkReviewQueue : defaults.clinicalData.autoLinkReviewQueue
         },
         todoList: {
             items: bData.todoList?.items || {},
@@ -488,6 +510,7 @@ function restoreBackup(backupId) {
                 lastEdited: bData.periodicReviews?.pr2?.lastEdited ?? defaults.periodicReviews.pr2.lastEdited
             }
         } : defaults.periodicReviews,
+        competencyUIState: bData.competencyUIState ?? defaults.competencyUIState,
         lastSaved: bData.lastSaved || Date.now(),
         _version: (bData._version ?? 0) + 1,
         _lastModified: new Date().toISOString(),
@@ -930,7 +953,13 @@ function mergeRemoteState(data) {
             ),
             patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
             dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-            missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) }
+            missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
+            autoLinkReviewQueue: (() => {
+                var local = Array.isArray(roadmapData.clinicalData?.autoLinkReviewQueue) ? roadmapData.clinicalData.autoLinkReviewQueue : [];
+                var remote = Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : [];
+                var localIds = new Set(local.map(function(q) { return q.procedureId; }));
+                return local.concat(remote.filter(function(q) { return q.procedureId && !localIds.has(q.procedureId); }));
+            })()
         },
         todoList: {
             items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
@@ -990,6 +1019,10 @@ function mergeRemoteState(data) {
                 lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
             }
         } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
+        competencyUIState: data.competencyUIState ? {
+            expandedCategories: Array.isArray(data.competencyUIState.expandedCategories) ? data.competencyUIState.expandedCategories : (roadmapData.competencyUIState?.expandedCategories || []),
+            viewMode: data.competencyUIState.viewMode ?? roadmapData.competencyUIState?.viewMode ?? 'department'
+        } : (roadmapData.competencyUIState || { expandedCategories: [], viewMode: 'department' }),
         lastSaved: data.lastSaved,
         _version: Math.max(data._version || 0, roadmapData._version || 0),
         _lastModified: data._lastModified || roadmapData._lastModified,
@@ -1065,7 +1098,8 @@ function loadFromLocalStorage(finalize = true) {
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                     patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
                     dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-                    missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) }
+                    missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
+                    autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
                 },
                 todoList: {
                     items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
@@ -1122,6 +1156,10 @@ function loadFromLocalStorage(finalize = true) {
                         lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
                     }
                 } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
+                competencyUIState: data.competencyUIState ? {
+                    expandedCategories: Array.isArray(data.competencyUIState.expandedCategories) ? data.competencyUIState.expandedCategories : [],
+                    viewMode: data.competencyUIState.viewMode ?? 'department'
+                } : (roadmapData.competencyUIState || { expandedCategories: [], viewMode: 'department' }),
                 lastSaved: data.lastSaved || roadmapData.lastSaved,
                 _version: data._version || roadmapData._version || 0,
                 _lastModified: data._lastModified || roadmapData._lastModified
@@ -1814,7 +1852,8 @@ function restoreCheckpoint(index) {
                     competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies),
                     patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
                     dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots),
-                    missingNotes: cpData.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {}
+                    missingNotes: cpData.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
+                    autoLinkReviewQueue: Array.isArray(cpData.clinicalData?.autoLinkReviewQueue) ? cpData.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
                 },
                 todoList: {
                     items: { ...(roadmapData.todoList?.items || {}), ...(cpData.todoList?.items || {}) },
@@ -1848,11 +1887,16 @@ function restoreCheckpoint(index) {
                         lastEdited: cpData.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
                     }
                 } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
+                competencyUIState: cpData.competencyUIState ?? roadmapData.competencyUIState ?? { expandedCategories: [], viewMode: 'department' },
                 lastSaved: cpData.lastSaved || Date.now(),
                 _version: (cpData._version ?? 0) + 1,
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
+
+            // Clear migration flags so migrations re-run against restored data
+            localStorage.removeItem('unifiedPatientStoreDone_v1');
+            localStorage.removeItem('competencyEnhancementsDone_v1');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -2125,7 +2169,8 @@ function importAndRestoreDirectly() {
                             competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
                             patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
                             dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-                            missingNotes: data.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {}
+                            missingNotes: data.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
+                            autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
                         },
                         todoList: {
                             items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
@@ -2159,6 +2204,7 @@ function importAndRestoreDirectly() {
                                 lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
                             }
                         } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
+                        competencyUIState: data.competencyUIState ?? roadmapData.competencyUIState ?? { expandedCategories: [], viewMode: 'department' },
                         lastSaved: data.lastSaved || Date.now(),
                         _version: (data._version ?? 0) + 1,
                         _lastModified: new Date().toISOString(),
@@ -2437,6 +2483,16 @@ function validateStateIntegrity(data) {
     if (data.clinicalData?.competencies !== undefined && data.clinicalData.competencies !== null && typeof data.clinicalData.competencies !== 'object') {
         console.error('[GUARD-F] clinicalData.competencies is not an object');
         errors.push('clinicalData.competencies is not an object');
+    }
+    // autoLinkReviewQueue must be array if present
+    if (data.clinicalData?.autoLinkReviewQueue !== undefined && !Array.isArray(data.clinicalData.autoLinkReviewQueue)) {
+        console.error('[GUARD-F] clinicalData.autoLinkReviewQueue is not an array');
+        errors.push('clinicalData.autoLinkReviewQueue is not an array');
+    }
+    // competencyUIState must be object if present
+    if (data.competencyUIState !== undefined && data.competencyUIState !== null && typeof data.competencyUIState !== 'object') {
+        console.error('[GUARD-F] competencyUIState is not an object');
+        errors.push('competencyUIState is not an object');
     }
     return errors;
 }
