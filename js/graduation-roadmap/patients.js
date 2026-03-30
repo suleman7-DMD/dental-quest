@@ -419,6 +419,138 @@ function filterPatientsSidebar() {
     renderPatientsSidebar();
 }
 
+// ==================== CIS v2: UNIFIED PATIENT STORE MIGRATION ====================
+
+function migrateToUnifiedPatientStore() {
+    if (localStorage.getItem('unifiedPatientStoreDone_v1')) return;
+    var patients = roadmapData.clinicalData?.patients;
+    if (!patients || typeof patients !== 'object' || Object.keys(patients).length === 0) {
+        // No data to migrate — just set flag
+        localStorage.setItem('unifiedPatientStoreDone_v1', '1');
+        return;
+    }
+
+    // Create checkpoint before migration
+    if (typeof createCheckpoint === 'function') {
+        try { createCheckpoint('pre-unified-patient-migration'); } catch(e) { console.error('Checkpoint error:', e); }
+    }
+
+    if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
+    var pr = roadmapData.clinicalData.patientRecords;
+    var idRemapTable = {};
+
+    // Iterate clinicalData.patients, merge into patientRecords
+    Object.keys(patients).forEach(function(oldId) {
+        var p = patients[oldId];
+        if (!p) return;
+
+        var chart = (p.chartNumber || '').trim();
+        var normChart = typeof normalizeChartNumber === 'function' ? normalizeChartNumber(chart) : chart.replace(/^0+/, '') || '0';
+        var canonicalId = chart ? ('pt_' + chart) : oldId;
+
+        // Try to find existing match in patientRecords by normalized chart, then by name
+        var matchId = null;
+        if (chart && typeof findByNormalizedChart === 'function') {
+            matchId = findByNormalizedChart(pr, chart);
+        }
+        if (!matchId && p.name) {
+            var nameLower = p.name.toLowerCase().trim();
+            Object.keys(pr).forEach(function(prId) {
+                if (!matchId && pr[prId] && (pr[prId].name || '').toLowerCase().trim() === nameLower) {
+                    matchId = prId;
+                }
+            });
+        }
+
+        if (matchId) {
+            // Fill-merge: never overwrite existing richer data
+            var existing = pr[matchId];
+            Object.keys(p).forEach(function(key) {
+                if (existing[key] == null && p[key] != null) {
+                    existing[key] = p[key];
+                }
+            });
+            if (oldId !== matchId) idRemapTable[oldId] = matchId;
+        } else {
+            // New entry — use canonical ID
+            pr[canonicalId] = { ...p, id: canonicalId };
+            if (oldId !== canonicalId) idRemapTable[oldId] = canonicalId;
+        }
+    });
+
+    // Remap ALL foreign key references using idRemapTable
+    if (Object.keys(idRemapTable).length > 0) {
+        // Remap appointments[].patientId
+        Object.values(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
+            if (apt.patientId && idRemapTable[apt.patientId]) {
+                apt.patientId = idRemapTable[apt.patientId];
+            }
+        });
+
+        // Remap completedProcedures[].patientId
+        Object.values(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
+            if (proc.patientId && idRemapTable[proc.patientId]) {
+                proc.patientId = idRemapTable[proc.patientId];
+            }
+        });
+
+        // Remap competency completionEntries[].patientId across ALL categories/sections/items
+        var comp = roadmapData.clinicalData.competencies;
+        if (comp && typeof comp === 'object') {
+            Object.values(comp).forEach(function(cat) {
+                (getValues(cat.sections) || []).forEach(function(sec) {
+                    var items = sec.items || {};
+                    Object.values(items).forEach(function(item) {
+                        (item.completionEntries || []).forEach(function(entry) {
+                            if (entry.patientId && idRemapTable[entry.patientId]) {
+                                entry.patientId = idRemapTable[entry.patientId];
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // Remap monthlyPlanner.customTasks clinic task patient references
+        Object.values(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
+            if (task.patientId && idRemapTable[task.patientId]) {
+                task.patientId = idRemapTable[task.patientId];
+            }
+        });
+
+        // Remap autoLinkReviewQueue[].patientId
+        (roadmapData.clinicalData.autoLinkReviewQueue || []).forEach(function(q) {
+            if (q.patientId && idRemapTable[q.patientId]) {
+                q.patientId = idRemapTable[q.patientId];
+            }
+        });
+
+        // Remap periodicReviews.pr2 patient-keyed sub-objects
+        var pr2 = roadmapData.periodicReviews?.pr2;
+        if (pr2) {
+            ['removedPatients', 'patientNotes', 'inProgressProcedures'].forEach(function(field) {
+                if (pr2[field] && typeof pr2[field] === 'object') {
+                    var remapped = {};
+                    Object.entries(pr2[field]).forEach(function(entry) {
+                        var key = entry[0], val = entry[1];
+                        remapped[idRemapTable[key] || key] = val;
+                    });
+                    pr2[field] = remapped;
+                }
+            });
+        }
+
+        console.log('[CIS-v2] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across all collections');
+    }
+
+    // Clear old store — keep as empty object for schema compatibility
+    roadmapData.clinicalData.patients = {}; // DEPRECATED: unified into patientRecords. Kept for schema compatibility.
+
+    localStorage.setItem('unifiedPatientStoreDone_v1', '1');
+    console.log('[CIS-v2] Unified patient store migration complete. Migrated ' + Object.keys(patients).length + ' patients.');
+    saveData();
+}
+
 function getPatientRecords() {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     // Guard: don't initialize defaults until real data has loaded from cloud
@@ -483,112 +615,11 @@ function findByNormalizedChart(records, rawChart) {
     return null;
 }
 
-// Merge both patient stores: patientRecords (from imports) + clinicalData.patients (from clinical tab)
-// Dedup by normalized chart number + name to prevent same patient showing twice with different IDs
+// Post-CIS-v2: Single canonical store. Alias to getPatientRecords().
+// The old two-store merge logic is no longer needed — migrateToUnifiedPatientStore()
+// has consolidated clinicalData.patients into patientRecords.
 function getAllPatientRecords() {
-    var records = getPatientRecords();
-    var clinicalPatients = roadmapData.clinicalData?.patients || {};
-    // Self-dedup within patientRecords: previous imports may have created
-    // pt_079118 while defaults filled pt_79118 — both in same store
-    var merged = {};
-    var existingCharts = {};
-    var existingNames = {};
-    Object.keys(records).forEach(function(id) {
-        var rec = records[id];
-        if (!rec) return;
-        var chart = normalizeChartNumber(rec.chartNumber);
-        var rawChart = (rec.chartNumber || '').trim();
-        var name = (rec.name || '').toLowerCase().trim();
-        // Check if a record with this normalized chart already exists
-        if (chart && existingCharts[chart]) {
-            var keepId = existingCharts[chart];
-            var keepRaw = (merged[keepId].chartNumber || '').trim();
-            if (rawChart.length > keepRaw.length) {
-                // New record has longer chart — swap: promote it as primary
-                var old = merged[keepId];
-                delete merged[keepId];
-                merged[id] = rec;
-                // Fill-merge old fields onto new
-                Object.keys(old).forEach(function(key) {
-                    if (rec[key] == null && old[key] != null) {
-                        rec[key] = old[key];
-                    }
-                });
-                existingCharts[chart] = id;
-                if (name) existingNames[name] = id;
-            } else {
-                // Existing has better or equal chart — merge new fields onto it
-                Object.keys(rec).forEach(function(key) {
-                    if (merged[keepId][key] == null && rec[key] != null) {
-                        merged[keepId][key] = rec[key];
-                    }
-                });
-            }
-            return;
-        }
-        // Check if a record with this name already exists
-        if (name && existingNames[name]) {
-            var keepId = existingNames[name];
-            var keepRaw = (merged[keepId].chartNumber || '').trim();
-            if (rawChart.length > keepRaw.length) {
-                var old = merged[keepId];
-                delete merged[keepId];
-                merged[id] = rec;
-                Object.keys(old).forEach(function(key) {
-                    if (rec[key] == null && old[key] != null) {
-                        rec[key] = old[key];
-                    }
-                });
-                if (chart) existingCharts[chart] = id;
-                existingNames[name] = id;
-            } else {
-                Object.keys(rec).forEach(function(key) {
-                    if (merged[keepId][key] == null && rec[key] != null) {
-                        merged[keepId][key] = rec[key];
-                    }
-                });
-            }
-            return;
-        }
-        merged[id] = rec;
-        if (chart) existingCharts[chart] = id;
-        if (name) existingNames[name] = id;
-    });
-    Object.keys(clinicalPatients).forEach(function(id) {
-        if (merged[id]) return; // Same ID already exists
-        var cp = clinicalPatients[id];
-        if (!cp) return;
-        var chart = normalizeChartNumber(cp.chartNumber);
-        // Dedup by normalized chart number
-        if (chart && existingCharts[chart]) {
-            // Same chart number under different ID — fill-merge onto existing record
-            var existingId = existingCharts[chart];
-            var existing = merged[existingId];
-            Object.keys(cp).forEach(function(key) {
-                if (existing[key] == null && cp[key] != null) {
-                    existing[key] = cp[key];
-                }
-            });
-            return;
-        }
-        // Dedup by name (case-insensitive) — fallback for ALL patients (not just chartless)
-        var cpName = (cp.name || '').toLowerCase().trim();
-        if (cpName && existingNames[cpName]) {
-            // Same name under different ID — fill-merge onto existing record
-            var existingId = existingNames[cpName];
-            var existing = merged[existingId];
-            Object.keys(cp).forEach(function(key) {
-                if (existing[key] == null && cp[key] != null) {
-                    existing[key] = cp[key];
-                }
-            });
-            return;
-        }
-        merged[id] = cp;
-        if (chart) existingCharts[chart] = id;
-        if (cpName) existingNames[cpName] = id;
-    });
-    return merged;
+    return getPatientRecords();
 }
 
 function renderPatientsSidebar() {
