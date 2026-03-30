@@ -962,6 +962,7 @@ function initUI() {
     try { ensureCompetenciesInitialized(); } catch(e) { console.error('ensureCompetenciesInitialized error:', e); }
 
     // CIS v2 migrations — idempotent, gated by localStorage flags
+    try { migrateCompetencyEnhancements(); } catch(e) { console.error('migrateCompetencyEnhancements error:', e); }
     try { migrateToUnifiedPatientStore(); } catch(e) { console.error('migrateToUnifiedPatientStore error:', e); }
 
     // ALWAYS try to render, even if above steps failed

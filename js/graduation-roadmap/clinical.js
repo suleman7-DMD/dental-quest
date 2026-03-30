@@ -1004,6 +1004,42 @@ function ensureCompetenciesInitialized() {
     }
 }
 
+// CIS v2: Migrate new competency fields to existing Firebase user data
+// Without this, mergeCompetencies() only preserves completed/completionEntries/status — new fields never propagate
+function migrateCompetencyEnhancements() {
+    if (localStorage.getItem('competencyEnhancementsDone_v1')) return;
+    var comp = roadmapData.clinicalData?.competencies;
+    if (!comp || typeof comp !== 'object') return;
+
+    // Build lookup from DEFAULT_COMPETENCIES
+    var defaults = {};
+    DEFAULT_COMPETENCIES.forEach(function(cat) {
+        (cat.sections || []).forEach(function(sec) {
+            (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
+        });
+    });
+
+    // Walk existing items and spread new fields from defaults
+    Object.values(comp).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            var items = sec.items || {};
+            Object.values(items).forEach(function(item) {
+                var def = defaults[item.id];
+                if (!def) return;
+                item.d3Deadline = item.d3Deadline ?? def.d3Deadline ?? null;
+                item.unlockedBy = item.unlockedBy ?? def.unlockedBy ?? null;
+                item.unlockEmailTo = item.unlockEmailTo ?? def.unlockEmailTo ?? null;
+                item.isSummative = item.isSummative ?? def.isSummative ?? false;
+                item.rules = item.rules ?? def.rules ?? null;
+                item.custom = item.custom ?? def.custom ?? false;
+            });
+        });
+    });
+
+    localStorage.setItem('competencyEnhancementsDone_v1', '1');
+    console.log('[CIS-v2] Migrated competency enhancement fields to existing items');
+}
+
 // Pure read-only accessor — no side effects during render.
 function getCompetenciesData() {
     return roadmapData.clinicalData?.competencies || {};
