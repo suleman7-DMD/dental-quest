@@ -1566,8 +1566,8 @@ function prSavePatientField(patientId, fieldName, value) {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     if (!roadmapData.clinicalData.patientRecords[patientId]) {
-        // Copy core fields from clinicalData.patients if available (prevents blank roster rows)
-        var clinicalPt = roadmapData.clinicalData.patients?.[patientId] ?? {};
+        // Copy core fields from clinicalData.patientRecords if available (prevents blank roster rows)
+        var clinicalPt = roadmapData.clinicalData.patientRecords?.[patientId] ?? {};
         roadmapData.clinicalData.patientRecords[patientId] = {
             id: patientId,
             name: clinicalPt.name ?? '',

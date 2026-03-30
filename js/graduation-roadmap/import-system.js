@@ -275,7 +275,7 @@ function syncClinicalToMonthlyPlanner() {
     }
 
     const appointments = roadmapData.clinicalData.appointments;
-    const patients = roadmapData.clinicalData.patients || {};
+    const patients = roadmapData.clinicalData.patientRecords || {};
     const hiddenClinicTasks = roadmapData.monthlyPlanner.hiddenClinicTasks;
     const customTasks = roadmapData.monthlyPlanner.customTasks;
 
@@ -357,7 +357,7 @@ function dedupAppointments() {
     if (!roadmapData.clinicalData?.appointments) return 0;
 
     const appointments = roadmapData.clinicalData.appointments;
-    const patients = roadmapData.clinicalData.patients || {};
+    const patients = roadmapData.clinicalData.patientRecords || {};
     const allApts = getValues(appointments);
 
     if (allApts.length === 0) return 0;

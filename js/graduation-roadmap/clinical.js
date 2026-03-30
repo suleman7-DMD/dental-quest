@@ -575,7 +575,7 @@ function saveAppointment() {
 
     // Create deadline if requested
     if (isNew && document.getElementById('appointmentModalCreateDeadline').checked) {
-        const patient = roadmapData.clinicalData.patients[patientId];
+        const patient = roadmapData.clinicalData.patientRecords?.[patientId];
         const patientName = patient?.name || 'Patient';
 
         // Add to custom deadlines
@@ -1866,7 +1866,7 @@ function backfillClinicalData() {
 
             // Update patient lastVisit
             if (apt.patientId) {
-                var patient = roadmapData.clinicalData.patients?.[apt.patientId];
+                var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
                 if (patient) {
                     if (!patient.lastVisit || patient.lastVisit < apt.date) {
                         patient.lastVisit = apt.date;
@@ -1935,7 +1935,7 @@ function backfillClinicalData() {
 
             // Get patient name
             if (apt.patientId) {
-                var pt = roadmapData.clinicalData.patients?.[apt.patientId];
+                var pt = roadmapData.clinicalData.patientRecords?.[apt.patientId];
                 if (pt) procData.patientName = pt.name || '';
             }
 
@@ -1968,9 +1968,9 @@ function backfillClinicalData() {
 
     // === Phase 4: Link patient records to clinical patients ===
     var patientRecords = roadmapData.clinicalData.patientRecords || {};
-    if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+    if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     var existingNames = new Set();
-    Object.values(roadmapData.clinicalData.patients).forEach(function(p) {
+    Object.values(roadmapData.clinicalData.patientRecords).forEach(function(p) {
         if (p.name) existingNames.add(p.name.toLowerCase().trim());
     });
 
@@ -1981,7 +1981,7 @@ function backfillClinicalData() {
 
         // Create clinical patient from patient record
         var patientId = pr.id || ('pt-' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
-        roadmapData.clinicalData.patients[patientId] = {
+        roadmapData.clinicalData.patientRecords[patientId] = {
             id: patientId,
             name: pr.name,
             chartNumber: pr.chartNumber || '',
@@ -2002,7 +2002,7 @@ function backfillClinicalData() {
     });
 
     // === Phase 5: Create procedure records from patient outstanding tasks marked completed ===
-    Object.values(roadmapData.clinicalData.patients).forEach(function(patient) {
+    Object.values(roadmapData.clinicalData.patientRecords).forEach(function(patient) {
         if (!patient.outstandingTasks) return;
         patient.outstandingTasks.forEach(function(task) {
             if (task.status === 'completed' && task.procedure) {
