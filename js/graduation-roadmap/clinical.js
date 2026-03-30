@@ -733,7 +733,7 @@ function migrateCompetencyEnhancements() {
 
     // Build lookup from DEFAULT_COMPETENCIES
     var defaults = {};
-    DEFAULT_COMPETENCIES.forEach(function(cat) {
+    Object.values(DEFAULT_COMPETENCIES).forEach(function(cat) {
         (cat.sections || []).forEach(function(sec) {
             (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
         });
@@ -920,7 +920,7 @@ function renderMilestoneDashboard() {
     if (paceResult && paceResult.ratePerWeek > 0) {
         var paceClass = paceResult.behindSchedule ? 'comp-pace-red' : (paceResult.pastGraduation ? 'comp-pace-yellow' : 'comp-pace-green');
         html += '<div class="comp-pace-badge ' + paceClass + '" style="margin-top:6px;">'
-            + paceResult.ratePerWeek.toFixed(1) + '/wk pace</div>';
+            + paceResult.ratePerWeek + '/wk pace</div>';
     }
     html += '</div>';
 
