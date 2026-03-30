@@ -137,66 +137,18 @@ function renderActiveRoster() {
     container.innerHTML = html;
 }
 
-function deletePatient() {
-    const patientId = document.getElementById('patientModalId').value;
+function deletePatient(patientId) {
+    // Accept patientId directly or fall back to modal field
+    patientId = patientId || (document.getElementById('patientModalId') ? document.getElementById('patientModalId').value : null);
     if (!patientId) return;
 
     showCustomConfirm('Are you sure you want to delete this patient? This cannot be undone.', function() {
-        delete roadmapData.clinicalData.patients[patientId];
-
-        // Collect deleted appointment IDs for cleanup
-        var deletedAptIds = [];
-
-        // Also remove any appointments for this patient
-        if (roadmapData.clinicalData.appointments) {
-            Object.keys(roadmapData.clinicalData.appointments).forEach(id => {
-                if (roadmapData.clinicalData.appointments[id]?.patientId === patientId) {
-                    deletedAptIds.push(id);
-                    delete roadmapData.clinicalData.appointments[id];
-                }
-            });
-        }
-
-        // Clean up procedure records referencing this patient + unlink from competencies
-        if (roadmapData.clinicalData.completedProcedures) {
-            Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
-                var proc = roadmapData.clinicalData.completedProcedures[procId];
-                if (proc && proc.patientId === patientId) {
-                    unlinkProcedureFromCompetencies(procId);
-                    delete roadmapData.clinicalData.completedProcedures[procId];
-                }
-            });
-        }
-
-        // Remove clinic planner tasks for deleted appointments + hide them
-        if (roadmapData.monthlyPlanner) {
-            if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
-            deletedAptIds.forEach(function(aptId) {
-                var taskId = 'clinic_' + aptId;
-                // Add to hidden so syncClinicalToMonthlyPlanner doesn't recreate them
-                roadmapData.monthlyPlanner.hiddenClinicTasks[taskId] = true;
-                // Remove from customTasks
-                if (roadmapData.monthlyPlanner.customTasks) {
-                    Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
-                        var ct = roadmapData.monthlyPlanner.customTasks[ctId];
-                        if (ct && ct.clinicalAppointmentId === aptId) {
-                            delete roadmapData.monthlyPlanner.customTasks[ctId];
-                        }
-                    });
-                }
-            });
-        }
-
-        clinicalDataDirty = true;
-
+        // CIS v2: Delegate to cascade function (handles appointments, procedures, competencies, planner, review queue)
+        cascadeDeletePatient(patientId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
-        closePatientModal();
-        renderPatientsList();
         renderAppointmentsList();
-        renderCompetencies();
         updateClinicalStats();
-        renderDashboard();
         showToast('Patient deleted');
     }, null, 'Delete Patient');
 }
@@ -301,8 +253,8 @@ function formatAptTime(time) {
 }
 
 function openAddAppointmentModal(preselectedPatientId = null) {
-    // Populate patient dropdown
-    const patients = roadmapData.clinicalData?.patients || {};
+    // CIS v2: Populate patient dropdown from unified store (AUDIT #10)
+    const patients = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     const patientSelect = document.getElementById('appointmentModalPatient');
     patientSelect.innerHTML = '<option value="">Select patient...</option>' +
         Object.values(patients)
@@ -329,8 +281,8 @@ function editAppointment(aptId) {
     const apt = roadmapData.clinicalData?.appointments?.[aptId];
     if (!apt) return;
 
-    // Populate patient dropdown
-    const patients = roadmapData.clinicalData?.patients || {};
+    // CIS v2: Populate patient dropdown from unified store (AUDIT #10)
+    const patients = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     const patientSelect = document.getElementById('appointmentModalPatient');
     patientSelect.innerHTML = '<option value="">Select patient...</option>' +
         Object.values(patients)
@@ -420,85 +372,30 @@ function saveAppointment() {
     }
 
     clinicalDataDirty = true;
-
-    // CRITICAL: Sync to Monthly Planner
-    syncClinicalToMonthlyPlanner();
-
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     closeAppointmentModal();
+    // CIS v2: Centralized propagation
+    propagateClinicalChanges({ appointments: true, source: 'saveAppointment' });
     renderAppointmentsList();
     updateClinicalStats();
-    renderDeadlines();
-    renderDashboard();
-
-    // Refresh Monthly Planner if initialized
-    if (typeof mpRenderAllCalendars === 'function') {
-        extendWeeksIfNeeded();
-        mpRenderAllCalendars();
-    }
-
-    // Rebuild week schedule for Stim Calc cross-app visibility
-    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
-
+    if (typeof renderDeadlines === 'function') renderDeadlines();
+    if (typeof extendWeeksIfNeeded === 'function') extendWeeksIfNeeded();
     showToast('Appointment saved!');
 }
 
 function deleteAppointment() {
-    const aptId = document.getElementById('appointmentModalId').value;
+    var aptId = document.getElementById('appointmentModalId').value;
     if (!aptId) return;
 
     showCustomConfirm('Delete this appointment?', function() {
-        if (roadmapData.clinicalData.appointments && roadmapData.clinicalData.appointments[aptId]) {
-            delete roadmapData.clinicalData.appointments[aptId];
-        }
-
-        // Cascade: delete procedure records linked to this appointment + unlink from competencies
-        if (roadmapData.clinicalData.completedProcedures) {
-            Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
-                var proc = roadmapData.clinicalData.completedProcedures[procId];
-                if (proc && proc.appointmentId === aptId) {
-                    unlinkProcedureFromCompetencies(procId);
-                    delete roadmapData.clinicalData.completedProcedures[procId];
-                }
-            });
-        }
-
-        // Hide clinic planner tasks so sync doesn't recreate them
-        if (roadmapData.monthlyPlanner) {
-            if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
-            roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
-        }
-
-        // Also remove linked deadline if exists
-        if (roadmapData.customDeadlines) {
-            Object.keys(roadmapData.customDeadlines).forEach(id => {
-                if (roadmapData.customDeadlines[id]?.clinicalAptId === aptId) {
-                    delete roadmapData.customDeadlines[id];
-                }
-            });
-        }
-
-        clinicalDataDirty = true;
-
-        // CRITICAL: Sync to Monthly Planner
-        syncClinicalToMonthlyPlanner();
-
+        // CIS v2: Delegate to cascade function
+        cascadeDeleteAppointment(aptId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         closeAppointmentModal();
-
-        // Refresh Monthly Planner if initialized
-        if (typeof mpRenderAllCalendars === 'function') {
-            mpRenderAllCalendars();
-        }
         renderAppointmentsList();
         updateClinicalStats();
-        renderDeadlines();
-        renderDashboard();
-        // Rebuild week schedule for Stim Calc cross-app visibility
-        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
-
         showToast('Appointment deleted');
     }, null, 'Delete Appointment');
 }
@@ -1628,16 +1525,12 @@ function deleteProcedure(procId) {
     if (!roadmapData.clinicalData?.completedProcedures?.[procId]) return;
 
     showCustomConfirm('Delete this procedure record? Competency counts will be adjusted.', function() {
-        unlinkProcedureFromCompetencies(procId);
-        delete roadmapData.clinicalData.completedProcedures[procId];
-
-        clinicalDataDirty = true;
+        // CIS v2: Delegate to cascade function
+        cascadeDeleteProcedure(procId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         renderProceduresList();
-        renderCompetencies();
         updateClinicalStats();
-        renderDashboard();
         showToast('Procedure deleted');
     }, null, 'Delete Procedure');
 }
@@ -1950,61 +1843,13 @@ function completeAppointment(aptId) {
 }
 
 function uncompleteAppointment(aptId) {
-    const apt = roadmapData.clinicalData?.appointments?.[aptId];
-    if (!apt) return;
-
-    apt.status = 'scheduled';
-    delete apt.completedAt;
-
-    unmarkLinkedDeadlineDone(aptId);
-    unmarkPlannerTaskDone(aptId);
-
-    // Remove procedure records created during completion + unlink from competencies
-    if (roadmapData.clinicalData.completedProcedures) {
-        Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
-            var proc = roadmapData.clinicalData.completedProcedures[procId];
-            if (proc && proc.appointmentId === aptId) {
-                unlinkProcedureFromCompetencies(procId);
-                delete roadmapData.clinicalData.completedProcedures[procId];
-            }
-        });
-    }
-
-    clinicalDataDirty = true;
-
-    // Recalculate patient lastVisit from remaining completed appointments
-    if (apt.patientId) {
-        var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
-        if (patient) {
-            var latestVisit = null;
-            getValues(roadmapData.clinicalData?.appointments).forEach(function(a) {
-                if (a.patientId === apt.patientId && a.status === 'completed' && a.id !== aptId) {
-                    if (!latestVisit || (a.date && a.date > latestVisit)) {
-                        latestVisit = a.date;
-                    }
-                }
-            });
-            patient.lastVisit = latestVisit;
-        }
-    }
-
+    // CIS v2: Delegate to cascade function
+    cascadeUncompleteAppointment(aptId);
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-
     renderAppointmentsList();
     renderProceduresList();
-    renderCompetencies();
     updateClinicalStats();
-    renderDashboard();
-    if (typeof renderDeadlines === 'function') renderDeadlines();
-    if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
-
-    // Rebuild week schedule for Stim Calc cross-app visibility
-    if (typeof buildCurrentWeekSchedule === 'function') {
-        buildCurrentWeekSchedule();
-        saveData();
-    }
-
     showToast('Appointment unmarked');
 }
 
@@ -2078,7 +1923,7 @@ function openProcedureRecordingModal(aptId) {
     var apt = roadmapData.clinicalData?.appointments?.[aptId];
     if (!apt) return;
 
-    var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+    var patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
     var patientName = patient?.name || 'Unknown Patient';
 
     document.getElementById('procModalAptId').value = aptId;
