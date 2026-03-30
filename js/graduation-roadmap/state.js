@@ -1434,6 +1434,128 @@ function cascadeUncompleteAppointment(aptId) {
     });
 }
 
+// ==================== CIS v2: AUTO-LINK ENGINE ====================
+
+function isItemUnlocked(item, competencies) {
+    if (!item.unlockedBy || !Array.isArray(item.unlockedBy) || item.unlockedBy.length === 0) return true;
+    return item.unlockedBy.every(function(prereq) {
+        var prereqResult = findCompetencyItem(prereq.id);
+        if (!prereqResult) return true; // Prereq not found = treat as unlocked
+        return prereqResult.item.completed >= prereq.required;
+    });
+}
+
+function matchProcedureToCompetencies(procedureText, categoryKey, competencies, patientId) {
+    // Priority 1: If patient has importedRequirements, use those as authoritative
+    var patient = patientId ? (roadmapData.clinicalData.patientRecords || {})[patientId] : null;
+    if (patient && Array.isArray(patient.importedRequirements) && patient.importedRequirements.length > 0) {
+        return patient.importedRequirements
+            .filter(function(req) {
+                var result = findCompetencyItem(req.reqId);
+                return result && result.item.completed < result.item.required;
+            })
+            .map(function(req) {
+                var result = findCompetencyItem(req.reqId);
+                return { item: result.item, confidence: 'high', source: 'importedRequirements' };
+            })
+            .filter(function(m) { return m.item; });
+    }
+
+    // Priority 2: Keyword matching against KEYWORD_PATTERNS
+    var text = (procedureText || '').toLowerCase();
+    var matches = [];
+    KEYWORD_PATTERNS.forEach(function(pattern) {
+        var matched = pattern.keywords.some(function(kw) { return text.includes(kw); });
+        if (matched) {
+            pattern.ids.forEach(function(itemId) {
+                var result = findCompetencyItem(itemId);
+                if (result) {
+                    matches.push({ item: result.item, confidence: pattern.confidence, source: 'keyword' });
+                }
+            });
+        }
+    });
+    return matches;
+}
+
+function addToReviewQueue(procedure, suggestions) {
+    if (!roadmapData.clinicalData.autoLinkReviewQueue) roadmapData.clinicalData.autoLinkReviewQueue = [];
+    // Dedup by procedureId
+    var existing = roadmapData.clinicalData.autoLinkReviewQueue.find(function(q) { return q.procedureId === procedure.id; });
+    if (existing) return;
+    roadmapData.clinicalData.autoLinkReviewQueue.push({
+        patientId: procedure.patientId ?? null,
+        procedureId: procedure.id,
+        procedureName: procedure.procedure ?? '',
+        date: procedure.date ?? '',
+        suggestedItems: suggestions.map(function(s) {
+            return { itemId: s.item.id, itemText: s.item.text, category: s.item.id.split('-')[0], confidence: s.confidence };
+        }),
+        createdAt: new Date().toISOString()
+    });
+}
+
+function autoLinkProcedureToCompetencies(procedure) {
+    // Step 1: If procedure already has competencyItemIds, use those (manual override)
+    if (procedure.competencyItemIds && procedure.competencyItemIds.length > 0) {
+        if (typeof linkProcedureToCompetencies === 'function') linkProcedureToCompetencies(procedure);
+        return;
+    }
+
+    // Step 2: Match by keyword/imported requirements
+    var competencies = roadmapData.clinicalData?.competencies;
+    if (!competencies) return;
+    var procedureText = procedure.procedure || '';
+    var matches = matchProcedureToCompetencies(procedureText, procedure.procedureType, competencies, procedure.patientId);
+
+    // Step 3: Filter to items with remaining > 0
+    var actionable = matches.filter(function(m) {
+        return m.item.completed < m.item.required;
+    });
+
+    // Step 4: Check unlock chains
+    var unlocked = actionable.filter(function(m) { return isItemUnlocked(m.item, competencies); });
+
+    // Step 5: Separate by confidence
+    var highConfidence = unlocked.filter(function(m) { return m.confidence === 'high'; });
+    var lowConfidence = unlocked.filter(function(m) { return m.confidence !== 'high'; });
+
+    // Auto-link high confidence matches
+    if (highConfidence.length > 0) {
+        procedure.competencyItemIds = highConfidence.map(function(m) { return m.item.id; });
+        procedure.autoLinked = true;
+        if (typeof linkProcedureToCompetencies === 'function') linkProcedureToCompetencies(procedure);
+        showAutoLinkToast(highConfidence, procedure.id);
+    }
+
+    // Queue low confidence for review
+    if (lowConfidence.length > 0) {
+        addToReviewQueue(procedure, lowConfidence);
+    }
+}
+
+function showAutoLinkToast(matches, procedureId) {
+    var names = matches.map(function(m) { return m.item.text; }).join(', ');
+    if (typeof showToast === 'function') {
+        showToast('✓ Linked to: ' + names + '. Review on Competencies tab.');
+    }
+}
+
+function findPatientByChartOrName(chartNumber, name) {
+    var records = roadmapData.clinicalData?.patientRecords || {};
+    if (chartNumber) {
+        if (typeof findByNormalizedChart === 'function') {
+            var id = findByNormalizedChart(records, chartNumber);
+            if (id) return records[id];
+        }
+    }
+    if (name) {
+        var nameLower = name.toLowerCase().trim();
+        return Object.values(records).find(function(p) { return (p.name || '').toLowerCase().trim() === nameLower; }) || null;
+    }
+    return null;
+}
+
 // ==================== MISSING NOTES HELPERS ====================
 
 function getMissingNotesAlertLevel(pendingCount) {
