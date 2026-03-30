@@ -546,6 +546,9 @@ function migrateToUnifiedPatientStore() {
     // Clear old store — keep as empty object for schema compatibility
     roadmapData.clinicalData.patients = {}; // DEPRECATED: unified into patientRecords. Kept for schema compatibility.
 
+    // Clear leading-zero dedup flag so it re-runs after this migration (may create new leading-zero variants)
+    localStorage.removeItem('leadingZeroDedupDone_v2');
+
     localStorage.setItem('unifiedPatientStoreDone_v1', '1');
     console.log('[CIS-v2] Unified patient store migration complete. Migrated ' + Object.keys(patients).length + ' patients.');
     saveData();
@@ -2662,7 +2665,7 @@ function migratePerioNoiseCleanup() {
 // One-time migration: consolidate duplicate patient records caused by leading-zero chart mismatch
 // e.g. pt_966540 (chart 966540) + pt_0966540 (chart 0966540) → keep pt_0966540 only
 function migrateLeadingZeroDedup() {
-    if (localStorage.getItem('leadingZeroDedupDone_v1')) return;
+    if (localStorage.getItem('leadingZeroDedupDone_v2')) return;
     var records = roadmapData?.clinicalData?.patientRecords;
     if (!records || Object.keys(records).length === 0) return;
 
@@ -2721,7 +2724,7 @@ function migrateLeadingZeroDedup() {
         saveData();
         console.log('[LEADING-ZERO-DEDUP] Consolidated ' + toRemove.length + ' duplicate patient records: ' + toRemove.join(', '));
     }
-    try { safeLocalStorageSet('leadingZeroDedupDone_v1', 'true'); } catch(e) {}
+    try { safeLocalStorageSet('leadingZeroDedupDone_v2', 'true'); } catch(e) {}
 }
 
 function applyRequirementCheckoffs(items, importContext) {
