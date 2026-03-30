@@ -80,7 +80,8 @@ let roadmapData = {
         competencies: null,     // Graduation requirements - initialized from DEFAULT_COMPETENCIES
         patientRecords: {},     // Detailed patient records (Patients tab — Google Docs style)
         dashboardSnapshots: [],
-        missingNotes: {}        // Missing progress notes tracker — keyed by note-{chart}-{dateNoHyphens}
+        missingNotes: {},       // Missing progress notes tracker — keyed by note-{chart}-{dateNoHyphens}
+        autoLinkReviewQueue: [] // Procedures needing competency review [{procedureId, patientId, procedureName, date, suggestedItems[], createdAt}]
     },
     // To-do list — flat checklist for clinic-related tasks from multiple sources
     todoList: {
@@ -117,6 +118,10 @@ let roadmapData = {
             removedPatients: {},
             lastEdited: null
         }
+    },
+    competencyUIState: {
+        expandedCategories: [],
+        viewMode: 'department'
     },
     lastSaved: null,
     // Version control for conflict detection
@@ -176,7 +181,8 @@ function getDefaultRoadmapData() {
             competencies: null,
             patientRecords: {},
             dashboardSnapshots: [],
-            missingNotes: {}
+            missingNotes: {},
+            autoLinkReviewQueue: []
         },
         todoList: {
             items: {},
@@ -208,6 +214,10 @@ function getDefaultRoadmapData() {
                 removedPatients: {},
                 lastEdited: null
             }
+        },
+        competencyUIState: {
+            expandedCategories: [],
+            viewMode: 'department'
         },
         lastSaved: null,
         _version: 0,
@@ -652,6 +662,45 @@ const PROCEDURE_TYPES = {
     externship: 'Externship & SPS',
     other: 'Other'
 };
+
+// Keyword patterns for auto-linking procedures to competency items
+// Single source of truth — used by autoLinkProcedureToCompetencies() and inferProcedureType()
+const KEYWORD_PATTERNS = [
+    // Fixed Prosthodontics
+    { keywords: ['crown', 'prep', 'fpd', 'bridge', 'pfm', 'e.max', 'emax', 'zirconia'], ids: ['fixed-form-prep', 'fixed-sum-prep'], confidence: 'high' },
+    { keywords: ['provisional', 'temp crown', 'temporary'], ids: ['fixed-form-prov', 'fixed-sum-temp'], confidence: 'high' },
+    { keywords: ['cementation', 'cement', 'seat crown', 'seat bridge'], ids: ['fixed-form-cement', 'fixed-sum-cement'], confidence: 'high' },
+    { keywords: ['final impression', 'pvs', 'digital scan', 'intraoral scan'], ids: ['fixed-form-impr', 'fixed-sum-impr'], confidence: 'high' },
+    { keywords: ['cerec', 'same-day', 'same day restoration'], ids: ['fixed-cerec'], confidence: 'high' },
+    { keywords: ['implant crown', 'implant supported', 'implant-supported'], ids: ['fixed-implant'], confidence: 'high' },
+    // Operative
+    { keywords: ['class v', 'cl 5', 'class 5'], ids: ['op-class5-1', 'op-class5-2'], confidence: 'high' },
+    { keywords: ['composite', 'do ', 'mo ', 'mod', 'class ii', 'class iii', 'class iv', 'class 2', 'class 3', 'class 4', 'multisurface'], ids: ['op-multi-1-6'], confidence: 'high' },
+    // SRP / Perio
+    { keywords: ['srp', 'scaling', 'root planing', 'quadrant scaling'], ids: ['perio-form-quad', 'perio-sum-calc'], confidence: 'high' },
+    { keywords: ['prophy', 'prophylaxis', 'cleaning', 'adult prophy'], ids: ['perio-form-prophy', 'perio-sum-prophy'], confidence: 'high' },
+    { keywords: ['ohi', 'oral hygiene instruction', 'home care instruction'], ids: ['perio-form-ohi', 'perio-sum-hci'], confidence: 'high' },
+    { keywords: ['re-eval', 're-evaluation', 'reeval', 'gingivitis re-eval'], ids: ['perio-form-reeval-ging', 'perio-sum-reeval-ging'], confidence: 'high' },
+    { keywords: ['recall', 'maintenance', 'perio maintenance'], ids: ['perio-form-recall', 'perio-sum-recall'], confidence: 'high' },
+    { keywords: ['periodontal diagnosis', 'perio dx', 'perio diagnosis'], ids: ['perio-form-dx', 'perio-sum-dx'], confidence: 'high' },
+    { keywords: ['impression', 'alginate', 'study model'], ids: ['perio-form-impr', 'perio-sum-impr'], confidence: 'high' },
+    // Endo
+    { keywords: ['rct', 'root canal', 'endodontic'], ids: ['endo-rct-1', 'endo-rct-2'], confidence: 'high' },
+    { keywords: ['pulpectomy', 'pulp therapy'], ids: ['endo-pulp-1', 'endo-pulp-2'], confidence: 'high' },
+    // Oral Surgery
+    { keywords: ['extraction', 'ext #', 'surgical extraction', 'exo'], ids: ['os-extract-1', 'os-extract-2'], confidence: 'high' },
+    // Dentures (medium - less specific text)
+    { keywords: ['denture', 'cu/cl', 'complete denture', 'cd'], ids: ['cd-form-prelim', 'cd-form-border', 'cd-form-jaw', 'cd-form-try', 'cd-form-process', 'cd-form-insert', 'cd-form-adjust'], confidence: 'medium' },
+    { keywords: ['overdenture', 'implant denture'], ids: ['cd-over-dup', 'cd-over-abut'], confidence: 'medium' },
+    // RPD (medium)
+    { keywords: ['rpd', 'partial denture', 'removable partial', 'flexible partial'], ids: ['rpd-track1', 'rpd-track2', 'rpd-track3'], confidence: 'medium' },
+    // Peds
+    { keywords: ['sealant', 'pit and fissure'], ids: ['peds-sealants'], confidence: 'high' },
+    // Group Practice
+    { keywords: ['written analysis', 'wa '], ids: ['gp-form-analysis', 'gp-sum-analysis'], confidence: 'high' },
+    // Treatment Planning
+    { keywords: ['ohra'], ids: ['tx-ohra'], confidence: 'high' },
+];
 
 // Find a competency item by ID across all categories/sections
 // Returns { item, catKey, section } or null
