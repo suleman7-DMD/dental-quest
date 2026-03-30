@@ -17,19 +17,19 @@ function switchClinicalSubtab(subtab, btn) {
 
 function initClinicalTab() {
     ensureCompetenciesInitialized();
-    renderPatientsList();
+    renderActiveRoster();
     renderAppointmentsList();
     renderProceduresList();
     updateClinicalStats();
 }
 
 function updateClinicalStats() {
-    const patients = roadmapData.clinicalData?.patients || {};
+    const patients = roadmapData.clinicalData?.patientRecords || {};
     const appointments = getValues(roadmapData.clinicalData?.appointments);
     const procedures = getValues(roadmapData.clinicalData?.completedProcedures);
 
     // Count active patients
-    const activePatients = Object.values(patients).filter(p => p.status === 'active').length;
+    const activePatients = Object.values(patients).filter(p => p.status !== 'inactive').length;
     document.getElementById('clinicalStatPatients').textContent = activePatients;
 
     // Count this week's appointments
@@ -57,261 +57,84 @@ function updateClinicalStats() {
     document.getElementById('clinicalStatRecalls').textContent = recallsDue;
 }
 
-// ===== PATIENT MANAGEMENT =====
+// ===== CIS v2: ACTIVE ROSTER (read-only clinical quick-reference) =====
+// Replaces old renderPatientsList() + patient CRUD. Patient management lives on Patients tab.
 
-function renderPatientsList() {
-    const container = document.getElementById('patientsList');
-    const patients = roadmapData.clinicalData?.patients || {};
-    const patientArray = Object.values(patients);
+function renderActiveRoster() {
+    var container = document.getElementById('patientsList');
+    if (!container) return;
 
-    // Get filter values
-    const searchTerm = document.getElementById('patientSearchInput')?.value?.toLowerCase() || '';
-    const statusFilter = document.getElementById('patientFilterStatus')?.value || 'all';
+    var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
+    var appointments = getValues(roadmapData.clinicalData?.appointments);
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-    // Filter patients
-    let filtered = patientArray;
-    if (searchTerm) {
-        filtered = filtered.filter(p =>
-            p.name?.toLowerCase().includes(searchTerm) ||
-            p.chartNumber?.toLowerCase().includes(searchTerm)
-        );
-    }
-    if (statusFilter === 'active') {
-        filtered = filtered.filter(p => p.status === 'active');
-    } else if (statusFilter === 'inactive') {
-        filtered = filtered.filter(p => p.status !== 'active');
-    } else if (statusFilter === 'needsAttention') {
-        filtered = filtered.filter(p => p.needsXrays || p.recallDue);
-    }
+    // Group patients by upcoming schedule
+    var thisWeek = [], thisMonth = [], recent = [];
+    var weekEnd = new Date(now); weekEnd.setDate(weekEnd.getDate() + (7 - now.getDay()));
+    var monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    var thirtyDaysAgo = new Date(now); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    if (filtered.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state" style="text-align: center; padding: 40px; color: #94a3b8;">
-                <div style="font-size: 3em; margin-bottom: 10px;">👤</div>
-                <p>${patientArray.length === 0 ? 'No patients yet. Click "Add Patient" to get started.' : 'No patients match your filters.'}</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Sort by name
-    filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    container.innerHTML = filtered.map(patient => {
-        const needsAttention = patient.needsXrays || patient.recallDue;
-        const tasks = patient.outstandingTasks || [];
-        const incompleteTasks = tasks.filter(t => t.status !== 'completed');
-
-        // Build flags HTML
-        let flagsHtml = '';
-        if (patient.needsXrays) {
-            flagsHtml += `<span class="patient-flag xray">📷 ${patient.xrayType || 'X-rays'} needed</span>`;
-        }
-        if (patient.recallDue) {
-            const recallDate = parseLocalDate(patient.recallDue);
-            const isOverdue = recallDate && recallDate < new Date();
-            flagsHtml += `<span class="patient-flag recall">${isOverdue ? '⚠️ Recall OVERDUE' : '🔔 Recall due'}</span>`;
-        }
-        if (patient.perioStatus && patient.perioStatus !== 'healthy') {
-            flagsHtml += `<span class="patient-flag perio">🦷 ${patient.perioStatus}</span>`;
-        }
-
-        // Build tasks HTML
-        let tasksHtml = '';
-        if (incompleteTasks.length > 0) {
-            tasksHtml = `
-                <div class="patient-tasks">
-                    <strong style="font-size: 0.85em; color: #94a3b8;">Outstanding (${incompleteTasks.length}):</strong>
-                    ${incompleteTasks.slice(0, 3).map(t => `
-                        <div class="patient-task-item">
-                            <span>○</span> ${escapeHtml(t.procedure)}
-                        </div>
-                    `).join('')}
-                    ${incompleteTasks.length > 3 ? `<div style="font-size: 0.8em; color: #94a3b8;">+${incompleteTasks.length - 3} more...</div>` : ''}
-                </div>
-            `;
-        }
-
-        const safeId = patient.id.replace(/'/g, "\\'");
-        return `
-            <div class="patient-card ${needsAttention ? 'needs-attention' : ''}" data-patient-id="${patient.id}">
-                <div class="patient-card-header">
-                    <div>
-                        <div class="patient-name">${escapeHtml(patient.name)}</div>
-                        <div class="patient-chart">Chart: ${patient.chartNumber || 'N/A'} | ${patient.asaClass || 'ASA I'}</div>
-                    </div>
-                    <span class="patient-status-badge ${patient.status}">${patient.status}</span>
-                </div>
-                ${flagsHtml ? `<div class="patient-flags">${flagsHtml}</div>` : ''}
-                ${patient.medicalAlerts ? `<div style="font-size: 0.85em; color: #ef4444; margin: 5px 0;">⚠️ ${escapeHtml(patient.medicalAlerts)}</div>` : ''}
-                ${tasksHtml}
-                <div class="patient-actions">
-                    <button class="patient-action-btn primary" onclick="openAddAppointmentModal('${safeId}')">📅 Schedule Apt</button>
-                    <button class="patient-action-btn secondary" onclick="editPatient('${safeId}')">✏️ Edit</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function filterPatients() {
-    renderPatientsList();
-}
-
-function openAddPatientModal() {
-    document.getElementById('patientModalTitle').textContent = '➕ Add Patient';
-    document.getElementById('patientModalId').value = '';
-    document.getElementById('patientModalName').value = '';
-    document.getElementById('patientModalChart').value = '';
-    document.getElementById('patientModalASA').value = 'ASA I';
-    document.getElementById('patientModalPerio').value = 'healthy';
-    document.getElementById('patientModalStatus').value = 'active';
-    document.getElementById('patientModalNeedsXrays').checked = false;
-    document.getElementById('patientModalXrayType').value = '';
-    document.getElementById('patientModalRecallDue').checked = false;
-    document.getElementById('patientModalRecallDate').value = '';
-    document.getElementById('patientModalMedical').value = '';
-    document.getElementById('patientModalNotes').value = '';
-    document.getElementById('patientDeleteBtn').style.display = 'none';
-
-    currentPatientTasks = [];
-    renderPatientTasksInModal();
-
-    document.getElementById('patientModal').style.display = 'flex';
-}
-
-function editPatient(patientId) {
-    const patient = roadmapData.clinicalData?.patients?.[patientId];
-    if (!patient) return;
-
-    document.getElementById('patientModalTitle').textContent = '✏️ Edit Patient';
-    document.getElementById('patientModalId').value = patientId;
-    document.getElementById('patientModalName').value = patient.name || '';
-    document.getElementById('patientModalChart').value = patient.chartNumber || '';
-    document.getElementById('patientModalASA').value = patient.asaClass || 'ASA I';
-    document.getElementById('patientModalPerio').value = patient.perioStatus || 'healthy';
-    document.getElementById('patientModalStatus').value = patient.status || 'active';
-    document.getElementById('patientModalNeedsXrays').checked = patient.needsXrays || false;
-    document.getElementById('patientModalXrayType').value = patient.xrayType || '';
-    document.getElementById('patientModalRecallDue').checked = !!patient.recallDue;
-    document.getElementById('patientModalRecallDate').value = patient.recallDue || '';
-    document.getElementById('patientModalMedical').value = patient.medicalAlerts || '';
-    document.getElementById('patientModalNotes').value = patient.notes || '';
-    document.getElementById('patientDeleteBtn').style.display = 'inline-block';
-
-    currentPatientTasks = JSON.parse(JSON.stringify(patient.outstandingTasks || []));
-    renderPatientTasksInModal();
-
-    document.getElementById('patientModal').style.display = 'flex';
-}
-
-function closePatientModal() {
-    document.getElementById('patientModal').style.display = 'none';
-    currentPatientTasks = [];
-}
-
-function addPatientTask() {
-    currentPatientTasks.push({
-        id: 'task-' + Date.now(),
-        procedure: '',
-        status: 'planned'
-    });
-    renderPatientTasksInModal();
-}
-
-function removePatientTask(taskId) {
-    const index = currentPatientTasks.findIndex(t => t.id === taskId);
-    if (index !== -1) {
-        currentPatientTasks.splice(index, 1);
-        renderPatientTasksInModal();
-    }
-}
-
-function updatePatientTask(taskId, field, value) {
-    const task = currentPatientTasks.find(t => t.id === taskId);
-    if (task) {
-        task[field] = value;
-    }
-}
-
-function renderPatientTasksInModal() {
-    const container = document.getElementById('patientTasksList');
-    if (currentPatientTasks.length === 0) {
-        container.innerHTML = '<p style="color: #94a3b8; font-size: 0.85em; margin: 0;">No tasks yet. Click "+ Add" to add procedures.</p>';
-        return;
-    }
-
-    container.innerHTML = currentPatientTasks.map((task) => `
-        <div class="patient-task-row" data-task-id="${task.id}">
-            <input type="text" value="${escapeHtml(task.procedure)}"
-                   placeholder="e.g., MOD Composite #30"
-                   onchange="updatePatientTask('${task.id}', 'procedure', this.value)">
-            <select onchange="updatePatientTask('${task.id}', 'status', this.value)">
-                <option value="planned" ${task.status === 'planned' ? 'selected' : ''}>Planned</option>
-                <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-                <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
-            </select>
-            <button onclick="removePatientTask('${task.id}')">✕</button>
-        </div>
-    `).join('');
-}
-
-function savePatient() {
-    const name = document.getElementById('patientModalName').value.trim();
-    if (!name) {
-        showToast('Patient name is required', 'error');
-        return;
-    }
-
-    const patientId = document.getElementById('patientModalId').value || 'pt-' + Date.now();
-
-    // Sync task inputs before saving (by task ID, not index)
-    document.querySelectorAll('#patientTasksList .patient-task-row').forEach((row) => {
-        const taskId = row.dataset.taskId;
-        const input = row.querySelector('input');
-        const select = row.querySelector('select');
-        const task = currentPatientTasks.find(t => t.id === taskId);
-        if (task) {
-            task.procedure = input.value;
-            task.status = select.value;
+    // Build next-appointment lookup
+    var patientNextApt = {};
+    appointments.filter(function(a) { return a.status !== 'cancelled' && a.status !== 'completed'; }).forEach(function(a) {
+        if (!a.patientId || !a.date) return;
+        if (!patientNextApt[a.patientId] || a.date < patientNextApt[a.patientId].date) {
+            patientNextApt[a.patientId] = a;
         }
     });
 
-    // Filter out empty tasks
-    const tasks = currentPatientTasks.filter(t => t.procedure.trim());
+    Object.entries(records).forEach(function(entry) {
+        var id = entry[0], p = entry[1];
+        if (!p || !p.name) return;
+        var nextApt = patientNextApt[id];
+        var item = { id: id, patient: p, nextApt: nextApt };
 
-    const formFields = {
-        id: patientId,
-        name: name,
-        chartNumber: document.getElementById('patientModalChart').value.trim(),
-        asaClass: document.getElementById('patientModalASA').value,
-        perioStatus: document.getElementById('patientModalPerio').value,
-        status: document.getElementById('patientModalStatus').value,
-        needsXrays: document.getElementById('patientModalNeedsXrays').checked,
-        xrayType: document.getElementById('patientModalXrayType').value,
-        recallDue: document.getElementById('patientModalRecallDue').checked ? document.getElementById('patientModalRecallDate').value : null,
-        medicalAlerts: document.getElementById('patientModalMedical').value.trim(),
-        notes: document.getElementById('patientModalNotes').value.trim(),
-        outstandingTasks: tasks,
-        lastUpdated: new Date().toISOString()
+        if (nextApt) {
+            var aptDate = parseLocalDate(nextApt.date);
+            if (aptDate && aptDate >= now && aptDate <= weekEnd) { thisWeek.push(item); return; }
+            if (aptDate && aptDate >= now && aptDate <= monthEnd) { thisMonth.push(item); return; }
+        }
+        if (p.lastVisit) {
+            var lastDate = parseLocalDate(p.lastVisit);
+            if (lastDate && lastDate >= thirtyDaysAgo) { recent.push(item); return; }
+        }
+    });
+
+    var sortByNextApt = function(a, b) {
+        var ad = a.nextApt?.date || '9999'; var bd = b.nextApt?.date || '9999';
+        return ad.localeCompare(bd);
     };
+    thisWeek.sort(sortByNextApt);
+    thisMonth.sort(sortByNextApt);
+    recent.sort(function(a, b) { return (b.patient.lastVisit || '').localeCompare(a.patient.lastVisit || ''); });
 
-    if (!roadmapData.clinicalData) roadmapData.clinicalData = { patients: {}, appointments: {}, completedProcedures: {}, patientRecords: {}, dashboardSnapshots: [] };
-    if (!roadmapData.clinicalData.patients) roadmapData.clinicalData.patients = {};
+    function renderGroup(title, items) {
+        if (items.length === 0) return '';
+        var rows = items.map(function(item) {
+            var p = item.patient;
+            var safeId = (item.id || '').replace(/['"\\]/g, '');
+            var dotColor = p.reliability === 'red' ? '#ef4444' : p.reliability === 'yellow' ? '#f59e0b' : '#22c55e';
+            var reliabilityDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + dotColor + ';margin-right:6px;"></span>';
+            var nextAptStr = item.nextApt
+                ? escapeHtml(item.nextApt.date) + (item.nextApt.procedures ? ' - ' + escapeHtml(item.nextApt.procedures) : '')
+                : '<span style="color:#64748b">No upcoming apt</span>';
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);">'
+                + '<div>' + reliabilityDot + '<strong>' + escapeHtml(p.name) + '</strong> <span style="color:#64748b;font-size:0.85em;">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>'
+                + '<div style="font-size:0.8em;color:#94a3b8;margin-top:2px;">Next: ' + nextAptStr + (p.lastVisit ? ' | Last: ' + escapeHtml(p.lastVisit) : '') + '</div></div>'
+                + '<button onclick="navigateToEntity(\'patient\',\'' + safeId + '\')" style="padding:4px 10px;background:#334155;border:none;border-radius:4px;color:#93c5fd;cursor:pointer;font-size:0.8em;">View</button>'
+                + '</div>';
+        }).join('');
+        return '<div style="margin-bottom:16px;"><h4 style="color:#e2e8f0;font-size:0.95em;margin:0 0 8px 0;">' + escapeHtml(title) + ' (' + items.length + ')</h4>'
+            + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">' + rows + '</div></div>';
+    }
 
-    // Merge form fields INTO existing patient to preserve imported data
-    // (lastVisit, importedRequirements, priorityNotes, highValue, clinicalBrief, briefHistory, allergies, etc.)
-    const existing = roadmapData.clinicalData.patients[patientId] || {};
-    roadmapData.clinicalData.patients[patientId] = { ...existing, ...formFields };
-
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    closePatientModal();
-    renderPatientsList();
-    updateClinicalStats();
-    renderDashboard(); // Update dashboard clinical widget
-    showToast('Patient saved!');
+    // All user text goes through escapeHtml() above
+    var html = renderGroup('This Week', thisWeek) + renderGroup('This Month', thisMonth) + renderGroup('Recent (30 days)', recent);
+    if (!html) {
+        html = '<div style="text-align:center;padding:40px;color:#94a3b8;"><p>No active patients. Import patients on the Patients tab.</p></div>';
+    }
+    container.innerHTML = html;
 }
 
 function deletePatient() {
