@@ -154,15 +154,38 @@ function cascadeDeletePatient(patientId) { ... }
 
 Every function that currently reads `clinicalData.patients{}` must be updated to read `patientRecords{}`:
 
-| Function | File | Current Read | New Read |
-|----------|------|-------------|----------|
-| `renderPatientsList()` | clinical.js | `clinicalData.patients` | `getAllPatientRecords()` → becomes Active Roster |
-| `savePatient()` | clinical.js | `clinicalData.patients[id]` | `savePatientRecord(id, fields)` |
-| `deletePatient()` | clinical.js | `clinicalData.patients` | `cascadeDeletePatient(id)` |
-| `completeAppointment()` | clinical.js | `clinicalData.patients[apt.patientId]` | `patientRecords[apt.patientId]` |
-| `confirmClinicalImport()` | import-system.js | `clinicalData.patients` | RETIRED — uses `confirmUnifiedImport()` |
-| `syncClinicalToMonthlyPlanner()` | import-system.js | `clinicalData.patients` | `patientRecords` |
-| `backfillClinicalData()` | clinical.js | `clinicalData.patients` | `patientRecords` |
+**Critical (breaks saves or loses data if missed):**
+
+| Function | File:Line | Current Read/Write | Action |
+|----------|-----------|-------------------|--------|
+| `validateStateIntegrity()` | firebase-sync.js:2397 | Checks `typeof patients !== 'object'` | Keep `patients: {}` in schema — Guard F blocks ALL saves if missing |
+| `syncClinicalToMonthlyPlanner()` | import-system.js:545 | Reads `patients{}` for name in planner task labels | Redirect to `patientRecords` — **planner tasks show "Unknown Patient" without this** |
+| `dedupAppointments()` | import-system.js:627 | Reads `patients{}` for dedup key | Redirect to `patientRecords` — **dedup breaks without this** |
+| `savePatient()` | clinical.js:300 | Writes to `patients[id]` | Redirect to `savePatientRecord(id, fields)` |
+| `confirmClinicalImport()` | import-system.js:379 | Creates patients in `patients{}` | RETIRED — uses `confirmUnifiedImport()` |
+| `confirmPatientImport()` APPOINTMENTS | patients.js:2344 | Writes new patients to `patients{}` | Redirect to `patientRecords` |
+
+**UI regressions if missed:**
+
+| Function | File:Line | Current Read/Write | Action |
+|----------|-----------|-------------------|--------|
+| `renderPatientsList()` | clinical.js:62 | Reads `clinicalData.patients` | Replaced by Active Roster reading `patientRecords` |
+| `deletePatient()` | clinical.js:322 | Deletes from `patients` only | Replaced by `cascadeDeletePatient(id)` |
+| `completeAppointment()` | clinical.js:2009 | Reads `patients[apt.patientId]` for lastVisit | Redirect to `patientRecords[apt.patientId]` |
+| `saveAppointment()` | clinical.js:578 | Reads patient name from `patients{}` | Redirect to `patientRecords` |
+| `backfillClinicalData()` Phases 1,3,4,5 | clinical.js:1827,1896,1929,1963 | Reads/writes `patients{}` in 4 phases | Redirect all reads to `patientRecords`. Phase 4 (patient bridging) becomes no-op — remove or repurpose |
+| `prSavePatientField()` | periodic-review.js:1569 | Reads `patients{}` for skeleton fallback | Redirect fallback to `patientRecords` |
+
+**Safe no-ops (leave as-is post-migration):**
+
+| Function | File:Line | Why Safe |
+|----------|-----------|---------|
+| `getAllPatientRecords()` merge | patients.js:490 | Merges empty `{}` — harmless |
+| `deletePatientRecord()` cascade | patients.js:1178 | Deletes from `patients[id]` — no-op on empty store |
+| `migrateLeadingZeroDedup()` | patients.js:2684 | Cleans `patients{}` duplicates — cleans empty `{}` harmlessly |
+| `initPeriodicReview()` merge | periodic-review.js:1659 | Appends from `patients{}` — appends nothing |
+| `getDefaultRoadmapData()` | state.js:172 | Declares `patients: {}` — keep for schema compat |
+| All 6 restore/load sites | firebase-sync.js | Reconstruct `patients: data.clinicalData?.patients \|\| {}` — keep for old backup consumption |
 
 ---
 
@@ -471,6 +494,16 @@ function autoLinkProcedureToCompetencies(procedure) {
 
 Medium confidence items go to review queue. High confidence auto-links with undo toast.
 
+**Coverage limitations (~20% of items):** Auto-link covers procedural clinical categories (fixed, operative, srp, endo, oralsurg, dentures, rpd, perio procedures). Non-procedural categories have ZERO keyword coverage and remain manual-entry:
+- **Peds** (all 6 items) — course completions, rotations, assessments
+- **Geriatrics** (all 3 items) — course + rotation + clinical assignment
+- **Externship** (all 3 items) — case presentation, outreach, SPS log
+- **Group Practice** (17 of 19 items) — periodic reviews, written analyses, PMS, leadership, workshops
+- **Treatment Planning** (3 of 4 items) — seminar, attendance, caries detection
+- **Fixed/Operative/Perio partial** — simulations, mock boards, occlusal analyses, case presentations
+
+These items are recorded via `adjustCompItem()`, `setCompItemStatus()`, or `REQUIREMENTS_STATUS` import from the webchat project.
+
 ### 6.4 Review Queue
 
 ```javascript
@@ -728,6 +761,81 @@ Per-category collapsible notes section showing rules from 000-REQUIREMENTS.md:
 - RPD: "Flexible/interim RPD must have ≥2 clasps AND replace ≥3 teeth."
 - Group Practice grade breakdown: "Formatives 25%, Summatives 65%, Communications 10%"
 
+### 8.11 Search & Filter Bar
+
+Persistent bar at top of Competencies tab. Filters across all 116+ items in real-time.
+
+- **Text search:** Type "summative" → shows only items containing "summative" across all categories. Searches `item.text`, `item.note`, `item.id`.
+- **Filter chips:** Status (pending | in-progress | completed), Category (any of 13). Multiple chips combinable.
+- **Clear all:** One-click reset to unfiltered view.
+- **Result count:** "Showing 8 of 116 items" badge.
+
+### 8.12 Inline Quick-Record
+
+Each competency item with `remaining > 0` shows a "Record" button. Clicking opens a streamlined modal pre-filled with:
+- Category + item (locked — this is what you're recording evidence for)
+- Patient dropdown (from `patientRecords`, sorted by recent visits)
+- Date (defaults to today)
+- Procedure text (free text)
+- Optional: tooth numbers, grade, faculty
+
+On save: calls `recordProcedure()` with `competencyItemIds: [thisItemId]` → `linkProcedureToCompetencies()` fires → evidence card appears instantly. No tab switching required.
+
+### 8.13 Persistent Expanded State
+
+Save which categories are expanded across sessions:
+
+```javascript
+// New field in roadmapData:
+competencyUIState: {
+  expandedCategories: [],   // array of catKey strings
+  viewMode: 'department'    // 'department' | 'patient'
+}
+```
+
+On category expand/collapse: update `competencyUIState.expandedCategories`, save to localStorage + Firebase. On load: restore expanded state. Added to all 6 merge/restore sites (take latest `_lastModified`).
+
+### 8.14 Enhanced Accordion Sorting
+
+Categories sorted dynamically by urgency:
+1. Categories with D3 deadline items approaching (< 60 days) — float to top
+2. Categories with lowest completion % — next priority
+3. Categories at 100% — sink to bottom with "Complete" badge
+
+Each category header shows: icon + name + micro progress bar + single "next action" text (from `getWhatsNextItems()` filtered to this category).
+
+### 8.15 By Patient View Mode
+
+Toggle between "By Department" (default, 13 category cards) and "By Patient":
+
+**By Patient view:** Lists each patient who has `importedRequirements[]` with at least one outstanding requirement. For each patient:
+- Name + chart# + reliability dot
+- Next appointment date (from `getNextScheduledVisit()`)
+- List of outstanding requirement IDs they can fulfill (from `importedRequirements`)
+- Each req shown with category color badge + completion progress
+- "Schedule Appointment" quick-action if no upcoming appointment
+- Click patient name → navigates to Patients tab
+
+Sorted by: graduation value (patients fulfilling most outstanding requirements first).
+
+### 8.16 Pace Projection Per Category
+
+Inside each expanded category, below the progress bar:
+
+```
+At current rate: complete by Oct 2026 | Need 0.8/week to finish by May 2027
+```
+
+Computed from: `(required - completed) / weeksUntilGraduation`. Color-coded: green if pace < 1/week, yellow if 1-2/week, red if > 2/week. Graduation date: May 12, 2027.
+
+### 8.17 Inline Editable Per-Item Notes
+
+Each competency item's existing `note` field becomes inline-editable:
+- Click note text → `contenteditable` activates (same pattern as patient record fields in `savePatientField()`)
+- Blur saves, Escape cancels (uses `committed` flag to prevent double-fire)
+- Placeholder: "Add a note..." when empty
+- Notes visible without expanding the item (shown as small text under the item name)
+
 ---
 
 ## 9. Propagation Architecture
@@ -792,6 +900,18 @@ function propagateClinicalChanges({
 | `setCompItemStatus()` | `{ competencies: true }` |
 | `confirmUnifiedImport()` | `{ appointments: true, procedures: true, competencies: true, patients: true }` |
 | `backfillClinicalData()` | `{ appointments: true, procedures: true, competencies: true, patients: true }` |
+| `savePatientField()` | `{ patients: true }` — currently missing `clinicalDataDirty`, fixed by routing through propagation |
+| `addNewPatientRecord()` | `{ patients: true }` — currently missing `clinicalDataDirty`, fixed by routing through propagation |
+
+**Retired functions (replaced by cascade equivalents):**
+
+| Old Function | Replaced By |
+|---|---|
+| `deletePatient()` (clinical.js) | `cascadeDeletePatient()` |
+| `deletePatientRecord()` (patients.js) | `cascadeDeletePatient()` |
+| `deleteAppointment()` (clinical.js) | `cascadeDeleteAppointment()` |
+| `deleteProcedure()` (clinical.js) | `cascadeDeleteProcedure()` |
+| `uncompleteAppointment()` (clinical.js) | `cascadeUncompleteAppointment()` |
 
 ---
 
@@ -814,9 +934,17 @@ function cascadeDeletePatient(patientId) {
       unlinkProcedureFromCompetencies(p.id);
       delete roadmapData.clinicalData.completedProcedures[p.id];
     });
-    // Hide planner task
+    // Clean planner state
     roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + apt.id] = true;
     delete roadmapData.monthlyPlanner.customTasks['clinic_' + apt.id];
+    unmarkPlannerTaskDone(apt.id);  // Clean completedTasks entries
+    // Clean linked custom deadlines (clinicalAptId backlink)
+    Object.keys(roadmapData.customDeadlines || {}).forEach(dlId => {
+      if (roadmapData.customDeadlines[dlId].clinicalAptId === apt.id) {
+        delete roadmapData.completedDeadlines?.[dlId];
+        delete roadmapData.customDeadlines[dlId];
+      }
+    });
     // Delete appointment
     delete roadmapData.clinicalData.appointments[apt.id];
   });
@@ -862,19 +990,28 @@ function cascadeDeleteAppointment(aptId) {
       delete roadmapData.clinicalData.completedProcedures[p.id];
     });
 
-  // 2. Hide planner task
+  // 2. Clean planner state
   roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
   delete roadmapData.monthlyPlanner.customTasks['clinic_' + aptId];
+  unmarkPlannerTaskDone(aptId);  // Clean completedTasks entries
 
-  // 3. Delete appointment
+  // 3. Clean linked custom deadlines (clinicalAptId backlink)
+  Object.keys(roadmapData.customDeadlines || {}).forEach(dlId => {
+    if (roadmapData.customDeadlines[dlId].clinicalAptId === aptId) {
+      delete roadmapData.completedDeadlines?.[dlId];
+      delete roadmapData.customDeadlines[dlId];
+    }
+  });
+
+  // 4. Delete appointment
   delete roadmapData.clinicalData.appointments[aptId];
 
-  // 4. Recalculate patient lastVisit
+  // 5. Recalculate patient lastVisit
   if (apt.patientId) {
     recalculatePatientLastVisit(apt.patientId);
   }
 
-  // 5. Propagate
+  // 6. Propagate
   propagateClinicalChanges({
     appointments: true, procedures: true, competencies: true,
     source: 'cascadeDeleteAppointment'
@@ -931,6 +1068,26 @@ function cascadeUncompleteAppointment(aptId) {
 }
 ```
 
+### 10.5 `recalculatePatientLastVisit(patientId)` (utility)
+
+Referenced by `cascadeDeleteAppointment` and `cascadeUncompleteAppointment` but not defined elsewhere:
+
+```javascript
+function recalculatePatientLastVisit(patientId) {
+  const apts = getValues(roadmapData.clinicalData.appointments)
+    .filter(a => a.patientId === patientId && a.status === 'completed');
+  const patient = roadmapData.clinicalData.patientRecords[patientId];
+  if (!patient) return;
+  if (apts.length === 0) {
+    patient.lastVisit = '';
+  } else {
+    // Sort newest-first, take the most recent date
+    apts.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    patient.lastVisit = apts[0].date;
+  }
+}
+```
+
 ---
 
 ## 11. Bug Fix: txSummaryBU in PR Writeups (NEW ISSUE 3)
@@ -956,24 +1113,45 @@ Also add to `parsePatientRecord()` / `parsePatientUpdate()` fieldMap if not alre
 
 ### 12.1 `mergeRemoteCollectionsIntoLocal()` Changes
 
-Remove `clinicalData.patients` merge (store retired). Add:
-- `clinicalData.autoLinkReviewQueue` — addMissing
+**Do NOT remove `clinicalData.patients` merge yet.** During multi-device transition, un-migrated devices may still write to `patients{}`. Change the merge target: instead of merging remote `patients{}` into local `patients{}`, merge remote `patients{}` entries into local `patientRecords{}` using the existing fill-merge strategy (normalized chart match, never overwrite richer data). Add comment: `// Transitional: consumes patients{} from un-migrated devices. Safe to remove once all devices migrated.`
+
+Also add:
+- `clinicalData.autoLinkReviewQueue` — union by `procedureId` (no duplicates), remote entries added if not in local
+- `competencyUIState.expandedCategories` — remote wins (take latest)
 - Ensure `patientRecords` deep-merge covers new fields: `asaClass`, `perioStatus`, `outstandingTasks`, `medicalAlerts`
 
 ### 12.2 `isEmptyState()` Changes
 
-Remove `clinicalData.patients` check (retired). Verify `patientRecords` check covers the unified store.
+Replace `hasPatients = getCount(data.clinicalData?.patients) > 0` with a unified-store-aware check. Cannot simply remove — Guard C must still detect real patient data. Replacement:
+
+```javascript
+// OLD: const hasPatients = getCount(data.clinicalData?.patients) > 0;
+// NEW: Check if patientRecords has user-modified entries (not just the 19 defaults)
+const hasPatients = getValues(data.clinicalData?.patientRecords).some(p => p.lastUpdated);
+```
+
+This ensures freshly-seeded DEFAULT_PATIENT_RECORDS (which have no `lastUpdated`) don't falsely trigger Guard C, while any user-imported or edited patient correctly passes.
 
 ### 12.3 `validateStateIntegrity()` (Guard F) Changes
 
 Add validation for `autoLinkReviewQueue` (array, not corrupted).
 
-### 12.4 All 4 Merge/Restore Sites
+### 12.4 All 6 Merge/Restore Sites
 
-`mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly` — all must handle:
-- Missing `clinicalData.patients` gracefully (post-migration)
-- New `autoLinkReviewQueue` field
-- New competency item fields (`d3Deadline`, `unlockedBy`, `isSummative`, `rules`, `unlockEmailTo`)
+`mergeRemoteState`, `mergeRemoteCollectionsIntoLocal`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`, `restoreBackup` — all must handle:
+
+| New Field | Location | Merge Strategy |
+|---|---|---|
+| `clinicalData.patients` | Top-level | Keep as `data.clinicalData?.patients \|\| {}` — consumed during transition, always `{}` post-migration |
+| `clinicalData.autoLinkReviewQueue` | Top-level array | Union by `procedureId` — remote entries added if not in local |
+| `competencyUIState` | Top-level | `{ expandedCategories: data.competencyUIState?.expandedCategories \|\| [], viewMode: data.competencyUIState?.viewMode \|\| 'department' }` |
+| `d3Deadline` | Per competency item | `item.d3Deadline ?? null` — new field, defaults to null |
+| `unlockedBy` | Per competency item | `item.unlockedBy ?? null` — new field, defaults to null |
+| `isSummative` | Per competency item | `item.isSummative ?? false` — new field, defaults to false |
+| `rules` | Per competency item | `item.rules ?? null` — new field, defaults to null |
+| `unlockEmailTo` | Per competency item | `item.unlockEmailTo ?? null` — new field, defaults to null |
+
+New competency item fields use `?? null`/`?? false` defaults per CLAUDE.md Firebase save safety rules (`undefined` kills saves).
 
 ---
 
@@ -1005,27 +1183,39 @@ Add validation for `autoLinkReviewQueue` (array, not corrupted).
 19. Wire all Clinical CRUD to `propagateClinicalChanges()`
 20. Fix txSummaryBU in PR writeups (NEW ISSUE 3)
 
-### Phase 4: Competencies Tab Promotion
+### Phase 4: Competencies Tab Promotion + UI/UX
 21. Add to main nav bar, update `switchTab()` routing
 22. Build milestone dashboard (3 progress rings + pace projection)
 23. Build D3 deadline alert bar
 24. Unhide "What's Next" section with enhanced sorting
 25. Build review queue UI
 26. Build unlock chain visualization
-27. Build full evidence trail (not truncated)
+27. Build full evidence trail with rich evidence cards (patient links, type badges)
 28. Build "Which patients can fulfill this?" badges
 29. Add critical rules display per category
+30. Build search & filter bar (text search + status/category chips)
+31. Build inline quick-record modal (per-item "Record" button)
+32. Persist expanded state to `competencyUIState` + sync to Firebase
+33. Implement urgency-sorted category accordion (neediest first, completed last)
+34. Build "By Patient" view mode toggle
+35. Add pace projection per category inside expanded view
+36. Make per-item notes inline editable (contenteditable pattern)
 
 ### Phase 5: Integration & Verification
-30. End-to-end: Paste 9-block import via Patients tab → verify all stores updated
-31. End-to-end: Paste appointments via Clinical tab → verify same pipeline, competencies updated
-32. End-to-end: Complete appointment → verify auto-procedure + auto-link + competency update
-33. End-to-end: Delete patient from Patients tab → verify full cascade across all stores
-34. End-to-end: Delete patient from Clinical tab → verify same cascade (shared function)
-35. End-to-end: Smart auto-link → verify high-confidence auto-links, low-confidence queued
-36. End-to-end: Unlock chain → verify locked summatives can't be linked until formatives met
-37. Cross-device: Firebase sync → verify unified store merges correctly, no dual-store artifacts
-38. Cache-busting: Update all `<script src>` tags with `?v=20260330`
+37. End-to-end: Paste 9-block import via Patients tab → verify all stores updated
+38. End-to-end: Paste appointments via Clinical tab → verify same pipeline, competencies updated
+39. End-to-end: Complete appointment → verify auto-procedure + auto-link + competency update
+40. End-to-end: Delete patient from Patients tab → verify full cascade (appointments, procedures, competencies, planner tasks, deadlines, completedTasks, completedDeadlines all cleaned)
+41. End-to-end: Delete patient from Clinical tab → verify same cascade (shared function)
+42. End-to-end: Delete appointment → verify completedTasks + customDeadlines + completedDeadlines cleaned
+43. End-to-end: Smart auto-link → verify high-confidence auto-links, low-confidence queued
+44. End-to-end: Unlock chain → verify advisory display (NOT hard block — summatives still recordable)
+45. Cross-device: Firebase sync → verify unified store merges correctly, transitional `patients{}` consumption works
+46. UI: Search bar filters across categories, filter chips combinable, clear resets
+47. UI: Inline quick-record creates evidence without tab switching
+48. UI: By Patient view shows correct patient→requirement mapping
+49. UI: Persistent expanded state survives tab navigation + page reload
+50. Cache-busting: Update all `<script src>` tags with `?v=20260330`
 
 ---
 
@@ -1034,13 +1224,13 @@ Add validation for `autoLinkReviewQueue` (array, not corrupted).
 | File | Changes |
 |------|---------|
 | `js/graduation-roadmap/state.js` | `propagateClinicalChanges()`, cascade functions, `autoLinkProcedureToCompetencies()`, `matchProcedureToCompetencies()`, migration functions, `isItemUnlocked()`, milestone computation |
-| `js/graduation-roadmap/clinical.js` | `DEFAULT_COMPETENCIES` rebuilt, Active Roster rendering, `completeAppointment()` redesigned, `buildCompetencyChecklist()` unlock-aware, Competencies sub-tab removed |
+| `js/graduation-roadmap/clinical.js` | `DEFAULT_COMPETENCIES` enhanced with new fields (`d3Deadline`, `unlockedBy`, `isSummative`, `rules`) + 4 new fixed clinical experience items (no ID changes, no restructuring), Active Roster rendering, `completeAppointment()` redesigned, `buildCompetencyChecklist()` unlock-aware, Competencies sub-tab removed |
 | `js/graduation-roadmap/patients.js` | `confirmUnifiedImport()` (enhanced), `openUnifiedImportModal()` (shared), bug fixes (ISSUE 1, 2), `parseRequirementsMatch()` normalization |
 | `js/graduation-roadmap/import-system.js` | `confirmClinicalImport()` retired, Clinical import button rewired |
 | `js/graduation-roadmap/init.js` | Dashboard milestone widgets, tab routing for promoted Competencies |
 | `js/graduation-roadmap/periodic-review.js` | txSummaryBU in PR writeups (ISSUE 3) |
 | `js/graduation-roadmap/firebase-sync.js` | Merge/restore sites updated for unified store + new fields |
-| `graduation-roadmap.html` | Nav bar updated (Competencies promoted), Active Roster HTML, CSS for unlock chains + milestones + review queue |
+| `graduation-roadmap.html` | Nav bar updated (Competencies promoted), Active Roster HTML, CSS for unlock chains + milestones + review queue + search bar + inline quick-record + By Patient view |
 
 ---
 
@@ -1049,7 +1239,7 @@ Add validation for `autoLinkReviewQueue` (array, not corrupted).
 | Risk | Mitigation |
 |------|------------|
 | Migration wipes patient data | Checkpoint created before migration. One-time flag prevents re-run. |
-| Competency ID remapping breaks evidence | `migrateCompetencyIds()` updates both item IDs and completionEntries references |
+| Enhancement fields break old merges | New fields (`d3Deadline`, `unlockedBy`, `isSummative`) use `null`/`false` defaults — old merge sites pass through safely. `mergeCompetencies()` union strategy preserves unknown fields. |
 | Auto-link creates false positives | Confidence levels + review queue. High confidence only auto-links. Undo available. |
 | Dual-store references in Firebase from other devices | `mergeRemoteCollectionsIntoLocal()` handles missing `clinicalData.patients` gracefully post-migration. Other devices get migration on next load. |
 | Breaking webchat export format | Zero format changes. Same delimiters, field names, block types. |
