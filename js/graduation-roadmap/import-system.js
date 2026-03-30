@@ -266,6 +266,7 @@ function confirmLectureImport() {
 // Does NOT nuke-and-rebuild — only adds new, removes cancelled, skips user-edited.
 function syncClinicalToMonthlyPlanner() {
     if (!roadmapData.clinicalData?.appointments) return;
+    if (!clinicalDataDirty) return;
     if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = {};
     if (!roadmapData.monthlyPlanner.customTasks || Array.isArray(roadmapData.monthlyPlanner.customTasks)) {
         roadmapData.monthlyPlanner.customTasks = migrateArrayToObject(roadmapData.monthlyPlanner.customTasks, 'ctask');

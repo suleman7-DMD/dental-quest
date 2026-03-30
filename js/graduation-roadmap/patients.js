@@ -501,7 +501,7 @@ function migrateToUnifiedPatientStore() {
                 (getValues(cat.sections) || []).forEach(function(sec) {
                     var items = sec.items || {};
                     Object.values(items).forEach(function(item) {
-                        (item.completionEntries || []).forEach(function(entry) {
+                        getValues(item.completionEntries).forEach(function(entry) {
                             if (entry.patientId && idRemapTable[entry.patientId]) {
                                 entry.patientId = idRemapTable[entry.patientId];
                             }
@@ -820,7 +820,7 @@ function getNextScheduledVisit(patient, patientId) {
     var todayStr = getLocalDateString(new Date());
     var patientChart = normalizeChartNumber(patient.chartNumber);
     var patientName = (patient.name || '').toLowerCase().trim();
-    var clinicalPatients = roadmapData.clinicalData?.patients || {};
+    var clinicalPatients = roadmapData.clinicalData?.patientRecords || {};
 
     var futureApts = [];
     var aptKeys = Object.keys(appointments);
@@ -1192,6 +1192,7 @@ function addNewPatientRecord() {
         lastUpdated: new Date().toISOString()
     };
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     selectPatient(id);
@@ -1275,6 +1276,8 @@ function deletePatientRecord(id) {
             if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) {}
             if (typeof renderCompetencies === 'function') try { renderCompetencies(); } catch(e) {}
             if (typeof renderAppointmentsList === 'function') try { renderAppointmentsList(); } catch(e) {}
+            if (typeof syncClinicalToMonthlyPlanner === 'function') { clinicalDataDirty = true; syncClinicalToMonthlyPlanner(); }
+            if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
             showToast('Patient deleted');
         }
     );
@@ -1299,6 +1302,7 @@ function savePatientField(element) {
         records[patientId].nextVisitManual = true;
     }
     records[patientId].lastUpdated = new Date().toISOString();
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
@@ -1319,6 +1323,7 @@ function setPatientReliability(patientId, reliability) {
     if (!records[patientId]) return;
     records[patientId].reliability = reliability;
     records[patientId].lastUpdated = new Date().toISOString();
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderPatientRecord(patientId);
@@ -1415,6 +1420,15 @@ function computeRequirementMatches(patient) {
             });
         }
     });
+
+    // Perio noise filter: strip routine perio IDs for non-periodontitis patients
+    var perioNoiseIds = ['perio-sum-prophy', 'perio-form-recall', 'perio-sum-recall',
+        'perio-form-reeval-ging', 'perio-sum-reeval-ging', 'perio-3rd-reeval'];
+    var perioKeywords = /periodontitis|srp|scaling.and.root|calculus.removal/i;
+    var patientPerioText = [patient.txPlan || '', patient.perioStatus || '', patient.medicalHx || '', patient.notes || ''].join(' ');
+    if (!perioKeywords.test(patientPerioText)) {
+        matches = matches.filter(function(m) { return perioNoiseIds.indexOf(m.reqId) === -1; });
+    }
 
     return matches;
 }
@@ -1645,7 +1659,7 @@ function parsePatientImportText(text) {
             if (parsed2 && parsed2.chartNumber) result.updates.push(parsed2);
         } else if (effectiveHeader === 'REQUIREMENTS_MATCH') {
             var parsed3 = parseRequirementsMatch(bodyText);
-            if (parsed3.canFulfill.length > 0 || parsed3.completedToday.length > 0) result.reqMatches.push(parsed3);
+            if (parsed3.canFulfill.length > 0 || parsed3.completedToday.length > 0 || parsed3.highValue || parsed3.priorityNotes) result.reqMatches.push(parsed3);
         } else if (effectiveHeader === 'REQUIREMENTS_STATUS') {
             var parsed4 = parseRequirementsStatus(bodyText);
             if (parsed4.length > 0) result.reqStatuses = result.reqStatuses.concat(parsed4);
@@ -2272,6 +2286,9 @@ function confirmUnifiedImport() {
     var updated = 0;
     var lastImportedId = null;
 
+    // Set dirty flag BEFORE any state mutations so syncClinicalToMonthlyPlanner works
+    clinicalDataDirty = true;
+
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
         var chartNumber = (rec.chartNumber || '').trim();
@@ -2404,15 +2421,20 @@ function confirmUnifiedImport() {
                 if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
                 roadmapData.clinicalData.patientRecords[patientId] = {
                     id: patientId, name: apt.patientName, chartNumber: apt.chartNumber || '',
-                    status: 'active', asaClass: '', perioStatus: '', needsXrays: false,
-                    recallDue: null, medicalAlerts: '', outstandingTasks: [],
+                    type: '', reliability: '', provider: '',
+                    medicalHx: '', medications: '', allergies: '',
+                    dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
+                    txPlan: '', notes: '',
+                    lastVisit: '', nextVisit: '',
+                    lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
+                    perioStatus: '', recallHistory: '', activeStatus: 'active',
+                    importedRequirements: [], priorityNotes: '', highValue: false,
                     createdAt: new Date().toISOString()
                 };
             }
 
             // Dedup: skip if same patient+date+time already exists (by ID or name)
             var aptTime = apt.time || '09:00';
-            var aptNameLower = (apt.patientName || '').toLowerCase().trim();
             var isDupe = getValues(roadmapData.clinicalData.appointments).some(function(ex) {
                 // Primary: match by patientId + date + time
                 if (ex.patientId === patientId && ex.date === apt.date && ex.time === aptTime) return true;

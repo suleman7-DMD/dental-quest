@@ -450,8 +450,8 @@ function ensureInProgressDefaults(pr2) {
 }
 
 function getInProgressProcedures(pr2) {
-    ensureInProgressDefaults(pr2);
-    return pr2.inProgressProcedures;
+    // Read-only accessor — no mutation in render path
+    return pr2.inProgressProcedures || {};
 }
 
 function renderPRInProgressProcedures(pr2) {
@@ -1474,6 +1474,8 @@ function prStartEditField(patientId, fieldName, element) {
 
     var isLongField = ['medicalHx', 'medications', 'dentalHx', 'txSummaryBU', 'txCompletedByMe', 'txPlan', 'notes', 'recallHistory'].indexOf(fieldName) >= 0;
 
+    var committed = false;
+
     if (isLongField) {
         var textarea = document.createElement('textarea');
         textarea.className = 'pr-textarea';
@@ -1484,6 +1486,8 @@ function prStartEditField(patientId, fieldName, element) {
         textarea.focus();
 
         textarea.addEventListener('blur', function() {
+            if (committed) return;
+            committed = true;
             var val = textarea.value.trim();
             prSavePatientField(patientId, fieldName, val);
             element.textContent = val || 'Click to edit';
@@ -1491,6 +1495,7 @@ function prStartEditField(patientId, fieldName, element) {
         textarea.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 e.preventDefault();
+                committed = true;
                 element.textContent = currentText || 'Click to edit';
             }
         });
@@ -1505,6 +1510,8 @@ function prStartEditField(patientId, fieldName, element) {
         input.focus();
 
         input.addEventListener('blur', function() {
+            if (committed) return;
+            committed = true;
             var val = input.value.trim();
             prSavePatientField(patientId, fieldName, val);
             element.textContent = val || 'Click to edit';
@@ -1512,10 +1519,12 @@ function prStartEditField(patientId, fieldName, element) {
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                committed = true;
                 input.blur();
             }
             if (e.key === 'Escape') {
                 e.preventDefault();
+                committed = true;
                 element.textContent = currentText || 'Click to edit';
             }
         });
@@ -1530,6 +1539,7 @@ function prStartEditRosterNextAppt(element) {
     var noteObj = pr2.patientNotes?.[patientId] ?? {};
     var pt = (roadmapData.clinicalData?.patientRecords ?? {})[patientId];
     var currentText = noteObj.nextAppointment ?? pt?.nextVisit ?? '';
+    var committed = false;
 
     var input = document.createElement('input');
     input.type = 'text';
@@ -1541,6 +1551,8 @@ function prStartEditRosterNextAppt(element) {
     input.focus();
 
     input.addEventListener('blur', function() {
+        if (committed) return;
+        committed = true;
         var val = input.value.trim();
         if (!pr2.patientNotes) pr2.patientNotes = {};
         if (!pr2.patientNotes[patientId]) pr2.patientNotes[patientId] = {};
@@ -1553,10 +1565,12 @@ function prStartEditRosterNextAppt(element) {
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            committed = true;
             input.blur();
         }
         if (e.key === 'Escape') {
             e.preventDefault();
+            committed = true;
             element.textContent = currentText || 'Click to set';
         }
     });
@@ -1566,16 +1580,18 @@ function prSavePatientField(patientId, fieldName, value) {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     if (!roadmapData.clinicalData.patientRecords[patientId]) {
-        // Copy core fields from clinicalData.patientRecords if available (prevents blank roster rows)
-        var clinicalPt = roadmapData.clinicalData.patientRecords?.[patientId] ?? {};
+        // Look up name/chart from merged records or legacy patients store (NOT from patientRecords which we just confirmed is null)
+        var allRecords = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : {};
+        var sourcePt = allRecords[patientId] || roadmapData.clinicalData?.patients?.[patientId] || {};
         roadmapData.clinicalData.patientRecords[patientId] = {
             id: patientId,
-            name: clinicalPt.name ?? '',
-            chartNumber: clinicalPt.chartNumber ?? ''
+            name: sourcePt.name ?? '',
+            chartNumber: sourcePt.chartNumber ?? ''
         };
     }
     roadmapData.clinicalData.patientRecords[patientId][fieldName] = value;
     roadmapData.clinicalData.patientRecords[patientId].lastUpdated = new Date().toISOString();
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 }
@@ -1657,25 +1673,9 @@ function initPeriodicReview() {
     html += renderPRSubjectiveReport(pr2);
 
     // Section 10: Patient Roster
-    // Merge patientRecords + clinicalData.patients (some patients exist in patients{} but not patientRecords{})
-    var prPatients = (function() {
-        var records = getValues(roadmapData.clinicalData?.patientRecords ?? {});
-        var clinicalPatients = getValues(roadmapData.clinicalData?.patients ?? {});
-        var seenCharts = {};
-        var seenIds = {};
-        for (var i = 0; i < records.length; i++) {
-            if (records[i].chartNumber) seenCharts[records[i].chartNumber] = true;
-            if (records[i].id) seenIds[records[i].id] = true;
-        }
-        // Add clinicalData.patients entries not already in patientRecords (by chartNumber or id)
-        for (var j = 0; j < clinicalPatients.length; j++) {
-            var cp = clinicalPatients[j];
-            if (cp.chartNumber && seenCharts[cp.chartNumber]) continue;
-            if (cp.id && seenIds[cp.id]) continue;
-            records.push(cp);
-        }
-        return records;
-    })();
+    // Use getAllPatientRecords() which properly merges + deduplicates patientRecords + clinicalData.patients
+    var prPatientsObj = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
+    var prPatients = getValues(prPatientsObj);
     html += renderPRPatientRoster(pr2, prPatients);
 
     // Section 11: Patient Writeups

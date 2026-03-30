@@ -585,7 +585,7 @@ function saveDailyPlannerData() {
 function dpSyncAppointmentsToTimeline() {
     var today = getLocalDateString();
     var appointments = getValues(roadmapData.clinicalData?.appointments);
-    var patients = roadmapData.clinicalData?.patients || {};
+    var patients = roadmapData.clinicalData?.patientRecords || {};
 
     if (!roadmapData.dailyPlanner.blocks) roadmapData.dailyPlanner.blocks = {};
 

@@ -713,6 +713,11 @@ function toggleDeadlineDone(index) {
         if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
         if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
 
+        // BUG-D017: Propagate appointment uncomplete to planner/schedule
+        clinicalDataDirty = true;
+        if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
+        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
         showToast('Marked incomplete');
     } else {
         // Checking - show grade input modal
@@ -862,8 +867,8 @@ function submitDeadlineGrade(index) {
             apt.status = 'completed';
             apt.completedAt = new Date().toISOString();
 
-            // Update patient lastVisit
-            const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+            // Update patient lastVisit (use patientRecords, not deprecated patients store)
+            const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
             if (patient) {
                 patient.lastVisit = apt.date;
                 patient.lastUpdated = new Date().toISOString();
@@ -892,6 +897,11 @@ function submitDeadlineGrade(index) {
     loadCourseGrades();
     if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
     if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+
+    // BUG-D018: Propagate appointment complete to planner/schedule
+    clinicalDataDirty = true;
+    if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
 
     showToast(grade !== null ? `✓ Completed with ${grade}%` : '✓ Completed');
 }
@@ -1006,6 +1016,12 @@ function syncDeadlineToGrades(deadline, isComplete, grade = null) {
 
     // Ortho
     if (course.includes('orthodontics')) {
+        // BUG-D019: Add midterm handling for Ortho
+        if (what.toLowerCase().includes('midterm')) {
+            roadmapData.grades.ortho = roadmapData.grades.ortho || {};
+            if (isComplete && grade !== null) roadmapData.grades.ortho.midterm = grade;
+            else delete roadmapData.grades.ortho.midterm;
+        }
         if (what.includes('final')) {
             roadmapData.grades.ortho = roadmapData.grades.ortho || {};
             if (isComplete && grade !== null) roadmapData.grades.ortho.final = grade;

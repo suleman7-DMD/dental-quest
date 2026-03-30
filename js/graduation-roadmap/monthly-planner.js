@@ -175,7 +175,7 @@ function initMonthlyPlanner() {
         }
     });
 
-    if (needsSave) {
+    if (needsSave && hasLoadedFromCloud && !awaitingFirebaseLoad) {
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
     }
@@ -227,7 +227,7 @@ function mpToggleTaskComplete(taskId) {
                 apt.completedAt = new Date().toISOString();
 
                 // Update patient lastVisit
-                const patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+                const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
                 if (patient) {
                     patient.lastVisit = apt.date;
                     patient.lastUpdated = new Date().toISOString();
@@ -254,17 +254,22 @@ function mpToggleTaskComplete(taskId) {
             }
         });
 
-        // CROSS-SYNC: If this is a clinic task, uncomplete the appointment
+        // CROSS-SYNC: If this is a clinic task, uncomplete the appointment (removes procedures, unlinks competencies)
         if (taskIdStr.startsWith('clinic_')) {
             const aptId = taskIdStr.replace('clinic_', '');
-            const apt = roadmapData.clinicalData?.appointments?.[aptId];
-            if (apt && apt.status === 'completed') {
-                apt.status = 'scheduled';
-                delete apt.completedAt;
-
-                if (typeof unmarkLinkedDeadlineDone === 'function') {
-                    unmarkLinkedDeadlineDone(aptId);
+            if (typeof uncompleteAppointment === 'function') {
+                uncompleteAppointment(aptId);
+            } else {
+                // Fallback: just reset status
+                const apt = roadmapData.clinicalData?.appointments?.[aptId];
+                if (apt && apt.status === 'completed') {
+                    apt.status = 'scheduled';
+                    delete apt.completedAt;
                 }
+            }
+
+            if (typeof unmarkLinkedDeadlineDone === 'function') {
+                unmarkLinkedDeadlineDone(aptId);
             }
         }
 
@@ -274,6 +279,7 @@ function mpToggleTaskComplete(taskId) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+    if (typeof syncClinicalToMonthlyPlanner === 'function') { clinicalDataDirty = true; syncClinicalToMonthlyPlanner(); }
     mpRenderAllCalendars();
     mpUpdateStats();
 }
@@ -699,7 +705,7 @@ function mpCreateUntimedSection(week) {
 
     const completedCount = tasks.filter(t => {
         const taskId = t.isStatic ? `static-${t.date}-${t.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : t.id;
-        return completedTasks.includes(String(taskId));
+        return completedTasks.some(function(c) { return (c.value || c) === String(taskId); });
     }).length;
 
     let html = `
@@ -726,7 +732,7 @@ function mpCreateUntimedSection(week) {
         const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const typeClass = task.type || 'other';
         const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
-        const isCompleted = completedTasks.includes(String(taskId));
+        const isCompleted = completedTasks.some(function(c) { return (c.value || c) === String(taskId); });
         const rowClass = isCompleted ? 'mp-completed-row' : '';
 
         html += `
@@ -1277,7 +1283,7 @@ function buildCurrentWeekSchedule() {
         if (!apt.date || apt.date < mondayStr || apt.date > sundayStr) return;
         if (apt.status === 'cancelled') return;
 
-        var patient = roadmapData.clinicalData?.patients?.[apt.patientId];
+        var patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
         var patientName = patient?.name || 'Patient';
         var itemText = patientName + ' - ' + (apt.procedures || 'Appointment');
 
@@ -1355,7 +1361,7 @@ function mpToggleHiddenTasksView() {
     if (container.style.display === 'none') {
         var hidden = roadmapData.monthlyPlanner?.hiddenClinicTasks || {};
         var appointments = roadmapData.clinicalData?.appointments || {};
-        var patients = roadmapData.clinicalData?.patients || {};
+        var patients = roadmapData.clinicalData?.patientRecords || {};
         var keys = Object.keys(hidden);
 
         if (keys.length === 0) {

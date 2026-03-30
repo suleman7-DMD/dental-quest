@@ -304,7 +304,7 @@ function calculateNeeded() {
     const remainingComponents = [];
 
     course.components.forEach(comp => {
-        const grade = savedGrades[comp.id];
+        const grade = savedGrades[comp.id] !== undefined ? savedGrades[comp.id] : (comp.defaultGrade !== undefined ? comp.defaultGrade : null);
         if (grade !== null && grade !== undefined && grade !== '') {
             earnedPoints += (parseFloat(grade) / 100) * comp.weight;
             completedWeight += comp.weight;

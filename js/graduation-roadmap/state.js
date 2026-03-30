@@ -1010,7 +1010,7 @@ function getSmartAppointmentCount() {
         if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
             // Avoid double-counting if patient already counted
             var matchedByClinicalPatient = Object.values(patients).some(function(p) {
-                return ((p.name || '').toLowerCase().trim() === (pr.name || '').toLowerCase().trim() && p.chartNumber === pr.chartNumber) && p.lastVisit === pr.lastVisit;
+                return ((p.name || '').toLowerCase().trim() === (pr.name || '').toLowerCase().trim() && (p.chartNumber || '').replace(/^0+/, '') === (pr.chartNumber || '').replace(/^0+/, '')) && p.lastVisit === pr.lastVisit;
             });
             if (!matchedByClinicalPatient) {
                 extraVisits++;
@@ -1213,7 +1213,7 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
         });
         var snaps = roadmapData.clinicalData?.dashboardSnapshots;
         if (snaps && snaps.length > 0) {
-            var snapDate = snaps[snaps.length - 1]?.capturedAt;
+            var snapDate = snaps[0]?.capturedAt;
             if (snapDate) {
                 var sd = parseLocalDate(snapDate);
                 if (sd && (!earliest || sd < earliest)) earliest = sd;
@@ -1391,6 +1391,7 @@ function cascadeDeletePatient(patientId) {
 
     // 4. Delete patient record
     delete roadmapData.clinicalData.patientRecords[patientId];
+    if (roadmapData.clinicalData?.patients?.[patientId]) delete roadmapData.clinicalData.patients[patientId];
 
     // 5. Remove from review queue
     if (roadmapData.clinicalData.autoLinkReviewQueue) {
@@ -1482,6 +1483,9 @@ function matchProcedureToCompetencies(procedureText, patientId) {
 
 function addToReviewQueue(procedure, suggestions) {
     if (!roadmapData.clinicalData.autoLinkReviewQueue) roadmapData.clinicalData.autoLinkReviewQueue = [];
+    if (!Array.isArray(roadmapData.clinicalData.autoLinkReviewQueue)) {
+        roadmapData.clinicalData.autoLinkReviewQueue = getValues(roadmapData.clinicalData.autoLinkReviewQueue || []);
+    }
     // Dedup by procedureId
     var existing = roadmapData.clinicalData.autoLinkReviewQueue.find(function(q) { return q.procedureId === procedure.id; });
     if (existing) return;

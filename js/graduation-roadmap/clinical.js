@@ -144,6 +144,7 @@ function deletePatient(patientId) {
 
     showCustomConfirm('Are you sure you want to delete this patient? This cannot be undone.', function() {
         // CIS v2: Delegate to cascade function (handles appointments, procedures, competencies, planner, review queue)
+        clinicalDataDirty = true;
         cascadeDeletePatient(patientId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
@@ -158,7 +159,7 @@ function deletePatient(patientId) {
 function renderAppointmentsList() {
     const container = document.getElementById('appointmentsList');
     const appointments = getValues(roadmapData.clinicalData?.appointments);
-    const patients = roadmapData.clinicalData?.patients || {};
+    const patients = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
 
     // Sort by date
     const sorted = [...appointments].sort((a, b) => {
@@ -361,7 +362,7 @@ function saveAppointment() {
         roadmapData.customDeadlines[clinicalDeadlineId] = {
             id: clinicalDeadlineId,
             date: date,
-            what: `🏥 ${patientName} - ${apt.procedures || 'Clinic Apt'}`,
+            what: `🏥 ${patientName} - ${formFields.procedures || 'Clinic Apt'}`,
             course: 'Clinical',
             weight: '—',
             type: 'Clinical',
@@ -390,6 +391,7 @@ function deleteAppointment() {
 
     showCustomConfirm('Delete this appointment?', function() {
         // CIS v2: Delegate to cascade function
+        clinicalDataDirty = true;
         cascadeDeleteAppointment(aptId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
@@ -517,7 +519,7 @@ const DEFAULT_COMPETENCIES = {
         notes: '1 planned (unreliable) UL 1-3 teeth.',
         sections: [
             { title: 'Periodontology Summatives', items: [
-                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'planned', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'srp-reeval', text: 'Re-evaluate (SRP) Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
@@ -1091,6 +1093,7 @@ function acceptReviewSuggestion(procId, itemId) {
         }
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -1106,6 +1109,7 @@ function rejectReviewSuggestion(procId, itemId) {
             roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
         }
     }
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderReviewQueue();
@@ -1115,6 +1119,7 @@ function rejectReviewSuggestion(procId, itemId) {
 function dismissReviewItem(procId) {
     var queue = roadmapData.clinicalData?.autoLinkReviewQueue || [];
     roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderReviewQueue();
@@ -1233,6 +1238,7 @@ function removeEvidenceEntry(catKey, itemId, entryIndex) {
         foundItem.status = 'pending';
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -1262,6 +1268,7 @@ function undoRemoveEvidence(catKey, itemId, removedJson) {
         foundItem.status = 'in_progress';
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -1683,6 +1690,7 @@ function saveCompItemNote(catKey, itemId, newNote) {
         }
     });
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
@@ -1983,6 +1991,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
         }
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -2061,6 +2070,7 @@ function adjustCompItem(catKey, itemId, delta) {
         }
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -2076,6 +2086,7 @@ function updateCompNotes(catKey, notes) {
     const competencies = getCompetenciesData();
     if (competencies[catKey]) {
         competencies[catKey].notes = notes;
+        clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
     }
@@ -2106,6 +2117,7 @@ function resetCompetencies() {
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
         );
         expandedCompCategories.clear();
+        clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         renderCompetencies();
@@ -2264,6 +2276,7 @@ function saveCompItem() {
         showToast(`Updated: ${name}`);
     }
 
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
@@ -2302,6 +2315,7 @@ function deleteCompItem(catKey, itemId) {
         const c = comp[catKey];
         if (c && c.sections[foundSectionId] && c.sections[foundSectionId].items[itemId]) {
             delete c.sections[foundSectionId].items[itemId];
+            clinicalDataDirty = true;
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             saveData();
             renderCompetencies();
@@ -2315,6 +2329,7 @@ function deleteCompItem(catKey, itemId) {
 // All user-provided text is escaped via escapeHtml() before insertion into innerHTML
 
 function recordProcedure(data) {
+    clinicalDataDirty = true;
     const id = data.id || generateId('proc');
     const procedure = {
         id: id,
@@ -2631,6 +2646,10 @@ function backfillClinicalData() {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
 
+    // Propagate to planner/schedule
+    if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+
     // Re-render affected tabs
     try { initClinicalTab(); } catch(e) {}
     try { renderCompetencies(); } catch(e) {}
@@ -2899,7 +2918,7 @@ function saveProcedureRecord() {
 
     var aptId = document.getElementById('procModalAptId').value;
     var patientId = document.getElementById('procModalPatientId').value;
-    var patient = roadmapData.clinicalData?.patients?.[patientId];
+    var patient = roadmapData.clinicalData?.patientRecords?.[patientId];
 
     var competencyItemIds = [];
     document.querySelectorAll('.proc-comp-checkbox:checked').forEach(function(cb) {
@@ -2944,7 +2963,7 @@ function renderProceduresList() {
     if (!container) return;
 
     var procedures = getValues(roadmapData.clinicalData?.completedProcedures);
-    var patients = roadmapData.clinicalData?.patients || {};
+    var patients = roadmapData.clinicalData?.patientRecords || {};
 
     if (procedures.length === 0) {
         container.innerHTML = '<div class="empty-state" style="text-align:center; padding:40px; color:#94a3b8;">'

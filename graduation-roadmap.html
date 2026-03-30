@@ -226,7 +226,7 @@
             height: 8px;
             border-radius: 50%;
             background: #f59e0b;
-            animation: pulse 1.5s infinite;
+            animation: pulse-strong 1.5s infinite;
         }
 
         .do-today-sync-status.connected .sync-dot {
@@ -239,7 +239,7 @@
             animation: none;
         }
 
-        @keyframes pulse {
+        @keyframes pulse-strong {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
@@ -730,7 +730,7 @@
         }
 
         /* Minimum touch targets for accessibility (44x44px) */
-        button, .tab-btn, input[type="checkbox"] {
+        button:not(.comp-counter-btn):not(.planner-event-btn):not(.mp-cal-edit-btn):not(.mp-cal-delete-btn), .tab-btn, input[type="checkbox"] {
             min-height: 44px;
         }
 
@@ -1457,6 +1457,30 @@
             color: #b0bcc8;
             font-size: 0.85em;
             margin-top: 5px;
+        }
+
+        /* BUG-H6/H13: Clinical Quick Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stats-grid > div {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #e2e8f0;
         }
 
         /* Classmate Share */
@@ -8160,7 +8184,7 @@
             </div>
             <div class="course-body show" id="course-peds">
                 <div class="alert alert-critical" style="margin-bottom: 15px;">
-                    <strong>🚨 YOUR SITUATION:</strong> You have <span id="pedsLockedIn2" class="editable" contenteditable="true" onblur="saveData()">33.3</span> pts locked in (Exam 1: 77% × 40% = 30.8 + Headstart 2.5). 
+                    <strong>🚨 YOUR SITUATION:</strong> You have <span id="pedsLockedIn2" class="editable" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">33.3</span> pts locked in (Exam 1: 77% × 40% = 30.8 + Headstart 2.5). 
                     Need ~70% avg on remaining 57.5% to pass with C-.
                 </div>
                 <div class="table-container">
@@ -8173,8 +8197,8 @@
                             <tr><td>Exam 2 (Cumulative)</td><td>45%</td><td><span class="status status-pending">❌</span></td><td>Wed Feb 18</td><td><strong>🚨 SURVIVAL EXAM</strong> — 55 Q's from Dr. Shikui. Look for "blink blink" callouts</td></tr>
                             <tr><td>Exam 3 + Attendance</td><td>7.5%</td><td><span class="status status-pending">❌</span></td><td>Mon Mar 30</td><td>~50% lectures missed affects this component</td></tr>
                             <tr><td>Headstart Rotation</td><td>2.5%</td><td><span class="status status-done">✅ DONE</span></td><td>—</td><td></td></tr>
-                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>Orthodontic Module</td><td>5%</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="saveData()">TBD</td><td><strong>MANDATORY - AUTO-FAIL IF NOT DONE</strong></td></tr>
-                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>IPS Session</td><td>Extra credit</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="saveData()">TBD</td><td><strong>MANDATORY - AUTO-FAIL IF NOT DONE</strong></td></tr>
+                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>Orthodontic Module</td><td>5%</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">TBD</td><td><strong>MANDATORY - AUTO-FAIL IF NOT DONE</strong></td></tr>
+                            <tr style="background: rgba(220, 38, 38, 0.2);"><td>IPS Session</td><td>Extra credit</td><td><span class="status status-tbd">⚠️ FIND DATE</span></td><td class="editable find-date" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">TBD</td><td><strong>MANDATORY - AUTO-FAIL IF NOT DONE</strong></td></tr>
                             <tr style="background: rgba(220, 38, 38, 0.2);"><td>NPI Exercise</td><td>+2 pts bonus</td><td><span class="status status-tbd">⚠️</span></td><td>~Mar 30</td><td><strong>MANDATORY — Google Form on BB. Code: 39. No SSN = 3mo paper process!</strong></td></tr>
                         </tbody>
                     </table>
@@ -8318,7 +8342,7 @@
                             <tr><th>Component</th><th>Weight</th><th>Status</th><th>Due Date</th><th>Notes</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>Midterm</td><td class="editable" contenteditable="true" onblur="saveData()">TBD</td><td><span class="status status-pending">❌</span></td><td>Feb 11</td><td></td></tr>
+                            <tr><td>Midterm</td><td class="editable" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">TBD</td><td><span class="status status-pending">❌</span></td><td>Feb 11</td><td></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -8829,7 +8853,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('orthomodule')">
                 <div style="flex: 1;">
                     <strong>Orthodontic Module</strong><br>
-                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DUE DATE)</span></span><br>
+                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">TBD (FIND DUE DATE)</span></span><br>
                     <span style="color: #f87171;">Action: FIND DUE DATE — 5% of grade + MANDATORY</span>
                 </div>
             </div>
@@ -8838,7 +8862,7 @@
                 <input type="checkbox" class="checklist-checkbox" onchange="toggleMandatory('ips')">
                 <div style="flex: 1;">
                     <strong>IPS Session</strong><br>
-                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="saveData()">TBD (FIND DATE & ATTEND)</span></span><br>
+                    <span style="color: #b0bcc8;">Course: Peds | Due: <span class="editable find-date" contenteditable="true" onblur="if(hasLoadedFromCloud && !awaitingFirebaseLoad) saveData()">TBD (FIND DATE & ATTEND)</span></span><br>
                     <span style="color: #f87171;">Action: FIND DATE & ATTEND</span>
                 </div>
             </div>
@@ -10785,17 +10809,17 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/periodic-review.js?v=20260330cis"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260330cis"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/periodic-review.js?v=20260330fix"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260330fix"></script>
 </body>
 </html>

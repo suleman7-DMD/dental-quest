@@ -235,7 +235,7 @@ function renderDashboard() {
 
     // Patient tracker summary
     if (typeof getPatientRecords === 'function') {
-        const ptRecords = roadmapData.clinicalData?.patientRecords || {};
+        const ptRecords = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
         const ptCount = Object.keys(ptRecords).length;
         if (ptCount > 0) {
             html += '<div class="card" style="border: 2px solid #7c3aed; margin-top: 15px;">'
@@ -270,7 +270,7 @@ function renderDashboard() {
         alertItems.push({ type: 'warning', icon: '⚠️', text: pastScheduled.length + ' past appointment' + (pastScheduled.length > 1 ? 's' : '') + ' need completion — click Backfill', action: 'backfillClinicalData()' });
     }
     // Recalls due
-    var recallsDue = Object.values(roadmapData.clinicalData?.patients || {}).filter(function(p) {
+    var recallsDue = getValues(roadmapData.clinicalData?.patientRecords || {}).filter(function(p) {
         if (!p.recallDue || p.status !== 'active') return false;
         var recallDate = parseLocalDate(p.recallDue);
         var thirtyOut = new Date(today);
@@ -575,14 +575,14 @@ function renderTodoListSection() {
 // Targeted re-render for Missing Notes section (preserves scroll, focus, details state)
 function rerenderMissingNotesSection() {
     var container = document.getElementById('dashMissingNotesContainer');
-    if (!container) return renderDashboard();
+    if (!container) return;
     container.innerHTML = renderMissingNotesSection();
 }
 
 // Targeted re-render for Todo List section (preserves scroll, focus, details state)
 function rerenderTodoListSection() {
     var container = document.getElementById('dashTodoListContainer');
-    if (!container) return renderDashboard();
+    if (!container) return;
     container.innerHTML = renderTodoListSection();
 }
 
@@ -861,7 +861,7 @@ function initUI() {
         const oldCount = getCount(roadmapData.upcomingDeadlines ?? {});
         roadmapData.upcomingDeadlines = upcomingObj;
         // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
-        if (oldCount === 0 && idx > 0 && hasLoadedFromCloud && !awaitingFirebaseLoad) {
+        if (idx !== oldCount && hasLoadedFromCloud && !awaitingFirebaseLoad) {
             setTimeout(() => saveData(), 2000);
         }
     } catch(e) { console.error('Error syncing upcoming deadlines:', e); }
@@ -1015,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hasLoadedFromCloud = true;
             isInitialLoad = false;
             roadmapData._dataLoaded = true;
+            if (typeof markInitialLoadComplete === 'function') markInitialLoadComplete();
             updateSyncStatus('offline', 'Loaded locally');
             try {
                 initUI();
@@ -1038,6 +1039,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hasLoadedFromCloud = true;
             isInitialLoad = false;
             roadmapData._dataLoaded = true;
+            if (typeof markInitialLoadComplete === 'function') markInitialLoadComplete();
             updateSyncStatus('offline', 'Loaded locally (failsafe)');
             try { initUI(); } catch(e) { console.error('6s failsafe initUI failed:', e); }
         }

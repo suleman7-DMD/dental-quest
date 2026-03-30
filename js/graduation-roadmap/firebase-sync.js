@@ -218,6 +218,10 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
         addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
         addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
+        if (data.monthlyPlanner.currentWeekSchedule) {
+            if (!roadmapData.monthlyPlanner.currentWeekSchedule) roadmapData.monthlyPlanner.currentWeekSchedule = {};
+            addMissing(roadmapData.monthlyPlanner.currentWeekSchedule, data.monthlyPlanner.currentWeekSchedule);
+        }
     }
 
     // Top-level collections
@@ -598,7 +602,8 @@ function importBackup(file) {
                     competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
                     patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
                     dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
-                    missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes
+                    missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
+                    autoLinkReviewQueue: Array.isArray(bData.clinicalData?.autoLinkReviewQueue) ? bData.clinicalData.autoLinkReviewQueue : []
                 },
                 todoList: {
                     items: bData.todoList?.items || {},
@@ -955,7 +960,34 @@ function mergeRemoteState(data) {
                 roadmapData.clinicalData?.competencies,
                 data.clinicalData?.competencies
             ),
-            patientRecords: { ...(roadmapData.clinicalData?.patientRecords || {}), ...(data.clinicalData?.patientRecords || {}) },
+            patientRecords: (function() {
+                var local = roadmapData.clinicalData?.patientRecords || {};
+                var remote = data.clinicalData?.patientRecords || {};
+                var merged = {};
+                // Start with all local records
+                Object.keys(local).forEach(function(id) { merged[id] = { ...local[id] }; });
+                // Add remote records, field-level merge for existing (local wins for conflicts)
+                Object.keys(remote).forEach(function(id) {
+                    if (!merged[id]) {
+                        merged[id] = { ...remote[id] };
+                    } else {
+                        // Fill missing fields from remote, local wins for conflicts
+                        Object.keys(remote[id]).forEach(function(key) {
+                            if (merged[id][key] === undefined || merged[id][key] === null || merged[id][key] === '') {
+                                merged[id][key] = remote[id][key];
+                            }
+                        });
+                        // Deep merge specific array/object fields
+                        if (remote[id].importedRequirements && !merged[id].importedRequirements) {
+                            merged[id].importedRequirements = remote[id].importedRequirements;
+                        }
+                        if (remote[id].briefHistory && !merged[id].briefHistory) {
+                            merged[id].briefHistory = remote[id].briefHistory;
+                        }
+                    }
+                });
+                return merged;
+            })(),
             dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
             missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
             autoLinkReviewQueue: (() => {
@@ -966,9 +998,16 @@ function mergeRemoteState(data) {
             })()
         },
         todoList: {
-            items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
+            items: (function() {
+                var local = roadmapData.todoList?.items || {};
+                var remote = data.todoList?.items || {};
+                var merged = { ...remote, ...local };  // local wins on conflict
+                return merged;
+            })(),
             _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
-            lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
+            lastUpdated: (roadmapData.todoList?.lastUpdated && data.todoList?.lastUpdated)
+                ? (roadmapData.todoList.lastUpdated > data.todoList.lastUpdated ? roadmapData.todoList.lastUpdated : data.todoList.lastUpdated)
+                : roadmapData.todoList?.lastUpdated ?? data.todoList?.lastUpdated ?? null
         },
         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
         exams: {
@@ -977,18 +1016,18 @@ function mergeRemoteState(data) {
         },
         graduationPrep: data.graduationPrep ? {
             externship: {
-                startDate: data.graduationPrep?.externship?.startDate ?? null,
-                endDate: data.graduationPrep?.externship?.endDate ?? null,
-                patients: data.graduationPrep?.externship?.patients ?? {},
-                logistics: data.graduationPrep?.externship?.logistics ?? '',
-                notes: data.graduationPrep?.externship?.notes ?? ''
+                startDate: data.graduationPrep?.externship?.startDate ?? roadmapData.graduationPrep?.externship?.startDate ?? null,
+                endDate: data.graduationPrep?.externship?.endDate ?? roadmapData.graduationPrep?.externship?.endDate ?? null,
+                patients: data.graduationPrep?.externship?.patients ?? roadmapData.graduationPrep?.externship?.patients ?? {},
+                logistics: data.graduationPrep?.externship?.logistics ?? roadmapData.graduationPrep?.externship?.logistics ?? '',
+                notes: data.graduationPrep?.externship?.notes ?? roadmapData.graduationPrep?.externship?.notes ?? ''
             },
             cdcaAdex: {
-                sessions: data.graduationPrep?.cdcaAdex?.sessions ?? {},
-                notes: data.graduationPrep?.cdcaAdex?.notes ?? ''
+                sessions: data.graduationPrep?.cdcaAdex?.sessions ?? roadmapData.graduationPrep?.cdcaAdex?.sessions ?? {},
+                notes: data.graduationPrep?.cdcaAdex?.notes ?? roadmapData.graduationPrep?.cdcaAdex?.notes ?? ''
             },
-            inbde: { notes: data.graduationPrep?.inbde?.notes ?? '' },
-            jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? '' }
+            inbde: { notes: data.graduationPrep?.inbde?.notes ?? roadmapData.graduationPrep?.inbde?.notes ?? '' },
+            jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? roadmapData.graduationPrep?.jobSearch?.notes ?? '' }
         } : (roadmapData.graduationPrep || {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
             cdcaAdex: { sessions: {}, notes: '' },
@@ -997,12 +1036,12 @@ function mergeRemoteState(data) {
         }),
         clinicHeadlines: data.clinicHeadlines ? {
             appointments: {
-                completed: data.clinicHeadlines?.appointments?.completed ?? 0,
-                target: data.clinicHeadlines?.appointments?.target ?? 90
+                completed: data.clinicHeadlines?.appointments?.completed ?? roadmapData.clinicHeadlines?.appointments?.completed ?? 0,
+                target: data.clinicHeadlines?.appointments?.target ?? roadmapData.clinicHeadlines?.appointments?.target ?? 90
             },
             procedures: {
-                completed: data.clinicHeadlines?.procedures?.completed ?? 0,
-                target: data.clinicHeadlines?.procedures?.target ?? 116
+                completed: data.clinicHeadlines?.procedures?.completed ?? roadmapData.clinicHeadlines?.procedures?.completed ?? 0,
+                target: data.clinicHeadlines?.procedures?.target ?? roadmapData.clinicHeadlines?.procedures?.target ?? 116
             }
         } : (roadmapData.clinicHeadlines || {
             appointments: { completed: 0, target: 90 },
@@ -1011,7 +1050,7 @@ function mergeRemoteState(data) {
         periodicReviews: data.periodicReviews ? {
             pr2: {
                 reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
                 dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
                 adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
                 completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
@@ -1148,7 +1187,7 @@ function loadFromLocalStorage(finalize = true) {
                 periodicReviews: data.periodicReviews ? {
                     pr2: {
                         reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                        reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                        reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
                         dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
                         adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
                         completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
@@ -1165,8 +1204,8 @@ function loadFromLocalStorage(finalize = true) {
                     viewMode: data.competencyUIState.viewMode ?? 'department'
                 } : (roadmapData.competencyUIState || { expandedCategories: [], viewMode: 'department' }),
                 lastSaved: data.lastSaved || roadmapData.lastSaved,
-                _version: data._version || roadmapData._version || 0,
-                _lastModified: data._lastModified || roadmapData._lastModified
+                _version: data._version ?? roadmapData._version ?? 0,
+                _lastModified: data._lastModified ?? roadmapData._lastModified ?? null
             };
         } catch (e) {
             console.error('❌ Failed to parse localStorage data:', e);
@@ -1288,6 +1327,7 @@ function finishFirebaseLoad(data) {
                 // This handles: Chrome imports notes/todos → saves to Firebase → DuckDuckGo has newer localStorage
                 // Without this, DuckDuckGo's data (missing notes/todos) overwrites Firebase
                 mergeRemoteCollectionsIntoLocal(data);
+                clinicalDataDirty = true;
                 roadmapData._dataLoaded = true;
                 migrateInvalidFirebaseKeys(roadmapData);
                 localWasNewer = true;
@@ -1879,7 +1919,7 @@ function restoreCheckpoint(index) {
                 periodicReviews: cpData.periodicReviews ? {
                     pr2: {
                         reviewDate: cpData.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                        reviewPeriod: cpData.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                        reviewPeriod: cpData.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
                         dashboardDiscrepancyNotes: cpData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
                         adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(cpData.periodicReviews?.pr2?.adminStatsOverrides || {}) },
                         completedProceduresHtml: cpData.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
@@ -2196,7 +2236,7 @@ function importAndRestoreDirectly() {
                         periodicReviews: data.periodicReviews ? {
                             pr2: {
                                 reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? 'December 2025 — April 2026',
+                                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
                                 dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
                                 adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
                                 completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
@@ -2258,7 +2298,7 @@ function forceUploadToCloud() {
             showUploadConfirmModal(async function() {
                 createCheckpoint('Pre-force-upload backup');
 
-                roadmapData._version = Date.now();
+                roadmapData._version = (roadmapData._version || 0) + 1;
                 roadmapData._lastModified = new Date().toISOString();
                 roadmapData.lastSaved = Date.now();
 
