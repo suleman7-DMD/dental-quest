@@ -84,6 +84,14 @@ git diff --stat
 | 8 | `inferProcedureType()` explicitly defined using KEYWORD_PATTERNS | Task 3.2 |
 | 9 | `docs/000-INSTRUCTIONS.md` updated with 4 new `fixed-*` requirement IDs | New Task 3.6 |
 | 10 | Appointment modal patient dropdown reads from `patientRecords{}` (not empty `patients{}`) | Task 3.3 |
+| 11 | Review queue schema must include `patientId` field — used by cascade delete filter + FK remapping | Tasks 1.6, 1.7 |
+| 12 | Migration wiring moved from Phase 4 to Phase 1 (Task 1.7) — Phases 2-3 assume unified store exists | Task 1.7 |
+| 13 | `restoreCheckpoint()` must clear migration localStorage flags (`unifiedPatientStoreDone_v1`, `competencyEnhancementsDone_v1`) | Task 1.3 |
+| 14 | `migrateCompetencyEnhancements()` required — `mergeCompetencies()` only preserves completed/completionEntries/status, not new fields | Task 1.2b |
+| 15 | FK remapping must include `periodicReviews.pr2.removedPatients`, `pr2.patientNotes`, `pr2.inProgressProcedures` | Task 1.7 |
+| 16 | 4 critical consumer functions read from empty `patients{}` post-migration — must redirect to `patientRecords{}` | Task 3.5b |
+| 17 | `propagateClinicalChanges()` patients branch must include `renderActiveRoster()` | Task 1.4 |
+| 18 | `inferProcedureType()` must derive from `KEYWORD_PATTERNS` (single source of truth), not maintain parallel typeMap | Task 3.2 |
 
 ---
 
@@ -109,20 +117,22 @@ Phase 1 (Data Foundation)
   Group A (parallel - schema changes, no cross-file deps):
   |  Task 1.1: state.js defaults + globals
   |  Task 1.2: clinical.js DEFAULT_COMPETENCIES enhancement
-  |  Task 1.3: firebase-sync.js all 6 merge/restore sites
+  |  Task 1.3: firebase-sync.js all 6 merge/restore sites (+ clear migration flags on restore)
   |
-  Group B (parallel - depends on Group A):
+  Task 1.2b: migrateCompetencyEnhancements() migration function (depends on 1.2)
+  |
+  Group B (parallel - depends on Group A + 1.2b):
   |  Task 1.4: state.js propagateClinicalChanges()
   |  Task 1.5: state.js cascade functions
-  |  Task 1.6: state.js auto-link engine + keyword patterns
-  |  Task 1.7: patients.js migrateToUnifiedPatientStore()
+  |  Task 1.6: state.js auto-link engine + keyword patterns (depends on 1.1 AND 1.2)
+  |  Task 1.7: patients.js migrateToUnifiedPatientStore() + initUI wiring (depends on 1.1 AND 1.3)
   |
   Task 1.8: isEmptyState + validateStateIntegrity (depends on Group A)
 
 Phase 2 (Import Pipeline) - depends on Phase 1
   Task 2.1: Bug fix - empty REQUIREMENTS_MATCH (independent)
   Task 2.2: Bug fix - reqId case normalization (independent)
-  Task 2.3: patients.js confirmUnifiedImport() (depends on 1.4, 1.6)
+  Task 2.3: patients.js confirmUnifiedImport() (depends on 1.4, 1.6, 2.1, 2.2)
   Task 2.4: patients.js openUnifiedImportModal() (depends on 2.3)
   Task 2.5: import-system.js retire confirmClinicalImport (depends on 2.4)
 
@@ -132,6 +142,8 @@ Phase 3 (Clinical Tab Redesign) - depends on Phase 1
   Task 3.3: Wire all Clinical CRUD to cascades + propagation (depends on 1.4, 1.5)
   Task 3.4: Clinical tab import button rewire (depends on 2.4)
   Task 3.5: txSummaryBU in PR writeups (independent)
+  Task 3.5b: Redirect 4 critical consumers from patients{} to patientRecords{} (depends on 1.7)
+  Task 3.6: Update 000-INSTRUCTIONS.md (depends on 1.2)
 
 Phase 4 (Competencies Tab UI) - depends on Phases 1-3
   Group A (parallel - HTML/CSS foundation):
@@ -159,7 +171,7 @@ Phase 4 (Competencies Tab UI) - depends on Phases 1-3
   |  Task 4.16: By Patient view mode toggle
   |  Task 4.17: Inline editable per-item notes
   |
-  Task 4.18: Wire migration into initUI + final wiring (depends on all)
+  Task 4.18: Final wiring + verification (depends on all Phase 4 tasks)
 
 Phase 5 (Integration and Verification) - depends on everything
   Tasks 5.1-5.14: End-to-end verification scenarios
@@ -349,6 +361,70 @@ git commit -m "feat(cis-v2): enhance DEFAULT_COMPETENCIES with d3Deadline, unloc
 
 ---
 
+### Task 1.2b: Build migrateCompetencyEnhancements() in clinical.js
+
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (insert after `ensureCompetenciesInitialized()`)
+
+**Depends on:** Task 1.2
+
+- [ ] **Step 1: Add `migrateCompetencyEnhancements()` function**
+
+Gated by `localStorage.getItem('competencyEnhancementsDone_v1')`. Walks all existing competency items in `roadmapData.clinicalData.competencies`. For each item, finds the matching item in `DEFAULT_COMPETENCIES` by ID and spreads new fields with `?? null`/`?? false` to never overwrite existing values.
+
+```javascript
+function migrateCompetencyEnhancements() {
+    if (localStorage.getItem('competencyEnhancementsDone_v1')) return;
+    const comp = roadmapData.clinicalData?.competencies;
+    if (!comp || typeof comp !== 'object') return;
+
+    // Build lookup from DEFAULT_COMPETENCIES
+    const defaults = {};
+    DEFAULT_COMPETENCIES.forEach(cat => {
+        (cat.sections || []).forEach(sec => {
+            (sec.items || []).forEach(item => { defaults[item.id] = item; });
+        });
+    });
+
+    // Walk existing items and spread new fields from defaults
+    Object.values(comp).forEach(cat => {
+        getValues(cat.sections).forEach(sec => {
+            const items = sec.items || {};
+            Object.values(items).forEach(item => {
+                const def = defaults[item.id];
+                if (!def) return;
+                item.d3Deadline = item.d3Deadline ?? def.d3Deadline ?? null;
+                item.unlockedBy = item.unlockedBy ?? def.unlockedBy ?? null;
+                item.unlockEmailTo = item.unlockEmailTo ?? def.unlockEmailTo ?? null;
+                item.isSummative = item.isSummative ?? def.isSummative ?? false;
+                item.rules = item.rules ?? def.rules ?? null;
+                item.custom = item.custom ?? def.custom ?? false;
+            });
+        });
+    });
+
+    localStorage.setItem('competencyEnhancementsDone_v1', '1');
+    console.log('[CIS-v2] Migrated competency enhancement fields to existing items');
+}
+```
+
+- [ ] **Step 2: Wire into initUI() after `ensureCompetenciesInitialized()`**
+
+```javascript
+try { migrateCompetencyEnhancements(); } catch(e) { console.error('migrateCompetencyEnhancements error:', e); }
+```
+
+- [ ] **Step 3: Verify and commit**
+
+```bash
+grep "function migrateCompetencyEnhancements" js/graduation-roadmap/clinical.js  # 1
+grep "competencyEnhancementsDone_v1" js/graduation-roadmap/clinical.js           # >=2
+git add js/graduation-roadmap/clinical.js js/graduation-roadmap/init.js
+git commit -m "feat(cis-v2): add migrateCompetencyEnhancements to propagate new fields to existing users"
+```
+
+---
+
 ### Task 1.3: Update All 6 Merge/Restore Sites in firebase-sync.js
 
 **Files:**
@@ -378,6 +454,16 @@ In state reconstruction (~line 1062), add both fields to clinicalData and top-le
 - [ ] **Step 4: Update `restoreCheckpoint()` (line 1776)**
 
 In state reconstruction (~line 1811), add both fields.
+
+**CRITICAL: Clear migration localStorage flags on restore.** After the state reconstruction block, add:
+
+```javascript
+// Clear migration flags so migrations re-run against restored data
+localStorage.removeItem('unifiedPatientStoreDone_v1');
+localStorage.removeItem('competencyEnhancementsDone_v1');
+```
+
+Without this, restoring a pre-migration checkpoint leaves the flags set. Migrations won't re-run, and the app sees incomplete `patientRecords{}` while `patients{}` has the old data. The migrations are idempotent and checkpoint-safe — they create their own checkpoints and skip if already done.
 
 - [ ] **Step 5: Update `restoreBackup()` (line 425)**
 
@@ -428,6 +514,7 @@ function propagateClinicalChanges({ appointments = false, procedures = false, co
     if (patients) {
         if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
         if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
+        if (typeof renderActiveRoster === 'function') renderActiveRoster();  // AUDIT #17: Active Roster must refresh on patient changes
     }
     if (dashboard && typeof renderDashboard === 'function') renderDashboard();
     if (calendars && typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
@@ -503,7 +590,7 @@ Full function bodies are in the spec Sections 10.1-10.5. Copy the exact implemen
 **Files:**
 - Modify: `js/graduation-roadmap/state.js` (insert after cascade functions)
 
-**Depends on:** Tasks 1.1 (KEYWORD_PATTERNS), 1.2 (enhanced competencies)
+**Depends on:** Tasks 1.1 (KEYWORD_PATTERNS) AND 1.2 (enhanced competencies — `isItemUnlocked` reads `unlockedBy` field added by 1.2)
 
 - [ ] **Step 1: Add `isItemUnlocked(item, competencies)` (AUDIT #5: array unlockedBy)**
 
@@ -524,35 +611,59 @@ function isItemUnlocked(item, competencies) {
 
 Priority 1: If patient has `importedRequirements[]`, use those as authoritative source. Priority 2: Keyword matching against `KEYWORD_PATTERNS`. Returns array of `{ item, confidence, source }`.
 
-- [ ] **Step 3: Add `addToReviewQueue(procedureId, suggestions)`**
+- [ ] **Step 3: Add `addToReviewQueue(procedure, suggestions)` (AUDIT #11: must include patientId)**
 
-Deduplicates by procedureId. Pushes to `roadmapData.clinicalData.autoLinkReviewQueue[]`.
+Deduplicates by procedureId. Pushes to `roadmapData.clinicalData.autoLinkReviewQueue[]`. Each entry MUST include `patientId: procedure.patientId` — required by `cascadeDeletePatient()` filter and FK remapping in migration.
 
 - [ ] **Step 4: Add `autoLinkProcedureToCompetencies(procedure)`**
 
 If procedure already has `competencyItemIds`, uses those directly. Otherwise matches by keyword, filters to items with remaining > 0, checks unlock chains, separates high/low confidence. High confidence: auto-links + toast. Low confidence: queued for review.
 
-- [ ] **Step 5: Verify and commit**
+- [ ] **Step 5: Add `showAutoLinkToast(matches, procedureId)` helper**
+
+Shows a brief info toast listing what was auto-linked: "✓ Linked to: Crown Prep Formative, Cementation Summative". Used by `autoLinkProcedureToCompetencies()`. Simple implementation: call `showToast()` with a formatted message string built from `matches.map(m => m.item.text).join(', ')`.
+
+- [ ] **Step 6: Add `findPatientByChartOrName(chartNumber, name)` helper**
+
+Used by `confirmUnifiedImport()` for REQUIREMENTS_MATCH handling (spec Section 5.3). Searches `patientRecords{}` by normalized chart number first (using `findByNormalizedChart`), falls back to case-insensitive name match. Returns the patient record or null.
+
+```javascript
+function findPatientByChartOrName(chartNumber, name) {
+    const records = roadmapData.clinicalData?.patientRecords || {};
+    if (chartNumber) {
+        const id = findByNormalizedChart(records, chartNumber);
+        if (id) return records[id];
+    }
+    if (name) {
+        const nameLower = name.toLowerCase().trim();
+        return Object.values(records).find(p => (p.name || '').toLowerCase().trim() === nameLower) || null;
+    }
+    return null;
+}
+```
+
+- [ ] **Step 7: Verify and commit**
 
 ```bash
-grep "function autoLinkProcedureToCompetencies\|function matchProcedureToCompetencies\|function isItemUnlocked\|function addToReviewQueue" js/graduation-roadmap/state.js
-# Expected: 4 lines
+grep "function autoLinkProcedureToCompetencies\|function matchProcedureToCompetencies\|function isItemUnlocked\|function addToReviewQueue\|function showAutoLinkToast\|function findPatientByChartOrName" js/graduation-roadmap/state.js
+# Expected: 6 lines
 git add js/graduation-roadmap/state.js
-git commit -m "feat(cis-v2): add auto-link engine with keyword matching + review queue"
+git commit -m "feat(cis-v2): add auto-link engine with keyword matching + review queue + helpers"
 ```
 
 Full function bodies are in the spec Section 6.2-6.4.
 
 ---
 
-### Task 1.7: Build migrateToUnifiedPatientStore() in patients.js
+### Task 1.7: Build migrateToUnifiedPatientStore() in patients.js + Wire into initUI
 
 **Files:**
 - Modify: `js/graduation-roadmap/patients.js` (insert before `getPatientRecords()` at ~line 422)
 - Modify: `js/graduation-roadmap/patients.js:422` (simplify getPatientRecords)
 - Modify: `js/graduation-roadmap/patients.js:488` (simplify getAllPatientRecords)
+- Modify: `js/graduation-roadmap/init.js:694` (wire migration into initUI)
 
-**Depends on:** Task 1.1
+**Depends on:** Tasks 1.1 AND 1.3 (merge sites must handle unified store before migration runs)
 
 - [ ] **Step 1: Add `migrateToUnifiedPatientStore()`**
 
@@ -612,6 +723,20 @@ Object.values(roadmapData.monthlyPlanner?.customTasks || {}).forEach(task => {
     }
 });
 
+// Remap periodicReviews.pr2 patient-keyed sub-objects
+const pr2 = roadmapData.periodicReviews?.pr2;
+if (pr2) {
+    ['removedPatients', 'patientNotes', 'inProgressProcedures'].forEach(field => {
+        if (pr2[field] && typeof pr2[field] === 'object') {
+            const remapped = {};
+            Object.entries(pr2[field]).forEach(([key, val]) => {
+                remapped[idRemapTable[key] || key] = val;
+            });
+            pr2[field] = remapped;
+        }
+    });
+}
+
 console.log('[CIS-v2] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across all collections');
 ```
 
@@ -625,13 +750,26 @@ Post-migration, remove logic that merges from `clinicalData.patients`. Keep DEFA
 
 Post-migration, alias to `getPatientRecords()`. The two-store merge is gone.
 
-- [ ] **Step 4: Verify and commit**
+- [ ] **Step 4: Wire migration into initUI() (MOVED FROM TASK 4.18)**
+
+**Files:** Also modify `js/graduation-roadmap/init.js:694`
+
+Add migration call in `initUI()` after `ensureCompetenciesInitialized()` (~line 962):
+
+```javascript
+try { migrateToUnifiedPatientStore(); } catch(e) { console.error('migrateToUnifiedPatientStore error:', e); }
+```
+
+**Rationale:** All of Phases 2-3 assume the unified store exists (`patients{}` empty, `patientRecords{}` canonical). Without wiring the migration at end of Phase 1, every Phase 2-3 function reads from empty `patientRecords{}` and sees zero patients. The function is idempotent (gated by localStorage flag) and safe to wire immediately.
+
+- [ ] **Step 5: Verify and commit**
 
 ```bash
 grep "function migrateToUnifiedPatientStore" js/graduation-roadmap/patients.js  # Expected: 1
+grep "migrateToUnifiedPatientStore" js/graduation-roadmap/init.js               # Expected: 1
 python3 -c "c=open('js/graduation-roadmap/patients.js').read(); print('{:', c.count('{'), '}:', c.count('}'))"
-git add js/graduation-roadmap/patients.js
-git commit -m "feat(cis-v2): add migrateToUnifiedPatientStore, simplify patient access functions"
+git add js/graduation-roadmap/patients.js js/graduation-roadmap/init.js
+git commit -m "feat(cis-v2): add migrateToUnifiedPatientStore + wire into initUI, simplify patient access"
 ```
 
 ---
@@ -757,9 +895,13 @@ git commit -m "fix(cis-v2): normalize reqId to lowercase at all parse and compar
 
 - [ ] **Step 1: Rename function, keep backward-compat alias**
 
+**IMPORTANT:** Delete the existing `function confirmPatientImport()` declaration FIRST, then create the new function and alias. Having both a function declaration and a const with the same name causes errors.
+
 ```javascript
-function confirmUnifiedImport() { /* existing body enhanced */ }
-const confirmPatientImport = confirmUnifiedImport;
+// DELETE: function confirmPatientImport() { ... }  (the entire old function body)
+// REPLACE WITH:
+function confirmUnifiedImport() { /* enhanced body */ }
+const confirmPatientImport = confirmUnifiedImport;  // backward-compat alias for any HTML onclick references
 ```
 
 - [ ] **Step 2: Ensure all patient writes go to `patientRecords{}` only**
@@ -817,9 +959,9 @@ git commit -m "feat(cis-v2): rename to openUnifiedImportModal as shared entry po
 
 **Depends on:** Task 2.4
 
-- [ ] **Step 1: Comment out 6 retired functions in import-system.js**
+- [ ] **Step 1: Delete 6 retired functions from import-system.js**
 
-Add `// RETIRED by CIS v2` to: `openClinicalImportModal` (262), `closeClinicalImportModal` (270), `parseClinicalFormat` (274), `parseAppointmentBlock` (316), `previewClinicalImport` (341), `confirmClinicalImport` (370).
+**Delete entirely** (not comment out — dead code adds confusion and maintenance burden): `openClinicalImportModal` (262), `closeClinicalImportModal` (270), `parseClinicalFormat` (274), `parseAppointmentBlock` (316), `previewClinicalImport` (341), `confirmClinicalImport` (370).
 
 Keep: `syncClinicalToMonthlyPlanner`, `calculateEndTime`, `timeToMinutes`, `dedupAppointments`, lecture functions.
 
@@ -914,27 +1056,26 @@ if (apt.procedures && apt.procedures.trim()) {
 // User can still manually open procedure modal via the toast "Edit" button.
 ```
 
-- [ ] **Step 2: Add `inferProcedureType(text)` function (AUDIT #8: explicit definition)**
+- [ ] **Step 2: Add `inferProcedureType(text)` function (AUDIT #8 + #18: derives from KEYWORD_PATTERNS)**
 
-Uses the same keyword patterns from `KEYWORD_PATTERNS` to map procedure text to a `PROCEDURE_TYPES` key. Returns the best-matching category key or empty string if no match.
+**CRITICAL: Must derive from `KEYWORD_PATTERNS` in state.js (single source of truth).** Do NOT maintain a parallel typeMap — dual keyword lists drift and cause mismatches between auto-link and type inference.
 
 ```javascript
 function inferProcedureType(procedureText) {
     const text = (procedureText || '').toLowerCase();
-    // Priority-ordered: more specific patterns first
-    const typeMap = [
-        [['crown', 'bridge', 'fpd', 'cerec', 'prep', 'cementation', 'e.max', 'zirconia', 'pfm'], 'fixed'],
-        [['composite', 'class ii', 'class iii', 'class iv', 'class v', 'filling', 'mod', 'do ', 'mo '], 'operative'],
-        [['rct', 'root canal', 'endo', 'pulpectomy'], 'endo'],
-        [['extraction', 'surgical', 'ext #', 'exo'], 'oralsurg'],
-        [['srp', 'scaling', 'root planing'], 'srp'],
-        [['prophy', 'perio', 'ohi', 're-eval', 'recall', 'maintenance'], 'perio'],
-        [['denture', 'cd', 'cu/cl', 'complete denture'], 'dentures'],
-        [['rpd', 'partial denture', 'removable partial'], 'rpd'],
-        [['sealant', 'pedo', 'pediatric'], 'peds'],
-    ];
-    for (const [keywords, type] of typeMap) {
-        if (keywords.some(kw => text.includes(kw))) return type;
+    // Derive category from KEYWORD_PATTERNS item ID prefix (single source of truth)
+    const categoryFromId = {
+        'fixed-': 'fixed', 'op-': 'operative', 'perio-': 'perio', 'endo-': 'endo',
+        'os-': 'oralsurg', 'cd-': 'dentures', 'rpd-': 'rpd', 'peds-': 'peds',
+        'srp-': 'srp', 'gp-': 'grouppractice', 'tx-': 'txplanning'
+    };
+    for (const pattern of KEYWORD_PATTERNS) {
+        if (pattern.keywords.some(kw => text.includes(kw))) {
+            const firstId = pattern.ids[0] || '';
+            for (const [prefix, cat] of Object.entries(categoryFromId)) {
+                if (firstId.startsWith(prefix)) return cat;
+            }
+        }
     }
     return '';
 }
@@ -1055,6 +1196,125 @@ git commit -m "docs: add fixed-units/fpd/implant/cerec requirement IDs to webcha
 
 ---
 
+### Task 3.5b: Redirect 4 Critical Consumer Functions from patients{} to patientRecords{} (AUDIT #16)
+
+**Files:**
+- Modify: `js/graduation-roadmap/import-system.js:545` (syncClinicalToMonthlyPlanner)
+- Modify: `js/graduation-roadmap/import-system.js:627` (dedupAppointments)
+- Modify: `js/graduation-roadmap/clinical.js:1827` (backfillClinicalData)
+- Modify: `js/graduation-roadmap/periodic-review.js:1569` (prSavePatientField)
+
+**Depends on:** Task 1.7
+
+**Context:** The spec's Section 3.4 table marks these as "Critical (breaks saves or loses data if missed)." Post-migration, `clinicalData.patients{}` is empty. These 4 functions still read from it and will produce "Unknown Patient" labels, broken dedup, failed backfill, and blank skeleton records.
+
+- [ ] **Step 1: Fix `syncClinicalToMonthlyPlanner()` (import-system.js:545)**
+
+```javascript
+// OLD (line 545): const patients = roadmapData.clinicalData.patients || {};
+// NEW:
+const patients = roadmapData.clinicalData.patientRecords || {};
+```
+
+Also fix line 575-576 where patient name is read:
+```javascript
+// OLD: const patient = patients[apt.patientId] || {};
+// NEW:
+const patient = patients[apt.patientId] || {};  // Now reads from patientRecords
+```
+
+- [ ] **Step 2: Fix `dedupAppointments()` (import-system.js:627)**
+
+```javascript
+// OLD (line 627): const patients = roadmapData.clinicalData.patients || {};
+// NEW:
+const patients = roadmapData.clinicalData.patientRecords || {};
+```
+
+This fixes the dedup key generation — patient names are used as part of the dedup key. With empty `patients{}`, all names resolve to empty string, breaking grouping.
+
+- [ ] **Step 3: Fix `backfillClinicalData()` (clinical.js:1827,1896,1931)**
+
+All 4 places where `backfillClinicalData` reads from `clinicalData.patients`:
+
+```javascript
+// Phase 1 (line 1827): var patient = roadmapData.clinicalData.patients?.[apt.patientId];
+// NEW: var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
+
+// Phase 3 (line 1896): var pt = roadmapData.clinicalData.patients?.[apt.patientId];
+// NEW: var pt = roadmapData.clinicalData.patientRecords?.[apt.patientId];
+
+// Phase 4 (line 1931-1932): Object.values(roadmapData.clinicalData.patients).forEach(...)
+// NEW: Object.values(roadmapData.clinicalData.patientRecords || {}).forEach(...)
+```
+
+Phase 4 (patient bridging by name) becomes a lightweight fallback — most patients are already in `patientRecords{}` post-migration. Keep the logic but redirect the source.
+
+- [ ] **Step 4: Fix `prSavePatientField()` (periodic-review.js:1569)**
+
+```javascript
+// OLD (line 1568-1574):
+// var clinicalPt = roadmapData.clinicalData.patients?.[patientId] ?? {};
+// NEW:
+var clinicalPt = roadmapData.clinicalData.patientRecords?.[patientId] ?? {};
+```
+
+This fixes skeleton patient record creation in PR Review — without this fix, new PR entries get blank name/chartNumber.
+
+- [ ] **Step 5: Verify no remaining references to `clinicalData.patients` as data source**
+
+```bash
+# Find all reads from clinicalData.patients (excluding comments, schema compat lines, and isEmptyState)
+grep -n "clinicalData\.patients" js/graduation-roadmap/import-system.js js/graduation-roadmap/clinical.js js/graduation-roadmap/periodic-review.js | grep -v "//\|patients = {}\|patients:\|DEPRECATED\|compat\|isEmptyState"
+# Expected: 0 remaining reads from old store
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add js/graduation-roadmap/import-system.js js/graduation-roadmap/clinical.js js/graduation-roadmap/periodic-review.js
+git commit -m "fix(cis-v2): redirect 4 critical consumer functions from patients{} to patientRecords{}"
+```
+
+---
+
+### Phase 3 Verification Checklist
+
+```bash
+# 1. Brace balance on all Phase 3 modified files
+python3 -c "
+for f in ['js/graduation-roadmap/clinical.js', 'js/graduation-roadmap/import-system.js', 'js/graduation-roadmap/periodic-review.js', 'js/graduation-roadmap/patients.js']:
+    c = open(f).read(); o = c.count('{'); cl = c.count('}')
+    status = 'OK' if o == cl else 'MISMATCH'
+    print(f'{f}: open={o} close={cl} {status}')
+"
+
+# 2. Active Roster replaces old patient list
+grep "function renderActiveRoster" js/graduation-roadmap/clinical.js        # 1
+grep "function renderPatientsList" js/graduation-roadmap/clinical.js        # 0 (removed)
+
+# 3. completeAppointment uses auto-procedure guard
+grep "apt.procedures && apt.procedures.trim()" js/graduation-roadmap/clinical.js  # >=1
+
+# 4. All CRUD wired to cascades
+grep "cascadeDeletePatient\|cascadeDeleteAppointment\|cascadeDeleteProcedure\|cascadeUncompleteAppointment" js/graduation-roadmap/clinical.js  # >=4
+
+# 5. No remaining reads from clinicalData.patients (critical — catches missed redirects)
+grep -n "clinicalData\.patients\b" js/graduation-roadmap/import-system.js js/graduation-roadmap/clinical.js js/graduation-roadmap/periodic-review.js js/graduation-roadmap/patients.js | grep -v "//\|patients = {}\|patients:\|DEPRECATED\|compat\|isEmptyState\|getPatientRecords\|getAllPatient\|patients ||"
+# Expected: 0 (all redirected to patientRecords)
+
+# 6. inferProcedureType derives from KEYWORD_PATTERNS
+grep "KEYWORD_PATTERNS" js/graduation-roadmap/clinical.js  # >=1 (inferProcedureType uses it)
+
+# 7. propagateClinicalChanges used in CRUD
+grep -c "propagateClinicalChanges" js/graduation-roadmap/clinical.js  # >=5
+
+# 8. txSummaryBU in PR writeups
+grep "txSummaryBU" js/graduation-roadmap/periodic-review.js  # >=1
+```
+
+---
+
 ## Phase 4: Competencies Tab Promotion + UI/UX
 
 > Massive UI enhancement. Competencies becomes a flagship tab.
@@ -1113,67 +1373,199 @@ Appointments (blue, /90), Procedures (green, /116), Summatives (amber, /7). Plus
 
 ### Task 4.4: D3 Deadline Alert Bar
 
-- [ ] Collect all items with `d3Deadline` and `completed < required`, sort by date, render with urgency coloring into `#compD3Deadlines`.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside `renderCompetencies()`)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderD3DeadlineBar()` function**
+
+Walk all competency items across all categories. Collect items where `item.d3Deadline` is set AND `item.completed < item.required`. Sort by deadline date ascending (nearest first). Parse date with `const [y,m,d] = item.d3Deadline.split('-').map(Number); new Date(y, m-1, d)`.
+
+- [ ] **Step 2: Render into `#compD3Deadlines`**
+
+Each item shows: category icon, item text, progress (X/Y), deadline date formatted as "May 1, 2026". Color coding: red if past due or < 7 days, amber if < 30 days, green otherwise. Use `escapeHtml()` on all item text.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.5: What's Next Panel
 
-- [ ] Render top 5 items from `getWhatsNextItems()` into `#compWhatsNext` with "Record" quick-action buttons.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside `renderCompetencies()`)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderWhatsNext()` function**
+
+Call existing `getWhatsNextItems()` (clinical.js:1067). Take top 5 results.
+
+- [ ] **Step 2: Render into `#compWhatsNext`**
+
+Each item: category badge, item text (use `escapeHtml()`), progress bar, "Record" button that calls `openCompQuickRecord(itemId)`. If item has `unlockedBy` and `isItemUnlocked()` returns false, show advisory "⚠️ X formatives needed" in muted text.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.6: Review Queue UI
 
-- [ ] Render `autoLinkReviewQueue[]` count into `#compReviewQueue` banner.
-- [ ] Add `openReviewQueuePanel()` with Accept/Reject/Dismiss per suggestion.
-- [ ] Add `acceptReviewSuggestion()`, `rejectReviewSuggestion()`, `dismissReviewItem()` functions.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (new functions)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Render `autoLinkReviewQueue[]` count into `#compReviewQueue` banner**
+
+Show "🔍 X procedures need competency review" if queue is non-empty, hidden if empty.
+
+- [ ] **Step 2: Add `openReviewQueuePanel()` function**
+
+Renders each queue entry as a card: procedure name (use `escapeHtml()`), date, patient name, list of suggested competency items with Accept/Reject buttons per suggestion and Dismiss for the whole entry.
+
+- [ ] **Step 3: Add `acceptReviewSuggestion(procedureId, itemId)`, `rejectReviewSuggestion(procedureId, itemId)`, `dismissReviewItem(procedureId)` functions**
+
+`accept`: adds item to procedure's `competencyItemIds`, calls `linkProcedureToCompetencies()`, removes suggestion from queue entry. `reject`: removes suggestion from queue entry. `dismiss`: removes entire entry from queue. All call `saveData()` and re-render.
+
+- [ ] **Step 4: Commit**
 
 ---
 
 ### Task 4.7: Unlock Chain Visualization
 
-- [ ] Inside each expanded category, render formative-to-summative progress bars connected by arrows. Locked summatives grayed out with lock icon.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside category expansion rendering)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderUnlockChain(catKey, items)` function**
+
+For items with `unlockedBy` arrays, build a visual chain: formative item(s) → arrow → summative item. Formative shows progress bar (completed/required). Summative grayed out with 🔒 icon if `isItemUnlocked()` returns false. Use `escapeHtml()` on all item text.
+
+- [ ] **Step 2: Render inside each expanded category section, above the items list**
+
+Only show if category has items with `unlockedBy` set. Perio, operative, fixed, and CD categories will have chains.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.8: Full Evidence Trail with Rich Cards
 
-- [ ] Replace truncated evidence display with type-badged cards: Procedure (blue), Manual (gray), Import (purple), Backfill (amber), Auto-linked (teal). Patient name clickable. Remove button with undo.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside item detail rendering)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderEvidenceCards(item)` function**
+
+Replace current truncated `completionEntries` display. Each entry renders as a card with: type badge (Procedure=blue, Manual=gray, Import=purple, Backfill=amber, Auto-linked=teal), date, patient name (use `escapeHtml()`, clickable via `navigateToEntity('patient', entry.patientId)`), note text, and Remove button.
+
+- [ ] **Step 2: Add `removeEvidenceEntry(catKey, itemId, entryIndex)` function**
+
+Removes entry from `completionEntries`, decrements `completed`, calls `propagateClinicalChanges({ competencies: true, dashboard: false, calendars: false })` + `saveData()`. Show undo toast (5s timeout) that re-adds the entry.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.9: "Which Patients Can Fulfill This?" Badges
 
-- [ ] For items with remaining > 0, cross-reference `patientRecords[].importedRequirements`. Show expandable badge with patient names and next appointment dates.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside item rendering)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `getPatientsFulfilling(itemId)` function**
+
+For items with `item.completed < item.required`, cross-reference all `patientRecords[]` entries. Check each patient's `importedRequirements[]` for matching `reqId`. Return array of `{ patientId, name, nextAppointment }`. Use `getNextScheduledVisit()` for appointment dates.
+
+- [ ] **Step 2: Render as expandable badge below the item**
+
+Show "3 patients can fulfill this" clickable badge. Expanded: patient names (use `escapeHtml()`), next appointment date, "View" link via `navigateToEntity('patient', patientId)`. Only show if `getPatientsFulfilling()` returns non-empty.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.10: Critical Rules Display Per Category
 
-- [ ] Collect unique `rules` from items in each category. Render as collapsible `<details>` with red warning styling.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside category header rendering)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderCategoryRules(catKey, items)` function**
+
+Collect unique `rules` strings from all items in the category (skip null/empty). Deduplicate by exact string match.
+
+- [ ] **Step 2: Render as collapsible `<details>` with red warning styling**
+
+Uses `<details class="comp-rules-details"><summary>⚠️ X Critical Rules</summary>` with red-bordered styling. Each rule is a bullet point. Use `escapeHtml()` on rule text.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.11: Pace Projection Per Category
 
-- [ ] Inside each expanded category: `(remaining / weeksUntilGraduation)` items/week. Color-coded green/yellow/red.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (inside category expansion rendering)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `renderCategoryPace(catKey, stats)` function**
+
+Calculate: `remaining = totalRequired - totalCompleted` for the category. `weeksLeft = Math.max(1, (graduationDate - now) / (7 * 86400000))`. `pace = remaining / weeksLeft`. Use graduation date May 2027 as default.
+
+- [ ] **Step 2: Render inside each expanded category with color coding**
+
+Display "X items/week needed" with color: green if pace < 0.5, yellow if < 1.5, red if >= 1.5. Show "✅ Complete" if remaining === 0. Guard division by zero with `if (remaining < 1) return 'Complete'`.
+
+- [ ] **Step 3: Commit**
 
 ---
 
 ### Task 4.12: Search and Filter Bar
 
-- [ ] Render persistent search input + status filter chips into `#compSearchBar`.
-- [ ] Add `filterCompetencies()`, `toggleCompFilter()`, `clearCompFilters()`.
-- [ ] Apply filters in item rendering loop, show result count.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (new functions)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Render persistent search input + status filter chips into `#compSearchBar`**
+
+Text input with placeholder "Search competencies...", status chips: All, Pending, In Progress, Completed. Persist active filters in `roadmapData.competencyUIState`.
+
+- [ ] **Step 2: Add `filterCompetencies(searchText)`, `toggleCompFilter(status)`, `clearCompFilters()` functions**
+
+`filterCompetencies`: case-insensitive text match against item.text + item.id + category name. `toggleCompFilter`: toggle status chip active state. `clearCompFilters`: reset to all visible.
+
+- [ ] **Step 3: Apply filters in item rendering loop, show result count**
+
+Inside `renderCompetencies()`, filter items before rendering. Show "Showing X of Y items" in `#compSearchBar`. Use `escapeHtml()` on search input value when displaying.
+
+- [ ] **Step 4: Commit**
 
 ---
 
 ### Task 4.13: Inline Quick-Record Modal
 
-- [ ] Add `openCompQuickRecord(itemId)` - modal with patient dropdown, date, notes.
-- [ ] Add `submitCompQuickRecord()` - calls `recordProcedure()` with pre-filled `competencyItemIds`.
-- [ ] No tab switching required.
+**Files:**
+- Modify: `js/graduation-roadmap/clinical.js` (new functions)
+
+**Depends on:** Task 4.2
+
+- [ ] **Step 1: Add `openCompQuickRecord(itemId)` function**
+
+Opens modal overlay with: pre-selected competency item (from `findCompetencyItem(itemId)`), patient dropdown (from `getAllPatientRecords()`), date (default today, parsed with split pattern), notes textarea. All patient names use `escapeHtml()`.
+
+- [ ] **Step 2: Add `submitCompQuickRecord()` function**
+
+Calls `recordProcedure()` with pre-filled `competencyItemIds: [itemId]`. Then `autoLinkProcedureToCompetencies()` on the created procedure. Then `propagateClinicalChanges({ procedures: true, competencies: true })` + `saveData()`. Close modal.
+
+- [ ] **Step 3: Commit**
 
 ---
 
@@ -1205,20 +1597,30 @@ Appointments (blue, /90), Procedures (green, /116), Summatives (amber, /7). Plus
 
 ---
 
-### Task 4.18: Wire Migration into initUI + Final Wiring
+### Task 4.18: Final Wiring + Phase 4 Verification
 
 **Files:**
-- Modify: `js/graduation-roadmap/init.js:694`
+- Verify: all Phase 4 JS and HTML changes
 
 **Depends on:** All Phase 4 tasks
 
-- [ ] **Step 1: Add migration call after `ensureCompetenciesInitialized()` (~line 962)**
+**NOTE:** Migration wiring (`migrateToUnifiedPatientStore()` call in `initUI()`) was moved to Task 1.7 Step 4 to unblock Phase 2-3 testing. This task focuses on final integration verification.
 
-```javascript
-try { migrateToUnifiedPatientStore(); } catch(e) { console.error('migrateToUnifiedPatientStore error:', e); }
+- [ ] **Step 1: Verify all Phase 4 functions are callable from tab navigation**
+
+```bash
+grep "function filterCompetencies\|function openCompQuickRecord\|function setCompViewMode\|function openReviewQueuePanel\|function renderActiveRoster" js/graduation-roadmap/clinical.js
+# Expected: >=4
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Verify all new HTML sections have IDs**
+
+```bash
+grep "compSearchBar\|compViewToggle\|compMilestoneDashboard\|compD3Deadlines\|compWhatsNext\|compReviewQueue\|overallProgressSummary" graduation-roadmap.html | wc -l
+# Expected: >=7
+```
+
+- [ ] **Step 3: Commit**
 
 ---
 
@@ -1296,7 +1698,12 @@ Import with empty canFulfill. Verify priorityNotes and highValue still stored.
 
 - [ ] **Step 1: Update all `?v=` params to `?v=20260330cis`**
 
-All 12 script tags.
+All 12 script tags. Verify count:
+
+```bash
+grep -c "?v=" graduation-roadmap.html  # Must equal number of <script src> tags
+grep "<script src" graduation-roadmap.html | grep -v "?v=" | head -5  # Expected: 0 (no unversioned tags)
+```
 
 - [ ] **Step 2: Commit**
 
@@ -1305,16 +1712,41 @@ git add graduation-roadmap.html
 git commit -m "chore: bump cache-busting params for CIS v2 deploy"
 ```
 
+### Task 5.16: Final Comprehensive Reference Sweep
+
+- [ ] **Step 1: Verify zero remaining reads from `clinicalData.patients` as data source**
+
+```bash
+# Catches any consumer redirect we missed across ALL JS files
+grep -rn "clinicalData\.patients" js/graduation-roadmap/*.js | grep -v "//\|patients = {}\|patients:\|DEPRECATED\|compat\|isEmptyState\|getPatientRecords\|getAllPatient\|patients ||\|autoLinkReviewQueue\|competencyUIState"
+# Expected: only schema-compat lines (patients: {} in defaults, merge sites)
+```
+
+- [ ] **Step 2: Verify all new functions exist**
+
+```bash
+grep "function migrateToUnifiedPatientStore\|function migrateCompetencyEnhancements\|function propagateClinicalChanges\|function cascadeDeletePatient\|function cascadeDeleteAppointment\|function cascadeDeleteProcedure\|function cascadeUncompleteAppointment\|function autoLinkProcedureToCompetencies\|function isItemUnlocked\|function inferProcedureType\|function renderActiveRoster\|function confirmUnifiedImport\|function openUnifiedImportModal\|function showAutoLinkToast\|function findPatientByChartOrName\|function findCompetencyItem\|function recalculatePatientLastVisit" js/graduation-roadmap/*.js | wc -l
+# Expected: >=17
+```
+
+- [ ] **Step 3: Verify migration flags clear on checkpoint restore**
+
+```bash
+grep "unifiedPatientStoreDone_v1\|competencyEnhancementsDone_v1" js/graduation-roadmap/firebase-sync.js | grep "removeItem"
+# Expected: 2 lines (both flags cleared in restoreCheckpoint)
+```
+
 ---
 
 ## Summary
 
 | Phase | Tasks | Key Deliverables |
 |-------|-------|-----------------|
-| 1: Data Foundation | 1.1-1.8 | Unified store schema, cascade functions, propagation, auto-link engine, merge sites |
+| 1: Data Foundation | 1.1-1.2b, 1.3-1.8 | Unified store schema, cascade functions, propagation, auto-link engine, merge sites, competency migration, patient migration + initUI wiring |
 | 2: Import Pipeline | 2.1-2.5 | confirmUnifiedImport, 2 bug fixes, confirmClinicalImport retired |
-| 3: Clinical Tab | 3.1-3.6 | Active Roster, redesigned completeAppointment, CRUD cascades, txSummaryBU fix, 000-INSTRUCTIONS update |
+| 3: Clinical Tab | 3.1-3.6, 3.5b | Active Roster, redesigned completeAppointment, CRUD cascades, 4 consumer redirects, txSummaryBU fix, 000-INSTRUCTIONS update |
 | 4: Competencies UI | 4.1-4.18 | Nav reorder, milestone dashboard, D3 alerts, unlock chains, search/filter, quick-record, By Patient view |
+| 5: Integration | 5.1-5.16 | E2E scenarios, cache-busting, comprehensive reference sweep |
 | 5: Verification | 5.1-5.15 | 14 E2E scenarios + cache-busting |
 
 **Total: 47 implementation tasks + 15 verification scenarios**

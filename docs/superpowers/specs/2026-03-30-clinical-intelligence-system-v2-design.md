@@ -129,6 +129,8 @@ patientRecords[id] = {
 
 **Safety:** Creates checkpoint before migration via `createCheckpoint('pre-unified-patient-migration')`
 
+**Checkpoint restore interop:** `restoreCheckpoint()` must clear `unifiedPatientStoreDone_v1` from localStorage. If a user restores a pre-migration checkpoint, the migration must re-run on next init to re-consolidate the dual-store data. Without clearing the flag, code reads from `patientRecords{}` which may be incomplete in the restored snapshot while `patients{}` has the old data.
+
 ### 3.3 Unified Access Functions
 
 ```javascript
@@ -319,6 +321,7 @@ No category restructuring or ID changes needed. Migration adds new fields to EXI
 3. 4 new `fixed-*` clinical experience items added to `fixed` category with `completed: 0`
 4. New fields must be added to ALL 6 merge/restore sites per CLAUDE.md rules: `mergeRemoteState`, `loadFromLocalStorage`, `restoreCheckpoint`, `importAndRestoreDirectly`, `restoreBackup`, `importBackup`
 5. Gated by localStorage flag `competencyEnhancementsDone_v1`
+6. **Migration function `migrateCompetencyEnhancements()`**: Walk all existing competency items. For each item, look up the matching item in `DEFAULT_COMPETENCIES` and spread new fields using `?? null`/`?? false` (never overwrite existing values). This ensures existing Firebase users get the new `d3Deadline`, `unlockedBy`, `isSummative`, `rules`, `unlockEmailTo`, `custom` fields. Without this, `mergeCompetencies()` only preserves `completed`/`completionEntries`/`status` — new fields never propagate to existing data.
 
 ### 4.9 Dream-Bigger Enhancements
 
@@ -528,6 +531,7 @@ These items are recorded via `adjustCompItem()`, `setCompItemStatus()`, or `REQU
 ```javascript
 roadmapData.clinicalData.autoLinkReviewQueue = [
   {
+    patientId: string,              // Required — used by cascadeDeletePatient filter + FK remapping
     procedureId: string,
     procedureName: string,
     date: string,
@@ -651,19 +655,19 @@ Existing CRUD preserved with these changes:
 ```javascript
 function inferProcedureType(procedureText) {
   const text = (procedureText || '').toLowerCase();
-  const typeMap = [
-    [['crown', 'bridge', 'fpd', 'cerec', 'prep', 'cementation', 'e.max', 'zirconia', 'pfm'], 'fixed'],
-    [['composite', 'class ii', 'class iii', 'class iv', 'class v', 'filling', 'mod', 'do ', 'mo '], 'operative'],
-    [['rct', 'root canal', 'endo', 'pulpectomy'], 'endo'],
-    [['extraction', 'surgical', 'ext #', 'exo'], 'oralsurg'],
-    [['srp', 'scaling', 'root planing'], 'srp'],
-    [['prophy', 'perio', 'ohi', 're-eval', 'recall', 'maintenance'], 'perio'],
-    [['denture', 'cd', 'cu/cl', 'complete denture'], 'dentures'],
-    [['rpd', 'partial denture', 'removable partial'], 'rpd'],
-    [['sealant', 'pedo', 'pediatric'], 'peds'],
-  ];
-  for (const [keywords, type] of typeMap) {
-    if (keywords.some(kw => text.includes(kw))) return type;
+  // Derive from KEYWORD_PATTERNS (single source of truth — avoids dual keyword list drift)
+  const categoryFromId = {
+    'fixed-': 'fixed', 'op-': 'operative', 'perio-': 'perio', 'endo-': 'endo',
+    'os-': 'oralsurg', 'cd-': 'dentures', 'rpd-': 'rpd', 'peds-': 'peds',
+    'srp-': 'srp', 'gp-': 'grouppractice', 'tx-': 'txplanning'
+  };
+  for (const pattern of KEYWORD_PATTERNS) {
+    if (pattern.keywords.some(kw => text.includes(kw))) {
+      const firstId = pattern.ids[0] || '';
+      for (const [prefix, cat] of Object.entries(categoryFromId)) {
+        if (firstId.startsWith(prefix)) return cat;
+      }
+    }
   }
   return '';
 }
@@ -701,7 +705,7 @@ Clinical tab's import button calls `openUnifiedImportModal()` — same modal, sa
 
 Promoted to main nav bar as a peer tab. Tab ID: `#tab-competencies`. `switchTab('competencies')` triggers `renderCompetencies()`.
 
-Nav order: Mission Control | Patients | **Competencies** | Clinical | Schedule | Academics | Grad Prep
+Nav order: Mission Control | Patients | **Competencies** | Clinical | Deadlines | Schedule | Academics | Grad Prep | PR Review | Mini Review | Remember
 
 ### 8.2 Layout Structure
 
@@ -917,6 +921,7 @@ function propagateClinicalChanges({
   if (patients) {
     if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
     if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
+    if (typeof renderActiveRoster === 'function') renderActiveRoster();
   }
 
   // Global views — skippable for lightweight operations
@@ -1221,14 +1226,14 @@ New competency item fields use `?? null`/`?? false` defaults per CLAUDE.md Fireb
 
 ### Phase 4: Competencies Tab Promotion + UI/UX
 22. Add to main nav bar, update `switchTab()` routing
-22. Build milestone dashboard (3 progress rings + pace projection)
-23. Build D3 deadline alert bar
-24. Unhide "What's Next" section with enhanced sorting
-25. Build review queue UI
-26. Build unlock chain visualization
-27. Build full evidence trail with rich evidence cards (patient links, type badges)
-28. Build "Which patients can fulfill this?" badges
-29. Add critical rules display per category
+23. Build milestone dashboard (3 progress rings + pace projection)
+24. Build D3 deadline alert bar
+25. Unhide "What's Next" section with enhanced sorting
+26. Build review queue UI
+27. Build unlock chain visualization
+28. Build full evidence trail with rich evidence cards (patient links, type badges)
+29. Build "Which patients can fulfill this?" badges
+30. Add critical rules display per category
 31. Build search & filter bar (text search + status/category chips)
 32. Build inline quick-record modal (per-item "Record" button)
 33. Persist expanded state to `competencyUIState` + sync to Firebase
