@@ -677,7 +677,7 @@ const KEYWORD_PATTERNS = [
     { keywords: ['implant crown', 'implant supported', 'implant-supported'], ids: ['fixed-implant'], confidence: 'high' },
     // Operative
     { keywords: ['class v', 'cl 5', 'class 5'], ids: ['op-class5-1', 'op-class5-2'], confidence: 'high' },
-    { keywords: ['composite', 'do ', 'mo ', 'mod', 'class ii', 'class iii', 'class iv', 'class 2', 'class 3', 'class 4', 'multisurface'], ids: ['op-multi-1-6'], confidence: 'high' },
+    { keywords: ['composite', 'do ', 'mo ', 'mod', 'class ii', 'class iii', 'class iv', 'class 2', 'class 3', 'class 4', 'multisurface'], ids: ['op-multi-1', 'op-multi-2', 'op-multi-3', 'op-multi-4', 'op-multi-5', 'op-multi-6'], confidence: 'high' },
     // SRP / Perio
     { keywords: ['srp', 'scaling', 'root planing', 'quadrant scaling'], ids: ['perio-form-quad', 'perio-sum-calc'], confidence: 'high' },
     { keywords: ['prophy', 'prophylaxis', 'cleaning', 'adult prophy'], ids: ['perio-form-prophy', 'perio-sum-prophy'], confidence: 'high' },
@@ -692,7 +692,7 @@ const KEYWORD_PATTERNS = [
     // Oral Surgery
     { keywords: ['extraction', 'ext #', 'surgical extraction', 'exo'], ids: ['os-extract-1', 'os-extract-2'], confidence: 'high' },
     // Dentures (medium - less specific text)
-    { keywords: ['denture', 'cu/cl', 'complete denture', 'cd'], ids: ['cd-form-prelim', 'cd-form-border', 'cd-form-jaw', 'cd-form-try', 'cd-form-process', 'cd-form-insert', 'cd-form-adjust'], confidence: 'medium' },
+    { keywords: ['denture', 'cu/cl', 'complete denture', 'cd'], ids: ['cd-form-prelim', 'cd-form-final', 'cd-form-records', 'cd-form-trial', 'cd-form-postdam', 'cd-form-insert', 'cd-form-adjust'], confidence: 'medium' },
     { keywords: ['overdenture', 'implant denture'], ids: ['cd-over-dup', 'cd-over-abut'], confidence: 'medium' },
     // RPD (medium)
     { keywords: ['rpd', 'partial denture', 'removable partial', 'flexible partial'], ids: ['rpd-track1', 'rpd-track2', 'rpd-track3'], confidence: 'medium' },
@@ -701,7 +701,7 @@ const KEYWORD_PATTERNS = [
     // Group Practice
     { keywords: ['written analysis', 'wa '], ids: ['gp-form-analysis', 'gp-sum-analysis'], confidence: 'high' },
     // Treatment Planning
-    { keywords: ['ohra'], ids: ['tx-ohra'], confidence: 'high' },
+    { keywords: ['ohra'], ids: ['tx-ohra-1'], confidence: 'high' },
 ];
 
 // Find a competency item by ID across all categories/sections
@@ -1447,7 +1447,7 @@ function isItemUnlocked(item, competencies) {
     });
 }
 
-function matchProcedureToCompetencies(procedureText, categoryKey, competencies, patientId) {
+function matchProcedureToCompetencies(procedureText, patientId) {
     // Priority 1: If patient has importedRequirements, use those as authoritative
     var patient = patientId ? (roadmapData.clinicalData.patientRecords || {})[patientId] : null;
     if (patient && Array.isArray(patient.importedRequirements) && patient.importedRequirements.length > 0) {
@@ -1508,7 +1508,7 @@ function autoLinkProcedureToCompetencies(procedure) {
     var competencies = roadmapData.clinicalData?.competencies;
     if (!competencies) return;
     var procedureText = procedure.procedure || '';
-    var matches = matchProcedureToCompetencies(procedureText, procedure.procedureType, competencies, procedure.patientId);
+    var matches = matchProcedureToCompetencies(procedureText, procedure.patientId);
 
     // Step 3: Filter to items with remaining > 0
     var actionable = matches.filter(function(m) {
