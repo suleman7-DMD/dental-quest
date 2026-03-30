@@ -711,7 +711,7 @@ function renderPatientsSidebar() {
         +     'value="' + escapeHtml(searchTerm) + '" oninput="renderPatientsSidebar()" '
         +     'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
         +   '<div class="pts-sidebar-btns">'
-        +     '<button onclick="openPatientImportModal()" class="pts-btn-import">Import</button>'
+        +     '<button onclick="openUnifiedImportModal()" class="pts-btn-import">Import</button>'
         +     '<button onclick="addNewPatientRecord()" class="pts-btn-add">+ New</button>'
         +   '</div>'
         + '</div>'
@@ -1548,7 +1548,7 @@ function renderCountdownRadar() {
 
 // ==================== SECTION 6: IMPORT SYSTEM ====================
 
-function openPatientImportModal() {
+function openUnifiedImportModal() {
     var modal = document.getElementById('patientImportModal');
     if (!modal) {
         // Create the modal dynamically if not in HTML
@@ -2617,6 +2617,7 @@ function confirmUnifiedImport() {
 }
 // Backward-compat alias for any HTML onclick references
 var confirmPatientImport = confirmUnifiedImport;
+var openPatientImportModal = openUnifiedImportModal;
 
 function migratePerioNoiseCleanup() {
     if (localStorage.getItem('perioNoiseCleanupDone_v1')) return;
