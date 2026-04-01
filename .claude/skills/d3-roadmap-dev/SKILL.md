@@ -13,7 +13,7 @@ metadata:
   version: 5.0.0
   file: graduation-roadmap.html + js/graduation-roadmap/*.js (12 modules)
   lines: ~10825 HTML + ~12700 JS
-  last-verified: 2026-04-01
+  last-verified: 2026-04-01 (post-merge-corruption-fix, commit dd5acc1)
 ---
 
 # D3 Roadmap Development Patterns
