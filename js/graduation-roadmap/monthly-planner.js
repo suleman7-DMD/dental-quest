@@ -510,10 +510,13 @@ function mpCreateCalendarGrid(week) {
             html += `<div class="mp-cal-cell" style="height: ${rowHeight}px;" onclick="mpClickCell('${day.date}', ${hour}, ${week.num})"></div>`;
         }
 
-        // Task blocks for this day (positioned absolutely)
+        // Task blocks for this day — compute overlap columns for side-by-side layout
         const dayTasks = timedTasks.filter(t => t.date === day.date);
-        dayTasks.forEach(task => {
-            html += mpCreateTaskBlock(task, week.num, hoursWithTasks, rangeStart);
+        var overlapLayout = mpComputeOverlapLayout(dayTasks, hoursWithTasks, rangeStart);
+        dayTasks.forEach(function(task) {
+            var taskId = task.isStatic ? 'static-' + task.date + '-' + task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '') : task.id;
+            var layout = overlapLayout[taskId] || { col: 0, totalCols: 1 };
+            html += mpCreateTaskBlock(task, week.num, hoursWithTasks, rangeStart, layout);
         });
 
         html += '</div>';
@@ -588,7 +591,74 @@ function mpGetWeekTasks(week) {
     });
 }
 
-function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
+// Compute side-by-side column assignments for overlapping tasks (Google Calendar style)
+function mpComputeOverlapLayout(dayTasks, hoursWithTasks, rangeStart) {
+    var layout = {};
+    if (!dayTasks || dayTasks.length === 0) return layout;
+
+    // Convert each task to start/end in minutes for overlap detection
+    var intervals = dayTasks.map(function(task) {
+        var startH = parseInt(task.time.split(':')[0]);
+        var startM = parseInt(task.time.split(':')[1]) || 0;
+        var startMin = startH * 60 + startM;
+        var endMin;
+        if (task.endTime) {
+            var endH = parseInt(task.endTime.split(':')[0]);
+            var endM = parseInt(task.endTime.split(':')[1]) || 0;
+            endMin = endH * 60 + endM;
+        } else {
+            endMin = startMin + 60; // default 1hr for overlap calc
+        }
+        var taskId = task.isStatic ? 'static-' + task.date + '-' + task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '') : task.id;
+        return { id: taskId, start: startMin, end: endMin };
+    });
+
+    // Sort by start time, then by end time descending (longer events first)
+    intervals.sort(function(a, b) { return a.start - b.start || b.end - a.end; });
+
+    // Greedy column assignment: place each event in the first column that doesn't overlap
+    var columns = []; // columns[colIndex] = end time of last event in that column
+    var assigned = {}; // id -> colIndex
+
+    for (var i = 0; i < intervals.length; i++) {
+        var ev = intervals[i];
+        var placed = false;
+        for (var c = 0; c < columns.length; c++) {
+            if (columns[c] <= ev.start) {
+                columns[c] = ev.end;
+                assigned[ev.id] = c;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            assigned[ev.id] = columns.length;
+            columns.push(ev.end);
+        }
+    }
+
+    // Now compute totalCols for each overlap group
+    // Group events that share overlapping time ranges
+    var totalCols = columns.length;
+
+    // For each event, find the max columns among its overlapping peers
+    for (var i = 0; i < intervals.length; i++) {
+        var ev = intervals[i];
+        var maxCol = 0;
+        for (var j = 0; j < intervals.length; j++) {
+            if (intervals[j].start < ev.end && intervals[j].end > ev.start) {
+                maxCol = Math.max(maxCol, assigned[intervals[j].id] + 1);
+            }
+        }
+        layout[ev.id] = { col: assigned[ev.id], totalCols: maxCol };
+    }
+
+    return layout;
+}
+
+function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart, overlapInfo) {
+    if (rangeStart === undefined) rangeStart = 6;
+    if (!overlapInfo) overlapInfo = { col: 0, totalCols: 1 };
     const typeClass = task.type || 'other';
     const taskId = task.isStatic ? `static-${task.date}-${task.item.substring(0,15).replace(/[^a-zA-Z0-9]/g, '')}` : task.id;
     const completedTasks = getValues(roadmapData.monthlyPlanner?.completedTasks);
@@ -660,9 +730,16 @@ function mpCreateTaskBlock(task, weekNum, hoursWithTasks, rangeStart = 6) {
         ? `<button class="mp-cal-edit-btn" onclick="mpHideClinicTask('${taskId}', '${task.clinicalAppointmentId || ''}'); event.stopPropagation();" title="Hide from planner" style="font-size:0.7em;">👁️‍🗨️</button>`
         : '';
 
+    // Overlap layout: side-by-side columns within day column
+    var colPct = 100 / overlapInfo.totalCols;
+    var leftPct = overlapInfo.col * colPct;
+    var overlapStyle = overlapInfo.totalCols > 1
+        ? 'left:' + leftPct + '%; width:' + (colPct - 1) + '%; right:auto;'
+        : 'left:2px; right:2px;';
+
     return `
         <div class="mp-cal-task ${typeClass} ${completedClass}"
-             style="top: ${topPx}px; min-height: ${minHeight}px;"
+             style="top: ${topPx}px; min-height: ${minHeight}px; ${overlapStyle}"
              data-task-id="${taskId}"
              onclick="mpEditTaskFromBlock('${taskId}', ${weekNum}, ${task.isStatic || false})">
             <div class="mp-cal-task-header">

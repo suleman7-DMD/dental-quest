@@ -3352,8 +3352,7 @@
         /* Task blocks - absolutely positioned within day column */
         .mp-cal-task {
             position: absolute;
-            left: 2px;
-            right: 2px;
+            /* left/right/width set by inline style for overlap layout */
             padding: 6px 8px;
             border-radius: 4px;
             font-size: 11px;
@@ -3363,7 +3362,8 @@
             line-height: 1.3;
             display: flex;
             flex-direction: column;
-            /* NO overflow:hidden - let content show */
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .mp-cal-task:hover {
@@ -10821,18 +10821,18 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/periodic-review.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/troubleshooting.js?v=20260401c"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260401c"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/periodic-review.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/troubleshooting.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260401d"></script>
 </body>
 </html>
