@@ -7895,6 +7895,7 @@
         <button class="tab-btn" onclick="switchTab('periodicreview', event)">&#128221; PR Review</button>
         <button class="tab-btn" onclick="switchTab('minireview', event)">📋 Mini Review</button>
         <button class="tab-btn" onclick="switchTab('remember', event)" style="background:#7c3aed;">🛡️ Remember</button>
+        <button class="tab-btn" onclick="switchTab('troubleshooting', event)" style="background:#dc2626;">🔍 Troubleshoot</button>
     </div>
 
     <!-- ==================== MISSION CONTROL TAB ==================== -->
@@ -10234,6 +10235,12 @@
         </div><!-- END legacy-content -->
     </div>
 
+    <div id="tab-troubleshooting" class="tab-content">
+        <div id="troubleshootingContainer" style="padding:20px; max-width:1200px; margin:0 auto;">
+            <div style="text-align:center; color:#94a3b8; padding:40px;">Loading troubleshooting data...</div>
+        </div>
+    </div>
+
     <!-- Add/Edit Patient Modal -->
     <div id="patientModal" class="mp-modal-overlay" style="display: none;">
         <div class="mp-modal" style="max-width: 600px;">
@@ -10811,17 +10818,18 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/periodic-review.js?v=20260330fix2"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260330fix2"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/periodic-review.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/troubleshooting.js?v=20260401"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260401"></script>
 </body>
 </html>

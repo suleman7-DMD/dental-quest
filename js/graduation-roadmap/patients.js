@@ -1609,7 +1609,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
+    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], reqStatusUpdated: null, reqStatusSource: null, dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1661,7 +1661,9 @@ function parsePatientImportText(text) {
             if (parsed3.canFulfill.length > 0 || parsed3.completedToday.length > 0 || parsed3.highValue || parsed3.priorityNotes) result.reqMatches.push(parsed3);
         } else if (effectiveHeader === 'REQUIREMENTS_STATUS') {
             var parsed4 = parseRequirementsStatus(bodyText);
-            if (parsed4.length > 0) result.reqStatuses = result.reqStatuses.concat(parsed4);
+            if (parsed4.statuses.length > 0) result.reqStatuses = result.reqStatuses.concat(parsed4.statuses);
+            if (parsed4.updated) result.reqStatusUpdated = parsed4.updated;
+            if (parsed4.source) result.reqStatusSource = parsed4.source;
         } else if (effectiveHeader === 'SPS_DASHBOARD_UPDATE') {
             var parsed5 = parseDashboardUpdate(bodyText);
             if (parsed5) result.dashboardUpdate = parsed5;
@@ -1853,7 +1855,7 @@ function parseRequirementsMatch(text) {
         // In a section: parse based on section type
         if (inSection === 'priorityNotes') {
             // Continuation of priority notes — append
-            result.priorityNotes = (result.priorityNotes || '') + ' ' + trimmed;
+            result.priorityNotes = (result.priorityNotes || '') + '\n' + trimmed;
             return;
         }
         if (inSection && trimmed.indexOf('|') !== -1) {
@@ -1873,6 +1875,8 @@ function parseRequirementsMatch(text) {
 
 function parseRequirementsStatus(text) {
     var statuses = [];
+    var updated = null;
+    var source = null;
     var lines = text.split('\n');
     var inUpdates = false;
 
@@ -1901,9 +1905,14 @@ function parseRequirementsStatus(text) {
             return;
         }
 
-        // Other headers exit the section
-        if (upper.indexOf('UPDATED:') === 0 || upper.indexOf('SOURCE:') === 0) {
-            return; // metadata lines, skip
+        // Capture metadata fields instead of discarding
+        if (upper.indexOf('UPDATED:') === 0) {
+            updated = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            return;
+        }
+        if (upper.indexOf('SOURCE:') === 0) {
+            source = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            return;
         }
 
         // In updates section: parse lines with | delimiter
@@ -1921,7 +1930,7 @@ function parseRequirementsStatus(text) {
         }
     });
 
-    return statuses;
+    return { statuses: statuses, updated: updated, source: source };
 }
 
 // ==================== MISSING NOTES PARSER ====================
@@ -2462,7 +2471,8 @@ function confirmUnifiedImport() {
                 id: appointmentId, patientId: patientId,
                 date: apt.date, time: apt.time || '09:00', duration: 60,
                 procedures: apt.procedure || '', notes: apt.chair ? 'Chair: ' + apt.chair : '',
-                status: isPast ? 'completed' : 'scheduled', imported: true
+                status: isPast ? 'completed' : 'scheduled', imported: true,
+                createdAt: new Date().toISOString()
             };
             if (isPast) {
                 newApt.completedAt = apt.date + 'T17:00:00.000Z';

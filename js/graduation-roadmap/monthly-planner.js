@@ -1283,6 +1283,9 @@ function buildCurrentWeekSchedule() {
         if (!apt.date || apt.date < mondayStr || apt.date > sundayStr) return;
         if (apt.status === 'cancelled') return;
 
+        // Skip if already added via synced custom task (prevents duplicate entries)
+        if (schedule['clinic_' + apt.id]) return;
+
         var patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
         var patientName = patient?.name || 'Patient';
         var itemText = patientName + ' - ' + (apt.procedures || 'Appointment');

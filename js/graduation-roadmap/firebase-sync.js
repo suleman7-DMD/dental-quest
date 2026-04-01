@@ -1933,9 +1933,9 @@ function restoreCheckpoint(index) {
                     autoLinkReviewQueue: Array.isArray(cpData.clinicalData?.autoLinkReviewQueue) ? cpData.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
                 },
                 todoList: {
-                    items: { ...(roadmapData.todoList?.items || {}), ...(cpData.todoList?.items || {}) },
-                    _nextSeq: Math.max(cpData.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
-                    lastUpdated: cpData.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
+                    items: cpData.todoList?.items || {},
+                    _nextSeq: cpData.todoList?._nextSeq || 1,
+                    lastUpdated: cpData.todoList?.lastUpdated ?? null
                 },
                 dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
                 exams: migrateArrayToObject(cpData.exams, 'exam'),
@@ -2250,9 +2250,9 @@ function importAndRestoreDirectly() {
                             autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
                         },
                         todoList: {
-                            items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
-                            _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
-                            lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
+                            items: data.todoList?.items || {},
+                            _nextSeq: data.todoList?._nextSeq || 1,
+                            lastUpdated: data.todoList?.lastUpdated ?? null
                         },
                         dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
                         exams: migrateArrayToObject(data.exams, 'exam'),

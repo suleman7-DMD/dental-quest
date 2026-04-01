@@ -329,6 +329,9 @@ function syncClinicalToMonthlyPlanner() {
 
     // Reset dirty flag — sync is up to date
     clinicalDataDirty = false;
+
+    // Rebuild upcoming deadlines for cross-app visibility (Stim Calc)
+    if (typeof rebuildUpcomingDeadlines === 'function') rebuildUpcomingDeadlines();
 }
 
 function calculateEndTime(startTime, durationMinutes) {

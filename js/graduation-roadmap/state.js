@@ -282,6 +282,9 @@ function isEmptyState(data) {
     })();
     const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
     const hasTodoItems = getCount(data.todoList?.items) > 0;
+    var hasDailyPlannerContent = (data.dailyPlanner?.focus ?? '') !== '' ||
+                                 (data.dailyPlanner?.notes ?? '') !== '' ||
+                                 (data.dailyPlanner?.pomodorosCompleted ?? 0) > 0;
     const hasReviewQueue = Array.isArray(data.clinicalData?.autoLinkReviewQueue) && data.clinicalData.autoLinkReviewQueue.length > 0;
     // clinicHeadlines: only count as real data if user changed the target from default (90/116)
     const hasClinicHeadlines = data.clinicHeadlines && (
@@ -316,7 +319,7 @@ function isEmptyState(data) {
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasReviewQueue && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
+           !hasMissingNotes && !hasTodoItems && !hasDailyPlannerContent && !hasReviewQueue && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
 }
 
 function hasRealData(data) {
@@ -658,7 +661,8 @@ const PROCEDURE_TYPES = {
     oralsurg: 'Oral Surgery',
     peds: 'Pediatric Dentistry',
     perio: 'Periodontology',
-    grouppractice: 'Group Practice',
+    grouppractice: 'Group Practice — D3 (GD 640)',
+    grouppractice4: 'Group Practice — D4 (GD 642) & Leadership',
     txplanning: 'Treatment Planning',
     geriatrics: 'Geriatric Dental Medicine',
     externship: 'Externship & SPS',
@@ -674,12 +678,12 @@ const KEYWORD_PATTERNS = [
     { keywords: ['cementation', 'cement', 'seat crown', 'seat bridge'], ids: ['fixed-form-cement', 'fixed-sum-cement'], confidence: 'high' },
     { keywords: ['final impression', 'pvs', 'digital scan', 'intraoral scan'], ids: ['fixed-form-impr', 'fixed-sum-impr'], confidence: 'high' },
     { keywords: ['cerec', 'same-day', 'same day restoration'], ids: ['fixed-cerec'], confidence: 'high' },
-    { keywords: ['implant crown', 'implant supported', 'implant-supported'], ids: ['fixed-implant'], confidence: 'high' },
+    { keywords: ['implant crown', 'implant supported', 'implant-supported'], ids: ['fixed-implant-crown'], confidence: 'high' },
     // Operative
     { keywords: ['class v', 'cl 5', 'class 5'], ids: ['op-class5-1', 'op-class5-2'], confidence: 'high' },
     { keywords: ['composite', 'do ', 'mo ', 'mod', 'class ii', 'class iii', 'class iv', 'class 2', 'class 3', 'class 4', 'multisurface'], ids: ['op-multi-1', 'op-multi-2', 'op-multi-3', 'op-multi-4', 'op-multi-5', 'op-multi-6'], confidence: 'high' },
     // SRP / Perio
-    { keywords: ['srp', 'scaling', 'root planing', 'quadrant scaling'], ids: ['perio-form-quad', 'perio-sum-calc'], confidence: 'high' },
+    { keywords: ['srp', 'scaling', 'root planing', 'quadrant scaling'], ids: ['perio-form-quad', 'srp-calc-1', 'srp-calc-2', 'srp-calc-3'], confidence: 'high' },
     { keywords: ['prophy', 'prophylaxis', 'cleaning', 'adult prophy'], ids: ['perio-form-prophy', 'perio-sum-prophy'], confidence: 'high' },
     { keywords: ['ohi', 'oral hygiene instruction', 'home care instruction'], ids: ['perio-form-ohi', 'perio-sum-hci'], confidence: 'high' },
     { keywords: ['re-eval', 're-evaluation', 'reeval', 'gingivitis re-eval'], ids: ['perio-form-reeval-ging', 'perio-sum-reeval-ging'], confidence: 'high' },
@@ -814,6 +818,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
     if (resolvedTabId === 'periodicreview' && typeof initPeriodicReview === 'function') initPeriodicReview();
     if (resolvedTabId === 'minireview' && typeof renderMiniReview === 'function') renderMiniReview();
+    if (resolvedTabId === 'troubleshooting' && typeof renderTroubleshooting === 'function') renderTroubleshooting();
     // schedule and remember tabs: sub-tabs / static content handle their own init
 
     // If navigating to exam content, open the exams accordion
