@@ -755,40 +755,80 @@ function ensureCompetenciesInitialized() {
     }
 }
 
-// CIS v2: Migrate new competency fields to existing Firebase user data
-// Without this, mergeCompetencies() only preserves completed/completionEntries/status — new fields never propagate
+// CIS v2: Force-sync schema fields from DEFAULT_COMPETENCIES to saved data
+// v1 used ?? which preserved old incorrect d3Deadline values; v2 ALWAYS overwrites schema fields
+// Also: adds missing categories (grouppractice4), cleans phantom progress, handles GP D3/D4 split
 function migrateCompetencyEnhancements() {
-    if (localStorage.getItem('competencyEnhancementsDone_v1')) return;
+    if (localStorage.getItem('competencyEnhancementsDone_v2')) return;
     var comp = roadmapData.clinicalData?.competencies;
     if (!comp || typeof comp !== 'object') return;
 
-    // Build lookup from DEFAULT_COMPETENCIES
+    // Build flat lookup of all DEFAULT_COMPETENCIES items
     var defaults = {};
-    Object.values(DEFAULT_COMPETENCIES).forEach(function(cat) {
-        (cat.sections || []).forEach(function(sec) {
+    Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
+        (DEFAULT_COMPETENCIES[catKey].sections || []).forEach(function(sec) {
             (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
         });
     });
 
-    // Walk existing items and spread new fields from defaults
+    // 1. Add missing categories (e.g., grouppractice4 from D3/D4 split)
+    Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
+        if (!comp[catKey]) {
+            var fresh = {};
+            fresh[catKey] = DEFAULT_COMPETENCIES[catKey];
+            comp[catKey] = migrateCompetencies(JSON.parse(JSON.stringify(fresh)))[catKey];
+        }
+    });
+
+    // 2. Remove D4 items from old grouppractice (now in grouppractice4)
+    if (comp.grouppractice) {
+        Object.values(comp.grouppractice.sections || {}).forEach(function(sec) {
+            var items = sec.items || {};
+            Object.keys(items).forEach(function(itemKey) {
+                if ((items[itemKey].id || itemKey).indexOf('gp4-') === 0) {
+                    delete items[itemKey];
+                }
+            });
+        });
+    }
+
+    // 3. Update category metadata from defaults (name, color, icon)
+    Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
+        if (comp[catKey]) {
+            comp[catKey].name = DEFAULT_COMPETENCIES[catKey].name;
+            comp[catKey].color = DEFAULT_COMPETENCIES[catKey].color;
+            comp[catKey].icon = DEFAULT_COMPETENCIES[catKey].icon;
+        }
+    });
+
+    // 4. Force-sync schema fields + clean phantom progress
     Object.values(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
             Object.values(items).forEach(function(item) {
                 var def = defaults[item.id];
-                if (!def) return;
-                item.d3Deadline = item.d3Deadline ?? def.d3Deadline ?? null;
-                item.unlockedBy = item.unlockedBy ?? def.unlockedBy ?? null;
-                item.unlockEmailTo = item.unlockEmailTo ?? def.unlockEmailTo ?? null;
-                item.isSummative = item.isSummative ?? def.isSummative ?? false;
-                item.rules = item.rules ?? def.rules ?? null;
-                item.custom = item.custom ?? def.custom ?? false;
+                if (def) {
+                    // FORCE overwrite — these are schema fields, not user data
+                    item.d3Deadline = def.d3Deadline ?? null;
+                    item.unlockedBy = def.unlockedBy ?? null;
+                    item.unlockEmailTo = def.unlockEmailTo ?? null;
+                    item.isSummative = def.isSummative ?? false;
+                    item.rules = def.rules ?? null;
+                    item.custom = item.custom ?? def.custom ?? false;
+                }
+                // Clean phantom progress: completed > 0 but no evidence trail
+                // This happens when REQUIREMENTS_STATUS (Format D) absolute-set counts with no procedure records
+                var entries = getValues(item.completionEntries);
+                if (item.completed > 0 && entries.length === 0) {
+                    item.completed = 0;
+                    item.status = 'pending';
+                }
             });
         });
     });
 
-    localStorage.setItem('competencyEnhancementsDone_v1', '1');
-    console.log('[CIS-v2] Migrated competency enhancement fields to existing items');
+    localStorage.setItem('competencyEnhancementsDone_v2', '1');
+    console.log('[CIS-v2] Migrated competency enhancements v2: force-synced schema fields, cleaned phantom progress');
 }
 
 // Pure read-only accessor — no side effects during render.
@@ -2104,9 +2144,6 @@ function renderCompetencies() {
                 categoriesHtml += '</div>';
 
                 categoriesHtml += '</div>'; // close comp-req-item
-
-                // Task 4.8: Full evidence trail with rich cards
-                categoriesHtml += renderEvidenceCards(item, key);
             });
 
             categoriesHtml += '<button class="comp-add-req-btn" onclick="openAddCompItemModal(\'' + key + '\', \'' + escapeHtml(sec.id) + '\'); event.stopPropagation();">'
