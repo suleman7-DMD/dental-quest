@@ -109,7 +109,7 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 | op-multi-2 | Multisurface Summative #2 | 1 | 1 | null |
 | op-multi-3 | Multisurface Summative #3 | 1 | 1 | null |
 | op-multi-4 | Multisurface Summative #4 | 1 | 1 | null |
-| op-multi-5 | Multisurface Summative #5 | 1 | 1 | null |
+| op-multi-5 | Multisurface Summative #5 | 1 | 0 | null |
 | op-multi-6 | Multisurface Summative #6 | 1 | 0 | null |
 
 **Rules:**
@@ -142,11 +142,11 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| cd-form-prelim | Preliminary Impressions (edentulous preferred) | 2 arches | 0 | null |
-| cd-form-final | Final Impression (edentulous preferred) | 2 arches | 0 | null |
-| cd-form-records | Intermaxillary Records (1 edentulous arch preferred) | 1 case | 0 | null |
-| cd-form-postdam | Post Dam Technique (edentulous or max Kennedy Class I) | 1 case | 0 | null |
-| cd-form-trial | Trial Denture / Tooth Try-In (1 edentulous arch preferred) | 2 arches | 0 | null |
+| cd-form-prelim | Preliminary Impressions (edentulous preferred) | 2 arches | 2 | null — DONE |
+| cd-form-final | Final Impression (edentulous preferred) | 2 arches | 2 | null — DONE |
+| cd-form-records | Intermaxillary Records (1 edentulous arch preferred) | 1 case | 1 | null — DONE |
+| cd-form-postdam | Post Dam Technique (edentulous or max Kennedy Class I) | 1 case | 1 | null — DONE |
+| cd-form-trial | Trial Denture / Tooth Try-In (1 edentulous arch preferred) | 2 arches | 2 | null — DONE |
 | cd-form-insert | Insertion / Clinical Remount | 2 arches | 0 | null |
 | cd-form-adjust | Adjustment (1 edentulous arch preferred) | 2 arches | 0 | null |
 
@@ -250,7 +250,7 @@ These unlock the corresponding summative categories. You cannot attempt a summat
 |---|---|---|---|---|
 | perio-sum-hci | Home Care Instruction (= the D3 OHI summative) | 1 | 1 | 2025-10-01 — DONE |
 | perio-sum-dx | Diagnosis & Treatment Plan (Type 2) | 2 | 0 | null |
-| perio-sum-prophy | Prophy (includes the D3 one) | 3 | 2 | 1 by May 2026 (DONE); 2 more by D4 |
+| perio-sum-prophy | Prophy (includes the D3 one) | 3 | 3 | 1 by May 2026 (DONE); 2 more by D4 — ALL DONE |
 | perio-sum-reeval-ging | Re-evaluate Gingivitis (includes the D3 one) | 2 | 0 | 1 by May 2026; 1 more by D4 |
 | perio-sum-reeval-srp | Re-evaluate SRP | 1 | 0 | null |
 | perio-sum-impr | Re-evaluate Impression | 1 | 0 | null |
@@ -354,7 +354,7 @@ Update hx, radiographic review, exams, plaque control review, scaling/RP where i
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| peds-course | PD 530 Didactic course completion | 1 | 0 | null |
+| peds-course | PD 530 Didactic course completion | 1 | 1 | null — DONE |
 | peds-rotation | Rotations (including Franciscan Hospital) | 1 | 0 | null |
 | peds-assessment | Post-rotation assessment | 1 | 0 | null |
 | peds-recall | New Patient/Recall (on log sheet) | 3 | 0 | null |
@@ -385,7 +385,7 @@ All items in this category have a D3 deadline of May 2026 unless noted.
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| gp-form-analysis | Formative Written Analyses (7.5% combined) | 2 | 1 | 2026-05-15 |
+| gp-form-analysis | Formative Written Analyses (7.5% combined) | 2 | 2 | 2026-05-15 — DONE |
 | gp-sum-analysis | Summative Written Analysis (35% of grade) | 1 | 0 | 2026-05-15 |
 
 **Rule:** Required for EVERY Type 2 patient — immediately after comprehensive exam/data collection, arrange office meeting with GPL, submit electronically before meeting.
@@ -497,7 +497,7 @@ Everything that MUST be done specifically by end of D3:
 | 6 | Perio Re-eval Gingivitis: 3 formatives + 1 summative | perio-3rd-reeval | May 2026 | PENDING |
 | 7 | GP: 1 Formative Periodic Review | gp-form-review | May 2026 | DONE |
 | 8 | GP: 1 Summative Periodic Review | gp-sum-review | May 2026 | PENDING |
-| 9 | GP: 2 Formative Written Analyses | gp-form-analysis | May 2026 | 1/2 |
+| 9 | GP: 2 Formative Written Analyses | gp-form-analysis | May 2026 | DONE |
 | 10 | GP: 1 Summative Written Analysis | gp-sum-analysis | May 2026 | PENDING |
 | 11 | GP: 1 Formative PMS | gp-pms-3rd | May 2026 | PENDING |
 | 12 | GP: Communication Workshop attended | gp-comm-workshop | May 2026 | DONE |
@@ -548,3 +548,4 @@ Everything that MUST be done specifically by end of D3:
 | Date | Change |
 |---|---|
 | 2026-04-01 | Initial ground truth document created. Replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf. Resolves SRP duplication, adds aggregate trackers, splits GP comm module, adds missing D3 deadline items. |
+| 2026-04-01 | Corrections after manual audit: op-multi-5 completed 1→0 (only 4 multisurface summatives done), perio-sum-prophy 2→3 (all 3 done), gp-form-analysis 1→2 (both formative WAs done), peds-course 0→1 (PD 530 finished), cd-form-prelim/final/records/postdam/trial all updated to done (Jose Rosario interim through try-in). |
