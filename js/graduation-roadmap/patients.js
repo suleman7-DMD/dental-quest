@@ -2842,6 +2842,12 @@ function applyRequirementCheckoffs(items, importContext) {
                 var itemList = getValues(sec.items);
                 for (var i = 0; i < itemList.length; i++) {
                     if ((itemList[i].id || '').toLowerCase() === (item.reqId || '').toLowerCase()) {
+                        // Format D Safeguard: warn if REQUIREMENTS_STATUS (absolute-set) touches clinical procedure counts
+                        var clinicalProcCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
+                        if (!item.isDelta && clinicalProcCategories[catKey]) {
+                            console.warn('[COMPETENCY-SAFEGUARD] REQUIREMENTS_STATUS absolute-set on clinical category "' + catKey + '" item "' + item.reqId + '" = ' + item.completed + '. This sets the count directly with NO procedure record. If this inflates progress, the webchat export may have been incorrect. Use COMPLETED_TODAY (isDelta) for patient-level procedures.');
+                        }
+
                         // Increment or set completed count
                         if (typeof item.completed === 'number') {
                             if (item.isDelta) {

@@ -1285,6 +1285,29 @@ function navigateToEntity(type, id) {
     }
 }
 
+// Navigate to a specific competency item within its category — expands accordion and scrolls to item
+function navigateToCompetencyItem(catKey, itemId) {
+    switchTab('competencies');
+    setTimeout(function() {
+        // Expand the category if not already expanded
+        var body = document.getElementById('compBody-' + catKey);
+        if (body && !body.classList.contains('expanded')) {
+            toggleCompCategory(catKey);
+        }
+        // Scroll to the specific item after expansion animation
+        setTimeout(function() {
+            var itemEl = document.querySelector('[data-item-id="' + itemId + '"]');
+            if (itemEl) {
+                itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Brief highlight flash
+                itemEl.style.transition = 'background-color 0.3s';
+                itemEl.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+                setTimeout(function() { itemEl.style.backgroundColor = ''; }, 2000);
+            }
+        }, 300);
+    }, 150);
+}
+
 // ==================== CIS v2: CENTRALIZED PROPAGATION ====================
 
 function propagateClinicalChanges({ appointments = false, procedures = false, competencies = false, patients = false, dashboard = true, calendars = true, source = '' } = {}) {

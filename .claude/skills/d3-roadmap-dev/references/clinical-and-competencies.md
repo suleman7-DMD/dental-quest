@@ -113,22 +113,28 @@ competencies -> categories -> sections -> items
 
 Each item has `required` (count needed) and `completed` (count done) fields, making it a quantity-based system (NOT a binary signed/unsigned system).
 
-### DEFAULT_COMPETENCIES (~line 14128)
+### DEFAULT_COMPETENCIES (clinical.js ~line 408)
 
-10 categories of real BU dental school clinical requirements:
+**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status.
 
-| Key | Name | Icon | Color | Focus |
-|-----|------|------|-------|-------|
-| `fixed` | Fixed Prosthodontics | `#3b82f6` | Crowns, FPD, CEREC, impressions |
+15 categories of real BU dental school clinical requirements:
+
+| Key | Name | Color | Focus |
+|-----|------|-------|-------|
+| `fixed` | Fixed Prosthodontics | `#3b82f6` | Aggregate trackers (10 units, 1 FPD, 1 implant crown, 3 CEREC) + formatives + summatives |
 | `operative` | Operative | `#10b981` | Composites (Class V, multisurface), mock board |
-| `dentures` | Complete Dentures | `#8b5cf6` | Formatives, summatives, overdenture |
+| `dentures` | Complete Dentures | `#8b5cf6` | cd-units-total (4 arches) + formatives, summatives, overdenture |
 | `rpd` | RPDs | `#f59e0b` | 3 tracks (cast metal, flexible, interim) |
-| `srp` | SRPs | `#ef4444` | Calculus removal summatives |
+| `srp` | SRPs / Calculus Removal | `#ef4444` | srp-calc-1/2/3, srp-reeval. NO perio-sum-calc. srp-reeval = perio-sum-reeval-srp alias |
 | `endo` | Endodontics | `#06b6d4` | RCTs, pulpectomies, mock board |
 | `oralsurg` | Oral Surgery | `#ec4899` | 3rd/4th year rotations, extractions |
 | `peds` | Pediatric Dentistry | `#84cc16` | PD 530 course, rotations, log sheet |
 | `perio` | Periodontology | `#f472b6` | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice (GD 640) | `#0ea5e9` | Reviews, analyses, workshops |
+| `grouppractice` | Group Practice — D3 (GD 640) | `#0ea5e9` | D3 reviews, analyses, comm (workshop/form-txplan/sum-txplan), PMS, meetings, OHRA |
+| `grouppractice4` | Group Practice — D4 (GD 642) & Leadership | `#7c3aed` | D4 summatives, PTEs, aux assessments, leading rounds |
+| `txplanning` | Treatment Planning (RS 545) | `#6366f1` | Seminar presentation, OHRA, caries detection |
+| `geriatrics` | Geriatric Dental Medicine | `#8b5cf6` | PH 541 course, rotation, assignment |
+| `externship` | Externship & SPS | `#059669` | Case presentation, community outreach, SPS log |
 
 ### Category Shape
 ```javascript

@@ -405,39 +405,43 @@ function deleteAppointment() {
 // ==================== GRADUATION REQUIREMENTS / COMPETENCIES ====================
 
 // Default competencies data structure
+// Ground Truth: docs/GROUND_TRUTH_REQUIREMENTS.md — SINGLE source of truth for all requirement IDs, counts, deadlines.
+// Last synced: 2026-04-01. Changes from prior: perio-sum-calc REMOVED (use srp-calc-1/2/3), gp-comm SPLIT into 3,
+// ADDED: fixed-units-total, fixed-fpd, fixed-implant-crown, fixed-cerec, cd-units-total, gp-comm-workshop,
+// gp-comm-form-txplan, gp-comm-sum-txplan, gp-meetings, gp-ohra. ALIAS: srp-reeval = perio-sum-reeval-srp.
 const DEFAULT_COMPETENCIES = {
     fixed: {
         name: 'Fixed Prosthodontics',
         icon: '🦷',
         color: '#3b82f6',
-        notes: '2 planned (unreliable). Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations.',
+        notes: 'Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations. Cast Post/Core does NOT count as a unit. Up to 2 Pontic/Inlay/Onlay/Veneer CAN count.',
         sections: [
+            { title: 'Aggregate Trackers (clinical experience)', items: [
+                { id: 'fixed-units-total', text: 'Total fixed units (start to completion)', required: 10, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'ALL procedures on Fixed Prosthodontics Flow Sheet, ALL steps signed by faculty', custom: false },
+                { id: 'fixed-fpd', text: 'Must include 1 FPD (fixed partial denture)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'fixed-implant-crown', text: 'Must include 1 Implant-Supported Crown', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Can substitute with activation of implants on implant overdenture (satisfies implant req but does NOT count toward 10 fixed units)', custom: false },
+                { id: 'fixed-cerec', text: 'Must include 3 CEREC restorations', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            ]},
             { title: 'Fixed Formatives (to qualify for summatives)', items: [
-                { id: 'fixed-form-prov', text: '6 Provisional Restoration', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Must email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
-                { id: 'fixed-form-prep', text: '6 Tooth Preparation', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Must email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
-                { id: 'fixed-form-impr', text: '6 Final Impression', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Must email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
-                { id: 'fixed-form-cement', text: '6 Cementation', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Must email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false }
+                { id: 'fixed-form-prov', text: '6 Provisional Restoration', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
+                { id: 'fixed-form-prep', text: '6 Tooth Preparation', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
+                { id: 'fixed-form-impr', text: '6 Final Impression', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
+                { id: 'fixed-form-cement', text: '6 Cementation', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email Fixed Prosthodontics Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false }
             ]},
             { title: 'Fixed Summatives', items: [
                 { id: 'fixed-sum-prep', text: '2 Prep (Tooth Preparation)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
-                { id: 'fixed-sum-temp', text: '2 Temp (Provisional Restoration)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'fixed-sum-impr', text: '2 Final Impression', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
+                { id: 'fixed-sum-temp', text: '2 Temp (Provisional Restoration)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'fixed-sum-impr', text: '2 Final Impression', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
                 { id: 'fixed-sum-cement', text: '2 Cementation', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false }
             ]},
-            { title: 'Other Requirements', items: [
+            { title: 'Other Fixed Requirements', items: [
                 { id: 'fixed-occlusal-cr', text: 'Occlusal Analysis (Centric Relation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'fixed-occlusal-mi', text: 'Occlusal Analysis (Maximum Intercuspation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'fixed-mock', text: 'Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'fixed-sim-1', text: 'Fixed Simulation #1 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'fixed-sim-2', text: 'Fixed Simulation #2 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'fixed-sim-fpd', text: 'Simulation: 3-unit Prep and Temp of FPD', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-case-pres', text: 'Case Presentation (on 2 completed units)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
-            ]},
-            { title: 'Clinical Experience', items: [
-                { id: 'fixed-units', text: 'Minimum clinical units (start to completion)', required: 10, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-fpd', text: 'Must include 1 FPD', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-implant', text: 'Must include 1 Implant-Supported Crown', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-cerec', text: 'Must include minimum 3 CEREC restorations', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'fixed-case-pres', text: 'Case Presentation (on 2 completed fixed or fixed-removable units)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
         ]
     },
@@ -445,23 +449,25 @@ const DEFAULT_COMPETENCIES = {
         name: 'Operative',
         icon: '🔧',
         color: '#10b981',
-        notes: '20 formative surfaces completed. 4 summatives done (2x DO composite). NEED CLASS 5 formatives/summatives. Grade: 86% on first DO.',
+        notes: '2 Class V required (exactly 2). 6 additional multisurface. Max 4 summatives with same faculty.',
         sections: [
+            { title: 'Formative Prerequisite', items: [
+                { id: 'op-formatives', text: 'Complete 20 formative surfaces', required: 20, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email composite journal sheet to mcmanama@bu.edu', custom: false },
+                { id: 'op-approval', text: 'Approval from Dr. McManama', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            ]},
             { title: 'Summative Requirements (8 total)', items: [
                 { id: 'op-class5-1', text: 'Class V Composite Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-class5-2', text: 'Class V Composite Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-1', text: 'Multisurface #1 (DO composite)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '86% grade', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-2', text: 'Multisurface #2 (DO composite)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: 'Awaiting grade', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-3', text: 'Multisurface #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-4', text: 'Multisurface #4', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-5', text: 'Multisurface #5', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false },
-                { id: 'op-multi-6', text: 'Multisurface #6', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: false, rules: 'Max 4 summatives with same faculty', custom: false }
+                { id: 'op-class5-2', text: 'Class V Composite Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-1', text: 'Multisurface Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-2', text: 'Multisurface Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-3', text: 'Multisurface Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-4', text: 'Multisurface Summative #4', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-5', text: 'Multisurface Summative #5', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false },
+                { id: 'op-multi-6', text: 'Multisurface Summative #6', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'op-formatives', required: 20 }], unlockEmailTo: 'Dr. McManama', isSummative: true, rules: 'Max 4 summatives with same faculty', custom: false }
             ]},
-            { title: 'Other Requirements', items: [
-                { id: 'op-formatives', text: 'Complete 20 formative surfaces', required: 20, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'op-approval', text: 'Approval from Dr. McManama', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'op-assignment', text: 'Operative assignment/survey (Blackboard)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'op-license', text: 'Licensing Exam Prep (Dr. Robinson)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Other Operative Requirements', items: [
+                { id: 'op-assignment', text: 'Operative assignment/survey (Blackboard, 10% of grade)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'op-license', text: 'Licensing Exam Prep (Dr. Robinson, 10% of grade)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
         ]
     },
@@ -469,10 +475,13 @@ const DEFAULT_COMPETENCIES = {
         name: 'Complete Dentures',
         icon: '🦴',
         color: '#8b5cf6',
-        notes: 'In-progress: 2 arches interim CU/CL. Planned: 2 arches definitive CU/CL.',
+        notes: 'ALL steps must be completed by SAME student. Digital denture steps may qualify if performed independently.',
         sections: [
+            { title: 'Aggregate Tracker', items: [
+                { id: 'cd-units-total', text: 'Total CD units (1 unit = 1 full arch)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            ]},
             { title: 'Complete Denture Formatives', items: [
-                { id: 'cd-form-prelim', text: '2 arches: Preliminary Impressions', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'cd-form-prelim', text: '2 arches: Preliminary Impressions', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Email Removable Flow Sheet to gdadmin@bu.edu to unlock summatives', custom: false },
                 { id: 'cd-form-final', text: '2 arches: Final Impression', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'cd-form-records', text: '1 case: Inter-maxillary records', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'cd-form-postdam', text: '1 case: Post Dam Technique', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
@@ -480,17 +489,17 @@ const DEFAULT_COMPETENCIES = {
                 { id: 'cd-form-insert', text: '2 arches: Insertion / Clinical Remount', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'cd-form-adjust', text: '2 arches: Adjustment', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: 'Complete Denture Summatives', items: [
-                { id: 'cd-sum-prelim', text: 'Preliminary Impressions (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-final', text: 'Final Impression (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-records', text: 'Inter-maxillary records (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-postdam', text: 'Post-Dam Technique', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-trial', text: 'Trial Denture (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-insert', text: 'Insertion / Clinical Remount (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false },
-                { id: 'cd-sum-adjust', text: 'Adjustment (Edentulous)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: false, rules: null, custom: false }
+            { title: 'Complete Denture Summatives (Edentulous only)', items: [
+                { id: 'cd-sum-prelim', text: 'Preliminary Impressions', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-final', text: 'Final Impression', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-records', text: 'Inter-maxillary records', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-postdam', text: 'Post-Dam Technique', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-trial', text: 'Trial Denture / Tooth Try-In', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-insert', text: 'Insertion / Clinical Remount', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false },
+                { id: 'cd-sum-adjust', text: 'Adjustment', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'cd-form-prelim', required: 1 }, { id: 'cd-form-final', required: 1 }, { id: 'cd-form-records', required: 1 }, { id: 'cd-form-trial', required: 1 }, { id: 'cd-form-postdam', required: 1 }, { id: 'cd-form-insert', required: 1 }, { id: 'cd-form-adjust', required: 1 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false }
             ]},
             { title: 'Overdenture Experience (complete one)', items: [
-                { id: 'cd-over-dup', text: 'Duplicate denture and implant planning through surgery', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'cd-over-dup', text: 'Duplicate denture + implant planning through surgery', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'cd-over-abut', text: 'Abutment selection, placement & activation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
         ]
@@ -499,30 +508,30 @@ const DEFAULT_COMPETENCIES = {
         name: 'RPDs',
         icon: '🔩',
         color: '#f59e0b',
-        notes: 'NEED RPDs - Must complete one track.',
+        notes: 'Must complete one track. Flexible/interim RPD must have >=2 clasps AND replace >=3 teeth.',
         sections: [
             { title: 'Clinical Experience Tracks (choose one)', items: [
                 { id: 'rpd-track1', text: 'Track 1: 1 cast metal partial denture', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'rpd-track2', text: 'Track 2: 2 flexible RPDs + OSCE', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Flexible/interim RPD must have >=2 clasps AND replace >=3 teeth', custom: false },
-                { id: 'rpd-track3', text: 'Track 3: 4 interim/resin base RPDs + OSCE', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Flexible/interim RPD must have >=2 clasps AND replace >=3 teeth', custom: false }
+                { id: 'rpd-track2', text: 'Track 2: 2 flexible RPDs + OSCE', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Flexible RPD must have >=2 clasps AND replace >=3 teeth', custom: false },
+                { id: 'rpd-track3', text: 'Track 3: 4 interim/resin base RPDs + OSCE', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Interim RPD must have >=2 clasps AND replace >=3 teeth', custom: false }
             ]},
             { title: 'Formatives & Summatives', items: [
-                { id: 'rpd-form-abut', text: 'Formative: Abutment preparations (mounted casts)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'rpd-sum-abut', text: 'Summative: Abutment Preparations (Intra-Oral)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'rpd-form-abut', text: 'Formative: Abutment preparations on mounted casts', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'rpd-sum-abut', text: 'Summative: Abutment Preparations (intra-oral)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
     srp: {
-        name: 'SRPs',
+        name: 'SRPs / Calculus Removal',
         icon: '🩺',
         color: '#ef4444',
-        notes: '1 planned (unreliable) UL 1-3 teeth.',
+        notes: 'Officially Periodontology summatives, tracked with standalone IDs. NO separate perio-sum-calc ID exists.',
         sections: [
-            { title: 'Periodontology Summatives', items: [
-                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'srp-reeval', text: 'Re-evaluate (SRP) Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Calculus Removal Summatives', items: [
+                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-reeval', text: 'Re-evaluate SRP Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-reeval-srp', required: 1 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure. Alias: perio-sum-reeval-srp', custom: false }
             ]}
         ]
     },
@@ -530,13 +539,13 @@ const DEFAULT_COMPETENCIES = {
         name: 'Endodontics',
         icon: '🔬',
         color: '#06b6d4',
-        notes: '0 completed, 0 planned.',
+        notes: 'Pulpectomy summative can receive credit on completed RCT cases. Mock Board must be passed regardless of CDCA/WREB results.',
         sections: [
             { title: 'Requirements', items: [
                 { id: 'endo-rct-1', text: 'Root Canal Treatment #1 (on patient)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'endo-rct-2', text: 'Root Canal Treatment #2 (on patient)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'endo-pulp-1', text: 'Pulpectomy Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'endo-pulp-2', text: 'Pulpectomy Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'endo-pulp-1', text: 'Pulpectomy Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'endo-pulp-2', text: 'Pulpectomy Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
                 { id: 'endo-postdoc', text: 'Post-doc Endo Assist', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'endo-predoc', text: 'Pre-doc Endo Assist', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'endo-mock', text: 'Passed Mock Board on manikin', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
@@ -549,24 +558,24 @@ const DEFAULT_COMPETENCIES = {
         color: '#ec4899',
         notes: '',
         sections: [
-            { title: '3rd Year Requirements', items: [
-                { id: 'os-3rd-rotation', text: 'Participate in 3rd Year Oral Surgery Rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'os-3rd-consult', text: 'Summative: Management of Patient having OS Consult', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'os-3rd-nerve', text: 'Summative: Administration of IA and Long Buccal Block', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'os-3rd-suture', text: 'Summative: Participation in Suturing Workshop', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: '3rd Year Requirements (D3 Deadline)', items: [
+                { id: 'os-3rd-rotation', text: '3rd Year Oral Surgery Rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'os-3rd-consult', text: 'Summative: OS Consult Management', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'os-3rd-nerve', text: 'Summative: IAN + Long Buccal Nerve Block', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'os-3rd-suture', text: 'Summative: Suturing Workshop', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]},
             { title: '4th Year Requirements', items: [
                 { id: 'os-4th-rotation', text: 'Complete 2-week scheduled rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'os-4th-present', text: 'Presentation at morning seminar', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'os-4th-oral', text: 'Oral examination (end of rotation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'os-4th-oral', text: 'Oral examination at end of rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'os-4th-rx', text: 'Take-home prescription writing exercise', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'os-4th-mcq', text: 'MCQ quiz (Med Emergency, Nitrous, Instrument ID)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'os-4th-sim', text: 'Medical Simulation Lab at BMC', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'os-4th-nitrous', text: 'Nitrous-Oxide Oxygen Sedation Hands-On training', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
             { title: 'Clinical Summatives', items: [
-                { id: 'os-extract-1', text: 'Extraction on patient #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'os-extract-2', text: 'Extraction on patient #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'os-extract-1', text: 'Extraction on patient #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'os-extract-2', text: 'Extraction on patient #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -577,14 +586,14 @@ const DEFAULT_COMPETENCIES = {
         notes: '',
         sections: [
             { title: 'Course & Rotations', items: [
-                { id: 'peds-course', text: 'Successful completion of PD 530 course', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'peds-rotation', text: 'Rotations in Peds (including Franciscan Hospital)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'peds-course', text: 'PD 530 Didactic course completion', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'peds-rotation', text: 'Rotations (including Franciscan Hospital)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'peds-assessment', text: 'Post-rotation assessment', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: 'Clinical Summatives (log sheet)', items: [
-                { id: 'peds-recall', text: '3 New Patient/Recall', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'peds-sealants', text: '3 Sealants', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'peds-restore', text: '3 Restorative procedures', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Clinical Summatives (on log sheet)', items: [
+                { id: 'peds-recall', text: '3 New Patient/Recall', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'peds-sealants', text: '3 Sealants', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'peds-restore', text: '3 Restorative procedures', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -592,69 +601,89 @@ const DEFAULT_COMPETENCIES = {
         name: 'Periodontology',
         icon: '🦠',
         color: '#f472b6',
-        notes: '',
+        notes: 'All summative exams must be initiated on SPS BEFORE procedure. Faculty intervention = does NOT qualify.',
         sections: [
             { title: 'Surgical', items: [
-                { id: 'perio-surg-assist', text: '7 Surgical Assist (total 3rd/4th yr, max 1 implant uncovering)', required: 7, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'perio-surg-assist', text: '7 Surgical Assist (max 1 implant uncovering)', required: 7, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: '3rd Year Specific Summatives', items: [
-                { id: 'perio-3rd-ohi', text: 'Oral hygiene instructions (by Oct 1)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-3rd-prophy', text: 'Scaling and Prophy (by May 2026)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '100% - Need SRP summative', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-3rd-reeval', text: 'Re-eval Gingivitis (by May 2026)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: '3rd Year Summatives (D3 Deadlines)', items: [
+                { id: 'perio-3rd-ohi', text: 'OHI Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2025-10-01', unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'perio-3rd-prophy', text: 'Scaling & Prophy Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'perio-3rd-reeval', text: 'Re-eval Gingivitis Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]},
-            { title: 'Total Formatives (3rd & 4th Year)', items: [
-                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 zoom, 1 in person)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-quad', text: '3 Quad (SRP)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: 'UL quadrant', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-impr', text: '3 Re-evaluate Impression', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Formatives (3rd + 4th Year Cumulative)', items: [
+                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 Zoom, 1 in-person)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-quad', text: '3 Quad SRP', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-reeval-srp', text: '1 Re-evaluate SRP', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-impr', text: '3 Re-evaluate Impression', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: 'Total Summatives (3rd & 4th Year)', items: [
-                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-dx', required: 4 }], unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '100% score', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-calc', text: '3 Calculus removal', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate (Gingivitis)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-reeval-srp', text: '1 Re-evaluate (SRP)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-reeval-srp', required: 1 }], unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-impr', text: '1 Re-evaluate (Impression)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-impr', required: 3 }], unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-recall', text: '2 Recall', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: [{ id: 'perio-form-recall', required: 6 }], unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-mock', text: '1 Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Must initiate in SPS BEFORE procedure', custom: false }
+            { title: 'Summatives (3rd + 4th Year Cumulative)', items: [
+                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-dx', required: 4 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate Gingivitis', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-impr', text: '1 Re-evaluate Impression', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-impr', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-recall', text: '2 Recall', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-recall', required: 6 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-mock', text: '1 Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false }
             ]}
         ]
     },
     grouppractice: {
-        name: 'Group Practice (GD 640 & GD 642)',
+        name: 'Group Practice — D3 (GD 640)',
         icon: '👥',
         color: '#0ea5e9',
-        notes: '',
+        notes: 'Grade: Formatives 25% (PR 7.5% + WA 7.5% + PMS 5% + Case 5%) + Summatives 65% (PR 30% + WA 35%) + Comm 10%.',
         sections: [
-            { title: '3rd Year (GD 640)', items: [
-                { id: 'gp-attend', text: 'Clinical Attendance (4 per week)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-form-review', text: '1 Formative Periodic Review', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-sum-review', text: '1 Summative Periodic Review', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-form-analysis', text: '2 Formative Written Analyses', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '1 completed, 1 in progress', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-sum-analysis', text: '1 Summative Written Analysis', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-comm', text: 'Communication Workshop', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-leader', text: 'Leadership Workshop', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-case', text: 'Case Presentation at Group Monthly meeting', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-pms-3rd', text: 'Practice Management Scenarios (1 formative + 4 summative, cumulative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-01', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Attendance & Meetings', items: [
+                { id: 'gp-attend', text: 'Clinical Attendance (4 sessions/week)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: '-1 point grade deduction per week under 4 sessions', custom: false },
+                { id: 'gp-meetings', text: 'Monthly group meetings (mandatory)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: '-2 per unexcused absence', custom: false }
             ]},
-            { title: '4th Year (GD 642) Summatives', items: [
-                { id: 'gp4-comm-txplan', text: '1 Communication Treatment Plan Presentation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-periodicrev-1', text: '2 Periodic Reviews', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-written-analysis', text: '4 Written Analyses', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-pms', text: '4 Practice Management Scenarios (cumulative from 3rd+4th year)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Periodic Reviews', items: [
+                { id: 'gp-form-review', text: '1 Formative Periodic Review (7.5%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp-sum-review', text: '1 Summative Periodic Review (30%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]},
-            { title: '4th Year Leadership Requirements', items: [
+            { title: 'Written Analyses', items: [
+                { id: 'gp-form-analysis', text: '2 Formative Written Analyses (7.5%)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Required for EVERY Type 2 patient — submit electronically before GPL meeting', custom: false },
+                { id: 'gp-sum-analysis', text: '1 Summative Written Analysis (35%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
+            ]},
+            { title: 'Practice Management', items: [
+                { id: 'gp-pms-3rd', text: '1 Formative PMS (5%, at Leadership Workshop)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            ]},
+            { title: 'Communication Module (10%)', items: [
+                { id: 'gp-comm-workshop', text: 'Communication Workshop attendance (40% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Excused absence + makeup = full credit; 0 if nothing attended', custom: false },
+                { id: 'gp-comm-form-txplan', text: '1 Formative Tx Plan Presentation (20% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp-comm-sum-txplan', text: '1 Summative Tx Plan Presentation (40% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
+            ]},
+            { title: 'Other D3 GP Requirements', items: [
+                { id: 'gp-leader', text: 'Leadership Workshop attendance', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp-case', text: 'Case Presentation at Group Monthly Meeting (5%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp-ohra', text: 'OHRA at every PE/Tx Plan appointment', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Penalty: 1st offense -1, 2nd -3, 3rd -5 escalating', custom: false }
+            ]}
+        ]
+    },
+    grouppractice4: {
+        name: 'Group Practice — D4 (GD 642) & Leadership',
+        icon: '🎓',
+        color: '#7c3aed',
+        notes: 'Formally D4 requirements but formatives can/should be started in D3.',
+        sections: [
+            { title: '4th Year Summatives', items: [
+                { id: 'gp4-comm-txplan', text: '1 Communication Tx Plan Presentation (SEPARATE from D3)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-periodicrev-1', text: '2 Periodic Reviews (in 4th year)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-written-analysis', text: '4 Written Analyses (cumulative — D3 summative WA counts)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-pms', text: '4 Practice Management Scenarios (cumulative incl D3)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
+            ]},
+            { title: 'Leadership Requirements', items: [
                 { id: 'gp4-posttreat-eval', text: '3 Post Treatment Evaluations', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-tech', text: 'Auxiliary Team Assessment with Dental Technician - 1 formative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-asst', text: 'Auxiliary Team Assessment with Dental Assistant - 1 formative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-summatives', text: 'Auxiliary Team Summatives (Tech + Assistant combined)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-rounds-form', text: 'Leading Rounds - 1 formative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-rounds-sum', text: 'Leading Rounds - 1 summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'gp4-aux-tech', text: 'Aux Assessment with Dental Technician (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-aux-asst', text: 'Aux Assessment with Dental Assistant (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-aux-summatives', text: 'Aux Team Summatives (min 1 Tech + 1 Asst, 4 total)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-rounds-form', text: 'Leading Rounds (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-rounds-sum', text: 'Leading Rounds (1 summative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -662,17 +691,17 @@ const DEFAULT_COMPETENCIES = {
         name: 'Treatment Planning (RS 545)',
         icon: '📋',
         color: '#6366f1',
-        notes: 'RS 545 Seminar presentation + Data Collection/Tx Planning Rotation',
+        notes: '',
         sections: [
-            { title: 'Seminar Presentation (20% of grade)', items: [
-                { id: 'tx-seminar-1', text: '1 Summative small group presentation - Type 2 case (by Apr 24, 2026)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Seminar Presentation (20% of RS 545 grade)', items: [
+                { id: 'tx-seminar-1', text: '1 Summative Type 2 case presentation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-04-24', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]},
-            { title: 'Seminar Attendance (80% of grade)', items: [
-                { id: 'tx-attend-1', text: '2 Attend classmate seminar presentations (by Apr 23, 2027)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Seminar Attendance (80% of RS 545 grade)', items: [
+                { id: 'tx-attend-1', text: '2 Attend classmate presentations (by Apr 23, 2027)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: 'Data Collection/Treatment Planning Rotation', items: [
-                { id: 'tx-ohra-1', text: '2 OHRA Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'tx-caries-1', text: '2 Caries Detection Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            { title: 'Data Collection/Tx Planning Rotation', items: [
+                { id: 'tx-ohra-1', text: '2 OHRA Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'tx-caries-1', text: '2 Caries Detection Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -680,12 +709,12 @@ const DEFAULT_COMPETENCIES = {
         name: 'Geriatric Dental Medicine',
         icon: '👴',
         color: '#8b5cf6',
-        notes: 'DMD 27 must challenge didactic course Spring 2026, then complete rotation + assignment',
+        notes: 'DMD 27 must challenge PH 541 Spring 2026, then rotation + assignment.',
         sections: [
             { title: 'Requirements', items: [
-                { id: 'geri-course', text: 'Successful completion of PH 541 Didactic Course', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'geri-rotation', text: 'Geriatric Dental Medicine Rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'geri-assignment', text: 'Clinical Assignment (any GSDM patient or rotation/externship patient)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'geri-course', text: 'PH 541 Didactic Course (Spring 2026)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'geri-rotation', text: 'Geriatric Dental Medicine Rotation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'geri-course', required: 1 }], unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'geri-assignment', text: 'Clinical Assignment (any GSDM/rotation/externship patient)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'geri-course', required: 1 }], unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
         ]
     },
@@ -693,10 +722,10 @@ const DEFAULT_COMPETENCIES = {
         name: 'Externship & SPS',
         icon: '🌴',
         color: '#059669',
-        notes: 'Complete during 10-week externship rotation',
+        notes: 'Group 1 rotation: May 18 - July 24, 2026.',
         sections: [
             { title: 'Externship Requirements', items: [
-                { id: 'ext-casepres', text: 'Case Presentation (Upload on BB + self-assessment + mock referral)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'ext-casepres', text: 'Case Presentation (BB upload + self-assessment + mock referral)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'ext-outreach', text: 'Community Outreach Project', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'ext-spslog', text: 'SPS Log of all procedures + debriefing', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
@@ -973,7 +1002,9 @@ function renderD3Deadlines() {
         var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'overdue' : d.daysLeft < 30 ? 'soon' : 'ok';
         var colorMap = { overdue: '#ef4444', soon: '#f59e0b', ok: '#22c55e' };
         var label = d.daysLeft < 0 ? (Math.abs(d.daysLeft) + 'd overdue') : d.daysLeft === 0 ? 'TODAY' : (d.daysLeft + 'd left');
-        html += '<div class="comp-d3-card ' + urgency + '">'
+        var safeCatKey = (d.catKey || '').replace(/['"\\]/g, '');
+        var safeItemId = (d.item.id || '').replace(/['"\\]/g, '');
+        html += '<div class="comp-d3-card ' + urgency + '" onclick="navigateToCompetencyItem(\'' + safeCatKey + '\', \'' + safeItemId + '\')" style="cursor:pointer;" title="Click to view in competencies list">'
             + '<span style="color:' + (d.catColor || '#94a3b8') + '; font-weight:600;">' + escapeHtml(d.catName) + '</span>'
             + '<span style="color:#e2e8f0;">' + escapeHtml(d.item.text.length > 35 ? d.item.text.substring(0, 35) + '...' : d.item.text) + '</span>'
             + '<span style="color:' + colorMap[urgency] + '; font-weight:600; white-space:nowrap;">' + label + '</span>'
@@ -1277,19 +1308,44 @@ function undoRemoveEvidence(catKey, itemId, removedJson) {
 }
 
 // --- Task 4.9: "Which Patients Can Fulfill This?" Badges ---
+// Returns patients matching this competency item, with fulfillment status:
+//   'completed' = has a procedure record linked to this item
+//   'planned' = in importedRequirements (CAN_FULFILL) but no procedure record
 function getPatientsFulfilling(itemId) {
     var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     var matching = [];
+
+    // Build set of patientIds that have COMPLETED procedure records for this item
+    var completedPatientIds = {};
+    var competencies = getCompetenciesData();
+    var itemIdLower = (itemId || '').toLowerCase();
+    // Search all categories for the item's completionEntries
+    Object.values(competencies).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(it) {
+                if ((it.id || '').toLowerCase() === itemIdLower && Array.isArray(it.completionEntries)) {
+                    it.completionEntries.forEach(function(ce) {
+                        if (ce.patientId) completedPatientIds[ce.patientId] = true;
+                    });
+                }
+            });
+        });
+    });
 
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
         if (!pt || !pt.name) return;
         if (Array.isArray(pt.importedRequirements)) {
             var hasMatch = pt.importedRequirements.some(function(req) {
-                return req.reqId && req.reqId.toLowerCase() === itemId.toLowerCase();
+                return req.reqId && req.reqId.toLowerCase() === itemIdLower;
             });
             if (hasMatch) {
-                matching.push({ id: ptId, name: pt.name, chartNumber: pt.chartNumber || '' });
+                matching.push({
+                    id: ptId,
+                    name: pt.name,
+                    chartNumber: pt.chartNumber || '',
+                    fulfillmentStatus: completedPatientIds[ptId] ? 'completed' : 'planned'
+                });
             }
         }
     });
@@ -1303,13 +1359,171 @@ function renderPatientBadges(itemId) {
     var html = '<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">';
     patients.forEach(function(pt) {
         var safeId = (pt.id || '').replace(/['"\\]/g, '');
-        html += '<span class="comp-patient-badge" onclick="navigateToEntity(\'patient\', \'' + safeId + '\')">'
+        var safeItemId = (itemId || '').replace(/['"\\]/g, '');
+        var isCompleted = pt.fulfillmentStatus === 'completed';
+        var badgeClass = isCompleted ? 'comp-patient-badge badge-completed' : 'comp-patient-badge badge-planned';
+        var statusLabel = isCompleted ? ' \u2713' : ' (planned)';
+        html += '<span class="' + badgeClass + '" onclick="showPatientCompPreview(\'' + safeId + '\', \'' + safeItemId + '\'); event.stopPropagation();" title="' + (isCompleted ? 'Completed — click to preview' : 'Planned/potential — click to preview') + '">'
             + escapeHtml(pt.name)
             + (pt.chartNumber ? ' #' + escapeHtml(pt.chartNumber) : '')
+            + statusLabel
             + '</span>';
     });
     html += '</div>';
     return html;
+}
+
+// --- Patient Competency Preview Popup ---
+// Shows a mini patient card when clicking a patient chip on a competency item.
+// All user text is sanitized with escapeHtml() before insertion.
+function showPatientCompPreview(patientId, itemId) {
+    var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
+    var pt = records[patientId];
+    if (!pt) { showToast('Patient not found'); return; }
+
+    var compResult = findCompetencyItem(itemId);
+    var compText = compResult ? compResult.item.text : itemId;
+    var compCatName = compResult ? (getCompetenciesData()[compResult.catKey]?.name || '') : '';
+
+    var isCompleted = false;
+    if (compResult && Array.isArray(compResult.item.completionEntries)) {
+        isCompleted = compResult.item.completionEntries.some(function(ce) { return ce.patientId === patientId; });
+    }
+
+    var matchedReq = null;
+    if (Array.isArray(pt.importedRequirements)) {
+        matchedReq = pt.importedRequirements.find(function(req) {
+            return req.reqId && req.reqId.toLowerCase() === (itemId || '').toLowerCase();
+        });
+    }
+
+    var statusColor = isCompleted ? '#10b981' : '#f59e0b';
+    var statusText = isCompleted ? 'COMPLETED' : 'PLANNED / POTENTIAL';
+    var reliabilityColor = pt.reliability === 'green' ? '#10b981' : pt.reliability === 'red' ? '#ef4444' : '#f59e0b';
+    var safePatientId = (patientId || '').replace(/['"\\]/g, '');
+
+    // Build popup via DOM (all text content uses escapeHtml or textContent)
+    var overlay = document.createElement('div');
+    overlay.className = 'mp-modal-overlay';
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; display:flex; align-items:center; justify-content:center;';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+    var modal = document.createElement('div');
+    modal.style.cssText = 'background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;';
+    var headerLeft = document.createElement('div');
+    var dot = document.createElement('span');
+    dot.style.cssText = 'display:inline-block; width:10px; height:10px; border-radius:50%; background:' + reliabilityColor + '; margin-right:8px;';
+    headerLeft.appendChild(dot);
+    var nameEl = document.createElement('strong');
+    nameEl.style.cssText = 'color:#e2e8f0; font-size:1.1em;';
+    nameEl.textContent = pt.name || 'Unknown';
+    headerLeft.appendChild(nameEl);
+    if (pt.chartNumber) {
+        var chartEl = document.createElement('span');
+        chartEl.style.cssText = 'color:#64748b; margin-left:6px;';
+        chartEl.textContent = '#' + pt.chartNumber;
+        headerLeft.appendChild(chartEl);
+    }
+    if (pt.highValue) {
+        var hvBadge = document.createElement('span');
+        hvBadge.style.cssText = 'background:rgba(245,158,11,0.2); color:#f59e0b; padding:1px 6px; border-radius:4px; font-size:0.75em; margin-left:6px;';
+        hvBadge.textContent = 'HIGH VALUE';
+        headerLeft.appendChild(hvBadge);
+    }
+    header.appendChild(headerLeft);
+    var closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.2em;';
+    closeBtn.textContent = '\u00D7';
+    closeBtn.onclick = function() { overlay.remove(); };
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // Highlighted requirement match
+    var matchBox = document.createElement('div');
+    matchBox.style.cssText = 'background:rgba(' + (isCompleted ? '16,185,129' : '245,158,11') + ',0.1); border-left:3px solid ' + statusColor + '; padding:10px; border-radius:6px; margin-bottom:12px;';
+    var statusEl = document.createElement('div');
+    statusEl.style.cssText = 'font-size:0.8em; font-weight:600; color:' + statusColor + '; margin-bottom:4px;';
+    statusEl.textContent = statusText;
+    matchBox.appendChild(statusEl);
+    var compTextEl = document.createElement('div');
+    compTextEl.style.cssText = 'color:#e2e8f0; font-weight:600;';
+    compTextEl.textContent = compCatName + ' \u2192 ' + compText;
+    matchBox.appendChild(compTextEl);
+    if (matchedReq && matchedReq.description) {
+        var descEl = document.createElement('div');
+        descEl.style.cssText = 'color:#94a3b8; font-size:0.85em; margin-top:4px;';
+        descEl.textContent = matchedReq.description;
+        matchBox.appendChild(descEl);
+    }
+    if (matchedReq && matchedReq.procedure) {
+        var procEl = document.createElement('div');
+        procEl.style.cssText = 'color:#94a3b8; font-size:0.85em;';
+        procEl.textContent = 'Procedure: ' + matchedReq.procedure;
+        matchBox.appendChild(procEl);
+    }
+    modal.appendChild(matchBox);
+
+    // Clinical Brief snapshot
+    if (pt.clinicalBrief && pt.clinicalBrief.snapshot) {
+        var briefSection = document.createElement('div');
+        briefSection.style.marginBottom = '10px';
+        var briefLabel = document.createElement('div');
+        briefLabel.style.cssText = 'color:#1a7f79; font-weight:600; font-size:0.8em; margin-bottom:4px;';
+        briefLabel.textContent = 'CLINICAL BRIEF';
+        briefSection.appendChild(briefLabel);
+        var briefText = document.createElement('div');
+        briefText.style.cssText = 'color:#cbd5e1; font-size:0.85em;';
+        briefText.textContent = pt.clinicalBrief.snapshot;
+        briefSection.appendChild(briefText);
+        modal.appendChild(briefSection);
+    }
+
+    // Treatment Plan
+    if (pt.txPlan) {
+        var txSection = document.createElement('div');
+        txSection.style.marginBottom = '10px';
+        var txLabel = document.createElement('div');
+        txLabel.style.cssText = 'color:#10b981; font-weight:600; font-size:0.8em; margin-bottom:4px;';
+        txLabel.textContent = 'TREATMENT PLAN';
+        txSection.appendChild(txLabel);
+        var txText = document.createElement('div');
+        txText.style.cssText = 'color:#cbd5e1; font-size:0.85em; white-space:pre-line;';
+        txText.textContent = pt.txPlan.length > 300 ? pt.txPlan.substring(0, 300) + '...' : pt.txPlan;
+        txSection.appendChild(txText);
+        modal.appendChild(txSection);
+    }
+
+    // Last visit
+    if (pt.lastVisit) {
+        var visitSection = document.createElement('div');
+        visitSection.style.marginBottom = '10px';
+        var visitLabel = document.createElement('div');
+        visitLabel.style.cssText = 'color:#94a3b8; font-weight:600; font-size:0.8em; margin-bottom:2px;';
+        visitLabel.textContent = 'LAST VISIT';
+        visitSection.appendChild(visitLabel);
+        var visitText = document.createElement('div');
+        visitText.style.cssText = 'color:#cbd5e1; font-size:0.85em;';
+        visitText.textContent = pt.lastVisit;
+        visitSection.appendChild(visitText);
+        modal.appendChild(visitSection);
+    }
+
+    // Footer: navigate to full record
+    var footer = document.createElement('div');
+    footer.style.cssText = 'text-align:right; margin-top:8px;';
+    var viewBtn = document.createElement('button');
+    viewBtn.style.cssText = 'background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85em;';
+    viewBtn.textContent = 'View Full Record \u2192';
+    viewBtn.onclick = function() { overlay.remove(); navigateToEntity('patient', safePatientId); };
+    footer.appendChild(viewBtn);
+    modal.appendChild(footer);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
 }
 
 // --- Task 4.10: Critical Rules Display Per Category ---

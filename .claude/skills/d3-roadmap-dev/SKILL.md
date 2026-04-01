@@ -589,19 +589,22 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 
 Competencies live at `roadmapData.clinicalData.competencies` and are initialized from `DEFAULT_COMPETENCIES` (in clinical.js).
 
-**14 Categories (real BU DMD 2027 graduation requirements):**
-| Key | Name | Icon |
-|-----|------|------|
-| `fixed` | Fixed Prosthodontics | Formatives + summatives for crowns, FPD, CEREC |
+**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status.
+
+**15 Categories (real BU DMD 2027 graduation requirements):**
+| Key | Name | Focus |
+|-----|------|-------|
+| `fixed` | Fixed Prosthodontics | Aggregate trackers (10 units, 1 FPD, 1 implant crown, 3 CEREC) + formatives + summatives |
 | `operative` | Operative | Class V, multisurface composites, mock board |
-| `dentures` | Complete Dentures | Formatives, summatives, overdenture |
+| `dentures` | Complete Dentures | cd-units-total (4 arches) + formatives, summatives, overdenture |
 | `rpd` | RPDs | 3 track options (cast metal, flexible, interim) |
-| `srp` | SRPs | Calculus removal summatives |
+| `srp` | SRPs / Calculus Removal | Canonical IDs: srp-calc-1/2/3, srp-reeval. NO perio-sum-calc. srp-reeval = perio-sum-reeval-srp alias |
 | `endo` | Endodontics | RCTs, pulpectomies, mock board |
 | `oralsurg` | Oral Surgery | 3rd/4th year rotations, extractions |
 | `peds` | Pediatric Dentistry | PD 530 course, rotations, log sheet |
 | `perio` | Periodontology | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice (GD 640 & GD 642) | 3rd+4th year reviews, analyses, leadership |
+| `grouppractice` | Group Practice — D3 (GD 640) | D3 reviews, analyses, comm (gp-comm-workshop/form-txplan/sum-txplan), PMS, meetings, OHRA |
+| `grouppractice4` | Group Practice — D4 (GD 642) & Leadership | D4 summatives, PTEs, aux assessments, leading rounds |
 | `txplanning` | Treatment Planning (RS 545) | Seminar presentation, OHRA, caries detection |
 | `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
 | `externship` | Externship & SPS | Case presentation, community outreach, SPS log |

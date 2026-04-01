@@ -110,13 +110,15 @@ const date = new Date(year, month - 1, day);
 - **Missing Notes**: `MISSING_NOTES` block, 7 pipe-delimited fields, dedup by ID, 6-limit capacity bar. Stored in `clinicalData.missingNotes{}`.
 - **To-Do list**: `TODO_LIST` block, 5 pipe-delimited fields. Sources: MANUAL/EMAIL/SCREENSHOT/CLINIC/SYSTEM. Stored in `todoList{ items{}, _nextSeq, lastUpdated }`.
 - **Dashboard snapshot dedup**: Same `capturedAt` date replaces instead of duplicating.
+- **Format D Safeguard (REQUIREMENTS_STATUS)**: `applyRequirementCheckoffs()` logs a console warning when REQUIREMENTS_STATUS (non-delta/absolute-set) touches clinical procedure categories (fixed, operative, dentures, rpd, srp, endo, oralsurg, perio). This sets counts directly with NO procedure record backing. The webchat instructions now have safeguard rules preventing auto-generation of Format D entries for clinical procedures unless Suleman explicitly confirms counts. For patient-level procedure tracking, COMPLETED_TODAY (isDelta=true) in Format C is the correct mechanism.
+- **Competency ID changes (Apr 2026)**: IDs REMOVED: `perio-sum-calc` (use srp-calc-1/2/3), `gp-comm` (split into gp-comm-workshop/gp-comm-form-txplan/gp-comm-sum-txplan). IDs ADDED: fixed-units-total, fixed-fpd, fixed-implant-crown, fixed-cerec, cd-units-total, gp-comm-workshop, gp-comm-form-txplan, gp-comm-sum-txplan, gp-meetings, gp-ohra. ALIAS: srp-reeval = perio-sum-reeval-srp. See `docs/GROUND_TRUTH_REQUIREMENTS.md` for canonical ID list.
 
 ### Competencies & Procedures
 - **Procedure→competency linking**: `recordProcedure()` auto-creates `completionEntries[]`. `deleteProcedure()` calls `unlinkProcedureFromCompetencies()`. Never manually edit `item.completed`.
 - **Smart counting**: Mission Control uses `getSmartAppointmentCount()` and `getSmartProcedureCount()` (state.js). NEVER replace with narrow `getValues().filter()`. Validate `clinic_` task IDs against actual `appointments`. Patient visit dedup uses AND for name+chartNumber.
 - **Evidence trail**: `adjustCompItem()` and `setCompItemStatus()` auto-create `completionEntries[]`. Required for smart counter dedup.
 - **SPS dashboard is ground truth**: `getSmartProcedureCount()` uses SPS snapshot as AUTHORITATIVE when it exists (`snapshotCount > 0 ? snapshotCount : computedTotal`). NOT a floor/MAX — the snapshot IS the procedure count. `getSmartAppointmentCount()` still uses `MAX(computed, snapshot)` for appointments. PR tab "Attended" row uses `snapshot.appointments.attended` (not smart counter total).
-- **Procedure count categories**: `getSmartProcedureCount()` only counts competency-derived procedures from actual clinical categories: `fixed`, `operative`, `dentures`, `rpd`, `srp`, `endo`, `oralsurg`, `perio`. Non-procedure categories (`grouppractice`, `txplanning`, `geriatrics`, `externship`, `peds`) are excluded.
+- **Procedure count categories**: `getSmartProcedureCount()` only counts competency-derived procedures from actual clinical categories: `fixed`, `operative`, `dentures`, `rpd`, `srp`, `endo`, `oralsurg`, `perio`. Non-procedure categories (`grouppractice`, `grouppractice4`, `txplanning`, `geriatrics`, `externship`, `peds`) are excluded.
 - **`getCompetenciesData()` is read-only**: Initialization in `ensureCompetenciesInitialized()`, called from `initUI()` and `initClinicalTab()` only.
 - **`setCompItemStatus` toggle**: After filtering entries to keep procedure-linked, resync `item.completed = Math.min(required, entries.length)`.
 - **Procedure count dedup**: Only deducts entries with valid `procedureId` (not null). Null = manual/backfill.
@@ -182,6 +184,7 @@ const date = new Date(year, month - 1, day);
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem, V3 analytics |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |
 
+- **Ground Truth Requirements:** `docs/GROUND_TRUTH_REQUIREMENTS.md` -- the SINGLE source of truth for all graduation requirement IDs, counts, deadlines, and completion status. Both the Claude webchat project and this app use this file as their canonical reference.
 - **Brand**: "SULEMAN SHAIKH, DMD" (page titles, sidebar, mobile header). localStorage keys still use `dentalQuest*` prefix.
 - **URL**: suleman7-dmd.github.io/dental-quest/ | **Repo**: github.com/suleman7-DMD/dental-quest
 - **Pattern**: No build system. Push to `main` → live in ~30s.
