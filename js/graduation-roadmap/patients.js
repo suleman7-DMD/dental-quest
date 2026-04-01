@@ -1240,7 +1240,7 @@ function deletePatientRecord(id) {
             if (roadmapData.monthlyPlanner && deletedAptIds.length > 0) {
                 if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
                 deletedAptIds.forEach(function(aptId) {
-                    roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
+                    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = true;
                     if (roadmapData.monthlyPlanner.customTasks) {
                         Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
                             var ct = roadmapData.monthlyPlanner.customTasks[ctId];
@@ -1358,8 +1358,9 @@ function computeRequirementMatches(patient) {
     var seenReqs = {};
 
     // Use imported requirements from Claude analysis if available (authoritative)
-    if (patient.importedRequirements && patient.importedRequirements.length > 0) {
-        patient.importedRequirements.forEach(function(ir) {
+    var importedReqs = getValues(patient.importedRequirements);
+    if (importedReqs.length > 0) {
+        importedReqs.forEach(function(ir) {
             if (seenReqs[ir.reqId]) return;
             if (isRequirementOutstanding(ir.reqId)) {
                 seenReqs[ir.reqId] = true;
@@ -2322,7 +2323,7 @@ function confirmUnifiedImport() {
         if (records[id]) {
             // Update existing
             Object.keys(rec).forEach(function(key) {
-                if (key !== '_notesAppend' && rec[key]) {
+                if (key !== '_notesAppend' && key !== 'id' && rec[key]) {
                     records[id][key] = rec[key];
                 }
             });
@@ -2406,6 +2407,10 @@ function confirmUnifiedImport() {
     // Handle completed-today from reqMatches — pass patient context for procedure records
     var completedItems = [];
     parsed.reqMatches.forEach(function(rm) {
+        var resolvedPatientId = null;
+        if (rm.chartNumber) {
+            resolvedPatientId = findByNormalizedChart(records, rm.chartNumber);
+        }
         rm.completedToday.forEach(function(ct) {
             completedItems.push({
                 reqId: ct.reqId,
@@ -2413,6 +2418,7 @@ function confirmUnifiedImport() {
                 isDelta: true,
                 note: ct.procedure || ct.description || '',
                 patientName: ct.patientName || rm.name || '',
+                patientId: resolvedPatientId || null,
                 date: ct.date || getLocalDateString()
             });
         });
@@ -2819,6 +2825,34 @@ function migrateLeadingZeroDedup() {
                     task.patientId = idRemapTable[task.patientId];
                 }
             });
+
+            // Remap autoLinkReviewQueue[].patientId
+            var arlq = getValues(roadmapData.clinicalData.autoLinkReviewQueue);
+            arlq.forEach(function(q) {
+                if (q.patientId && idRemapTable[q.patientId]) {
+                    q.patientId = idRemapTable[q.patientId];
+                }
+                getValues(q.suggestedItems).forEach(function(si) {
+                    if (si.patientId && idRemapTable[si.patientId]) {
+                        si.patientId = idRemapTable[si.patientId];
+                    }
+                });
+            });
+
+            // Remap periodicReviews.pr2 patient-keyed sub-objects
+            var pr2 = roadmapData.periodicReviews?.pr2;
+            if (pr2) {
+                ['removedPatients', 'patientNotes', 'inProgressProcedures'].forEach(function(field) {
+                    if (pr2[field] && typeof pr2[field] === 'object') {
+                        Object.keys(idRemapTable).forEach(function(oldId) {
+                            if (pr2[field][oldId] !== undefined) {
+                                pr2[field][idRemapTable[oldId]] = pr2[field][oldId];
+                                delete pr2[field][oldId];
+                            }
+                        });
+                    }
+                });
+            }
 
             console.log('[LEADING-ZERO-DEDUP] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across FK collections');
         }

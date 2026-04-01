@@ -181,7 +181,7 @@ function renderDashboard() {
     html += '</div>';
     // Source breakdown
     var procBreakdown = [];
-    if (smartProcs.snapshotIsFloor) {
+    if (smartProcs.snapshotIsAuthoritative) {
         procBreakdown.push(smartProcs.fromSnapshot + ' per SPS dashboard');
     } else {
         if (smartProcs.fromProcedureRecords > 0) procBreakdown.push(smartProcs.fromProcedureRecords + ' recorded');

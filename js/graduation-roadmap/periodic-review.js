@@ -117,8 +117,8 @@ function savePR2Field(field, value) {
 }
 
 function getLatestSnapshot() {
-    const snaps = roadmapData.clinicalData?.dashboardSnapshots;
-    if (Array.isArray(snaps) && snaps.length > 0) return snaps[0];
+    const snaps = getValues(roadmapData.clinicalData?.dashboardSnapshots);
+    if (snaps.length > 0) return snaps[0];
     return null;
 }
 

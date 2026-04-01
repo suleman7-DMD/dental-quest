@@ -164,9 +164,11 @@ function mergeRemoteCollectionsIntoLocal(data) {
                     if (!local.clinicalBrief || (remote.clinicalBrief.dateGenerated > (local.clinicalBrief.dateGenerated || ''))) {
                         local.clinicalBrief = remote.clinicalBrief;
                     }
-                    if (remote.briefHistory && Array.isArray(remote.briefHistory)) {
-                        if (!local.briefHistory || remote.briefHistory.length > local.briefHistory.length) {
-                            local.briefHistory = remote.briefHistory;
+                    var remoteBH = getValues(remote.briefHistory);
+                    if (remoteBH.length > 0) {
+                        var localBH = getValues(local.briefHistory);
+                        if (remoteBH.length > localBH.length) {
+                            local.briefHistory = remoteBH;
                         }
                     }
                 }
@@ -194,10 +196,12 @@ function mergeRemoteCollectionsIntoLocal(data) {
             );
         }
         // autoLinkReviewQueue: union by procedureId (local wins for same procedureId)
-        if (Array.isArray(data.clinicalData.autoLinkReviewQueue) && data.clinicalData.autoLinkReviewQueue.length > 0) {
-            if (!Array.isArray(roadmapData.clinicalData.autoLinkReviewQueue)) roadmapData.clinicalData.autoLinkReviewQueue = [];
-            var localProcIds = new Set(roadmapData.clinicalData.autoLinkReviewQueue.map(function(q) { return q.procedureId; }));
-            data.clinicalData.autoLinkReviewQueue.forEach(function(remoteQ) {
+        var remoteQueue = getValues(data.clinicalData.autoLinkReviewQueue);
+        if (remoteQueue.length > 0) {
+            var localQueue = getValues(roadmapData.clinicalData.autoLinkReviewQueue);
+            roadmapData.clinicalData.autoLinkReviewQueue = localQueue;
+            var localProcIds = new Set(localQueue.map(function(q) { return q.procedureId; }));
+            remoteQueue.forEach(function(remoteQ) {
                 if (remoteQ.procedureId && !localProcIds.has(remoteQ.procedureId)) {
                     roadmapData.clinicalData.autoLinkReviewQueue.push(remoteQ);
                 }
@@ -524,6 +528,7 @@ function restoreBackup(backupId) {
     // Clear migration flags so migrations re-run against restored data
     localStorage.removeItem('unifiedPatientStoreDone_v1');
     localStorage.removeItem('competencyEnhancementsDone_v2');
+    localStorage.removeItem('competencyEnhancementsDone_v3');
 
     migrateInvalidFirebaseKeys(roadmapData);
     clinicalDataDirty = true;
@@ -634,6 +639,11 @@ function importBackup(file) {
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
+
+            // Clear migration flags so migrations re-run against imported data
+            localStorage.removeItem('unifiedPatientStoreDone_v1');
+            localStorage.removeItem('competencyEnhancementsDone_v2');
+            localStorage.removeItem('competencyEnhancementsDone_v3');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -985,12 +995,23 @@ function mergeRemoteState(data) {
                                 merged[id][key] = remote[id][key];
                             }
                         });
-                        // Deep merge specific array/object fields
-                        if (remote[id].importedRequirements && !merged[id].importedRequirements) {
-                            merged[id].importedRequirements = remote[id].importedRequirements;
+                        // clinicalBrief: newer dateGenerated wins
+                        if (remote[id].clinicalBrief && remote[id].clinicalBrief.dateGenerated) {
+                            if (!merged[id].clinicalBrief || (remote[id].clinicalBrief.dateGenerated > (merged[id].clinicalBrief.dateGenerated || ''))) {
+                                merged[id].clinicalBrief = remote[id].clinicalBrief;
+                            }
                         }
-                        if (remote[id].briefHistory && !merged[id].briefHistory) {
-                            merged[id].briefHistory = remote[id].briefHistory;
+                        // importedRequirements: remote fills if local is empty/missing
+                        var localIR = getValues(merged[id].importedRequirements);
+                        var remoteIR = getValues(remote[id].importedRequirements);
+                        if (remoteIR.length > 0 && localIR.length === 0) {
+                            merged[id].importedRequirements = remoteIR;
+                        }
+                        // briefHistory: longer array wins
+                        var localBH = getValues(merged[id].briefHistory);
+                        var remoteBH = getValues(remote[id].briefHistory);
+                        if (remoteBH.length > localBH.length) {
+                            merged[id].briefHistory = remoteBH;
                         }
                     }
                 });
@@ -999,8 +1020,8 @@ function mergeRemoteState(data) {
             dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
             missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
             autoLinkReviewQueue: (() => {
-                var local = Array.isArray(roadmapData.clinicalData?.autoLinkReviewQueue) ? roadmapData.clinicalData.autoLinkReviewQueue : [];
-                var remote = Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : [];
+                var local = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
+                var remote = getValues(data.clinicalData?.autoLinkReviewQueue);
                 var localIds = new Set(local.map(function(q) { return q.procedureId; }));
                 return local.concat(remote.filter(function(q) { return q.procedureId && !localIds.has(q.procedureId); }));
             })()
@@ -1122,10 +1143,14 @@ function loadFromLocalStorage(finalize = true) {
                         ...Object.keys(data.grades || {})
                     ]);
                     allCourses.forEach(courseId => {
-                        merged[courseId] = {
-                            ...(roadmapData.grades?.[courseId] || {}),
-                            ...(data.grades?.[courseId] || {})
-                        };
+                        merged[courseId] = (function() {
+                            var base = { ...(roadmapData.grades?.[courseId] || {}) };
+                            var stored = data.grades?.[courseId] || {};
+                            Object.keys(stored).forEach(function(k) {
+                                if (stored[k] !== null && stored[k] !== undefined) base[k] = stored[k];
+                            });
+                            return base;
+                        })();
                     });
                     return merged;
                 })(),
@@ -1974,6 +1999,7 @@ function restoreCheckpoint(index) {
             // Clear migration flags so migrations re-run against restored data
             localStorage.removeItem('unifiedPatientStoreDone_v1');
             localStorage.removeItem('competencyEnhancementsDone_v2');
+            localStorage.removeItem('competencyEnhancementsDone_v3');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -2291,6 +2317,7 @@ function importAndRestoreDirectly() {
                     // Clear migration flags so migrations re-run against restored data
                     localStorage.removeItem('unifiedPatientStoreDone_v1');
                     localStorage.removeItem('competencyEnhancementsDone_v2');
+                    localStorage.removeItem('competencyEnhancementsDone_v3');
 
                     migrateInvalidFirebaseKeys(roadmapData);
                     clinicalDataDirty = true;

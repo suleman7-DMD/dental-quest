@@ -400,6 +400,7 @@ function deleteAppointment() {
         renderAppointmentsList();
         updateClinicalStats();
         showToast('Appointment deleted');
+        if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     }, null, 'Delete Appointment');
 }
 
@@ -1078,8 +1079,8 @@ function renderD3Deadlines() {
 
     var html = '<div style="font-size:0.85em; color:#94a3b8; margin-bottom:8px; font-weight:600;">D3 Deadlines</div>';
     deadlineItems.forEach(function(d) {
-        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'soon' : d.daysLeft < 30 ? 'soon' : 'ok';
-        var colorMap = { overdue: '#ef4444', soon: '#f59e0b', ok: '#22c55e' };
+        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'soon' : d.daysLeft < 30 ? 'upcoming' : 'ok';
+        var colorMap = { overdue: '#ef4444', soon: '#f59e0b', upcoming: '#60a5fa', ok: '#22c55e' };
         var label = d.daysLeft < 0 ? (Math.abs(d.daysLeft) + 'd overdue') : d.daysLeft === 0 ? 'TODAY' : (d.daysLeft + 'd left');
         var safeCatKey = (d.catKey || '').replace(/['"\\]/g, '');
         var safeItemId = (d.item.id || '').replace(/['"\\]/g, '');
@@ -2732,8 +2733,8 @@ function linkProcedureToCompetencies(procedure) {
             });
         }
 
-        // Sync completed count from evidence entries
-        item.completed = Math.min(item.required, item.completionEntries.length);
+        // Sync completed count from evidence entries (floor: never decrease existing count, protects REQUIREMENTS_STATUS absolute-set)
+        item.completed = Math.min(item.required, Math.max(item.completed, item.completionEntries.length));
 
         // Auto-update status
         if (item.completed >= item.required) {
@@ -3105,6 +3106,7 @@ function uncompleteAppointment(aptId) {
     renderProceduresList();
     updateClinicalStats();
     showToast('Appointment unmarked');
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
 }
 
 function markLinkedDeadlineDone(aptId) {

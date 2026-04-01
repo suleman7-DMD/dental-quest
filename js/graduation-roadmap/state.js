@@ -1056,8 +1056,8 @@ function getSmartAppointmentCount() {
     // snapshots[0] is the most recent — mergeDashboardSnapshots() sorts newest-first by capturedAt.
     // If a snapshot needs correction, import a corrected SPS_DASHBOARD_UPDATE.
     var snapshotCount = 0;
-    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
-    if (snapshots && snapshots.length > 0) {
+    var snapshots = getValues(roadmapData.clinicalData?.dashboardSnapshots);
+    if (snapshots.length > 0) {
         snapshotCount = parseInt(snapshots[0].appointments?.attended) || 0;
     }
 
@@ -1113,8 +1113,8 @@ function getSmartProcedureCount() {
     // snapshots[0] is the most recent — mergeDashboardSnapshots() sorts newest-first by capturedAt.
     // When a snapshot exists, it IS the procedure count — it is authoritative, not a floor.
     var snapshotCount = 0;
-    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
-    if (snapshots && snapshots.length > 0) {
+    var snapshots = getValues(roadmapData.clinicalData?.dashboardSnapshots);
+    if (snapshots.length > 0) {
         snapshotCount = parseInt(snapshots[0].procedures?.totalCompleted) || 0;
     }
 
@@ -1333,6 +1333,18 @@ function navigateToEntity(type, id) {
             break;
         case 'deadline':
             switchTab('deadlines');
+            if (id) {
+                setTimeout(function() {
+                    var safeId = id.replace(/['"\\]/g, '');
+                    var el = document.querySelector('[data-deadline-id="' + safeId + '"]');
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.style.transition = 'background 0.3s';
+                        el.style.background = 'rgba(251, 191, 36, 0.15)';
+                        setTimeout(function() { el.style.background = ''; }, 2000);
+                    }
+                }, 200);
+            }
             break;
     }
 }
@@ -1418,7 +1430,7 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
 
     // 2. Clean planner state
     if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
-    roadmapData.monthlyPlanner.hiddenClinicTasks['clinic_' + aptId] = true;
+    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = true;
     delete roadmapData.monthlyPlanner.customTasks['clinic_' + aptId];
     if (typeof unmarkPlannerTaskDone === 'function') unmarkPlannerTaskDone(aptId);
 
